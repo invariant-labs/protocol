@@ -65,10 +65,10 @@ export class Market {
     this.connection = connection
     this.wallet = wallet
 
-    const programAddress = Network.LOCAL ? programId : getMarketAddress(network)
+    const programAddress = Network.LOCAL ? programId : new PublicKey(getMarketAddress(network))
 
     const provider = new Provider(connection, wallet, Provider.defaultOptions())
-    this.program = new Program<Amm>(idl as any, programId, provider)
+    this.program = new Program<Amm>(idl as any, programAddress, provider)
   }
 
   async create({ pair, signer, initTick, fee, tickSpacing }: CreatePool) {
