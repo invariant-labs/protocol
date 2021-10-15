@@ -75,7 +75,7 @@ export class Market {
     const tick = initTick || 0
 
     const [programAuthority, nonce] = await PublicKey.findProgramAddress(
-      [SEED],
+      [Buffer.from(SEED)],
       this.program.programId
     )
 
