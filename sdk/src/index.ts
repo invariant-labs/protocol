@@ -3,7 +3,7 @@ import { SEED, tou64, DENOMINATOR, signAndSend, sleep } from './utils'
 import { TICK_LIMIT, calculate_price_sqrt, fromInteger, MAX_TICK, MIN_TICK } from './math'
 import { PublicKey, Transaction } from '@solana/web3.js'
 import { Pair } from './pair'
-import { getMarketAddress, Network } from './network'
+import { getMarketAddress, Network, USDT_USDT, SOL_USDC } from './network'
 
 export {
   Market,
@@ -19,7 +19,9 @@ export {
   DENOMINATOR,
   TICK_LIMIT,
   MAX_TICK,
-  MIN_TICK
+  MIN_TICK,
+  USDT_USDT,
+  SOL_USDC
 }
 export interface IWallet {
   signTransaction(tx: Transaction): Promise<Transaction>
