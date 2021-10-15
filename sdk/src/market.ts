@@ -414,6 +414,28 @@ export class Market {
     accountY: PublicKey,
     owner: Keypair
   ) {
+    const tx = await this.swapTransaction(
+      pair,
+      XtoY,
+      amount,
+      priceLimit,
+      accountX,
+      accountY,
+      owner.publicKey
+    )
+
+    await signAndSend(tx, [owner], this.connection)
+  }
+
+  async swapTransaction(
+    pair: Pair,
+    XtoY: boolean,
+    amount: BN,
+    priceLimit: BN,
+    accountX: PublicKey,
+    accountY: PublicKey,
+    owner: PublicKey
+  ) {
     const state = await this.get(pair)
     const tickmap = await this.getTickmap(pair)
 
@@ -458,7 +480,7 @@ export class Market {
         TOKEN_PROGRAM_ID,
         accountX,
         state.authority,
-        owner.publicKey,
+        owner,
         [],
         tou64(amount)
       )
@@ -467,13 +489,14 @@ export class Market {
         TOKEN_PROGRAM_ID,
         accountY,
         state.authority,
-        owner.publicKey,
+        owner,
         [],
         tou64(amount)
       )
     }
     const tx = new Transaction().add(approve).add(swapIx)
-    await signAndSend(tx, [owner], this.connection)
+
+    return tx
   }
 
   async getReserveBalances(pair: Pair, payer: Signer) {
