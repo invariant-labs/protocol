@@ -48,7 +48,7 @@ describe('swap', () => {
 
     const swaplineProgram = anchor.workspace.Amm as Program
     const [_programAuthority, _nonce] = await anchor.web3.PublicKey.findProgramAddress(
-      [SEED],
+      [Buffer.from(SEED)],
       swaplineProgram.programId
     )
     nonce = _nonce
@@ -94,11 +94,11 @@ describe('swap', () => {
   it('#swap() within a tick', async () => {
     // Deposit
     const upperTick = 10
-    const upperIx = await market.createTickInstruction(pair, upperTick, wallet)
+    const upperIx = await market.createTickInstruction(pair, upperTick, wallet.publicKey)
     await signAndSend(new Transaction().add(upperIx), [wallet], connection)
 
     const lowerTick = -20
-    const lowerIx = await market.createTickInstruction(pair, lowerTick, wallet)
+    const lowerIx = await market.createTickInstruction(pair, lowerTick, wallet.publicKey)
     await signAndSend(new Transaction().add(lowerIx), [wallet], connection)
 
     const positionOwner = Keypair.generate()
@@ -116,7 +116,7 @@ describe('swap', () => {
     await market.initPosition(
       {
         pair,
-        owner: positionOwner,
+        owner: positionOwner.publicKey,
         userTokenX: userTokenXAccount,
         userTokenY: userTokenYAccount,
         index: 0,

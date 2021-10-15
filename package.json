@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "test:full": "anchor test tests/position.spec.ts && anchor test tests/swap.spec.ts && anchor test tests/cross.spec.ts && anchor test tests/reversed.spec.ts && anchor test tests/math.spec.ts",
+    "test:full": "anchor test tests/position.spec.ts && anchor test tests/swap.spec.ts && anchor test tests/cross.spec.ts && anchor test tests/reversed.spec.ts && anchor test tests/math.spec.ts && anchor test tests/withdraw.spec.ts",
     "test:swap": "anchor test tests/swap.spec.ts",
     "test:cross": "anchor test tests/cross.spec.ts",
     "test:reversed": "anchor test tests/reversed.spec.ts",

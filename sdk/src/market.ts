@@ -157,7 +157,7 @@ export class Market {
     return (await this.program.account.positionList.fetch(positionListAddress)) as PositionList
   }
 
-  async getPosition(owner: Keypair, index: number) {
+  async getPosition(owner: PublicKey, index: number) {
     const { positionAddress } = await this.getPositionAddress(owner, index)
     return (await this.program.account.position.fetch(positionAddress)) as Position
   }
@@ -190,16 +190,12 @@ export class Market {
     }
   }
 
-  async getPositionAddress(owner: Keypair, index: number) {
+  async getPositionAddress(owner: PublicKey, index: number) {
     const indexBuffer = Buffer.alloc(4)
     indexBuffer.writeInt32LE(index)
 
     const [positionAddress, positionBump] = await PublicKey.findProgramAddress(
-      [
-        Buffer.from(utils.bytes.utf8.encode(POSITION_SEED)),
-        owner.publicKey.toBuffer(),
-        indexBuffer
-      ],
+      [Buffer.from(utils.bytes.utf8.encode(POSITION_SEED)), owner.toBuffer(), indexBuffer],
       this.program.programId
     )
 
@@ -209,7 +205,7 @@ export class Market {
     }
   }
 
-  async createTickInstruction(pair: Pair, index: number, payer: Keypair) {
+  async createTickInstruction(pair: Pair, index: number, payer: PublicKey) {
     const state = await this.get(pair)
 
     const { tickAddress, tickBump } = await this.getTickAddress(pair, index)
@@ -219,7 +215,7 @@ export class Market {
         tick: tickAddress,
         pool: await pair.getAddress(this.program.programId),
         tickmap: state.tickmap,
-        payer: payer.publicKey,
+        payer,
         tokenX: state.tokenX,
         tokenY: state.tokenY,
         rent: SYSVAR_RENT_PUBKEY,
@@ -229,7 +225,7 @@ export class Market {
   }
 
   async createTick(pair: Pair, index: number, payer: Keypair) {
-    const lowerIx = await this.createTickInstruction(pair, index, payer)
+    const lowerIx = await this.createTickInstruction(pair, index, payer.publicKey)
     await signAndSend(new Transaction().add(lowerIx), [payer], this.connection)
   }
 
@@ -267,7 +263,7 @@ export class Market {
     const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTick)
     const { tickAddress: upperTickAddress } = await this.getTickAddress(pair, upperTick)
     const { positionAddress, positionBump } = await this.getPositionAddress(owner, index)
-    const { positionListAddress } = await this.getPositionListAddress(owner.publicKey)
+    const { positionListAddress } = await this.getPositionListAddress(owner)
     const poolAddress = await pair.getAddress(this.program.programId)
 
     return this.program.instruction.initPosition(
@@ -281,7 +277,7 @@ export class Market {
           pool: poolAddress,
           positionList: positionListAddress,
           position: positionAddress,
-          owner: owner.publicKey,
+          owner,
           lowerTick: lowerTickAddress,
           upperTick: upperTickAddress,
           tokenX: pair.tokenX,
@@ -321,7 +317,7 @@ export class Market {
     )
 
     return (await this.program.instruction.withdraw(
-      positionBump,
+      // positionBump,
       index,
       position.lowerTickIndex,
       position.upperTickIndex,
@@ -330,7 +326,7 @@ export class Market {
         accounts: {
           pool: await pair.getAddress(this.program.programId),
           position: positionAddress,
-          owner: owner.publicKey,
+          owner,
           lowerTick: lowerTickAddress,
           upperTick: upperTickAddress,
           tokenX: pair.tokenX,
@@ -346,29 +342,31 @@ export class Market {
     )) as TransactionInstruction
   }
 
-  async initPosition(initPosition: InitPosition, signer: Keypair) {
+  async initPositionTx(initPosition: InitPosition) {
     const { owner, userTokenX, userTokenY } = initPosition
 
     const approveXIx = await this.getApproveInstruction(
       initPosition.pair,
-      owner.publicKey,
+      owner,
       userTokenX,
       new BN(1e14)
     )
     const approveYIx = await this.getApproveInstruction(
       initPosition.pair,
-      owner.publicKey,
+      owner,
       userTokenY,
       new BN(1e14)
     )
 
     const initPositionIx = await this.initPositionInstruction(initPosition)
+    return new Transaction().add(approveXIx).add(approveYIx).add(initPositionIx)
+  }
 
-    await signAndSend(
-      new Transaction().add(approveXIx).add(approveYIx).add(initPositionIx),
-      [signer],
-      this.connection
-    )
+  async initPosition(initPosition: InitPosition, signer: Keypair) {
+    const { owner, userTokenX, userTokenY } = initPosition
+
+    const tx = await this.initPositionTx(initPosition)
+    await signAndSend(tx, [signer], this.connection)
   }
 
   async withdraw(
@@ -376,18 +374,8 @@ export class Market {
     signer: Keypair
   ) {
     const state = await this.get(pair)
-    const approveXIx = await this.getApproveInstruction(
-      pair,
-      owner.publicKey,
-      userTokenX,
-      new BN(1e14)
-    )
-    const approveYIx = await this.getApproveInstruction(
-      pair,
-      owner.publicKey,
-      userTokenY,
-      new BN(1e14)
-    )
+    const approveXIx = await this.getApproveInstruction(pair, owner, userTokenX, new BN(1e14))
+    const approveYIx = await this.getApproveInstruction(pair, owner, userTokenY, new BN(1e14))
 
     const withdrawPositionIx = await this.withdrawInstruction({
       pair,
@@ -559,7 +547,7 @@ export enum Errors {
 
 export interface InitPosition {
   pair: Pair
-  owner: Keypair
+  owner: PublicKey
   userTokenX: PublicKey
   userTokenY: PublicKey
   index: number
@@ -570,7 +558,7 @@ export interface InitPosition {
 
 export interface ModifyPosition {
   pair: Pair
-  owner: Keypair
+  owner: PublicKey
   userTokenX: PublicKey
   userTokenY: PublicKey
   index: number

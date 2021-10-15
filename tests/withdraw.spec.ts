@@ -48,7 +48,7 @@ describe('swap', () => {
 
     const swaplineProgram = anchor.workspace.Amm as Program
     const [_programAuthority, _nonce] = await anchor.web3.PublicKey.findProgramAddress(
-      [SEED],
+      [Buffer.from(SEED)],
       swaplineProgram.programId
     )
     nonce = _nonce
@@ -91,14 +91,14 @@ describe('swap', () => {
     assert.ok(tickmapData.bitmap.every((v) => v == 0))
   })
 
-  it('#swap() within a tick', async () => {
+  it('#withdraw', async () => {
     // Deposit
     const upperTick = 10
-    const upperIx = await market.createTickInstruction(pair, upperTick, wallet)
+    const upperIx = await market.createTickInstruction(pair, upperTick, wallet.publicKey)
     await signAndSend(new Transaction().add(upperIx), [wallet], connection)
 
     const lowerTick = -20
-    const lowerIx = await market.createTickInstruction(pair, lowerTick, wallet)
+    const lowerIx = await market.createTickInstruction(pair, lowerTick, wallet.publicKey)
     await signAndSend(new Transaction().add(lowerIx), [wallet], connection)
 
     const positionOwner = Keypair.generate()
@@ -111,10 +111,11 @@ describe('swap', () => {
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
     const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) }
 
+    await market.createPositionList(positionOwner)
     await market.initPosition(
       {
         pair,
-        owner: positionOwner,
+        owner: positionOwner.publicKey,
         userTokenX: userTokenXAccount,
         userTokenY: userTokenYAccount,
         index: 0,
@@ -174,7 +175,7 @@ describe('swap', () => {
       {
         pair,
 
-        owner: positionOwner,
+        owner: positionOwner.publicKey,
         userTokenX: userTokenXAccount,
         userTokenY: userTokenYAccount,
         index: 0,
@@ -197,7 +198,7 @@ describe('swap', () => {
     assert.ok(reservesBeforeWithdraw.y.sub(reservesAfterWithdraw.y).eq(expectedWithdrawnY))
 
     // Check position
-    const positionAfterWithdraw = await market.getPosition(positionOwner, 0)
+    const positionAfterWithdraw = await market.getPosition(positionOwner.publicKey, 0)
     assert.ok(positionAfterWithdraw.liquidity.v.eqn(0))
     assert.ok(positionAfterWithdraw.tokensOwedX.v.eq(new BN(5400000000000)))
     assert.ok(positionAfterWithdraw.tokensOwedY.v.eqn(0))
