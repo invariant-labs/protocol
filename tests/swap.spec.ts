@@ -144,7 +144,16 @@ describe('swap', () => {
     const reserveXBefore = (await tokenX.getAccountInfo(poolDataBefore.tokenXReserve)).amount
     const reserveYBefore = (await tokenY.getAccountInfo(poolDataBefore.tokenYReserve)).amount
 
-    await market.swap(pair, true, amount, targetPrice, accountX, accountY, owner)
+    const tx = await market.swapTransaction(
+      pair,
+      true,
+      amount,
+      targetPrice,
+      accountX,
+      accountY,
+      owner.publicKey
+    )
+    await signAndSend(tx, [owner], connection)
 
     // Check pool
     const poolData = await market.get(pair)
