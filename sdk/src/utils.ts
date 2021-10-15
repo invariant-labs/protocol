@@ -8,7 +8,7 @@ import {
   Transaction
 } from '@solana/web3.js'
 
-export const SEED = Buffer.from('Swapline')
+export const SEED = 'Swapline'
 export const DENOMINATOR = new BN(10).pow(new BN(12))
 
 export const signAndSend = async (
