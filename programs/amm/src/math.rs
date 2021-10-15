@@ -1,0 +1,673 @@
+use crate::uint::U256;
+use std::ops::Div;
+
+use crate::decimal::{Decimal, MulUp};
+use crate::tickmap::MAX_TICK;
+
+#[derive(PartialEq, Debug)]
+pub struct SwapResult {
+    pub next_price_sqrt: Decimal,
+    pub amount_in: Decimal,
+    pub amount_out: Decimal,
+    pub fee_amount: Decimal,
+}
+
+pub fn calculate_price_sqrt(tick_index: i32) -> Decimal {
+    // checking if tick be converted to price (overflows if more)
+    let tick = tick_index.abs();
+    assert!(tick <= MAX_TICK, "tick over bounds");
+
+    let mut price = Decimal::one();
+
+    if tick & 0x1 != 0 {
+        price = price * Decimal::new(1000049998750);
+    }
+    if tick & 0x2 != 0 {
+        price = price * Decimal::new(1000100000000);
+    }
+    if tick & 0x4 != 0 {
+        price = price * Decimal::new(1000200010000);
+    }
+    if tick & 0x8 != 0 {
+        price = price * Decimal::new(1000400060004);
+    }
+    if tick & 0x10 != 0 {
+        price = price * Decimal::new(1000800280056);
+    }
+    if tick & 0x20 != 0 {
+        price = price * Decimal::new(1001601200560);
+    }
+    if tick & 0x40 != 0 {
+        price = price * Decimal::new(1003204964963);
+    }
+    if tick & 0x80 != 0 {
+        price = price * Decimal::new(1006420201726);
+    }
+    if tick & 0x100 != 0 {
+        price = price * Decimal::new(1012881622442);
+    }
+    if tick & 0x200 != 0 {
+        price = price * Decimal::new(1025929181080);
+    }
+    if tick & 0x400 != 0 {
+        price = price * Decimal::new(1052530684591);
+    }
+    if tick & 0x800 != 0 {
+        price = price * Decimal::new(1107820842005);
+    }
+    if tick & 0x1000 != 0 {
+        price = price * Decimal::new(1227267017980);
+    }
+    if tick & 0x2000 != 0 {
+        price = price * Decimal::new(1506184333421);
+    }
+    if tick & 0x4000 != 0 {
+        price = price * Decimal::new(2268591246242);
+    }
+    if tick & 0x8000 != 0 {
+        price = price * Decimal::new(5146506242525);
+    }
+    if tick & 0x10_000 != 0 {
+        price = price * Decimal::new(26486526504348);
+    }
+    if tick & 0x20_000 != 0 {
+        price = price * Decimal::new(701536086265529);
+    }
+
+    if tick_index < 0 {
+        price = Decimal::new(
+            U256::from(Decimal::one().v)
+                .checked_mul(U256::from(Decimal::one().v))
+                .unwrap()
+                .checked_div(U256::from(price.v))
+                .unwrap()
+                .as_u128(),
+        );
+    }
+
+    price
+}
+
+pub fn compute_swap_step(
+    current_price_sqrt: Decimal,
+    target_price_sqrt: Decimal,
+    liquidity: Decimal,
+    amount: Decimal,
+    by_amount_in: bool,
+    fee: Decimal,
+) -> SwapResult {
+    let a_to_b = current_price_sqrt >= target_price_sqrt;
+    let exact_in = by_amount_in;
+
+    let next_price_sqrt;
+    let mut amount_in = Decimal::new(0);
+    let mut amount_out = Decimal::new(0);
+    let fee_amount;
+
+    if exact_in {
+        let amount_after_fee = amount * (Decimal::one() - fee);
+
+        amount_in = if a_to_b {
+            get_delta_x(target_price_sqrt, current_price_sqrt, liquidity, true)
+        } else {
+            get_delta_y(current_price_sqrt, target_price_sqrt, liquidity, true)
+        };
+
+        // if target price was hit it will be the next price
+        if amount_after_fee >= amount_in {
+            next_price_sqrt = target_price_sqrt
+        } else {
+            next_price_sqrt = get_next_sqrt_price_from_input(
+                current_price_sqrt,
+                liquidity,
+                amount_after_fee,
+                a_to_b,
+            )
+        };
+    } else {
+        amount_out = if a_to_b {
+            get_delta_y(target_price_sqrt, current_price_sqrt, liquidity, false)
+        } else {
+            get_delta_x(current_price_sqrt, target_price_sqrt, liquidity, false)
+        };
+
+        if amount >= amount_out {
+            next_price_sqrt = target_price_sqrt
+        } else {
+            next_price_sqrt =
+                get_next_sqrt_price_from_output(current_price_sqrt, liquidity, amount, a_to_b)
+        }
+    }
+
+    let max = target_price_sqrt == next_price_sqrt;
+
+    if a_to_b {
+        amount_in = if max && exact_in {
+            amount_in
+        } else {
+            get_delta_x(next_price_sqrt, current_price_sqrt, liquidity, true)
+        };
+        amount_out = if max && !exact_in {
+            amount_out
+        } else {
+            get_delta_y(next_price_sqrt, current_price_sqrt, liquidity, false)
+        }
+    } else {
+        amount_in = if max && exact_in {
+            amount_in
+        } else {
+            get_delta_y(current_price_sqrt, next_price_sqrt, liquidity, true)
+        };
+        amount_out = if max && !exact_in {
+            amount_out
+        } else {
+            get_delta_x(current_price_sqrt, next_price_sqrt, liquidity, false)
+        }
+    }
+
+    // Amount out can not exceed amount
+    if !exact_in && amount_out > amount {
+        amount_out = amount;
+    }
+
+    if exact_in && next_price_sqrt != target_price_sqrt {
+        fee_amount = amount - amount_in
+    } else {
+        fee_amount = amount_in.mul_up(fee)
+    }
+    // fee_amount = Decimal::new(0);
+
+    SwapResult {
+        next_price_sqrt,
+        amount_in,
+        amount_out,
+        fee_amount,
+    }
+}
+
+// delta x = (L * delta_sqrt_price) / (lower_sqrt_price * higher_sqrt_price)
+pub fn get_delta_x(
+    sqrt_price_a: Decimal,
+    sqrt_price_b: Decimal,
+    liquidity: Decimal,
+    up: bool,
+) -> Decimal {
+    let delta_price = if sqrt_price_a > sqrt_price_b {
+        sqrt_price_a - sqrt_price_b
+    } else {
+        sqrt_price_b - sqrt_price_a
+    };
+
+    let nominator = liquidity * delta_price;
+
+    match up {
+        true => nominator.div_up(sqrt_price_a * sqrt_price_b),
+        false => nominator / (sqrt_price_a.mul_up(sqrt_price_b)),
+    }
+}
+
+// delta y = L * delta_sqrt_price
+pub fn get_delta_y(
+    sqrt_price_a: Decimal,
+    sqrt_price_b: Decimal,
+    liquidity: Decimal,
+    up: bool,
+) -> Decimal {
+    let delta_price = if sqrt_price_a > sqrt_price_b {
+        sqrt_price_a - sqrt_price_b
+    } else {
+        sqrt_price_b - sqrt_price_a
+    };
+
+    match up {
+        true => liquidity.mul_up(delta_price),
+        false => liquidity * delta_price,
+    }
+}
+
+fn get_next_sqrt_price_from_input(
+    price_sqrt: Decimal,
+    liquidity: Decimal,
+    amount: Decimal,
+    a_to_b: bool,
+) -> Decimal {
+    assert!(price_sqrt > Decimal::new(0));
+    assert!(liquidity > Decimal::new(0));
+
+    if a_to_b {
+        get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true)
+    } else {
+        get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true)
+    }
+}
+
+fn get_next_sqrt_price_from_output(
+    price_sqrt: Decimal,
+    liquidity: Decimal,
+    amount: Decimal,
+    a_to_b: bool,
+) -> Decimal {
+    assert!(price_sqrt > Decimal::new(0));
+    assert!(liquidity > Decimal::new(0));
+
+    if a_to_b {
+        get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, false)
+    } else {
+        get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false)
+    }
+}
+
+// tries to do L * price / (L +- amount * price)
+// if overflows it should do L / (L / price +- amount)
+fn get_next_sqrt_price_x_up(
+    price_sqrt: Decimal,
+    liquidity: Decimal,
+    amount: Decimal,
+    add: bool,
+) -> Decimal {
+    if amount == Decimal::new(0) {
+        return price_sqrt;
+    };
+
+    // This can be simplified but I don't want to do it without tests
+
+    let product = amount * price_sqrt;
+    if add {
+        if product / amount == price_sqrt {
+            let denominator = liquidity + product;
+
+            if denominator >= liquidity {
+                return liquidity.mul_up(price_sqrt).div_up(denominator);
+            }
+        }
+        return liquidity.div_up((liquidity / price_sqrt) + amount);
+    } else {
+        // Overflow check, not sure if needed yet
+        assert!(product / amount == price_sqrt && liquidity > product);
+        return liquidity.mul_up(price_sqrt).div_up(liquidity - product);
+    }
+}
+
+// price +- (amount / L)
+fn get_next_sqrt_price_y_down(
+    price_sqrt: Decimal,
+    liquidity: Decimal,
+    amount: Decimal,
+    add: bool,
+) -> Decimal {
+    if add {
+        price_sqrt + (amount / liquidity)
+    } else {
+        let quotient = amount.div_up(liquidity);
+        assert!(price_sqrt > quotient);
+        price_sqrt - quotient
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_swap_step() {
+        // amount in capped at target price
+        {
+            let price = Decimal::one();
+            let target = (Decimal::from_integer(101) / Decimal::from_integer(100)).sqrt();
+            let liquidity = Decimal::from_integer(2);
+            let amount = Decimal::one();
+            let fee = Decimal::from_decimal(6, 4);
+
+            let result = compute_swap_step(price, target, liquidity, amount, true, fee);
+            let expected_result = SwapResult {
+                next_price_sqrt: target,
+                amount_in: Decimal::new(9975124224),
+                amount_out: Decimal::new(9925619579),
+                fee_amount: Decimal::new(5985075),
+            };
+            assert_eq!(result, expected_result)
+        }
+        // amount out capped at target price
+        {
+            let price = Decimal::one();
+            let target = (Decimal::from_integer(101) / Decimal::from_integer(100)).sqrt();
+            let liquidity = Decimal::from_integer(2);
+            let amount = Decimal::one();
+            let fee = Decimal::from_decimal(6, 4);
+
+            let result = compute_swap_step(price, target, liquidity, amount, false, fee);
+            let expected_result = SwapResult {
+                next_price_sqrt: target,
+                amount_in: Decimal::new(9975124224),
+                amount_out: Decimal::new(9925619579),
+                fee_amount: Decimal::new(5985075),
+            };
+            assert_eq!(result, expected_result)
+        }
+        // amount in not capped
+        {
+            let price = Decimal::one();
+            let target = Decimal::from_integer(10).sqrt();
+            let liquidity = Decimal::from_integer(2);
+            let amount = Decimal::one();
+            let fee = Decimal::from_decimal(6, 4);
+
+            let result = compute_swap_step(price, target, liquidity, amount, true, fee);
+            let expected_result = SwapResult {
+                next_price_sqrt: Decimal::new(1499700000000),
+                amount_in: Decimal::new(999400000000),
+                amount_out: Decimal::new(666399946655),
+                fee_amount: Decimal::new(600000000),
+            };
+            assert_eq!(result, expected_result)
+        }
+        // amount out not capped
+        {
+            let price = Decimal::one();
+            let target = Decimal::from_integer(10).sqrt();
+            let liquidity = Decimal::from_integer(2);
+            let amount = Decimal::one();
+            let fee = Decimal::from_decimal(6, 4);
+
+            let result = compute_swap_step(price, target, liquidity, amount, false, fee);
+            let expected_result = SwapResult {
+                next_price_sqrt: Decimal::new(2000000000000),
+                amount_in: Decimal::new(2000000000000),
+                amount_out: Decimal::one(),
+                fee_amount: Decimal::new(1200000000),
+            };
+            assert_eq!(result, expected_result)
+        }
+        // next tests
+        {
+            let price = Decimal::new(20282409603651);
+            let target = (Decimal::from_integer(101) / Decimal::from_integer(100)).sqrt();
+            let liquidity = Decimal::new(1024);
+            let amount = Decimal::from_integer(4);
+            let fee = Decimal::from_decimal(3, 3);
+
+            let result = compute_swap_step(price, target, liquidity, amount, false, fee);
+            let expected_result = SwapResult {
+                next_price_sqrt: Decimal::new(1004987562112),
+                amount_in: Decimal::new(969),
+                amount_out: Decimal::new(19740),
+                fee_amount: Decimal::new(3),
+            };
+            assert_eq!(result, expected_result)
+        }
+    }
+
+    #[test]
+    fn test_get_delta_x() {
+        // zero at zero liquidity
+        {
+            let result = get_delta_x(
+                Decimal::from_integer(1),
+                Decimal::from_integer(1),
+                Decimal::new(0),
+                false,
+            );
+            assert_eq!(result, Decimal::new(0));
+        }
+        // equal at equal liquidity
+        {
+            let result = get_delta_x(
+                Decimal::from_integer(1),
+                Decimal::from_integer(2),
+                Decimal::from_integer(2),
+                false,
+            );
+            assert_eq!(result, Decimal::from_integer(1));
+        }
+        {
+            let sqrt_price_a = Decimal::from_integer(1);
+            let sqrt_price_b = Decimal::from_integer(121) / Decimal::from_integer(100);
+            let liquidity = Decimal::one();
+            let round_up = false;
+
+            let result = get_delta_x(sqrt_price_a, sqrt_price_b, liquidity, round_up);
+
+            assert_eq!(result, Decimal::new(173553719008));
+        }
+    }
+
+    #[test]
+    fn test_get_delta_y() {
+        // zero at zero liquidity
+        {
+            let result = get_delta_y(
+                Decimal::from_integer(1),
+                Decimal::from_integer(1),
+                Decimal::new(0),
+                false,
+            );
+            assert_eq!(result, Decimal::new(0));
+        }
+        // equal at equal liquidity
+        {
+            let result = get_delta_y(
+                Decimal::from_integer(1),
+                Decimal::from_integer(2),
+                Decimal::from_integer(2),
+                false,
+            );
+            assert_eq!(result, Decimal::from_integer(2));
+        }
+        // big numbers
+        {
+            let result = get_delta_y(
+                Decimal::new(345_234_676_865),
+                Decimal::new(854_456_421_658),
+                Decimal::new(974_234_124_246),
+                false,
+            );
+            // expected 496101200585 (if up: true, then real is 496101200586)
+            // real     496101200585.428...
+            assert_eq!(result, Decimal::new(496101200585));
+        }
+    }
+
+    #[test]
+    fn test_calculate_price_sqrt() {
+        {
+            let result = calculate_price_sqrt(0);
+            assert_eq!(result, Decimal::one());
+        }
+        {
+            // // test every single tick, takes a while
+            // let mut prev = Decimal::new(u128::MAX.into());
+            // for i in (((-MAX_TICK / 2) + 1)..(MAX_TICK / 2)).rev() {
+            //     let result = calculate_price_sqrt(i * 2);
+            //     assert!(result != Decimal::new(0));
+            //     assert_eq!(result, Decimal::from_decimal(10001, 4).pow(i.into()));
+            //     assert!(result < prev);
+            //     prev = result;
+            // }
+        }
+        {
+            let price_sqrt = calculate_price_sqrt(20_000);
+            // expected 2.718145925979
+            // real     2.718145926825...
+            assert_eq!(price_sqrt, Decimal::new(2718145925979));
+        }
+        {
+            let price_sqrt = calculate_price_sqrt(200_000);
+            // expected 22015.455979766288
+            // real     22015.456048527954...
+            assert_eq!(price_sqrt, Decimal::new(22015455979766288))
+        }
+        {
+            let price_sqrt = calculate_price_sqrt(-20_000);
+            // expected 0.367897834491
+            // real     0.36789783437712...
+            assert_eq!(price_sqrt, Decimal::new(367897834491));
+        }
+        {
+            let price_sqrt = calculate_price_sqrt(-200_000);
+            // expected 0.000045422634
+            // real     0.00004542263388...
+            assert_eq!(price_sqrt, Decimal::new(45422634))
+        }
+    }
+
+    #[test]
+    fn test_get_next_sqrt_price_x_up() {
+        // bool = true
+        {
+            let price_sqrt = Decimal::from_integer(1);
+            let liquidity = Decimal::from_integer(1);
+            let amount = Decimal::from_integer(1);
+
+            let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
+
+            assert_eq!(
+                result,
+                Decimal::from_integer(1).div(Decimal::from_integer(2))
+            );
+        }
+        {
+            let price_sqrt = Decimal::from_integer(1);
+            let liquidity = Decimal::from_integer(2);
+            let amount = Decimal::from_integer(3);
+
+            let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
+
+            assert_eq!(
+                result,
+                Decimal::from_integer(2).div(Decimal::from_integer(5))
+            );
+        }
+        {
+            let price_sqrt = Decimal::from_integer(2);
+            let liquidity = Decimal::from_integer(3);
+            let amount = Decimal::from_integer(5);
+
+            let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
+
+            assert_eq!(
+                result,
+                Decimal::new(461538461539) // rounded up Decimal::from_integer(6).div(Decimal::from_integer(13))
+            );
+        }
+        {
+            let price_sqrt = Decimal::from_integer(24234);
+            let liquidity = Decimal::from_integer(3000);
+            let amount = Decimal::from_integer(5000);
+
+            let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
+
+            assert_eq!(
+                result,
+                Decimal::new(599985145206) // rounded up Decimal::from_integer(24234).div(Decimal::from_integer(40391))
+            );
+        }
+        // bool = false
+        {
+            let price_sqrt = Decimal::from_integer(1);
+            let liquidity = Decimal::from_integer(2);
+            let amount = Decimal::from_integer(1);
+
+            let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
+
+            assert_eq!(result, Decimal::from_integer(2));
+        }
+        {
+            let price_sqrt = Decimal::from_integer(100_000);
+            let liquidity = Decimal::from_integer(500_000_000);
+            let amount = Decimal::from_integer(4_000);
+
+            let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
+
+            assert_eq!(result, Decimal::from_integer(500_000));
+        }
+        {
+            let price_sqrt = Decimal::from_integer(3);
+            let liquidity = Decimal::new(222);
+            let amount = Decimal::new(37);
+
+            let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
+            assert_eq!(result, Decimal::from_integer(6));
+        }
+    }
+
+    #[test]
+    fn test_get_next_sqrt_price_y_down() {
+        {
+            let price_sqrt = Decimal::from_integer(1);
+            let liquidity = Decimal::from_integer(1);
+            let amount = Decimal::from_integer(1);
+
+            let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true);
+
+            assert_eq!(result, Decimal::from_integer(2));
+        }
+        {
+            let price_sqrt = Decimal::from_integer(1);
+            let liquidity = Decimal::from_integer(2);
+            let amount = Decimal::from_integer(3);
+
+            let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true);
+
+            assert_eq!(
+                result,
+                Decimal::from_integer(5).div(Decimal::from_integer(2))
+            );
+        }
+        {
+            let price_sqrt = Decimal::from_integer(2);
+            let liquidity = Decimal::from_integer(3);
+            let amount = Decimal::from_integer(5);
+
+            let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true);
+
+            assert_eq!(
+                result,
+                Decimal::from_integer(11).div(Decimal::from_integer(3))
+            );
+        }
+        {
+            let price_sqrt = Decimal::from_integer(24234);
+            let liquidity = Decimal::from_integer(3000);
+            let amount = Decimal::from_integer(5000);
+
+            let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true);
+
+            assert_eq!(
+                result,
+                Decimal::from_integer(72707).div(Decimal::from_integer(3))
+            );
+        }
+        // bool = false
+        {
+            let price_sqrt = Decimal::from_integer(1);
+            let liquidity = Decimal::from_integer(2);
+            let amount = Decimal::from_integer(1);
+
+            let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, false);
+
+            assert_eq!(
+                result,
+                Decimal::from_integer(1).div(Decimal::from_integer(2))
+            );
+        }
+        {
+            let price_sqrt = Decimal::from_integer(100_000);
+            let liquidity = Decimal::from_integer(500_000_000);
+            let amount = Decimal::from_integer(4_000);
+
+            let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, false);
+            assert_eq!(result, Decimal::new(99999999992000000));
+        }
+        {
+            let price_sqrt = Decimal::from_integer(3);
+            let liquidity = Decimal::new(222);
+            let amount = Decimal::new(37);
+
+            let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, false);
+
+            // expected 2.833333333333
+            // real     2.999999999999833...
+            assert_eq!(result, Decimal::new(2833333333333));
+        }
+    }
+}
