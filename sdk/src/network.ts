@@ -17,9 +17,8 @@ export const getMarketAddress = (network: Network) => {
   }
 }
 
-const USDC = new PublicKey('35P5P6ZGKUN6wqxrX4VdLRrGbzkrfvhyNs4iqk1vDxAx')
-const USDT = new PublicKey('CYPdUAp8KshzJ2a45kzgy3fr4UTiyrEGE998rA7wzFR6')
-const SOL = new PublicKey('23AQ2kRxqT1fk47q6G8YcKrpx4VhWeUvKHuRijT61qSD')
-
-export const USDC_USDT = new Pair(USDC, USDT)
-export const SOL_USDC = new Pair(USDC, SOL)
+export const MOCK_TOKENS = {
+  USDC: '35P5P6ZGKUN6wqxrX4VdLRrGbzkrfvhyNs4iqk1vDxAx',
+  USDT: 'CYPdUAp8KshzJ2a45kzgy3fr4UTiyrEGE998rA7wzFR6',
+  SOL: '23AQ2kRxqT1fk47q6G8YcKrpx4VhWeUvKHuRijT61qSD'
+}
