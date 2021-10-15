@@ -39,7 +39,7 @@ describe('swap', () => {
 
     const swaplineProgram = anchor.workspace.Amm as Program
     const [_programAuthority, _nonce] = await anchor.web3.PublicKey.findProgramAddress(
-      [SEED],
+      [Buffer.from(SEED)],
       swaplineProgram.programId
     )
     nonce = _nonce
@@ -106,7 +106,7 @@ describe('swap', () => {
     await market.initPosition(
       {
         pair,
-        owner: positionOwner,
+        owner: positionOwner.publicKey,
         userTokenX: userTokenXAccount,
         userTokenY: userTokenYAccount,
         index: 0,
@@ -120,7 +120,7 @@ describe('swap', () => {
     await market.initPosition(
       {
         pair,
-        owner: positionOwner,
+        owner: positionOwner.publicKey,
         userTokenX: userTokenXAccount,
         userTokenY: userTokenYAccount,
         index: 1,
