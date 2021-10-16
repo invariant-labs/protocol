@@ -117,6 +117,20 @@ export class Market {
     return (await this.program.account.pool.fetch(address)) as PoolStructure
   }
 
+  public async onPoolChange(
+    tokenX: PublicKey,
+    tokenY: PublicKey,
+    fn: (poolStructure: PoolStructure) => void
+  ) {
+    const poolAddress = await new Pair(tokenX, tokenY).getAddress(this.program.programId)
+
+    this.program.account.pool
+      .subscribe(poolAddress, 'singleGossip')
+      .on('change', (poolStructure: PoolStructure) => {
+        fn(poolStructure)
+      })
+  }
+
   async getTickmap(pair: Pair) {
     const state = await this.get(pair)
     const tickmap = (await this.program.account.tickmap.fetch(state.tickmap)) as Tickmap
