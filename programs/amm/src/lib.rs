@@ -340,6 +340,32 @@ pub mod amm {
         Ok(())
     }
 
+    pub fn remove_position(ctx: Context<RemovePosition>) -> ProgramResult {
+        let mut position_list = ctx.accounts.position_list.load_mut()?;
+        let mut last_position = ctx.accounts.last_position.load_mut()?;
+        let mut removed_position = ctx.accounts.last_position.load_mut()?;
+
+        position_list.head -= 1;
+
+        // t
+
+        // reassign all fields in position
+        {
+            removed_position.owner = last_position.owner;
+            removed_position.pool = last_position.pool;
+            removed_position.liquidity = last_position.liquidity;
+            removed_position.lower_tick_index = last_position.lower_tick_index;
+            removed_position.upper_tick_index = last_position.upper_tick_index;
+            removed_position.fee_growth_inside_x = last_position.fee_growth_inside_x;
+            removed_position.fee_growth_inside_y = last_position.fee_growth_inside_y;
+            removed_position.tokens_owed_x = last_position.tokens_owed_x;
+            removed_position.tokens_owed_y = last_position.tokens_owed_y;
+            removed_position.tokens_owed_y = last_position.tokens_owed_y;
+        }
+
+        Ok(())
+    }
+
     pub fn withdraw(
         ctx: Context<ModifyPosition>,
         index: u32,
