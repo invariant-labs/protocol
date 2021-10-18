@@ -348,6 +348,32 @@ export type Amm = {
       ]
     },
     {
+      "name": "removePosition",
+      "accounts": [
+        {
+          "name": "positionList",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "lastPosition",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "removedPosition",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "withdraw",
       "accounts": [
         {

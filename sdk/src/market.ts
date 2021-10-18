@@ -514,6 +514,24 @@ export class Market {
 
     return { x: accounts[0].amount, y: accounts[1].amount }
   }
+
+  async removePositionInstruction(
+    owner: PublicKey,
+    index: number
+  ): Promise<TransactionInstruction> {
+    const { positionListAddress } = await this.getPositionListAddress(owner)
+    const { positionAddress: lastPositionAddress } = await this.getPositionAddress(owner, index)
+    const { positionAddress: removedPosition } = await this.getPositionAddress(owner, index)
+
+    return this.program.instruction.removePosition(index, {
+      accounts: {
+        owner,
+        removedPosition,
+        positionList: positionListAddress,
+        lastPosition: lastPositionAddress
+      }
+    }) as TransactionInstruction
+  }
 }
 export interface Decimal {
   v: BN

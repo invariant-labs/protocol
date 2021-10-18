@@ -164,7 +164,6 @@ pub struct RemovePosition<'info> {
         bump = last_position.load()?.bump
     )]
     pub last_position: Loader<'info, Position>,
-
     #[account(mut,
         seeds = [b"positionv1",
         owner.to_account_info().key.as_ref(),
@@ -172,8 +171,6 @@ pub struct RemovePosition<'info> {
         bump = removed_position.load()?.bump
     )]
     pub removed_position: Loader<'info, Position>,
-
-    // to remove position
     #[account(mut, signer)]
     pub owner: AccountInfo<'info>,
 }
