@@ -3,6 +3,7 @@ import { TokenInstructions } from '@project-serum/serum'
 import { Token } from '@solana/spl-token'
 import BN from 'bn.js'
 import { Decimal } from '../sdk/lib/pool'
+import { DECIMAL, FEE_DECIMAL } from '@invariant-labs/sdk/src/utils'
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {
@@ -45,4 +46,12 @@ export const createToken = async (
     TokenInstructions.TOKEN_PROGRAM_ID
   )
   return token
+}
+
+export const fromFee = (fee: number): Decimal => {
+  const PERCENT_NOMINATOR = 1000
+  const val = new BN(fee * PERCENT_NOMINATOR).mul(new BN(10).pow(new BN(DECIMAL - FEE_DECIMAL)))
+  return {
+    v: val
+  }
 }
