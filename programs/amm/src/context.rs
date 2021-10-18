@@ -149,6 +149,35 @@ pub struct CreatePositionList<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(index: i32)]
+pub struct RemovePosition<'info> {
+    #[account(mut,
+        seeds = [b"positionlistv1", owner.to_account_info().key.as_ref()],
+        bump = position_list.load()?.bump
+    )]
+    pub position_list: Loader<'info, PositionList>,
+    #[account(mut,
+        seeds = [b"positionv1",
+        owner.to_account_info().key.as_ref(),
+        &(position_list.load()?.head - 1).to_le_bytes()],
+        bump = last_position.load()?.bump
+    )]
+    pub last_position: Loader<'info, Position>,
+
+    #[account(mut,
+        seeds = [b"positionv1",
+        owner.to_account_info().key.as_ref(),
+        &index.to_le_bytes()],
+        bump = removed_position.load()?.bump
+    )]
+    pub removed_position: Loader<'info, Position>,
+
+    // to remove position
+    #[account(mut, signer)]
+    pub owner: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
 #[instruction(bump: u8, index: u32,lower_tick_index: i32, upper_tick_index: i32)]
 pub struct InitPosition<'info> {
     #[account(init,
