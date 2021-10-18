@@ -342,12 +342,10 @@ pub mod amm {
 
     pub fn remove_position(ctx: Context<RemovePosition>) -> ProgramResult {
         let mut position_list = ctx.accounts.position_list.load_mut()?;
-        let mut last_position = ctx.accounts.last_position.load_mut()?;
         let mut removed_position = ctx.accounts.last_position.load_mut()?;
+        let last_position = ctx.accounts.last_position.load()?;
 
         position_list.head -= 1;
-
-        // t
 
         // reassign all fields in position
         {
