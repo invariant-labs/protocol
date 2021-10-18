@@ -9,6 +9,8 @@ import {
 } from '@solana/web3.js'
 
 export const SEED = 'Swapline'
+export const DECIMAL = 12
+export const FEE_DECIMAL = 5
 export const DENOMINATOR = new BN(10).pow(new BN(12))
 
 export const signAndSend = async (
