@@ -328,10 +328,6 @@ export type Amm = {
           "type": "u8"
         },
         {
-          "name": "index",
-          "type": "u32"
-        },
-        {
           "name": "lowerTickIndex",
           "type": "i32"
         },

@@ -176,12 +176,12 @@ pub struct RemovePosition<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(bump: u8, index: u32,lower_tick_index: i32, upper_tick_index: i32)]
+#[instruction(bump: u8, lower_tick_index: i32, upper_tick_index: i32)]
 pub struct InitPosition<'info> {
     #[account(init,
         seeds = [b"positionv1",
         owner.to_account_info().key.as_ref(),
-        &index.to_le_bytes()],
+        &position_list.load()?.head.to_le_bytes()],
         bump = bump, payer = owner,
     )]
     pub position: Loader<'info, Position>,

@@ -124,7 +124,6 @@ describe('Position list', () => {
         owner: positionOwner.publicKey,
         userTokenX: userTokenXAccount,
         userTokenY: userTokenYAccount,
-        index: 0,
         lowerTick: ticksIndexes[0],
         upperTick: ticksIndexes[1],
         liquidityDelta: fromInteger(1)
@@ -138,7 +137,6 @@ describe('Position list', () => {
         owner: positionOwner.publicKey,
         userTokenX: userTokenXAccount,
         userTokenY: userTokenYAccount,
-        index: 1,
         lowerTick: ticksIndexes[0],
         upperTick: ticksIndexes[1],
         liquidityDelta: fromInteger(1)
@@ -151,7 +149,6 @@ describe('Position list', () => {
         owner: positionOwner.publicKey,
         userTokenX: userTokenXAccount,
         userTokenY: userTokenYAccount,
-        index: 2,
         lowerTick: ticksIndexes[0],
         upperTick: ticksIndexes[2],
         liquidityDelta: fromInteger(1)
@@ -164,7 +161,6 @@ describe('Position list', () => {
         owner: positionOwner.publicKey,
         userTokenX: userTokenXAccount,
         userTokenY: userTokenYAccount,
-        index: 3,
         lowerTick: ticksIndexes[1],
         upperTick: ticksIndexes[4],
         liquidityDelta: fromInteger(1)
@@ -218,7 +214,6 @@ describe('Position list', () => {
         owner: positionOwner.publicKey,
         userTokenX: userTokenXAccount,
         userTokenY: userTokenYAccount,
-        index: positionList.head,
         lowerTick: ticksIndexes[1],
         upperTick: ticksIndexes[2],
         liquidityDelta: fromInteger(1)

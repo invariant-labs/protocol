@@ -281,22 +281,25 @@ export class Market {
     owner,
     userTokenX,
     userTokenY,
-    index,
     lowerTick,
     upperTick,
     liquidityDelta
   }: InitPosition) {
     const state = await this.get(pair)
 
+    // maybe in the future index cloud be store at market
+    const positionList = await this.getPositionList(owner)
     const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTick)
     const { tickAddress: upperTickAddress } = await this.getTickAddress(pair, upperTick)
-    const { positionAddress, positionBump } = await this.getPositionAddress(owner, index)
+    const { positionAddress, positionBump } = await this.getPositionAddress(
+      owner,
+      positionList.head
+    )
     const { positionListAddress } = await this.getPositionListAddress(owner)
     const poolAddress = await pair.getAddress(this.program.programId)
 
     return this.program.instruction.initPosition(
       positionBump,
-      index,
       lowerTick,
       upperTick,
       liquidityDelta,
@@ -599,7 +602,6 @@ export interface InitPosition {
   owner: PublicKey
   userTokenX: PublicKey
   userTokenY: PublicKey
-  index: number
   lowerTick: number
   upperTick: number
   liquidityDelta: Decimal

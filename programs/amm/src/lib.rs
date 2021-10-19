@@ -253,7 +253,6 @@ pub mod amm {
     pub fn init_position(
         ctx: Context<InitPosition>,
         bump: u8,
-        index: u32,
         lower_tick_index: i32,
         upper_tick_index: i32,
         liquidity_delta: Decimal,
@@ -270,7 +269,6 @@ pub mod amm {
         check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
 
         // update position_list head
-        require!(position_list.head == index, InvalidPositionIndex);
         position_list.head += 1;
 
         // init position
