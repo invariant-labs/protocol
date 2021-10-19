@@ -96,10 +96,10 @@ describe('Position list', () => {
       })
     )
   })
-  // it('Remove from empty list should failed', async () => {
-  //   const ix = await market.removePositionInstruction(positionOwner.publicKey, 0)
-  //   assertThrowsAsync(signAndSend(new Transaction().add(ix), [positionOwner], connection))
-  // })
+  it('Remove from empty list should failed', async () => {
+    const ix = await market.removePositionInstruction(positionOwner.publicKey, 0)
+    assertThrowsAsync(signAndSend(new Transaction().add(ix), [positionOwner], connection))
+  })
   it('Add multiple position', async () => {
     const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
     const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)

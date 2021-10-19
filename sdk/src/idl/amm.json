@@ -367,11 +367,16 @@
         },
         {
           "name": "owner",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
     },
     {
       "name": "withdraw",

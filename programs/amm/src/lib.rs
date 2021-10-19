@@ -340,7 +340,7 @@ pub mod amm {
         Ok(())
     }
 
-    pub fn remove_position(ctx: Context<RemovePosition>) -> ProgramResult {
+    pub fn remove_position(ctx: Context<RemovePosition>, _: u32) -> ProgramResult {
         let mut position_list = ctx.accounts.position_list.load_mut()?;
         let mut removed_position = ctx.accounts.last_position.load_mut()?;
         let last_position = ctx.accounts.last_position.load()?;
