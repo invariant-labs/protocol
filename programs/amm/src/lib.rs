@@ -342,13 +342,13 @@ pub mod amm {
         msg!("REMOVE POSITION");
 
         let mut position_list = ctx.accounts.position_list.load_mut()?;
-        let mut removed_position = ctx.accounts.removed_position.load_mut()?;
-        let last_position = ctx.accounts.last_position.load()?;
-
         position_list.head -= 1;
 
-        // reassign all fields in position
-        {
+        // when removed position is not the last one
+        if position_list.head != index {
+            let mut removed_position = ctx.accounts.removed_position.load_mut()?;
+            let last_position = ctx.accounts.last_position.load_mut()?;
+            // reassign all fields in position
             removed_position.owner = last_position.owner;
             removed_position.pool = last_position.pool;
             removed_position.liquidity = last_position.liquidity;

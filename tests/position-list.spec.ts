@@ -19,12 +19,6 @@ import { MAX_TICK } from '@invariant-labs/sdk/lib/math'
 import { MIN_TICK } from '@invariant-labs/sdk/lib/math'
 import { assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
 
-// MULTI ADD
-// REMOVE LAST POSITION
-// REMOVE FROM MIDDLE
-// REMOVE PREVIOUS ADDED POSITION
-// ONLY OWNER CAN MODIFY POSITION LIST
-
 describe('Position list', () => {
   const provider = Provider.local()
   const connection = provider.connection
@@ -109,9 +103,6 @@ describe('Position list', () => {
     assertThrowsAsync(signAndSend(new Transaction().add(ix), [positionOwner], connection))
   })
   it('Add multiple position', async () => {
-    // const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
-    // const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
-
     xOwnerAmount = tou64(1e10)
     yOwnerAmount = tou64(1e10)
 
@@ -205,9 +196,8 @@ describe('Position list', () => {
     assert.ok(eqDecimal(lastPosition.tokensOwedX, testedPosition.tokensOwedX))
     assert.ok(eqDecimal(lastPosition.tokensOwedY, testedPosition.tokensOwedY))
   })
-  it('Add position to previous removed position', async () => {
-    const positionList = await market.getPositionList(positionOwner.publicKey)
-
+  it('Add position in place of the removed one', async () => {
+    const positionListBefore = await market.getPositionList(positionOwner.publicKey)
     await market.initPosition(
       {
         pair,
@@ -220,7 +210,59 @@ describe('Position list', () => {
       },
       positionOwner
     )
+    const positionListAfter = await market.getPositionList(positionOwner.publicKey)
+
+    assert.equal(positionListBefore.head + 1, positionListAfter.head)
   })
+  it('Remove last position', async () => {
+    const lastPositionIndexBefore = (await market.getPositionList(positionOwner.publicKey)).head - 1
+    const ix = await market.removePositionInstruction(
+      positionOwner.publicKey,
+      lastPositionIndexBefore
+    )
+    await signAndSend(new Transaction().add(ix), [positionOwner], connection)
+
+    const lastPositionIndexAfter = (await market.getPositionList(positionOwner.publicKey)).head - 1
+    assert.equal(lastPositionIndexBefore - 1, lastPositionIndexAfter)
+  })
+  it('Only owner can modify position list', async () => {
+    const positionListBefore = await market.getPositionList(positionOwner.publicKey)
+    const ix = await market.initPositionInstruction({
+      pair,
+      owner: positionOwner.publicKey,
+      userTokenX: userTokenXAccount,
+      userTokenY: userTokenYAccount,
+      lowerTick: ticksIndexes[0],
+      upperTick: ticksIndexes[3],
+      liquidityDelta: fromInteger(1)
+    })
+
+    signAndSend(new Transaction().add(ix), [wallet], connection)
+
+    const positionListAfter = await market.getPositionList(positionOwner.publicKey)
+    assert.equal(positionListBefore.head, positionListAfter.head)
+  })
+  // it('remove all positions', async () => {
+  // const positionListBefore = await market.getPositionList(positionOwner.publicKey)
+  // console.log(`head: ${positionListBefore.head}`)
+  // const ix = await market.removePositionInstruction(positionOwner.publicKey, 0)
+  // await signAndSend(new Transaction().add(ix), [positionOwner], connection)
+
+  // const ix2 = await market.removePositionInstruction(positionOwner.publicKey, 2)
+  // await signAndSend(new Transaction().add(ix2), [positionOwner], connection)
+
+  // const ix1 = await market.removePositionInstruction(positionOwner.publicKey, 1)
+  // await signAndSend(new Transaction().add(ix1), [positionOwner], connection)
+
+  // const ix0 = await market.removePositionInstruction(positionOwner.publicKey, 0)
+  // await signAndSend(new Transaction().add(ix0), [positionOwner], connection)
+
+  // for (let i = positionListBefore.head - 1; i > 0; i--) {
+  //   console.log(i)
+  //   // const ix = await market.removePositionInstruction(positionOwner.publicKey, i)
+  //   // await signAndSend(new Transaction().add(ix), [positionOwner], connection)
+  // }
+  // })
   // describe('#initPosition above current tick', async () => {
   //   it('init position', async () => {
   //     const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
