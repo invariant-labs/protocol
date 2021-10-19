@@ -178,9 +178,16 @@ export class Market {
 
   async getPositionsFromIndexes(owner: PublicKey, indexes: Array<number>) {
     const positionPromises = indexes.map(async (tick, i) => {
-      return await this.getPositionAddress(owner, i)
+      return await this.getPosition(owner, i)
     })
     return Promise.all(positionPromises)
+  }
+
+  async getPositionsFromRange(owner: PublicKey, lowerIndex: number, upperIndex: number) {
+    return this.getPositionsFromIndexes(
+      owner,
+      Array.from({ length: upperIndex - lowerIndex + 1 }, (_, i) => i + lowerIndex)
+    )
   }
 
   async getTickAddress(pair, index: number) {
