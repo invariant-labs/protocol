@@ -48,6 +48,8 @@ describe('Position list', () => {
   let ticksIndexes: Array<number>
   let xOwnerAmount: u64
   let yOwnerAmount: u64
+  let userTokenXAccount: PublicKey
+  let userTokenYAccount: PublicKey
 
   before(async () => {
     const swaplineProgram = anchor.workspace.Amm as Program
@@ -72,6 +74,13 @@ describe('Position list', () => {
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey)
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+
+    // user deposit
+    userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
+    userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
+
+    await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], xOwnerAmount)
+    await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], yOwnerAmount)
   })
   it('Prepare pool', async () => {
     const fee = 600
@@ -100,8 +109,8 @@ describe('Position list', () => {
     assertThrowsAsync(signAndSend(new Transaction().add(ix), [positionOwner], connection))
   })
   it('Add multiple position', async () => {
-    const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
-    const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
+    // const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
+    // const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
 
     xOwnerAmount = tou64(1e10)
     yOwnerAmount = tou64(1e10)
@@ -171,7 +180,6 @@ describe('Position list', () => {
       0,
       positionListBefore.head - 1
     )
-    const positionToRemove = positionsBefore[positionIndexToRemove]
     const lastPosition = positionsBefore[positionListBefore.head - 1]
 
     const ix = await market.removePositionInstruction(
@@ -200,6 +208,23 @@ describe('Position list', () => {
     assert.ok(eqDecimal(lastPosition.feeGrowthInsideY, testedPosition.feeGrowthInsideY))
     assert.ok(eqDecimal(lastPosition.tokensOwedX, testedPosition.tokensOwedX))
     assert.ok(eqDecimal(lastPosition.tokensOwedY, testedPosition.tokensOwedY))
+  })
+  it('Add position to previous removed position', async () => {
+    const positionList = await market.getPositionList(positionOwner.publicKey)
+
+    await market.initPosition(
+      {
+        pair,
+        owner: positionOwner.publicKey,
+        userTokenX: userTokenXAccount,
+        userTokenY: userTokenYAccount,
+        index: positionList.head,
+        lowerTick: ticksIndexes[1],
+        upperTick: ticksIndexes[2],
+        liquidityDelta: fromInteger(1)
+      },
+      positionOwner
+    )
   })
   // describe('#initPosition above current tick', async () => {
   //   it('init position', async () => {
