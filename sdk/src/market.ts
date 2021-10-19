@@ -176,6 +176,13 @@ export class Market {
     return (await this.program.account.position.fetch(positionAddress)) as Position
   }
 
+  async getPositionsFromIndexes(owner: PublicKey, indexes: Array<number>) {
+    const positionPromises = indexes.map(async (tick, i) => {
+      return await this.getPositionAddress(owner, i)
+    })
+    return Promise.all(positionPromises)
+  }
+
   async getTickAddress(pair, index: number) {
     const poolAddress = await pair.getAddress(this.program.programId)
     const indexBuffer = Buffer.alloc(4)
