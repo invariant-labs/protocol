@@ -17,7 +17,7 @@ import idl from './idl/amm.json'
 import { IWallet, Pair } from '.'
 import { getMarketAddress } from './network'
 
-import { Amm } from './idl/amm'
+// import { Amm } from './idl/amm'
 import { Network } from './network'
 const POSITION_SEED = 'positionv1'
 const TICK_SEED = 'tickv1'
@@ -59,7 +59,7 @@ export interface Tickmap {
 export class Market {
   private connection: Connection
   private wallet: IWallet
-  public program: Program<Amm>
+  public program: Program
 
   constructor(network: Network, wallet: IWallet, connection: Connection, programId?: PublicKey) {
     this.connection = connection
@@ -68,7 +68,7 @@ export class Market {
     const programAddress = Network.LOCAL ? programId : new PublicKey(getMarketAddress(network))
 
     const provider = new Provider(connection, wallet, Provider.defaultOptions())
-    this.program = new Program<Amm>(idl as any, programAddress, provider)
+    this.program = new Program(idl as any, programAddress, provider)
   }
 
   async create({ pair, signer, initTick, fee, tickSpacing }: CreatePool) {
