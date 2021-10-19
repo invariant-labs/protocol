@@ -360,7 +360,6 @@ pub mod amm {
             removed_position.fee_growth_inside_y = last_position.fee_growth_inside_y;
             removed_position.tokens_owed_x = last_position.tokens_owed_x;
             removed_position.tokens_owed_y = last_position.tokens_owed_y;
-            removed_position.tokens_owed_y = last_position.tokens_owed_y;
         }
 
         Ok(())

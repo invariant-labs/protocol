@@ -22,7 +22,6 @@ import { assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
 // MULTI ADD
 // REMOVE LAST POSITION
 // REMOVE FROM MIDDLE
-// REMOVE FROM EMPTY LIST SHOULD FAILED
 // REMOVE PREVIOUS ADDED POSITION
 // ONLY OWNER CAN MODIFY POSITION LIST
 
@@ -164,11 +163,44 @@ describe('Position list', () => {
       positionOwner
     )
   })
-  // it('Remove from empty list should failed', async () => {
-  //   const ix = await market.removePositionInstruction(positionOwner.publicKey, 0)
-  //   const tx = new Transaction().add(ix)
-  //   await signAndSend(tx, [positionOwner], connection)
-  // })
+  it('Remove middle position', async () => {
+    const positionIndexToRemove = 2
+    const positionListBefore = await market.getPositionList(positionOwner.publicKey)
+    const positionsBefore = await market.getPositionsFromRange(
+      positionOwner.publicKey,
+      0,
+      positionListBefore.head - 1
+    )
+    const positionToRemove = positionsBefore[positionIndexToRemove]
+    const lastPosition = positionsBefore[positionListBefore.head - 1]
+
+    const ix = await market.removePositionInstruction(
+      positionOwner.publicKey,
+      positionIndexToRemove
+    )
+    await signAndSend(new Transaction().add(ix), [positionOwner], connection)
+
+    const positionListAfter = await market.getPositionList(positionOwner.publicKey)
+    const positionsAfter = await market.getPositionsFromRange(
+      positionOwner.publicKey,
+      0,
+      positionListAfter.head - 1
+    )
+
+    // check position list head
+    assert.ok(positionListBefore.head - 1 == positionListAfter.head)
+
+    // last position should be at removed index
+    const testedPosition = positionsAfter[positionIndexToRemove]
+    assert.ok(lastPosition.pool.equals(testedPosition.pool))
+    assert.ok(eqDecimal(lastPosition.liquidity, testedPosition.liquidity))
+    assert.ok(lastPosition.lowerTickIndex === testedPosition.lowerTickIndex)
+    assert.ok(lastPosition.upperTickIndex === testedPosition.upperTickIndex)
+    assert.ok(eqDecimal(lastPosition.feeGrowthInsideX, testedPosition.feeGrowthInsideX))
+    assert.ok(eqDecimal(lastPosition.feeGrowthInsideY, testedPosition.feeGrowthInsideY))
+    assert.ok(eqDecimal(lastPosition.tokensOwedX, testedPosition.tokensOwedX))
+    assert.ok(eqDecimal(lastPosition.tokensOwedY, testedPosition.tokensOwedY))
+  })
   // describe('#initPosition above current tick', async () => {
   //   it('init position', async () => {
   //     const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
