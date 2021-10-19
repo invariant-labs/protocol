@@ -7,6 +7,7 @@
     "test:position": "anchor test tests/position.spec.ts",
     "test:math": "anchor test tests/math.spec.ts",
     "test:withdraw": "anchor test tests/withdraw.spec.ts",
+    "test:position-list": "anchor test tests/position-list.spec.ts",
     "build": "cd sdk && npm run build"
   },
   "dependencies": {

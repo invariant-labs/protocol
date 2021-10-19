@@ -367,7 +367,7 @@
         },
         {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         }
       ],
@@ -788,5 +788,8 @@
       "name": "InvalidPositionIndex",
       "msg": "Invalid position index"
     }
-  ]
+  ],
+  "metadata": {
+    "address": "FPr3fREovDnqMfubJTrJAFwopvJB8grXj1o3gkmSyzmw"
+  }
 }

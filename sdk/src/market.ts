@@ -331,7 +331,6 @@ export class Market {
     )
 
     return (await this.program.instruction.withdraw(
-      // positionBump,
       index,
       position.lowerTickIndex,
       position.upperTickIndex,
@@ -520,13 +519,17 @@ export class Market {
     index: number
   ): Promise<TransactionInstruction> {
     const { positionListAddress } = await this.getPositionListAddress(owner)
-    const { positionAddress: lastPositionAddress } = await this.getPositionAddress(owner, index)
-    const { positionAddress: removedPosition } = await this.getPositionAddress(owner, index)
+    const position = await this.getPositionList(owner)
+    const { positionAddress: lastPositionAddress } = await this.getPositionAddress(
+      owner,
+      position.head - 1
+    )
+    const { positionAddress: removedPositionAddress } = await this.getPositionAddress(owner, index)
 
     return this.program.instruction.removePosition(index, {
       accounts: {
-        owner,
-        removedPosition,
+        owner: owner,
+        removedPosition: removedPositionAddress,
         positionList: positionListAddress,
         lastPosition: lastPositionAddress
       }

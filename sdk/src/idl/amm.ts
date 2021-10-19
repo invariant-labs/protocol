@@ -367,7 +367,7 @@ export type Amm = {
         },
         {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         }
       ],
