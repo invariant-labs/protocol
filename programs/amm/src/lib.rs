@@ -328,12 +328,8 @@ pub mod amm {
             lower_tick_index,
         )?;
 
-        // send tokens to reserve
-        let seeds = &[SEED.as_bytes(), &[pool.nonce]];
-        let signer = &[&seeds[..]];
-
-        let cpi_ctx_x = ctx.accounts.take_x().with_signer(signer);
-        let cpi_ctx_y = ctx.accounts.take_y().with_signer(signer);
+        let cpi_ctx_x = ctx.accounts.take_x();
+        let cpi_ctx_y = ctx.accounts.take_y();
 
         token::transfer(cpi_ctx_x, amount_x)?;
         token::transfer(cpi_ctx_y, amount_y)?;

@@ -235,7 +235,7 @@ impl<'info> TakeTokens<'info> for InitPosition<'info> {
             Transfer {
                 from: self.account_x.to_account_info(),
                 to: self.reserve_x.to_account_info(),
-                authority: self.program_authority.clone(),
+                authority: self.owner.clone(),
             },
         )
     }
@@ -246,7 +246,7 @@ impl<'info> TakeTokens<'info> for InitPosition<'info> {
             Transfer {
                 from: self.account_y.to_account_info(),
                 to: self.reserve_y.to_account_info(),
-                authority: self.program_authority.clone(),
+                authority: self.owner.clone(),
             },
         )
     }

@@ -359,21 +359,8 @@ export class Market {
   async initPositionTx(initPosition: InitPosition) {
     const { owner, userTokenX, userTokenY } = initPosition
 
-    const approveXIx = await this.getApproveInstruction(
-      initPosition.pair,
-      owner,
-      userTokenX,
-      new BN(1e14)
-    )
-    const approveYIx = await this.getApproveInstruction(
-      initPosition.pair,
-      owner,
-      userTokenY,
-      new BN(1e14)
-    )
-
     const initPositionIx = await this.initPositionInstruction(initPosition)
-    return new Transaction().add(approveXIx).add(approveYIx).add(initPositionIx)
+    return new Transaction().add(initPositionIx)
   }
 
   async initPosition(initPosition: InitPosition, signer: Keypair) {
