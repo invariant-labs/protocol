@@ -328,10 +328,6 @@ export type Amm = {
           "type": "u8"
         },
         {
-          "name": "index",
-          "type": "u32"
-        },
-        {
           "name": "lowerTickIndex",
           "type": "i32"
         },
@@ -344,6 +340,37 @@ export type Amm = {
           "type": {
             "defined": "Decimal"
           }
+        }
+      ]
+    },
+    {
+      "name": "removePosition",
+      "accounts": [
+        {
+          "name": "positionList",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "lastPosition",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "removedPosition",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u32"
         }
       ]
     },

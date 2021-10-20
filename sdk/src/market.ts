@@ -176,6 +176,20 @@ export class Market {
     return (await this.program.account.position.fetch(positionAddress)) as Position
   }
 
+  async getPositionsFromIndexes(owner: PublicKey, indexes: Array<number>) {
+    const positionPromises = indexes.map(async (tick, i) => {
+      return await this.getPosition(owner, i)
+    })
+    return Promise.all(positionPromises)
+  }
+
+  async getPositionsFromRange(owner: PublicKey, lowerIndex: number, upperIndex: number) {
+    return this.getPositionsFromIndexes(
+      owner,
+      Array.from({ length: upperIndex - lowerIndex + 1 }, (_, i) => i + lowerIndex)
+    )
+  }
+
   async getTickAddress(pair, index: number) {
     const poolAddress = await pair.getAddress(this.program.programId)
     const indexBuffer = Buffer.alloc(4)
@@ -267,22 +281,25 @@ export class Market {
     owner,
     userTokenX,
     userTokenY,
-    index,
     lowerTick,
     upperTick,
     liquidityDelta
   }: InitPosition) {
     const state = await this.get(pair)
 
+    // maybe in the future index cloud be store at market
+    const positionList = await this.getPositionList(owner)
     const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTick)
     const { tickAddress: upperTickAddress } = await this.getTickAddress(pair, upperTick)
-    const { positionAddress, positionBump } = await this.getPositionAddress(owner, index)
+    const { positionAddress, positionBump } = await this.getPositionAddress(
+      owner,
+      positionList.head
+    )
     const { positionListAddress } = await this.getPositionListAddress(owner)
     const poolAddress = await pair.getAddress(this.program.programId)
 
     return this.program.instruction.initPosition(
       positionBump,
-      index,
       lowerTick,
       upperTick,
       liquidityDelta,
@@ -331,7 +348,6 @@ export class Market {
     )
 
     return (await this.program.instruction.withdraw(
-      // positionBump,
       index,
       position.lowerTickIndex,
       position.upperTickIndex,
@@ -514,6 +530,28 @@ export class Market {
 
     return { x: accounts[0].amount, y: accounts[1].amount }
   }
+
+  async removePositionInstruction(
+    owner: PublicKey,
+    index: number
+  ): Promise<TransactionInstruction> {
+    const { positionListAddress } = await this.getPositionListAddress(owner)
+    const position = await this.getPositionList(owner)
+    const { positionAddress: lastPositionAddress } = await this.getPositionAddress(
+      owner,
+      position.head - 1
+    )
+    const { positionAddress: removedPositionAddress } = await this.getPositionAddress(owner, index)
+
+    return this.program.instruction.removePosition(index, {
+      accounts: {
+        owner: owner,
+        removedPosition: removedPositionAddress,
+        positionList: positionListAddress,
+        lastPosition: lastPositionAddress
+      }
+    }) as TransactionInstruction
+  }
 }
 export interface Decimal {
   v: BN
@@ -564,7 +602,6 @@ export interface InitPosition {
   owner: PublicKey
   userTokenX: PublicKey
   userTokenY: PublicKey
-  index: number
   lowerTick: number
   upperTick: number
   liquidityDelta: Decimal
