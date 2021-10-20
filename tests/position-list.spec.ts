@@ -16,6 +16,7 @@ import { Provider, Program, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken, eqDecimal } from './testUtils'
 import { assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
+import { ERRORS } from '@invariant-labs/sdk/lib/utils'
 
 describe('Position list', () => {
   const provider = Provider.local()
@@ -224,9 +225,8 @@ describe('Position list', () => {
     assert.equal(lastPositionIndexBefore - 1, lastPositionIndexAfter)
   })
   it('Only owner can modify position list', async () => {
-    // TODO should failed
     const positionListBefore = await market.getPositionList(positionOwner.publicKey)
-    const ix = await market.initPositionInstruction({
+    const initPositionTx = await market.initPositionTx({
       pair,
       owner: positionOwner.publicKey,
       userTokenX: userTokenXAccount,
@@ -235,8 +235,13 @@ describe('Position list', () => {
       upperTick: ticksIndexes[3],
       liquidityDelta: fromInteger(1)
     })
+    const removePositionIx = await market.removePositionInstruction(positionOwner.publicKey, 0)
 
-    signAndSend(new Transaction().add(ix), [wallet], connection)
+    assertThrowsAsync(signAndSend(initPositionTx, [wallet], connection), ERRORS.SIGNATURE)
+    assertThrowsAsync(
+      signAndSend(new Transaction().add(removePositionIx), [wallet], connection),
+      ERRORS.SIGNATURE
+    )
 
     const positionListAfter = await market.getPositionList(positionOwner.publicKey)
     assert.equal(positionListBefore.head, positionListAfter.head)
@@ -266,7 +271,6 @@ describe('Position list', () => {
       positionOwner
     )
     const positionListAfter = await market.getPositionList(positionOwner.publicKey)
-
     assert.equal(positionListBefore.head + 1, positionListAfter.head)
   })
 })
