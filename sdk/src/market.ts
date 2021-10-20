@@ -330,7 +330,7 @@ export class Market {
       position.upperTickIndex
     )
 
-    return (await this.program.instruction.withdraw(
+    return this.program.instruction.withdraw(
       // positionBump,
       index,
       position.lowerTickIndex,
@@ -353,7 +353,7 @@ export class Market {
           tokenProgram: TOKEN_PROGRAM_ID
         }
       }
-    )) as TransactionInstruction
+    ) as TransactionInstruction
   }
 
   async initPositionTx(initPosition: InitPosition) {
@@ -374,10 +374,6 @@ export class Market {
     { pair, owner, userTokenX, userTokenY, index, liquidityDelta }: ModifyPosition,
     signer: Keypair
   ) {
-    const state = await this.get(pair)
-    const approveXIx = await this.getApproveInstruction(pair, owner, userTokenX, new BN(1e14))
-    const approveYIx = await this.getApproveInstruction(pair, owner, userTokenY, new BN(1e14))
-
     const withdrawPositionIx = await this.withdrawInstruction({
       pair,
       owner,
@@ -387,11 +383,7 @@ export class Market {
       liquidityDelta
     })
 
-    await signAndSend(
-      new Transaction().add(approveXIx).add(approveYIx).add(withdrawPositionIx),
-      [signer],
-      this.connection
-    )
+    await signAndSend(new Transaction().add(withdrawPositionIx), [signer], this.connection)
   }
 
   async swap(
