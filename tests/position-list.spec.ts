@@ -15,8 +15,6 @@ import {
 import { Provider, Program, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken, eqDecimal } from './testUtils'
-import { MAX_TICK } from '@invariant-labs/sdk/lib/math'
-import { MIN_TICK } from '@invariant-labs/sdk/lib/math'
 import { assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
 
 describe('Position list', () => {
@@ -226,6 +224,7 @@ describe('Position list', () => {
     assert.equal(lastPositionIndexBefore - 1, lastPositionIndexAfter)
   })
   it('Only owner can modify position list', async () => {
+    // TODO should failed
     const positionListBefore = await market.getPositionList(positionOwner.publicKey)
     const ix = await market.initPositionInstruction({
       pair,
@@ -242,377 +241,32 @@ describe('Position list', () => {
     const positionListAfter = await market.getPositionList(positionOwner.publicKey)
     assert.equal(positionListBefore.head, positionListAfter.head)
   })
-  // it('remove all positions', async () => {
-  // const positionListBefore = await market.getPositionList(positionOwner.publicKey)
-  // console.log(`head: ${positionListBefore.head}`)
-  // const ix = await market.removePositionInstruction(positionOwner.publicKey, 0)
-  // await signAndSend(new Transaction().add(ix), [positionOwner], connection)
+  it('Remove all positions', async () => {
+    const positionListBefore = await market.getPositionList(positionOwner.publicKey)
 
-  // const ix2 = await market.removePositionInstruction(positionOwner.publicKey, 2)
-  // await signAndSend(new Transaction().add(ix2), [positionOwner], connection)
+    for (let i = positionListBefore.head - 1; i >= 0; i--) {
+      const ix = await market.removePositionInstruction(positionOwner.publicKey, i)
+      await signAndSend(new Transaction().add(ix), [positionOwner], connection)
+    }
+    const positionListAfter = await market.getPositionList(positionOwner.publicKey)
+    assert.equal(positionListAfter.head, 0)
+  })
+  it('Add position to cleared list', async () => {
+    const positionListBefore = await market.getPositionList(positionOwner.publicKey)
+    await market.initPosition(
+      {
+        pair,
+        owner: positionOwner.publicKey,
+        userTokenX: userTokenXAccount,
+        userTokenY: userTokenYAccount,
+        lowerTick: ticksIndexes[0],
+        upperTick: ticksIndexes[1],
+        liquidityDelta: fromInteger(1)
+      },
+      positionOwner
+    )
+    const positionListAfter = await market.getPositionList(positionOwner.publicKey)
 
-  // const ix1 = await market.removePositionInstruction(positionOwner.publicKey, 1)
-  // await signAndSend(new Transaction().add(ix1), [positionOwner], connection)
-
-  // const ix0 = await market.removePositionInstruction(positionOwner.publicKey, 0)
-  // await signAndSend(new Transaction().add(ix0), [positionOwner], connection)
-
-  // for (let i = positionListBefore.head - 1; i > 0; i--) {
-  //   console.log(i)
-  //   // const ix = await market.removePositionInstruction(positionOwner.publicKey, i)
-  //   // await signAndSend(new Transaction().add(ix), [positionOwner], connection)
-  // }
-  // })
-  // describe('#initPosition above current tick', async () => {
-  //   it('init position', async () => {
-  //     const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
-  //     const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
-
-  //     xOwnerAmount = tou64(1e10)
-  //     yOwnerAmount = tou64(1e10)
-
-  //     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], xOwnerAmount)
-  //     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], yOwnerAmount)
-
-  //     const liquidityDelta = fromInteger(10_000)
-  //     const positionIndex = 0
-
-  //     await market.initPosition(
-  //       {
-  //         pair,
-  //         owner: positionOwner.publicKey,
-  //         userTokenX: userTokenXAccount,
-  //         userTokenY: userTokenYAccount,
-  //         index: positionIndex,
-  //         lowerTick,
-  //         upperTick,
-  //         liquidityDelta
-  //       },
-  //       positionOwner
-  //     )
-
-  //     // load state
-  //     const positionState = await market.getPosition(positionOwner.publicKey, positionIndex)
-  //     const poolState = await market.get(pair)
-  //     const lowerTickState = await market.getTick(pair, lowerTick)
-  //     const upperTickState = await market.getTick(pair, upperTick)
-  //     const reserveBalances = await market.getReserveBalances(pair, wallet)
-  //     const userTokenXBalance = (await tokenX.getAccountInfo(userTokenXAccount)).amount
-  //     const userTokenYBalance = (await tokenY.getAccountInfo(userTokenYAccount)).amount
-
-  //     const { positionBump } = await market.getPositionAddress(
-  //       positionOwner.publicKey,
-  //       positionIndex
-  //     )
-  //     const expectedZeroDecimal = new BN(0)
-  //     const expectedXIncrease = new BN(21549)
-  //     const expectedYIncrease = new BN(0)
-
-  //     // check ticks
-  //     assert.ok(lowerTickState.index === lowerTick)
-  //     assert.ok(lowerTickState.sign === true)
-  //     assert.ok(eqDecimal(lowerTickState.liquidityGross, liquidityDelta))
-  //     assert.ok(eqDecimal(lowerTickState.liquidityChange, liquidityDelta))
-
-  //     assert.ok(upperTickState.index === upperTick)
-  //     assert.ok(upperTickState.sign === false)
-  //     assert.ok(eqDecimal(upperTickState.liquidityGross, liquidityDelta))
-  //     assert.ok(eqDecimal(upperTickState.liquidityChange, liquidityDelta))
-
-  //     // check pool
-  //     assert.ok(eqDecimal(poolState.liquidity, { v: new BN(0) }))
-  //     assert.ok(poolState.currentTickIndex === initTick)
-
-  //     // check position
-  //     const poolAddress = await pair.getAddress(market.program.programId)
-  //     assert.ok(positionState.owner.equals(positionOwner.publicKey))
-  //     assert.ok(positionState.pool.equals(poolAddress))
-  //     assert.ok(positionState.liquidity.v.eq(liquidityDelta.v))
-  //     assert.ok(positionState.lowerTickIndex == lowerTick)
-  //     assert.ok(positionState.upperTickIndex == upperTick)
-  //     assert.ok(positionState.feeGrowthInsideX.v.eq(expectedZeroDecimal))
-  //     assert.ok(positionState.feeGrowthInsideY.v.eq(expectedZeroDecimal))
-  //     assert.ok(positionState.bump == positionBump)
-
-  //     // checks position list
-  //     const positionList = await market.getPositionList(positionOwner.publicKey)
-  //     assert.equal(positionList.head, positionIndex + 1)
-
-  //     // balance transfer
-  //     assert.ok(reserveBalances.x.eq(expectedXIncrease))
-  //     assert.ok(reserveBalances.y.eq(expectedYIncrease))
-  //     assert.ok(userTokenXBalance.eq(xOwnerAmount.sub(expectedXIncrease)))
-  //     assert.ok(userTokenYBalance.eq(yOwnerAmount.sub(expectedYIncrease)))
-
-  //     xOwnerAmount = userTokenXBalance
-  //     yOwnerAmount = userTokenYBalance
-  //   })
-  // })
-  // describe('#initPosition within current tick', async () => {
-  //   // min + 10
-  //   // max - 10
-  //   // x = 317
-  //   // y = 32
-  //   // liquidity = 100
-  //   const lowerTick = MIN_TICK + 10
-  //   const upperTick = MAX_TICK - 10
-
-  //   it('#createTick(lower)', async () => {
-  //     const ix = await market.createTickInstruction(pair, lowerTick, wallet.publicKey)
-  //     await signAndSend(new Transaction().add(ix), [wallet], connection)
-
-  //     const expectedZeroDecimal = new BN(0)
-  //     const tick = await market.getTick(pair, lowerTick)
-  //     const { tickBump } = await market.getTickAddress(pair, lowerTick)
-  //     assert.ok(tick.index == lowerTick)
-  //     assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
-  //     assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
-  //     assert.ok(tick.sqrtPrice.v.eq(expectedZeroDecimal))
-  //     assert.ok(tick.feeGrowthOutsideX.v.eq(expectedZeroDecimal))
-  //     assert.ok(tick.feeGrowthOutsideY.v.eq(expectedZeroDecimal))
-  //     assert.ok(tick.bump == tickBump)
-  //   })
-  //   it('#createTick(upperTick)', async () => {
-  //     const ix = await market.createTickInstruction(pair, upperTick, wallet.publicKey)
-  //     await signAndSend(new Transaction().add(ix), [wallet], connection)
-
-  //     const expectedZeroDecimal = new BN(0)
-  //     const tick = await market.getTick(pair, upperTick)
-  //     const { tickBump } = await market.getTickAddress(pair, upperTick)
-  //     assert.ok(tick.index == upperTick)
-  //     assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
-  //     assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
-  //     assert.ok(tick.sqrtPrice.v.eq(expectedZeroDecimal))
-  //     assert.ok(tick.feeGrowthOutsideX.v.eq(expectedZeroDecimal))
-  //     assert.ok(tick.feeGrowthOutsideY.v.eq(expectedZeroDecimal))
-  //     assert.ok(tick.bump == tickBump)
-  //   })
-  //   it('init position', async () => {
-  //     const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
-  //     const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
-
-  //     xOwnerAmount = tou64(1e10)
-  //     yOwnerAmount = tou64(1e10)
-  //     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], xOwnerAmount)
-  //     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], yOwnerAmount)
-
-  //     const liquidityDelta = fromInteger(100)
-  //     const positionIndex = 1
-  //     const reserveBalancesBefore = await market.getReserveBalances(pair, wallet)
-
-  //     await market.initPosition(
-  //       {
-  //         pair,
-  //         owner: positionOwner.publicKey,
-  //         userTokenX: userTokenXAccount,
-  //         userTokenY: userTokenYAccount,
-  //         index: positionIndex,
-  //         lowerTick,
-  //         upperTick,
-  //         liquidityDelta
-  //       },
-  //       positionOwner
-  //     )
-
-  //     // load state
-  //     const positionState = await market.getPosition(positionOwner.publicKey, positionIndex)
-  //     const poolState = await market.get(pair)
-  //     const lowerTickState = await market.getTick(pair, lowerTick)
-  //     const upperTickState = await market.getTick(pair, upperTick)
-  //     const reserveBalancesAfter = await market.getReserveBalances(pair, wallet)
-  //     const userTokenXBalance = (await tokenX.getAccountInfo(userTokenXAccount)).amount
-  //     const userTokenYBalance = (await tokenY.getAccountInfo(userTokenYAccount)).amount
-
-  //     const { positionBump } = await market.getPositionAddress(
-  //       positionOwner.publicKey,
-  //       positionIndex
-  //     )
-  //     const expectedZeroDecimal = new BN(0)
-  //     const expectedXIncrease = new BN(317)
-  //     const expectedYIncrease = new BN(32)
-
-  //     // check ticks
-  //     assert.ok(lowerTickState.index === lowerTick)
-  //     assert.ok(lowerTickState.sign === true)
-  //     assert.ok(eqDecimal(lowerTickState.liquidityGross, liquidityDelta))
-  //     assert.ok(eqDecimal(lowerTickState.liquidityChange, liquidityDelta))
-
-  //     assert.ok(upperTickState.index === upperTick)
-  //     assert.ok(upperTickState.sign === false)
-  //     assert.ok(eqDecimal(upperTickState.liquidityGross, liquidityDelta))
-  //     assert.ok(eqDecimal(upperTickState.liquidityChange, liquidityDelta))
-
-  //     // check pool
-  //     assert.ok(eqDecimal(poolState.liquidity, liquidityDelta))
-  //     assert.ok(poolState.currentTickIndex === initTick)
-
-  //     // check position
-  //     const poolAddress = await pair.getAddress(market.program.programId)
-  //     assert.ok(positionState.owner.equals(positionOwner.publicKey))
-  //     assert.ok(positionState.pool.equals(poolAddress))
-  //     assert.ok(positionState.liquidity.v.eq(liquidityDelta.v))
-  //     assert.ok(positionState.lowerTickIndex == lowerTick)
-  //     assert.ok(positionState.upperTickIndex == upperTick)
-  //     assert.ok(positionState.feeGrowthInsideX.v.eq(expectedZeroDecimal))
-  //     assert.ok(positionState.feeGrowthInsideY.v.eq(expectedZeroDecimal))
-  //     assert.ok(positionState.bump == positionBump)
-
-  //     // checks position list
-  //     const positionList = await market.getPositionList(positionOwner.publicKey)
-  //     assert.equal(positionList.head, positionIndex + 1)
-
-  //     // balance transfer
-  //     assert.ok(reserveBalancesAfter.x.eq(reserveBalancesBefore.x.add(expectedXIncrease)))
-  //     assert.ok(reserveBalancesAfter.y.eq(reserveBalancesBefore.y.add(expectedYIncrease)))
-  //     assert.ok(userTokenXBalance.eq(xOwnerAmount.sub(expectedXIncrease)))
-  //     assert.ok(userTokenYBalance.eq(yOwnerAmount.sub(expectedYIncrease)))
-
-  //     xOwnerAmount = userTokenXBalance
-  //     yOwnerAmount = userTokenYBalance
-  //   })
-  // })
-  // describe('#initPosition below current tick', async () => {
-  //   // 23040
-  //   // -4608
-  //   // x = 0
-  //   // y = 2162
-  //   // liquidity = 10000
-  //   const lowerTick = -46080
-  //   const upperTick = -23040
-
-  //   it('#createTick(lower)', async () => {
-  //     const ix = await market.createTickInstruction(pair, lowerTick, wallet.publicKey)
-  //     await signAndSend(new Transaction().add(ix), [wallet], connection)
-
-  //     const expectedZeroDecimal = new BN(0)
-  //     const tick = await market.getTick(pair, lowerTick)
-  //     const { tickBump } = await market.getTickAddress(pair, lowerTick)
-  //     assert.ok(tick.index == lowerTick)
-  //     assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
-  //     assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
-  //     assert.ok(tick.sqrtPrice.v.eq(expectedZeroDecimal))
-  //     assert.ok(tick.feeGrowthOutsideX.v.eq(expectedZeroDecimal))
-  //     assert.ok(tick.feeGrowthOutsideY.v.eq(expectedZeroDecimal))
-  //     assert.ok(tick.bump == tickBump)
-  //   })
-  //   it('#createTick(upperTick)', async () => {
-  //     const ix = await market.createTickInstruction(pair, upperTick, wallet.publicKey)
-  //     await signAndSend(new Transaction().add(ix), [wallet], connection)
-
-  //     const expectedZeroDecimal = new BN(0)
-  //     const tick = await market.getTick(pair, upperTick)
-  //     const { tickBump } = await market.getTickAddress(pair, upperTick)
-  //     assert.ok(tick.index == upperTick)
-  //     assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
-  //     assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
-  //     assert.ok(tick.sqrtPrice.v.eq(expectedZeroDecimal))
-  //     assert.ok(tick.feeGrowthOutsideX.v.eq(expectedZeroDecimal))
-  //     assert.ok(tick.feeGrowthOutsideY.v.eq(expectedZeroDecimal))
-  //     assert.ok(tick.bump == tickBump)
-  //   })
-  //   it('init position', async () => {
-  //     const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
-  //     const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
-
-  //     xOwnerAmount = tou64(1e10)
-  //     yOwnerAmount = tou64(1e10)
-  //     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], xOwnerAmount)
-  //     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], yOwnerAmount)
-
-  //     const liquidityDelta = fromInteger(10_000)
-  //     const positionIndex = 2
-  //     const reserveBalancesBefore = await market.getReserveBalances(pair, wallet)
-  //     const poolStateBefore = await market.get(pair)
-
-  //     await market.initPosition(
-  //       {
-  //         pair,
-  //         owner: positionOwner.publicKey,
-  //         userTokenX: userTokenXAccount,
-  //         userTokenY: userTokenYAccount,
-  //         index: positionIndex,
-  //         lowerTick,
-  //         upperTick,
-  //         liquidityDelta
-  //       },
-  //       positionOwner
-  //     )
-
-  //     // load state
-  //     const positionState = await market.getPosition(positionOwner.publicKey, positionIndex)
-  //     const poolStateAfter = await market.get(pair)
-  //     const lowerTickState = await market.getTick(pair, lowerTick)
-  //     const upperTickState = await market.getTick(pair, upperTick)
-  //     const reserveBalancesAfter = await market.getReserveBalances(pair, wallet)
-  //     const userTokenXBalance = (await tokenX.getAccountInfo(userTokenXAccount)).amount
-  //     const userTokenYBalance = (await tokenY.getAccountInfo(userTokenYAccount)).amount
-
-  //     const { positionBump } = await market.getPositionAddress(
-  //       positionOwner.publicKey,
-  //       positionIndex
-  //     )
-  //     const expectedZeroDecimal = new BN(0)
-  //     const expectedXIncrease = new BN(0)
-  //     const expectedYIncrease = new BN(2162)
-
-  //     // check ticks
-  //     assert.ok(lowerTickState.index === lowerTick)
-  //     assert.ok(lowerTickState.sign === true)
-  //     assert.ok(eqDecimal(lowerTickState.liquidityGross, liquidityDelta))
-  //     assert.ok(eqDecimal(lowerTickState.liquidityChange, liquidityDelta))
-
-  //     assert.ok(upperTickState.index === upperTick)
-  //     assert.ok(upperTickState.sign === false)
-  //     assert.ok(eqDecimal(upperTickState.liquidityGross, liquidityDelta))
-  //     assert.ok(eqDecimal(upperTickState.liquidityChange, liquidityDelta))
-
-  //     // check pool
-  //     assert.ok(eqDecimal(poolStateAfter.liquidity, poolStateBefore.liquidity))
-  //     assert.ok(poolStateAfter.currentTickIndex === initTick)
-
-  //     // check position
-  //     const poolAddress = await pair.getAddress(market.program.programId)
-  //     assert.ok(positionState.owner.equals(positionOwner.publicKey))
-  //     assert.ok(positionState.pool.equals(poolAddress))
-  //     assert.ok(positionState.liquidity.v.eq(liquidityDelta.v))
-  //     assert.ok(positionState.lowerTickIndex == lowerTick)
-  //     assert.ok(positionState.upperTickIndex == upperTick)
-  //     assert.ok(positionState.feeGrowthInsideX.v.eq(expectedZeroDecimal))
-  //     assert.ok(positionState.feeGrowthInsideY.v.eq(expectedZeroDecimal))
-  //     assert.ok(positionState.bump == positionBump)
-
-  //     // checks position list
-  //     const positionList = await market.getPositionList(positionOwner.publicKey)
-  //     assert.equal(positionList.head, positionIndex + 1)
-
-  //     // balance transfer
-  //     assert.ok(reserveBalancesAfter.x.eq(reserveBalancesBefore.x.add(expectedXIncrease)))
-  //     assert.ok(reserveBalancesAfter.y.eq(reserveBalancesBefore.y.add(expectedYIncrease)))
-  //     assert.ok(userTokenXBalance.eq(xOwnerAmount.sub(expectedXIncrease)))
-  //     assert.ok(userTokenYBalance.eq(yOwnerAmount.sub(expectedYIncrease)))
-
-  //     // before - after
-  //     // x/y user balance
-  //     // x/y reserve balance
-
-  //     // await pool.withdraw(
-  //     //   {
-  //     //     owner: positionOwner,
-  //     //     userTokenX: userTokenXAccount,
-  //     //     userTokenY: userTokenYAccount,
-  //     //     lowerTick,
-  //     //     upperTick,
-  //     //     liquidityDelta
-  //     //   },
-  //     //   positionOwner
-  //     // )
-
-  //     // const poolDataAfter = await pool.get()
-  //     // assert.ok(poolDataAfter.liquidity.v.eqn(0))
-
-  //     console.log(userTokenXBalance.toString(), userTokenYBalance.toString())
-  //     xOwnerAmount = userTokenXBalance
-  //     yOwnerAmount = userTokenYBalance
-  // })
-  // })
+    assert.equal(positionListBefore.head + 1, positionListAfter.head)
+  })
 })
