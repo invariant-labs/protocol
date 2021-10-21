@@ -196,10 +196,7 @@ pub mod amm {
         let signer = &[&seeds[..]];
 
         // Maybe rounding error should be counted?
-        token::transfer(
-            take_ctx.with_signer(signer),
-            total_amount_in.to_token_ceil(),
-        )?;
+        token::transfer(take_ctx, total_amount_in.to_token_ceil())?;
         token::transfer(
             send_ctx.with_signer(signer),
             total_amount_out.to_token_floor(),

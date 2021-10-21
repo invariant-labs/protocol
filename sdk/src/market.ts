@@ -137,17 +137,6 @@ export class Market {
     return tickmap
   }
 
-  async getApproveInstruction(pair: Pair, owner: PublicKey, account: PublicKey, amount: BN) {
-    return Token.createApproveInstruction(
-      TOKEN_PROGRAM_ID,
-      account,
-      (await this.get(pair)).authority,
-      owner,
-      [],
-      tou64(amount)
-    )
-  }
-
   async getTick(pair: Pair, index: number) {
     const { tickAddress } = await this.getTickAddress(pair, index)
     return (await this.program.account.tick.fetch(tickAddress)) as Tick
@@ -449,33 +438,14 @@ export class Market {
         tokenY: state.tokenY,
         reserveX: state.tokenXReserve,
         reserveY: state.tokenYReserve,
+        owner,
         accountX,
         accountY,
         programAuthority: state.authority,
         tokenProgram: TOKEN_PROGRAM_ID
       }
     })
-    let approve: TransactionInstruction
-    if (XtoY) {
-      approve = Token.createApproveInstruction(
-        TOKEN_PROGRAM_ID,
-        accountX,
-        state.authority,
-        owner,
-        [],
-        tou64(amount)
-      )
-    } else {
-      approve = Token.createApproveInstruction(
-        TOKEN_PROGRAM_ID,
-        accountY,
-        state.authority,
-        owner,
-        [],
-        tou64(amount)
-      )
-    }
-    const tx = new Transaction().add(approve).add(swapIx)
+    const tx = new Transaction().add(swapIx)
 
     return tx
   }
