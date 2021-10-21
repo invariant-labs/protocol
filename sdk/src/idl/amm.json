@@ -333,10 +333,6 @@
           "type": "u8"
         },
         {
-          "name": "index",
-          "type": "u32"
-        },
-        {
           "name": "lowerTickIndex",
           "type": "i32"
         },
@@ -376,7 +372,12 @@
           "isSigner": true
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
     },
     {
       "name": "withdraw",

@@ -165,7 +165,6 @@ describe('position', () => {
           owner: positionOwner.publicKey,
           userTokenX: userTokenXAccount,
           userTokenY: userTokenYAccount,
-          index: positionIndex,
           lowerTick,
           upperTick,
           liquidityDelta
@@ -288,7 +287,6 @@ describe('position', () => {
           owner: positionOwner.publicKey,
           userTokenX: userTokenXAccount,
           userTokenY: userTokenYAccount,
-          index: positionIndex,
           lowerTick,
           upperTick,
           liquidityDelta
@@ -412,7 +410,6 @@ describe('position', () => {
           owner: positionOwner.publicKey,
           userTokenX: userTokenXAccount,
           userTokenY: userTokenYAccount,
-          index: positionIndex,
           lowerTick,
           upperTick,
           liquidityDelta

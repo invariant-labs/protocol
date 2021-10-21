@@ -13,6 +13,37 @@ export const DECIMAL = 12
 export const FEE_DECIMAL = 5
 export const DENOMINATOR = new BN(10).pow(new BN(12))
 
+export enum ERRORS {
+  SIGNATURE = 'Error: Signature verification failed',
+  SIGNER = 'Error: unknown signer',
+  PANICKED = 'Program failed to complete',
+  SERIALIZATION = '0xa4',
+  ALLOWANCE = 'custom program error: 0x1',
+  NO_SIGNERS = 'Error: No signers'
+}
+
+export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
+  try {
+    await fn
+  } catch (e: any) {
+    let err
+    if (e.code) {
+      err = '0x' + e.code.toString(16)
+    } else {
+      err = e.toString()
+    }
+    if (word) {
+      const regex = new RegExp(`${word}$`)
+      if (!regex.test(err)) {
+        console.log(err)
+        throw new Error('Invalid Error message')
+      }
+    }
+    return
+  }
+  throw new Error('Function did not throw error')
+}
+
 export const signAndSend = async (
   tx: Transaction,
   signers: Array<Keypair>,

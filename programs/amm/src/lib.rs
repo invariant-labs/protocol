@@ -250,7 +250,6 @@ pub mod amm {
     pub fn init_position(
         ctx: Context<InitPosition>,
         bump: u8,
-        index: u32,
         lower_tick_index: i32,
         upper_tick_index: i32,
         liquidity_delta: Decimal,
@@ -267,7 +266,6 @@ pub mod amm {
         check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
 
         // update position_list head
-        require!(position_list.head == index, InvalidPositionIndex);
         position_list.head += 1;
 
         // init position
@@ -333,15 +331,17 @@ pub mod amm {
         Ok(())
     }
 
-    pub fn remove_position(ctx: Context<RemovePosition>) -> ProgramResult {
-        let mut position_list = ctx.accounts.position_list.load_mut()?;
-        let mut removed_position = ctx.accounts.last_position.load_mut()?;
-        let last_position = ctx.accounts.last_position.load()?;
+    pub fn remove_position(ctx: Context<RemovePosition>, index: u32) -> ProgramResult {
+        msg!("REMOVE POSITION");
 
+        let mut position_list = ctx.accounts.position_list.load_mut()?;
         position_list.head -= 1;
 
-        // reassign all fields in position
-        {
+        // when removed position is not the last one
+        if position_list.head != index {
+            let mut removed_position = ctx.accounts.removed_position.load_mut()?;
+            let last_position = ctx.accounts.last_position.load_mut()?;
+            // reassign all fields in position
             removed_position.owner = last_position.owner;
             removed_position.pool = last_position.pool;
             removed_position.liquidity = last_position.liquidity;
@@ -350,7 +350,6 @@ pub mod amm {
             removed_position.fee_growth_inside_x = last_position.fee_growth_inside_x;
             removed_position.fee_growth_inside_y = last_position.fee_growth_inside_y;
             removed_position.tokens_owed_x = last_position.tokens_owed_x;
-            removed_position.tokens_owed_y = last_position.tokens_owed_y;
             removed_position.tokens_owed_y = last_position.tokens_owed_y;
         }
 
