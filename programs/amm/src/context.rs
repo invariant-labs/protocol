@@ -57,6 +57,8 @@ pub struct Swap<'info> {
         constraint = &account_y.mint == token_y.to_account_info().key
     )]
     pub account_y: Box<Account<'info, TokenAccount>>,
+    #[account(signer)]
+    pub owner: AccountInfo<'info>,
     pub program_authority: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
 }
@@ -68,7 +70,7 @@ impl<'info> TakeTokens<'info> for Swap<'info> {
             Transfer {
                 from: self.account_x.to_account_info(),
                 to: self.reserve_x.to_account_info(),
-                authority: self.program_authority.clone(),
+                authority: self.owner.clone(),
             },
         )
     }
@@ -79,7 +81,7 @@ impl<'info> TakeTokens<'info> for Swap<'info> {
             Transfer {
                 from: self.account_y.to_account_info(),
                 to: self.reserve_y.to_account_info(),
-                authority: self.program_authority.clone(),
+                authority: self.owner.clone(),
             },
         )
     }
@@ -232,7 +234,7 @@ impl<'info> TakeTokens<'info> for InitPosition<'info> {
             Transfer {
                 from: self.account_x.to_account_info(),
                 to: self.reserve_x.to_account_info(),
-                authority: self.program_authority.clone(),
+                authority: self.owner.clone(),
             },
         )
     }
@@ -243,7 +245,7 @@ impl<'info> TakeTokens<'info> for InitPosition<'info> {
             Transfer {
                 from: self.account_y.to_account_info(),
                 to: self.reserve_y.to_account_info(),
-                authority: self.program_authority.clone(),
+                authority: self.owner.clone(),
             },
         )
     }
