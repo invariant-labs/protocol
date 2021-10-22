@@ -261,9 +261,9 @@ pub mod amm {
         msg!("INIT_POSITION");
 
         let mut position = ctx.accounts.position.load_init()?;
-        let mut pool = ctx.accounts.pool.load_mut()?;
-        let mut lower_tick = ctx.accounts.lower_tick.load_mut()?;
-        let mut upper_tick = ctx.accounts.upper_tick.load_mut()?;
+        let pool = &mut ctx.accounts.pool.load_mut()?;
+        let lower_tick = &mut ctx.accounts.lower_tick.load_mut()?;
+        let upper_tick = &mut ctx.accounts.upper_tick.load_mut()?;
         let mut position_list = ctx.accounts.position_list.load_mut()?;
 
         // validate ticks
@@ -286,48 +286,8 @@ pub mod amm {
             bump: bump,
         };
 
-        // update initialized tick
-        lower_tick.update(
-            pool.current_tick_index,
-            liquidity_delta,
-            pool.fee_growth_global_x,
-            pool.fee_growth_global_y,
-            false,
-            true,
-        )?;
-        upper_tick.update(
-            pool.current_tick_index,
-            liquidity_delta,
-            pool.fee_growth_global_x,
-            pool.fee_growth_global_y,
-            true,
-            true,
-        )?;
-
-        // update fee inside position
-        let (fee_growth_inside_x, fee_growth_inside_y) = calculate_fee_growth_inside(
-            *lower_tick,
-            *upper_tick,
-            pool.current_tick_index,
-            pool.fee_growth_global_x,
-            pool.fee_growth_global_y,
-        );
-
-        position.update(
-            true,
-            liquidity_delta,
-            fee_growth_inside_x,
-            fee_growth_inside_y,
-        )?;
-
-        // calculate tokens amounts and update pool liquidity
-        let (amount_x, amount_y) = calculate_amount_delta(
-            &mut pool,
-            liquidity_delta,
-            true,
-            upper_tick_index,
-            lower_tick_index,
-        )?;
+        let (amount_x, amount_y) =
+            position.modify(pool, upper_tick, lower_tick, liquidity_delta, true)?;
 
         // send tokens to reserve
         let seeds = &[SEED.as_bytes(), &[pool.nonce]];

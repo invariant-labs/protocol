@@ -26,6 +26,60 @@ impl Pool {
 }
 
 impl Position {
+    pub fn modify(
+        self: &mut Self,
+        pool: &mut Pool,
+        upper_tick: &mut Tick,
+        lower_tick: &mut Tick,
+        liquidity_delta: Decimal,
+        add: bool,
+    ) -> Result<(u64, u64)> {
+        // update initialized tick
+        lower_tick.update(
+            pool.current_tick_index,
+            liquidity_delta,
+            pool.fee_growth_global_x,
+            pool.fee_growth_global_y,
+            false,
+            true,
+        )?;
+        upper_tick.update(
+            pool.current_tick_index,
+            liquidity_delta,
+            pool.fee_growth_global_x,
+            pool.fee_growth_global_y,
+            true,
+            true,
+        )?;
+
+        // update fee inside position
+        let (fee_growth_inside_x, fee_growth_inside_y) = calculate_fee_growth_inside(
+            *lower_tick,
+            *upper_tick,
+            pool.current_tick_index,
+            pool.fee_growth_global_x,
+            pool.fee_growth_global_y,
+        );
+
+        self.update(
+            true,
+            liquidity_delta,
+            fee_growth_inside_x,
+            fee_growth_inside_y,
+        )?;
+
+        // calculate tokens amounts and update pool liquidity
+        let token_amounts = calculate_amount_delta(
+            pool,
+            liquidity_delta,
+            true,
+            upper_tick.index,
+            lower_tick.index,
+        )?;
+
+        Ok(token_amounts)
+    }
+
     pub fn update(
         self: &mut Self,
         sign: bool,
