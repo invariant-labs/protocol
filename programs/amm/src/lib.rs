@@ -41,27 +41,27 @@ pub mod amm {
     ) -> ProgramResult {
         let pool = &mut ctx.accounts.pool.load_init()?;
 
-        {
-            pool.token_x = *ctx.accounts.token_x.key;
-            pool.token_y = *ctx.accounts.token_y.key;
-            pool.token_x_reserve = *ctx.accounts.token_x_reserve.key;
-            pool.token_y_reserve = *ctx.accounts.token_y_reserve.key;
-            pool.tick_spacing = tick_spacing.try_into().unwrap();
-            pool.fee = Decimal::from_decimal(fee.into(), 5);
-            pool.protocol_fee = Decimal::from_decimal(1, 1); // 10%
-            pool.liquidity = Decimal::new(0);
-            pool.sqrt_price = calculate_price_sqrt(init_tick);
-            pool.current_tick_index = init_tick;
-            pool.tickmap = *ctx.accounts.tickmap.to_account_info().key;
-            pool.fee_growth_global_x = Decimal::new(0);
-            pool.fee_growth_global_y = Decimal::new(0);
-            pool.fee_protocol_token_x = Decimal::new(0);
-            pool.fee_protocol_token_y = Decimal::new(0);
-            // pool.accumulated_protocol_fees
-            pool.bump = bump;
-            pool.nonce = nonce;
-            pool.authority = *ctx.accounts.program_authority.key;
-        }
+        **pool = Pool {
+            token_x: *ctx.accounts.token_x.key,
+            token_y: *ctx.accounts.token_y.key,
+            token_x_reserve: *ctx.accounts.token_x_reserve.key,
+            token_y_reserve: *ctx.accounts.token_y_reserve.key,
+            tick_spacing: tick_spacing.try_into().unwrap(),
+            fee: Decimal::from_decimal(fee.into(), 5),
+            protocol_fee: Decimal::from_decimal(1, 1), // 10%
+            liquidity: Decimal::new(0),
+            sqrt_price: calculate_price_sqrt(init_tick),
+            current_tick_index: init_tick,
+            tickmap: *ctx.accounts.tickmap.to_account_info().key,
+            fee_growth_global_x: Decimal::new(0),
+            fee_growth_global_y: Decimal::new(0),
+            fee_protocol_token_x: Decimal::new(0),
+            fee_protocol_token_y: Decimal::new(0),
+            bump: bump,
+            nonce: nonce,
+            authority: *ctx.accounts.program_authority.key,
+        };
+
         Ok(())
     }
 
@@ -218,24 +218,23 @@ pub mod amm {
         tickmap.set(index, pool.tick_spacing);
 
         // init tick
-        {
-            tick.bump = bump;
-            tick.index = index;
-            tick.sign = true;
-            tick.liquidity_change = Decimal::new(0);
-            tick.liquidity_gross = Decimal::new(0);
-            tick.sqrt_price = Decimal::new(0);
-
-            let below_current_tick = index <= pool.current_tick_index;
-            tick.fee_growth_outside_x = match below_current_tick {
+        let below_current_tick = index <= pool.current_tick_index;
+        *tick = Tick {
+            index: index,
+            sign: true,
+            liquidity_change: Decimal::new(0),
+            liquidity_gross: Decimal::new(0),
+            sqrt_price: calculate_price_sqrt(index),
+            fee_growth_outside_x: match below_current_tick {
                 true => pool.fee_growth_global_x,
                 false => Decimal::new(0),
-            };
-            tick.fee_growth_outside_y = match below_current_tick {
+            },
+            fee_growth_outside_y: match below_current_tick {
                 true => pool.fee_growth_global_y,
                 false => Decimal::new(0),
-            };
-        }
+            },
+            bump: bump,
+        };
 
         Ok(())
     }
@@ -244,8 +243,10 @@ pub mod amm {
         msg!("CREATE POSITION LIST");
         let mut position_list = ctx.accounts.position_list.load_init()?;
 
-        position_list.bump = bump;
-        position_list.head = 0;
+        *position_list = PositionList {
+            head: 0,
+            bump: bump,
+        };
 
         Ok(())
     }
@@ -272,16 +273,18 @@ pub mod amm {
         position_list.head += 1;
 
         // init position
-        {
-            position.bump = bump;
-            position.owner = *ctx.accounts.owner.to_account_info().key;
-            position.liquidity = Decimal::new(0);
-            position.lower_tick_index = lower_tick.index;
-            position.upper_tick_index = upper_tick.index;
-            position.pool = *ctx.accounts.pool.to_account_info().key;
-            position.fee_growth_inside_x = Decimal::new(0);
-            position.fee_growth_inside_y = Decimal::new(0);
-        }
+        *position = Position {
+            owner: *ctx.accounts.owner.to_account_info().key,
+            pool: *ctx.accounts.pool.to_account_info().key,
+            liquidity: Decimal::new(0),
+            lower_tick_index: lower_tick.index,
+            upper_tick_index: upper_tick.index,
+            fee_growth_inside_x: Decimal::new(0),
+            fee_growth_inside_y: Decimal::new(0),
+            tokens_owed_x: Decimal::new(0),
+            tokens_owed_y: Decimal::new(0),
+            bump: bump,
+        };
 
         // update initialized tick
         lower_tick.update(
@@ -348,16 +351,20 @@ pub mod amm {
         if position_list.head != index {
             let mut removed_position = ctx.accounts.removed_position.load_mut()?;
             let last_position = ctx.accounts.last_position.load_mut()?;
+
             // reassign all fields in position
-            removed_position.owner = last_position.owner;
-            removed_position.pool = last_position.pool;
-            removed_position.liquidity = last_position.liquidity;
-            removed_position.lower_tick_index = last_position.lower_tick_index;
-            removed_position.upper_tick_index = last_position.upper_tick_index;
-            removed_position.fee_growth_inside_x = last_position.fee_growth_inside_x;
-            removed_position.fee_growth_inside_y = last_position.fee_growth_inside_y;
-            removed_position.tokens_owed_x = last_position.tokens_owed_x;
-            removed_position.tokens_owed_y = last_position.tokens_owed_y;
+            *removed_position = Position {
+                bump: removed_position.bump,
+                owner: last_position.owner,
+                pool: last_position.pool,
+                liquidity: last_position.liquidity,
+                lower_tick_index: last_position.lower_tick_index,
+                upper_tick_index: last_position.upper_tick_index,
+                fee_growth_inside_x: last_position.fee_growth_inside_x,
+                fee_growth_inside_y: last_position.fee_growth_inside_y,
+                tokens_owed_x: last_position.tokens_owed_x,
+                tokens_owed_y: last_position.tokens_owed_y,
+            };
         }
 
         Ok(())
