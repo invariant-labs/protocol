@@ -137,17 +137,6 @@ export class Market {
     return tickmap
   }
 
-  async getApproveInstruction(pair: Pair, owner: PublicKey, account: PublicKey, amount: BN) {
-    return Token.createApproveInstruction(
-      TOKEN_PROGRAM_ID,
-      account,
-      (await this.get(pair)).authority,
-      owner,
-      [],
-      tou64(amount)
-    )
-  }
-
   async getTick(pair: Pair, index: number) {
     const { tickAddress } = await this.getTickAddress(pair, index)
     return (await this.program.account.tick.fetch(tickAddress)) as Tick
@@ -347,7 +336,8 @@ export class Market {
       position.upperTickIndex
     )
 
-    return (await this.program.instruction.withdraw(
+    return this.program.instruction.withdraw(
+      // positionBump,
       index,
       position.lowerTickIndex,
       position.upperTickIndex,
@@ -369,27 +359,14 @@ export class Market {
           tokenProgram: TOKEN_PROGRAM_ID
         }
       }
-    )) as TransactionInstruction
+    ) as TransactionInstruction
   }
 
   async initPositionTx(initPosition: InitPosition) {
     const { owner, userTokenX, userTokenY } = initPosition
 
-    const approveXIx = await this.getApproveInstruction(
-      initPosition.pair,
-      owner,
-      userTokenX,
-      new BN(1e14)
-    )
-    const approveYIx = await this.getApproveInstruction(
-      initPosition.pair,
-      owner,
-      userTokenY,
-      new BN(1e14)
-    )
-
     const initPositionIx = await this.initPositionInstruction(initPosition)
-    return new Transaction().add(approveXIx).add(approveYIx).add(initPositionIx)
+    return new Transaction().add(initPositionIx)
   }
 
   async initPosition(initPosition: InitPosition, signer: Keypair) {
@@ -403,10 +380,6 @@ export class Market {
     { pair, owner, userTokenX, userTokenY, index, liquidityDelta }: ModifyPosition,
     signer: Keypair
   ) {
-    const state = await this.get(pair)
-    const approveXIx = await this.getApproveInstruction(pair, owner, userTokenX, new BN(1e14))
-    const approveYIx = await this.getApproveInstruction(pair, owner, userTokenY, new BN(1e14))
-
     const withdrawPositionIx = await this.withdrawInstruction({
       pair,
       owner,
@@ -416,11 +389,7 @@ export class Market {
       liquidityDelta
     })
 
-    await signAndSend(
-      new Transaction().add(approveXIx).add(approveYIx).add(withdrawPositionIx),
-      [signer],
-      this.connection
-    )
+    await signAndSend(new Transaction().add(withdrawPositionIx), [signer], this.connection)
   }
 
   async swap(
@@ -486,33 +455,14 @@ export class Market {
         tokenY: state.tokenY,
         reserveX: state.tokenXReserve,
         reserveY: state.tokenYReserve,
+        owner,
         accountX,
         accountY,
         programAuthority: state.authority,
         tokenProgram: TOKEN_PROGRAM_ID
       }
     })
-    let approve: TransactionInstruction
-    if (XtoY) {
-      approve = Token.createApproveInstruction(
-        TOKEN_PROGRAM_ID,
-        accountX,
-        state.authority,
-        owner,
-        [],
-        tou64(amount)
-      )
-    } else {
-      approve = Token.createApproveInstruction(
-        TOKEN_PROGRAM_ID,
-        accountY,
-        state.authority,
-        owner,
-        [],
-        tou64(amount)
-      )
-    }
-    const tx = new Transaction().add(approve).add(swapIx)
+    const tx = new Transaction().add(swapIx)
 
     return tx
   }

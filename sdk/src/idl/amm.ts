@@ -123,6 +123,11 @@ export type Amm = {
           "isSigner": false
         },
         {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
           "name": "programAuthority",
           "isMut": false,
           "isSigner": false
