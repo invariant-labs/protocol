@@ -328,7 +328,7 @@ pub mod amm {
         liquidity_delta: Decimal,
         add: bool,
     ) -> ProgramResult {
-        msg!("WITHDRAW");
+        msg!("MODIFY POSITION");
 
         let mut position = ctx.accounts.position.load_mut()?;
         let pool = &mut ctx.accounts.pool.load_mut()?;
@@ -345,12 +345,17 @@ pub mod amm {
         let seeds = &[SEED.as_bytes(), &[pool.nonce]];
         let signer = &[&seeds[..]];
 
-        let cpi_ctx_x = if add {
-            ctx.accounts.send_x().with_signer(signer)
+        let (cpi_ctx_x, cpi_ctx_y) = if add {
+            (
+                ctx.accounts.send_x().with_signer(signer),
+                ctx.accounts.send_y().with_signer(signer),
+            )
         } else {
-            ctx.accounts.take_x().with_signer(signer)
+            (
+                ctx.accounts.take_x().with_signer(signer),
+                ctx.accounts.take_y().with_signer(signer),
+            )
         };
-        let cpi_ctx_y = ctx.accounts.send_y().with_signer(signer);
 
         token::transfer(cpi_ctx_x, amount_x)?;
         token::transfer(cpi_ctx_y, amount_y)?;
