@@ -336,12 +336,13 @@ export class Market {
       position.upperTickIndex
     )
 
-    return this.program.instruction.withdraw(
+    return this.program.instruction.modifyPosition(
       // positionBump,
       index,
       position.lowerTickIndex,
       position.upperTickIndex,
       liquidityDelta,
+      false,
       {
         accounts: {
           pool: await pair.getAddress(this.program.programId),

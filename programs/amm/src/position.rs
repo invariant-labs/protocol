@@ -41,7 +41,7 @@ impl Position {
             pool.fee_growth_global_x,
             pool.fee_growth_global_y,
             false,
-            true,
+            add,
         )?;
         upper_tick.update(
             pool.current_tick_index,
@@ -49,7 +49,7 @@ impl Position {
             pool.fee_growth_global_x,
             pool.fee_growth_global_y,
             true,
-            true,
+            add,
         )?;
 
         // update fee inside position
@@ -62,7 +62,7 @@ impl Position {
         );
 
         self.update(
-            true,
+            add,
             liquidity_delta,
             fee_growth_inside_x,
             fee_growth_inside_y,
@@ -72,7 +72,7 @@ impl Position {
         let token_amounts = calculate_amount_delta(
             pool,
             liquidity_delta,
-            true,
+            add,
             upper_tick.index,
             lower_tick.index,
         )?;

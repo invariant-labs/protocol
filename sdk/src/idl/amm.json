@@ -380,7 +380,7 @@
       ]
     },
     {
-      "name": "withdraw",
+      "name": "modifyPosition",
       "accounts": [
         {
           "name": "pool",
@@ -466,6 +466,10 @@
           "type": {
             "defined": "Decimal"
           }
+        },
+        {
+          "name": "add",
+          "type": "bool"
         }
       ]
     }

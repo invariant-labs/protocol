@@ -317,3 +317,27 @@ impl<'info> SendTokens<'info> for ModifyPosition<'info> {
         )
     }
 }
+
+impl<'info> TakeTokens<'info> for ModifyPosition<'info> {
+    fn take_x(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+        CpiContext::new(
+            self.token_program.to_account_info(),
+            Transfer {
+                from: self.account_x.to_account_info(),
+                to: self.reserve_x.to_account_info(),
+                authority: self.owner.clone(),
+            },
+        )
+    }
+
+    fn take_y(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+        CpiContext::new(
+            self.token_program.to_account_info(),
+            Transfer {
+                from: self.account_y.to_account_info(),
+                to: self.reserve_y.to_account_info(),
+                authority: self.owner.clone(),
+            },
+        )
+    }
+}

@@ -380,7 +380,7 @@ export type Amm = {
       ]
     },
     {
-      "name": "withdraw",
+      "name": "modifyPosition",
       "accounts": [
         {
           "name": "pool",
@@ -466,6 +466,10 @@ export type Amm = {
           "type": {
             "defined": "Decimal"
           }
+        },
+        {
+          "name": "add",
+          "type": "bool"
         }
       ]
     }
