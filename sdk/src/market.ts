@@ -566,7 +566,7 @@ export class Market {
     return this.removePositionWithIndexInstruction(owner, positionList.head - 1, index)
   }
 
-  async transferPositionOwnership(
+  async transferPositionOwnershipInstruction(
     owner: PublicKey,
     recipient: PublicKey,
     index: number
