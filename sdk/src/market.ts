@@ -233,6 +233,11 @@ export class Market {
     }
   }
 
+  async geNewPositionAddress(owner: PublicKey) {
+    const positionList = await this.getPositionList(owner)
+    return this.getPositionAddress(owner, positionList.head)
+  }
+
   async createTickInstruction(pair: Pair, index: number, payer: PublicKey) {
     const state = await this.get(pair)
 
@@ -557,9 +562,42 @@ export class Market {
     owner: PublicKey,
     index: number
   ): Promise<TransactionInstruction> {
-    const position = await this.getPositionList(owner)
-    return this.removePositionWithIndexInstruction(owner, position.head - 1, index)
+    const positionList = await this.getPositionList(owner)
+    return this.removePositionWithIndexInstruction(owner, positionList.head - 1, index)
   }
+
+  // async transferPositionOwnership(
+  //   owner: PublicKey,
+  //   recipient: PublicKey,
+  //   index: number
+  // ): Promise<TransactionInstruction> {
+  //   const { positionListAddress: ownerList } = await this.getPositionListAddress(owner)
+  //   const { positionListAddress: recipientList } = await this.getPositionListAddress(owner)
+
+  //   const ownerPositionList = await this.getPositionList(owner)
+  //   const { positionAddress: removedPosition } = await this.getPositionAddress(owner, index)
+  //   const { positionAddress: lastPosition } = await this.getPositionAddress(
+  //     owner,
+  //     ownerPositionList.head - 1
+  //   )
+
+  //   return this.program.instruction.transferPositionOwnership(index, {
+  //     accounts: {
+  //       owner,
+  //       recipient,
+
+  //       ownerList,
+  //       recipientList,
+
+  //       lastPosition,
+  //       removedPosition,
+  //       newPosition: lastPositionAddress,
+
+  //       rent: SYSVAR_RENT_PUBKEY,
+  //       systemProgram: SystemProgram.programId
+  //     }
+  //   }) as TransactionInstruction
+  // }
 }
 export interface Decimal {
   v: BN
