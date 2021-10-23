@@ -531,17 +531,17 @@ export class Market {
     return { x: accounts[0].amount, y: accounts[1].amount }
   }
 
-  async removePositionInstruction(
+  async removePositionWithIndexInstruction(
     owner: PublicKey,
+    lastPositionIndex: number,
     index: number
   ): Promise<TransactionInstruction> {
     const { positionListAddress } = await this.getPositionListAddress(owner)
-    const position = await this.getPositionList(owner)
+    const { positionAddress: removedPositionAddress } = await this.getPositionAddress(owner, index)
     const { positionAddress: lastPositionAddress } = await this.getPositionAddress(
       owner,
-      position.head - 1
+      lastPositionIndex
     )
-    const { positionAddress: removedPositionAddress } = await this.getPositionAddress(owner, index)
 
     return this.program.instruction.removePosition(index, {
       accounts: {
@@ -551,6 +551,14 @@ export class Market {
         lastPosition: lastPositionAddress
       }
     }) as TransactionInstruction
+  }
+
+  async removePositionInstruction(
+    owner: PublicKey,
+    index: number
+  ): Promise<TransactionInstruction> {
+    const position = await this.getPositionList(owner)
+    return this.removePositionWithIndexInstruction(owner, position.head - 1, index)
   }
 }
 export interface Decimal {

@@ -284,11 +284,19 @@ describe('Position list', () => {
       upperTick: ticksIndexes[2],
       liquidityDelta: fromInteger(1)
     })
-    const removePositionIx = await market.removePositionInstruction(
+    const removePositionIx = await market.removePositionWithIndexInstruction(
       positionOwner.publicKey,
+      positionListBefore.head,
       positionListBefore.head
     )
-    await signAndSend(new Transaction().add(initPositionIx), [positionOwner], connection)
-    await signAndSend(new Transaction().add(removePositionIx), [positionOwner], connection)
+    await signAndSend(
+      new Transaction().add(initPositionIx).add(removePositionIx),
+      [positionOwner],
+      connection
+    )
+    const positionListAfter = await market.getPositionList(positionOwner.publicKey)
+
+    // added and removed should be the same length
+    assert.equal(positionListAfter.head, positionListBefore.head)
   })
 })
