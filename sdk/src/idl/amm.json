@@ -375,6 +375,66 @@
       ]
     },
     {
+      "name": "transferPositionOwnership",
+      "accounts": [
+        {
+          "name": "ownerList",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "recipientList",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "newPosition",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "removedPosition",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "lastPosition",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "recipient",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
       "name": "withdraw",
       "accounts": [
         {
