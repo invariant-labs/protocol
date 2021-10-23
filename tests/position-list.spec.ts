@@ -273,4 +273,22 @@ describe('Position list', () => {
     const positionListAfter = await market.getPositionList(positionOwner.publicKey)
     assert.equal(positionListBefore.head + 1, positionListAfter.head)
   })
+  it('Add and remove position in the same transaction', async () => {
+    const positionListBefore = await market.getPositionList(positionOwner.publicKey)
+    const initPositionIx = await market.initPositionInstruction({
+      pair,
+      owner: positionOwner.publicKey,
+      userTokenX: userTokenXAccount,
+      userTokenY: userTokenYAccount,
+      lowerTick: ticksIndexes[1],
+      upperTick: ticksIndexes[2],
+      liquidityDelta: fromInteger(1)
+    })
+    const removePositionIx = await market.removePositionInstruction(
+      positionOwner.publicKey,
+      positionListBefore.head
+    )
+    await signAndSend(new Transaction().add(initPositionIx), [positionOwner], connection)
+    await signAndSend(new Transaction().add(removePositionIx), [positionOwner], connection)
+  })
 })
