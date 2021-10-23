@@ -24,6 +24,8 @@ const SEED: &str = "Swapline";
 #[program]
 pub mod amm {
 
+    use util::close;
+
     use crate::{
         position::{calculate_amount_delta, calculate_fee_growth_inside},
         util::{check_ticks, get_tick_from_price},
@@ -360,8 +362,41 @@ pub mod amm {
             removed_position.tokens_owed_y = last_position.tokens_owed_y;
         }
 
+        close(
+            ctx.accounts.last_position.to_account_info(),
+            ctx.accounts.owner.to_account_info(),
+        )?;
+
         Ok(())
     }
+
+    // pub fn transfer_position(ctx: Context<TransferPositionOwnership>, index: u32) -> ProgramResult {
+    //     msg!("TRANSFER POSITION");
+
+    //     let mut owner_list = ctx.accounts.owner_list.load_mut()?;
+    //     let mut recipient_list = ctx.accounts.recipient_list.load_mut()?;
+
+    //     owner_list.head -= 1;
+    //     recipient_list.head += 1;
+
+    //     // when removed position is not the last one
+    //     if owner_list.head != index {
+    //         let mut removed_position = ctx.accounts.removed_position.load_mut()?;
+    //         let last_position = ctx.accounts.last_position.load_mut()?;
+    //         // reassign all fields in position
+    //         removed_position.owner = last_position.owner;
+    //         removed_position.pool = last_position.pool;
+    //         removed_position.liquidity = last_position.liquidity;
+    //         removed_position.lower_tick_index = last_position.lower_tick_index;
+    //         removed_position.upper_tick_index = last_position.upper_tick_index;
+    //         removed_position.fee_growth_inside_x = last_position.fee_growth_inside_x;
+    //         removed_position.fee_growth_inside_y = last_position.fee_growth_inside_y;
+    //         removed_position.tokens_owed_x = last_position.tokens_owed_x;
+    //         removed_position.tokens_owed_y = last_position.tokens_owed_y;
+    //     }
+
+    //     Ok(())
+    // }
 
     pub fn withdraw(
         ctx: Context<ModifyPosition>,
