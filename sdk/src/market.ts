@@ -566,38 +566,37 @@ export class Market {
     return this.removePositionWithIndexInstruction(owner, positionList.head - 1, index)
   }
 
-  // async transferPositionOwnership(
-  //   owner: PublicKey,
-  //   recipient: PublicKey,
-  //   index: number
-  // ): Promise<TransactionInstruction> {
-  //   const { positionListAddress: ownerList } = await this.getPositionListAddress(owner)
-  //   const { positionListAddress: recipientList } = await this.getPositionListAddress(owner)
+  async transferPositionOwnership(
+    owner: PublicKey,
+    recipient: PublicKey,
+    index: number
+  ): Promise<TransactionInstruction> {
+    const { positionListAddress: ownerList } = await this.getPositionListAddress(owner)
+    const { positionListAddress: recipientList } = await this.getPositionListAddress(owner)
 
-  //   const ownerPositionList = await this.getPositionList(owner)
-  //   const { positionAddress: removedPosition } = await this.getPositionAddress(owner, index)
-  //   const { positionAddress: lastPosition } = await this.getPositionAddress(
-  //     owner,
-  //     ownerPositionList.head - 1
-  //   )
+    const ownerPositionList = await this.getPositionList(owner)
+    const { positionAddress: removedPosition } = await this.getPositionAddress(owner, index)
+    const { positionAddress: lastPosition } = await this.getPositionAddress(
+      owner,
+      ownerPositionList.head - 1
+    )
+    const { positionAddress: newPosition, positionBump: newPositionBump } =
+      await this.geNewPositionAddress(recipient)
 
-  //   return this.program.instruction.transferPositionOwnership(index, {
-  //     accounts: {
-  //       owner,
-  //       recipient,
-
-  //       ownerList,
-  //       recipientList,
-
-  //       lastPosition,
-  //       removedPosition,
-  //       newPosition: lastPositionAddress,
-
-  //       rent: SYSVAR_RENT_PUBKEY,
-  //       systemProgram: SystemProgram.programId
-  //     }
-  //   }) as TransactionInstruction
-  // }
+    return this.program.instruction.transferPositionOwnership(newPositionBump, index, {
+      accounts: {
+        owner,
+        recipient,
+        ownerList,
+        recipientList,
+        lastPosition,
+        removedPosition,
+        newPosition,
+        rent: SYSVAR_RENT_PUBKEY,
+        systemProgram: SystemProgram.programId
+      }
+    }) as TransactionInstruction
+  }
 }
 export interface Decimal {
   v: BN
