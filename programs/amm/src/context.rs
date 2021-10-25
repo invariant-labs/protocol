@@ -190,7 +190,7 @@ pub struct TransferPositionOwnership<'info> {
     pub recipient_list: Loader<'info, PositionList>,
     #[account(init,
         seeds = [b"positionv1",
-        owner.to_account_info().key.as_ref(),
+        recipient.to_account_info().key.as_ref(),
         &recipient_list.load()?.head.to_le_bytes()],
         bump = bump, payer = owner,
     )]
@@ -198,12 +198,11 @@ pub struct TransferPositionOwnership<'info> {
     #[account(mut,
         seeds = [b"positionv1",
         owner.to_account_info().key.as_ref(),
-        &owner_list.load()?.head.to_le_bytes()],
+        &index.to_le_bytes()],
         bump = removed_position.load()?.bump,
     )]
     pub removed_position: Loader<'info, Position>,
     #[account(mut,
-        close = owner,
         seeds = [b"positionv1",
         owner.to_account_info().key.as_ref(),
         &(owner_list.load()?.head - 1).to_le_bytes()],

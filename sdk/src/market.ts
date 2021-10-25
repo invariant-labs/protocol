@@ -572,7 +572,7 @@ export class Market {
     index: number
   ): Promise<TransactionInstruction> {
     const { positionListAddress: ownerList } = await this.getPositionListAddress(owner)
-    const { positionListAddress: recipientList } = await this.getPositionListAddress(owner)
+    const { positionListAddress: recipientList } = await this.getPositionListAddress(recipient)
 
     const ownerPositionList = await this.getPositionList(owner)
     const { positionAddress: removedPosition } = await this.getPositionAddress(owner, index)
