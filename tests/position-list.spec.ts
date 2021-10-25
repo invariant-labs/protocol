@@ -352,7 +352,22 @@ describe('Position list', () => {
         positionOwner
       )
     })
-    it('only owner can transfer position')
+    it('only owner can transfer position', async () => {
+      const transferPositionOwnershipInstruction =
+        await market.transferPositionOwnershipInstruction(
+          positionOwner.publicKey,
+          positionRecipient.publicKey,
+          0
+        )
+      await assertThrowsAsync(
+        signAndSend(
+          new Transaction().add(transferPositionOwnershipInstruction),
+          [positionRecipient],
+          connection
+        ),
+        ERRORS.SIGNATURE
+      )
+    })
     it('transfer first position', async () => {
       const removedIndex = 0
       const ownerListBefore = await market.getPositionList(positionOwner.publicKey)
@@ -415,8 +430,8 @@ describe('Position list', () => {
       assert.equal(recipientListBefore.head + 1, recipientListAfter.head)
     })
   })
-  it('transfer last position')
   it('transfer middle position')
+  it('transfer last position')
   it('clear position')
   it('get back position')
 })
