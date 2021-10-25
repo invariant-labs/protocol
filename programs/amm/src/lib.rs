@@ -395,7 +395,7 @@ pub mod amm {
             new_position.fee_growth_inside_x = removed_position.fee_growth_inside_y;
             new_position.tokens_owed_x = removed_position.tokens_owed_x;
             new_position.tokens_owed_y = removed_position.tokens_owed_y;
-            new_position.bump = bump;
+            new_position.bump = bump; // new bump
         }
 
         // when removed position is not the last one

@@ -17,6 +17,7 @@ import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken, eqDecimal } from './testUtils'
 import { assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
 import { ERRORS } from '@invariant-labs/sdk/lib/utils'
+import { sleep } from '@invariant-labs/sdk'
 
 describe('Position list', () => {
   const provider = Provider.local()
@@ -306,31 +307,116 @@ describe('Position list', () => {
     })
   })
   describe('transferPositionOwnership()', async () => {
-    // prepare recipient
     const positionRecipient = Keypair.generate()
     before(async () => {
+      // prepare recipient
       await connection.requestAirdrop(positionRecipient.publicKey, 1e9)
+      await sleep(2000)
+      await market.createPositionList(positionRecipient)
 
-      // TODO: fill owner position list
+      // init positions
+      await market.initPosition(
+        {
+          pair,
+          owner: positionOwner.publicKey,
+          userTokenX: userTokenXAccount,
+          userTokenY: userTokenYAccount,
+          lowerTick: ticksIndexes[0],
+          upperTick: ticksIndexes[1],
+          liquidityDelta: fromInteger(1)
+        },
+        positionOwner
+      )
+      await market.initPosition(
+        {
+          pair,
+          owner: positionOwner.publicKey,
+          userTokenX: userTokenXAccount,
+          userTokenY: userTokenYAccount,
+          lowerTick: ticksIndexes[1],
+          upperTick: ticksIndexes[2],
+          liquidityDelta: fromInteger(1)
+        },
+        positionOwner
+      )
+      await market.initPosition(
+        {
+          pair,
+          owner: positionOwner.publicKey,
+          userTokenX: userTokenXAccount,
+          userTokenY: userTokenYAccount,
+          lowerTick: ticksIndexes[1],
+          upperTick: ticksIndexes[3],
+          liquidityDelta: fromInteger(1)
+        },
+        positionOwner
+      )
     })
     it('only owner can transfer position')
     it('transfer first position', async () => {
+      const removedIndex = 0
+      const ownerListBefore = await market.getPositionList(positionOwner.publicKey)
+      const recipientListBefore = await market.getPositionList(positionRecipient.publicKey)
+      const removedPosition = await market.getPosition(positionOwner.publicKey, removedIndex)
+      const lastPositionBefore = await market.getPosition(
+        positionOwner.publicKey,
+        ownerListBefore.head - 1
+      )
+
       const transferPositionOwnershipInstruction =
         await market.transferPositionOwnershipInstruction(
           positionOwner.publicKey,
           positionRecipient.publicKey,
-          0
+          removedIndex
         )
-
       await signAndSend(
         new Transaction().add(transferPositionOwnershipInstruction),
         [positionOwner],
         connection
       )
+
+      const recipientPosition = await market.getPosition(positionRecipient.publicKey, 0)
+      const ownerListAfter = await market.getPositionList(positionOwner.publicKey)
+      const recipientListAfter = await market.getPositionList(positionRecipient.publicKey)
+      const firstPositionAfter = await market.getPosition(positionOwner.publicKey, 0)
+
+      // transferred last position
+      {
+        assert.ok(
+          eqDecimal(lastPositionBefore.feeGrowthInsideX, firstPositionAfter.feeGrowthInsideX)
+        )
+        assert.ok(
+          eqDecimal(lastPositionBefore.feeGrowthInsideY, firstPositionAfter.feeGrowthInsideY)
+        )
+        assert.ok(eqDecimal(lastPositionBefore.liquidity, firstPositionAfter.liquidity))
+        assert.equal(lastPositionBefore.upperTickIndex, firstPositionAfter.upperTickIndex)
+        assert.equal(lastPositionBefore.lowerTickIndex, firstPositionAfter.lowerTickIndex)
+        assert.ok(lastPositionBefore.owner.equals(firstPositionAfter.owner))
+        assert.ok(lastPositionBefore.pool.equals(firstPositionAfter.pool))
+        assert.ok(eqDecimal(lastPositionBefore.tokensOwedX, firstPositionAfter.tokensOwedX))
+        assert.ok(eqDecimal(lastPositionBefore.tokensOwedY, firstPositionAfter.tokensOwedY))
+      }
+
+      // equals fields of transferred position
+      {
+        assert.ok(eqDecimal(removedPosition.feeGrowthInsideX, recipientPosition.feeGrowthInsideX))
+        assert.ok(eqDecimal(removedPosition.feeGrowthInsideY, recipientPosition.feeGrowthInsideY))
+        assert.ok(eqDecimal(removedPosition.liquidity, recipientPosition.liquidity))
+        assert.equal(removedPosition.upperTickIndex, recipientPosition.upperTickIndex)
+        assert.equal(removedPosition.lowerTickIndex, recipientPosition.lowerTickIndex)
+        assert.ok(removedPosition.owner.equals(recipientPosition.owner))
+        assert.ok(removedPosition.pool.equals(recipientPosition.pool))
+        assert.ok(eqDecimal(removedPosition.tokensOwedX, recipientPosition.tokensOwedX))
+        assert.ok(eqDecimal(removedPosition.tokensOwedY, recipientPosition.tokensOwedY))
+      }
+
+      // positions length
+      assert.equal(ownerListBefore.head - 1, ownerListAfter.head)
+      assert.equal(recipientListBefore.head + 1, recipientListAfter.head)
     })
   })
   it('transfer last position')
   it('transfer middle position')
-  it('transfer last position')
+  it('clear position')
   it('get back position')
 })
