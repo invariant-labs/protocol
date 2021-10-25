@@ -151,7 +151,7 @@ pub struct CreatePositionList<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(index: i32)]
+#[instruction(index: i32, lower_tick_index: i32, upper_tick_index: i32)]
 pub struct RemovePosition<'info> {
     #[account(mut,
         seeds = [b"positionlistv1", owner.to_account_info().key.as_ref()],
@@ -167,14 +167,66 @@ pub struct RemovePosition<'info> {
     )]
     pub last_position: Loader<'info, Position>,
     #[account(mut,
+        seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
+        bump = pool.load()?.bump
+    )]
+    pub pool: Loader<'info, Pool>,
+    #[account(mut,
         seeds = [b"positionv1",
         owner.to_account_info().key.as_ref(),
         &index.to_le_bytes()],
         bump = removed_position.load()?.bump
     )]
     pub removed_position: Loader<'info, Position>,
-    #[account(mut, signer)]
+    #[account(mut,
+        seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &lower_tick_index.to_le_bytes()],
+        bump = lower_tick.load()?.bump
+    )]
+    pub lower_tick: Loader<'info, Tick>,
+    #[account(mut,
+        seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &upper_tick_index.to_le_bytes()],
+        bump = upper_tick.load()?.bump
+    )]
+    pub upper_tick: Loader<'info, Tick>,
     pub owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub token_x: Account<'info, Mint>,
+    #[account(mut)]
+    pub token_y: Account<'info, Mint>,
+    #[account(mut)]
+    pub account_x: Box<Account<'info, TokenAccount>>,
+    #[account(mut)]
+    pub account_y: Box<Account<'info, TokenAccount>>,
+    #[account(mut)]
+    pub reserve_x: Box<Account<'info, TokenAccount>>,
+    #[account(mut)]
+    pub reserve_y: Box<Account<'info, TokenAccount>>,
+    pub token_program: AccountInfo<'info>,
+    pub program_authority: AccountInfo<'info>,
+}
+
+impl<'info> SendTokens<'info> for RemovePosition<'info> {
+    fn send_x(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+        CpiContext::new(
+            self.token_program.to_account_info(),
+            Transfer {
+                from: self.reserve_x.to_account_info(),
+                to: self.account_x.to_account_info(),
+                authority: self.program_authority.clone(),
+            },
+        )
+    }
+
+    fn send_y(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+        CpiContext::new(
+            self.token_program.to_account_info(),
+            Transfer {
+                from: self.reserve_y.to_account_info(),
+                to: self.account_y.to_account_info(),
+                authority: self.program_authority.clone(),
+            },
+        )
+    }
 }
 
 #[derive(Accounts)]
