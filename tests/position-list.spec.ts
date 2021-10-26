@@ -14,7 +14,7 @@ import {
 } from '@invariant-labs/sdk'
 import { Provider, Program, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { createToken, eqDecimal, positionEquals, positionWithoutOwnerPosition } from './testUtils'
+import { createToken, eqDecimal, positionEquals, positionWithoutOwnerEquals } from './testUtils'
 import { assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
 import { ERRORS } from '@invariant-labs/sdk/lib/utils'
 import { sleep } from '@invariant-labs/sdk'
@@ -408,7 +408,7 @@ describe('Position list', () => {
       positionEquals(lastPositionBefore, firstPositionAfter)
 
       // equals fields of transferred position
-      positionWithoutOwnerPosition(removedPosition, recipientPosition)
+      positionWithoutOwnerEquals(removedPosition, recipientPosition)
       assert.ok(recipientPosition.owner.equals(positionRecipient.publicKey))
 
       // positions length
@@ -452,7 +452,7 @@ describe('Position list', () => {
       positionEquals(lastPositionBefore, middlePositionAfter)
 
       // equals fields of transferred position
-      positionWithoutOwnerPosition(removedPosition, recipientPosition)
+      positionWithoutOwnerEquals(removedPosition, recipientPosition)
       assert.ok(recipientPosition.owner.equals(positionRecipient.publicKey))
 
       // positions length
@@ -485,7 +485,7 @@ describe('Position list', () => {
       )
 
       // equals fields of transferred position
-      positionWithoutOwnerPosition(removedPosition, recipientPosition)
+      positionWithoutOwnerEquals(removedPosition, recipientPosition)
       assert.ok(recipientPosition.owner.equals(positionRecipient.publicKey))
 
       // positions length
@@ -517,7 +517,7 @@ describe('Position list', () => {
       )
 
       // equals fields of transferred position
-      positionWithoutOwnerPosition(removedPosition, recipientPosition)
+      positionWithoutOwnerEquals(removedPosition, recipientPosition)
       assert.ok(recipientPosition.owner.equals(positionRecipient.publicKey))
 
       // positions length
@@ -561,7 +561,7 @@ describe('Position list', () => {
       positionEquals(lastPositionBefore, firstPositionAfter)
 
       // equals fields of transferred position
-      positionWithoutOwnerPosition(removedPosition, ownerNewPosition)
+      positionWithoutOwnerEquals(removedPosition, ownerNewPosition)
       assert.ok(ownerNewPosition.owner.equals(positionOwner.publicKey))
 
       // positions length
