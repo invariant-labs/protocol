@@ -1,13 +1,13 @@
 {
   "scripts": {
-    "test:full": "anchor test tests/position.spec.ts && anchor test tests/swap.spec.ts && anchor test tests/cross.spec.ts && anchor test tests/reversed.spec.ts && anchor test tests/math.spec.ts && anchor test tests/withdraw.spec.ts && anchor test tests/claim.spec.ts",
-    "test:swap": "anchor test tests/swap.spec.ts",
-    "test:cross": "anchor test tests/cross.spec.ts",
-    "test:reversed": "anchor test tests/reversed.spec.ts",
-    "test:position": "anchor test tests/position.spec.ts",
-    "test:math": "anchor test tests/math.spec.ts",
-    "test:withdraw": "anchor test tests/withdraw.spec.ts",
-    "test:claim": "anchor test tests/claim.spec.ts",
+    "test:full": "npm run test:swap && npm run test:cross && npm run test:reversed && npm run test:position && npm run test:math && npm run test:withdraw && npm run test:position-list",
+    "test:swap": "anchor test --skip-build tests/swap.spec.ts",
+    "test:cross": "anchor test --skip-build tests/cross.spec.ts",
+    "test:reversed": "anchor test --skip-build tests/reversed.spec.ts",
+    "test:position": "anchor test --skip-build tests/position.spec.ts",
+    "test:math": "anchor test --skip-build tests/math.spec.ts",
+    "test:withdraw": "anchor test --skip-build tests/withdraw.spec.ts",
+    "test:position-list": "anchor test --skip-build tests/position-list.spec.ts",
     "build": "cd sdk && npm run build"
   },
   "dependencies": {

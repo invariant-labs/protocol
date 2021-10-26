@@ -109,7 +109,6 @@ describe('swap', () => {
         owner: positionOwner.publicKey,
         userTokenX: userTokenXAccount,
         userTokenY: userTokenYAccount,
-        index: 0,
         lowerTick,
         upperTick,
         liquidityDelta
@@ -123,7 +122,6 @@ describe('swap', () => {
         owner: positionOwner.publicKey,
         userTokenX: userTokenXAccount,
         userTokenY: userTokenYAccount,
-        index: 1,
         lowerTick: middleTick,
         upperTick: upperTick + 20,
         liquidityDelta

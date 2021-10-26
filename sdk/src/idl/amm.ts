@@ -1,4 +1,4 @@
-{
+export type Amm = {
   "version": "0.0.0",
   "name": "amm",
   "instructions": [
@@ -468,95 +468,11 @@
           }
         }
       ]
-    },
-    {
-      "name": "claimFee",
-      "accounts": [
-        {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "position",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "lowerTick",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "upperTick",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "tokenX",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenY",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "accountX",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "accountY",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "reserveX",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "reserveY",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "programAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "index",
-          "type": "u32"
-        },
-        {
-          "name": "lowerTickIndex",
-          "type": "i32"
-        },
-        {
-          "name": "upperTickIndex",
-          "type": "i32"
-        }
-      ]
     }
   ],
   "accounts": [
     {
-      "name": "Pool",
+      "name": "pool",
       "type": {
         "kind": "struct",
         "fields": [
@@ -652,7 +568,7 @@
       }
     },
     {
-      "name": "Tickmap",
+      "name": "tickmap",
       "type": {
         "kind": "struct",
         "fields": [
@@ -669,7 +585,7 @@
       }
     },
     {
-      "name": "Tick",
+      "name": "tick",
       "type": {
         "kind": "struct",
         "fields": [
@@ -719,7 +635,7 @@
       }
     },
     {
-      "name": "PositionList",
+      "name": "positionList",
       "type": {
         "kind": "struct",
         "fields": [
@@ -735,7 +651,7 @@
       }
     },
     {
-      "name": "Position",
+      "name": "position",
       "type": {
         "kind": "struct",
         "fields": [

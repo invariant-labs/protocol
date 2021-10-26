@@ -137,17 +137,6 @@ export class Market {
     return tickmap
   }
 
-  async getApproveInstruction(pair: Pair, owner: PublicKey, account: PublicKey, amount: BN) {
-    return Token.createApproveInstruction(
-      TOKEN_PROGRAM_ID,
-      account,
-      (await this.get(pair)).authority,
-      owner,
-      [],
-      tou64(amount)
-    )
-  }
-
   async getTick(pair: Pair, index: number) {
     const { tickAddress } = await this.getTickAddress(pair, index)
     return (await this.program.account.tick.fetch(tickAddress)) as Tick
@@ -174,6 +163,20 @@ export class Market {
   async getPosition(owner: PublicKey, index: number) {
     const { positionAddress } = await this.getPositionAddress(owner, index)
     return (await this.program.account.position.fetch(positionAddress)) as Position
+  }
+
+  async getPositionsFromIndexes(owner: PublicKey, indexes: Array<number>) {
+    const positionPromises = indexes.map(async (tick, i) => {
+      return await this.getPosition(owner, i)
+    })
+    return Promise.all(positionPromises)
+  }
+
+  async getPositionsFromRange(owner: PublicKey, lowerIndex: number, upperIndex: number) {
+    return this.getPositionsFromIndexes(
+      owner,
+      Array.from({ length: upperIndex - lowerIndex + 1 }, (_, i) => i + lowerIndex)
+    )
   }
 
   async getTickAddress(pair, index: number) {
@@ -267,22 +270,25 @@ export class Market {
     owner,
     userTokenX,
     userTokenY,
-    index,
     lowerTick,
     upperTick,
     liquidityDelta
   }: InitPosition) {
     const state = await this.get(pair)
 
+    // maybe in the future index cloud be store at market
+    const positionList = await this.getPositionList(owner)
     const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTick)
     const { tickAddress: upperTickAddress } = await this.getTickAddress(pair, upperTick)
-    const { positionAddress, positionBump } = await this.getPositionAddress(owner, index)
+    const { positionAddress, positionBump } = await this.getPositionAddress(
+      owner,
+      positionList.head
+    )
     const { positionListAddress } = await this.getPositionListAddress(owner)
     const poolAddress = await pair.getAddress(this.program.programId)
 
     return this.program.instruction.initPosition(
       positionBump,
-      index,
       lowerTick,
       upperTick,
       liquidityDelta,
@@ -330,7 +336,7 @@ export class Market {
       position.upperTickIndex
     )
 
-    return (await this.program.instruction.withdraw(
+    return this.program.instruction.withdraw(
       // positionBump,
       index,
       position.lowerTickIndex,
@@ -353,27 +359,14 @@ export class Market {
           tokenProgram: TOKEN_PROGRAM_ID
         }
       }
-    )) as TransactionInstruction
+    ) as TransactionInstruction
   }
 
   async initPositionTx(initPosition: InitPosition) {
     const { owner, userTokenX, userTokenY } = initPosition
 
-    const approveXIx = await this.getApproveInstruction(
-      initPosition.pair,
-      owner,
-      userTokenX,
-      new BN(1e14)
-    )
-    const approveYIx = await this.getApproveInstruction(
-      initPosition.pair,
-      owner,
-      userTokenY,
-      new BN(1e14)
-    )
-
     const initPositionIx = await this.initPositionInstruction(initPosition)
-    return new Transaction().add(approveXIx).add(approveYIx).add(initPositionIx)
+    return new Transaction().add(initPositionIx)
   }
 
   async initPosition(initPosition: InitPosition, signer: Keypair) {
@@ -387,10 +380,6 @@ export class Market {
     { pair, owner, userTokenX, userTokenY, index, liquidityDelta }: ModifyPosition,
     signer: Keypair
   ) {
-    const state = await this.get(pair)
-    const approveXIx = await this.getApproveInstruction(pair, owner, userTokenX, new BN(1e14))
-    const approveYIx = await this.getApproveInstruction(pair, owner, userTokenY, new BN(1e14))
-
     const withdrawPositionIx = await this.withdrawInstruction({
       pair,
       owner,
@@ -400,11 +389,7 @@ export class Market {
       liquidityDelta
     })
 
-    await signAndSend(
-      new Transaction().add(approveXIx).add(approveYIx).add(withdrawPositionIx),
-      [signer],
-      this.connection
-    )
+    await signAndSend(new Transaction().add(withdrawPositionIx), [signer], this.connection)
   }
 
   async swap(
@@ -470,33 +455,14 @@ export class Market {
         tokenY: state.tokenY,
         reserveX: state.tokenXReserve,
         reserveY: state.tokenYReserve,
+        owner,
         accountX,
         accountY,
         programAuthority: state.authority,
         tokenProgram: TOKEN_PROGRAM_ID
       }
     })
-    let approve: TransactionInstruction
-    if (XtoY) {
-      approve = Token.createApproveInstruction(
-        TOKEN_PROGRAM_ID,
-        accountX,
-        state.authority,
-        owner,
-        [],
-        tou64(amount)
-      )
-    } else {
-      approve = Token.createApproveInstruction(
-        TOKEN_PROGRAM_ID,
-        accountY,
-        state.authority,
-        owner,
-        [],
-        tou64(amount)
-      )
-    }
-    const tx = new Transaction().add(approve).add(swapIx)
+    const tx = new Transaction().add(swapIx)
 
     return tx
   }
@@ -570,9 +536,32 @@ export class Market {
       index
     })
 
-    await signAndSend(new Transaction().add(claimFeeIx), [signer], this.connection)
+    await signAndSend(new Transaction().add(claimFeeIx), [signer], this.connection) 
+  }
+    
+  async removePositionInstruction(
+    owner: PublicKey,
+    index: number
+  ): Promise<TransactionInstruction> {
+    const { positionListAddress } = await this.getPositionListAddress(owner)
+    const position = await this.getPositionList(owner)
+    const { positionAddress: lastPositionAddress } = await this.getPositionAddress(
+      owner,
+      position.head - 1
+    )
+    const { positionAddress: removedPositionAddress } = await this.getPositionAddress(owner, index)
+
+    return this.program.instruction.removePosition(index, {
+      accounts: {
+        owner: owner,
+        removedPosition: removedPositionAddress,
+        positionList: positionListAddress,
+        lastPosition: lastPositionAddress
+      }
+    }) as TransactionInstruction
   }
 }
+
 export interface Decimal {
   v: BN
 }
@@ -622,7 +611,6 @@ export interface InitPosition {
   owner: PublicKey
   userTokenX: PublicKey
   userTokenY: PublicKey
-  index: number
   lowerTick: number
   upperTick: number
   liquidityDelta: Decimal
