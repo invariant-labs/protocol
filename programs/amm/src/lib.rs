@@ -380,7 +380,7 @@ pub mod amm {
 
         // reassign all fields in new_position
         {
-            new_position.owner = removed_position.owner;
+            new_position.owner = *ctx.accounts.recipient.key;
             new_position.pool = removed_position.pool;
             new_position.liquidity = removed_position.liquidity;
             new_position.lower_tick_index = removed_position.lower_tick_index;
