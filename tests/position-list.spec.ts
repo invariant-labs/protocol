@@ -489,7 +489,38 @@ describe('Position list', () => {
       assert.equal(ownerListBefore.head - 1, ownerListAfter.head)
       assert.equal(recipientListBefore.head + 1, recipientListAfter.head)
     })
-    // it('clear position')
+    it('clear position', async () => {
+      const removedIndex = 0
+      const recipientListBefore = await market.getPositionList(positionRecipient.publicKey)
+      const removedPosition = await market.getPosition(positionOwner.publicKey, removedIndex)
+
+      const transferPositionOwnershipInstruction =
+        await market.transferPositionOwnershipInstruction(
+          positionOwner.publicKey,
+          positionRecipient.publicKey,
+          removedIndex
+        )
+      await signAndSend(
+        new Transaction().add(transferPositionOwnershipInstruction),
+        [positionOwner],
+        connection
+      )
+
+      const ownerListAfter = await market.getPositionList(positionOwner.publicKey)
+      const recipientListAfter = await market.getPositionList(positionRecipient.publicKey)
+      const recipientPosition = await market.getPosition(
+        positionRecipient.publicKey,
+        recipientListAfter.head - 1
+      )
+
+      // equals fields of transferred position
+      positionWithoutOwnerPosition(removedPosition, recipientPosition)
+      assert.ok(recipientPosition.owner.equals(positionRecipient.publicKey))
+
+      // positions length
+      assert.equal(ownerListAfter.head, 0)
+      assert.equal(recipientListBefore.head + 1, recipientListAfter.head)
+    })
     // it('get back position')
   })
 })

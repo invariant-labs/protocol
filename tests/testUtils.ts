@@ -2,9 +2,9 @@ import { Connection, Keypair } from '@solana/web3.js'
 import { TokenInstructions } from '@project-serum/serum'
 import { Token } from '@solana/spl-token'
 import BN from 'bn.js'
-import { Decimal } from '../sdk/lib/pool'
 import { DECIMAL, FEE_DECIMAL } from '@invariant-labs/sdk/src/utils'
 import { Position } from '@invariant-labs/sdk/lib/market'
+import { Decimal } from '@invariant-labs/sdk/src/market'
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {
