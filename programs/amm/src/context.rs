@@ -157,6 +157,7 @@ pub struct RemovePosition<'info> {
     )]
     pub position_list: Loader<'info, PositionList>,
     #[account(mut,
+        close = owner,
         seeds = [b"positionv1",
         owner.to_account_info().key.as_ref(),
         &(position_list.load()?.head - 1).to_le_bytes()],
@@ -203,6 +204,7 @@ pub struct TransferPositionOwnership<'info> {
     )]
     pub removed_position: Loader<'info, Position>,
     #[account(mut,
+        close = owner,
         seeds = [b"positionv1",
         owner.to_account_info().key.as_ref(),
         &(owner_list.load()?.head - 1).to_le_bytes()],

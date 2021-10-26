@@ -24,8 +24,6 @@ const SEED: &str = "Swapline";
 #[program]
 pub mod amm {
 
-    use util::close;
-
     use crate::{
         position::{calculate_amount_delta, calculate_fee_growth_inside},
         util::{check_ticks, get_tick_from_price},
@@ -362,11 +360,6 @@ pub mod amm {
             removed_position.tokens_owed_y = last_position.tokens_owed_y;
         }
 
-        close(
-            ctx.accounts.last_position.to_account_info(),
-            ctx.accounts.owner.to_account_info(),
-        )?;
-
         Ok(())
     }
 
@@ -412,11 +405,6 @@ pub mod amm {
             removed_position.tokens_owed_x = last_position.tokens_owed_x;
             removed_position.tokens_owed_y = last_position.tokens_owed_y;
         }
-
-        close(
-            ctx.accounts.last_position.to_account_info(),
-            ctx.accounts.owner.to_account_info(),
-        )?;
 
         Ok(())
     }
