@@ -353,6 +353,9 @@ describe('Position list', () => {
       )
     })
     it('only owner can transfer position', async () => {
+      const ownerListBefore = await market.getPositionList(positionOwner.publicKey)
+      const recipientListBefore = await market.getPositionList(positionRecipient.publicKey)
+
       const transferPositionOwnershipInstruction =
         await market.transferPositionOwnershipInstruction(
           positionOwner.publicKey,
@@ -367,6 +370,12 @@ describe('Position list', () => {
         ),
         ERRORS.SIGNATURE
       )
+
+      const ownerListAfter = await market.getPositionList(positionOwner.publicKey)
+      const recipientListAfter = await market.getPositionList(positionRecipient.publicKey)
+
+      assert.equal(ownerListBefore.head, ownerListAfter.head)
+      assert.equal(recipientListBefore.head, recipientListAfter.head)
     })
     it('transfer first position', async () => {
       const removedIndex = 0
@@ -493,7 +502,48 @@ describe('Position list', () => {
       assert.equal(ownerListBefore.head - 1, ownerListAfter.head)
       assert.equal(recipientListBefore.head + 1, recipientListAfter.head)
     })
-    it('transfer last position')
+    it('transfer last position', async () => {
+      const ownerListBefore = await market.getPositionList(positionOwner.publicKey)
+      const removedIndex = ownerListBefore.head - 1
+      const recipientListBefore = await market.getPositionList(positionRecipient.publicKey)
+      const removedPosition = await market.getPosition(positionOwner.publicKey, removedIndex)
+
+      const transferPositionOwnershipInstruction =
+        await market.transferPositionOwnershipInstruction(
+          positionOwner.publicKey,
+          positionRecipient.publicKey,
+          removedIndex
+        )
+      await signAndSend(
+        new Transaction().add(transferPositionOwnershipInstruction),
+        [positionOwner],
+        connection
+      )
+
+      const ownerListAfter = await market.getPositionList(positionOwner.publicKey)
+      const recipientListAfter = await market.getPositionList(positionRecipient.publicKey)
+      const recipientPosition = await market.getPosition(
+        positionRecipient.publicKey,
+        recipientListAfter.head - 1
+      )
+
+      // equals fields of transferred position
+      {
+        assert.ok(eqDecimal(removedPosition.feeGrowthInsideX, recipientPosition.feeGrowthInsideX))
+        assert.ok(eqDecimal(removedPosition.feeGrowthInsideY, recipientPosition.feeGrowthInsideY))
+        assert.ok(eqDecimal(removedPosition.liquidity, recipientPosition.liquidity))
+        assert.equal(removedPosition.upperTickIndex, recipientPosition.upperTickIndex)
+        assert.equal(removedPosition.lowerTickIndex, recipientPosition.lowerTickIndex)
+        assert.ok(removedPosition.owner.equals(recipientPosition.owner))
+        assert.ok(removedPosition.pool.equals(recipientPosition.pool))
+        assert.ok(eqDecimal(removedPosition.tokensOwedX, recipientPosition.tokensOwedX))
+        assert.ok(eqDecimal(removedPosition.tokensOwedY, recipientPosition.tokensOwedY))
+      }
+
+      // positions length
+      assert.equal(ownerListBefore.head - 1, ownerListAfter.head)
+      assert.equal(recipientListBefore.head + 1, recipientListAfter.head)
+    })
     it('clear position')
     it('get back position')
   })
