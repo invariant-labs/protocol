@@ -14,7 +14,7 @@ import {
 } from '@invariant-labs/sdk'
 import { Provider, Program, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { createToken, eqDecimal } from './testUtils'
+import { createToken, eqDecimal, positionEquals, positionWithoutOwnerPosition } from './testUtils'
 import { assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
 import { ERRORS } from '@invariant-labs/sdk/lib/utils'
 import { sleep } from '@invariant-labs/sdk'
@@ -404,35 +404,12 @@ describe('Position list', () => {
       const recipientListAfter = await market.getPositionList(positionRecipient.publicKey)
       const firstPositionAfter = await market.getPosition(positionOwner.publicKey, removedIndex)
 
-      // transferred last position
-      {
-        assert.ok(
-          eqDecimal(lastPositionBefore.feeGrowthInsideX, firstPositionAfter.feeGrowthInsideX)
-        )
-        assert.ok(
-          eqDecimal(lastPositionBefore.feeGrowthInsideY, firstPositionAfter.feeGrowthInsideY)
-        )
-        assert.ok(eqDecimal(lastPositionBefore.liquidity, firstPositionAfter.liquidity))
-        assert.equal(lastPositionBefore.upperTickIndex, firstPositionAfter.upperTickIndex)
-        assert.equal(lastPositionBefore.lowerTickIndex, firstPositionAfter.lowerTickIndex)
-        assert.ok(lastPositionBefore.owner.equals(firstPositionAfter.owner))
-        assert.ok(lastPositionBefore.pool.equals(firstPositionAfter.pool))
-        assert.ok(eqDecimal(lastPositionBefore.tokensOwedX, firstPositionAfter.tokensOwedX))
-        assert.ok(eqDecimal(lastPositionBefore.tokensOwedY, firstPositionAfter.tokensOwedY))
-      }
+      // move last position
+      positionEquals(lastPositionBefore, firstPositionAfter)
 
       // equals fields of transferred position
-      {
-        assert.ok(eqDecimal(removedPosition.feeGrowthInsideX, recipientPosition.feeGrowthInsideX))
-        assert.ok(eqDecimal(removedPosition.feeGrowthInsideY, recipientPosition.feeGrowthInsideY))
-        assert.ok(eqDecimal(removedPosition.liquidity, recipientPosition.liquidity))
-        assert.equal(removedPosition.upperTickIndex, recipientPosition.upperTickIndex)
-        assert.equal(removedPosition.lowerTickIndex, recipientPosition.lowerTickIndex)
-        assert.ok(removedPosition.owner.equals(recipientPosition.owner))
-        assert.ok(removedPosition.pool.equals(recipientPosition.pool))
-        assert.ok(eqDecimal(removedPosition.tokensOwedX, recipientPosition.tokensOwedX))
-        assert.ok(eqDecimal(removedPosition.tokensOwedY, recipientPosition.tokensOwedY))
-      }
+      positionWithoutOwnerPosition(removedPosition, recipientPosition)
+      assert.ok(recipientPosition.owner.equals(positionRecipient.publicKey))
 
       // positions length
       assert.equal(ownerListBefore.head - 1, ownerListAfter.head)
@@ -468,35 +445,12 @@ describe('Position list', () => {
       )
       const middlePositionAfter = await market.getPosition(positionOwner.publicKey, removedIndex)
 
-      // transferred last position
-      {
-        assert.ok(
-          eqDecimal(lastPositionBefore.feeGrowthInsideX, middlePositionAfter.feeGrowthInsideX)
-        )
-        assert.ok(
-          eqDecimal(lastPositionBefore.feeGrowthInsideY, middlePositionAfter.feeGrowthInsideY)
-        )
-        assert.ok(eqDecimal(lastPositionBefore.liquidity, middlePositionAfter.liquidity))
-        assert.equal(lastPositionBefore.upperTickIndex, middlePositionAfter.upperTickIndex)
-        assert.equal(lastPositionBefore.lowerTickIndex, middlePositionAfter.lowerTickIndex)
-        assert.ok(lastPositionBefore.owner.equals(middlePositionAfter.owner))
-        assert.ok(lastPositionBefore.pool.equals(middlePositionAfter.pool))
-        assert.ok(eqDecimal(lastPositionBefore.tokensOwedX, middlePositionAfter.tokensOwedX))
-        assert.ok(eqDecimal(lastPositionBefore.tokensOwedY, middlePositionAfter.tokensOwedY))
-      }
+      // move last position
+      positionEquals(lastPositionBefore, middlePositionAfter)
 
       // equals fields of transferred position
-      {
-        assert.ok(eqDecimal(removedPosition.feeGrowthInsideX, recipientPosition.feeGrowthInsideX))
-        assert.ok(eqDecimal(removedPosition.feeGrowthInsideY, recipientPosition.feeGrowthInsideY))
-        assert.ok(eqDecimal(removedPosition.liquidity, recipientPosition.liquidity))
-        assert.equal(removedPosition.upperTickIndex, recipientPosition.upperTickIndex)
-        assert.equal(removedPosition.lowerTickIndex, recipientPosition.lowerTickIndex)
-        assert.ok(removedPosition.owner.equals(recipientPosition.owner))
-        assert.ok(removedPosition.pool.equals(recipientPosition.pool))
-        assert.ok(eqDecimal(removedPosition.tokensOwedX, recipientPosition.tokensOwedX))
-        assert.ok(eqDecimal(removedPosition.tokensOwedY, recipientPosition.tokensOwedY))
-      }
+      positionWithoutOwnerPosition(removedPosition, recipientPosition)
+      assert.ok(recipientPosition.owner.equals(positionRecipient.publicKey))
 
       // positions length
       assert.equal(ownerListBefore.head - 1, ownerListAfter.head)
@@ -528,23 +482,14 @@ describe('Position list', () => {
       )
 
       // equals fields of transferred position
-      {
-        assert.ok(eqDecimal(removedPosition.feeGrowthInsideX, recipientPosition.feeGrowthInsideX))
-        assert.ok(eqDecimal(removedPosition.feeGrowthInsideY, recipientPosition.feeGrowthInsideY))
-        assert.ok(eqDecimal(removedPosition.liquidity, recipientPosition.liquidity))
-        assert.equal(removedPosition.upperTickIndex, recipientPosition.upperTickIndex)
-        assert.equal(removedPosition.lowerTickIndex, recipientPosition.lowerTickIndex)
-        assert.ok(removedPosition.owner.equals(recipientPosition.owner))
-        assert.ok(removedPosition.pool.equals(recipientPosition.pool))
-        assert.ok(eqDecimal(removedPosition.tokensOwedX, recipientPosition.tokensOwedX))
-        assert.ok(eqDecimal(removedPosition.tokensOwedY, recipientPosition.tokensOwedY))
-      }
+      positionWithoutOwnerPosition(removedPosition, recipientPosition)
+      assert.ok(recipientPosition.owner.equals(positionRecipient.publicKey))
 
       // positions length
       assert.equal(ownerListBefore.head - 1, ownerListAfter.head)
       assert.equal(recipientListBefore.head + 1, recipientListAfter.head)
     })
-    it('clear position')
-    it('get back position')
+    // it('clear position')
+    // it('get back position')
   })
 })
