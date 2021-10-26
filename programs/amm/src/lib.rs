@@ -311,6 +311,9 @@ pub mod amm {
         let (amount_x, amount_y) =
             removed_position.modify(pool, upper_tick, lower_tick, liquidity_delta, false)?;
 
+        let amount_x = amount_x + removed_position.tokens_owed_x.to_token_floor();
+        let amount_y = amount_y + removed_position.tokens_owed_y.to_token_floor();
+
         // Remove empty position
         position_list.head -= 1;
 
@@ -381,13 +384,13 @@ pub mod amm {
 
         let (cpi_ctx_x, cpi_ctx_y) = if add {
             (
-                ctx.accounts.send_x().with_signer(signer),
-                ctx.accounts.send_y().with_signer(signer),
+                ctx.accounts.take_x().with_signer(signer),
+                ctx.accounts.take_y().with_signer(signer),
             )
         } else {
             (
-                ctx.accounts.take_x().with_signer(signer),
-                ctx.accounts.take_y().with_signer(signer),
+                ctx.accounts.send_x().with_signer(signer),
+                ctx.accounts.send_y().with_signer(signer),
             )
         };
 
