@@ -514,6 +514,64 @@ export class Market {
 
     return { x: accounts[0].amount, y: accounts[1].amount }
   }
+
+  async claimFeeInstruction({
+    pair,
+    owner,
+    userTokenX,
+    userTokenY,
+    index
+  }: ClaimFee) {
+    const state = await this.get(pair)
+    const {positionAddress, positionBump} = await this.getPositionAddress(owner, index);
+    const position = await this.getPosition(owner, index);
+    const {tickAddress: lowerTickAddress} = await this.getTickAddress(pair, position.lowerTickIndex)
+    const {tickAddress: upperTickAddress} = await this.getTickAddress(pair, position.upperTickIndex)
+
+    return (await this.program.instruction.claimFee(
+      index,
+      position.lowerTickIndex,
+      position.upperTickIndex,
+      {
+        accounts: {
+          pool: await pair.getAddress(this.program.programId),
+          position: positionAddress,
+          lowerTick: lowerTickAddress,
+          upperTick: upperTickAddress,
+          owner,
+          tokenX: pair.tokenX,
+          tokenY: pair.tokenY,
+          accountX: userTokenX,
+          accountY: userTokenY,
+          reserveX: state.tokenXReserve,
+          reserveY: state.tokenYReserve,
+          programAuthority: state.authority,
+          tokenProgram: TOKEN_PROGRAM_ID
+        }
+      }
+    )) as TransactionInstruction
+  }
+
+  async claimFee(
+    {
+      pair,
+      owner,
+      userTokenX,
+      userTokenY,
+      index
+    }: ClaimFee, signer: Keypair
+  ) {
+    
+    const claimFeeIx = await this.claimFeeInstruction({
+      pair,
+      owner,
+      userTokenX,
+      userTokenY,
+      index
+    })
+
+    await signAndSend(new Transaction().add(claimFeeIx), [signer], this.connection)
+  }
 }
 export interface Decimal {
   v: BN
@@ -585,4 +643,12 @@ export interface CreatePool {
   initTick?: number
   fee: number
   tickSpacing: number
+}
+
+export interface ClaimFee {
+  pair: Pair,
+  owner: PublicKey,
+  userTokenX: PublicKey,
+  userTokenY: PublicKey,
+  index: number
 }
