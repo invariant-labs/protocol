@@ -483,25 +483,56 @@ export class Market {
   }
 
   async removePositionInstruction(
+    pair: Pair,
     owner: PublicKey,
-    index: number
+    index: number,
+    userTokenX: PublicKey,
+    userTokenY: PublicKey
   ): Promise<TransactionInstruction> {
     const { positionListAddress } = await this.getPositionListAddress(owner)
-    const position = await this.getPositionList(owner)
+    const positionList = await this.getPositionList(owner)
     const { positionAddress: lastPositionAddress } = await this.getPositionAddress(
       owner,
-      position.head - 1
+      positionList.head - 1
     )
     const { positionAddress: removedPositionAddress } = await this.getPositionAddress(owner, index)
 
-    return this.program.instruction.removePosition(index, {
-      accounts: {
-        owner: owner,
-        removedPosition: removedPositionAddress,
-        positionList: positionListAddress,
-        lastPosition: lastPositionAddress
+    const state = await this.get(pair)
+    const position = await this.getPosition(owner, index)
+
+    const { tickAddress: lowerTickAddress } = await this.getTickAddress(
+      pair,
+      position.lowerTickIndex
+    )
+    const { tickAddress: upperTickAddress } = await this.getTickAddress(
+      pair,
+      position.upperTickIndex
+    )
+
+    return this.program.instruction.removePosition(
+      index,
+      position.lowerTickIndex,
+      position.upperTickIndex,
+      {
+        accounts: {
+          owner: owner,
+          removedPosition: removedPositionAddress,
+          positionList: positionListAddress,
+          lastPosition: lastPositionAddress,
+          pool: await pair.getAddress(this.program.programId),
+          lowerTick: lowerTickAddress,
+          upperTick: upperTickAddress,
+          tokenX: pair.tokenX,
+          tokenY: pair.tokenY,
+          accountX: userTokenX,
+          accountY: userTokenY,
+          reserveX: state.tokenXReserve,
+          reserveY: state.tokenYReserve,
+          programAuthority: state.authority,
+          tokenProgram: TOKEN_PROGRAM_ID
+        }
       }
-    }) as TransactionInstruction
+    ) as TransactionInstruction
   }
 }
 export interface Decimal {

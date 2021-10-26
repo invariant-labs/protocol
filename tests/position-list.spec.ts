@@ -98,8 +98,17 @@ describe('Position list', () => {
     )
   })
   it('Remove from empty list should failed', async () => {
-    const ix = await market.removePositionInstruction(positionOwner.publicKey, 0)
-    assertThrowsAsync(signAndSend(new Transaction().add(ix), [positionOwner], connection))
+    assertThrowsAsync(
+      market.removePositionInstruction(
+        pair,
+        positionOwner.publicKey,
+        0,
+        userTokenXAccount,
+        userTokenYAccount
+      )
+    )
+
+    // assertThrowsAsync(signAndSend(new Transaction().add(ix), [positionOwner], connection))
   })
   it('Add multiple position', async () => {
     xOwnerAmount = tou64(1e10)
@@ -169,8 +178,11 @@ describe('Position list', () => {
     const lastPosition = positionsBefore[positionListBefore.head - 1]
 
     const ix = await market.removePositionInstruction(
+      pair,
       positionOwner.publicKey,
-      positionIndexToRemove
+      positionIndexToRemove,
+      userTokenXAccount,
+      userTokenYAccount
     )
     await signAndSend(new Transaction().add(ix), [positionOwner], connection)
 
@@ -216,8 +228,11 @@ describe('Position list', () => {
   it('Remove last position', async () => {
     const lastPositionIndexBefore = (await market.getPositionList(positionOwner.publicKey)).head - 1
     const ix = await market.removePositionInstruction(
+      pair,
       positionOwner.publicKey,
-      lastPositionIndexBefore
+      0,
+      userTokenXAccount,
+      userTokenYAccount
     )
     await signAndSend(new Transaction().add(ix), [positionOwner], connection)
 
@@ -235,7 +250,13 @@ describe('Position list', () => {
       upperTick: ticksIndexes[3],
       liquidityDelta: fromInteger(1)
     })
-    const removePositionIx = await market.removePositionInstruction(positionOwner.publicKey, 0)
+    const removePositionIx = await market.removePositionInstruction(
+      pair,
+      positionOwner.publicKey,
+      0,
+      userTokenXAccount,
+      userTokenYAccount
+    )
 
     assertThrowsAsync(signAndSend(initPositionTx, [wallet], connection), ERRORS.SIGNATURE)
     assertThrowsAsync(
@@ -250,7 +271,13 @@ describe('Position list', () => {
     const positionListBefore = await market.getPositionList(positionOwner.publicKey)
 
     for (let i = positionListBefore.head - 1; i >= 0; i--) {
-      const ix = await market.removePositionInstruction(positionOwner.publicKey, i)
+      const ix = await market.removePositionInstruction(
+        pair,
+        positionOwner.publicKey,
+        i,
+        userTokenXAccount,
+        userTokenYAccount
+      )
       await signAndSend(new Transaction().add(ix), [positionOwner], connection)
     }
     const positionListAfter = await market.getPositionList(positionOwner.publicKey)

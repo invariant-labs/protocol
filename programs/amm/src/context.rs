@@ -153,6 +153,15 @@ pub struct CreatePositionList<'info> {
 #[derive(Accounts)]
 #[instruction(index: i32, lower_tick_index: i32, upper_tick_index: i32)]
 pub struct RemovePosition<'info> {
+    #[account(mut, signer)]
+    pub owner: AccountInfo<'info>,
+    #[account(mut,
+        seeds = [b"positionv1",
+        owner.to_account_info().key.as_ref(),
+        &index.to_le_bytes()],
+        bump = removed_position.load()?.bump
+    )]
+    pub removed_position: Loader<'info, Position>,
     #[account(mut,
         seeds = [b"positionlistv1", owner.to_account_info().key.as_ref()],
         bump = position_list.load()?.bump
@@ -172,13 +181,6 @@ pub struct RemovePosition<'info> {
     )]
     pub pool: Loader<'info, Pool>,
     #[account(mut,
-        seeds = [b"positionv1",
-        owner.to_account_info().key.as_ref(),
-        &index.to_le_bytes()],
-        bump = removed_position.load()?.bump
-    )]
-    pub removed_position: Loader<'info, Position>,
-    #[account(mut,
         seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &lower_tick_index.to_le_bytes()],
         bump = lower_tick.load()?.bump
     )]
@@ -188,7 +190,7 @@ pub struct RemovePosition<'info> {
         bump = upper_tick.load()?.bump
     )]
     pub upper_tick: Loader<'info, Tick>,
-    pub owner: AccountInfo<'info>,
+
     #[account(mut)]
     pub token_x: Account<'info, Mint>,
     #[account(mut)]
