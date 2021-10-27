@@ -441,6 +441,156 @@ export type Amm = {
           "type": "i32"
         }
       ]
+    },
+    {
+      "name": "transferPositionOwnership",
+      "accounts": [
+        {
+          "name": "ownerList",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "recipientList",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "newPosition",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "removedPosition",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "lastPosition",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "recipient",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "withdraw",
+      "accounts": [
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "position",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "lowerTick",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "upperTick",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenX",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenY",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "accountX",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "accountY",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveX",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveY",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "programAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "lowerTickIndex",
+          "type": "i32"
+        },
+        {
+          "name": "upperTickIndex",
+          "type": "i32"
+        },
+        {
+          "name": "liquidityDelta",
+          "type": {
+            "defined": "Decimal"
+          }
+        }
+      ]
     }
   ],
   "accounts": [
