@@ -315,54 +315,6 @@ export class Market {
     ) as TransactionInstruction
   }
 
-  async withdrawInstruction({
-    pair,
-    owner,
-    userTokenX,
-    userTokenY,
-    index,
-    liquidityDelta
-  }: ModifyPosition) {
-    const state = await this.get(pair)
-    const { positionAddress, positionBump } = await this.getPositionAddress(owner, index)
-
-    const position = await this.getPosition(owner, index)
-    const { tickAddress: lowerTickAddress } = await this.getTickAddress(
-      pair,
-      position.lowerTickIndex
-    )
-    const { tickAddress: upperTickAddress } = await this.getTickAddress(
-      pair,
-      position.upperTickIndex
-    )
-
-    return this.program.instruction.modifyPosition(
-      // positionBump,
-      index,
-      position.lowerTickIndex,
-      position.upperTickIndex,
-      liquidityDelta,
-      false,
-      {
-        accounts: {
-          pool: await pair.getAddress(this.program.programId),
-          position: positionAddress,
-          owner,
-          lowerTick: lowerTickAddress,
-          upperTick: upperTickAddress,
-          tokenX: pair.tokenX,
-          tokenY: pair.tokenY,
-          accountX: userTokenX,
-          accountY: userTokenY,
-          reserveX: state.tokenXReserve,
-          reserveY: state.tokenYReserve,
-          programAuthority: state.authority,
-          tokenProgram: TOKEN_PROGRAM_ID
-        }
-      }
-    ) as TransactionInstruction
-  }
-
   async initPositionTx(initPosition: InitPosition) {
     const { owner, userTokenX, userTokenY } = initPosition
 
@@ -375,22 +327,6 @@ export class Market {
 
     const tx = await this.initPositionTx(initPosition)
     await signAndSend(tx, [signer], this.connection)
-  }
-
-  async withdraw(
-    { pair, owner, userTokenX, userTokenY, index, liquidityDelta }: ModifyPosition,
-    signer: Keypair
-  ) {
-    const withdrawPositionIx = await this.withdrawInstruction({
-      pair,
-      owner,
-      userTokenX,
-      userTokenY,
-      index,
-      liquidityDelta
-    })
-
-    await signAndSend(new Transaction().add(withdrawPositionIx), [signer], this.connection)
   }
 
   async swap(

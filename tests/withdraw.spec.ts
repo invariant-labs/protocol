@@ -167,41 +167,6 @@ describe('withdraw', () => {
     assert.ok(poolData.feeProtocolTokenX.v.eq(new BN(600000013280)))
     assert.ok(poolData.feeProtocolTokenY.v.eqn(0))
 
-    // Withdraw
-    const reservesBeforeWithdraw = await market.getReserveBalances(pair, wallet)
-    const liquidityToWithdraw = { v: liquidityDelta.v.divn(2) }
-
-    await market.withdraw(
-      {
-        pair,
-        owner: positionOwner.publicKey,
-        userTokenX: userTokenXAccount,
-        userTokenY: userTokenYAccount,
-        index: 0,
-        liquidityDelta: liquidityToWithdraw
-      },
-      positionOwner
-    )
-
-    // Check pool
-    const poolDataAfter = await market.get(pair)
-    assert.ok(poolDataAfter.liquidity.v.eq(liquidityToWithdraw.v))
-    assert.equal(poolDataAfter.currentTickIndex, lowerTick)
-    assert.ok(poolDataAfter.sqrtPrice.v.lt(poolDataBefore.sqrtPrice.v))
-
-    // Check amounts tokens
-    const reservesAfterWithdraw = await market.getReserveBalances(pair, wallet)
-    const expectedWithdrawnX = new BN(746)
-    const expectedWithdrawnY = new BN(3)
-    assert.ok(reservesBeforeWithdraw.x.sub(reservesAfterWithdraw.x).eq(expectedWithdrawnX))
-    assert.ok(reservesBeforeWithdraw.y.sub(reservesAfterWithdraw.y).eq(expectedWithdrawnY))
-
-    // Check position
-    const positionAfterWithdraw = await market.getPosition(positionOwner.publicKey, 0)
-    assert.ok(positionAfterWithdraw.liquidity.v.eq(liquidityToWithdraw.v))
-    assert.ok(positionAfterWithdraw.tokensOwedX.v.eq(new BN(5400000000000)))
-    assert.ok(positionAfterWithdraw.tokensOwedY.v.eqn(0))
-
     // Remove position
     const reservesBeforeRemove = await market.getReserveBalances(pair, wallet)
 
@@ -220,6 +185,8 @@ describe('withdraw', () => {
 
     // Check amounts tokens
     const reservesAfterRemove = await market.getReserveBalances(pair, wallet)
+    const expectedWithdrawnX = new BN(1493)
+    const expectedWithdrawnY = new BN(6)
     const expectedFeeX = new BN(5)
 
     assert.ok(

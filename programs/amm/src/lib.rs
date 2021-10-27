@@ -350,54 +350,6 @@ pub mod amm {
 
         Ok(())
     }
-
-    pub fn modify_position(
-        ctx: Context<ModifyPosition>,
-        _index: u32,
-        _lower_tick_index: i32,
-        _upper_tick_index: i32,
-        liquidity_delta: Decimal,
-        add: bool,
-    ) -> ProgramResult {
-        msg!("MODIFY POSITION");
-
-        let mut position = ctx.accounts.position.load_mut()?;
-        let pool = &mut ctx.accounts.pool.load_mut()?;
-        let lower_tick = &mut ctx.accounts.lower_tick.load_mut()?;
-        let upper_tick = &mut ctx.accounts.upper_tick.load_mut()?;
-
-        // validate ticks
-        check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
-
-        let (amount_x, amount_y) =
-            position.modify(pool, upper_tick, lower_tick, liquidity_delta, add)?;
-
-        // Position liquidity should be greater than zero, use remove otherwise
-        require!(
-            { position.liquidity } > Decimal::new(0),
-            ErrorCode::PositionWithoutLiquidity
-        );
-
-        // send tokens to reserve
-        let seeds = &[SEED.as_bytes(), &[pool.nonce]];
-        let signer = &[&seeds[..]];
-
-        let (cpi_ctx_x, cpi_ctx_y) = if add {
-            (
-                ctx.accounts.take_x().with_signer(signer),
-                ctx.accounts.take_y().with_signer(signer),
-            )
-        } else {
-            (
-                ctx.accounts.send_x().with_signer(signer),
-                ctx.accounts.send_y().with_signer(signer),
-            )
-        };
-
-        token::transfer(cpi_ctx_x, amount_x)?;
-        token::transfer(cpi_ctx_y, amount_y)?;
-        Ok(())
-    }
 }
 
 #[error]
