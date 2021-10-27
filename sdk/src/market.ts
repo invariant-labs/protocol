@@ -233,7 +233,7 @@ export class Market {
     }
   }
 
-  async geNewPositionAddress(owner: PublicKey) {
+  async getNewPositionAddress(owner: PublicKey) {
     const positionList = await this.getPositionList(owner)
     return this.getPositionAddress(owner, positionList.head)
   }
@@ -581,7 +581,7 @@ export class Market {
       ownerPositionList.head - 1
     )
     const { positionAddress: newPosition, positionBump: newPositionBump } =
-      await this.geNewPositionAddress(recipient)
+      await this.getNewPositionAddress(recipient)
 
     return this.program.instruction.transferPositionOwnership(newPositionBump, index, {
       accounts: {
