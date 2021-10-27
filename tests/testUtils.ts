@@ -2,8 +2,9 @@ import { Connection, Keypair } from '@solana/web3.js'
 import { TokenInstructions } from '@project-serum/serum'
 import { Token } from '@solana/spl-token'
 import BN from 'bn.js'
-import { Decimal } from '../sdk/lib/pool'
 import { DECIMAL, FEE_DECIMAL } from '@invariant-labs/sdk/src/utils'
+import { Position } from '@invariant-labs/sdk/lib/market'
+import { Decimal } from '@invariant-labs/sdk/src/market'
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {
@@ -46,6 +47,24 @@ export const createToken = async (
     TokenInstructions.TOKEN_PROGRAM_ID
   )
   return token
+}
+
+// do not compare bump
+export const positionEquals = (a: Position, b: Position) => {
+  return positionWithoutOwnerEquals(a, b) && a.owner == b.owner
+}
+
+export const positionWithoutOwnerEquals = (a: Position, b: Position) => {
+  return (
+    eqDecimal(a.feeGrowthInsideX, b.feeGrowthInsideX) &&
+    eqDecimal(a.feeGrowthInsideY, b.feeGrowthInsideY) &&
+    eqDecimal(a.liquidity, b.liquidity) &&
+    a.lowerTickIndex == b.lowerTickIndex &&
+    a.upperTickIndex == b.upperTickIndex &&
+    a.pool.equals(b.pool) &&
+    eqDecimal(a.tokensOwedX, b.tokensOwedX) &&
+    eqDecimal(a.tokensOwedY, b.tokensOwedY)
+  )
 }
 
 export const fromFee = (fee: number): Decimal => {
