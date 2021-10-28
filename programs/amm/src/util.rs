@@ -1,5 +1,7 @@
 use std::cell::RefMut;
 
+use anchor_lang::solana_program::clock::UnixTimestamp;
+
 use crate::account::{Pool, Tick, Tickmap};
 use crate::decimal::Decimal;
 use crate::math::calculate_price_sqrt;
@@ -70,7 +72,7 @@ pub fn get_closer_limit(
     }
 }
 
-pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) {
+pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
     assert!(
         tick.index != pool.current_tick_index,
         "already on this tick"
@@ -85,10 +87,23 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) {
         pool.liquidity = pool.liquidity - tick.liquidity_change;
     }
 
+    if tick.last_timestamp.is_some() {
+        let current_timestamp = Clock::get().unwrap().unix_timestamp;
+        let time_passed = current_timestamp - tick.last_timestamp.unwrap();
+        if time_passed < 0 {
+            return Err(ErrorCode::NegativeTime.into());
+        }
+        tick.seconds_per_liquidity = tick.seconds_per_liquidity
+            + (Decimal::from_integer(time_passed.try_into().unwrap()) / tick.liquidity_gross);
+        tick.last_timestamp = Some(current_timestamp);
+    }
+
     assert!(
         { pool.sqrt_price } > { tick.sqrt_price },
         "price of pool is below price on current tick"
     );
+
+    Ok(())
 }
 
 pub fn get_tick_from_price(

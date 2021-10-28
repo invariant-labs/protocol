@@ -222,6 +222,8 @@ pub mod amm {
             tick.liquidity_change = Decimal::new(0);
             tick.liquidity_gross = Decimal::new(0);
             tick.sqrt_price = Decimal::new(0);
+            tick.seconds_per_liquidity = Decimal::new(0);
+            tick.last_timestamp = Option::None;
 
             let below_current_tick = index <= pool.current_tick_index;
             tick.fee_growth_outside_x = match below_current_tick {
@@ -567,4 +569,6 @@ pub enum ErrorCode {
     InvalidPoolLiquidity = 12, // 136
     #[msg("Invalid position index")]
     InvalidPositionIndex = 13, // 137
+    #[msg("Time cannot be negative")]
+    NegativeTime = 14,
 }

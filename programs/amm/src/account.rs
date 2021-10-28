@@ -1,5 +1,5 @@
 use crate::decimal::Decimal;
-use anchor_lang::prelude::*;
+use anchor_lang::{prelude::*, solana_program::clock::UnixTimestamp};
 
 #[account(zero_copy)]
 #[derive(PartialEq, Default, Debug)]
@@ -58,6 +58,8 @@ pub struct Tick {
     pub sqrt_price: Decimal,
     pub fee_growth_outside_x: Decimal,
     pub fee_growth_outside_y: Decimal,
+    pub seconds_per_liquidity: Decimal,
+    pub last_timestamp: Option<UnixTimestamp>,
     pub bump: u8,
 }
 
