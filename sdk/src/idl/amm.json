@@ -772,6 +772,20 @@
             }
           },
           {
+            "name": "secondsPerLiquidity",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "lastTimestamp",
+            "type": {
+              "option": {
+                "defined": "UnixTimestamp"
+              }
+            }
+          },
+          {
             "name": "bump",
             "type": "u8"
           }
@@ -937,6 +951,11 @@
       "code": 313,
       "name": "InvalidPositionIndex",
       "msg": "Invalid position index"
+    },
+    {
+      "code": 314,
+      "name": "NegativeTime",
+      "msg": "Time cannot be negative"
     }
   ]
 }
