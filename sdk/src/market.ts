@@ -222,6 +222,11 @@ export class Market {
     }
   }
 
+  async getNewPositionAddress(owner: PublicKey) {
+    const positionList = await this.getPositionList(owner)
+    return this.getPositionAddress(owner, positionList.head)
+  }
+
   async createTickInstruction(pair: Pair, index: number, payer: PublicKey) {
     const state = await this.get(pair)
 
@@ -538,18 +543,18 @@ export class Market {
 
     await signAndSend(new Transaction().add(claimFeeIx), [signer], this.connection) 
   }
-    
-  async removePositionInstruction(
+
+  async removePositionWithIndexInstruction(
     owner: PublicKey,
+    lastPositionIndex: number,
     index: number
   ): Promise<TransactionInstruction> {
     const { positionListAddress } = await this.getPositionListAddress(owner)
-    const position = await this.getPositionList(owner)
+    const { positionAddress: removedPositionAddress } = await this.getPositionAddress(owner, index)
     const { positionAddress: lastPositionAddress } = await this.getPositionAddress(
       owner,
-      position.head - 1
+      lastPositionIndex
     )
-    const { positionAddress: removedPositionAddress } = await this.getPositionAddress(owner, index)
 
     return this.program.instruction.removePosition(index, {
       accounts: {
@@ -557,6 +562,46 @@ export class Market {
         removedPosition: removedPositionAddress,
         positionList: positionListAddress,
         lastPosition: lastPositionAddress
+      }
+    }) as TransactionInstruction
+  }
+
+  async removePositionInstruction(
+    owner: PublicKey,
+    index: number
+  ): Promise<TransactionInstruction> {
+    const positionList = await this.getPositionList(owner)
+    return this.removePositionWithIndexInstruction(owner, positionList.head - 1, index)
+  }
+
+  async transferPositionOwnershipInstruction(
+    owner: PublicKey,
+    recipient: PublicKey,
+    index: number
+  ): Promise<TransactionInstruction> {
+    const { positionListAddress: ownerList } = await this.getPositionListAddress(owner)
+    const { positionListAddress: recipientList } = await this.getPositionListAddress(recipient)
+
+    const ownerPositionList = await this.getPositionList(owner)
+    const { positionAddress: removedPosition } = await this.getPositionAddress(owner, index)
+    const { positionAddress: lastPosition } = await this.getPositionAddress(
+      owner,
+      ownerPositionList.head - 1
+    )
+    const { positionAddress: newPosition, positionBump: newPositionBump } =
+      await this.getNewPositionAddress(recipient)
+
+    return this.program.instruction.transferPositionOwnership(newPositionBump, index, {
+      accounts: {
+        owner,
+        recipient,
+        ownerList,
+        recipientList,
+        lastPosition,
+        removedPosition,
+        newPosition,
+        rent: SYSVAR_RENT_PUBKEY,
+        systemProgram: SystemProgram.programId
       }
     }) as TransactionInstruction
   }
