@@ -438,6 +438,23 @@ pub mod amm {
         let mut lower_tick = ctx.accounts.lower_tick.load_mut()?;
         let mut upper_tick = ctx.accounts.upper_tick.load_mut()?;
 
+        lower_tick.update(
+            pool.current_tick_index,
+            Decimal::new(0),
+            pool.fee_growth_global_x,
+            pool.fee_growth_global_y,
+            false,
+            false,
+        )?;
+        upper_tick.update(
+            pool.current_tick_index,
+            Decimal::new(0),
+            pool.fee_growth_global_x,
+            pool.fee_growth_global_y,
+            true,
+            false,
+        )?;
+
         let (fee_growth_inside_x, fee_growth_inside_y) = calculate_fee_growth_inside(
             *lower_tick,
             *upper_tick,
@@ -459,11 +476,8 @@ pub mod amm {
         position.tokens_owed_y =
             position.tokens_owed_y - Decimal::from_integer(fee_to_collect_y as u128);
 
-        let seeds = &[SEED.as_bytes(), &[pool.nonce]];
-        let signer = &[&seeds[..]];
-
-        let cpi_ctx_x = ctx.accounts.send_x().with_signer(signer);
-        let cpi_ctx_y = ctx.accounts.send_y().with_signer(signer);
+        let cpi_ctx_x = ctx.accounts.send_x();
+        let cpi_ctx_y = ctx.accounts.send_y();
 
         token::transfer(cpi_ctx_x, fee_to_collect_x)?;
         token::transfer(cpi_ctx_y, fee_to_collect_y)?;

@@ -86,7 +86,7 @@ describe('claim', () => {
     })
 
     it('#claim', async () => {
-        const upperTick = 20
+        const upperTick = 10
         const lowerTick = -20
 
         await market.createTick(pair, upperTick, wallet)
@@ -124,7 +124,7 @@ describe('claim', () => {
         const accountX = await tokenX.createAccount(swapper.publicKey)
         const accountY = await tokenY.createAccount(swapper.publicKey)
 
-        await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], mintAmount)
+        await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
 
         const poolDataBefore = await market.get(pair)
         const targetPrice = DENOMINATOR.muln(100).divn(110)
@@ -139,9 +139,9 @@ describe('claim', () => {
 
         const amountX = (await tokenX.getAccountInfo(accountX)).amount
         const amountY = (await tokenY.getAccountInfo(accountY)).amount
-        const reservesAfter = await market.getReserveBalances(pair, wallet)
-        const reserveXDelta = reservesAfter.x.sub(reservesBeforeSwap.x)
-        const reserveYDelta = reservesAfter.y.sub(reservesBeforeSwap.y)
+        const reservesAfterSwap = await market.getReserveBalances(pair, wallet)
+        const reserveXDelta = reservesAfterSwap.x.sub(reservesBeforeSwap.x)
+        const reserveYDelta = reservesBeforeSwap.y.sub(reservesAfterSwap.y)
 
         assert.ok(amountX.eqn(0))
         assert.ok(amountY.eq(amount.subn(7)))
@@ -153,20 +153,29 @@ describe('claim', () => {
         assert.ok(poolDataAfter.feeProtocolTokenY.v.eqn(0))
 
         const reservesBeforeClaim = await market.getReserveBalances(pair, wallet)
+        const positionBeforeClaim = await market.getPosition(positionOwner.publicKey, 0)
 
         await market.claimFee({
             pair,
             owner: positionOwner.publicKey,
             userTokenX: userTokenXAccount,
             userTokenY: userTokenYAccount,
-            index: 0
+            index: 0,
         },
         positionOwner
         )
 
+        const userTokenXAccountBeforeClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
+        const userTokenXAccountAfterClaim = (await tokenX.getAccountInfo(positionOwner.publicKey)).amount
+        const positionAfterClaim = await market.getPosition(positionOwner.publicKey, 0)
         const reservesAfterClaim = await market.getReserveBalances(pair, wallet)
-        const expectedClaimX = new BN()
+        const expectedTokensOwedX = new BN(400000000000)
+        const expectedFeeGrowthInsideX = new BN(5400000)
+        const expectedTokensClaimed = 5
 
-        assert.ok(reservesBeforeClaim.x.sub)
-    })
+        assert.ok(reservesAfterClaim.x.subn(5).eq(reservesBeforeClaim.x))
+        assert.ok(expectedTokensOwedX.eq(positionAfterClaim.tokensOwedX.v))
+        assert.ok(expectedFeeGrowthInsideX.eq(positionAfterClaim.feeGrowthInsideX.v))
+        assert.ok(userTokenXAccountAfterClaim.sub(userTokenXAccountBeforeClaim).eqn(expectedTokensClaimed))
+    }) 
 })

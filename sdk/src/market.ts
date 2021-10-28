@@ -486,7 +486,7 @@ export class Market {
     owner,
     userTokenX,
     userTokenY,
-    index
+    index,
   }: ClaimFee) {
     const state = await this.get(pair)
     const {positionAddress, positionBump} = await this.getPositionAddress(owner, index);
@@ -524,7 +524,7 @@ export class Market {
       owner,
       userTokenX,
       userTokenY,
-      index
+      index,
     }: ClaimFee, signer: Keypair
   ) {
     
@@ -533,7 +533,7 @@ export class Market {
       owner,
       userTokenX,
       userTokenY,
-      index
+      index,
     })
 
     await signAndSend(new Transaction().add(claimFeeIx), [signer], this.connection) 
@@ -638,5 +638,5 @@ export interface ClaimFee {
   owner: PublicKey,
   userTokenX: PublicKey,
   userTokenY: PublicKey,
-  index: number
+  index: number,
 }
