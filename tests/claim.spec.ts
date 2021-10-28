@@ -154,7 +154,8 @@ describe('claim', () => {
 
         const reservesBeforeClaim = await market.getReserveBalances(pair, wallet)
         const positionBeforeClaim = await market.getPosition(positionOwner.publicKey, 0)
-
+        const userTokenXAccountBeforeClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
+        
         await market.claimFee({
             pair,
             owner: positionOwner.publicKey,
@@ -164,16 +165,18 @@ describe('claim', () => {
         },
         positionOwner
         )
-
-        const userTokenXAccountBeforeClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
-        const userTokenXAccountAfterClaim = (await tokenX.getAccountInfo(positionOwner.publicKey)).amount
+        
+        const userTokenXAccountAfterClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
         const positionAfterClaim = await market.getPosition(positionOwner.publicKey, 0)
         const reservesAfterClaim = await market.getReserveBalances(pair, wallet)
         const expectedTokensOwedX = new BN(400000000000)
         const expectedFeeGrowthInsideX = new BN(5400000)
         const expectedTokensClaimed = 5
 
-        assert.ok(reservesAfterClaim.x.subn(5).eq(reservesBeforeClaim.x))
+        console.log(userTokenXAccountBeforeClaim)
+        console.log(userTokenXAccountAfterClaim)
+
+        assert.ok(reservesBeforeClaim.x.subn(5).eq(reservesAfterClaim.x))
         assert.ok(expectedTokensOwedX.eq(positionAfterClaim.tokensOwedX.v))
         assert.ok(expectedFeeGrowthInsideX.eq(positionAfterClaim.feeGrowthInsideX.v))
         assert.ok(userTokenXAccountAfterClaim.sub(userTokenXAccountBeforeClaim).eqn(expectedTokensClaimed))

@@ -484,6 +484,8 @@ pub mod amm {
         let mut lower_tick = ctx.accounts.lower_tick.load_mut()?;
         let mut upper_tick = ctx.accounts.upper_tick.load_mut()?;
 
+        check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
+
         lower_tick.update(
             pool.current_tick_index,
             Decimal::new(0),
@@ -522,8 +524,11 @@ pub mod amm {
         position.tokens_owed_y =
             position.tokens_owed_y - Decimal::from_integer(fee_to_collect_y as u128);
 
-        let cpi_ctx_x = ctx.accounts.send_x();
-        let cpi_ctx_y = ctx.accounts.send_y();
+        let seeds = &[SEED.as_bytes(), &[pool.nonce]];
+        let signer = &[&seeds[..]];
+
+        let cpi_ctx_x = ctx.accounts.send_x().with_signer(signer);
+        let cpi_ctx_y = ctx.accounts.send_y().with_signer(signer);
 
         token::transfer(cpi_ctx_x, fee_to_collect_x)?;
         token::transfer(cpi_ctx_y, fee_to_collect_y)?;
