@@ -174,6 +174,31 @@ pub mod amm {
                 } else {
                     tick_index
                 };
+
+                let (current_tick_address, _) = Pubkey::find_program_address(
+                    &[
+                        b"tickv1",
+                        ctx.accounts.pool.to_account_info().key.as_ref(),
+                        &pool.current_tick_index.to_le_bytes(),
+                    ],
+                    ctx.program_id,
+                );
+
+                // Finding the correct tick in remaining accounts
+                let loader = match ctx
+                    .remaining_accounts
+                    .iter()
+                    .find(|account| *account.key == current_tick_address)
+                {
+                    Some(account) => {
+                        Loader::<'_, Tick>::try_from(ctx.program_id, &account).unwrap()
+                    }
+                    None => return Err(ErrorCode::TickNotFound.into()),
+                };
+
+                let mut current_tick = loader.load_mut().unwrap();
+                let current_timestamp = Clock::get().unwrap().unix_timestamp;
+                current_tick.last_timestamp = Some(current_timestamp);
             } else {
                 // Binary search for tick (can happen only on the last step)
                 pool.current_tick_index = get_tick_from_price(
