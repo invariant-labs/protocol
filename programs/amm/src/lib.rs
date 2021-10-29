@@ -16,7 +16,7 @@ use context::*;
 use decimal::*;
 use math::*;
 use tickmap::*;
-use util::{cross_tick, get_closer_limit};
+use util::{close, cross_tick, get_closer_limit};
 
 declare_id!("FPr3fREovDnqMfubJTrJAFwopvJB8grXj1o3gkmSyzmw");
 const SEED: &str = "Swapline";
@@ -24,10 +24,7 @@ const SEED: &str = "Swapline";
 #[program]
 pub mod amm {
 
-    use crate::{
-        position::{calculate_amount_delta, calculate_fee_growth_inside},
-        util::{check_ticks, get_tick_from_price},
-    };
+    use crate::util::{check_ticks, get_tick_from_price};
 
     use super::*;
 
@@ -302,6 +299,7 @@ pub mod amm {
         let mut position_list = ctx.accounts.position_list.load_mut()?;
         let removed_position = &mut ctx.accounts.removed_position.load_mut()?;
         let pool = &mut ctx.accounts.pool.load_mut()?;
+        let lower_tick = &mut ctx.accounts.lower_tick.load()?;
         let lower_tick = &mut ctx.accounts.lower_tick.load_mut()?;
         let upper_tick = &mut ctx.accounts.upper_tick.load_mut()?;
 
@@ -335,6 +333,27 @@ pub mod amm {
                 tokens_owed_y: last_position.tokens_owed_y,
             };
         }
+
+        // if { lower_tick.liquidity_gross } == Decimal::new(0) {
+        //     close(
+        //         ctx.accounts.lower_tick.to_account_info(),
+        //         ctx.accounts.owner.to_account_info(),
+        //     )
+        //     .unwrap();
+        // }
+        // if { upper_tick.liquidity_gross } == Decimal::new(0) {
+        //     close(
+        //         ctx.accounts.upper_tick.to_account_info(),
+        //         ctx.accounts.owner.to_account_info(),
+        //     )
+        //     .unwrap();
+        // }
+
+        let seeds = &[SEED.as_bytes(), &[pool.nonce]];
+        let signer = &[&seeds[..]];
+
+        token::transfer(ctx.accounts.send_x().with_signer(signer), amount_x)?;
+        token::transfer(ctx.accounts.send_y().with_signer(signer), amount_y)?;
 
         Ok(())
     }
@@ -381,80 +400,6 @@ pub mod amm {
             removed_position.tokens_owed_x = last_position.tokens_owed_x;
             removed_position.tokens_owed_y = last_position.tokens_owed_y;
         }
-
-        Ok(())
-    }
-
-    pub fn withdraw(
-        ctx: Context<ModifyPosition>,
-        index: u32,
-        lower_tick_index: i32,
-        upper_tick_index: i32,
-        liquidity_delta: Decimal,
-    ) -> ProgramResult {
-        msg!("WITHDRAW");
-
-        let mut position = ctx.accounts.position.load_mut()?;
-        let mut pool = ctx.accounts.pool.load_mut()?;
-        let mut lower_tick = ctx.accounts.lower_tick.load_mut()?;
-        let mut upper_tick = ctx.accounts.upper_tick.load_mut()?;
-
-        // validate ticks
-        check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
-
-        // update ticks
-        lower_tick.update(
-            pool.current_tick_index,
-            liquidity_delta,
-            pool.fee_growth_global_x,
-            pool.fee_growth_global_y,
-            true,
-            false,
-        )?;
-        upper_tick.update(
-            pool.current_tick_index,
-            liquidity_delta,
-            pool.fee_growth_global_x,
-            pool.fee_growth_global_y,
-            false,
-            false,
-        )?;
-
-        // update fee inside position
-        let (fee_growth_inside_x, fee_growth_inside_y) = calculate_fee_growth_inside(
-            *lower_tick,
-            *upper_tick,
-            pool.current_tick_index,
-            pool.fee_growth_global_x,
-            pool.fee_growth_global_y,
-        );
-        position.update(
-            false,
-            liquidity_delta,
-            fee_growth_inside_x,
-            fee_growth_inside_y,
-        )?;
-
-        // calculate tokens amounts and update pool liquidity
-        let (amount_x, amount_y) = calculate_amount_delta(
-            &mut pool,
-            liquidity_delta,
-            false,
-            upper_tick_index,
-            lower_tick_index,
-        )?;
-
-        // send tokens to reserve
-        let seeds = &[SEED.as_bytes(), &[pool.nonce]];
-        let signer = &[&seeds[..]];
-
-        let (cpi_ctx_x, cpi_ctx_y) = (
-            ctx.accounts.send_x().with_signer(signer),
-            ctx.accounts.send_y().with_signer(signer),
-        );
-
-        token::transfer(cpi_ctx_x, amount_x)?;
-        token::transfer(cpi_ctx_y, amount_y)?;
 
         Ok(())
     }
