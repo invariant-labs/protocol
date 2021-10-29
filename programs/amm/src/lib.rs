@@ -299,7 +299,6 @@ pub mod amm {
         let mut position_list = ctx.accounts.position_list.load_mut()?;
         let removed_position = &mut ctx.accounts.removed_position.load_mut()?;
         let pool = &mut ctx.accounts.pool.load_mut()?;
-        let lower_tick = &mut ctx.accounts.lower_tick.load()?;
         let lower_tick = &mut ctx.accounts.lower_tick.load_mut()?;
         let upper_tick = &mut ctx.accounts.upper_tick.load_mut()?;
 
