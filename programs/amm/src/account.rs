@@ -59,7 +59,7 @@ pub struct Tick {
     pub fee_growth_outside_x: Decimal,
     pub fee_growth_outside_y: Decimal,
     pub seconds_per_liquidity: Decimal,
-    pub last_timestamp: Option<UnixTimestamp>,
+    pub last_timestamp: Option<i64>,
     pub bump: u8,
 }
 

@@ -241,4 +241,9 @@ mod test {
             assert_eq!(from_tick, None);
         }
     }
+
+    #[test]
+    fn test_cross_tick() {
+        
+    }
 }

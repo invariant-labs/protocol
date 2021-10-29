@@ -780,9 +780,7 @@
           {
             "name": "lastTimestamp",
             "type": {
-              "option": {
-                "defined": "UnixTimestamp"
-              }
+              "option": "i64"
             }
           },
           {
