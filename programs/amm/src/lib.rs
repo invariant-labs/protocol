@@ -16,7 +16,7 @@ use context::*;
 use decimal::*;
 use math::*;
 use tickmap::*;
-use util::{close, cross_tick, get_closer_limit};
+use util::{cross_tick, get_closer_limit};
 
 declare_id!("FPr3fREovDnqMfubJTrJAFwopvJB8grXj1o3gkmSyzmw");
 const SEED: &str = "Swapline";
