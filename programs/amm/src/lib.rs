@@ -333,21 +333,6 @@ pub mod amm {
             };
         }
 
-        // if { lower_tick.liquidity_gross } == Decimal::new(0) {
-        //     close(
-        //         ctx.accounts.lower_tick.to_account_info(),
-        //         ctx.accounts.owner.to_account_info(),
-        //     )
-        //     .unwrap();
-        // }
-        // if { upper_tick.liquidity_gross } == Decimal::new(0) {
-        //     close(
-        //         ctx.accounts.upper_tick.to_account_info(),
-        //         ctx.accounts.owner.to_account_info(),
-        //     )
-        //     .unwrap();
-        // }
-
         let seeds = &[SEED.as_bytes(), &[pool.nonce]];
         let signer = &[&seeds[..]];
 
