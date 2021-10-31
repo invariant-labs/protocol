@@ -60,6 +60,13 @@ impl Position {
         pool.position_iterator += 1;
     }
 
+    // for future use
+    pub fn get_id(self: Self) -> String {
+        let mut id = self.pool.to_string().to_owned();
+        id.push_str({ self.id }.to_string().as_str());
+        id
+    }
+
     // TODO: add tests
     fn calculate_new_liquidity_safely(
         self: &mut Self,
