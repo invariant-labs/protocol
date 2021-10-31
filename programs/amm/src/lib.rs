@@ -345,6 +345,7 @@ pub mod amm {
             // reassign all fields in position
             removed_position.owner = last_position.owner;
             removed_position.pool = last_position.pool;
+            removed_position.id = last_position.id;
             removed_position.liquidity = last_position.liquidity;
             removed_position.lower_tick_index = last_position.lower_tick_index;
             removed_position.upper_tick_index = last_position.upper_tick_index;
@@ -376,6 +377,7 @@ pub mod amm {
         {
             new_position.owner = *ctx.accounts.recipient.key;
             new_position.pool = removed_position.pool;
+            new_position.id = removed_position.id;
             new_position.liquidity = removed_position.liquidity;
             new_position.lower_tick_index = removed_position.lower_tick_index;
             new_position.upper_tick_index = removed_position.upper_tick_index;
@@ -391,6 +393,7 @@ pub mod amm {
             // reassign all fields in owner position list
             removed_position.owner = last_position.owner;
             removed_position.pool = last_position.pool;
+            removed_position.id = last_position.id;
             removed_position.liquidity = last_position.liquidity;
             removed_position.lower_tick_index = last_position.lower_tick_index;
             removed_position.upper_tick_index = last_position.upper_tick_index;
