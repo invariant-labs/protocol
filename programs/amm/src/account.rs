@@ -8,6 +8,7 @@ pub struct Pool {
     pub token_y: Pubkey,
     pub token_x_reserve: Pubkey,
     pub token_y_reserve: Pubkey,
+    pub position_iterator: u64,
     pub tick_spacing: u16,
     pub fee: Decimal,
     pub protocol_fee: Decimal,
@@ -69,11 +70,11 @@ pub struct PositionList {
 }
 
 #[account(zero_copy)]
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Default, Debug)]
 pub struct Position {
-    pub id: [char; 42],
     pub owner: Pubkey,
     pub pool: Pubkey,
+    pub id: u64, // unique inside pool
     pub liquidity: Decimal,
     pub lower_tick_index: i32,
     pub upper_tick_index: i32,
@@ -82,21 +83,4 @@ pub struct Position {
     pub tokens_owed_x: Decimal,
     pub tokens_owed_y: Decimal,
     pub bump: u8,
-}
-impl Default for Position {
-    fn default() -> Self {
-        Position {
-            id: [' '; 42],
-            owner: Pubkey::default(),
-            pool: Pubkey::default(),
-            liquidity: Decimal::default(),
-            lower_tick_index: 0,
-            upper_tick_index: 0,
-            fee_growth_inside_x: Decimal::default(),
-            fee_growth_inside_y: Decimal::default(),
-            tokens_owed_x: Decimal::default(),
-            tokens_owed_y: Decimal::default(),
-            bump: 0,
-        }
-    }
 }

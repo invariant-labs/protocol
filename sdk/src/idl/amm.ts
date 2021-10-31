@@ -553,6 +553,10 @@ export type Amm = {
             "type": "publicKey"
           },
           {
+            "name": "positionIterator",
+            "type": "u64"
+          },
+          {
             "name": "tickSpacing",
             "type": "u16"
           },
@@ -722,6 +726,10 @@ export type Amm = {
           {
             "name": "pool",
             "type": "publicKey"
+          },
+          {
+            "name": "id",
+            "type": "u64"
           },
           {
             "name": "liquidity",

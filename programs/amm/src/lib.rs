@@ -278,6 +278,7 @@ pub mod amm {
             position.pool = *ctx.accounts.pool.to_account_info().key;
             position.fee_growth_inside_x = Decimal::new(0);
             position.fee_growth_inside_y = Decimal::new(0);
+            position.initialized_id(&mut pool);
         }
 
         // update initialized tick

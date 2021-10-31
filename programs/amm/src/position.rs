@@ -55,6 +55,11 @@ impl Position {
         Ok(())
     }
 
+    pub fn initialized_id(self: &mut Self, pool: &mut Pool) {
+        self.id = pool.position_iterator;
+        pool.position_iterator += 1;
+    }
+
     // TODO: add tests
     fn calculate_new_liquidity_safely(
         self: &mut Self,
