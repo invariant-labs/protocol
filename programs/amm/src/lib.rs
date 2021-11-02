@@ -16,7 +16,7 @@ use context::*;
 use decimal::*;
 use math::*;
 use tickmap::*;
-use util::{cross_tick, get_closer_limit};
+use util::{close, cross_tick, get_closer_limit};
 
 declare_id!("FPr3fREovDnqMfubJTrJAFwopvJB8grXj1o3gkmSyzmw");
 const SEED: &str = "Swapline";
@@ -299,17 +299,43 @@ pub mod amm {
         let mut position_list = ctx.accounts.position_list.load_mut()?;
         let removed_position = &mut ctx.accounts.removed_position.load_mut()?;
         let pool = &mut ctx.accounts.pool.load_mut()?;
-        let lower_tick = &mut ctx.accounts.lower_tick.load_mut()?;
-        let upper_tick = &mut ctx.accounts.upper_tick.load_mut()?;
 
-        // validate ticks
-        check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
-        let liquidity_delta = removed_position.liquidity;
-        let (amount_x, amount_y) =
-            removed_position.modify(pool, upper_tick, lower_tick, liquidity_delta, false)?;
+        let mut close_lower = false;
+        let mut close_upper = false;
 
-        let amount_x = amount_x + removed_position.tokens_owed_x.to_token_floor();
-        let amount_y = amount_y + removed_position.tokens_owed_y.to_token_floor();
+        let (amount_x, amount_y) = {
+            let lower_tick = &mut ctx.accounts.lower_tick.load_mut()?;
+            let upper_tick = &mut ctx.accounts.upper_tick.load_mut()?;
+
+            // validate ticks
+            check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
+            let liquidity_delta = removed_position.liquidity;
+            let (amount_x, amount_y) =
+                removed_position.modify(pool, upper_tick, lower_tick, liquidity_delta, false)?;
+
+            let amount_x = amount_x + removed_position.tokens_owed_x.to_token_floor();
+            let amount_y = amount_y + removed_position.tokens_owed_y.to_token_floor();
+
+            close_lower = { lower_tick.liquidity_gross } == Decimal::new(0);
+            close_upper = { upper_tick.liquidity_gross } == Decimal::new(0);
+
+            (amount_x, amount_y)
+        };
+
+        if close_lower {
+            close(
+                ctx.accounts.lower_tick.to_account_info(),
+                ctx.accounts.owner.to_account_info(),
+            )
+            .unwrap();
+        }
+        if close_upper {
+            close(
+                ctx.accounts.upper_tick.to_account_info(),
+                ctx.accounts.owner.to_account_info(),
+            )
+            .unwrap();
+        }
 
         // Remove empty position
         position_list.head -= 1;
