@@ -461,6 +461,7 @@ export class Market {
           positionList: positionListAddress,
           lastPosition: lastPositionAddress,
           pool: await pair.getAddress(this.program.programId),
+          tickmap: state.tickmap,
           lowerTick: lowerTickAddress,
           upperTick: upperTickAddress,
           tokenX: pair.tokenX,

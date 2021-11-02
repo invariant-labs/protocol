@@ -181,6 +181,11 @@ pub struct RemovePosition<'info> {
     )]
     pub pool: Loader<'info, Pool>,
     #[account(mut,
+        constraint = tickmap.to_account_info().key == &pool.load()?.tickmap,
+        constraint = tickmap.to_account_info().owner == program_id,
+    )]
+    pub tickmap: Loader<'info, Tickmap>,
+    #[account(mut,
         seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &lower_tick_index.to_le_bytes()],
         bump = lower_tick.load()?.bump
     )]

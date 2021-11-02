@@ -291,14 +291,15 @@ pub mod amm {
     pub fn remove_position(
         ctx: Context<RemovePosition>,
         index: u32,
-        _lower_tick_index: i32,
-        _upper_tick_index: i32,
+        lower_tick_index: i32,
+        upper_tick_index: i32,
     ) -> ProgramResult {
         msg!("REMOVE POSITION");
 
         let mut position_list = ctx.accounts.position_list.load_mut()?;
         let removed_position = &mut ctx.accounts.removed_position.load_mut()?;
         let pool = &mut ctx.accounts.pool.load_mut()?;
+        let tickmap = &mut ctx.accounts.tickmap.load_mut()?;
 
         let mut close_lower = false;
         let mut close_upper = false;
@@ -328,6 +329,7 @@ pub mod amm {
                 ctx.accounts.owner.to_account_info(),
             )
             .unwrap();
+            tickmap.set(false, lower_tick_index, pool.tick_spacing);
         }
         if close_upper {
             close(
@@ -335,6 +337,7 @@ pub mod amm {
                 ctx.accounts.owner.to_account_info(),
             )
             .unwrap();
+            tickmap.set(false, upper_tick_index, pool.tick_spacing);
         }
 
         // Remove empty position

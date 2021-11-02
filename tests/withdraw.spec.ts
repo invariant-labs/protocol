@@ -3,7 +3,7 @@ import { Provider, Program, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import { createToken } from './testUtils'
+import { assertThrowsAsync, createToken } from './testUtils'
 import {
   Market,
   Pair,
@@ -193,5 +193,8 @@ describe('withdraw', () => {
       reservesBeforeRemove.x.sub(reservesAfterRemove.x).eq(expectedWithdrawnX.add(expectedFeeX))
     )
     assert.ok(reservesBeforeRemove.y.sub(reservesAfterRemove.y).eq(expectedWithdrawnY))
+
+    assertThrowsAsync(market.getTick(pair, upperTick))
+    assertThrowsAsync(market.getTick(pair, lowerTick))
   })
 })

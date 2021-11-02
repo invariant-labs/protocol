@@ -377,6 +377,11 @@ export type Amm = {
           "isSigner": false
         },
         {
+          "name": "tickmap",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "lowerTick",
           "isMut": true,
           "isSigner": false
