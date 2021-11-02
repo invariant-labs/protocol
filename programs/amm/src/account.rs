@@ -3,6 +3,18 @@ use anchor_lang::prelude::*;
 
 #[account(zero_copy)]
 #[derive(PartialEq, Default, Debug)]
+pub struct State {}
+
+#[account(zero_copy)]
+#[derive(PartialEq, Default, Debug)]
+pub struct FeeTier {
+    pub fee: Decimal,
+    pub tick_spacing: u16,
+    pub bump: u8,
+}
+
+#[account(zero_copy)]
+#[derive(PartialEq, Default, Debug)]
 pub struct Pool {
     pub token_x: Pubkey,
     pub token_y: Pubkey,
