@@ -17,7 +17,7 @@ import idl from './idl/amm.json'
 import { IWallet, Pair } from '.'
 import { getMarketAddress } from './network'
 
-import { Amm } from './idl/amm'
+// import { Amm } from './idl/amm'
 import { Network } from './network'
 const POSITION_SEED = 'positionv1'
 const TICK_SEED = 'tickv1'
@@ -59,7 +59,7 @@ export interface Tickmap {
 export class Market {
   private connection: Connection
   private wallet: IWallet
-  public program: Program<Amm>
+  public program: Program
 
   constructor(network: Network, wallet: IWallet, connection: Connection, programId?: PublicKey) {
     this.connection = connection
@@ -68,7 +68,7 @@ export class Market {
     const programAddress = Network.LOCAL ? programId : new PublicKey(getMarketAddress(network))
 
     const provider = new Provider(connection, wallet, Provider.defaultOptions())
-    this.program = new Program<Amm>(idl as any, programAddress, provider)
+    this.program = new Program(idl as any, programAddress, provider)
   }
 
   async create({ pair, signer, initTick, fee, tickSpacing }: CreatePool) {
@@ -486,6 +486,64 @@ export class Market {
     return { x: accounts[0].amount, y: accounts[1].amount }
   }
 
+  async claimFeeInstruction({
+    pair,
+    owner,
+    userTokenX,
+    userTokenY,
+    index,
+  }: ClaimFee) {
+    const state = await this.get(pair)
+    const {positionAddress, positionBump} = await this.getPositionAddress(owner, index);
+    const position = await this.getPosition(owner, index);
+    const {tickAddress: lowerTickAddress} = await this.getTickAddress(pair, position.lowerTickIndex)
+    const {tickAddress: upperTickAddress} = await this.getTickAddress(pair, position.upperTickIndex)
+
+    return (await this.program.instruction.claimFee(
+      index,
+      position.lowerTickIndex,
+      position.upperTickIndex,
+      {
+        accounts: {
+          pool: await pair.getAddress(this.program.programId),
+          position: positionAddress,
+          lowerTick: lowerTickAddress,
+          upperTick: upperTickAddress,
+          owner,
+          tokenX: pair.tokenX,
+          tokenY: pair.tokenY,
+          accountX: userTokenX,
+          accountY: userTokenY,
+          reserveX: state.tokenXReserve,
+          reserveY: state.tokenYReserve,
+          programAuthority: state.authority,
+          tokenProgram: TOKEN_PROGRAM_ID
+        }
+      }
+    )) as TransactionInstruction
+  }
+
+  async claimFee(
+    {
+      pair,
+      owner,
+      userTokenX,
+      userTokenY,
+      index,
+    }: ClaimFee, signer: Keypair
+  ) {
+    
+    const claimFeeIx = await this.claimFeeInstruction({
+      pair,
+      owner,
+      userTokenX,
+      userTokenY,
+      index,
+    })
+
+    await signAndSend(new Transaction().add(claimFeeIx), [signer], this.connection) 
+  }
+
   async removePositionWithIndexInstruction(
     owner: PublicKey,
     lastPositionIndex: number,
@@ -548,6 +606,7 @@ export class Market {
     }) as TransactionInstruction
   }
 }
+
 export interface Decimal {
   v: BN
 }
@@ -617,4 +676,12 @@ export interface CreatePool {
   initTick?: number
   fee: number
   tickSpacing: number
+}
+
+export interface ClaimFee {
+  pair: Pair,
+  owner: PublicKey,
+  userTokenX: PublicKey,
+  userTokenY: PublicKey,
+  index: number,
 }
