@@ -476,6 +476,69 @@ pub mod amm {
         token::transfer(cpi_ctx_y, amount_y)?;
         Ok(())
     }
+
+    pub fn claim_fee(
+        ctx: Context<ClaimFee>,
+        index: u32,
+        lower_tick_index: i32,
+        upper_tick_index: i32,
+    ) -> ProgramResult {
+        let mut pool = ctx.accounts.pool.load_mut()?;
+        let mut position = ctx.accounts.position.load_mut()?;
+        let mut lower_tick = ctx.accounts.lower_tick.load_mut()?;
+        let mut upper_tick = ctx.accounts.upper_tick.load_mut()?;
+
+        check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
+
+        lower_tick.update(
+            pool.current_tick_index,
+            Decimal::new(0),
+            pool.fee_growth_global_x,
+            pool.fee_growth_global_y,
+            false,
+            false,
+        )?;
+        upper_tick.update(
+            pool.current_tick_index,
+            Decimal::new(0),
+            pool.fee_growth_global_x,
+            pool.fee_growth_global_y,
+            true,
+            false,
+        )?;
+
+        let (fee_growth_inside_x, fee_growth_inside_y) = calculate_fee_growth_inside(
+            *lower_tick,
+            *upper_tick,
+            pool.current_tick_index,
+            pool.fee_growth_global_x,
+            pool.fee_growth_global_y,
+        );
+        position.update(
+            false,
+            Decimal::new(0),
+            fee_growth_inside_x,
+            fee_growth_inside_y,
+        )?;
+
+        let fee_to_collect_x = position.tokens_owed_x.to_token_floor();
+        let fee_to_collect_y = position.tokens_owed_y.to_token_floor();
+        position.tokens_owed_x =
+            position.tokens_owed_x - Decimal::from_integer(fee_to_collect_x as u128);
+        position.tokens_owed_y =
+            position.tokens_owed_y - Decimal::from_integer(fee_to_collect_y as u128);
+
+        let seeds = &[SEED.as_bytes(), &[pool.nonce]];
+        let signer = &[&seeds[..]];
+
+        let cpi_ctx_x = ctx.accounts.send_x().with_signer(signer);
+        let cpi_ctx_y = ctx.accounts.send_y().with_signer(signer);
+
+        token::transfer(cpi_ctx_x, fee_to_collect_x)?;
+        token::transfer(cpi_ctx_y, fee_to_collect_y)?;
+
+        Ok(())
+    }
 }
 
 #[error]
