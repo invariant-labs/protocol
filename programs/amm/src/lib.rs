@@ -209,7 +209,7 @@ pub mod amm {
         let mut tickmap = ctx.accounts.tickmap.load_mut()?;
         let pool = ctx.accounts.pool.load()?;
 
-        tickmap.set(index, pool.tick_spacing);
+        tickmap.set(true, index, pool.tick_spacing);
 
         // init tick
         let below_current_tick = index <= pool.current_tick_index;
