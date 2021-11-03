@@ -65,6 +65,31 @@ pub mod amm {
         Ok(())
     }
 
+    pub fn create_fee_tier(
+        ctx: Context<CreateFeeTier>,
+        bump: u8,
+        tick_spacing: u16,
+    ) -> ProgramResult {
+        msg!("CREATE FEE TIER");
+        // 0.02% -> 4
+        // 0.04% -> 8
+        // 0.1%  -> 20
+        // 0.3%  -> 60
+        // 1%    -> 200
+
+        let fee_tier = &mut ctx.accounts.fee_tier.load_init()?;
+        let spacing_to_fee = Decimal::from_decimal(5, 5); // 0,00005
+        let fee = Decimal::new(tick_spacing.into()) * (spacing_to_fee);
+
+        **fee_tier = FeeTier {
+            fee,
+            tick_spacing,
+            bump,
+        };
+
+        Ok(())
+    }
+
     pub fn swap(
         ctx: Context<Swap>,
         x_to_y: bool,
