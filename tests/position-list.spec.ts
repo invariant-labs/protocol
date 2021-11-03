@@ -201,6 +201,7 @@ describe('Position list', () => {
       // last position should be at removed index
       const testedPosition = positionsAfter[positionIndexToRemove]
       assert.ok(lastPosition.pool.equals(testedPosition.pool))
+      assert.ok(lastPosition.id.eq(testedPosition.id))
       assert.ok(eqDecimal(lastPosition.liquidity, testedPosition.liquidity))
       assert.ok(lastPosition.lowerTickIndex === testedPosition.lowerTickIndex)
       assert.ok(lastPosition.upperTickIndex === testedPosition.upperTickIndex)
