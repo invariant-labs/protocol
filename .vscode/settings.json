@@ -1,18 +1,19 @@
 {
-    "cSpell.words": [
-        "initializable",
-        "localnet",
-        "poolv",
-        "positionlistv",
-        "positionv",
-        "Pubkey",
-        "seedv",
-        "solana",
-        "subn",
-        "Swapline",
-        "Sysvar",
-        "tickmap",
-        "tickv"
-    ],
-    "editor.formatOnSave": true
+  "cSpell.words": [
+    "feetier",
+    "initializable",
+    "localnet",
+    "poolv",
+    "positionlistv",
+    "positionv",
+    "Pubkey",
+    "seedv",
+    "solana",
+    "subn",
+    "Swapline",
+    "Sysvar",
+    "tickmap",
+    "tickv"
+  ],
+  "editor.formatOnSave": true
 }

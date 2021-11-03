@@ -31,6 +31,18 @@ pub struct Create<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(bump: u8, tick_spacing: u16)]
+pub struct CreateFeeTier<'info> {
+    #[account(init, seeds = [b"feetier",
+    program_id.as_ref(), &tick_spacing.to_le_bytes()],
+    bump = bump, payer = payer)]
+    pub fee_tier: Loader<'info, FeeTier>,
+    #[account(mut, signer)]
+    pub payer: AccountInfo<'info>,
+    pub rent: Sysvar<'info, Rent>,
+    pub system_program: AccountInfo<'info>,
+}
+#[derive(Accounts)]
 pub struct Swap<'info> {
     #[account(mut, seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()], bump = pool.load()?.bump)]
     pub pool: Loader<'info, Pool>,
