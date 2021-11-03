@@ -211,6 +211,7 @@ describe('Position list', () => {
     })
     it('Add position in place of the removed one', async () => {
       const positionListBefore = await market.getPositionList(positionOwner.publicKey)
+      await market.createTick(pair, ticksIndexes[2], wallet)
       await market.initPosition(
         {
           pair,
@@ -289,6 +290,8 @@ describe('Position list', () => {
     })
     it('Add position to cleared list', async () => {
       const positionListBefore = await market.getPositionList(positionOwner.publicKey)
+      await market.createTick(pair, ticksIndexes[0], wallet)
+      await market.createTick(pair, ticksIndexes[1], wallet)
       await market.initPosition(
         {
           pair,
@@ -312,6 +315,8 @@ describe('Position list', () => {
       await connection.requestAirdrop(positionRecipient.publicKey, 1e9)
       await sleep(2000)
       await market.createPositionList(positionRecipient)
+
+      await market.createTick(pair, ticksIndexes[2], wallet)
 
       // init positions
       await market.initPosition(
