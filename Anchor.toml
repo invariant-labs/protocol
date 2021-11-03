@@ -7,6 +7,7 @@ wallet = "~/.config/solana/id.json"
 
 [programs.localnet]
 amm = "FPr3fREovDnqMfubJTrJAFwopvJB8grXj1o3gkmSyzmw"
+staker = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
 
 [scripts]
 test = "ts-mocha -p ./tsconfig.json -t 1000000"
