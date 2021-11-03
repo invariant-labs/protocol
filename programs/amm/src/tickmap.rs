@@ -145,13 +145,11 @@ impl Tickmap {
             (tick % tick_spacing as i32) == 0,
             "tick not divisible by spacing"
         );
-        // subtract 1 to not check current tick
+        // don't subtract 1 to check the current tick
         let bitmap_index = tick
             .checked_div(tick_spacing.try_into().unwrap())
             .unwrap()
             .checked_add(TICK_LIMIT)
-            .unwrap()
-            .checked_sub(1)
             .unwrap();
         let limit = get_search_limit(tick, tick_spacing, false)
             .checked_add(TICK_LIMIT)
@@ -307,13 +305,20 @@ mod tests {
             map.set(-50, 10);
             map.set(-100, 10);
             assert_eq!(map.prev_initialized(0, 10), Some(-50));
-            assert_eq!(map.prev_initialized(-50, 10), Some(-100));
+            assert_eq!(map.prev_initialized(-50, 10), Some(-50));
         }
         // Current is last
         {
             let mut map = Tickmap::default();
 
             map.set(0, 10);
+            assert_eq!(map.prev_initialized(0, 10), Some(0));
+        }
+        // Next is last
+        {
+            let mut map = Tickmap::default();
+
+            map.set(10, 10);
             assert_eq!(map.prev_initialized(0, 10), None);
         }
         // Just below limit
