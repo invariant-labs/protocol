@@ -1,14 +1,12 @@
 [package]
-name = "amm"
+name = "staker"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2018"
-license = "Apache-2.0"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "amm"
-doctest = false
+name = "staker"
 
 [features]
 no-entrypoint = []
