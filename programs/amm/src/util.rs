@@ -74,15 +74,11 @@ pub fn get_closer_limit(
 }
 
 pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) {
-    assert!(
-        tick.index != pool.current_tick_index,
-        "already on this tick"
-    );
     tick.fee_growth_outside_x = pool.fee_growth_global_x - tick.fee_growth_outside_x;
     tick.fee_growth_outside_y = pool.fee_growth_global_y - tick.fee_growth_outside_y;
 
     // When going to higher tick net_liquidity should be added and for going lower subtracted
-    if (pool.current_tick_index > tick.index) ^ tick.sign {
+    if (pool.current_tick_index >= tick.index) ^ tick.sign {
         pool.liquidity = pool.liquidity + tick.liquidity_change;
     } else {
         pool.liquidity = pool.liquidity - tick.liquidity_change;
