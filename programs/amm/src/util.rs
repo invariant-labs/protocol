@@ -83,11 +83,6 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) {
     } else {
         pool.liquidity = pool.liquidity - tick.liquidity_change;
     }
-
-    assert!(
-        { pool.sqrt_price } > { tick.sqrt_price },
-        "price of pool is below price on current tick"
-    );
 }
 
 pub fn get_tick_from_price(
@@ -209,7 +204,7 @@ mod test {
     #[test]
     fn test_get_closer_limit() {
         let tickmap = &mut Tickmap::default();
-        tickmap.set(0, 1);
+        tickmap.set(true, 0, 1);
 
         // tick limit closer
         {

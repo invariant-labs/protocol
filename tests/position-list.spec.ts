@@ -102,8 +102,15 @@ describe('Position list', () => {
   })
   describe('#RemovePosition()', async () => {
     it('Remove from empty list should failed', async () => {
-      const ix = await market.removePositionInstruction(positionOwner.publicKey, 0)
-      assertThrowsAsync(signAndSend(new Transaction().add(ix), [positionOwner], connection))
+      assertThrowsAsync(
+        market.removePositionInstruction(
+          pair,
+          positionOwner.publicKey,
+          0,
+          userTokenXAccount,
+          userTokenYAccount
+        )
+      )
     })
     it('Add multiple position', async () => {
       xOwnerAmount = tou64(1e10)
@@ -173,8 +180,11 @@ describe('Position list', () => {
       const lastPosition = positionsBefore[positionListBefore.head - 1]
 
       const ix = await market.removePositionInstruction(
+        pair,
         positionOwner.publicKey,
-        positionIndexToRemove
+        positionIndexToRemove,
+        userTokenXAccount,
+        userTokenYAccount
       )
       await signAndSend(new Transaction().add(ix), [positionOwner], connection)
 
@@ -202,6 +212,7 @@ describe('Position list', () => {
     })
     it('Add position in place of the removed one', async () => {
       const positionListBefore = await market.getPositionList(positionOwner.publicKey)
+      await market.createTick(pair, ticksIndexes[2], wallet)
       await market.initPosition(
         {
           pair,
@@ -222,8 +233,11 @@ describe('Position list', () => {
       const lastPositionIndexBefore =
         (await market.getPositionList(positionOwner.publicKey)).head - 1
       const ix = await market.removePositionInstruction(
+        pair,
         positionOwner.publicKey,
-        lastPositionIndexBefore
+        lastPositionIndexBefore,
+        userTokenXAccount,
+        userTokenYAccount
       )
       await signAndSend(new Transaction().add(ix), [positionOwner], connection)
 
@@ -242,7 +256,13 @@ describe('Position list', () => {
         upperTick: ticksIndexes[3],
         liquidityDelta: fromInteger(1)
       })
-      const removePositionIx = await market.removePositionInstruction(positionOwner.publicKey, 0)
+      const removePositionIx = await market.removePositionInstruction(
+        pair,
+        positionOwner.publicKey,
+        0,
+        userTokenXAccount,
+        userTokenYAccount
+      )
 
       assertThrowsAsync(signAndSend(initPositionTx, [wallet], connection), ERRORS.SIGNATURE)
       assertThrowsAsync(
@@ -257,7 +277,13 @@ describe('Position list', () => {
       const positionListBefore = await market.getPositionList(positionOwner.publicKey)
 
       for (let i = positionListBefore.head - 1; i >= 0; i--) {
-        const ix = await market.removePositionInstruction(positionOwner.publicKey, i)
+        const ix = await market.removePositionInstruction(
+          pair,
+          positionOwner.publicKey,
+          i,
+          userTokenXAccount,
+          userTokenYAccount
+        )
         await signAndSend(new Transaction().add(ix), [positionOwner], connection)
       }
       const positionListAfter = await market.getPositionList(positionOwner.publicKey)
@@ -265,6 +291,8 @@ describe('Position list', () => {
     })
     it('Add position to cleared list', async () => {
       const positionListBefore = await market.getPositionList(positionOwner.publicKey)
+      await market.createTick(pair, ticksIndexes[0], wallet)
+      await market.createTick(pair, ticksIndexes[1], wallet)
       await market.initPosition(
         {
           pair,
@@ -280,32 +308,6 @@ describe('Position list', () => {
       const positionListAfter = await market.getPositionList(positionOwner.publicKey)
       assert.equal(positionListBefore.head + 1, positionListAfter.head)
     })
-    it('Add and remove position in the same transaction', async () => {
-      const positionListBefore = await market.getPositionList(positionOwner.publicKey)
-      const initPositionIx = await market.initPositionInstruction({
-        pair,
-        owner: positionOwner.publicKey,
-        userTokenX: userTokenXAccount,
-        userTokenY: userTokenYAccount,
-        lowerTick: ticksIndexes[1],
-        upperTick: ticksIndexes[2],
-        liquidityDelta: fromInteger(1)
-      })
-      const removePositionIx = await market.removePositionWithIndexInstruction(
-        positionOwner.publicKey,
-        positionListBefore.head,
-        positionListBefore.head
-      )
-      await signAndSend(
-        new Transaction().add(initPositionIx).add(removePositionIx),
-        [positionOwner],
-        connection
-      )
-      const positionListAfter = await market.getPositionList(positionOwner.publicKey)
-
-      // added and removed should be the same length
-      assert.equal(positionListAfter.head, positionListBefore.head)
-    })
   })
   describe('#TransferPositionOwnership', async () => {
     const positionRecipient = Keypair.generate()
@@ -314,6 +316,8 @@ describe('Position list', () => {
       await connection.requestAirdrop(positionRecipient.publicKey, 1e9)
       await sleep(2000)
       await market.createPositionList(positionRecipient)
+
+      await market.createTick(pair, ticksIndexes[2], wallet)
 
       // init positions
       await market.initPosition(
