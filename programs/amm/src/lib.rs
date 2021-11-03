@@ -258,7 +258,7 @@ pub mod amm {
         msg!("INIT_POSITION");
 
         let mut position = ctx.accounts.position.load_init()?;
-        let pool = &mut ctx.accounts.pool.load_mut()?;
+        let mut pool = &mut ctx.accounts.pool.load_mut()?;
         let lower_tick = &mut ctx.accounts.lower_tick.load_mut()?;
         let upper_tick = &mut ctx.accounts.upper_tick.load_mut()?;
         let mut position_list = ctx.accounts.position_list.load_mut()?;
@@ -268,21 +268,22 @@ pub mod amm {
 
         // update position_list head
         position_list.head += 1;
-        // position.initialized_id(&mut pool);
+        position.initialized_id(&mut pool);
 
-        // // init position
-        // *position = Position {
-        //     owner: *ctx.accounts.owner.to_account_info().key,
-        //     pool: *ctx.accounts.pool.to_account_info().key,
-        //     liquidity: Decimal::new(0),
-        //     lower_tick_index: lower_tick.index,
-        //     upper_tick_index: upper_tick.index,
-        //     fee_growth_inside_x: Decimal::new(0),
-        //     fee_growth_inside_y: Decimal::new(0),
-        //     tokens_owed_x: Decimal::new(0),
-        //     tokens_owed_y: Decimal::new(0),
-        //     bump: bump,
-        // };
+        // init position
+        *position = Position {
+            owner: *ctx.accounts.owner.to_account_info().key,
+            pool: *ctx.accounts.pool.to_account_info().key,
+            id: position.id,
+            liquidity: Decimal::new(0),
+            lower_tick_index: lower_tick.index,
+            upper_tick_index: upper_tick.index,
+            fee_growth_inside_x: Decimal::new(0),
+            fee_growth_inside_y: Decimal::new(0),
+            tokens_owed_x: Decimal::new(0),
+            tokens_owed_y: Decimal::new(0),
+            bump: bump,
+        };
 
         let (amount_x, amount_y) =
             position.modify(pool, upper_tick, lower_tick, liquidity_delta, true)?;
@@ -305,8 +306,9 @@ pub mod amm {
         let pool = &mut ctx.accounts.pool.load_mut()?;
         let tickmap = &mut ctx.accounts.tickmap.load_mut()?;
 
-        let mut close_lower = false;
-        let mut close_upper = false;
+        // closing tick can't be in the same scope as loaded tick
+        let close_lower;
+        let close_upper;
 
         let (amount_x, amount_y) = {
             let lower_tick = &mut ctx.accounts.lower_tick.load_mut()?;
@@ -426,54 +428,27 @@ pub mod amm {
 
     pub fn claim_fee(
         ctx: Context<ClaimFee>,
-        index: u32,
-        lower_tick_index: i32,
-        upper_tick_index: i32,
+        _index: u32,
+        _lower_tick_index: i32,
+        _upper_tick_index: i32,
     ) -> ProgramResult {
-        let mut pool = ctx.accounts.pool.load_mut()?;
-        let mut position = ctx.accounts.position.load_mut()?;
-        let mut lower_tick = ctx.accounts.lower_tick.load_mut()?;
-        let mut upper_tick = ctx.accounts.upper_tick.load_mut()?;
+        let pool = &mut ctx.accounts.pool.load_mut()?;
+        let position = &mut ctx.accounts.position.load_mut()?;
+        let lower_tick = &mut ctx.accounts.lower_tick.load_mut()?;
+        let upper_tick = &mut ctx.accounts.upper_tick.load_mut()?;
 
         check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
 
-        lower_tick.update(
-            pool.current_tick_index,
-            Decimal::new(0),
-            pool.fee_growth_global_x,
-            pool.fee_growth_global_y,
-            false,
-            false,
-        )?;
-        upper_tick.update(
-            pool.current_tick_index,
-            Decimal::new(0),
-            pool.fee_growth_global_x,
-            pool.fee_growth_global_y,
-            true,
-            false,
-        )?;
-
-        let (fee_growth_inside_x, fee_growth_inside_y) = calculate_fee_growth_inside(
-            *lower_tick,
-            *upper_tick,
-            pool.current_tick_index,
-            pool.fee_growth_global_x,
-            pool.fee_growth_global_y,
-        );
-        position.update(
-            false,
-            Decimal::new(0),
-            fee_growth_inside_x,
-            fee_growth_inside_y,
-        )?;
+        position
+            .modify(pool, upper_tick, lower_tick, Decimal::new(0), true)
+            .unwrap();
 
         let fee_to_collect_x = position.tokens_owed_x.to_token_floor();
         let fee_to_collect_y = position.tokens_owed_y.to_token_floor();
         position.tokens_owed_x =
-            position.tokens_owed_x - Decimal::from_integer(fee_to_collect_x as u128);
+            position.tokens_owed_x - Decimal::from_integer(fee_to_collect_x.into());
         position.tokens_owed_y =
-            position.tokens_owed_y - Decimal::from_integer(fee_to_collect_y as u128);
+            position.tokens_owed_y - Decimal::from_integer(fee_to_collect_y.into());
 
         let seeds = &[SEED.as_bytes(), &[pool.nonce]];
         let signer = &[&seeds[..]];

@@ -929,8 +929,5 @@
       "name": "PositionWithoutLiquidity",
       "msg": "Position liquidity would be zero"
     }
-  ],
-  "metadata": {
-    "address": "FPr3fREovDnqMfubJTrJAFwopvJB8grXj1o3gkmSyzmw"
-  }
+  ]
 }
