@@ -11,7 +11,7 @@ import {
   TransactionInstruction,
   Signer
 } from '@solana/web3.js'
-import { findInitialized, fromInteger } from './math'
+import { findInitialized, isInitialized } from './math'
 import { SEED, signAndSend, tou64 } from './utils'
 import idl from './idl/amm.json'
 import { IWallet, Pair } from '.'
@@ -135,6 +135,12 @@ export class Market {
     const state = await this.get(pair)
     const tickmap = (await this.program.account.tickmap.fetch(state.tickmap)) as Tickmap
     return tickmap
+  }
+
+  async isInitialized(pair: Pair, index: number) {
+    const state = await this.get(pair)
+    const tickmap = await this.getTickmap(pair)
+    return isInitialized(tickmap, index, state.tickSpacing)
   }
 
   async getTick(pair: Pair, index: number) {

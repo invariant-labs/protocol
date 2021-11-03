@@ -101,6 +101,9 @@ describe('withdraw', () => {
     const lowerIx = await market.createTickInstruction(pair, lowerTick, wallet.publicKey)
     await signAndSend(new Transaction().add(lowerIx), [wallet], connection)
 
+    assert.ok(await market.isInitialized(pair, lowerTick))
+    assert.ok(await market.isInitialized(pair, upperTick))
+
     const positionOwner = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
     const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
@@ -196,5 +199,8 @@ describe('withdraw', () => {
 
     assertThrowsAsync(market.getTick(pair, upperTick))
     assertThrowsAsync(market.getTick(pair, lowerTick))
+
+    assert.isFalse(await market.isInitialized(pair, lowerTick))
+    assert.isFalse(await market.isInitialized(pair, upperTick))
   })
 })
