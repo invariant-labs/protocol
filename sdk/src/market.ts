@@ -629,6 +629,7 @@ export interface Tick {
 export interface Position {
   owner: PublicKey
   pool: PublicKey
+  id: BN
   liquidity: Decimal
   lowerTickIndex: number
   upperTickIndex: number

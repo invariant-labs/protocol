@@ -8,6 +8,7 @@ pub struct Pool {
     pub token_y: Pubkey,
     pub token_x_reserve: Pubkey,
     pub token_y_reserve: Pubkey,
+    pub position_iterator: u64,
     pub tick_spacing: u16,
     pub fee: Decimal,
     pub protocol_fee: Decimal,
@@ -73,6 +74,7 @@ pub struct PositionList {
 pub struct Position {
     pub owner: Pubkey,
     pub pool: Pubkey,
+    pub id: u64, // unique inside pool
     pub liquidity: Decimal,
     pub lower_tick_index: i32,
     pub upper_tick_index: i32,

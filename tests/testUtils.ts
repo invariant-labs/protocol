@@ -62,6 +62,7 @@ export const positionWithoutOwnerEquals = (a: Position, b: Position) => {
     a.lowerTickIndex == b.lowerTickIndex &&
     a.upperTickIndex == b.upperTickIndex &&
     a.pool.equals(b.pool) &&
+    a.id.eq(b.id) &&
     eqDecimal(a.tokensOwedX, b.tokensOwedX) &&
     eqDecimal(a.tokensOwedY, b.tokensOwedY)
   )
