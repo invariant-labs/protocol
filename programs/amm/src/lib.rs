@@ -24,8 +24,6 @@ const SEED: &str = "Swapline";
 #[program]
 pub mod amm {
 
-    use position::calculate_fee_growth_inside;
-
     use crate::util::{check_ticks, get_tick_from_price};
 
     use super::*;
