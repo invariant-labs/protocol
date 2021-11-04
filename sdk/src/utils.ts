@@ -72,13 +72,12 @@ export const tou64 = (amount) => {
 
 export const fromFee = (fee: number) => {
   const decimal = new BN(fee).divn(100)
-
   return {
     v: decimal.mul(DENOMINATOR)
   }
 }
 
-// export const feeToTickSpacing = (fee: Decimal) => {
-// 1%
-// 0.01 * 10^12 ->
-// }
+export const feeToTickSpacing = (fee: number) => {
+  const FEE_TO_TICK_SPACING = 200
+  return fee * FEE_TO_TICK_SPACING
+}
