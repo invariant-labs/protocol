@@ -65,7 +65,10 @@ describe('position', () => {
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
-  it('#createFeeTier()', async () => {})
+  it('#createFeeTier()', async () => {
+    const ix = await market.createFeeTierInstruction(0.01, wallet.publicKey)
+    await signAndSend(new Transaction().add(ix), [wallet], connection)
+  })
   it('#create()', async () => {
     const fee = 600
     const tickSpacing = 4

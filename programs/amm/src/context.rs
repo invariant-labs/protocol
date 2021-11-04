@@ -11,7 +11,18 @@ pub trait SendTokens<'info> {
     fn send_x(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>>;
     fn send_y(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>>;
 }
-
+#[derive(Accounts)]
+#[instruction(bump: u8, tick_spacing: u16)]
+pub struct CreateFeeTier<'info> {
+    #[account(init, seeds = [b"feetierv1",
+    program_id.as_ref(), &tick_spacing.to_le_bytes()],
+    bump = bump, payer = payer)]
+    pub fee_tier: Loader<'info, FeeTier>,
+    #[account(mut, signer)]
+    pub payer: AccountInfo<'info>,
+    pub rent: Sysvar<'info, Rent>,
+    pub system_program: AccountInfo<'info>,
+}
 #[derive(Accounts)]
 #[instruction(bump: u8)]
 pub struct Create<'info> {
@@ -24,19 +35,6 @@ pub struct Create<'info> {
     pub token_x_reserve: AccountInfo<'info>,
     pub token_y_reserve: AccountInfo<'info>,
     pub program_authority: AccountInfo<'info>,
-    #[account(mut, signer)]
-    pub payer: AccountInfo<'info>,
-    pub rent: Sysvar<'info, Rent>,
-    pub system_program: AccountInfo<'info>,
-}
-
-#[derive(Accounts)]
-#[instruction(bump: u8, tick_spacing: u16)]
-pub struct CreateFeeTier<'info> {
-    #[account(init, seeds = [b"feetierv1",
-    program_id.as_ref(), &tick_spacing.to_le_bytes()],
-    bump = bump, payer = payer)]
-    pub fee_tier: Loader<'info, FeeTier>,
     #[account(mut, signer)]
     pub payer: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,

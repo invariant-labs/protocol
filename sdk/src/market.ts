@@ -133,7 +133,7 @@ export class Market {
 
   async getFeeTierAddress(fee: number) {
     const tickSpacing = feeToTickSpacing(fee)
-    const tickSpacingBuffer = Buffer.alloc(4)
+    const tickSpacingBuffer = Buffer.alloc(2)
     tickSpacingBuffer.writeUInt16LE(tickSpacing)
 
     const [address, bump] = await PublicKey.findProgramAddress(
