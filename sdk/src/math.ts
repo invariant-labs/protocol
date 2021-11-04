@@ -1,10 +1,23 @@
 import { BN } from '@project-serum/anchor'
-import { Decimal } from './market'
+import { Decimal, Tickmap } from './market'
 import { DENOMINATOR } from './utils'
 
 export const TICK_LIMIT = 100_000
 export const MAX_TICK = 221_818
 export const MIN_TICK = -MAX_TICK
+
+export const isInitialized = (tickmap: Tickmap, index: number, tickSpacing: number) => {
+  if (index % tickSpacing !== 0) {
+    throw Error("invalid arguments can't check tick")
+  }
+  const toIndex = Math.floor(index / tickSpacing) + TICK_LIMIT
+  const byte = Math.floor(toIndex / 8)
+  const bit = Math.floor(toIndex % 8)
+
+  const value = tickmap.bitmap[byte] & (1 << bit)
+
+  return value !== 0
+}
 
 export const findInitialized = (ticks: number[], from: number, to: number, tickSpacing: number) => {
   if (from > to || from % tickSpacing !== 0 || to % tickSpacing !== 0) {

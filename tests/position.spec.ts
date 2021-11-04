@@ -128,7 +128,7 @@ describe('position', () => {
       assert.ok(tick.index == lowerTick)
       assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
       assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
-      assert.ok(tick.sqrtPrice.v.eq(expectedZeroDecimal))
+      assert.ok(tick.sqrtPrice.v.eq(calculate_price_sqrt(lowerTick).v))
       assert.ok(tick.feeGrowthOutsideX.v.eq(expectedZeroDecimal))
       assert.ok(tick.feeGrowthOutsideY.v.eq(expectedZeroDecimal))
       assert.ok(tick.bump == tickBump)
@@ -143,7 +143,7 @@ describe('position', () => {
       assert.ok(tick.index == upperTick)
       assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
       assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
-      assert.ok(tick.sqrtPrice.v.eq(expectedZeroDecimal))
+      assert.ok(tick.sqrtPrice.v.eq(calculate_price_sqrt(upperTick).v))
       assert.ok(tick.feeGrowthOutsideX.v.eq(expectedZeroDecimal))
       assert.ok(tick.feeGrowthOutsideY.v.eq(expectedZeroDecimal))
       assert.ok(tick.bump == tickBump)
@@ -210,6 +210,7 @@ describe('position', () => {
       const poolAddress = await pair.getAddress(market.program.programId)
       assert.ok(positionState.owner.equals(positionOwner.publicKey))
       assert.ok(positionState.pool.equals(poolAddress))
+      assert.ok(positionState.id.eqn(0))
       assert.ok(positionState.liquidity.v.eq(liquidityDelta.v))
       assert.ok(positionState.lowerTickIndex == lowerTick)
       assert.ok(positionState.upperTickIndex == upperTick)
@@ -250,7 +251,7 @@ describe('position', () => {
       assert.ok(tick.index == lowerTick)
       assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
       assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
-      assert.ok(tick.sqrtPrice.v.eq(expectedZeroDecimal))
+      assert.ok(tick.sqrtPrice.v.eq(calculate_price_sqrt(lowerTick).v))
       assert.ok(tick.feeGrowthOutsideX.v.eq(expectedZeroDecimal))
       assert.ok(tick.feeGrowthOutsideY.v.eq(expectedZeroDecimal))
       assert.ok(tick.bump == tickBump)
@@ -265,7 +266,7 @@ describe('position', () => {
       assert.ok(tick.index == upperTick)
       assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
       assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
-      assert.ok(tick.sqrtPrice.v.eq(expectedZeroDecimal))
+      assert.ok(tick.sqrtPrice.v.eq(calculate_price_sqrt(upperTick).v))
       assert.ok(tick.feeGrowthOutsideX.v.eq(expectedZeroDecimal))
       assert.ok(tick.feeGrowthOutsideY.v.eq(expectedZeroDecimal))
       assert.ok(tick.bump == tickBump)
@@ -332,6 +333,7 @@ describe('position', () => {
       const poolAddress = await pair.getAddress(market.program.programId)
       assert.ok(positionState.owner.equals(positionOwner.publicKey))
       assert.ok(positionState.pool.equals(poolAddress))
+      assert.ok(positionState.id.eqn(1))
       assert.ok(positionState.liquidity.v.eq(liquidityDelta.v))
       assert.ok(positionState.lowerTickIndex == lowerTick)
       assert.ok(positionState.upperTickIndex == upperTick)
@@ -372,7 +374,7 @@ describe('position', () => {
       assert.ok(tick.index == lowerTick)
       assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
       assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
-      assert.ok(tick.sqrtPrice.v.eq(expectedZeroDecimal))
+      assert.ok(tick.sqrtPrice.v.eq(calculate_price_sqrt(lowerTick).v))
       assert.ok(tick.feeGrowthOutsideX.v.eq(expectedZeroDecimal))
       assert.ok(tick.feeGrowthOutsideY.v.eq(expectedZeroDecimal))
       assert.ok(tick.bump == tickBump)
@@ -387,7 +389,7 @@ describe('position', () => {
       assert.ok(tick.index == upperTick)
       assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
       assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
-      assert.ok(tick.sqrtPrice.v.eq(expectedZeroDecimal))
+      assert.ok(tick.sqrtPrice.v.eq(calculate_price_sqrt(upperTick).v))
       assert.ok(tick.feeGrowthOutsideX.v.eq(expectedZeroDecimal))
       assert.ok(tick.feeGrowthOutsideY.v.eq(expectedZeroDecimal))
       assert.ok(tick.bump == tickBump)
@@ -455,6 +457,7 @@ describe('position', () => {
       const poolAddress = await pair.getAddress(market.program.programId)
       assert.ok(positionState.owner.equals(positionOwner.publicKey))
       assert.ok(positionState.pool.equals(poolAddress))
+      assert.ok(positionState.id.eqn(2))
       assert.ok(positionState.liquidity.v.eq(liquidityDelta.v))
       assert.ok(positionState.lowerTickIndex == lowerTick)
       assert.ok(positionState.upperTickIndex == upperTick)
@@ -472,26 +475,6 @@ describe('position', () => {
       assert.ok(userTokenXBalance.eq(xOwnerAmount.sub(expectedXIncrease)))
       assert.ok(userTokenYBalance.eq(yOwnerAmount.sub(expectedYIncrease)))
 
-      // before - after
-      // x/y user balance
-      // x/y reserve balance
-
-      // await pool.withdraw(
-      //   {
-      //     owner: positionOwner,
-      //     userTokenX: userTokenXAccount,
-      //     userTokenY: userTokenYAccount,
-      //     lowerTick,
-      //     upperTick,
-      //     liquidityDelta
-      //   },
-      //   positionOwner
-      // )
-
-      // const poolDataAfter = await pool.get()
-      // assert.ok(poolDataAfter.liquidity.v.eqn(0))
-
-      console.log(userTokenXBalance.toString(), userTokenYBalance.toString())
       xOwnerAmount = userTokenXBalance
       yOwnerAmount = userTokenYBalance
     })
