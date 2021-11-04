@@ -7,6 +7,7 @@ import {
   sendAndConfirmRawTransaction,
   Transaction
 } from '@solana/web3.js'
+import { Decimal } from './market'
 
 export const SEED = 'Swapline'
 export const DECIMAL = 12
@@ -68,3 +69,16 @@ export const tou64 = (amount) => {
   // eslint-disable-next-line new-cap
   return new u64(amount.toString())
 }
+
+export const fromFee = (fee: number) => {
+  const decimal = new BN(fee).divn(100)
+
+  return {
+    v: decimal.mul(DENOMINATOR)
+  }
+}
+
+// export const feeToTickSpacing = (fee: Decimal) => {
+// 1%
+// 0.01 * 10^12 ->
+// }
