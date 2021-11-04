@@ -65,9 +65,8 @@ describe('position', () => {
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
-
+  it('#createFeeTier()', async () => {})
   it('#create()', async () => {
-    assert.ok(true)
     const fee = 600
     const tickSpacing = 4
     const feeDecimal = new BN(fee).mul(new BN(10).pow(new BN(12 - 5)))

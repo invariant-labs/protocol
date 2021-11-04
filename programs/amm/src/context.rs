@@ -33,7 +33,7 @@ pub struct Create<'info> {
 #[derive(Accounts)]
 #[instruction(bump: u8, tick_spacing: u16)]
 pub struct CreateFeeTier<'info> {
-    #[account(init, seeds = [b"feetier",
+    #[account(init, seeds = [b"feetierv1",
     program_id.as_ref(), &tick_spacing.to_le_bytes()],
     bump = bump, payer = payer)]
     pub fee_tier: Loader<'info, FeeTier>,

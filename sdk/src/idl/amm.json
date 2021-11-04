@@ -80,6 +80,41 @@
       ]
     },
     {
+      "name": "createFeeTier",
+      "accounts": [
+        {
+          "name": "feeTier",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        },
+        {
+          "name": "tickSpacing",
+          "type": "u16"
+        }
+      ]
+    },
+    {
       "name": "swap",
       "accounts": [
         {
@@ -615,6 +650,28 @@
     }
   ],
   "accounts": [
+    {
+      "name": "FeeTier",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "fee",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "tickSpacing",
+            "type": "u16"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
     {
       "name": "Pool",
       "type": {
