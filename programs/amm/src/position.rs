@@ -235,6 +235,34 @@ pub fn calculate_fee_growth_inside(
     (fee_growth_inside_x, fee_growth_inside_y)
 }
 
+pub fn calculate_seconds_between_ticks(
+    tick_lower: Tick,
+    tick_upper: Tick,
+    tick_current: i32,
+    start_timestamp: i64,
+) -> u64 {
+    let seconds_passed: u64 = (Clock::get().unwrap().unix_timestamp - start_timestamp)
+        .try_into()
+        .unwrap();
+
+    let current_above_lower = tick_current >= tick_lower.index;
+    let current_below_upper = tick_current < tick_upper.index;
+
+    let seconds_below = if current_above_lower {
+        tick_lower.seconds_outside
+    } else {
+        seconds_passed - tick_lower.seconds_outside
+    };
+
+    let seconds_above = if current_below_upper {
+        seconds_passed - tick_upper.seconds_outside
+    } else {
+        tick_upper.seconds_outside
+    };
+
+    seconds_passed - seconds_below - seconds_above
+}
+
 pub fn calculate_amount_delta(
     pool: &mut Pool,
     liquidity_delta: Decimal,
