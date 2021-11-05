@@ -1,7 +1,5 @@
 use std::cell::RefMut;
 
-use anchor_lang::solana_program::clock::UnixTimestamp;
-
 use crate::account::{Pool, Tick, Tickmap};
 use crate::decimal::Decimal;
 use crate::math::calculate_price_sqrt;
@@ -72,13 +70,18 @@ pub fn get_closer_limit(
     }
 }
 
-pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
+pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) {
     assert!(
         tick.index != pool.current_tick_index,
         "already on this tick"
     );
     tick.fee_growth_outside_x = pool.fee_growth_global_x - tick.fee_growth_outside_x;
     tick.fee_growth_outside_y = pool.fee_growth_global_y - tick.fee_growth_outside_y;
+
+    let seconds_passed: u64 = (Clock::get().unwrap().unix_timestamp - pool.timestamp)
+        .try_into()
+        .unwrap();
+    tick.seconds_outside = seconds_passed - tick.seconds_outside;
 
     // When going to higher tick net_liquidity should be added and for going lower subtracted
     if (pool.current_tick_index > tick.index) ^ tick.sign {
@@ -87,23 +90,10 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
         pool.liquidity = pool.liquidity - tick.liquidity_change;
     }
 
-    if tick.last_timestamp.is_some() {
-        let current_timestamp = Clock::get().unwrap().unix_timestamp;
-        let time_passed = current_timestamp - tick.last_timestamp.unwrap();
-        if time_passed < 0 {
-            return Err(ErrorCode::NegativeTime.into());
-        }
-        tick.seconds_per_liquidity = tick.seconds_per_liquidity
-            + (Decimal::from_integer(time_passed.try_into().unwrap()) / tick.liquidity_gross);
-        tick.last_timestamp = Some(current_timestamp);
-    }
-
     assert!(
         { pool.sqrt_price } > { tick.sqrt_price },
         "price of pool is below price on current tick"
     );
-
-    Ok(())
 }
 
 pub fn get_tick_from_price(
@@ -240,10 +230,5 @@ mod test {
             assert_eq!(result, expected);
             assert_eq!(from_tick, None);
         }
-    }
-
-    #[test]
-    fn test_cross_tick() {
-        
     }
 }
