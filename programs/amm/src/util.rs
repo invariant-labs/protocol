@@ -1,4 +1,7 @@
+use anchor_lang::__private::ErrorCode;
+use anchor_lang::__private::CLOSED_ACCOUNT_DISCRIMINATOR;
 use std::cell::RefMut;
+use std::io::Write;
 
 use crate::account::{Pool, Tick, Tickmap};
 use crate::decimal::Decimal;
@@ -71,10 +74,6 @@ pub fn get_closer_limit(
 }
 
 pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) {
-    assert!(
-        tick.index != pool.current_tick_index,
-        "already on this tick"
-    );
     tick.fee_growth_outside_x = pool.fee_growth_global_x - tick.fee_growth_outside_x;
     tick.fee_growth_outside_y = pool.fee_growth_global_y - tick.fee_growth_outside_y;
 
@@ -84,16 +83,11 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) {
     tick.seconds_outside = seconds_passed - tick.seconds_outside;
 
     // When going to higher tick net_liquidity should be added and for going lower subtracted
-    if (pool.current_tick_index > tick.index) ^ tick.sign {
+    if (pool.current_tick_index >= tick.index) ^ tick.sign {
         pool.liquidity = pool.liquidity + tick.liquidity_change;
     } else {
         pool.liquidity = pool.liquidity - tick.liquidity_change;
     }
-
-    assert!(
-        { pool.sqrt_price } > { tick.sqrt_price },
-        "price of pool is below price on current tick"
-    );
 }
 
 pub fn get_tick_from_price(
@@ -150,6 +144,26 @@ pub fn price_to_tick_in_range(price: Decimal, low: i32, high: i32, step: i32) ->
     low.checked_mul(step).unwrap()
 }
 
+pub fn close<'info>(
+    info: AccountInfo<'info>,
+    sol_destination: AccountInfo<'info>,
+) -> ProgramResult {
+    // Transfer tokens from the account to the sol_destination.
+    let dest_starting_lamports = sol_destination.lamports();
+    **sol_destination.lamports.borrow_mut() =
+        dest_starting_lamports.checked_add(info.lamports()).unwrap();
+    **info.lamports.borrow_mut() = 0;
+
+    // Mark the account discriminator as closed.
+    let mut data = info.try_borrow_mut_data()?;
+    let dst: &mut [u8] = &mut data;
+    let mut cursor = std::io::Cursor::new(dst);
+    cursor
+        .write_all(&CLOSED_ACCOUNT_DISCRIMINATOR)
+        .map_err(|_| ErrorCode::AccountDidNotSerialize)?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -195,7 +209,7 @@ mod test {
     #[test]
     fn test_get_closer_limit() {
         let tickmap = &mut Tickmap::default();
-        tickmap.set(0, 1);
+        tickmap.set(true, 0, 1);
 
         // tick limit closer
         {

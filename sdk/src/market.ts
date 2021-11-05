@@ -11,7 +11,7 @@ import {
   TransactionInstruction,
   Signer
 } from '@solana/web3.js'
-import { findInitialized, fromInteger } from './math'
+import { findInitialized, isInitialized } from './math'
 import { SEED, signAndSend, tou64 } from './utils'
 import idl from './idl/amm.json'
 import { IWallet, Pair } from '.'
@@ -135,6 +135,12 @@ export class Market {
     const state = await this.get(pair)
     const tickmap = (await this.program.account.tickmap.fetch(state.tickmap)) as Tickmap
     return tickmap
+  }
+
+  async isInitialized(pair: Pair, index: number) {
+    const state = await this.get(pair)
+    const tickmap = await this.getTickmap(pair)
+    return isInitialized(tickmap, index, state.tickSpacing)
   }
 
   async getTick(pair: Pair, index: number) {
@@ -320,53 +326,6 @@ export class Market {
     ) as TransactionInstruction
   }
 
-  async withdrawInstruction({
-    pair,
-    owner,
-    userTokenX,
-    userTokenY,
-    index,
-    liquidityDelta
-  }: ModifyPosition) {
-    const state = await this.get(pair)
-    const { positionAddress, positionBump } = await this.getPositionAddress(owner, index)
-
-    const position = await this.getPosition(owner, index)
-    const { tickAddress: lowerTickAddress } = await this.getTickAddress(
-      pair,
-      position.lowerTickIndex
-    )
-    const { tickAddress: upperTickAddress } = await this.getTickAddress(
-      pair,
-      position.upperTickIndex
-    )
-
-    return this.program.instruction.withdraw(
-      // positionBump,
-      index,
-      position.lowerTickIndex,
-      position.upperTickIndex,
-      liquidityDelta,
-      {
-        accounts: {
-          pool: await pair.getAddress(this.program.programId),
-          position: positionAddress,
-          owner,
-          lowerTick: lowerTickAddress,
-          upperTick: upperTickAddress,
-          tokenX: pair.tokenX,
-          tokenY: pair.tokenY,
-          accountX: userTokenX,
-          accountY: userTokenY,
-          reserveX: state.tokenXReserve,
-          reserveY: state.tokenYReserve,
-          programAuthority: state.authority,
-          tokenProgram: TOKEN_PROGRAM_ID
-        }
-      }
-    ) as TransactionInstruction
-  }
-
   async initPositionTx(initPosition: InitPosition) {
     const { owner, userTokenX, userTokenY } = initPosition
 
@@ -379,22 +338,6 @@ export class Market {
 
     const tx = await this.initPositionTx(initPosition)
     await signAndSend(tx, [signer], this.connection)
-  }
-
-  async withdraw(
-    { pair, owner, userTokenX, userTokenY, index, liquidityDelta }: ModifyPosition,
-    signer: Keypair
-  ) {
-    const withdrawPositionIx = await this.withdrawInstruction({
-      pair,
-      owner,
-      userTokenX,
-      userTokenY,
-      index,
-      liquidityDelta
-    })
-
-    await signAndSend(new Transaction().add(withdrawPositionIx), [signer], this.connection)
   }
 
   async swap(
@@ -545,9 +488,12 @@ export class Market {
   }
 
   async removePositionWithIndexInstruction(
+    pair: Pair,
     owner: PublicKey,
     lastPositionIndex: number,
-    index: number
+    index: number,
+    userTokenX: PublicKey,
+    userTokenY: PublicKey
   ): Promise<TransactionInstruction> {
     const { positionListAddress } = await this.getPositionListAddress(owner)
     const { positionAddress: removedPositionAddress } = await this.getPositionAddress(owner, index)
@@ -556,22 +502,61 @@ export class Market {
       lastPositionIndex
     )
 
-    return this.program.instruction.removePosition(index, {
-      accounts: {
-        owner: owner,
-        removedPosition: removedPositionAddress,
-        positionList: positionListAddress,
-        lastPosition: lastPositionAddress
+    const state = await this.get(pair)
+    const position = await this.getPosition(owner, index)
+
+    const { tickAddress: lowerTickAddress } = await this.getTickAddress(
+      pair,
+      position.lowerTickIndex
+    )
+    const { tickAddress: upperTickAddress } = await this.getTickAddress(
+      pair,
+      position.upperTickIndex
+    )
+
+    return this.program.instruction.removePosition(
+      index,
+      position.lowerTickIndex,
+      position.upperTickIndex,
+      {
+        accounts: {
+          owner: owner,
+          removedPosition: removedPositionAddress,
+          positionList: positionListAddress,
+          lastPosition: lastPositionAddress,
+          pool: await pair.getAddress(this.program.programId),
+          tickmap: state.tickmap,
+          lowerTick: lowerTickAddress,
+          upperTick: upperTickAddress,
+          tokenX: pair.tokenX,
+          tokenY: pair.tokenY,
+          accountX: userTokenX,
+          accountY: userTokenY,
+          reserveX: state.tokenXReserve,
+          reserveY: state.tokenYReserve,
+          programAuthority: state.authority,
+          tokenProgram: TOKEN_PROGRAM_ID
+        }
       }
-    }) as TransactionInstruction
+    ) as TransactionInstruction
   }
 
   async removePositionInstruction(
+    pair: Pair,
     owner: PublicKey,
-    index: number
+    index: number,
+    userTokenX: PublicKey,
+    userTokenY: PublicKey
   ): Promise<TransactionInstruction> {
     const positionList = await this.getPositionList(owner)
-    return this.removePositionWithIndexInstruction(owner, positionList.head - 1, index)
+    return this.removePositionWithIndexInstruction(
+      pair,
+      owner,
+      positionList.head - 1,
+      index,
+      userTokenX,
+      userTokenY
+    )
   }
 
   async transferPositionOwnershipInstruction(
@@ -629,6 +614,7 @@ export interface Tick {
 export interface Position {
   owner: PublicKey
   pool: PublicKey
+  id: BN
   liquidity: Decimal
   lowerTickIndex: number
   upperTickIndex: number

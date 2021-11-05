@@ -29,8 +29,11 @@ pub fn get_search_limit(tick: i32, tick_spacing: u16, up: bool) -> i32 {
     }
 }
 impl Tickmap {
-    pub fn set(&mut self, tick: i32, tick_spacing: u16) {
-        assert!(!self.get(tick, tick_spacing), "tick already initialized");
+    pub fn set(&mut self, value: bool, tick: i32, tick_spacing: u16) {
+        assert!(
+            self.get(tick, tick_spacing) != value,
+            "tick initialize tick again"
+        );
         assert!(
             tick % tick_spacing as i32 == 0,
             "tick not divisible by spacing"
@@ -46,7 +49,7 @@ impl Tickmap {
             .try_into()
             .unwrap();
 
-        self.bitmap[byte] |= 1 << bit;
+        self.bitmap[byte] ^= 1 << bit;
     }
 
     pub fn get(&self, tick: i32, tick_spacing: u16) -> bool {
@@ -145,13 +148,11 @@ impl Tickmap {
             (tick % tick_spacing as i32) == 0,
             "tick not divisible by spacing"
         );
-        // subtract 1 to not check current tick
+        // don't subtract 1 to check the current tick
         let bitmap_index = tick
             .checked_div(tick_spacing.try_into().unwrap())
             .unwrap()
             .checked_add(TICK_LIMIT)
-            .unwrap()
-            .checked_sub(1)
             .unwrap();
         let limit = get_search_limit(tick, tick_spacing, false)
             .checked_add(TICK_LIMIT)
@@ -215,34 +216,60 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_initialize() {
+    fn test_set() {
         {
             let mut map = Tickmap::default();
 
             //zero
             {
-                map.set(0, 1);
-                assert_eq!(map.get(0, 1), true);
+                let index = 0;
+
+                assert_eq!(map.get(index, 1), false);
+                map.set(true, index, 1);
+                assert_eq!(map.get(index, 1), true);
+                map.set(false, index, 1);
+                assert_eq!(map.get(index, 1), false);
             }
             // small
             {
-                map.set(7, 1);
-                assert_eq!(map.get(7, 1), true);
+                let index = 7;
+
+                assert_eq!(map.get(index, 1), false);
+                map.set(true, index, 1);
+                assert_eq!(map.get(index, 1), true);
+                map.set(false, index, 1);
+                assert_eq!(map.get(index, 1), false);
             }
             // big
             {
-                map.set(TICK_LIMIT - 1, 1);
-                assert_eq!(map.get(TICK_LIMIT - 1, 1), true);
+                let index = TICK_LIMIT - 1;
+
+                assert_eq!(map.get(index, 1), false);
+                map.set(true, index, 1);
+                assert_eq!(map.get(index, 1), true);
+                map.set(false, index, 1);
+                assert_eq!(map.get(index, 1), false);
             }
             // negative
             {
-                map.set(-40, 1);
-                assert_eq!(map.get(-40, 1), true);
+                let index = TICK_LIMIT - 40;
+
+                assert_eq!(map.get(index, 1), false);
+                map.set(true, index, 1);
+                assert_eq!(map.get(index, 1), true);
+                map.set(false, index, 1);
+                assert_eq!(map.get(index, 1), false);
             }
             // tick spacing
             {
-                map.set(20000, 1000);
-                assert_eq!(map.get(20000, 1000), true);
+                let index = 20000;
+                let tick_spacing = 1000;
+
+                assert_eq!(map.get(index, tick_spacing), false);
+                map.set(true, index, tick_spacing);
+                assert_eq!(map.get(index, tick_spacing), true);
+                map.set(false, index, tick_spacing);
+                assert_eq!(map.get(index, tick_spacing), false);
             }
         }
     }
@@ -252,14 +279,14 @@ mod tests {
         // Simple
         {
             let mut map = Tickmap::default();
-            map.set(5, 1);
+            map.set(true, 5, 1);
             assert_eq!(map.next_initialized(0, 1), Some(5));
         }
         // Multiple
         {
             let mut map = Tickmap::default();
-            map.set(50, 10);
-            map.set(100, 10);
+            map.set(true, 50, 10);
+            map.set(true, 100, 10);
             assert_eq!(map.next_initialized(0, 10), Some(50));
             assert_eq!(map.next_initialized(50, 10), Some(100));
         }
@@ -267,28 +294,28 @@ mod tests {
         {
             let mut map = Tickmap::default();
 
-            map.set(0, 10);
+            map.set(true, 0, 10);
             assert_eq!(map.next_initialized(0, 10), None);
         }
         // Just below limit
         {
             let mut map = Tickmap::default();
 
-            map.set(0, 1);
+            map.set(true, 0, 1);
             assert_eq!(map.next_initialized(-TICK_SEARCH_RANGE, 1), Some(0));
         }
         // At limit
         {
             let mut map = Tickmap::default();
 
-            map.set(0, 1);
+            map.set(true, 0, 1);
             assert_eq!(map.next_initialized(-TICK_SEARCH_RANGE - 1, 1), None);
         }
         // Farther than limit
         {
             let mut map = Tickmap::default();
 
-            map.set(TICK_LIMIT - 10, 1);
+            map.set(true, TICK_LIMIT - 10, 1);
             assert_eq!(map.next_initialized(-TICK_LIMIT + 1, 1), None);
         }
     }
@@ -298,43 +325,50 @@ mod tests {
         // Simple
         {
             let mut map = Tickmap::default();
-            map.set(-5, 1);
+            map.set(true, -5, 1);
             assert_eq!(map.prev_initialized(0, 1), Some(-5));
         }
         // Multiple
         {
             let mut map = Tickmap::default();
-            map.set(-50, 10);
-            map.set(-100, 10);
+            map.set(true, -50, 10);
+            map.set(true, -100, 10);
             assert_eq!(map.prev_initialized(0, 10), Some(-50));
-            assert_eq!(map.prev_initialized(-50, 10), Some(-100));
+            assert_eq!(map.prev_initialized(-50, 10), Some(-50));
         }
         // Current is last
         {
             let mut map = Tickmap::default();
 
-            map.set(0, 10);
+            map.set(true, 0, 10);
+            assert_eq!(map.prev_initialized(0, 10), Some(0));
+        }
+        // Next is last
+        {
+            let mut map = Tickmap::default();
+
+            map.set(true, 10, 10);
             assert_eq!(map.prev_initialized(0, 10), None);
         }
         // Just below limit
         {
             let mut map = Tickmap::default();
 
-            map.set(0, 1);
+            map.set(true, 0, 1);
             assert_eq!(map.prev_initialized(TICK_SEARCH_RANGE, 1), Some(0));
         }
         // At limit
         {
             let mut map = Tickmap::default();
 
-            map.set(0, 1);
+            map.set(true, 0, 1);
             assert_eq!(map.prev_initialized(TICK_SEARCH_RANGE + 1, 1), None);
         }
         // Farther than limit
         {
             let mut map = Tickmap::default();
 
-            map.set(-TICK_LIMIT + 1, 1);
+            map.set(true, -TICK_LIMIT + 1, 1);
             assert_eq!(map.prev_initialized(TICK_LIMIT - 1, 1), None);
         }
     }
