@@ -14,9 +14,10 @@ pub trait SendTokens<'info> {
 #[derive(Accounts)]
 #[instruction(bump: u8, tick_spacing: u16)]
 pub struct CreateFeeTier<'info> {
-    #[account(init, seeds = [b"feetierv1",
-    program_id.as_ref(), &tick_spacing.to_le_bytes()],
-    bump = bump, payer = payer)]
+    #[account(init,
+        seeds = [b"feetierv1", program_id.as_ref(), &tick_spacing.to_le_bytes()],
+        bump = bump, payer = payer
+    )]
     pub fee_tier: Loader<'info, FeeTier>,
     #[account(mut, signer)]
     pub payer: AccountInfo<'info>,
@@ -24,10 +25,18 @@ pub struct CreateFeeTier<'info> {
     pub system_program: AccountInfo<'info>,
 }
 #[derive(Accounts)]
-#[instruction(bump: u8)]
+#[instruction(bump: u8, nonce: u8, init_tick: i32, tick_spacing: u16)]
 pub struct Create<'info> {
-    #[account(init, seeds = [b"poolv1", token_x.key.as_ref(), token_y.key.as_ref()], bump = bump, payer = payer)]
+    #[account(init,
+        seeds = [b"poolv1", token_x.key.as_ref(), token_y.key.as_ref()],
+        bump = bump, payer = payer
+    )]
     pub pool: Loader<'info, Pool>,
+    #[account(
+        seeds = [b"feetierv1", program_id.as_ref(), &tick_spacing.to_le_bytes()],
+        bump = fee_tier.load()?.bump
+    )]
+    pub fee_tier: Loader<'info, FeeTier>,
     #[account(zero)]
     pub tickmap: Loader<'info, Tickmap>,
     pub token_x: AccountInfo<'info>,
