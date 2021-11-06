@@ -11,6 +11,11 @@
           "isSigner": false
         },
         {
+          "name": "feeTier",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "tickmap",
           "isMut": true,
           "isSigner": false
@@ -70,12 +75,8 @@
           "type": "i32"
         },
         {
-          "name": "fee",
-          "type": "u64"
-        },
-        {
           "name": "tickSpacing",
-          "type": "u64"
+          "type": "u16"
         }
       ]
     },
@@ -986,5 +987,8 @@
       "name": "PositionWithoutLiquidity",
       "msg": "Position liquidity would be zero"
     }
-  ]
+  ],
+  "metadata": {
+    "address": "FPr3fREovDnqMfubJTrJAFwopvJB8grXj1o3gkmSyzmw"
+  }
 }
