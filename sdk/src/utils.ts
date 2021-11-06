@@ -7,12 +7,12 @@ import {
   sendAndConfirmRawTransaction,
   Transaction
 } from '@solana/web3.js'
-import { Decimal } from './market'
 
 export const SEED = 'Swapline'
 export const DECIMAL = 12
 export const FEE_DECIMAL = 5
 export const DENOMINATOR = new BN(10).pow(new BN(12))
+export const FEE_DENOMINATOR = 10 ** FEE_DECIMAL
 
 export enum ERRORS {
   SIGNATURE = 'Error: Signature verification failed',
@@ -71,13 +71,13 @@ export const tou64 = (amount) => {
 }
 
 export const fromFee = (fee: number) => {
-  const decimal = new BN(fee).divn(100)
+  const decimal = new BN(fee * FEE_DENOMINATOR)
   return {
-    v: decimal.mul(DENOMINATOR)
+    v: decimal.mul(DENOMINATOR).div(new BN(FEE_DENOMINATOR))
   }
 }
 
 export const feeToTickSpacing = (fee: number) => {
-  const FEE_TO_TICK_SPACING = 200
-  return fee * FEE_TO_TICK_SPACING
+  const TICK_SPACING_FACTOR = 20000
+  return fee * TICK_SPACING_FACTOR
 }
