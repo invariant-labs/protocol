@@ -7,11 +7,13 @@ import {
   sendAndConfirmRawTransaction,
   Transaction
 } from '@solana/web3.js'
+import { Decimal } from './market'
 
 export const SEED = 'Swapline'
 export const DECIMAL = 12
 export const FEE_DECIMAL = 5
-export const DENOMINATOR = new BN(10).pow(new BN(12))
+export const DENOMINATOR = new BN(10).pow(new BN(DECIMAL))
+export const FEE_OFFSET = new BN(10).pow(new BN(DECIMAL - FEE_DECIMAL))
 export const FEE_DENOMINATOR = 10 ** FEE_DECIMAL
 
 export enum ERRORS {
@@ -70,14 +72,16 @@ export const tou64 = (amount) => {
   return new u64(amount.toString())
 }
 
-export const fromFee = (fee: number) => {
-  const decimal = new BN(fee * FEE_DENOMINATOR)
+export const fromFee = (fee: BN): Decimal => {
+  // e.g fee - BN(1) -> 0.001%
   return {
-    v: decimal.mul(DENOMINATOR).div(new BN(FEE_DENOMINATOR))
+    v: fee.mul(FEE_OFFSET)
   }
 }
 
-export const feeToTickSpacing = (fee: number) => {
-  const TICK_SPACING_FACTOR = 20000
-  return fee * TICK_SPACING_FACTOR
+export const feeToTickSpacing = (fee: BN): number => {
+  // linear relationship between fee and tickSpacing
+  // tickSpacing = fee * 10^4
+  const FEE_TO_SPACING_OFFSET = new BN(10).pow(new BN(DECIMAL - 4))
+  return fee.muln(2).div(FEE_TO_SPACING_OFFSET).toNumber()
 }
