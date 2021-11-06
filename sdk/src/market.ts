@@ -32,6 +32,12 @@ export interface Decimal {
   v: BN
 }
 
+export interface FeeTierStructure {
+  fee: Decimal
+  tickSpacing: number
+  bump: number
+}
+
 export interface PoolStructure {
   tokenX: PublicKey
   tokenY: PublicKey
@@ -71,8 +77,9 @@ export class Market {
     this.program = new Program(idl as any, programAddress, provider)
   }
 
-  async create({ pair, signer, initTick, fee, tickSpacing }: CreatePool) {
+  async create({ pair, signer, initTick, fee }: CreatePool) {
     const tick = initTick || 0
+    const tickSpacing = feeToTickSpacing(fee)
 
     const [programAuthority, nonce] = await PublicKey.findProgramAddress(
       [Buffer.from(SEED)],
@@ -80,6 +87,7 @@ export class Market {
     )
 
     const [poolAddress, bump] = await pair.getAddressAndBump(this.program.programId)
+    const { address: feeTierAddress, bump: feeTierBump } = await this.getFeeTierAddress(fee)
 
     const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, signer)
     const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, signer)
@@ -87,11 +95,12 @@ export class Market {
     const tokenXReserve = await tokenX.createAccount(programAuthority)
     const tokenYReserve = await tokenY.createAccount(programAuthority)
 
-    const bitmapKeypair = await Keypair.generate()
+    const bitmapKeypair = Keypair.generate()
 
-    await this.program.rpc.create(bump, nonce, tick, new BN(fee), new BN(tickSpacing), {
+    await this.program.rpc.create(bump, nonce, tick, tickSpacing, {
       accounts: {
         pool: poolAddress,
+        feeTier: feeTierAddress,
         tickmap: bitmapKeypair.publicKey,
         tokenX: tokenX.publicKey,
         tokenY: tokenY.publicKey,
@@ -110,6 +119,11 @@ export class Market {
   async get(pair: Pair) {
     const address = await pair.getAddress(this.program.programId)
     return (await this.program.account.pool.fetch(address)) as PoolStructure
+  }
+
+  async getFeeTier(fee: number) {
+    const { address } = await this.getFeeTierAddress(fee)
+    return (await this.program.account.feeTier.fetch(address)) as FeeTierStructure
   }
 
   async getPool(tokenX: PublicKey, tokenY: PublicKey) {
@@ -686,7 +700,6 @@ export interface CreatePool {
   signer: Keypair
   initTick?: number
   fee: number
-  tickSpacing: number
 }
 
 export interface ClaimFee {
