@@ -23,6 +23,8 @@ jobs:
             'npm run test:position',
             'npm run test:math',
             'npm run test:withdraw',
+            'npm run test:position-list',
+            'npm run test:claim',
             'cargo test'
           ]
     steps:
