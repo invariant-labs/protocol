@@ -97,7 +97,7 @@ export class Market {
 
     const bitmapKeypair = Keypair.generate()
 
-    await this.program.rpc.create(bump, nonce, tick, tickSpacing, {
+    await this.program.rpc.create(bump, nonce, tick, fee, tickSpacing, {
       accounts: {
         pool: poolAddress,
         feeTier: feeTierAddress,
@@ -145,15 +145,18 @@ export class Market {
       })
   }
 
-  async getFeeTierAddress(fee: BN) {
-    const tickSpacing = feeToTickSpacing(fee)
+  async getFeeTierAddress(fee: BN, tickSpacing?: number) {
+    const ts = tickSpacing ?? feeToTickSpacing(fee)
     const tickSpacingBuffer = Buffer.alloc(2)
-    tickSpacingBuffer.writeUInt16LE(tickSpacing)
+    const feeBuffer = Buffer.alloc(8)
+    tickSpacingBuffer.writeUInt16LE(ts)
+    feeBuffer.writeBigUInt64LE(BigInt(fee.toString()))
 
     const [address, bump] = await PublicKey.findProgramAddress(
       [
         Buffer.from(utils.bytes.utf8.encode(FEE_TIER)),
         this.program.programId.toBuffer(),
+        feeBuffer,
         tickSpacingBuffer
       ],
       this.program.programId
@@ -271,7 +274,7 @@ export class Market {
     const { address, bump } = await this.getFeeTierAddress(fee)
     const tickSpacing = feeToTickSpacing(fee)
 
-    return this.program.instruction.createFeeTier(bump, tickSpacing, {
+    return this.program.instruction.createFeeTier(bump, fee, tickSpacing, {
       accounts: {
         feeTier: address,
         payer,

@@ -17,7 +17,6 @@ import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createStandardFeeTiers, createToken, eqDecimal, STANDARD_FEE_TIER } from './testUtils'
 import { MAX_TICK } from '@invariant-labs/sdk/lib/math'
 import { MIN_TICK } from '@invariant-labs/sdk/lib/math'
-import { fromFee } from '@invariant-labs/sdk/src/utils'
 import { feeToTickSpacing } from '@invariant-labs/sdk/lib/utils'
 
 describe('position', () => {
