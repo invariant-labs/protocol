@@ -7,7 +7,6 @@ import {
   sendAndConfirmRawTransaction,
   Transaction
 } from '@solana/web3.js'
-import { Decimal } from './market'
 
 export const SEED = 'Swapline'
 export const DECIMAL = 12
