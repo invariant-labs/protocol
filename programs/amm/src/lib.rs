@@ -9,7 +9,6 @@ mod util;
 
 use anchor_lang::prelude::*;
 use anchor_spl::token;
-use std::convert::TryInto;
 
 use account::*;
 use context::*;
@@ -28,23 +27,46 @@ pub mod amm {
 
     use super::*;
 
+    pub fn create_fee_tier(
+        ctx: Context<CreateFeeTier>,
+        bump: u8,
+        fee: u64,
+        tick_spacing: u16,
+    ) -> ProgramResult {
+        msg!("INVARIANT: CREATE FEE TIER");
+
+        let fee_tier = &mut ctx.accounts.fee_tier.load_init()?;
+        let fee = Decimal::new(fee.into());
+
+        **fee_tier = FeeTier {
+            fee,
+            tick_spacing,
+            bump,
+        };
+
+        Ok(())
+    }
+
     pub fn create(
         ctx: Context<Create>,
         bump: u8,
         nonce: u8,
         init_tick: i32,
         fee: u64,
-        tick_spacing: u64,
+        tick_spacing: u16,
     ) -> ProgramResult {
+        msg!("INVARIANT: CREATE POOL");
+
         let pool = &mut ctx.accounts.pool.load_init()?;
+        let fee_tier = ctx.accounts.fee_tier.load()?;
 
         **pool = Pool {
             token_x: *ctx.accounts.token_x.key,
             token_y: *ctx.accounts.token_y.key,
             token_x_reserve: *ctx.accounts.token_x_reserve.key,
             token_y_reserve: *ctx.accounts.token_y_reserve.key,
-            tick_spacing: tick_spacing.try_into().unwrap(),
-            fee: Decimal::from_decimal(fee.into(), 5),
+            tick_spacing: fee_tier.tick_spacing,
+            fee: fee_tier.fee,
             protocol_fee: Decimal::from_decimal(1, 1), // 10%
             liquidity: Decimal::new(0),
             sqrt_price: calculate_price_sqrt(init_tick),
@@ -55,8 +77,8 @@ pub mod amm {
             fee_protocol_token_x: Decimal::new(0),
             fee_protocol_token_y: Decimal::new(0),
             position_iterator: 0,
-            bump: bump,
-            nonce: nonce,
+            bump,
+            nonce,
             authority: *ctx.accounts.program_authority.key,
         };
 

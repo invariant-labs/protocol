@@ -14,9 +14,10 @@ import {
 } from '@invariant-labs/sdk'
 import { Provider, Program, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { createToken, eqDecimal } from './testUtils'
+import { createStandardFeeTiers, createToken, eqDecimal, STANDARD_FEE_TIER } from './testUtils'
 import { MAX_TICK } from '@invariant-labs/sdk/lib/math'
 import { MIN_TICK } from '@invariant-labs/sdk/lib/math'
+import { feeToTickSpacing } from '@invariant-labs/sdk/lib/utils'
 
 describe('position', () => {
   const provider = Provider.local()
@@ -65,26 +66,26 @@ describe('position', () => {
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
-
+  it('#createFeeTier()', async () => {
+    await createStandardFeeTiers(market, wallet)
+  })
   it('#create()', async () => {
-    assert.ok(true)
-    const fee = 600
-    const tickSpacing = 4
-    const feeDecimal = new BN(fee).mul(new BN(10).pow(new BN(12 - 5)))
-    initTick = -23028
+    // fee tier 0.02% / 4
+    const fee = STANDARD_FEE_TIER[0]
 
+    initTick = -23028
     await market.create({
       pair,
       signer: admin,
       initTick,
-      fee,
-      tickSpacing
+      feeTier: { fee }
     })
 
     const createdPool = await market.get(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
     assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
-    assert.ok(createdPool.fee.v.eq(feeDecimal))
+    assert.ok(createdPool.fee.v.eq(fee))
+    assert.equal(createdPool.tickSpacing, feeToTickSpacing(fee))
     assert.ok(createdPool.liquidity.v.eqn(0))
     assert.ok(createdPool.sqrtPrice.v.eq(calculate_price_sqrt(initTick).v))
     assert.ok(createdPool.currentTickIndex == initTick)

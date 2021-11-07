@@ -14,6 +14,8 @@ import {
   TICK_LIMIT,
   Network
 } from '@invariant-labs/sdk'
+import { fromFee } from '@invariant-labs/sdk/lib/utils'
+import { FeeTier } from '@invariant-labs/sdk/lib/market'
 
 describe('withdraw', () => {
   const provider = Provider.local()
@@ -28,6 +30,10 @@ describe('withdraw', () => {
     connection,
     anchor.workspace.Amm.programId
   )
+  const feeTier: FeeTier = {
+    fee: fromFee(new BN(600)),
+    tickSpacing: 10
+  }
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -58,24 +64,22 @@ describe('withdraw', () => {
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
-
+  it('#createFeeTier()', async () => {
+    await market.createFeeTier(feeTier, wallet)
+  })
   it('#create()', async () => {
-    assert.ok(true)
-    const fee = 600
-    const tickSpacing = 10
-    const feeDecimal = new BN(fee).mul(new BN(10).pow(new BN(12 - 5)))
-
+    // 0.6% / 10
     await market.create({
       pair,
       signer: admin,
-      fee,
-      tickSpacing
+      feeTier
     })
 
     const createdPool = await market.get(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
     assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
-    assert.ok(createdPool.fee.v.eq(feeDecimal))
+    assert.ok(createdPool.fee.v.eq(feeTier.fee))
+    assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
     assert.ok(createdPool.liquidity.v.eqn(0))
     assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR))
     assert.ok(createdPool.currentTickIndex == 0)
@@ -90,7 +94,6 @@ describe('withdraw', () => {
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
     assert.ok(tickmapData.bitmap.every((v) => v == 0))
   })
-
   it('#withdraw', async () => {
     // Deposit
     const upperTick = 10
