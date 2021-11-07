@@ -72,11 +72,9 @@ export const tou64 = (amount) => {
   return new u64(amount.toString())
 }
 
-export const fromFee = (fee: BN): Decimal => {
+export const fromFee = (fee: BN): BN => {
   // e.g fee - BN(1) -> 0.001%
-  return {
-    v: fee.mul(FEE_OFFSET)
-  }
+  return fee.mul(FEE_OFFSET)
 }
 
 export const feeToTickSpacing = (fee: BN): number => {

@@ -78,14 +78,14 @@ describe('position', () => {
       pair,
       signer: admin,
       initTick,
-      feeTier: {fee: fee.v}
+      feeTier: { fee }
     })
 
     const createdPool = await market.get(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
     assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
-    assert.ok(eqDecimal(createdPool.fee, fee))
-    assert.equal(createdPool.tickSpacing, feeToTickSpacing(fee.v))
+    assert.ok(createdPool.fee.v.eq(fee))
+    assert.equal(createdPool.tickSpacing, feeToTickSpacing(fee))
     assert.ok(createdPool.liquidity.v.eqn(0))
     assert.ok(createdPool.sqrtPrice.v.eq(calculate_price_sqrt(initTick).v))
     assert.ok(createdPool.currentTickIndex == initTick)
