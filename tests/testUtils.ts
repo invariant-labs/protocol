@@ -81,7 +81,7 @@ export const positionWithoutOwnerEquals = (a: Position, b: Position) => {
 export const createStandardFeeTiers = async (market: Market, payer: Keypair) => {
   Promise.all(
     STANDARD_FEE_TIER.map(async (fee) => {
-      await market.createFeeTier(fee.v, payer)
+      await market.createFeeTier({ fee: fee.v }, payer)
     })
   )
 }

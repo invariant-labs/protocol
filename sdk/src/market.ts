@@ -77,9 +77,10 @@ export class Market {
     this.program = new Program(idl as any, programAddress, provider)
   }
 
-  async create({ pair, signer, initTick, fee }: CreatePool) {
+  async create({ pair, signer, initTick, feeTier }: CreatePool) {
+    const { fee, tickSpacing } = feeTier
     const tick = initTick || 0
-    const tickSpacing = feeToTickSpacing(fee)
+    const ts = tickSpacing ?? feeToTickSpacing(fee)
 
     const [programAuthority, nonce] = await PublicKey.findProgramAddress(
       [Buffer.from(SEED)],
@@ -87,7 +88,7 @@ export class Market {
     )
 
     const [poolAddress, bump] = await pair.getAddressAndBump(this.program.programId)
-    const { address: feeTierAddress } = await this.getFeeTierAddress(fee)
+    const { address: feeTierAddress } = await this.getFeeTierAddress(feeTier)
 
     const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, signer)
     const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, signer)
@@ -97,7 +98,7 @@ export class Market {
 
     const bitmapKeypair = Keypair.generate()
 
-    await this.program.rpc.create(bump, nonce, tick, fee, tickSpacing, {
+    await this.program.rpc.create(bump, nonce, tick, fee, ts, {
       accounts: {
         pool: poolAddress,
         feeTier: feeTierAddress,
@@ -121,8 +122,8 @@ export class Market {
     return (await this.program.account.pool.fetch(address)) as PoolStructure
   }
 
-  async getFeeTier(fee: BN) {
-    const { address } = await this.getFeeTierAddress(fee)
+  async getFeeTier(feeTier: FeeTier) {
+    const { address } = await this.getFeeTierAddress(feeTier)
     return (await this.program.account.feeTier.fetch(address)) as FeeTierStructure
   }
 
@@ -145,7 +146,7 @@ export class Market {
       })
   }
 
-  async getFeeTierAddress(fee: BN, tickSpacing?: number) {
+  async getFeeTierAddress({ fee, tickSpacing }: FeeTier) {
     const ts = tickSpacing ?? feeToTickSpacing(fee)
     const tickSpacingBuffer = Buffer.alloc(2)
     const feeBuffer = Buffer.alloc(8)
@@ -270,11 +271,12 @@ export class Market {
     return this.getPositionAddress(owner, positionList.head)
   }
 
-  async createFeeTierInstruction(fee: BN, payer: PublicKey) {
-    const { address, bump } = await this.getFeeTierAddress(fee)
-    const tickSpacing = feeToTickSpacing(fee)
+  async createFeeTierInstruction(feeTier: FeeTier, payer: PublicKey) {
+    const { fee, tickSpacing } = feeTier
+    const { address, bump } = await this.getFeeTierAddress(feeTier)
+    const ts = tickSpacing ?? feeToTickSpacing(fee)
 
-    return this.program.instruction.createFeeTier(bump, fee, tickSpacing, {
+    return this.program.instruction.createFeeTier(bump, fee, ts, {
       accounts: {
         feeTier: address,
         payer,
@@ -283,8 +285,8 @@ export class Market {
       }
     })
   }
-  async createFeeTier(fee: BN, payer: Keypair) {
-    const ix = await this.createFeeTierInstruction(fee, payer.publicKey)
+  async createFeeTier(feeTier: FeeTier, payer: Keypair) {
+    const ix = await this.createFeeTierInstruction(feeTier, payer.publicKey)
     signAndSend(new Transaction().add(ix), [payer], this.connection)
   }
 
@@ -706,7 +708,12 @@ export interface CreatePool {
   pair: Pair
   signer: Keypair
   initTick?: number
+  feeTier: FeeTier
+}
+
+export interface FeeTier {
   fee: BN
+  tickSpacing?: number
 }
 
 export interface ClaimFee {
