@@ -27,13 +27,36 @@ pub mod amm {
 
     use super::*;
 
+    pub fn create_fee_tier(
+        ctx: Context<CreateFeeTier>,
+        bump: u8,
+        fee: u64,
+        tick_spacing: u16,
+    ) -> ProgramResult {
+        msg!("INVARIANT: CREATE FEE TIER");
+
+        let fee_tier = &mut ctx.accounts.fee_tier.load_init()?;
+        let fee = Decimal::new(fee.into());
+
+        **fee_tier = FeeTier {
+            fee,
+            tick_spacing,
+            bump,
+        };
+
+        Ok(())
+    }
+
     pub fn create(
         ctx: Context<Create>,
         bump: u8,
         nonce: u8,
         init_tick: i32,
+        fee: u64,
         tick_spacing: u16,
     ) -> ProgramResult {
+        msg!("INVARIANT: CREATE POOL");
+
         let pool = &mut ctx.accounts.pool.load_init()?;
         let fee_tier = ctx.accounts.fee_tier.load()?;
 
@@ -57,26 +80,6 @@ pub mod amm {
             bump,
             nonce,
             authority: *ctx.accounts.program_authority.key,
-        };
-
-        Ok(())
-    }
-
-    pub fn create_fee_tier(
-        ctx: Context<CreateFeeTier>,
-        bump: u8,
-        tick_spacing: u16,
-    ) -> ProgramResult {
-        msg!("CREATE FEE TIER");
-
-        let fee_tier = &mut ctx.accounts.fee_tier.load_init()?;
-        let spacing_to_fee = Decimal::from_decimal(5, 5); // 0,00005
-        let fee = Decimal::from_integer(tick_spacing.into()) * (spacing_to_fee);
-
-        **fee_tier = FeeTier {
-            fee,
-            tick_spacing,
-            bump,
         };
 
         Ok(())

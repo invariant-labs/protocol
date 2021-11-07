@@ -12,10 +12,10 @@ pub trait SendTokens<'info> {
     fn send_y(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>>;
 }
 #[derive(Accounts)]
-#[instruction(bump: u8, tick_spacing: u16)]
+#[instruction(bump: u8, fee: u64, tick_spacing: u16)]
 pub struct CreateFeeTier<'info> {
     #[account(init,
-        seeds = [b"feetierv1", program_id.as_ref(), &tick_spacing.to_le_bytes()],
+        seeds = [b"feetierv1", program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()],
         bump = bump, payer = payer
     )]
     pub fee_tier: Loader<'info, FeeTier>,
@@ -25,7 +25,7 @@ pub struct CreateFeeTier<'info> {
     pub system_program: AccountInfo<'info>,
 }
 #[derive(Accounts)]
-#[instruction(bump: u8, nonce: u8, init_tick: i32, tick_spacing: u16)]
+#[instruction(bump: u8, nonce: u8, init_tick: i32, fee: u64, tick_spacing: u16)]
 pub struct Create<'info> {
     #[account(init,
         seeds = [b"poolv1", token_x.key.as_ref(), token_y.key.as_ref()],
@@ -33,7 +33,7 @@ pub struct Create<'info> {
     )]
     pub pool: Loader<'info, Pool>,
     #[account(
-        seeds = [b"feetierv1", program_id.as_ref(), &tick_spacing.to_le_bytes()],
+        seeds = [b"feetierv1", program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()],
         bump = fee_tier.load()?.bump
     )]
     pub fee_tier: Loader<'info, FeeTier>,
