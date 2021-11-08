@@ -1,6 +1,7 @@
 use std::ops::Mul;
 
 use anchor_lang::require;
+use anchor_lang::solana_program::clock::UnixTimestamp;
 
 use crate::math::get_delta_y;
 use crate::*;
@@ -24,8 +25,7 @@ impl Pool {
         Ok(())
     }
 
-    pub fn update_seconds_per_liquidity_global(self: &mut Self) {
-        let current_timestamp = Clock::get().unwrap().unix_timestamp;
+    pub fn update_seconds_per_liquidity_global(self: &mut Self, current_timestamp: UnixTimestamp) {
         let time_passed_past: u128 = (self.last_timestamp - self.start_timestamp)
             .try_into()
             .unwrap();
@@ -34,7 +34,7 @@ impl Pool {
             .unwrap();
 
         self.seconds_per_liquidity_global = self.seconds_per_liquidity_global
-            + (Decimal::new(time_passed_current - time_passed_past) / self.liquidity);
+            + (Decimal::from_integer(time_passed_current - time_passed_past) / self.liquidity);
 
         self.last_timestamp = current_timestamp;
     }
@@ -48,8 +48,9 @@ impl Position {
         lower_tick: &mut Tick,
         liquidity_delta: Decimal,
         add: bool,
+        current_timestamp: UnixTimestamp,
     ) -> Result<(u64, u64)> {
-        pool.update_seconds_per_liquidity_global();
+        pool.update_seconds_per_liquidity_global(current_timestamp);
 
         // update initialized tick
         lower_tick.update(
@@ -256,11 +257,10 @@ pub fn calculate_seconds_between_ticks(
     tick_lower: Tick,
     tick_upper: Tick,
     tick_current: i32,
-    start_timestamp: i64,
+    start_timestamp: UnixTimestamp,
+    current_timestamp: UnixTimestamp,
 ) -> u64 {
-    let seconds_passed: u64 = (Clock::get().unwrap().unix_timestamp - start_timestamp)
-        .try_into()
-        .unwrap();
+    let seconds_passed: u64 = (current_timestamp - start_timestamp).try_into().unwrap();
 
     let current_above_lower = tick_current >= tick_lower.index;
     let current_below_upper = tick_current < tick_upper.index;
@@ -335,8 +335,9 @@ pub fn calculate_seconds_per_liquidity_inside(
     tick_upper: Tick,
     tick_current: i32,
     pool: &mut Pool,
+    current_timestamp: UnixTimestamp,
 ) -> Decimal {
-    pool.update_seconds_per_liquidity_global();
+    pool.update_seconds_per_liquidity_global(current_timestamp);
 
     let current_above_lower = tick_current >= tick_lower.index;
     let current_below_upper = tick_current < tick_upper.index;
