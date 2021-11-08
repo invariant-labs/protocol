@@ -77,10 +77,14 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) {
     tick.fee_growth_outside_x = pool.fee_growth_global_x - tick.fee_growth_outside_x;
     tick.fee_growth_outside_y = pool.fee_growth_global_y - tick.fee_growth_outside_y;
 
-    let seconds_passed: u64 = (Clock::get().unwrap().unix_timestamp - pool.timestamp)
+    let seconds_passed: u64 = (Clock::get().unwrap().unix_timestamp - pool.start_timestamp)
         .try_into()
         .unwrap();
     tick.seconds_outside = seconds_passed - tick.seconds_outside;
+
+    pool.update_seconds_per_liquidity_global();
+    tick.seconds_per_liquidity_outside =
+        pool.seconds_per_liquidity_global - tick.seconds_per_liquidity_outside;
 
     // When going to higher tick net_liquidity should be added and for going lower subtracted
     if (pool.current_tick_index >= tick.index) ^ tick.sign {

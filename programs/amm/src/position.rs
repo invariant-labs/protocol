@@ -23,6 +23,21 @@ impl Pool {
 
         Ok(())
     }
+
+    pub fn update_seconds_per_liquidity_global(self: &mut Self) {
+        let current_timestamp = Clock::get().unwrap().unix_timestamp;
+        let time_passed_past: u128 = (self.last_timestamp - self.start_timestamp)
+            .try_into()
+            .unwrap();
+        let time_passed_current: u128 = (current_timestamp - self.start_timestamp)
+            .try_into()
+            .unwrap();
+
+        self.seconds_per_liquidity_global = self.seconds_per_liquidity_global
+            + (Decimal::new(time_passed_current - time_passed_past) / self.liquidity);
+
+        self.last_timestamp = current_timestamp;
+    }
 }
 
 impl Position {
@@ -34,6 +49,8 @@ impl Position {
         liquidity_delta: Decimal,
         add: bool,
     ) -> Result<(u64, u64)> {
+        pool.update_seconds_per_liquidity_global();
+
         // update initialized tick
         lower_tick.update(
             pool.current_tick_index,
@@ -311,6 +328,32 @@ pub fn calculate_amount_delta(
         true => (amount_x.to_token_ceil(), amount_y.to_token_ceil()),
         false => (amount_x.to_token_floor(), amount_y.to_token_floor()),
     })
+}
+
+pub fn calculate_seconds_per_liquidity_inside(
+    tick_lower: Tick,
+    tick_upper: Tick,
+    tick_current: i32,
+    pool: &mut Pool,
+) -> Decimal {
+    pool.update_seconds_per_liquidity_global();
+
+    let current_above_lower = tick_current >= tick_lower.index;
+    let current_below_upper = tick_current < tick_upper.index;
+
+    let seconds_per_liquidity_below = if current_above_lower {
+        tick_lower.seconds_per_liquidity_outside
+    } else {
+        pool.seconds_per_liquidity_global - tick_lower.seconds_per_liquidity_outside
+    };
+
+    let seconds_per_liquidity_above = if current_below_upper {
+        pool.seconds_per_liquidity_global - tick_upper.seconds_per_liquidity_outside
+    } else {
+        tick_upper.seconds_per_liquidity_outside
+    };
+
+    pool.seconds_per_liquidity_global - seconds_per_liquidity_below - seconds_per_liquidity_above
 }
 
 #[cfg(test)]

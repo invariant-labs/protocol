@@ -55,7 +55,9 @@ pub mod amm {
             fee_protocol_token_x: Decimal::new(0),
             fee_protocol_token_y: Decimal::new(0),
             position_iterator: 0,
-            timestamp: Clock::get().unwrap().unix_timestamp,
+            seconds_per_liquidity_global: Decimal::new(0),
+            start_timestamp: Clock::get().unwrap().unix_timestamp,
+            last_timestamp: Clock::get().unwrap().unix_timestamp,
             bump: bump,
             nonce: nonce,
             authority: *ctx.accounts.program_authority.key,
@@ -230,12 +232,12 @@ pub mod amm {
                 false => Decimal::new(0),
             },
             seconds_outside: match below_current_tick {
-                true => (Clock::get().unwrap().unix_timestamp - pool.timestamp)
+                true => (Clock::get().unwrap().unix_timestamp - pool.start_timestamp)
                     .try_into()
                     .unwrap(),
                 false => 0,
             },
-            seconds_per_liquidity: Decimal::new(0),
+            seconds_per_liquidity_outside: Decimal::new(0),
             bump: bump,
         };
 
