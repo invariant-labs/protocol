@@ -679,6 +679,20 @@
             }
           },
           {
+            "name": "secondsPerLiquidityGlobal",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "startTimestamp",
+            "type": "i64"
+          },
+          {
+            "name": "lastTimestamp",
+            "type": "i64"
+          },
+          {
             "name": "bump",
             "type": "u8"
           },
@@ -754,16 +768,14 @@
             }
           },
           {
-            "name": "secondsPerLiquidity",
+            "name": "secondsPerLiquidityOutside",
             "type": {
               "defined": "Decimal"
             }
           },
           {
-            "name": "lastTimestamp",
-            "type": {
-              "option": "i64"
-            }
+            "name": "secondsOutside",
+            "type": "u64"
           },
           {
             "name": "bump",
@@ -940,6 +952,11 @@
       "code": 314,
       "name": "NegativeTime",
       "msg": "Time cannot be negative"
+    },
+    {
+      "code": 315,
+      "name": "PositionWithoutLiquidity",
+      "msg": "Position liquidity would be zero"
     }
   ]
 }
