@@ -18,7 +18,7 @@ export const getMarketAddress = (network: Network) => {
 }
 
 export const MOCK_TOKENS = {
-  USDC: '35P5P6ZGKUN6wqxrX4VdLRrGbzkrfvhyNs4iqk1vDxAx',
-  USDT: 'CYPdUAp8KshzJ2a45kzgy3fr4UTiyrEGE998rA7wzFR6',
-  SOL: '23AQ2kRxqT1fk47q6G8YcKrpx4VhWeUvKHuRijT61qSD'
+  USDC: '5ihkgQGjKvWvmMtywTgLdwokZ6hqFv5AgxSyYoCNufQW',
+  USDT: '4cZv7KgYNgmr3NZSDhT5bhXGGttXKTndqyXeeC1cB6Xm',
+  SOL: 'BJVjNqQzM1fywLWzzKbQEZ2Jsx9AVyhSLWzko3yF68PH'
 }
