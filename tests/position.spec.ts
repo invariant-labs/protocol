@@ -71,21 +71,21 @@ describe('position', () => {
   })
   it('#create()', async () => {
     // fee tier 0.02% / 4
-    const fee = STANDARD_FEE_TIER[0]
+    const feeTier = STANDARD_FEE_TIER[0]
 
     initTick = -23028
     await market.create({
       pair,
       signer: admin,
       initTick,
-      feeTier: { fee }
+      feeTier
     })
 
     const createdPool = await market.get(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
     assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
-    assert.ok(createdPool.fee.v.eq(fee))
-    assert.equal(createdPool.tickSpacing, feeToTickSpacing(fee))
+    assert.ok(createdPool.fee.v.eq(feeTier.fee))
+    assert.equal(createdPool.tickSpacing, feeToTickSpacing(feeTier.fee))
     assert.ok(createdPool.liquidity.v.eqn(0))
     assert.ok(createdPool.sqrtPrice.v.eq(calculate_price_sqrt(initTick).v))
     assert.ok(createdPool.currentTickIndex == initTick)
