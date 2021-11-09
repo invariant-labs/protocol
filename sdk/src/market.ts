@@ -340,15 +340,7 @@ export class Market {
     await signAndSend(tx, [signer], this.connection)
   }
 
-  async swap(
-    pair: Pair,
-    XtoY: boolean,
-    amount: BN,
-    priceLimit: BN,
-    accountX: PublicKey,
-    accountY: PublicKey,
-    owner: Keypair
-  ) {
+  async swap({ pair, XtoY, amount, priceLimit, accountX, accountY, byAmountIn }, owner: Keypair) {
     const tx = await this.swapTransaction(
       pair,
       XtoY,
@@ -356,7 +348,8 @@ export class Market {
       priceLimit,
       accountX,
       accountY,
-      owner.publicKey
+      owner.publicKey,
+      byAmountIn
     )
 
     await signAndSend(tx, [owner], this.connection)
@@ -369,7 +362,8 @@ export class Market {
     priceLimit: BN,
     accountX: PublicKey,
     accountY: PublicKey,
-    owner: PublicKey
+    owner: PublicKey,
+    byAmountIn: boolean = true
   ) {
     const state = await this.get(pair)
     const tickmap = await this.getTickmap(pair)
@@ -392,7 +386,7 @@ export class Market {
       })
     )
 
-    const swapIx = await this.program.instruction.swap(XtoY, amount, true, priceLimit, {
+    const swapIx = await this.program.instruction.swap(XtoY, amount, byAmountIn, priceLimit, {
       remainingAccounts: remainingAccounts.map((pubkey) => {
         return { pubkey, isWritable: true, isSigner: false }
       }),
@@ -429,18 +423,18 @@ export class Market {
     return { x: accounts[0].amount, y: accounts[1].amount }
   }
 
-  async claimFeeInstruction({
-    pair,
-    owner,
-    userTokenX,
-    userTokenY,
-    index,
-  }: ClaimFee) {
+  async claimFeeInstruction({ pair, owner, userTokenX, userTokenY, index }: ClaimFee) {
     const state = await this.get(pair)
-    const {positionAddress, positionBump} = await this.getPositionAddress(owner, index);
-    const position = await this.getPosition(owner, index);
-    const {tickAddress: lowerTickAddress} = await this.getTickAddress(pair, position.lowerTickIndex)
-    const {tickAddress: upperTickAddress} = await this.getTickAddress(pair, position.upperTickIndex)
+    const { positionAddress, positionBump } = await this.getPositionAddress(owner, index)
+    const position = await this.getPosition(owner, index)
+    const { tickAddress: lowerTickAddress } = await this.getTickAddress(
+      pair,
+      position.lowerTickIndex
+    )
+    const { tickAddress: upperTickAddress } = await this.getTickAddress(
+      pair,
+      position.upperTickIndex
+    )
 
     return (await this.program.instruction.claimFee(
       index,
@@ -466,25 +460,16 @@ export class Market {
     )) as TransactionInstruction
   }
 
-  async claimFee(
-    {
-      pair,
-      owner,
-      userTokenX,
-      userTokenY,
-      index,
-    }: ClaimFee, signer: Keypair
-  ) {
-    
+  async claimFee({ pair, owner, userTokenX, userTokenY, index }: ClaimFee, signer: Keypair) {
     const claimFeeIx = await this.claimFeeInstruction({
       pair,
       owner,
       userTokenX,
       userTokenY,
-      index,
+      index
     })
 
-    await signAndSend(new Transaction().add(claimFeeIx), [signer], this.connection) 
+    await signAndSend(new Transaction().add(claimFeeIx), [signer], this.connection)
   }
 
   async removePositionWithIndexInstruction(
@@ -665,9 +650,19 @@ export interface CreatePool {
 }
 
 export interface ClaimFee {
-  pair: Pair,
-  owner: PublicKey,
-  userTokenX: PublicKey,
-  userTokenY: PublicKey,
-  index: number,
+  pair: Pair
+  owner: PublicKey
+  userTokenX: PublicKey
+  userTokenY: PublicKey
+  index: number
+}
+
+export interface Swap {
+  pair: Pair
+  XtoY: boolean
+  amount: BN
+  priceLimit: BN
+  accountX: PublicKey
+  accountY: PublicKey
+  byAmountIn: boolean
 }

@@ -9,6 +9,7 @@
     "test:withdraw": "anchor test --skip-build tests/withdraw.spec.ts",
     "test:position-list": "anchor test --skip-build tests/position-list.spec.ts",
     "test:claim": "anchor test --skip-build tests/claim.spec.ts",
+    "test:target": "anchor test --skip-build tests/target.spec.ts",
     "build": "cd sdk && npm run build"
   },
   "dependencies": {
