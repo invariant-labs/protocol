@@ -188,8 +188,11 @@ describe('Stake tests', () => {
     await signAndSend(new Transaction().add(ixStake), [positionOwner], connection)
 
     const stake = await staker.getStake(positionOwner.publicKey)
+    const liquidity: Decimal = { v: new BN(liquidityDelta.v) }
 
     assert.ok(stake.position.equals(position))
     assert.ok(stake.owner.equals(positionOwner.publicKey))
+    assert.ok(stake.incentive.equals(incentiveAccount.publicKey))
+    assert.ok(eqDecimal(stake.liquidity, liquidity))
   })
 })

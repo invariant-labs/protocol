@@ -195,6 +195,10 @@
             "type": "publicKey"
           },
           {
+            "name": "incentive",
+            "type": "publicKey"
+          },
+          {
             "name": "secondsPerLiquidityInitial",
             "type": {
               "defined": "Decimal"
@@ -317,5 +321,8 @@
       "name": "ZeroLiquidity",
       "msg": "User have no liquidity"
     }
-  ]
+  ],
+  "metadata": {
+    "address": "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
+  }
 }

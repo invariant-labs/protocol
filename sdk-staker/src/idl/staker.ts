@@ -195,6 +195,10 @@ export type Staker = {
             "type": "publicKey"
           },
           {
+            "name": "incentive",
+            "type": "publicKey"
+          },
+          {
             "name": "secondsPerLiquidityInitial",
             "type": {
               "defined": "Decimal"
@@ -514,6 +518,10 @@ export const IDL: Staker = {
           },
           {
             "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "incentive",
             "type": "publicKey"
           },
           {
