@@ -1,6 +1,6 @@
-import { calculate_price_sqrt } from '../sdk/src/math'
 import { assert } from 'chai'
 import { BN } from '@project-serum/anchor'
+import { calculate_price_sqrt } from '@invariant-labs/sdk'
 
 describe('Test sqrt price calculation', () => {
   it('Test 20000', () => {

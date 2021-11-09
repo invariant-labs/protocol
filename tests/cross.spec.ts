@@ -8,7 +8,7 @@ import { Market, Pair, SEED, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@in
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 
-describe('swap', () => {
+describe('cross', () => {
   const provider = Provider.local()
   const connection = provider.connection
   // @ts-expect-error
@@ -51,7 +51,7 @@ describe('swap', () => {
     nonce = _nonce
     programAuthority = _programAuthority
 
-    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey)
+    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })

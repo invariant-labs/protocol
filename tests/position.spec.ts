@@ -14,10 +14,11 @@ import {
 } from '@invariant-labs/sdk'
 import { Provider, Program, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { createStandardFeeTiers, createToken, eqDecimal, STANDARD_FEE_TIER } from './testUtils'
+import { createStandardFeeTiers, createToken, eqDecimal } from './testUtils'
 import { MAX_TICK } from '@invariant-labs/sdk/lib/math'
 import { MIN_TICK } from '@invariant-labs/sdk/lib/math'
 import { feeToTickSpacing } from '@invariant-labs/sdk/lib/utils'
+import { FEE_TIERS } from '@invariant-labs/sdk/lib/network'
 
 describe('position', () => {
   const provider = Provider.local()
@@ -33,6 +34,7 @@ describe('position', () => {
     connection,
     anchor.workspace.Amm.programId
   )
+  const feeTier = FEE_TIERS[0]
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -62,7 +64,7 @@ describe('position', () => {
       createToken(connection, wallet, mintAuthority),
       createToken(connection, wallet, mintAuthority)
     ])
-    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey)
+    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
@@ -71,8 +73,6 @@ describe('position', () => {
   })
   it('#create()', async () => {
     // fee tier 0.02% / 4
-    const feeTier = STANDARD_FEE_TIER[0]
-
     initTick = -23028
     await market.create({
       pair,
