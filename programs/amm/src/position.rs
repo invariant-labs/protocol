@@ -25,7 +25,7 @@ impl Pool {
         Ok(())
     }
 
-    pub fn update_seconds_per_liquidity_global(self: &mut Self, current_timestamp: UnixTimestamp) {
+    pub fn update_seconds_per_liquidity_global(self: &mut Self, current_timestamp: u64) {
         let time_passed_past = (self.last_timestamp - self.start_timestamp) as u64;
         let time_passed_current = (current_timestamp - self.start_timestamp) as u64;
 
@@ -45,7 +45,7 @@ impl Position {
         lower_tick: &mut Tick,
         liquidity_delta: Decimal,
         add: bool,
-        current_timestamp: UnixTimestamp,
+        current_timestamp: u64,
     ) -> Result<(u64, u64)> {
         if pool.liquidity != Decimal::new(0) {
             pool.update_seconds_per_liquidity_global(current_timestamp);
@@ -334,7 +334,7 @@ pub fn calculate_seconds_per_liquidity_inside(
     tick_upper: Tick,
     tick_current: i32,
     pool: &mut Pool,
-    current_timestamp: UnixTimestamp,
+    current_timestamp: u64,
 ) -> Decimal {
     pool.update_seconds_per_liquidity_global(current_timestamp);
 

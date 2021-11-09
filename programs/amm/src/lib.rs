@@ -59,7 +59,7 @@ pub mod amm {
 
         let pool = &mut ctx.accounts.pool.load_init()?;
         let fee_tier = ctx.accounts.fee_tier.load()?;
-        let current_timestamp = Clock::get()?.unix_timestamp;
+        let current_timestamp = Clock::get()?.unix_timestamp as u64;
 
         **pool = Pool {
             token_x: *ctx.accounts.token_x.key,
@@ -188,7 +188,7 @@ pub mod amm {
                     let mut tick = loader.load_mut().unwrap();
 
                     // crossing tick
-                    cross_tick(&mut tick, &mut pool, Clock::get()?.unix_timestamp);
+                    cross_tick(&mut tick, &mut pool);
                 }
 
                 // set tick to limit (below if price is going down, because current tick is below price)
@@ -234,6 +234,7 @@ pub mod amm {
         let mut tick = ctx.accounts.tick.load_init()?;
         let mut tickmap = ctx.accounts.tickmap.load_mut()?;
         let pool = ctx.accounts.pool.load()?;
+        let current_timestamp = Clock::get()?.unix_timestamp as u64;
 
         tickmap.set(true, index, pool.tick_spacing);
 
@@ -254,7 +255,7 @@ pub mod amm {
                 false => Decimal::new(0),
             },
             seconds_outside: match below_current_tick {
-                true => (Clock::get()?.unix_timestamp - pool.start_timestamp) as u64,
+                true => (current_timestamp - pool.start_timestamp),
                 false => 0,
             },
             seconds_per_liquidity_outside: Decimal::new(0),
@@ -290,6 +291,7 @@ pub mod amm {
         let lower_tick = &mut ctx.accounts.lower_tick.load_mut()?;
         let upper_tick = &mut ctx.accounts.upper_tick.load_mut()?;
         let mut position_list = ctx.accounts.position_list.load_mut()?;
+        let current_timestamp = Clock::get()?.unix_timestamp as u64;
 
         // validate ticks
         check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
@@ -319,7 +321,7 @@ pub mod amm {
             lower_tick,
             liquidity_delta,
             true,
-            Clock::get()?.unix_timestamp,
+            current_timestamp,
         )?;
 
         token::transfer(ctx.accounts.take_x(), amount_x)?;
@@ -339,6 +341,7 @@ pub mod amm {
         let removed_position = &mut ctx.accounts.removed_position.load_mut()?;
         let pool = &mut ctx.accounts.pool.load_mut()?;
         let tickmap = &mut ctx.accounts.tickmap.load_mut()?;
+        let current_timestamp = Clock::get()?.unix_timestamp as u64;
 
         // closing tick can't be in the same scope as loaded tick
         let close_lower;
@@ -357,7 +360,7 @@ pub mod amm {
                 lower_tick,
                 liquidity_delta,
                 false,
-                Clock::get()?.unix_timestamp,
+                current_timestamp,
             )?;
 
             let amount_x = amount_x + removed_position.tokens_owed_x.to_token_floor();
@@ -476,6 +479,7 @@ pub mod amm {
         let position = &mut ctx.accounts.position.load_mut()?;
         let lower_tick = &mut ctx.accounts.lower_tick.load_mut()?;
         let upper_tick = &mut ctx.accounts.upper_tick.load_mut()?;
+        let current_timestamp = Clock::get()?.unix_timestamp as u64;
 
         check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
 
@@ -486,7 +490,7 @@ pub mod amm {
                 lower_tick,
                 Decimal::new(0),
                 true,
-                Clock::get()?.unix_timestamp,
+                current_timestamp,
             )
             .unwrap();
 
