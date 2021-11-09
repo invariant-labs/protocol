@@ -63,13 +63,14 @@ pub mod staker {
         require!(current_time < incentive.end_time, Ended);
 
         let user_stake = &mut ctx.accounts.user_stake.load_init()?;
+        let position = ctx.accounts.position.load()?;
 
         {
             user_stake.position = *ctx.accounts.position.to_account_info().key;
             user_stake.owner = *ctx.accounts.owner.to_account_info().key;
             user_stake.timestamp = Clock::get().unwrap().unix_timestamp as u64;
-            user_stake.liquidity = Decimal::from_integer(100); //position.liquidity; // TODO load from position
-
+            user_stake.liquidity = Decimal::new(position.liquidity.v);
+            user_stake.incentive = *ctx.accounts.incentive.to_account_info().key;
             user_stake.seconds_per_liquidity_initial = Decimal::from_integer(0); //TODO add fun to callculate it from tick map
             user_stake.index = index;
             user_stake.bump = bump;

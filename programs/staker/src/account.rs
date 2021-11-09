@@ -5,6 +5,7 @@ use anchor_lang::prelude::*;
 pub struct UserStake {
     pub position: Pubkey,
     pub owner: Pubkey,
+    pub incentive: Pubkey,
     pub seconds_per_liquidity_initial: Decimal,
     pub liquidity: Decimal,
     pub timestamp: u64,

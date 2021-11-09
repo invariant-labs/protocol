@@ -83,7 +83,7 @@ export class Staker {
     return (await this.program.account.incentive.fetch(incentivePubKey)) as IncentiveStructure
   }
 
-  public async stakeInstruction({ position, incentive, owner, index, amm }: Stake) {
+  public async stakeInstruction({ position, incentive, owner, index, amm }: createStake) {
     const [userStakeAddress, userStakeBump] = await PublicKey.findProgramAddress(
       [Buffer.from(utils.bytes.utf8.encode(STAKER_SEED)), owner.toBuffer()],
       this.programId
@@ -154,9 +154,17 @@ export interface CreateIncentive {
   amm: PublicKey
   stakerAuthority: PublicKey
 }
+export interface createStake {
+  position: PublicKey
+  incentive: PublicKey
+  owner: PublicKey
+  amm: PublicKey
+  index: number
+}
 export interface Stake {
   position: PublicKey
   incentive: PublicKey
+  liquidity: Decimal
   owner: PublicKey
   amm: PublicKey
   index: number
