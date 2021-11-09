@@ -254,9 +254,7 @@ pub mod amm {
                 false => Decimal::new(0),
             },
             seconds_outside: match below_current_tick {
-                true => (Clock::get()?.unix_timestamp - pool.start_timestamp)
-                    .try_into()
-                    .unwrap(),
+                true => (Clock::get()?.unix_timestamp - pool.start_timestamp) as u64,
                 false => 0,
             },
             seconds_per_liquidity_outside: Decimal::new(0),
