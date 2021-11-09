@@ -28,7 +28,7 @@ pub struct CreateFeeTier<'info> {
 #[instruction(bump: u8, nonce: u8, init_tick: i32, fee: u64, tick_spacing: u16)]
 pub struct Create<'info> {
     #[account(init,
-        seeds = [b"poolv1", token_x.key.as_ref(), token_y.key.as_ref()],
+        seeds = [b"poolv1", fee_tier.to_account_info().key.as_ref(), token_x.key.as_ref(), token_y.key.as_ref()],
         bump = bump, payer = payer
     )]
     pub pool: Loader<'info, Pool>,
@@ -50,8 +50,9 @@ pub struct Create<'info> {
     pub system_program: AccountInfo<'info>,
 }
 #[derive(Accounts)]
+#[instruction(fee_tier_address: Pubkey)]
 pub struct Swap<'info> {
-    #[account(mut, seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()], bump = pool.load()?.bump)]
+    #[account(mut, seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()], bump = pool.load()?.bump)]
     pub pool: Loader<'info, Pool>,
     #[account(mut,
         constraint = tickmap.to_account_info().key == &pool.load()?.tickmap,
@@ -130,7 +131,7 @@ impl<'info> SendTokens<'info> for Swap<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(bump: u8, index: i32)]
+#[instruction(bump: u8, fee_tier_address: Pubkey, index: i32)]
 pub struct CreateTick<'info> {
     #[account(init,
         seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &index.to_le_bytes()],
@@ -138,7 +139,7 @@ pub struct CreateTick<'info> {
     )]
     pub tick: Loader<'info, Tick>,
     #[account(
-        seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
+        seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
         bump = pool.load()?.bump)]
     pub pool: Loader<'info, Pool>,
     #[account(mut,
@@ -170,7 +171,7 @@ pub struct CreatePositionList<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(index: i32, lower_tick_index: i32, upper_tick_index: i32)]
+#[instruction(fee_tier_address: Pubkey, index: i32, lower_tick_index: i32, upper_tick_index: i32)]
 pub struct RemovePosition<'info> {
     #[account(mut, signer)]
     pub owner: AccountInfo<'info>,
@@ -195,7 +196,7 @@ pub struct RemovePosition<'info> {
     )]
     pub last_position: Loader<'info, Position>,
     #[account(mut,
-        seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
+        seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
         bump = pool.load()?.bump
     )]
     pub pool: Loader<'info, Pool>,
@@ -299,7 +300,7 @@ pub struct TransferPositionOwnership<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(bump: u8, lower_tick_index: i32, upper_tick_index: i32)]
+#[instruction(bump: u8, fee_tier_address: Pubkey, lower_tick_index: i32, upper_tick_index: i32)]
 pub struct InitPosition<'info> {
     #[account(init,
         seeds = [b"positionv1",
@@ -309,7 +310,7 @@ pub struct InitPosition<'info> {
     )]
     pub position: Loader<'info, Position>,
     #[account(mut,
-        seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
+        seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
         bump = pool.load()?.bump
     )]
     pub pool: Loader<'info, Pool>,
@@ -373,10 +374,10 @@ impl<'info> TakeTokens<'info> for InitPosition<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(index: u32, lower_tick_index: i32, upper_tick_index: i32)]
+#[instruction(fee_tier_address: Pubkey, index: u32, lower_tick_index: i32, upper_tick_index: i32)]
 pub struct ClaimFee<'info> {
     #[account(mut,
-        seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
+        seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
         bump = pool.load()?.bump
     )]
     pub pool: Loader<'info, Pool>,

@@ -52,8 +52,8 @@ pub mod amm {
         bump: u8,
         nonce: u8,
         init_tick: i32,
-        fee: u64,
-        tick_spacing: u16,
+        _fee: u64,
+        _tick_spacing: u16,
     ) -> ProgramResult {
         msg!("INVARIANT: CREATE POOL");
 
@@ -87,6 +87,7 @@ pub mod amm {
 
     pub fn swap(
         ctx: Context<Swap>,
+        _fee_tier_address: Pubkey,
         x_to_y: bool,
         amount: u64,
         by_amount_in: bool, // whether amount specifies input or output
@@ -225,7 +226,12 @@ pub mod amm {
         Ok(())
     }
 
-    pub fn create_tick(ctx: Context<CreateTick>, bump: u8, index: i32) -> ProgramResult {
+    pub fn create_tick(
+        ctx: Context<CreateTick>,
+        bump: u8,
+        _fee_tier_address: Pubkey,
+        index: i32,
+    ) -> ProgramResult {
         msg!("CREATE_TICK");
 
         let mut tick = ctx.accounts.tick.load_init()?;
@@ -271,6 +277,7 @@ pub mod amm {
     pub fn init_position(
         ctx: Context<InitPosition>,
         bump: u8,
+        _fee_tier_address: Pubkey,
         _lower_tick_index: i32,
         _upper_tick_index: i32,
         liquidity_delta: Decimal,
@@ -315,6 +322,7 @@ pub mod amm {
 
     pub fn remove_position(
         ctx: Context<RemovePosition>,
+        _fee_tier_address: Pubkey,
         index: u32,
         lower_tick_index: i32,
         upper_tick_index: i32,
@@ -448,6 +456,7 @@ pub mod amm {
 
     pub fn claim_fee(
         ctx: Context<ClaimFee>,
+        _fee_tier_address: Pubkey,
         _index: u32,
         _lower_tick_index: i32,
         _upper_tick_index: i32,
