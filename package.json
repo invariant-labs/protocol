@@ -10,11 +10,10 @@
     "test:position-list": "anchor test --skip-build tests/position-list.spec.ts",
     "test:claim": "anchor test --skip-build tests/claim.spec.ts",
     "build": "cd sdk && npm run build",
-
     "test:staker-all": "anchor test tests-staker/create.spec.ts && anchor test tests-staker/stake.spec.ts && anchor test tests-staker/withdraw.spec.ts",
-        "test:create": "anchor test tests-staker/create.spec.ts",
-        "test:stake": "anchor test tests-staker/stake.spec.ts",
-        "test:withdraw-staker": "anchor test tests-staker/withdraw.spec.ts",
+    "test:create": "anchor test tests-staker/create.spec.ts",
+    "test:stake": "anchor test tests-staker/stake.spec.ts",
+    "test:withdraw-staker": "anchor test tests-staker/withdraw.spec.ts",
     "build-staker": "cd sdk-staker && npm run build"
   },
   "dependencies": {

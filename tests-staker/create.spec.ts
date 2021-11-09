@@ -18,6 +18,8 @@ import {
 import { createToken as createTkn } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { signAndSend } from '../sdk-staker/lib/utils'
+import { fromFee } from '@invariant-labs/sdk/lib/utils'
+import { FeeTier } from '@invariant-labs/sdk/lib/market'
 
 describe('Create incentive tests', () => {
   const provider = Provider.local()
@@ -90,11 +92,16 @@ describe('Create incentive tests', () => {
     const fee = 600
     const tickSpacing = 10
 
+    const feeTier: FeeTier = {
+      fee: fromFee(new BN(600)),
+      tickSpacing: 10
+    }
+
+    await market.createFeeTier(feeTier, wallet)
     await market.create({
       pair,
       signer: admin,
-      fee,
-      tickSpacing
+      feeTier
     })
     pool = await pair.getAddress(anchor.workspace.Amm.programId)
     amm = anchor.workspace.Amm.programId
