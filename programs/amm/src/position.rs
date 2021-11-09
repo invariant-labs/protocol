@@ -1,6 +1,7 @@
 use std::ops::Mul;
 
 use anchor_lang::require;
+use anchor_lang::solana_program::clock::UnixTimestamp;
 
 use crate::math::get_delta_y;
 use crate::*;
@@ -23,6 +24,20 @@ impl Pool {
 
         Ok(())
     }
+
+    pub fn update_seconds_per_liquidity_global(self: &mut Self, current_timestamp: UnixTimestamp) {
+        let time_passed_past: u128 = (self.last_timestamp - self.start_timestamp)
+            .try_into()
+            .unwrap();
+        let time_passed_current: u128 = (current_timestamp - self.start_timestamp)
+            .try_into()
+            .unwrap();
+
+        self.seconds_per_liquidity_global = self.seconds_per_liquidity_global
+            + (Decimal::from_integer(time_passed_current - time_passed_past) / self.liquidity);
+
+        self.last_timestamp = current_timestamp;
+    }
 }
 
 impl Position {
@@ -33,7 +48,12 @@ impl Position {
         lower_tick: &mut Tick,
         liquidity_delta: Decimal,
         add: bool,
+        current_timestamp: UnixTimestamp,
     ) -> Result<(u64, u64)> {
+        if pool.liquidity != Decimal::new(0) {
+            pool.update_seconds_per_liquidity_global(current_timestamp);
+        }
+
         // update initialized tick
         lower_tick.update(
             pool.current_tick_index,
@@ -235,6 +255,33 @@ pub fn calculate_fee_growth_inside(
     (fee_growth_inside_x, fee_growth_inside_y)
 }
 
+pub fn calculate_seconds_between_ticks(
+    tick_lower: Tick,
+    tick_upper: Tick,
+    tick_current: i32,
+    start_timestamp: UnixTimestamp,
+    current_timestamp: UnixTimestamp,
+) -> u64 {
+    let seconds_passed: u64 = (current_timestamp - start_timestamp).try_into().unwrap();
+
+    let current_above_lower = tick_current >= tick_lower.index;
+    let current_below_upper = tick_current < tick_upper.index;
+
+    let seconds_below = if current_above_lower {
+        tick_lower.seconds_outside
+    } else {
+        seconds_passed - tick_lower.seconds_outside
+    };
+
+    let seconds_above = if current_below_upper {
+        tick_upper.seconds_outside
+    } else {
+        seconds_passed - tick_upper.seconds_outside
+    };
+
+    seconds_passed - seconds_below - seconds_above
+}
+
 pub fn calculate_amount_delta(
     pool: &mut Pool,
     liquidity_delta: Decimal,
@@ -283,6 +330,33 @@ pub fn calculate_amount_delta(
         true => (amount_x.to_token_ceil(), amount_y.to_token_ceil()),
         false => (amount_x.to_token_floor(), amount_y.to_token_floor()),
     })
+}
+
+pub fn calculate_seconds_per_liquidity_inside(
+    tick_lower: Tick,
+    tick_upper: Tick,
+    tick_current: i32,
+    pool: &mut Pool,
+    current_timestamp: UnixTimestamp,
+) -> Decimal {
+    pool.update_seconds_per_liquidity_global(current_timestamp);
+
+    let current_above_lower = tick_current >= tick_lower.index;
+    let current_below_upper = tick_current < tick_upper.index;
+
+    let seconds_per_liquidity_below = if current_above_lower {
+        tick_lower.seconds_per_liquidity_outside
+    } else {
+        pool.seconds_per_liquidity_global - tick_lower.seconds_per_liquidity_outside
+    };
+
+    let seconds_per_liquidity_above = if current_below_upper {
+        tick_upper.seconds_per_liquidity_outside
+    } else {
+        pool.seconds_per_liquidity_global - tick_upper.seconds_per_liquidity_outside
+    };
+
+    pool.seconds_per_liquidity_global - seconds_per_liquidity_below - seconds_per_liquidity_above
 }
 
 #[cfg(test)]
@@ -770,6 +844,136 @@ mod tests {
 
             assert_eq!(result.0, 0);
             assert_eq!(result.1, 1);
+        }
+    }
+
+    #[test]
+    fn test_update_seconds_per_liquidity_global() {
+        let mut pool = Pool {
+            liquidity: Decimal::from_integer(1000),
+            start_timestamp: 0,
+            last_timestamp: 0,
+            seconds_per_liquidity_global: Decimal::new(0),
+            ..Default::default()
+        };
+
+        let current_timestamp = 100;
+        pool.update_seconds_per_liquidity_global(current_timestamp);
+        assert_eq!(pool.seconds_per_liquidity_global.v, 100000000000);
+    }
+
+    #[test]
+    fn test_calculate_seconds_between_ticks() {
+        let mut tick_lower = Tick {
+            index: 0,
+            seconds_outside: 25,
+            ..Default::default()
+        };
+        let mut tick_upper = Tick {
+            index: 10,
+            seconds_outside: 17,
+            ..Default::default()
+        };
+        let start_timestamp = 0;
+        let current_timestamp = 100;
+
+        {
+            let tick_current = -10;
+            let seconds_inside = calculate_seconds_between_ticks(
+                tick_lower,
+                tick_upper,
+                tick_current,
+                start_timestamp,
+                current_timestamp,
+            );
+            assert_eq!(seconds_inside, 8);
+        }
+
+        {
+            let tick_current = 0;
+            let seconds_inside = calculate_seconds_between_ticks(
+                tick_lower,
+                tick_upper,
+                tick_current,
+                start_timestamp,
+                current_timestamp,
+            );
+            assert_eq!(seconds_inside, 58);
+        }
+
+        {
+            tick_lower.seconds_outside = 8;
+            tick_upper.seconds_outside = 33;
+
+            let tick_current = 20;
+            let seconds_inside = calculate_seconds_between_ticks(
+                tick_lower,
+                tick_upper,
+                tick_current,
+                start_timestamp,
+                current_timestamp,
+            );
+            assert_eq!(seconds_inside, 25);
+        }
+    }
+
+    #[test]
+    fn test_calculate_seconds_per_liquidity_inside() {
+        let mut tick_lower = Tick {
+            index: 0,
+            seconds_per_liquidity_outside: Decimal::new(3012300000),
+            ..Default::default()
+        };
+        let mut tick_upper = Tick {
+            index: 10,
+            seconds_per_liquidity_outside: Decimal::new(2030400000),
+            ..Default::default()
+        };
+        let mut pool = Pool {
+            liquidity: Decimal::from_integer(1000),
+            start_timestamp: 0,
+            last_timestamp: 0,
+            seconds_per_liquidity_global: Decimal::new(0),
+            ..Default::default()
+        };
+        let current_timestamp = 100;
+
+        {
+            let tick_current = -10;
+            let seconds_per_liquidity_inside = calculate_seconds_per_liquidity_inside(
+                tick_lower,
+                tick_upper,
+                tick_current,
+                &mut pool,
+                current_timestamp,
+            );
+            assert_eq!(seconds_per_liquidity_inside.v, 981900000);
+        }
+
+        {
+            let tick_current = 0;
+            let seconds_per_liquidity_inside = calculate_seconds_per_liquidity_inside(
+                tick_lower,
+                tick_upper,
+                tick_current,
+                &mut pool,
+                current_timestamp,
+            );
+            assert_eq!(seconds_per_liquidity_inside.v, 94957300000);
+        }
+
+        {
+            tick_lower.seconds_per_liquidity_outside = Decimal::new(2012333200);
+            tick_upper.seconds_per_liquidity_outside = Decimal::new(3012333310);
+            let tick_current = 20;
+            let seconds_per_liquidity_inside = calculate_seconds_per_liquidity_inside(
+                tick_lower,
+                tick_upper,
+                tick_current,
+                &mut pool,
+                current_timestamp,
+            );
+            assert_eq!(seconds_per_liquidity_inside.v, 1000000110);
         }
     }
 }

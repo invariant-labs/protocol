@@ -1,5 +1,6 @@
 use anchor_lang::__private::ErrorCode;
 use anchor_lang::__private::CLOSED_ACCOUNT_DISCRIMINATOR;
+use anchor_lang::solana_program::clock::UnixTimestamp;
 use std::cell::RefMut;
 use std::io::Write;
 
@@ -73,9 +74,22 @@ pub fn get_closer_limit(
     }
 }
 
-pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) {
+pub fn cross_tick(
+    tick: &mut RefMut<Tick>,
+    pool: &mut Pool,
+    current_timestamp: UnixTimestamp,
+) -> Result<()> {
     tick.fee_growth_outside_x = pool.fee_growth_global_x - tick.fee_growth_outside_x;
     tick.fee_growth_outside_y = pool.fee_growth_global_y - tick.fee_growth_outside_y;
+
+    let seconds_passed: u64 = (current_timestamp - pool.start_timestamp)
+        .try_into()
+        .unwrap();
+    tick.seconds_outside = seconds_passed - tick.seconds_outside;
+
+    pool.update_seconds_per_liquidity_global(current_timestamp);
+    tick.seconds_per_liquidity_outside =
+        pool.seconds_per_liquidity_global - tick.seconds_per_liquidity_outside;
 
     // When going to higher tick net_liquidity should be added and for going lower subtracted
     if (pool.current_tick_index >= tick.index) ^ tick.sign {
@@ -83,6 +97,8 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) {
     } else {
         pool.liquidity = pool.liquidity - tick.liquidity_change;
     }
+
+    Ok(())
 }
 
 pub fn get_tick_from_price(
@@ -157,6 +173,12 @@ pub fn close<'info>(
         .write_all(&CLOSED_ACCOUNT_DISCRIMINATOR)
         .map_err(|_| ErrorCode::AccountDidNotSerialize)?;
     Ok(())
+}
+
+pub fn get_current_time() -> Result<i64> {
+    let current_time = Clock::get()?.unix_timestamp;
+
+    Ok(current_time)
 }
 
 #[cfg(test)]

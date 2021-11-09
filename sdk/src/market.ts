@@ -53,6 +53,9 @@ export interface PoolStructure {
   feeGrowthGlobalY: Decimal
   feeProtocolTokenX: Decimal
   feeProtocolTokenY: Decimal
+  secondsPerLiquidityGlobal: Decimal
+  startTimestamp: BN
+  lastTimestamp: BN
   bump: number
   nonce: number
   authority: PublicKey

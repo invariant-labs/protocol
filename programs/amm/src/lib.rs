@@ -59,6 +59,7 @@ pub mod amm {
 
         let pool = &mut ctx.accounts.pool.load_init()?;
         let fee_tier = ctx.accounts.fee_tier.load()?;
+        let current_timestamp = Clock::get()?.unix_timestamp;
 
         **pool = Pool {
             token_x: *ctx.accounts.token_x.key,
@@ -77,11 +78,13 @@ pub mod amm {
             fee_protocol_token_x: Decimal::new(0),
             fee_protocol_token_y: Decimal::new(0),
             position_iterator: 0,
-            bump,
-            nonce,
+            seconds_per_liquidity_global: Decimal::new(0),
+            start_timestamp: current_timestamp,
+            last_timestamp: current_timestamp,
+            bump: bump,
+            nonce: nonce,
             authority: *ctx.accounts.program_authority.key,
         };
-
         Ok(())
     }
 
@@ -185,7 +188,7 @@ pub mod amm {
                     let mut tick = loader.load_mut().unwrap();
 
                     // crossing tick
-                    cross_tick(&mut tick, &mut pool);
+                    cross_tick(&mut tick, &mut pool, Clock::get()?.unix_timestamp);
                 }
 
                 // set tick to limit (below if price is going down, because current tick is below price)
@@ -250,6 +253,13 @@ pub mod amm {
                 true => pool.fee_growth_global_y,
                 false => Decimal::new(0),
             },
+            seconds_outside: match below_current_tick {
+                true => (Clock::get()?.unix_timestamp - pool.start_timestamp)
+                    .try_into()
+                    .unwrap(),
+                false => 0,
+            },
+            seconds_per_liquidity_outside: Decimal::new(0),
             bump: bump,
         };
 
@@ -305,8 +315,14 @@ pub mod amm {
             bump: bump,
         };
 
-        let (amount_x, amount_y) =
-            position.modify(pool, upper_tick, lower_tick, liquidity_delta, true)?;
+        let (amount_x, amount_y) = position.modify(
+            pool,
+            upper_tick,
+            lower_tick,
+            liquidity_delta,
+            true,
+            Clock::get()?.unix_timestamp,
+        )?;
 
         token::transfer(ctx.accounts.take_x(), amount_x)?;
         token::transfer(ctx.accounts.take_y(), amount_y)?;
@@ -337,8 +353,14 @@ pub mod amm {
             // validate ticks
             check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
             let liquidity_delta = removed_position.liquidity;
-            let (amount_x, amount_y) =
-                removed_position.modify(pool, upper_tick, lower_tick, liquidity_delta, false)?;
+            let (amount_x, amount_y) = removed_position.modify(
+                pool,
+                upper_tick,
+                lower_tick,
+                liquidity_delta,
+                false,
+                Clock::get()?.unix_timestamp,
+            )?;
 
             let amount_x = amount_x + removed_position.tokens_owed_x.to_token_floor();
             let amount_y = amount_y + removed_position.tokens_owed_y.to_token_floor();
@@ -460,7 +482,14 @@ pub mod amm {
         check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
 
         position
-            .modify(pool, upper_tick, lower_tick, Decimal::new(0), true)
+            .modify(
+                pool,
+                upper_tick,
+                lower_tick,
+                Decimal::new(0),
+                true,
+                Clock::get()?.unix_timestamp,
+            )
             .unwrap();
 
         let fee_to_collect_x = position.tokens_owed_x.to_token_floor();
@@ -513,6 +542,8 @@ pub enum ErrorCode {
     InvalidPoolLiquidity = 12, // 136
     #[msg("Invalid position index")]
     InvalidPositionIndex = 13, // 137
+    #[msg("Time cannot be negative")]
+    NegativeTime = 14,
     #[msg("Position liquidity would be zero")]
-    PositionWithoutLiquidity = 14, // 138
+    PositionWithoutLiquidity = 15, // 138
 }

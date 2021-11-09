@@ -28,6 +28,9 @@ pub struct Pool {
     pub fee_growth_global_y: Decimal,
     pub fee_protocol_token_x: Decimal,
     pub fee_protocol_token_y: Decimal,
+    pub seconds_per_liquidity_global: Decimal,
+    pub start_timestamp: i64,
+    pub last_timestamp: i64,
     pub bump: u8,
     pub nonce: u8,
     pub authority: Pubkey,
@@ -67,6 +70,8 @@ pub struct Tick {
     pub sqrt_price: Decimal,
     pub fee_growth_outside_x: Decimal,
     pub fee_growth_outside_y: Decimal,
+    pub seconds_per_liquidity_outside: Decimal,
+    pub seconds_outside: u64,
     pub bump: u8,
 }
 

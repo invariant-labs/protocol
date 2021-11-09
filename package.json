@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "test:full": "npm run test:swap && npm run test:cross && npm run test:reversed && npm run test:position && npm run test:math && npm run test:withdraw && npm run test:position-list && npm run test:claim",
+    "test:full": "npm run test:swap && npm run test:cross && npm run test:reversed && npm run test:position && npm run test:math && npm run test:withdraw && npm run test:position-list && npm run test:claim && npm run test:timestamp",
     "test:swap": "anchor test --skip-build tests/swap.spec.ts",
     "test:cross": "anchor test --skip-build tests/cross.spec.ts",
     "test:reversed": "anchor test --skip-build tests/reversed.spec.ts",
@@ -10,11 +10,14 @@
     "test:position-list": "anchor test --skip-build tests/position-list.spec.ts",
     "test:claim": "anchor test --skip-build tests/claim.spec.ts",
     "build": "cd sdk && npm run build",
+    
     "test:staker-all": "anchor test tests-staker/create.spec.ts && anchor test tests-staker/stake.spec.ts && anchor test tests-staker/withdraw.spec.ts",
     "test:create": "anchor test tests-staker/create.spec.ts",
     "test:stake": "anchor test tests-staker/stake.spec.ts",
     "test:withdraw-staker": "anchor test tests-staker/withdraw.spec.ts",
-    "build-staker": "cd sdk-staker && npm run build"
+    "build-staker": "cd sdk-staker && npm run build",
+    "test:timestamp": "anchor test --skip-build tests/timestamp.spec.ts"
+
   },
   "dependencies": {
     "@project-serum/anchor": "^0.17.1-beta.1",
