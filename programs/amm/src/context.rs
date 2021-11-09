@@ -11,12 +11,32 @@ pub trait SendTokens<'info> {
     fn send_x(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>>;
     fn send_y(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>>;
 }
-
 #[derive(Accounts)]
-#[instruction(bump: u8)]
+#[instruction(bump: u8, fee: u64, tick_spacing: u16)]
+pub struct CreateFeeTier<'info> {
+    #[account(init,
+        seeds = [b"feetierv1", program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()],
+        bump = bump, payer = payer
+    )]
+    pub fee_tier: Loader<'info, FeeTier>,
+    #[account(mut, signer)]
+    pub payer: AccountInfo<'info>,
+    pub rent: Sysvar<'info, Rent>,
+    pub system_program: AccountInfo<'info>,
+}
+#[derive(Accounts)]
+#[instruction(bump: u8, nonce: u8, init_tick: i32, fee: u64, tick_spacing: u16)]
 pub struct Create<'info> {
-    #[account(init, seeds = [b"poolv1", token_x.key.as_ref(), token_y.key.as_ref()], bump = bump, payer = payer)]
+    #[account(init,
+        seeds = [b"poolv1", token_x.key.as_ref(), token_y.key.as_ref()],
+        bump = bump, payer = payer
+    )]
     pub pool: Loader<'info, Pool>,
+    #[account(
+        seeds = [b"feetierv1", program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()],
+        bump = fee_tier.load()?.bump
+    )]
+    pub fee_tier: Loader<'info, FeeTier>,
     #[account(zero)]
     pub tickmap: Loader<'info, Tickmap>,
     pub token_x: AccountInfo<'info>,
@@ -29,7 +49,6 @@ pub struct Create<'info> {
     pub rent: Sysvar<'info, Rent>,
     pub system_program: AccountInfo<'info>,
 }
-
 #[derive(Accounts)]
 pub struct Swap<'info> {
     #[account(mut, seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()], bump = pool.load()?.bump)]

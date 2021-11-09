@@ -16,8 +16,9 @@ import { Provider, Program, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken, eqDecimal, positionEquals, positionWithoutOwnerEquals } from './testUtils'
 import { assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
-import { ERRORS } from '@invariant-labs/sdk/lib/utils'
+import { ERRORS, fromFee } from '@invariant-labs/sdk/lib/utils'
 import { sleep } from '@invariant-labs/sdk'
+import { FeeTier } from '@invariant-labs/sdk/lib/market'
 
 describe('Position list', () => {
   const provider = Provider.local()
@@ -33,6 +34,10 @@ describe('Position list', () => {
     connection,
     anchor.workspace.Amm.programId
   )
+  const feeTier: FeeTier = {
+    fee: fromFee(new BN(600)),
+    tickSpacing: 3
+  }
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -77,17 +82,17 @@ describe('Position list', () => {
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], yOwnerAmount)
   })
   describe('Settings', async () => {
+    it('createFeeTier()', async () => {
+      await market.createFeeTier(feeTier, wallet)
+    })
     it('Prepare pool', async () => {
-      const fee = 600
-      const tickSpacing = 3
       initTick = -23028
 
       await market.create({
         pair,
         signer: admin,
         initTick,
-        fee,
-        tickSpacing
+        feeTier
       })
       await market.createPositionList(positionOwner)
 
