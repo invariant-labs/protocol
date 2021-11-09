@@ -1184,6 +1184,7 @@ dependencies = [
 name = "staker"
 version = "0.1.0"
 dependencies = [
+ "amm",
  "anchor-lang",
  "anchor-spl",
  "integer-sqrt",

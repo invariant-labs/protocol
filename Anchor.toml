@@ -5,6 +5,9 @@ url = "https://anchor.projectserum.com"
 cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
+[workspace]
+members = ["programs/amm", "programs/staker"]
+
 [programs.localnet]
 amm = "FPr3fREovDnqMfubJTrJAFwopvJB8grXj1o3gkmSyzmw"
 staker = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
