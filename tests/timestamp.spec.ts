@@ -6,6 +6,8 @@ import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken } from './testUtils'
 import { assert } from 'chai'
 import { tou64 } from '@invariant-labs/sdk'
+import { FeeTier } from '@invariant-labs/sdk/lib/market'
+import { fromFee } from '@invariant-labs/sdk/lib/utils'
 
 describe('timestamp', () => {
     const provider = Provider.local()
@@ -20,6 +22,10 @@ describe('timestamp', () => {
         connection,
         anchor.workspace.Amm.programId
     )
+    const feeTier: FeeTier = {
+        fee: fromFee(new BN(600)),
+        tickSpacing: 10
+    }
     let pair: Pair
     let tokenX: Token
     let tokenY: Token
@@ -28,8 +34,8 @@ describe('timestamp', () => {
 
     before(async () => {
         await Promise.all([
-            await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
-            await connection.requestAirdrop(admin.publicKey, 1e9)
+            await connection.requestAirdrop(mintAuthority.publicKey, 1e11),
+            await connection.requestAirdrop(admin.publicKey, 1e11)
         ])
 
         const tokens = await Promise.all([
@@ -52,22 +58,27 @@ describe('timestamp', () => {
         
     })
 
-    it('#create()', async () => {
-        const fee = 600
-        const tickSpacing = 10
-        const feeDecimal = new BN(fee).mul(new BN(10).pow(new BN(12 - 5)))
+    it("createFeeTier()", async () => {
+        await market.createFeeTier(feeTier, wallet);
+    })
 
+    it('#create()', async () => {
+        const current_timestamp = await new BN((new Date().valueOf() / 1000)).toString()
         await market.create({
             pair,
             signer: admin,
-            fee,
-            tickSpacing
+            feeTier
         })
 
+        
+        console.log(current_timestamp)
+        
         const createdPool = await market.get(pair)
+        console.log(createdPool.startTimestamp.toString())
+        console.log(createdPool.lastTimestamp.toString())
         assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
         assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
-        assert.ok(createdPool.fee.v.eq(feeDecimal))
+        assert.ok(createdPool.fee.v.eq(feeTier.fee))
         assert.ok(createdPool.liquidity.v.eqn(0))
         assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR))
         assert.ok(createdPool.currentTickIndex == 0)
@@ -76,74 +87,94 @@ describe('timestamp', () => {
         assert.ok(createdPool.feeProtocolTokenX.v.eqn(0))
         assert.ok(createdPool.feeProtocolTokenY.v.eqn(0))
         assert.ok(createdPool.authority.equals(programAuthority))
+        assert.ok(createdPool.secondsPerLiquidityGlobal.v.eqn(0))
         assert.equal(createdPool.nonce, nonce)
-
+        
         const tickmapData = await market.getTickmap(pair)
         assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
         assert.ok(tickmapData.bitmap.every((v) => v == 0))
     })
 
-    it('#swap', async () => {
-        const mintAmount = tou64(new BN(10).pow(new BN(10)))
+    // it('#timestamp', async () => {
+    //     const mintAmount = tou64(new BN(10).pow(new BN(10)))
 
-        const upperTick = 10
-        await market.createTick(pair, upperTick, wallet)
-        const midTick = -20
-        await market.createTick(pair, midTick, wallet)
-        const lowerTick = -30
+    //     const upperTick = 10
+    //     await market.createTick(pair, upperTick, wallet)
+    //     const midTick = -20
+    //     await market.createTick(pair, midTick, wallet)
+    //     const lowerTick = -30
+    //     await market.createTick(pair, lowerTick, wallet)
 
-        const positionOwner1 = Keypair.generate()
-        await connection.requestAirdrop(positionOwner1.publicKey, 1e9)
-        const user1TokenXAccount = await tokenX.createAccount(positionOwner1.publicKey)
-        const user1TokenYAccount = await tokenY.createAccount(positionOwner1.publicKey)
+    //     const positionOwner1 = Keypair.generate()
+    //     await connection.requestAirdrop(positionOwner1.publicKey, 1e9)
+    //     const user1TokenXAccount = await tokenX.createAccount(positionOwner1.publicKey)
+    //     const user1TokenYAccount = await tokenY.createAccount(positionOwner1.publicKey)
 
-        await tokenX.mintTo(user1TokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-        await tokenY.mintTo(user1TokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-        const liquidityDelta1 = { v: new BN(1000000).mul(DENOMINATOR)}
+    //     await tokenX.mintTo(user1TokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+    //     await tokenY.mintTo(user1TokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+    //     const liquidityDelta1 = { v: new BN(1000000).mul(DENOMINATOR)}
 
-        await market.createPositionList(positionOwner1)
-        await market.initPosition(
-            {
-                pair,
-                owner: positionOwner1.publicKey,
-                userTokenX: user1TokenXAccount,
-                userTokenY: user1TokenYAccount,
-                lowerTick: midTick,
-                upperTick,
-                liquidityDelta: liquidityDelta1
-            },
-            positionOwner1
-        )
+    //     await market.createPositionList(positionOwner1)
+    //     await market.initPosition(
+    //         {
+    //             pair,
+    //             owner: positionOwner1.publicKey,
+    //             userTokenX: user1TokenXAccount,
+    //             userTokenY: user1TokenYAccount,
+    //             lowerTick: midTick,
+    //             upperTick,
+    //             liquidityDelta: liquidityDelta1
+    //         },
+    //         positionOwner1
+    //     )
         
         
-        assert.ok((await market.get(pair)).liquidity.v.eq(liquidityDelta1.v))
+    //     assert.ok((await market.get(pair)).liquidity.v.eq(liquidityDelta1.v))
 
-        const positionOwner2 = Keypair.generate()
-        await connection.requestAirdrop(positionOwner2.publicKey, 1e9)
-        const user2TokenXAccount = await tokenX.createAccount(positionOwner2.publicKey)
-        const user2TokenYAccount = await tokenY.createAccount(positionOwner2.publicKey)
+    //     const positionOwner2 = Keypair.generate()
+    //     await connection.requestAirdrop(positionOwner2.publicKey, 1e9)
+    //     const user2TokenXAccount = await tokenX.createAccount(positionOwner2.publicKey)
+    //     const user2TokenYAccount = await tokenY.createAccount(positionOwner2.publicKey)
 
-        await tokenX.mintTo(user2TokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-        await tokenY.mintTo(user2TokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-        const liquidityDelta2 = { v: new BN(100000).mul(DENOMINATOR)}
+    //     await tokenX.mintTo(user2TokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+    //     await tokenY.mintTo(user2TokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+    //     const liquidityDelta2 = { v: new BN(1000000).mul(DENOMINATOR)}
         
+    //     await market.createPositionList(positionOwner2)
         
+    //     await market.initPosition(
+    //         {
+    //             pair,
+    //             owner: positionOwner2.publicKey,
+    //             userTokenX: user2TokenXAccount,
+    //             userTokenY: user2TokenYAccount,
+    //             lowerTick,
+    //             upperTick: midTick,
+    //             liquidityDelta: liquidityDelta2
+    //         },
+    //         positionOwner2
+    //     )
 
-        await market.createPositionList(positionOwner2)
-        
-        await market.initPosition(
-            {
-                pair,
-                owner: positionOwner2.publicKey,
-                userTokenX: user2TokenXAccount,
-                userTokenY: user2TokenYAccount,
-                lowerTick,
-                upperTick: midTick,
-                liquidityDelta: liquidityDelta2
-            },
-            positionOwner2
-        )
-        console.log("11111")
-        assert.ok((await market.get(pair)).liquidity.v.eq(liquidityDelta1.v.add(liquidityDelta2.v)))
-    })
+    //     assert.ok((await market.get(pair)).liquidity.v.eq(liquidityDelta1.v))
+
+    //     const swapper = Keypair.generate()
+    //     await connection.requestAirdrop(swapper.publicKey, 1e10)
+
+    //     const amount = new BN(1500)
+    //     const accountX = await tokenX.createAccount(swapper.publicKey)
+    //     const accountY = await tokenY.createAccount(swapper.publicKey)
+
+    //     await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
+
+    //     const poolDataBefore = await market.get(pair)
+    //     const targetPrice = DENOMINATOR.muln(100).divn(110)
+    //     const reservesBeforeSwap = await market.getReserveBalances(pair, wallet)
+
+    //     await market.swap(pair, true, amount, targetPrice, accountX, accountY, swapper)
+
+    //     const poolDataAfter = await market.get(pair)
+    //     assert.ok(poolDataAfter.liquidity.v.eq(liquidityDelta2.v))
+    //     assert.ok(poolDataAfter.currentTickIndex == lowerTick)
+    //     assert.ok(poolDataAfter.sqrtPrice.v.lt(poolDataBefore.sqrtPrice.v))
+    // })
 })
