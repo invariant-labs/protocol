@@ -1,13 +1,12 @@
 [package]
-name = "amm"
+name = "staker"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2018"
-license = "Apache-2.0"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "amm"
+name = "staker"
 doctest = false
 
 [features]
@@ -21,3 +20,4 @@ anchor-lang = "0.18.0"
 anchor-spl = "0.18.0"
 integer-sqrt = "0.1.5"
 uint = "0.9"
+amm = { path = "../amm", features = ["cpi"] }

@@ -9,8 +9,15 @@
     "test:withdraw": "anchor test --skip-build tests/withdraw.spec.ts",
     "test:position-list": "anchor test --skip-build tests/position-list.spec.ts",
     "test:claim": "anchor test --skip-build tests/claim.spec.ts",
-    "test:timestamp": "anchor test --skip-build tests/timestamp.spec.ts",
-    "build": "cd sdk && npm run build"
+    "build": "cd sdk && npm run build",
+    
+    "test:staker-all": "anchor test tests-staker/create.spec.ts && anchor test tests-staker/stake.spec.ts && anchor test tests-staker/withdraw.spec.ts",
+    "test:create": "anchor test tests-staker/create.spec.ts",
+    "test:stake": "anchor test tests-staker/stake.spec.ts",
+    "test:withdraw-staker": "anchor test tests-staker/withdraw.spec.ts",
+    "build-staker": "cd sdk-staker && npm run build",
+    "test:timestamp": "anchor test --skip-build tests/timestamp.spec.ts"
+
   },
   "dependencies": {
     "@project-serum/anchor": "^0.17.1-beta.1",
