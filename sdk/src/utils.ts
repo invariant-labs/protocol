@@ -1,12 +1,14 @@
-import { Provider, BN } from '@project-serum/anchor'
+import { Provider, BN, utils } from '@project-serum/anchor'
 import { u64 } from '@solana/spl-token'
 import {
   ConfirmOptions,
   Connection,
   Keypair,
+  PublicKey,
   sendAndConfirmRawTransaction,
   Transaction
 } from '@solana/web3.js'
+import { FeeTier, FEE_TIER } from './market'
 
 export const SEED = 'Swapline'
 export const DECIMAL = 12
@@ -81,4 +83,27 @@ export const feeToTickSpacing = (fee: BN): number => {
   // tickSpacing = fee * 10^4
   const FEE_TO_SPACING_OFFSET = new BN(10).pow(new BN(DECIMAL - 4))
   return fee.muln(2).div(FEE_TO_SPACING_OFFSET).toNumber()
+}
+
+export const getFeeTierAddress = async ({ fee, tickSpacing }: FeeTier, programId: PublicKey) => {
+  const ts = tickSpacing ?? feeToTickSpacing(fee)
+  const tickSpacingBuffer = Buffer.alloc(2)
+  const feeBuffer = Buffer.alloc(8)
+  tickSpacingBuffer.writeUInt16LE(ts)
+  feeBuffer.writeBigUInt64LE(BigInt(fee.toString()))
+
+  const [address, bump] = await PublicKey.findProgramAddress(
+    [
+      Buffer.from(utils.bytes.utf8.encode(FEE_TIER)),
+      programId.toBuffer(),
+      feeBuffer,
+      tickSpacingBuffer
+    ],
+    programId
+  )
+
+  return {
+    address,
+    bump
+  }
 }
