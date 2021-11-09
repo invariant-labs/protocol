@@ -3,6 +3,7 @@ mod context;
 mod decimal;
 mod math;
 mod uint;
+
 use anchor_lang::prelude::*;
 use anchor_spl::token;
 use context::*;
@@ -37,8 +38,9 @@ pub mod staker {
         );
         require!((current_time + MAX_DURATION) >= end_time, TooLongDuration);
         let incentive = &mut ctx.accounts.incentive.load_init()?;
+
         {
-            //incentive.pool = *ctx.accounts.pool.to_account_info().key; // TODO
+            incentive.pool = *ctx.accounts.pool.to_account_info().key;
             incentive.token_account = *ctx.accounts.incentive_token_account.to_account_info().key;
             incentive.total_reward_unclaimed = reward;
             incentive.total_seconds_claimed = Decimal::from_integer(0);
@@ -54,19 +56,20 @@ pub mod staker {
         Ok(())
     }
 
-    pub fn stake(ctx: Context<CreateUserStake>, bump: u8, index: u32) -> ProgramResult {
+    pub fn stake(ctx: Context<CreateUserStake>, index: u32, bump: u8) -> ProgramResult {
         let mut incentive = ctx.accounts.incentive.load_mut()?;
         let current_time = Clock::get().unwrap().unix_timestamp as u64;
-        require!(current_time <= incentive.start_time, NotStarted);
+        require!(current_time >= incentive.start_time, NotStarted);
         require!(current_time < incentive.end_time, Ended);
 
         let user_stake = &mut ctx.accounts.user_stake.load_init()?;
 
-        //let position = ctx.accounts.position.load()?;
         {
             user_stake.position = *ctx.accounts.position.to_account_info().key;
+            user_stake.owner = *ctx.accounts.owner.to_account_info().key;
             user_stake.timestamp = Clock::get().unwrap().unix_timestamp as u64;
             user_stake.liquidity = Decimal::from_integer(100); //position.liquidity; // TODO load from position
+
             user_stake.seconds_per_liquidity_initial = Decimal::from_integer(0); //TODO add fun to callculate it from tick map
             user_stake.index = index;
             user_stake.bump = bump;

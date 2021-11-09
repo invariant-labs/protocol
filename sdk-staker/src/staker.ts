@@ -60,9 +60,10 @@ export class Staker {
     pool,
     incentiveTokenAcc,
     founderTokenAcc,
+    amm,
     stakerAuthority
   }: CreateIncentive) {
-    return (await this.program.instruction.createIncentive(reward, startTime, endTime, {
+    return this.program.instruction.createIncentive(reward, startTime, endTime, {
       accounts: {
         incentive: incentive.publicKey,
         pool: pool,
@@ -72,55 +73,49 @@ export class Staker {
         stakerAuthority: stakerAuthority,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
+        amm: amm,
         rent: SYSVAR_RENT_PUBKEY
       }
-    })) as TransactionInstruction
+    }) as TransactionInstruction
   }
 
-  public async get(incentivePubKey: PublicKey) {
-    return (await this.program.account.incentive.fetch(
-      incentivePubKey
-    )) as IncentiveStructure
+  public async getIncentive(incentivePubKey: PublicKey) {
+    return (await this.program.account.incentive.fetch(incentivePubKey)) as IncentiveStructure
   }
 
-  public async increaseIncentiveInstruction({
-    amount,
-    founder,
-    incentive,
-    incentiveTokenAcc,
-    founderTokenAcc,
-    stakerAuthority
-  }: IncreaseIncentive) {
-    return (await this.program.instruction.increaseIncentive(amount, {
-      accounts: {
-        incentive: incentive.publicKey,
-        incentiveTokenAccount: incentiveTokenAcc,
-        founderTokenAccount: founderTokenAcc,
-        founder: founder.publicKey,
-        stakerAuthority: stakerAuthority,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
-        rent: SYSVAR_RENT_PUBKEY
-      }
-    })) as TransactionInstruction
-  }
-
-  public async stakeInstruction({ positionAddress, incentive, owner, index }: Stake) {
+  public async stakeInstruction({ position, incentive, owner, index, amm }: Stake) {
     const [userStakeAddress, userStakeBump] = await PublicKey.findProgramAddress(
       [Buffer.from(utils.bytes.utf8.encode(STAKER_SEED)), owner.toBuffer()],
       this.programId
     )
 
-    return (await this.program.instruction.stake(userStakeBump, index, {
+    return (await this.program.instruction.stake(index, userStakeBump, {
       accounts: {
         userStake: userStakeAddress,
-        position: positionAddress,
+        position,
         incentive: incentive,
-        owner: owner,
+        owner,
         systemProgram: SystemProgram.programId,
+        amm: amm,
         rent: SYSVAR_RENT_PUBKEY
       }
     })) as TransactionInstruction
+  }
+
+  public async getStakeAddress(owner: PublicKey) {
+    const [positionAddress, positionBump] = await PublicKey.findProgramAddress(
+      [Buffer.from(utils.bytes.utf8.encode(STAKER_SEED)), owner.toBuffer()],
+      this.program.programId
+    )
+    return {
+      positionAddress,
+      positionBump
+    }
+  }
+
+  public async getStake(owner: PublicKey) {
+    let { positionAddress } = await this.getStakeAddress(owner)
+    return (await this.program.account.userStake.fetch(positionAddress)) as Stake
   }
 
   public async withdrawInstruction({
@@ -147,19 +142,6 @@ export class Staker {
     })) as TransactionInstruction
   }
 }
-
-// public async getUserStakeAddress(owner: PublicKey) {
-//   const [userStakeAddress, userStakeBump] = await PublicKey.findProgramAddress(
-//     [Buffer.from(utils.bytes.utf8.encode(STAKER_SEED)), owner.toBuffer()],
-//     this.programId
-//   )
-
-//   return {
-//     userStakeAddress,
-//     userStakeBump
-//   }
-// }
-
 export interface CreateIncentive {
   reward: Decimal
   startTime: BN
@@ -169,22 +151,14 @@ export interface CreateIncentive {
   founder: Keypair
   incentiveTokenAcc: PublicKey
   founderTokenAcc: PublicKey
+  amm: PublicKey
   stakerAuthority: PublicKey
 }
-
-export interface IncreaseIncentive {
-  amount: Decimal
-  incentive: Keypair
-  founder: Keypair
-  incentiveTokenAcc: PublicKey
-  founderTokenAcc: PublicKey
-  stakerAuthority: PublicKey
-}
-
 export interface Stake {
-  positionAddress: PublicKey
+  position: PublicKey
   incentive: PublicKey
   owner: PublicKey
+  amm: PublicKey
   index: number
 }
 export interface Withdraw {

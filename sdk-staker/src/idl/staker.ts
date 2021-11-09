@@ -41,6 +41,11 @@ export type Staker = {
           "isSigner": false
         },
         {
+          "name": "amm",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -92,6 +97,11 @@ export type Staker = {
           "isSigner": true
         },
         {
+          "name": "amm",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -104,12 +114,12 @@ export type Staker = {
       ],
       "args": [
         {
-          "name": "bump",
-          "type": "u8"
-        },
-        {
           "name": "index",
           "type": "u32"
+        },
+        {
+          "name": "bump",
+          "type": "u8"
         }
       ]
     },
@@ -172,166 +182,16 @@ export type Staker = {
   ],
   "accounts": [
     {
-      "name": "pool",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "tokenX",
-            "type": "publicKey"
-          },
-          {
-            "name": "tokenY",
-            "type": "publicKey"
-          },
-          {
-            "name": "tokenXReserve",
-            "type": "publicKey"
-          },
-          {
-            "name": "tokenYReserve",
-            "type": "publicKey"
-          },
-          {
-            "name": "tickSpacing",
-            "type": "u16"
-          },
-          {
-            "name": "fee",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "protocolFee",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "liquidity",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "sqrtPrice",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "currentTickIndex",
-            "type": "i32"
-          },
-          {
-            "name": "tickmap",
-            "type": "publicKey"
-          },
-          {
-            "name": "feeGrowthGlobalX",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "feeGrowthGlobalY",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "feeProtocolTokenX",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "feeProtocolTokenY",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
-            "name": "nonce",
-            "type": "u8"
-          },
-          {
-            "name": "authority",
-            "type": "publicKey"
-          }
-        ]
-      }
-    },
-    {
-      "name": "position",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "owner",
-            "type": "publicKey"
-          },
-          {
-            "name": "pool",
-            "type": "publicKey"
-          },
-          {
-            "name": "liquidity",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "lowerTickIndex",
-            "type": "i32"
-          },
-          {
-            "name": "upperTickIndex",
-            "type": "i32"
-          },
-          {
-            "name": "feeGrowthInsideX",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "feeGrowthInsideY",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "tokensOwedX",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "tokensOwedY",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
       "name": "userStake",
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "position",
+            "type": "publicKey"
+          },
+          {
+            "name": "owner",
             "type": "publicKey"
           },
           {
@@ -503,6 +363,11 @@ export const IDL: Staker = {
           "isSigner": false
         },
         {
+          "name": "amm",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -554,6 +419,11 @@ export const IDL: Staker = {
           "isSigner": true
         },
         {
+          "name": "amm",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -566,12 +436,12 @@ export const IDL: Staker = {
       ],
       "args": [
         {
-          "name": "bump",
-          "type": "u8"
-        },
-        {
           "name": "index",
           "type": "u32"
+        },
+        {
+          "name": "bump",
+          "type": "u8"
         }
       ]
     },
@@ -634,166 +504,16 @@ export const IDL: Staker = {
   ],
   "accounts": [
     {
-      "name": "pool",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "tokenX",
-            "type": "publicKey"
-          },
-          {
-            "name": "tokenY",
-            "type": "publicKey"
-          },
-          {
-            "name": "tokenXReserve",
-            "type": "publicKey"
-          },
-          {
-            "name": "tokenYReserve",
-            "type": "publicKey"
-          },
-          {
-            "name": "tickSpacing",
-            "type": "u16"
-          },
-          {
-            "name": "fee",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "protocolFee",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "liquidity",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "sqrtPrice",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "currentTickIndex",
-            "type": "i32"
-          },
-          {
-            "name": "tickmap",
-            "type": "publicKey"
-          },
-          {
-            "name": "feeGrowthGlobalX",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "feeGrowthGlobalY",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "feeProtocolTokenX",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "feeProtocolTokenY",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
-            "name": "nonce",
-            "type": "u8"
-          },
-          {
-            "name": "authority",
-            "type": "publicKey"
-          }
-        ]
-      }
-    },
-    {
-      "name": "position",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "owner",
-            "type": "publicKey"
-          },
-          {
-            "name": "pool",
-            "type": "publicKey"
-          },
-          {
-            "name": "liquidity",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "lowerTickIndex",
-            "type": "i32"
-          },
-          {
-            "name": "upperTickIndex",
-            "type": "i32"
-          },
-          {
-            "name": "feeGrowthInsideX",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "feeGrowthInsideY",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "tokensOwedX",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "tokensOwedY",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
       "name": "userStake",
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "position",
+            "type": "publicKey"
+          },
+          {
+            "name": "owner",
             "type": "publicKey"
           },
           {

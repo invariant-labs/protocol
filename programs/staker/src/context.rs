@@ -1,4 +1,6 @@
 use crate::account::*;
+use amm::account::{Pool, Position};
+use amm::program::Amm;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, TokenAccount, Transfer};
 
@@ -15,13 +17,14 @@ pub struct CreateIncentive<'info> {
         constraint = &founder_token_account.owner == founder.to_account_info().key
     )]
     pub founder_token_account: Account<'info, TokenAccount>,
-    pub pool: AccountInfo<'info>, //TODO change to account loader
+    pub pool: AccountLoader<'info, Pool>,
 
     #[account(mut)]
     pub founder: Signer<'info>,
     pub staker_authority: AccountInfo<'info>, // TODO validation ??
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
+    pub amm: Program<'info, Amm>,
     pub system_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
 }
@@ -44,20 +47,25 @@ impl<'info> DepositToken<'info> for CreateIncentive<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(bump: u8, index: u32)]
+#[instruction(index: u32, bump: u8)]
 pub struct CreateUserStake<'info> {
     #[account(init,
         seeds = [b"staker", owner.to_account_info().key.as_ref()],
         payer = owner,
         bump = bump)]
     pub user_stake: Loader<'info, UserStake>,
-    #[account(mut)] //,
-    // seeds = [b"positionv1", owner.to_account_info().key.as_ref(), &index.to_le_bytes()],
-    // bump = position.load()?.bump)] //TODO add after merge with invariant
-    pub position: AccountInfo<'info>,
+    #[account(mut,
+        constraint = owner.key == &position.load()?.owner
+        // seeds = [b"positionv1",
+        // owner.to_account_info().key.as_ref(),
+        // &index.to_le_bytes()],
+        // bump = position.load()?.bump
+    )] //TODO try to use seed
+    pub position: AccountLoader<'info, Position>,
     #[account(mut)]
     pub incentive: Loader<'info, Incentive>,
     pub owner: Signer<'info>,
+    pub amm: Program<'info, Amm>,
     pub system_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
 }
