@@ -36,9 +36,10 @@ pub mod amm {
         fee: u64,
         tick_spacing: u64,
     ) -> ProgramResult {
-        let pool = &mut ctx.accounts.pool.load_init()?;
+        let mut pool = ctx.accounts.pool.load_init()?;
+        let current_timestamp = Clock::get()?.unix_timestamp;
 
-        **pool = Pool {
+        *pool = Pool {
             token_x: *ctx.accounts.token_x.key,
             token_y: *ctx.accounts.token_y.key,
             token_x_reserve: *ctx.accounts.token_x_reserve.key,
@@ -56,13 +57,12 @@ pub mod amm {
             fee_protocol_token_y: Decimal::new(0),
             position_iterator: 0,
             seconds_per_liquidity_global: Decimal::new(0),
-            start_timestamp: Clock::get()?.unix_timestamp,
-            last_timestamp: Clock::get()?.unix_timestamp,
+            start_timestamp: current_timestamp,
+            last_timestamp: current_timestamp,
             bump: bump,
             nonce: nonce,
             authority: *ctx.accounts.program_authority.key,
         };
-
         Ok(())
     }
 
