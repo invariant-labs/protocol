@@ -26,15 +26,12 @@ impl Pool {
     }
 
     pub fn update_seconds_per_liquidity_global(self: &mut Self, current_timestamp: UnixTimestamp) {
-        let time_passed_past: u128 = (self.last_timestamp - self.start_timestamp)
-            .try_into()
-            .unwrap();
-        let time_passed_current: u128 = (current_timestamp - self.start_timestamp)
-            .try_into()
-            .unwrap();
+        let time_passed_past = (self.last_timestamp - self.start_timestamp) as u64;
+        let time_passed_current = (current_timestamp - self.start_timestamp) as u64;
 
         self.seconds_per_liquidity_global = self.seconds_per_liquidity_global
-            + (Decimal::from_integer(time_passed_current - time_passed_past) / self.liquidity);
+            + (Decimal::from_integer((time_passed_current - time_passed_past) as u128)
+                / self.liquidity);
 
         self.last_timestamp = current_timestamp;
     }
@@ -262,7 +259,7 @@ pub fn calculate_seconds_between_ticks(
     start_timestamp: UnixTimestamp,
     current_timestamp: UnixTimestamp,
 ) -> u64 {
-    let seconds_passed: u64 = (current_timestamp - start_timestamp).try_into().unwrap();
+    let seconds_passed: u64 = (current_timestamp - start_timestamp) as u64;
 
     let current_above_lower = tick_current >= tick_lower.index;
     let current_below_upper = tick_current < tick_upper.index;
