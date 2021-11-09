@@ -1,5 +1,4 @@
 use crate::uint::U256;
-use std::ops::Div;
 
 use crate::decimal::{Decimal, MulUp};
 use crate::tickmap::MAX_TICK;
@@ -306,6 +305,8 @@ fn get_next_sqrt_price_y_down(
 
 #[cfg(test)]
 mod tests {
+    use std::ops::Div;
+
     use super::*;
 
     #[test]

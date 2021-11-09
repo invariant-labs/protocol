@@ -12,16 +12,16 @@ import {
   Signer
 } from '@solana/web3.js'
 import { findInitialized, isInitialized } from './math'
-import { SEED, signAndSend, tou64 } from './utils'
+import { feeToTickSpacing, SEED, signAndSend, tou64 } from './utils'
 import idl from './idl/amm.json'
 import { IWallet, Pair } from '.'
 import { getMarketAddress } from './network'
 
-// import { Amm } from './idl/amm'
 import { Network } from './network'
 const POSITION_SEED = 'positionv1'
 const TICK_SEED = 'tickv1'
 const POSITION_LIST_SEED = 'positionlistv1'
+const FEE_TIER = 'feetierv1'
 export const DEFAULT_PUBLIC_KEY = new PublicKey(0)
 
 // in initializable ticks
@@ -30,6 +30,12 @@ const RANGE_IN_OTHER_DIRECTION = 2
 
 export interface Decimal {
   v: BN
+}
+
+export interface FeeTierStructure {
+  fee: Decimal
+  tickSpacing: number
+  bump: number
 }
 
 export interface PoolStructure {
@@ -71,8 +77,10 @@ export class Market {
     this.program = new Program(idl as any, programAddress, provider)
   }
 
-  async create({ pair, signer, initTick, fee, tickSpacing }: CreatePool) {
+  async create({ pair, signer, initTick, feeTier }: CreatePool) {
+    const { fee, tickSpacing } = feeTier
     const tick = initTick || 0
+    const ts = tickSpacing ?? feeToTickSpacing(fee)
 
     const [programAuthority, nonce] = await PublicKey.findProgramAddress(
       [Buffer.from(SEED)],
@@ -80,6 +88,7 @@ export class Market {
     )
 
     const [poolAddress, bump] = await pair.getAddressAndBump(this.program.programId)
+    const { address: feeTierAddress } = await this.getFeeTierAddress(feeTier)
 
     const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, signer)
     const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, signer)
@@ -87,11 +96,12 @@ export class Market {
     const tokenXReserve = await tokenX.createAccount(programAuthority)
     const tokenYReserve = await tokenY.createAccount(programAuthority)
 
-    const bitmapKeypair = await Keypair.generate()
+    const bitmapKeypair = Keypair.generate()
 
-    await this.program.rpc.create(bump, nonce, tick, new BN(fee), new BN(tickSpacing), {
+    await this.program.rpc.create(bump, nonce, tick, fee, ts, {
       accounts: {
         pool: poolAddress,
+        feeTier: feeTierAddress,
         tickmap: bitmapKeypair.publicKey,
         tokenX: tokenX.publicKey,
         tokenY: tokenY.publicKey,
@@ -112,6 +122,11 @@ export class Market {
     return (await this.program.account.pool.fetch(address)) as PoolStructure
   }
 
+  async getFeeTier(feeTier: FeeTier) {
+    const { address } = await this.getFeeTierAddress(feeTier)
+    return (await this.program.account.feeTier.fetch(address)) as FeeTierStructure
+  }
+
   async getPool(tokenX: PublicKey, tokenY: PublicKey) {
     const address = await new Pair(tokenX, tokenY).getAddress(this.program.programId)
     return (await this.program.account.pool.fetch(address)) as PoolStructure
@@ -129,6 +144,29 @@ export class Market {
       .on('change', (poolStructure: PoolStructure) => {
         fn(poolStructure)
       })
+  }
+
+  async getFeeTierAddress({ fee, tickSpacing }: FeeTier) {
+    const ts = tickSpacing ?? feeToTickSpacing(fee)
+    const tickSpacingBuffer = Buffer.alloc(2)
+    const feeBuffer = Buffer.alloc(8)
+    tickSpacingBuffer.writeUInt16LE(ts)
+    feeBuffer.writeBigUInt64LE(BigInt(fee.toString()))
+
+    const [address, bump] = await PublicKey.findProgramAddress(
+      [
+        Buffer.from(utils.bytes.utf8.encode(FEE_TIER)),
+        this.program.programId.toBuffer(),
+        feeBuffer,
+        tickSpacingBuffer
+      ],
+      this.program.programId
+    )
+
+    return {
+      address,
+      bump
+    }
   }
 
   async getTickmap(pair: Pair) {
@@ -233,12 +271,31 @@ export class Market {
     return this.getPositionAddress(owner, positionList.head)
   }
 
+  async createFeeTierInstruction(feeTier: FeeTier, payer: PublicKey) {
+    const { fee, tickSpacing } = feeTier
+    const { address, bump } = await this.getFeeTierAddress(feeTier)
+    const ts = tickSpacing ?? feeToTickSpacing(fee)
+
+    return this.program.instruction.createFeeTier(bump, fee, ts, {
+      accounts: {
+        feeTier: address,
+        payer,
+        rent: SYSVAR_RENT_PUBKEY,
+        systemProgram: SystemProgram.programId
+      }
+    })
+  }
+  async createFeeTier(feeTier: FeeTier, payer: Keypair) {
+    const ix = await this.createFeeTierInstruction(feeTier, payer.publicKey)
+    signAndSend(new Transaction().add(ix), [payer], this.connection)
+  }
+
   async createTickInstruction(pair: Pair, index: number, payer: PublicKey) {
     const state = await this.get(pair)
 
     const { tickAddress, tickBump } = await this.getTickAddress(pair, index)
 
-    return (await this.program.instruction.createTick(tickBump, index, {
+    return this.program.instruction.createTick(tickBump, index, {
       accounts: {
         tick: tickAddress,
         pool: await pair.getAddress(this.program.programId),
@@ -249,7 +306,7 @@ export class Market {
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId
       }
-    })) as TransactionInstruction
+    }) as TransactionInstruction
   }
 
   async createTick(pair: Pair, index: number, payer: Keypair) {
@@ -645,8 +702,12 @@ export interface CreatePool {
   pair: Pair
   signer: Keypair
   initTick?: number
-  fee: number
-  tickSpacing: number
+  feeTier: FeeTier
+}
+
+export interface FeeTier {
+  fee: BN
+  tickSpacing?: number
 }
 
 export interface ClaimFee {
