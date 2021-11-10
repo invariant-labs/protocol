@@ -10,7 +10,7 @@ import {
 } from '@solana/web3.js'
 import { FeeTier, FEE_TIER } from './market'
 
-export const SEED = 'Swapline'
+export const SEED = 'Invariant'
 export const DECIMAL = 12
 export const FEE_DECIMAL = 5
 export const DENOMINATOR = new BN(10).pow(new BN(DECIMAL))
@@ -83,6 +83,21 @@ export const feeToTickSpacing = (fee: BN): number => {
   // tickSpacing = fee * 10^4
   const FEE_TO_SPACING_OFFSET = new BN(10).pow(new BN(DECIMAL - 4))
   return fee.muln(2).div(FEE_TO_SPACING_OFFSET).toNumber()
+}
+
+export const generateTicksArray = (start: number, stop: number, step: number) => {
+  const validDir = (start > stop && step < 0) || (start < stop && step > 0)
+  const validMod = start % step === 0 && stop % step === 0
+
+  if (!validDir || !validMod) {
+    throw new Error('Invalid parameters')
+  }
+
+  const ticks: Array<number> = []
+  for (let i = start; i <= stop; i += step) {
+    ticks.push(i)
+  }
+  return ticks
 }
 
 export const getFeeTierAddress = async ({ fee, tickSpacing }: FeeTier, programId: PublicKey) => {

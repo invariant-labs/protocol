@@ -18,7 +18,7 @@ use tickmap::*;
 use util::{close, cross_tick, get_closer_limit};
 
 declare_id!("FPr3fREovDnqMfubJTrJAFwopvJB8grXj1o3gkmSyzmw");
-const SEED: &str = "Swapline";
+const SEED: &str = "Invariant";
 
 #[program]
 pub mod amm {

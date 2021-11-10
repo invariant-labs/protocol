@@ -12,7 +12,15 @@ import {
   Signer
 } from '@solana/web3.js'
 import { findInitialized, isInitialized } from './math'
-import { feeToTickSpacing, getFeeTierAddress, SEED, signAndSend, tou64 } from './utils'
+import {
+  feeToTickSpacing,
+  fromFee,
+  generateTicksArray,
+  getFeeTierAddress,
+  SEED,
+  signAndSend,
+  tou64
+} from './utils'
 import idl from './idl/amm.json'
 import { IWallet, Pair } from '.'
 import { getMarketAddress } from './network'
@@ -294,6 +302,16 @@ export class Market {
   async createTick(pair: Pair, index: number, payer: Keypair) {
     const lowerIx = await this.createTickInstruction(pair, index, payer.publicKey)
     await signAndSend(new Transaction().add(lowerIx), [payer], this.connection)
+  }
+
+  async createTicksFromRange(pair: Pair, payer: Keypair, start: number, stop: number) {
+    const step = pair.feeTier.tickSpacing ?? feeToTickSpacing(pair.feeTier.fee)
+
+    Promise.all(
+      generateTicksArray(start, stop, step).map(async (tick) => {
+        await this.createTick(pair, tick, payer)
+      })
+    )
   }
 
   async createPositionListInstruction(owner: PublicKey) {
