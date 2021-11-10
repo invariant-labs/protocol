@@ -310,6 +310,7 @@ pub mod amm {
             upper_tick_index: upper_tick.index,
             fee_growth_inside_x: Decimal::new(0),
             fee_growth_inside_y: Decimal::new(0),
+            seconds_per_liquidity_inside: Decimal::new(0),
             tokens_owed_x: Decimal::new(0),
             tokens_owed_y: Decimal::new(0),
             bump: bump,
@@ -407,6 +408,7 @@ pub mod amm {
                 upper_tick_index: last_position.upper_tick_index,
                 fee_growth_inside_x: last_position.fee_growth_inside_x,
                 fee_growth_inside_y: last_position.fee_growth_inside_y,
+                seconds_per_liquidity_inside: last_position.seconds_per_liquidity_inside,
                 tokens_owed_x: last_position.tokens_owed_x,
                 tokens_owed_y: last_position.tokens_owed_y,
             };

@@ -752,11 +752,11 @@
           },
           {
             "name": "startTimestamp",
-            "type": "i64"
+            "type": "u64"
           },
           {
             "name": "lastTimestamp",
-            "type": "i64"
+            "type": "u64"
           },
           {
             "name": "bump",
@@ -905,6 +905,12 @@
           },
           {
             "name": "feeGrowthInsideY",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "secondsPerLiquidityInside",
             "type": {
               "defined": "Decimal"
             }

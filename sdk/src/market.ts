@@ -671,6 +671,7 @@ export interface Position {
   upperTickIndex: number
   feeGrowthInsideX: Decimal
   feeGrowthInsideY: Decimal
+  secondsPerLiquidityInside: Decimal
   tokensOwedX: Decimal
   tokensOwedY: Decimal
   bump: number

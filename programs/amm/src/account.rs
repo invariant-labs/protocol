@@ -93,6 +93,7 @@ pub struct Position {
     pub upper_tick_index: i32,
     pub fee_growth_inside_x: Decimal,
     pub fee_growth_inside_y: Decimal,
+    pub seconds_per_liquidity_inside: Decimal,
     pub tokens_owed_x: Decimal,
     pub tokens_owed_y: Decimal,
     pub bump: u8,
