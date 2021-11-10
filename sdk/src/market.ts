@@ -641,6 +641,31 @@ export class Market {
       }
     }) as TransactionInstruction
   }
+
+  async updateSecondsPerLiquidityInstruction({
+    pair,
+    owner,
+    lowerTickIndex,
+    upperTickIndex
+  }: SecondsPerLiquidity) {
+    const positionList = await this.getPositionList(owner)
+    const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTickIndex)
+    const { tickAddress: upperTickAddress } = await this.getTickAddress(pair, upperTickIndex)
+    const poolAddress = await pair.getAddress(this.program.programId)
+
+    return this.program.instruction.updateSecondsPerLiquidity(lowerTickIndex, upperTickIndex, {
+      accounts: {
+        pool: poolAddress,
+        lowerTick: lowerTickAddress,
+        upperTick: upperTickAddress,
+        tokenX: pair.tokenX,
+        tokenY: pair.tokenY,
+        owner,
+        rent: SYSVAR_RENT_PUBKEY,
+        systemProgram: SystemProgram.programId
+      }
+    }) as TransactionInstruction
+  }
 }
 
 export interface Decimal {
@@ -726,4 +751,10 @@ export interface ClaimFee {
   userTokenX: PublicKey
   userTokenY: PublicKey
   index: number
+}
+export interface SecondsPerLiquidity {
+  pair: Pair
+  owner: PublicKey
+  lowerTickIndex: number
+  upperTickIndex: number
 }

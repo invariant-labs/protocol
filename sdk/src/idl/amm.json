@@ -634,6 +634,61 @@
           "type": "i32"
         }
       ]
+    },
+    {
+      "name": "updateSecondsPerLiquidity",
+      "accounts": [
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "lowerTick",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "upperTick",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenX",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenY",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "lowerTickIndex",
+          "type": "i32"
+        },
+        {
+          "name": "upperTickIndex",
+          "type": "i32"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -916,6 +971,10 @@
             }
           },
           {
+            "name": "lastSlot",
+            "type": "u64"
+          },
+          {
             "name": "tokensOwedX",
             "type": {
               "defined": "Decimal"
@@ -1030,8 +1089,5 @@
       "name": "PositionWithoutLiquidity",
       "msg": "Position liquidity would be zero"
     }
-  ],
-  "metadata": {
-    "address": "FPr3fREovDnqMfubJTrJAFwopvJB8grXj1o3gkmSyzmw"
-  }
+  ]
 }

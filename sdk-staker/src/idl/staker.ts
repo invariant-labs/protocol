@@ -142,7 +142,12 @@ export type Staker = {
           "isSigner": false
         },
         {
-          "name": "userTokenAccount",
+          "name": "ownerTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "position",
           "isMut": true,
           "isSigner": false
         },
@@ -152,12 +157,17 @@ export type Staker = {
           "isSigner": false
         },
         {
-          "name": "user",
+          "name": "owner",
           "isMut": false,
           "isSigner": true
         },
         {
           "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "amm",
           "isMut": false,
           "isSigner": false
         },
@@ -173,6 +183,10 @@ export type Staker = {
         }
       ],
       "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        },
         {
           "name": "nonce",
           "type": "u8"
@@ -320,6 +334,16 @@ export type Staker = {
       "code": 307,
       "name": "ZeroLiquidity",
       "msg": "User have no liquidity"
+    },
+    {
+      "code": 308,
+      "name": "SlotsAreNotEqual",
+      "msg": "Slots are not equal"
+    },
+    {
+      "code": 309,
+      "name": "ZeroSecondsStaked",
+      "msg": "Zero seconds staked"
     }
   ]
 };
@@ -468,7 +492,12 @@ export const IDL: Staker = {
           "isSigner": false
         },
         {
-          "name": "userTokenAccount",
+          "name": "ownerTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "position",
           "isMut": true,
           "isSigner": false
         },
@@ -478,12 +507,17 @@ export const IDL: Staker = {
           "isSigner": false
         },
         {
-          "name": "user",
+          "name": "owner",
           "isMut": false,
           "isSigner": true
         },
         {
           "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "amm",
           "isMut": false,
           "isSigner": false
         },
@@ -499,6 +533,10 @@ export const IDL: Staker = {
         }
       ],
       "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        },
         {
           "name": "nonce",
           "type": "u8"
@@ -646,6 +684,16 @@ export const IDL: Staker = {
       "code": 307,
       "name": "ZeroLiquidity",
       "msg": "User have no liquidity"
+    },
+    {
+      "code": 308,
+      "name": "SlotsAreNotEqual",
+      "msg": "Slots are not equal"
+    },
+    {
+      "code": 309,
+      "name": "ZeroSecondsStaked",
+      "msg": "Zero seconds staked"
     }
   ]
 };

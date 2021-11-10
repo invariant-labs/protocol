@@ -14,6 +14,7 @@ use account::*;
 use context::*;
 use decimal::*;
 use math::*;
+use position::calculate_seconds_per_liquidity_inside;
 use tickmap::*;
 use util::{close, cross_tick, get_closer_limit};
 
@@ -292,6 +293,7 @@ pub mod amm {
         let upper_tick = &mut ctx.accounts.upper_tick.load_mut()?;
         let mut position_list = ctx.accounts.position_list.load_mut()?;
         let current_timestamp = Clock::get()?.unix_timestamp as u64;
+        let slot = Clock::get()?.slot;
 
         // validate ticks
         check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
@@ -311,6 +313,7 @@ pub mod amm {
             fee_growth_inside_x: Decimal::new(0),
             fee_growth_inside_y: Decimal::new(0),
             seconds_per_liquidity_inside: Decimal::new(0),
+            last_slot: slot,
             tokens_owed_x: Decimal::new(0),
             tokens_owed_y: Decimal::new(0),
             bump: bump,
@@ -409,6 +412,7 @@ pub mod amm {
                 fee_growth_inside_x: last_position.fee_growth_inside_x,
                 fee_growth_inside_y: last_position.fee_growth_inside_y,
                 seconds_per_liquidity_inside: last_position.seconds_per_liquidity_inside,
+                last_slot: last_position.last_slot,
                 tokens_owed_x: last_position.tokens_owed_x,
                 tokens_owed_y: last_position.tokens_owed_y,
             };
@@ -512,6 +516,20 @@ pub mod amm {
         token::transfer(cpi_ctx_x, fee_to_collect_x)?;
         token::transfer(cpi_ctx_y, fee_to_collect_y)?;
 
+        Ok(())
+    }
+
+    pub fn update_seconds_per_liquidity(
+        ctx: Context<UpdateSecondsPerLiquitity>,
+        lower_tick_index: i32,
+        upper_tick_index: i32,
+    ) -> ProgramResult {
+        let pool = &mut ctx.accounts.pool.load_mut()?;
+        let lower_tick = *ctx.accounts.lower_tick.load()?;
+        let upper_tick = *ctx.accounts.upper_tick.load()?;
+        let current_time = Clock::get().unwrap().unix_timestamp as u64;
+
+        calculate_seconds_per_liquidity_inside(lower_tick, upper_tick, pool, current_time);
         Ok(())
     }
 }

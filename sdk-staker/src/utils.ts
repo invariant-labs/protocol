@@ -33,5 +33,5 @@ export const signAndSend = async (
   tx.recentBlockhash = blockhash.blockhash
   tx.partialSign(...signers)
   const rawTx = tx.serialize()
-  return await sendAndConfirmRawTransaction(connection, rawTx, opts || Provider.defaultOptions())
+  return await sendAndConfirmRawTransaction(connection, rawTx)
 }

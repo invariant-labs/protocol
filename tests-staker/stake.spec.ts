@@ -183,6 +183,13 @@ describe('Stake tests', () => {
     )
 
     //stake
+    const ixUpdate = await market.updateSecondsPerLiquidityInstruction({
+      pair: pair,
+      owner: positionOwner.publicKey,
+      lowerTickIndex: lowerTick,
+      upperTickIndex: upperTick
+    })
+
     const ixStake = await staker.stakeInstruction({
       index: index,
       position: position,
@@ -190,14 +197,16 @@ describe('Stake tests', () => {
       owner: positionOwner.publicKey,
       amm: amm
     })
-    await signAndSend(new Transaction().add(ixStake), [positionOwner], connection)
+    await signAndSend(new Transaction().add(ixUpdate).add(ixStake), [positionOwner], connection)
 
     const stake = await staker.getStake(positionOwner.publicKey)
+    let positionStruct = await market.getPosition(positionOwner.publicKey, index)
     const liquidity: Decimal = { v: new BN(liquidityDelta.v) }
 
     assert.ok(stake.position.equals(position))
     assert.ok(stake.owner.equals(positionOwner.publicKey))
     assert.ok(stake.incentive.equals(incentiveAccount.publicKey))
+    assert.ok(eqDecimal(stake.secondsPerLiquidityInitial, positionStruct.secondsPerLiquidityInside))
     assert.ok(eqDecimal(stake.liquidity, liquidity))
   })
 })

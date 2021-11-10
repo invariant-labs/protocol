@@ -332,11 +332,12 @@ pub fn calculate_amount_delta(
 pub fn calculate_seconds_per_liquidity_inside(
     tick_lower: Tick,
     tick_upper: Tick,
-    tick_current: i32,
     pool: &mut Pool,
     current_timestamp: u64,
 ) -> Decimal {
     pool.update_seconds_per_liquidity_global(current_timestamp);
+
+    let tick_current = pool.current_tick_index;
 
     let current_above_lower = tick_current >= tick_lower.index;
     let current_below_upper = tick_current < tick_upper.index;
@@ -936,11 +937,10 @@ mod tests {
         let current_timestamp = 100;
 
         {
-            let tick_current = -10;
+            pool.current_tick_index = -10;
             let seconds_per_liquidity_inside = calculate_seconds_per_liquidity_inside(
                 tick_lower,
                 tick_upper,
-                tick_current,
                 &mut pool,
                 current_timestamp,
             );
@@ -948,11 +948,10 @@ mod tests {
         }
 
         {
-            let tick_current = 0;
+            pool.current_tick_index = 0;
             let seconds_per_liquidity_inside = calculate_seconds_per_liquidity_inside(
                 tick_lower,
                 tick_upper,
-                tick_current,
                 &mut pool,
                 current_timestamp,
             );
@@ -962,11 +961,10 @@ mod tests {
         {
             tick_lower.seconds_per_liquidity_outside = Decimal::new(2012333200);
             tick_upper.seconds_per_liquidity_outside = Decimal::new(3012333310);
-            let tick_current = 20;
+            pool.current_tick_index = 20;
             let seconds_per_liquidity_inside = calculate_seconds_per_liquidity_inside(
                 tick_lower,
                 tick_upper,
-                tick_current,
                 &mut pool,
                 current_timestamp,
             );

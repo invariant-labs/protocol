@@ -19,8 +19,6 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 #[program]
 pub mod staker {
 
-    use crate::decimal::Decimal;
-
     use super::*;
 
     pub fn create_incentive(
@@ -64,6 +62,10 @@ pub mod staker {
 
         let user_stake = &mut ctx.accounts.user_stake.load_init()?;
         let position = ctx.accounts.position.load()?;
+        let update_slot = position.last_slot as i64;
+        let slot = Clock::get()?.slot as i64;
+        let diff_slot = slot - update_slot;
+        require!(diff_slot <= 1, SlotsAreNotEqual);
 
         {
             user_stake.position = *ctx.accounts.position.to_account_info().key;
@@ -71,7 +73,8 @@ pub mod staker {
             user_stake.timestamp = Clock::get().unwrap().unix_timestamp as u64;
             user_stake.liquidity = Decimal::new(position.liquidity.v);
             user_stake.incentive = *ctx.accounts.incentive.to_account_info().key;
-            user_stake.seconds_per_liquidity_initial = Decimal::from_integer(0); //TODO add fun to callculate it from tick map
+            user_stake.seconds_per_liquidity_initial =
+                Decimal::new(position.seconds_per_liquidity_inside.v);
             user_stake.index = index;
             user_stake.bump = bump;
             incentive.num_of_stakes += 1;
@@ -81,15 +84,21 @@ pub mod staker {
         Ok(())
     }
 
-    // DRAFT
-    pub fn withdraw(ctx: Context<Withdraw>, nonce: u8) -> ProgramResult {
+    pub fn withdraw(ctx: Context<Withdraw>, bump: u8, nonce: u8) -> ProgramResult {
         let user_stake = &mut ctx.accounts.user_stake.load_mut()?;
+        let position = ctx.accounts.position.load()?;
         let mut incentive = ctx.accounts.incentive.load_mut()?;
         let current_time = Clock::get().unwrap().unix_timestamp as u64;
-        let seconds_per_liquidity_inside: Decimal = Decimal::from_integer(0); // TODO add fun to callculate it from tick map
+        let update_slot = position.last_slot as i64;
+        let slot = Clock::get()?.slot as i64;
+        let diff_slot = slot - update_slot;
+        //require!(diff_slot <= 1, SlotsAreNotEqual);
+        //require!(user_stake.liquidity.v != 0, ZeroSecondsStaked);
+        let seconds_per_liquidity_inside: Decimal =
+            Decimal::new(position.seconds_per_liquidity_inside.v);
         let reward = incentive.total_reward_unclaimed;
 
-        require!(reward != Decimal::from_integer(0), ZeroAmount);
+        //require!(reward != Decimal::from_integer(0), ZeroAmount);
 
         let (seconds_inside, reward) = calculate_reward(
             incentive.total_reward_unclaimed,
@@ -144,4 +153,8 @@ pub enum ErrorCode {
     Ended = 6,
     #[msg("User have no liquidity")]
     ZeroLiquidity = 7,
+    #[msg("Slots are not equal")]
+    SlotsAreNotEqual = 8,
+    #[msg("Zero seconds staked")]
+    ZeroSecondsStaked = 9,
 }

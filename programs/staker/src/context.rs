@@ -74,23 +74,34 @@ pub struct CreateUserStake<'info> {
 #[instruction(bump: u8)]
 pub struct Withdraw<'info> {
     #[account(
-        seeds = [b"userstakev1", user.to_account_info().key.as_ref(), system_program.to_account_info().key.as_ref()],
+        seeds = [b"userstakev1", owner.to_account_info().key.as_ref(), system_program.to_account_info().key.as_ref()],
         bump = bump)]
     pub user_stake: Loader<'info, UserStake>,
-    #[account(mut)]
+    #[account(mut,
+        constraint = &user_stake.load()?.incentive == incentive.to_account_info().key 
+    )]
     pub incentive: Loader<'info, Incentive>,
     #[account(mut,
         constraint = &incentive_token_account.owner == staker_authority.to_account_info().key
     )]
     pub incentive_token_account: Account<'info, TokenAccount>,
     #[account(mut,
-        constraint = user_token_account.to_account_info().key != incentive_token_account.to_account_info().key,
-        constraint = &user_token_account.owner == user.to_account_info().key
+        constraint = owner_token_account.to_account_info().key != incentive_token_account.to_account_info().key,
+        constraint = &owner_token_account.owner == owner.to_account_info().key
     )]
-    pub user_token_account: Account<'info, TokenAccount>,
+    pub owner_token_account: Account<'info, TokenAccount>,
+    #[account(mut,
+        constraint = owner.key == &position.load()?.owner
+        // seeds = [b"positionv1",
+        // owner.to_account_info().key.as_ref(),
+        // &index.to_le_bytes()],
+        // bump = position.load()?.bump
+    )] //TODO try to use seed
+    pub position: AccountLoader<'info, Position>,
     pub staker_authority: AccountInfo<'info>, // TODO validation with seed
-    pub user: Signer<'info>,
+    pub owner: Signer<'info>,
     pub token_program: AccountInfo<'info>,
+    pub amm: Program<'info, Amm>,
     pub system_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
 }
@@ -105,7 +116,7 @@ impl<'info> WithdrawToken<'info> for Withdraw<'info> {
             self.token_program.to_account_info(),
             Transfer {
                 from: self.incentive_token_account.to_account_info(),
-                to: self.user_token_account.to_account_info(),
+                to: self.owner_token_account.to_account_info(),
                 authority: self.staker_authority.to_account_info().clone(),
             },
         )

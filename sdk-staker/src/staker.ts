@@ -119,23 +119,30 @@ export class Staker {
   }
 
   public async withdrawInstruction({
-    stakeAddress,
     incentive,
     stakerAuthority,
     incentiveTokenAcc,
-    userTokenAcc,
-    user,
+    ownerTokenAcc,
+    position,
+    owner,
+    amm,
     nonce
   }: Withdraw) {
-    return (await this.program.instruction.stake(nonce, {
+    const [userStakeAddress, userStakeBump] = await PublicKey.findProgramAddress(
+      [Buffer.from(utils.bytes.utf8.encode(STAKER_SEED)), owner.toBuffer()],
+      this.programId
+    )
+    return (await this.program.instruction.withdraw(userStakeBump, nonce, {
       accounts: {
-        userStake: stakeAddress,
+        userStake: userStakeAddress,
         incentive: incentive,
         incentiveTokenAccount: incentiveTokenAcc,
-        useerTokenAccount: userTokenAcc,
+        ownerTokenAccount: ownerTokenAcc,
+        position: position,
         stakerAuthority: stakerAuthority,
-        user: user,
+        owner: owner,
         tokenProgram: TOKEN_PROGRAM_ID,
+        amm: amm,
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY
       }
@@ -165,17 +172,19 @@ export interface Stake {
   position: PublicKey
   incentive: PublicKey
   liquidity: Decimal
+  secondsPerLiquidityInitial: Decimal
   owner: PublicKey
   amm: PublicKey
   index: number
 }
 export interface Withdraw {
-  stakeAddress: PublicKey
   incentive: PublicKey
   stakerAuthority: PublicKey
   incentiveTokenAcc: PublicKey
-  userTokenAcc: PublicKey
-  user: PublicKey
+  ownerTokenAcc: PublicKey
+  position: PublicKey
+  owner: PublicKey
+  amm: PublicKey
   nonce: number
 }
 export interface IncentiveStructure {
