@@ -9,7 +9,7 @@ export class Pair {
   public tokenX: PublicKey
   public tokenY: PublicKey
   public feeTier: FeeTier
-  public feeTierAddress: PublicKey
+  public feeTierAddress: PublicKey | null
   constructor(first: PublicKey, second: PublicKey, feeTier: FeeTier) {
     if (first.equals(second)) {
       throw new Error('Pair must contain two unique public keys')
@@ -23,6 +23,7 @@ export class Pair {
       this.tokenY = first
     }
     this.feeTier = feeTier
+    this.feeTierAddress = null
   }
 
   async getAddressAndBump(programId: PublicKey): Promise<[PublicKey, number]> {

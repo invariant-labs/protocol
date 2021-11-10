@@ -70,11 +70,10 @@ export class Market {
   constructor(network: Network, wallet: IWallet, connection: Connection, programId?: PublicKey) {
     this.connection = connection
     this.wallet = wallet
-
-    const programAddress = Network.LOCAL ? programId : new PublicKey(getMarketAddress(network))
-
+    const programAddress = new PublicKey(getMarketAddress(network))
     const provider = new Provider(connection, wallet, Provider.defaultOptions())
-    this.program = new Program(idl as any, programAddress, provider)
+
+    this.program = new Program(idl as Idl, programAddress, provider)
   }
 
   async create({ pair, signer, initTick, feeTier }: CreatePool) {
@@ -127,8 +126,8 @@ export class Market {
     return (await this.program.account.feeTier.fetch(address)) as FeeTierStructure
   }
 
-  async getPool(tokenX: PublicKey, tokenY: PublicKey, feeTier: FeeTier) {
-    const address = await new Pair(tokenX, tokenY, feeTier).getAddress(this.program.programId)
+  async getPool(pair: Pair) {
+    const address = await pair.getAddress(this.program.programId)
     return (await this.program.account.pool.fetch(address)) as PoolStructure
   }
 
