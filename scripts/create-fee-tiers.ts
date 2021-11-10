@@ -1,8 +1,8 @@
+import { Market, Network } from '@invariant-labs/sdk/src'
 import * as anchor from '@project-serum/anchor'
 import { Provider } from '@project-serum/anchor'
-import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
-import { FEE_TIERS, MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
-import { Market, Pair } from '@invariant-labs/sdk/src'
+import { clusterApiUrl, Keypair } from '@solana/web3.js'
+import { createStandardFeeTiers } from '../tests/testUtils'
 require('dotenv').config()
 
 const provider = Provider.local(clusterApiUrl('devnet'), {
@@ -15,13 +15,6 @@ const market = new Market(Network.DEV, provider.wallet, connection)
 const wallet = provider.wallet.payer as Keypair
 
 const main = async () => {
-  const feeTier = FEE_TIERS[0]
-  const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.USDT), feeTier)
-
-  await market.create({
-    pair,
-    signer: wallet,
-    feeTier
-  })
+  await createStandardFeeTiers(market, wallet)
 }
 main()

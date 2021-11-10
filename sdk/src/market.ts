@@ -12,7 +12,15 @@ import {
   Signer
 } from '@solana/web3.js'
 import { findInitialized, isInitialized } from './math'
-import { feeToTickSpacing, SEED, signAndSend, tou64 } from './utils'
+import {
+  feeToTickSpacing,
+  fromFee,
+  generateTicksArray,
+  getFeeTierAddress,
+  SEED,
+  signAndSend,
+  tou64
+} from './utils'
 import idl from './idl/amm.json'
 import { IWallet, Pair } from '.'
 import { getMarketAddress } from './network'
@@ -21,7 +29,7 @@ import { Network } from './network'
 const POSITION_SEED = 'positionv1'
 const TICK_SEED = 'tickv1'
 const POSITION_LIST_SEED = 'positionlistv1'
-const FEE_TIER = 'feetierv1'
+export const FEE_TIER = 'feetierv1'
 export const DEFAULT_PUBLIC_KEY = new PublicKey(0)
 
 // in initializable ticks
@@ -70,11 +78,10 @@ export class Market {
   constructor(network: Network, wallet: IWallet, connection: Connection, programId?: PublicKey) {
     this.connection = connection
     this.wallet = wallet
-
-    const programAddress = Network.LOCAL ? programId : new PublicKey(getMarketAddress(network))
-
+    const programAddress = new PublicKey(getMarketAddress(network))
     const provider = new Provider(connection, wallet, Provider.defaultOptions())
-    this.program = new Program(idl as any, programAddress, provider)
+
+    this.program = new Program(idl as Idl, programAddress, provider)
   }
 
   async create({ pair, signer, initTick, feeTier }: CreatePool) {
@@ -127,17 +134,18 @@ export class Market {
     return (await this.program.account.feeTier.fetch(address)) as FeeTierStructure
   }
 
-  async getPool(tokenX: PublicKey, tokenY: PublicKey) {
-    const address = await new Pair(tokenX, tokenY).getAddress(this.program.programId)
+  async getPool(pair: Pair) {
+    const address = await pair.getAddress(this.program.programId)
     return (await this.program.account.pool.fetch(address)) as PoolStructure
   }
 
   public async onPoolChange(
     tokenX: PublicKey,
     tokenY: PublicKey,
+    feeTier: FeeTier,
     fn: (poolStructure: PoolStructure) => void
   ) {
-    const poolAddress = await new Pair(tokenX, tokenY).getAddress(this.program.programId)
+    const poolAddress = await new Pair(tokenX, tokenY, feeTier).getAddress(this.program.programId)
 
     this.program.account.pool
       .subscribe(poolAddress, 'singleGossip')
@@ -146,27 +154,8 @@ export class Market {
       })
   }
 
-  async getFeeTierAddress({ fee, tickSpacing }: FeeTier) {
-    const ts = tickSpacing ?? feeToTickSpacing(fee)
-    const tickSpacingBuffer = Buffer.alloc(2)
-    const feeBuffer = Buffer.alloc(8)
-    tickSpacingBuffer.writeUInt16LE(ts)
-    feeBuffer.writeBigUInt64LE(BigInt(fee.toString()))
-
-    const [address, bump] = await PublicKey.findProgramAddress(
-      [
-        Buffer.from(utils.bytes.utf8.encode(FEE_TIER)),
-        this.program.programId.toBuffer(),
-        feeBuffer,
-        tickSpacingBuffer
-      ],
-      this.program.programId
-    )
-
-    return {
-      address,
-      bump
-    }
+  async getFeeTierAddress(feeTier: FeeTier) {
+    return await getFeeTierAddress(feeTier, this.program.programId)
   }
 
   async getTickmap(pair: Pair) {
@@ -294,8 +283,9 @@ export class Market {
     const state = await this.get(pair)
 
     const { tickAddress, tickBump } = await this.getTickAddress(pair, index)
+    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
 
-    return this.program.instruction.createTick(tickBump, index, {
+    return this.program.instruction.createTick(tickBump, feeTierAddress, index, {
       accounts: {
         tick: tickAddress,
         pool: await pair.getAddress(this.program.programId),
@@ -312,6 +302,16 @@ export class Market {
   async createTick(pair: Pair, index: number, payer: Keypair) {
     const lowerIx = await this.createTickInstruction(pair, index, payer.publicKey)
     await signAndSend(new Transaction().add(lowerIx), [payer], this.connection)
+  }
+
+  async createTicksFromRange(pair: Pair, payer: Keypair, start: number, stop: number) {
+    const step = pair.feeTier.tickSpacing ?? feeToTickSpacing(pair.feeTier.fee)
+
+    Promise.all(
+      generateTicksArray(start, stop, step).map(async (tick) => {
+        await this.createTick(pair, tick, payer)
+      })
+    )
   }
 
   async createPositionListInstruction(owner: PublicKey) {
@@ -354,9 +354,11 @@ export class Market {
     )
     const { positionListAddress } = await this.getPositionListAddress(owner)
     const poolAddress = await pair.getAddress(this.program.programId)
+    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
 
     return this.program.instruction.initPosition(
       positionBump,
+      feeTierAddress,
       lowerTick,
       upperTick,
       liquidityDelta,
@@ -430,6 +432,7 @@ export class Market {
   ) {
     const state = await this.get(pair)
     const tickmap = await this.getTickmap(pair)
+    const feeTier = await pair.getFeeTierAddress(this.program.programId)
 
     const [lowerBound, upperBound] = XtoY
       ? [-RANGE_IN_DIRECTION * state.tickSpacing, RANGE_IN_OTHER_DIRECTION * state.tickSpacing]
@@ -449,7 +452,7 @@ export class Market {
       })
     )
 
-    const swapIx = await this.program.instruction.swap(XtoY, amount, true, priceLimit, {
+    const swapIx = await this.program.instruction.swap(feeTier, XtoY, amount, true, priceLimit, {
       remainingAccounts: remainingAccounts.map((pubkey) => {
         return { pubkey, isWritable: true, isSigner: false }
       }),
@@ -498,8 +501,10 @@ export class Market {
       pair,
       position.upperTickIndex
     )
+    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
 
     return (await this.program.instruction.claimFee(
+      feeTierAddress,
       index,
       position.lowerTickIndex,
       position.upperTickIndex,
@@ -549,6 +554,7 @@ export class Market {
       owner,
       lastPositionIndex
     )
+    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
 
     const state = await this.get(pair)
     const position = await this.getPosition(owner, index)
@@ -563,6 +569,7 @@ export class Market {
     )
 
     return this.program.instruction.removePosition(
+      feeTierAddress,
       index,
       position.lowerTickIndex,
       position.upperTickIndex,

@@ -60,7 +60,7 @@ describe('withdraw', () => {
     nonce = _nonce
     programAuthority = _programAuthority
 
-    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey)
+    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })

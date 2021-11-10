@@ -18,10 +18,6 @@ const main = async () => {
   const feeTier = FEE_TIERS[0]
   const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.USDT), feeTier)
 
-  await market.create({
-    pair,
-    signer: wallet,
-    feeTier
-  })
+  await market.createTicksFromRange(pair, wallet, -24, 24)
 }
 main()
