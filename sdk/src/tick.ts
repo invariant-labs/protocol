@@ -1,15 +1,19 @@
 import { BN } from '@project-serum/anchor'
 import { Decimal } from './market'
+import { calculate_price_sqrt } from './math'
 
-// export const getLiquidityByX = (
-//   x: BN,
-//   lowerTick: number,
-//   upperTick: number,
-//   currentTick: number
-// ) => {
-//   // return L
-//   // return x
-// }
+export const getLiquidityByX = (
+  x: BN,
+  lowerTick: number,
+  upperTick: number,
+  currentTick: number
+) => {
+  const lowerSqrtPrice = calculate_price_sqrt(lowerTick)
+  const upperSqrtPrice = calculate_price_sqrt(upperTick)
+  const currentSqrtPrice = calculate_price_sqrt(currentTick)
+
+  return getLiquidityByXPrice(x, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice)
+}
 
 export const getLiquidityByXPrice = (
   x: BN,
