@@ -149,16 +149,27 @@ describe('Math', () => {
       const lowerTick = -25000
       const upperTick = -19000
 
-      const { liquidity: roundUpLiquidity, x: roundUpX } = getLiquidityByY(
+      // const { liquidity: roundUpLiquidity, x: roundUpX } = getLiquidityByY(
+      //   y,
+      //   lowerTick,
+      //   upperTick,
+      //   currentTick,
+      //   true
+      // )
+      const { liquidity: roundDownLiquidity, x: roundDownX } = getLiquidityByY(
         y,
         lowerTick,
         upperTick,
         currentTick,
-        true
+        false
       )
 
-      assert.ok(expectedL.v.eq(roundUpLiquidity.v))
+      // console.log(`roundUpX = ${roundUpX.toString()}`)
+      console.log(`roundDownX = ${roundDownX.toString()}`)
+      // assert.ok(expectedL.v.eq(roundUpLiquidity.v))
+      assert.ok(expectedL.v.eq(roundDownLiquidity.v))
       // assert.ok(expectedXRoundUp.eq(roundUpX))
+      assert.ok(expectedXRoundDown.eq(roundDownX))
     })
     it('above current tick', async () => {
       // error

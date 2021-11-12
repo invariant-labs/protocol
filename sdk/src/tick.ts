@@ -7,11 +7,23 @@ const mulUp = (a: BN, b: BN) => {
   return a.mul(b).add(DENOMINATOR.subn(1)).div(DENOMINATOR)
 }
 
+const divUp = (a: BN, b: BN) => {
+  return a.mul(DENOMINATOR).add(b).subn(1).div(b)
+}
+
 const calculateY = (priceDiff: BN, liquidity: BN, roundingUp: boolean) => {
   if (roundingUp) {
     return mulUp(priceDiff, liquidity)
   }
   return priceDiff.mul(liquidity).div(DENOMINATOR)
+}
+
+const calculateX = (nominator: BN, denominator: BN, liquidity: BN, roundingUp: boolean) => {
+  // let result: BN
+  // if (roundingUp) {
+  //   result = divUp(nominator, denominator)
+  // }
+  return liquidity.mul(nominator).div(denominator).div(DENOMINATOR)
 }
 
 export const getLiquidityByX = (
@@ -100,9 +112,19 @@ export const getLiquidityByYPrice = (
     }
   }
 
-  // TODO
+  const priceDiff = currentSqrtPrice.v.sub(lowerSqrtPrice.v)
+  const liquidity = y.mul(DENOMINATOR).mul(DENOMINATOR).div(priceDiff)
+
+  const denominator = currentSqrtPrice.v.mul(upperSqrtPrice.v).div(DENOMINATOR)
+  const nominator = upperSqrtPrice.v.sub(currentSqrtPrice.v)
+
+  console.log(`denominator = ${denominator.toString()}`)
+  console.log(`nominator = ${nominator.toString()}`)
+
+  const x = calculateX(nominator, denominator, liquidity, roundingUp)
+
   return {
-    liquidity: { v: new BN(0) },
-    x: new BN(0)
+    liquidity: { v: liquidity },
+    x
   }
 }
