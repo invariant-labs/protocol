@@ -12,15 +12,7 @@ import {
   Signer
 } from '@solana/web3.js'
 import { findInitialized, isInitialized } from './math'
-import {
-  feeToTickSpacing,
-  fromFee,
-  generateTicksArray,
-  getFeeTierAddress,
-  SEED,
-  signAndSend,
-  tou64
-} from './utils'
+import { feeToTickSpacing, generateTicksArray, getFeeTierAddress, SEED, signAndSend } from './utils'
 import idl from './idl/amm.json'
 import { IWallet, Pair } from '.'
 import { getMarketAddress } from './network'

@@ -10,15 +10,14 @@ import {
   signAndSend,
   calculate_price_sqrt,
   fromInteger,
-  Network,
-  FEE_TIERS
+  Network
 } from '@invariant-labs/sdk'
 import { Provider, Program, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createStandardFeeTiers, createToken, eqDecimal } from './testUtils'
 import { MAX_TICK } from '@invariant-labs/sdk/lib/math'
 import { MIN_TICK } from '@invariant-labs/sdk/lib/math'
-import { feeToTickSpacing } from '@invariant-labs/sdk/lib/utils'
+import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
 
 describe('position', () => {
   const provider = Provider.local()

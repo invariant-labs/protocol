@@ -1,5 +1,6 @@
-import { FEE_TIERS, Market, Network, Pair } from '@invariant-labs/sdk/src'
+import { Market, Network, Pair } from '@invariant-labs/sdk/src'
 import { MOCK_TOKENS } from '@invariant-labs/sdk/src/network'
+import { FEE_TIERS } from '@invariant-labs/sdk/src/utils'
 import * as anchor from '@project-serum/anchor'
 import { Provider } from '@project-serum/anchor'
 import { clusterApiUrl, PublicKey } from '@solana/web3.js'

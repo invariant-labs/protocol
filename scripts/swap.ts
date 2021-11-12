@@ -4,8 +4,8 @@ import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
 import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
 import { MINTER } from './minter'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { FEE_TIERS, Market, Pair, tou64 } from '@invariant-labs/sdk/src'
-import { DECIMAL, DENOMINATOR } from '@invariant-labs/sdk/src/utils'
+import { Market, Pair, tou64 } from '@invariant-labs/sdk/src'
+import { DENOMINATOR, FEE_TIERS } from '@invariant-labs/sdk/src/utils'
 require('dotenv').config()
 
 const provider = Provider.local(clusterApiUrl('devnet'), {
