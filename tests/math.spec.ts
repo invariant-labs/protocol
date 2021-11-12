@@ -117,8 +117,6 @@ describe('Math', () => {
       // rust results:
       const expectedL = { v: new BN('2789052279103923275993666') }
 
-      // price diff 0.017 [17 * 10^9]
-      // liquidity 2.8 * 10^12 [2.8 * 10^24]
       const lowerTick = -22000
       const upperTick = -21000
 
@@ -129,7 +127,6 @@ describe('Math', () => {
         currentTick,
         true
       )
-
       const { liquidity: roundDownLiquidity, x: roundDownX } = getLiquidityByY(
         y,
         lowerTick,
@@ -143,7 +140,26 @@ describe('Math', () => {
       assert.ok(roundUpX.eq(new BN(0)))
       assert.ok(roundDownX.eq(new BN(0)))
     })
-    it('in current tick', async () => {})
+    it('in current tick', async () => {
+      // rust results:
+      const expectedL = { v: new BN('584945290554346935615679') }
+      const expectedXRoundUp = new BN('77539808126')
+      const expectedXRoundDown = new BN('77539808125')
+
+      const lowerTick = -25000
+      const upperTick = -19000
+
+      const { liquidity: roundUpLiquidity, x: roundUpX } = getLiquidityByY(
+        y,
+        lowerTick,
+        upperTick,
+        currentTick,
+        true
+      )
+
+      assert.ok(expectedL.v.eq(roundUpLiquidity.v))
+      // assert.ok(expectedXRoundUp.eq(roundUpX))
+    })
     it('above current tick', async () => {
       // error
       const lowerTick = -10000
