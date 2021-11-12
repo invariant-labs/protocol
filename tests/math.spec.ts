@@ -79,20 +79,33 @@ describe('Math', () => {
       assert.ok(expectedRoundUpY.eq(roundUpY))
       assert.ok(expectedRoundDownY.eq(roundDownY))
     })
-    // it('above current tick', async () => {
-    //   const lowerTick = 150
-    //   const upperTick = 800
+    it('above current tick', async () => {
+      // rust results:
+      const expectedL = { v: new BN('13548826000000000000') }
+      const expectedY = new BN(0)
 
-    //   const { liquidity: roundUpLiquidity, y: roundUpY } = getLiquidityByX(
-    //     x,
-    //     lowerTick,
-    //     upperTick,
-    //     currentTick,
-    //     true
-    //   )
+      const lowerTick = 150
+      const upperTick = 800
 
-    //   console.log(`liquidity = ${roundUpLiquidity.v.toString()}`)
-    //   console.log(`y = ${roundUpY.toString()}`)
-    // })
+      const { liquidity: roundUpLiquidity, y: roundUpY } = getLiquidityByX(
+        x,
+        lowerTick,
+        upperTick,
+        currentTick,
+        true
+      )
+      const { liquidity: roundDownLiquidity, y: roundDownY } = getLiquidityByX(
+        x,
+        lowerTick,
+        upperTick,
+        currentTick,
+        false
+      )
+
+      assert.ok(roundUpLiquidity.v.eq(expectedL.v))
+      assert.ok(roundDownLiquidity.v.eq(expectedL.v))
+      assert.ok(roundUpY.eq(expectedY))
+      assert.ok(roundDownY.eq(expectedY))
+    })
   })
 })
