@@ -1,6 +1,6 @@
 import { assert } from 'chai'
 import { BN } from '@project-serum/anchor'
-import { getLiquidityByX } from '@invariant-labs/sdk/src/tick'
+import { getLiquidityByX, getLiquidityByY } from '@invariant-labs/sdk/src/tick'
 import { calculate_price_sqrt } from '@invariant-labs/sdk'
 
 describe('Math', () => {
@@ -106,6 +106,54 @@ describe('Math', () => {
       assert.ok(roundDownLiquidity.v.eq(expectedL.v))
       assert.ok(roundUpY.eq(expectedY))
       assert.ok(roundDownY.eq(expectedY))
+    })
+  })
+  describe('calculate x, liquidity', () => {
+    const tokenDecimal = 9
+    const y = new BN(476 * 10 ** (tokenDecimal - 1)) // 47.6
+    const currentTick = -20000
+
+    it('below current tick', async () => {
+      // rust results:
+      const expectedL = { v: new BN('2789052279103923275993666') }
+
+      // price diff 0.017 [17 * 10^9]
+      // liquidity 2.8 * 10^12 [2.8 * 10^24]
+      const lowerTick = -22000
+      const upperTick = -21000
+
+      const { liquidity: roundUpLiquidity, x: roundUpX } = getLiquidityByY(
+        y,
+        lowerTick,
+        upperTick,
+        currentTick,
+        true
+      )
+
+      const { liquidity: roundDownLiquidity, x: roundDownX } = getLiquidityByY(
+        y,
+        lowerTick,
+        upperTick,
+        currentTick,
+        false
+      )
+
+      assert.ok(expectedL.v.eq(roundUpLiquidity.v))
+      assert.ok(expectedL.v.eq(roundDownLiquidity.v))
+      assert.ok(roundUpX.eq(new BN(0)))
+      assert.ok(roundDownX.eq(new BN(0)))
+    })
+    it('in current tick', async () => {})
+    it('above current tick', async () => {
+      // error
+      const lowerTick = -10000
+      const upperTick = 0
+      try {
+        getLiquidityByY(y, lowerTick, upperTick, currentTick, true)
+        assert.ok(false)
+      } catch (e) {
+        assert.ok(true)
+      }
     })
   })
 })

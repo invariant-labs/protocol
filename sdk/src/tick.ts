@@ -39,7 +39,7 @@ export const getLiquidityByXPrice = (
   y: BN
 } => {
   if (upperSqrtPrice.v.lt(currentSqrtPrice.v)) {
-    throw new Error('cannot be determined liquidity')
+    throw new Error('liquidity cannot be determined')
   }
 
   if (currentSqrtPrice.v.lt(lowerSqrtPrice.v)) {
@@ -65,11 +65,44 @@ export const getLiquidityByXPrice = (
   }
 }
 
-// export const getLiquidityByYPrice = (
-//   y: BN,
-//   lowerSqrtPrice: Decimal,
-//   upperSqrtPrice: Decimal,
-//   currentSqrtPrice: Decimal
-// ) => {
+export const getLiquidityByY = (
+  y: BN,
+  lowerTick: number,
+  upperTick: number,
+  currentTick: number,
+  roundingUp: boolean
+) => {
+  const lowerSqrtPrice = calculate_price_sqrt(lowerTick)
+  const upperSqrtPrice = calculate_price_sqrt(upperTick)
+  const currentSqrtPrice = calculate_price_sqrt(currentTick)
 
-// }
+  return getLiquidityByYPrice(y, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
+}
+
+export const getLiquidityByYPrice = (
+  y: BN,
+  lowerSqrtPrice: Decimal,
+  upperSqrtPrice: Decimal,
+  currentSqrtPrice: Decimal,
+  roundingUp: boolean
+) => {
+  if (currentSqrtPrice.v.lt(lowerSqrtPrice.v)) {
+    throw new Error('liquidity cannot be determined')
+  }
+
+  if (upperSqrtPrice.v.lt(currentSqrtPrice.v)) {
+    const priceDiff = upperSqrtPrice.v.sub(lowerSqrtPrice.v)
+    const liquidity = y.mul(DENOMINATOR).mul(DENOMINATOR).div(priceDiff)
+
+    return {
+      liquidity: { v: liquidity },
+      x: new BN(0)
+    }
+  }
+
+  // TODO
+  return {
+    liquidity: { v: new BN(0) },
+    x: new BN(0)
+  }
+}
