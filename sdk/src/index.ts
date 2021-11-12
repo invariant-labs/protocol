@@ -4,6 +4,7 @@ import { TICK_LIMIT, calculate_price_sqrt, fromInteger, MAX_TICK, MIN_TICK } fro
 import { PublicKey, Transaction } from '@solana/web3.js'
 import { Pair } from './pair'
 import { getMarketAddress, Network, MOCK_TOKENS } from './network'
+import { FEE_TIERS } from './constants'
 
 export {
   Market,
@@ -20,7 +21,8 @@ export {
   TICK_LIMIT,
   MAX_TICK,
   MIN_TICK,
-  MOCK_TOKENS
+  MOCK_TOKENS,
+  FEE_TIERS
 }
 export interface IWallet {
   signTransaction(tx: Transaction): Promise<Transaction>

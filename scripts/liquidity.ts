@@ -1,11 +1,11 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider } from '@project-serum/anchor'
 import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
-import { FEE_TIERS, MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
+import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
 import { MINTER } from './minter'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { mintTo } from '@project-serum/serum/lib/token-instructions'
-import { fromInteger, Market, Pair, tou64 } from '@invariant-labs/sdk/src'
+import { FEE_TIERS, fromInteger, Market, Pair, tou64 } from '@invariant-labs/sdk/src'
+import { getLiquidityByX } from '@invariant-labs/sdk/src/tick'
 require('dotenv').config()
 
 const provider = Provider.local(clusterApiUrl('devnet'), {
@@ -32,18 +32,24 @@ const main = async () => {
   await usdc.mintTo(minterUsdc, MINTER, [], amount)
   await usdt.mintTo(minterUsdt, MINTER, [], amount)
 
-  await market.createPositionList(MINTER)
+  // await market.createPositionList(MINTER)
 
-  const liquidityDelta = fromInteger(1_000_000_000_000)
+  const x = new anchor.BN(500 * 10 ** 6)
+  const lowerTick = -4
+  const upperTick = 4
+  const pool = await market.getPool(pair)
+
+  const { liquidity } = getLiquidityByX(x, lowerTick, upperTick, pool.currentTickIndex)
+
   await market.initPosition(
     {
       pair,
       owner: MINTER.publicKey,
       userTokenX: minterUsdt,
       userTokenY: minterUsdc,
-      lowerTick: -4,
-      upperTick: 4,
-      liquidityDelta
+      lowerTick,
+      upperTick,
+      liquidityDelta: liquidity
     },
     MINTER
   )

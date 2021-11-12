@@ -3,7 +3,7 @@ import { TokenInstructions } from '@project-serum/serum'
 import { Token } from '@solana/spl-token'
 import { Market, Position } from '@invariant-labs/sdk/lib/market'
 import { Decimal } from '@invariant-labs/sdk/src/market'
-import { FEE_TIERS } from '@invariant-labs/sdk/src/network'
+import { FEE_TIERS } from '@invariant-labs/sdk/src'
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {

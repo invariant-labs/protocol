@@ -50,4 +50,11 @@ export const getLiquidityByXPrice = (
   }
 }
 
-// export const getLiquidityByY = () => {}
+// export const getLiquidityByYPrice = (
+//   y: BN,
+//   lowerSqrtPrice: Decimal,
+//   upperSqrtPrice: Decimal,
+//   currentSqrtPrice: Decimal
+// ) => {
+
+// }
