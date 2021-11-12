@@ -287,8 +287,6 @@ pub fn calculate_amount_delta(
 
 #[cfg(test)]
 mod tests {
-    use std::u128::MAX;
-
     use super::*;
 
     #[test]
@@ -724,116 +722,17 @@ mod tests {
     #[test]
     fn test_calculate_amount_delta() {
         // current tick smaller than lower tick
-        // {
-        //     let mut pool = Pool {
-        //         liquidity: Decimal::from_integer(0),
-        //         current_tick_index: 0,
-        //         ..Default::default()
-        //     };
-
-        //     let liquidity_delta = Decimal::from_integer(10);
-        //     let liquidity_sign = true;
-        //     let upper_tick = 4;
-        //     let lower_tick = 2;
-
-        //     let result = calculate_amount_delta(
-        //         &mut pool,
-        //         liquidity_delta,
-        //         liquidity_sign,
-        //         upper_tick,
-        //         lower_tick,
-        //     )
-        //     .unwrap();
-
-        //     assert_eq!(result.0, 1);
-        //     assert_eq!(result.1, 0);
-        // }
-        // // current tick greater than upper tick
-        // {
-        //     let mut pool = Pool {
-        //         liquidity: Decimal::from_integer(0),
-        //         current_tick_index: 6,
-        //         ..Default::default()
-        //     };
-
-        //     let liquidity_delta = Decimal::from_integer(10);
-        //     let liquidity_sign = true;
-        //     let upper_tick = 4;
-        //     let lower_tick = 2;
-
-        //     let result = calculate_amount_delta(
-        //         &mut pool,
-        //         liquidity_delta,
-        //         liquidity_sign,
-        //         upper_tick,
-        //         lower_tick,
-        //     )
-        //     .unwrap();
-
-        //     assert_eq!(result.0, 0);
-        //     assert_eq!(result.1, 1);
-        // }
-        // {
-        //     // x = 0.43
-        //     // L = ~434
-        //     // lower = 80
-        //     // upper = 120
-        //     // current = 100
-
-        //     let lower_tick = 80;
-        //     let upper_tick = 120;
-        //     let current_tick_index = 100;
-        //     let decimal: u32 = 6;
-        //     let token_offset = Decimal::from_integer(10u128.pow(decimal));
-        //     println!("token_offset = {:?}", token_offset);
-        //     // let liquidity_delta = Decimal::from_integer(43) * token_offset;
-        //     let liquidity_delta = Decimal::new(432392997000000000000);
-        //     println!("liquidity delta = {:?}", liquidity_delta);
-        //     let liquidity_sign = false;
-        //     let mut pool = Pool {
-        //         current_tick_index,
-        //         sqrt_price: calculate_price_sqrt(current_tick_index),
-        //         liquidity: Decimal::from_integer(9432392997000000000000),
-        //         ..Default::default()
-        //     };
-
-        //     let result = calculate_amount_delta(
-        //         &mut pool,
-        //         liquidity_delta,
-        //         liquidity_sign,
-        //         upper_tick,
-        //         lower_tick,
-        //     )
-        //     .unwrap();
-
-        //     // exported result (0.43, 0.43) [(43 * 10^(DECIMAL - 2), 43 * 10^(DECIMAL - 2))]
-        //     // result          (0.0...1, 0.0...1)
-
-        //     println!("{:?}", result);
-        // }
         {
-            // x = 0.43
-            // L = ~434
-            // lower = 150
-            // upper = 800
-            // current = 100
-
-            let lower_tick = -25000;
-            let upper_tick = -19000;
-            let current_tick_index = -20000;
-            // let decimal: u32 = ;
-            // let token_offset = Decimal::from_integer(10u128.pow(decimal));
-            // println!("token_offset = {:?}", token_offset);
-            // let liquidity_delta = Decimal::from_integer(43) * token_offset;
-            let liquidity_delta = Decimal::new(584945290554346935615679);
-            println!("liquidity delta = {:?}", liquidity_delta);
-            let liquidity_sign = true;
             let mut pool = Pool {
-                current_tick_index,
-                sqrt_price: calculate_price_sqrt(current_tick_index),
-                // liquidity: Decimal::from_integer(9432392997000000000000),
+                liquidity: Decimal::from_integer(0),
+                current_tick_index: 0,
                 ..Default::default()
             };
+
+            let liquidity_delta = Decimal::from_integer(10);
+            let liquidity_sign = true;
+            let upper_tick = 4;
+            let lower_tick = 2;
 
             let result = calculate_amount_delta(
                 &mut pool,
@@ -844,18 +743,33 @@ mod tests {
             )
             .unwrap();
 
-            // exported result (0.43, 0.43) [(43 * 10^(DECIMAL - 2), 43 * 10^(DECIMAL - 2))]
-            // result          (0.0...1, 0.0...1)
+            assert_eq!(result.0, 1);
+            assert_eq!(result.1, 0);
+        }
+        // current tick greater than upper tick
+        {
+            let mut pool = Pool {
+                liquidity: Decimal::from_integer(0),
+                current_tick_index: 6,
+                ..Default::default()
+            };
 
-            println!("{:?}", result);
+            let liquidity_delta = Decimal::from_integer(10);
+            let liquidity_sign = true;
+            let upper_tick = 4;
+            let lower_tick = 2;
+
+            let result = calculate_amount_delta(
+                &mut pool,
+                liquidity_delta,
+                liquidity_sign,
+                upper_tick,
+                lower_tick,
+            )
+            .unwrap();
+
+            assert_eq!(result.0, 0);
+            assert_eq!(result.1, 1);
         }
     }
-
-    // #[test]
-    // fn test() {
-    //     let max = u128::MAX;
-
-    //     // 39 character
-    //     println!("max = {:?}", max)
-    // }
 }
