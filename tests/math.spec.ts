@@ -37,23 +37,38 @@ describe('Math', () => {
     })
   })
   describe('calculate liquidity', () => {
-    describe('same decimal tokens', async () => {
+    describe('positive liquidity delta (token rounding up)', async () => {
       // expected
-      const xDecimal = 6
-      const yDecimal = 6
-      const x = new BN(43 * 10 ** xDecimal - 2) // 0.43
+      const decimal = 6
+      const x = new BN(43 * 10 ** (decimal - 2)) // 0.43
       const currentTick = 100
 
       it('below current tick', async () => {
         const lowerTick = -50
         const upperTick = 10
-        const { liquidity, y } = getLiquidityByX(x, lowerTick, upperTick, currentTick)
-        console.log(liquidity.toString())
-        console.log(y.toString())
+        try {
+          getLiquidityByX(x, lowerTick, upperTick, currentTick)
+          assert.ok(false)
+        } catch (e) {
+          assert.ok(true)
+        }
       })
-      it('in current tick', async () => {})
+      it('in current tick', async () => {
+        // rust results:
+        const expectedL = { v: new BN('432392997000000000000') }
+        const expectedX = new BN(430000)
+        const expectedY = new BN(434322)
+
+        const lowerTick = 80
+        const upperTick = 120
+        const { liquidity, y } = getLiquidityByX(x, lowerTick, upperTick, currentTick)
+
+        assert.ok(liquidity.v.eq(expectedL.v))
+        assert.ok(expectedX.eq(x))
+        // assert.ok(expectedY.eq(y))
+      })
       it('above current tick', async () => {})
     })
-    describe('difference decimal  tokens', async () => {})
+    describe('negative liquidity delta (token rounding down)', async () => {})
   })
 })
