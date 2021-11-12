@@ -36,39 +36,63 @@ describe('Math', () => {
       assert.ok(result.v.eq(new BN('1000000000000')))
     })
   })
-  describe('calculate liquidity', () => {
-    describe('positive liquidity delta (token rounding up)', async () => {
-      // expected
-      const decimal = 6
-      const x = new BN(43 * 10 ** (decimal - 2)) // 0.43
-      const currentTick = 100
+  describe('calculate y, liquidity', () => {
+    const tokenDecimal = 6
+    const x = new BN(43 * 10 ** (tokenDecimal - 2)) // 0.43
+    const currentTick = 100
 
-      it('below current tick', async () => {
-        const lowerTick = -50
-        const upperTick = 10
-        try {
-          getLiquidityByX(x, lowerTick, upperTick, currentTick)
-          assert.ok(false)
-        } catch (e) {
-          assert.ok(true)
-        }
-      })
-      it('in current tick', async () => {
-        // rust results:
-        const expectedL = { v: new BN('432392997000000000000') }
-        const expectedX = new BN(430000)
-        const expectedY = new BN(434322)
-
-        const lowerTick = 80
-        const upperTick = 120
-        const { liquidity, y } = getLiquidityByX(x, lowerTick, upperTick, currentTick)
-
-        assert.ok(liquidity.v.eq(expectedL.v))
-        assert.ok(expectedX.eq(x))
-        // assert.ok(expectedY.eq(y))
-      })
-      it('above current tick', async () => {})
+    it('below current tick', async () => {
+      const lowerTick = -50
+      const upperTick = 10
+      try {
+        getLiquidityByX(x, lowerTick, upperTick, currentTick, true)
+        assert.ok(false)
+      } catch (e) {
+        assert.ok(true)
+      }
     })
-    describe('negative liquidity delta (token rounding down)', async () => {})
+    it('in current tick', async () => {
+      // rust results:
+      const expectedL = { v: new BN('432392997000000000000') }
+      const expectedRoundUpY = new BN('434322')
+      const expectedRoundDownY = new BN('434321')
+
+      const lowerTick = 80
+      const upperTick = 120
+      const { liquidity: roundUpLiquidity, y: roundUpY } = getLiquidityByX(
+        x,
+        lowerTick,
+        upperTick,
+        currentTick,
+        true
+      )
+      const { liquidity: roundDownLiquidity, y: roundDownY } = getLiquidityByX(
+        x,
+        lowerTick,
+        upperTick,
+        currentTick,
+        false
+      )
+
+      assert.ok(roundUpLiquidity.v.eq(expectedL.v))
+      assert.ok(roundDownLiquidity.v.eq(expectedL.v))
+      assert.ok(expectedRoundUpY.eq(roundUpY))
+      assert.ok(expectedRoundDownY.eq(roundDownY))
+    })
+    // it('above current tick', async () => {
+    //   const lowerTick = 150
+    //   const upperTick = 800
+
+    //   const { liquidity: roundUpLiquidity, y: roundUpY } = getLiquidityByX(
+    //     x,
+    //     lowerTick,
+    //     upperTick,
+    //     currentTick,
+    //     true
+    //   )
+
+    //   console.log(`liquidity = ${roundUpLiquidity.v.toString()}`)
+    //   console.log(`y = ${roundUpY.toString()}`)
+    // })
   })
 })

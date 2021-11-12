@@ -3,24 +3,37 @@ import { DENOMINATOR } from '.'
 import { Decimal } from './market'
 import { calculate_price_sqrt } from './math'
 
+const mulUp = (a: BN, b: BN) => {
+  return a.mul(b).add(DENOMINATOR.subn(1)).div(DENOMINATOR)
+}
+
+const calculateY = (priceDiff: BN, liquidity: BN, roundingUp: boolean) => {
+  if (roundingUp) {
+    return mulUp(priceDiff, liquidity)
+  }
+  return priceDiff.mul(liquidity).div(DENOMINATOR)
+}
+
 export const getLiquidityByX = (
   x: BN,
   lowerTick: number,
   upperTick: number,
-  currentTick: number
+  currentTick: number,
+  roundingUp: boolean
 ) => {
   const lowerSqrtPrice = calculate_price_sqrt(lowerTick)
   const upperSqrtPrice = calculate_price_sqrt(upperTick)
   const currentSqrtPrice = calculate_price_sqrt(currentTick)
 
-  return getLiquidityByXPrice(x, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice)
+  return getLiquidityByXPrice(x, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
 }
 
 export const getLiquidityByXPrice = (
   x: BN,
   lowerSqrtPrice: Decimal,
   upperSqrtPrice: Decimal,
-  currentSqrtPrice: Decimal
+  currentSqrtPrice: Decimal,
+  roundingUp: boolean
 ): {
   liquidity: Decimal
   y: BN
@@ -43,7 +56,8 @@ export const getLiquidityByXPrice = (
   const nominator = currentSqrtPrice.v.mul(upperSqrtPrice.v).div(DENOMINATOR)
   const denominator = upperSqrtPrice.v.sub(currentSqrtPrice.v)
   const liquidity = x.mul(nominator).div(denominator)
-  const y = currentSqrtPrice.v.sub(lowerSqrtPrice.v).mul(liquidity).div(DENOMINATOR)
+  const priceDiff = currentSqrtPrice.v.sub(lowerSqrtPrice.v)
+  const y = calculateY(priceDiff, liquidity, roundingUp)
 
   return {
     liquidity: { v: liquidity.mul(DENOMINATOR) },
