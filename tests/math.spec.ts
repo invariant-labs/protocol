@@ -81,7 +81,7 @@ describe('Math', () => {
     })
     it('above current tick', async () => {
       // rust results:
-      const expectedL = { v: new BN('13548826000000000000') }
+      const expectedL = { v: new BN('13548826311611234766') }
       const expectedY = new BN(0)
 
       const lowerTick = 150

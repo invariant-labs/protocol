@@ -12,10 +12,12 @@ const divUp = (a: BN, b: BN) => {
 }
 
 const calculateY = (priceDiff: BN, liquidity: BN, roundingUp: boolean) => {
+  const shiftedLiquidity = liquidity.div(DENOMINATOR)
+
   if (roundingUp) {
-    return mulUp(priceDiff, liquidity)
+    return mulUp(priceDiff, shiftedLiquidity)
   }
-  return priceDiff.mul(liquidity).div(DENOMINATOR)
+  return priceDiff.mul(shiftedLiquidity).div(DENOMINATOR)
 }
 
 const calculateX = (nominator: BN, denominator: BN, liquidity: BN, roundingUp: boolean) => {
@@ -57,22 +59,22 @@ export const getLiquidityByXPrice = (
   if (currentSqrtPrice.v.lt(lowerSqrtPrice.v)) {
     const nominator = lowerSqrtPrice.v.mul(upperSqrtPrice.v).div(DENOMINATOR)
     const denominator = upperSqrtPrice.v.sub(lowerSqrtPrice.v)
-    const liquidity = x.mul(nominator).div(denominator)
+    const liquidity = x.mul(nominator).mul(DENOMINATOR).div(denominator)
 
     return {
-      liquidity: { v: liquidity.mul(DENOMINATOR) },
+      liquidity: { v: liquidity },
       y: new BN(0)
     }
   }
 
   const nominator = currentSqrtPrice.v.mul(upperSqrtPrice.v).div(DENOMINATOR)
   const denominator = upperSqrtPrice.v.sub(currentSqrtPrice.v)
-  const liquidity = x.mul(nominator).div(denominator)
+  const liquidity = x.mul(nominator).div(denominator).mul(DENOMINATOR)
   const priceDiff = currentSqrtPrice.v.sub(lowerSqrtPrice.v)
   const y = calculateY(priceDiff, liquidity, roundingUp)
 
   return {
-    liquidity: { v: liquidity.mul(DENOMINATOR) },
+    liquidity: { v: liquidity },
     y
   }
 }
