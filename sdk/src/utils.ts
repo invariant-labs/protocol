@@ -85,6 +85,14 @@ export const feeToTickSpacing = (fee: BN): number => {
   return fee.muln(2).div(FEE_TO_SPACING_OFFSET).toNumber()
 }
 
+export const FEE_TIERS: Array<FeeTier> = [
+  { fee: fromFee(new BN(20)) },
+  { fee: fromFee(new BN(40)) },
+  { fee: fromFee(new BN(100)) },
+  { fee: fromFee(new BN(300)) },
+  { fee: fromFee(new BN(1000)) }
+]
+
 export const generateTicksArray = (start: number, stop: number, step: number) => {
   const validDir = (start > stop && step < 0) || (start < stop && step > 0)
   const validMod = start % step === 0 && stop % step === 0

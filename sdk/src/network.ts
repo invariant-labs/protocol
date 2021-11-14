@@ -1,7 +1,3 @@
-import { BN } from '@project-serum/anchor'
-import { FeeTier } from './market'
-import { feeToTickSpacing, fromFee } from './utils'
-
 export enum Network {
   LOCAL,
   DEV
@@ -17,19 +13,6 @@ export const getMarketAddress = (network: Network) => {
       throw new Error('Unknown network')
   }
 }
-
-export const FEE_TIERS: Array<FeeTier> = [
-  fromFee(new BN(20)), // 0.02% -> 4
-  fromFee(new BN(40)), // 0.04% -> 8
-  fromFee(new BN(100)), // 0.1% -> 20
-  fromFee(new BN(300)), // 0.3% -> 60
-  fromFee(new BN(1000)) // 1%   -> 200
-].map((fee) => {
-  return {
-    fee,
-    feeTier: feeToTickSpacing(fee)
-  }
-})
 
 export const MOCK_TOKENS = {
   USDC: '5ihkgQGjKvWvmMtywTgLdwokZ6hqFv5AgxSyYoCNufQW',

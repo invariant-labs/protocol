@@ -4,9 +4,8 @@ import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
 import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
 import { MINTER } from './minter'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { fromInteger, Market, Pair, tou64 } from '@invariant-labs/sdk/src'
-import { getLiquidityByX } from '@invariant-labs/sdk/src/tick'
-import { FEE_TIERS } from '@invariant-labs/sdk/src/utils'
+import { Market, Pair, tou64 } from '@invariant-labs/sdk/src'
+import { DENOMINATOR, FEE_TIERS } from '@invariant-labs/sdk/src/utils'
 require('dotenv').config()
 
 const provider = Provider.local(clusterApiUrl('devnet'), {
@@ -28,30 +27,20 @@ const main = async () => {
   const usdt = new Token(connection, new PublicKey(MOCK_TOKENS.USDT), TOKEN_PROGRAM_ID, wallet)
   const minterUsdc = await usdc.createAccount(MINTER.publicKey)
   const minterUsdt = await usdt.createAccount(MINTER.publicKey)
-  const amount = tou64(1000 * 10 ** 6)
+  const amount = 10 ** 4
 
-  await usdc.mintTo(minterUsdc, MINTER, [], amount)
-  await usdt.mintTo(minterUsdt, MINTER, [], amount)
+  await usdc.mintTo(minterUsdc, MINTER, [], tou64(2 * amount))
+  await usdt.mintTo(minterUsdt, MINTER, [], tou64(2 * amount))
 
-  // await market.createPositionList(MINTER)
+  const priceLimit = DENOMINATOR.muln(100).divn(50)
 
-  const x = new anchor.BN(500 * 10 ** 6)
-  const lowerTick = -4
-  const upperTick = 4
-  const pool = await market.getPool(pair)
-
-  const { liquidity } = getLiquidityByX(x, lowerTick, upperTick, pool.currentTickIndex, true)
-
-  await market.initPosition(
-    {
-      pair,
-      owner: MINTER.publicKey,
-      userTokenX: minterUsdt,
-      userTokenY: minterUsdc,
-      lowerTick,
-      upperTick,
-      liquidityDelta: liquidity
-    },
+  market.swap(
+    pair,
+    false, // y to x
+    tou64(amount),
+    priceLimit,
+    minterUsdt,
+    minterUsdc,
     MINTER
   )
 }

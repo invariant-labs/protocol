@@ -1,6 +1,6 @@
 import * as anchor from '@project-serum/anchor'
 import { BN, Program, utils, Idl, Provider } from '@project-serum/anchor'
-import { Token, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token'
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import {
   Connection,
   Keypair,
@@ -12,15 +12,7 @@ import {
   Signer
 } from '@solana/web3.js'
 import { findInitialized, isInitialized } from './math'
-import {
-  feeToTickSpacing,
-  fromFee,
-  generateTicksArray,
-  getFeeTierAddress,
-  SEED,
-  signAndSend,
-  tou64
-} from './utils'
+import { feeToTickSpacing, generateTicksArray, getFeeTierAddress, SEED, signAndSend } from './utils'
 import idl from './idl/amm.json'
 import { IWallet, Pair } from '.'
 import { getMarketAddress } from './network'
