@@ -76,8 +76,8 @@ export class Market {
     this.program = new Program(idl as Idl, programAddress, provider)
   }
 
-  async create({ pair, signer, initTick, feeTier }: CreatePool) {
-    const { fee, tickSpacing } = feeTier
+  async create({ pair, signer, initTick }: CreatePool) {
+    const { fee, tickSpacing } = pair.feeTier
     const tick = initTick || 0
     const ts = tickSpacing ?? feeToTickSpacing(fee)
 
@@ -87,7 +87,7 @@ export class Market {
     )
 
     const [poolAddress, bump] = await pair.getAddressAndBump(this.program.programId)
-    const { address: feeTierAddress } = await this.getFeeTierAddress(feeTier)
+    const { address: feeTierAddress } = await this.getFeeTierAddress(pair.feeTier)
 
     const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, signer)
     const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, signer)
@@ -708,7 +708,6 @@ export interface CreatePool {
   pair: Pair
   signer: Keypair
   initTick?: number
-  feeTier: FeeTier
 }
 
 export interface FeeTier {
