@@ -143,7 +143,7 @@ describe('claim', () => {
         accountY,
         byAmountIn: true
       },
-      positionOwner
+      swapper
     )
     const poolDataAfter = await market.get(pair)
     assert.ok(poolDataAfter.liquidity.v.eq(poolDataBefore.liquidity.v))
