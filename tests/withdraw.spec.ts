@@ -71,8 +71,7 @@ describe('withdraw', () => {
     // 0.6% / 10
     await market.create({
       pair,
-      signer: admin,
-      feeTier
+      signer: admin
     })
 
     const createdPool = await market.get(pair)
@@ -145,11 +144,21 @@ describe('withdraw', () => {
 
     // Swap
     const poolDataBefore = await market.get(pair)
-    const targetPrice = DENOMINATOR.muln(100).divn(110)
+    const priceLimit = DENOMINATOR.muln(100).divn(110)
     const reservesBefore = await market.getReserveBalances(pair, wallet)
 
-    await market.swap(pair, true, amount, targetPrice, accountX, accountY, owner)
-
+    await market.swap(
+      {
+        pair,
+        XtoY: true,
+        amount,
+        priceLimit,
+        accountX,
+        accountY,
+        byAmountIn: true
+      },
+      owner
+    )
     // Check pool
     const poolData = await market.get(pair)
     assert.ok(poolData.liquidity.v.eq(poolDataBefore.liquidity.v))
