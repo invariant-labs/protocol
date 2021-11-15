@@ -71,8 +71,7 @@ describe('swap', () => {
     // 0.6% / 10
     await market.create({
       pair,
-      signer: admin,
-      feeTier
+      signer: admin
     })
 
     const createdPool = await market.get(pair)

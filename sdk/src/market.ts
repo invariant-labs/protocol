@@ -391,30 +391,17 @@ export class Market {
     await signAndSend(tx, [signer], this.connection)
   }
 
-  async swap({ pair, XtoY, amount, priceLimit, accountX, accountY, byAmountIn }, owner: Keypair) {
-    const tx = await this.swapTransaction(
-      pair,
-      XtoY,
-      amount,
-      priceLimit,
-      accountX,
-      accountY,
-      owner.publicKey,
-      byAmountIn
-    )
+  async swap(props: Swap, owner: Keypair) {
+    const tx = await this.swapTransaction({
+      owner: owner.publicKey,
+      ...props
+    })
 
     await signAndSend(tx, [owner], this.connection)
   }
 
   async swapTransaction(
-    pair: Pair,
-    XtoY: boolean,
-    amount: BN,
-    priceLimit: BN,
-    accountX: PublicKey,
-    accountY: PublicKey,
-    owner: PublicKey,
-    byAmountIn: boolean = true
+    { pair, XtoY, amount, priceLimit, accountX, accountY, byAmountIn, owner }: SwapTransaction // pair: Pair, // XtoY: boolean, // amount: BN, // priceLimit: BN, // accountX: PublicKey, // accountY: PublicKey, // owner: PublicKey, // byAmountIn: boolean = true
   ) {
     const state = await this.get(pair)
     const tickmap = await this.getTickmap(pair)
@@ -731,4 +718,8 @@ export interface Swap {
   accountX: PublicKey
   accountY: PublicKey
   byAmountIn: boolean
+}
+
+export interface SwapTransaction extends Swap {
+  owner: PublicKey
 }
