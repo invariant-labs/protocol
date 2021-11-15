@@ -1,17 +1,7 @@
 import * as anchor from '@project-serum/anchor'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import {
-  Market,
-  Pair,
-  SEED,
-  tou64,
-  TICK_LIMIT,
-  signAndSend,
-  calculate_price_sqrt,
-  fromInteger,
-  Network
-} from '@invariant-labs/sdk'
+import { Market, Pair, SEED, tou64, signAndSend, fromInteger, Network } from '@invariant-labs/sdk'
 import { Provider, Program, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken, eqDecimal, positionEquals, positionWithoutOwnerEquals } from './testUtils'
@@ -70,7 +60,7 @@ describe('Position list', () => {
       createToken(connection, wallet, mintAuthority),
       createToken(connection, wallet, mintAuthority)
     ])
-    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey)
+    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
 

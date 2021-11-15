@@ -184,6 +184,10 @@
       ],
       "args": [
         {
+          "name": "feeTierAddress",
+          "type": "publicKey"
+        },
+        {
           "name": "xToY",
           "type": "bool"
         },
@@ -249,6 +253,10 @@
         {
           "name": "bump",
           "type": "u8"
+        },
+        {
+          "name": "feeTierAddress",
+          "type": "publicKey"
         },
         {
           "name": "index",
@@ -377,6 +385,10 @@
           "type": "u8"
         },
         {
+          "name": "feeTierAddress",
+          "type": "publicKey"
+        },
+        {
           "name": "lowerTickIndex",
           "type": "i32"
         },
@@ -477,6 +489,10 @@
         }
       ],
       "args": [
+        {
+          "name": "feeTierAddress",
+          "type": "publicKey"
+        },
         {
           "name": "index",
           "type": "u32"
@@ -621,6 +637,10 @@
         }
       ],
       "args": [
+        {
+          "name": "feeTierAddress",
+          "type": "publicKey"
+        },
         {
           "name": "index",
           "type": "u32"
@@ -995,8 +1015,5 @@
       "name": "PositionWithoutLiquidity",
       "msg": "Position liquidity would be zero"
     }
-  ],
-  "metadata": {
-    "address": "FPr3fREovDnqMfubJTrJAFwopvJB8grXj1o3gkmSyzmw"
-  }
+  ]
 }

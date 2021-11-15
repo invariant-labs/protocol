@@ -1,20 +1,9 @@
-import { Connection, Keypair, Transaction } from '@solana/web3.js'
+import { Connection, Keypair } from '@solana/web3.js'
 import { TokenInstructions } from '@project-serum/serum'
 import { Token } from '@solana/spl-token'
-import BN from 'bn.js'
-import { DECIMAL, FEE_DECIMAL } from '@invariant-labs/sdk/src/utils'
 import { Market, Position } from '@invariant-labs/sdk/lib/market'
 import { Decimal } from '@invariant-labs/sdk/src/market'
-import { signAndSend } from '@invariant-labs/sdk'
-import { fromFee } from '@invariant-labs/sdk/lib/utils'
-
-export const STANDARD_FEE_TIER = [
-  fromFee(new BN(20)), // 0.02% -> 4
-  fromFee(new BN(40)), // 0.04% -> 8
-  fromFee(new BN(100)), // 0.1%  -> 20
-  fromFee(new BN(300)), // 0.3%  -> 60
-  fromFee(new BN(1000)) // 1%    -> 200
-]
+import { FEE_TIERS } from '@invariant-labs/sdk/src/utils'
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {
@@ -80,8 +69,8 @@ export const positionWithoutOwnerEquals = (a: Position, b: Position) => {
 
 export const createStandardFeeTiers = async (market: Market, payer: Keypair) => {
   Promise.all(
-    STANDARD_FEE_TIER.map(async (fee) => {
-      await market.createFeeTier({ fee }, payer)
+    FEE_TIERS.map(async (feeTier) => {
+      await market.createFeeTier(feeTier, payer)
     })
   )
 }
