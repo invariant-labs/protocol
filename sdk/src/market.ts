@@ -378,10 +378,23 @@ export class Market {
   }
 
   async initPositionTx(initPosition: InitPosition) {
-    const { owner, userTokenX, userTokenY } = initPosition
+    const { owner, pair, lowerTick, upperTick } = initPosition
 
-    const initPositionIx = await this.initPositionInstruction(initPosition)
-    return new Transaction().add(initPositionIx)
+    const [tickmap, pool] = await Promise.all([this.getTickmap(pair), this.get(pair)])
+
+    const lowerExists = isInitialized(tickmap, lowerTick, pool.tickSpacing)
+    const upperExists = isInitialized(tickmap, upperTick, pool.tickSpacing)
+
+    const tx = new Transaction()
+
+    if (!lowerExists) {
+      tx.add(await this.createTickInstruction(pair, lowerTick, owner))
+    }
+    if (!upperExists) {
+      tx.add(await this.createTickInstruction(pair, upperTick, owner))
+    }
+
+    return tx.add(await this.initPositionInstruction(initPosition))
   }
 
   async initPosition(initPosition: InitPosition, signer: Keypair) {
