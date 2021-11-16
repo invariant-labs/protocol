@@ -3,6 +3,37 @@
   "name": "amm",
   "instructions": [
     {
+      "name": "createState",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "createFeeTier",
       "accounts": [
         {
@@ -44,6 +75,11 @@
     {
       "name": "create",
       "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
         {
           "name": "pool",
           "isMut": true,
@@ -126,6 +162,11 @@
     {
       "name": "swap",
       "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
         {
           "name": "pool",
           "isMut": true,
@@ -654,9 +695,97 @@
           "type": "i32"
         }
       ]
+    },
+    {
+      "name": "withdrawProtocolFee",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenX",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenY",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "feeTier",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "reserveX",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveY",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "accountX",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "accountY",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "programAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
+    {
+      "name": "State",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "protocolFee",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "admin",
+            "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
     {
       "name": "FeeTier",
       "type": {
@@ -685,6 +814,10 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "state",
+            "type": "publicKey"
+          },
+          {
             "name": "tokenX",
             "type": "publicKey"
           },
@@ -710,12 +843,6 @@
           },
           {
             "name": "fee",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "protocolFee",
             "type": {
               "defined": "Decimal"
             }
@@ -1014,6 +1141,14 @@
       "code": 314,
       "name": "PositionWithoutLiquidity",
       "msg": "Position liquidity would be zero"
+    },
+    {
+      "code": 315,
+      "name": "Unauthorized",
+      "msg": "You are not admin"
     }
-  ]
+  ],
+  "metadata": {
+    "address": "FPr3fREovDnqMfubJTrJAFwopvJB8grXj1o3gkmSyzmw"
+  }
 }

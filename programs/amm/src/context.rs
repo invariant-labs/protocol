@@ -1,5 +1,6 @@
 use crate::account::*;
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
 pub trait TakeTokens<'info> {
@@ -10,6 +11,18 @@ pub trait TakeTokens<'info> {
 pub trait SendTokens<'info> {
     fn send_x(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>>;
     fn send_y(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>>;
+}
+
+#[derive(Accounts)]
+#[instruction(bump: u8)]
+pub struct CreateState<'info> {
+    #[account(init, seeds = [b"invariantstatev1".as_ref()], bump = bump, payer = admin)]
+    pub state: Loader<'info, State>,
+    #[account(mut)]
+    pub admin: Signer<'info>,
+    pub rent: Sysvar<'info, Rent>,
+    #[account(address = system_program::ID)]
+    pub system_program: AccountInfo<'info>,
 }
 #[derive(Accounts)]
 #[instruction(bump: u8, fee: u64, tick_spacing: u16)]
@@ -27,6 +40,8 @@ pub struct CreateFeeTier<'info> {
 #[derive(Accounts)]
 #[instruction(bump: u8, nonce: u8, init_tick: i32, fee: u64, tick_spacing: u16)]
 pub struct Create<'info> {
+    #[account(seeds = [b"invariantstatev1".as_ref()], bump = state.load()?.bump, constraint = state.to_account_info().owner == program_id)]
+    pub state: Loader<'info, State>,
     #[account(init,
         seeds = [b"poolv1", fee_tier.to_account_info().key.as_ref(), token_x.key.as_ref(), token_y.key.as_ref()],
         bump = bump, payer = payer
@@ -52,6 +67,8 @@ pub struct Create<'info> {
 #[derive(Accounts)]
 #[instruction(fee_tier_address: Pubkey)]
 pub struct Swap<'info> {
+    #[account(seeds = [b"invariantstatev1".as_ref()], bump = state.load()?.bump)]
+    pub state: Loader<'info, State>,
     #[account(mut, seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()], bump = pool.load()?.bump)]
     pub pool: Loader<'info, Pool>,
     #[account(mut,
@@ -417,6 +434,62 @@ pub struct ClaimFee<'info> {
 }
 
 impl<'info> SendTokens<'info> for ClaimFee<'info> {
+    fn send_x(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+        CpiContext::new(
+            self.token_program.to_account_info(),
+            Transfer {
+                from: self.reserve_x.to_account_info(),
+                to: self.account_x.to_account_info(),
+                authority: self.program_authority.clone(),
+            },
+        )
+    }
+
+    fn send_y(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+        CpiContext::new(
+            self.token_program.to_account_info(),
+            Transfer {
+                from: self.reserve_y.to_account_info(),
+                to: self.account_y.to_account_info(),
+                authority: self.program_authority.clone(),
+            },
+        )
+    }
+}
+
+#[derive(Accounts)]
+pub struct WithdrawProtocolFee<'info> {
+    #[account(seeds = [b"invariantstatev1".as_ref()], bump = state.load()?.bump)]
+    pub state: Loader<'info, State>,
+    #[account(mut, seeds = [b"poolv1", fee_tier.key.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()], bump = pool.load()?.bump)]
+    pub pool: Loader<'info, Pool>,
+    pub token_x: Account<'info, Mint>,
+    pub token_y: Account<'info, Mint>,
+    pub fee_tier: AccountInfo<'info>,
+    #[account(mut,
+        constraint = &reserve_x.mint == token_x.to_account_info().key
+    )]
+    pub reserve_x: Account<'info, TokenAccount>,
+    #[account(mut,
+        constraint = &reserve_y.mint == token_y.to_account_info().key
+    )]
+    pub reserve_y: Account<'info, TokenAccount>,
+    #[account(mut,
+        constraint = &account_x.mint == token_x.to_account_info().key
+    )]
+    pub account_x: Box<Account<'info, TokenAccount>>,
+    #[account(mut,
+        constraint = &account_y.mint == token_y.to_account_info().key
+    )]
+    pub account_y: Box<Account<'info, TokenAccount>>,
+    #[account(mut,
+        constraint = &state.load()?.admin == admin.key)]
+    pub admin: Signer<'info>,
+    pub program_authority: AccountInfo<'info>,
+    pub token_program: AccountInfo<'info>,
+}
+
+impl<'info> SendTokens<'info> for WithdrawProtocolFee<'info> {
     fn send_x(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
         CpiContext::new(
             self.token_program.to_account_info(),

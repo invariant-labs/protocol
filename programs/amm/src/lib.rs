@@ -22,10 +22,20 @@ const SEED: &str = "Invariant";
 
 #[program]
 pub mod amm {
-
     use crate::util::{check_ticks, get_tick_from_price};
 
     use super::*;
+
+    pub fn create_state(ctx: Context<CreateState>, bump: u8) -> ProgramResult {
+        msg!("INVARIANT: CREATE STATE");
+        let state = &mut ctx.accounts.state.load_init()?;
+        **state = State {
+            protocol_fee: Decimal::from_decimal(1, 1),
+            admin: *ctx.accounts.admin.key,
+            bump,
+        };
+        Ok(())
+    }
 
     pub fn create_fee_tier(
         ctx: Context<CreateFeeTier>,
@@ -56,18 +66,17 @@ pub mod amm {
         _tick_spacing: u16,
     ) -> ProgramResult {
         msg!("INVARIANT: CREATE POOL");
-
         let pool = &mut ctx.accounts.pool.load_init()?;
         let fee_tier = ctx.accounts.fee_tier.load()?;
 
         **pool = Pool {
+            state: *ctx.accounts.state.to_account_info().key,
             token_x: *ctx.accounts.token_x.key,
             token_y: *ctx.accounts.token_y.key,
             token_x_reserve: *ctx.accounts.token_x_reserve.key,
             token_y_reserve: *ctx.accounts.token_y_reserve.key,
             tick_spacing: fee_tier.tick_spacing,
             fee: fee_tier.fee,
-            protocol_fee: Decimal::from_decimal(1, 1), // 10%
             liquidity: Decimal::new(0),
             sqrt_price: calculate_price_sqrt(init_tick),
             current_tick_index: init_tick,
@@ -98,6 +107,7 @@ pub mod amm {
 
         let sqrt_price_limit = Decimal::new(sqrt_price_limit);
         let mut pool = ctx.accounts.pool.load_mut()?;
+        let state = ctx.accounts.state.load()?;
         let tickmap = ctx.accounts.tickmap.load()?;
 
         // limit is on the right side of price
@@ -138,7 +148,7 @@ pub mod amm {
             }
 
             // fee has to be added before crossing any ticks
-            let protocol_fee = result.fee_amount * pool.protocol_fee;
+            let protocol_fee = result.fee_amount * state.protocol_fee;
 
             pool.add_fee(result.fee_amount - protocol_fee, x_to_y);
             if x_to_y {
@@ -490,6 +500,29 @@ pub mod amm {
 
         Ok(())
     }
+
+    #[access_control(admin(&ctx.accounts.state, &ctx.accounts.admin))]
+    pub fn withdraw_protocol_fee(ctx: Context<WithdrawProtocolFee>) -> ProgramResult {
+        let mut pool = ctx.accounts.pool.load_mut()?;
+
+        let fee_to_collect_x = pool.fee_protocol_token_x.to_token_floor();
+        let fee_to_collect_y = pool.fee_protocol_token_y.to_token_floor();
+        pool.fee_protocol_token_x =
+            pool.fee_protocol_token_x - Decimal::from_integer(fee_to_collect_x.into());
+        pool.fee_protocol_token_y =
+            pool.fee_protocol_token_y - Decimal::from_integer(fee_to_collect_y.into());
+
+        let seeds = &[SEED.as_bytes(), &[pool.nonce]];
+        let signer = &[&seeds[..]];
+
+        let cpi_ctx_x = ctx.accounts.send_x().with_signer(signer);
+        let cpi_ctx_y = ctx.accounts.send_y().with_signer(signer);
+
+        token::transfer(cpi_ctx_x, fee_to_collect_x)?;
+        token::transfer(cpi_ctx_y, fee_to_collect_y)?;
+
+        Ok(())
+    }
 }
 
 #[error]
@@ -524,4 +557,12 @@ pub enum ErrorCode {
     InvalidPositionIndex = 13, // 137
     #[msg("Position liquidity would be zero")]
     PositionWithoutLiquidity = 14, // 138
+    #[msg("You are not admin")]
+    Unauthorized = 15, // 139
+}
+
+fn admin(state_loader: &Loader<State>, signer: &AccountInfo) -> Result<()> {
+    let state = state_loader.load()?;
+    require!(signer.key.eq(&state.admin), Unauthorized);
+    Ok(())
 }

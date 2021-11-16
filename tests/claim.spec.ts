@@ -10,6 +10,8 @@ import { TICK_LIMIT } from '@invariant-labs/sdk'
 import { tou64 } from '@invariant-labs/sdk'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
+import { CreateState} from '@invariant-labs/sdk/src/market'
+import { sleep } from '@invariant-labs/sdk'
 
 describe('claim', () => {
   const provider = Provider.local()
@@ -28,6 +30,10 @@ describe('claim', () => {
   const feeTier: FeeTier = {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
+  }
+  const state: CreateState = {
+    protocolFee: fromFee(new BN(1000)),
+    admin: admin.publicKey
   }
   let pair: Pair
   let tokenX: Token
@@ -59,6 +65,10 @@ describe('claim', () => {
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
+  it('#createState()', async () => {
+    await market.createState(admin)
+    await market.program.account.state.fetch(await (await market.getStateAddress()).address)
+  })
   it('#createFeeTier()', async () => {
     await market.createFeeTier(feeTier, wallet)
   })
@@ -67,9 +77,9 @@ describe('claim', () => {
     await market.create({
       pair,
       signer: admin,
-      feeTier
+      feeTier,
+      state
     })
-
     const createdPool = await market.get(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
     assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
@@ -93,8 +103,8 @@ describe('claim', () => {
     const upperTick = 10
     const lowerTick = -20
 
-    await market.createTick(pair, upperTick, wallet)
-    await market.createTick(pair, lowerTick, wallet)
+    await market.createTick(pair, upperTick, wallet, feeTier)
+    await market.createTick(pair, lowerTick, wallet, feeTier)
 
     const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
     const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
@@ -134,7 +144,7 @@ describe('claim', () => {
     const targetPrice = DENOMINATOR.muln(100).divn(110)
     const reservesBeforeSwap = await market.getReserveBalances(pair, wallet)
 
-    await market.swap(pair, true, amount, targetPrice, accountX, accountY, swapper)
+    await market.swap(state, pair, true, amount, targetPrice, accountX, accountY, swapper)
 
     const poolDataAfter = await market.get(pair)
     assert.ok(poolDataAfter.liquidity.v.eq(poolDataBefore.liquidity.v))
