@@ -128,7 +128,7 @@
       "accounts": [
         {
           "name": "userStake",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -190,6 +190,10 @@
         {
           "name": "nonce",
           "type": "u8"
+        },
+        {
+          "name": "index",
+          "type": "u32"
         }
       ]
     }

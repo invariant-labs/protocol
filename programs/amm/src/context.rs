@@ -440,7 +440,7 @@ impl<'info> SendTokens<'info> for ClaimFee<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(lower_tick_index: i32, upper_tick_index: i32)]
+#[instruction(lower_tick_index: i32, upper_tick_index: i32, index: i32)]
 pub struct UpdateSecondsPerLiquitity<'info> {
     #[account(mut,
         seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
@@ -457,6 +457,13 @@ pub struct UpdateSecondsPerLiquitity<'info> {
         bump = upper_tick.load()?.bump
     )]
     pub upper_tick: Loader<'info, Tick>,
+    #[account(mut,
+        seeds = [b"positionv1",
+        owner.to_account_info().key.as_ref(),
+        &index.to_le_bytes()],
+        bump = position.load()?.bump
+    )]
+    pub position: Loader<'info, Position>,
     #[account(mut)]
     pub token_x: Account<'info, Mint>,
     #[account(mut)]

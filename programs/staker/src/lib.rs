@@ -27,6 +27,7 @@ pub mod staker {
         start_time: u64,
         end_time: u64,
     ) -> ProgramResult {
+        msg!("CREATE INCENTIVE");
         require!(reward != Decimal::new(0), ZeroAmount);
         let current_time: u64 = Clock::get().unwrap().unix_timestamp as u64; //not sure if that is safe
 
@@ -55,6 +56,7 @@ pub mod staker {
     }
 
     pub fn stake(ctx: Context<CreateUserStake>, index: u32, bump: u8) -> ProgramResult {
+        msg!("STAKE");
         let mut incentive = ctx.accounts.incentive.load_mut()?;
         let current_time = Clock::get().unwrap().unix_timestamp as u64;
         require!(current_time >= incentive.start_time, NotStarted);
@@ -84,7 +86,8 @@ pub mod staker {
         Ok(())
     }
 
-    pub fn withdraw(ctx: Context<Withdraw>, bump: u8, nonce: u8) -> ProgramResult {
+    pub fn withdraw(ctx: Context<Withdraw>, bump: u8, nonce: u8, index: u32) -> ProgramResult {
+        msg!("WITHDRAW");
         let user_stake = &mut ctx.accounts.user_stake.load_mut()?;
         let position = ctx.accounts.position.load()?;
         let mut incentive = ctx.accounts.incentive.load_mut()?;
@@ -92,13 +95,14 @@ pub mod staker {
         let update_slot = position.last_slot as i64;
         let slot = Clock::get()?.slot as i64;
         let diff_slot = slot - update_slot;
-        //require!(diff_slot <= 1, SlotsAreNotEqual);
-        //require!(user_stake.liquidity.v != 0, ZeroSecondsStaked);
+        require!(diff_slot <= 1, SlotsAreNotEqual);
+        require!(user_stake.liquidity.v != 0, ZeroSecondsStaked);
         let seconds_per_liquidity_inside: Decimal =
             Decimal::new(position.seconds_per_liquidity_inside.v);
-        let reward = incentive.total_reward_unclaimed;
 
-        //require!(reward != Decimal::from_integer(0), ZeroAmount);
+        let reward_unclaimed = incentive.total_reward_unclaimed;
+
+        require!(reward_unclaimed != Decimal::from_integer(0), ZeroAmount);
 
         let (seconds_inside, reward) = calculate_reward(
             incentive.total_reward_unclaimed,
@@ -112,12 +116,11 @@ pub mod staker {
         )
         .unwrap();
 
-        incentive.num_of_stakes -= 1;
+        incentive.num_of_stakes -= 1; //TODO end incentive if 0 and is after end
         incentive.total_seconds_claimed = incentive.total_seconds_claimed.add(seconds_inside);
         incentive.total_reward_unclaimed = incentive
             .total_reward_unclaimed
-            .sub(Decimal::from_integer(reward as u128));
-
+            .sub(Decimal::new(reward as u128));
         user_stake.seconds_per_liquidity_initial = Decimal::from_integer(0);
         user_stake.liquidity = Decimal::from_integer(0);
         user_stake.timestamp = 0; // TODO timestamp 0 is a good idea ?

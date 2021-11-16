@@ -128,7 +128,7 @@ export type Staker = {
       "accounts": [
         {
           "name": "userStake",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -190,6 +190,10 @@ export type Staker = {
         {
           "name": "nonce",
           "type": "u8"
+        },
+        {
+          "name": "index",
+          "type": "u32"
         }
       ]
     }
@@ -478,7 +482,7 @@ export const IDL: Staker = {
       "accounts": [
         {
           "name": "userStake",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -540,6 +544,10 @@ export const IDL: Staker = {
         {
           "name": "nonce",
           "type": "u8"
+        },
+        {
+          "name": "index",
+          "type": "u32"
         }
       ]
     }

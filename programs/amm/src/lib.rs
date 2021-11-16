@@ -523,13 +523,17 @@ pub mod amm {
         ctx: Context<UpdateSecondsPerLiquitity>,
         lower_tick_index: i32,
         upper_tick_index: i32,
+        index: i32,
     ) -> ProgramResult {
+        msg!("UPDATE SECOND PER LIQUIDITY");
         let pool = &mut ctx.accounts.pool.load_mut()?;
         let lower_tick = *ctx.accounts.lower_tick.load()?;
         let upper_tick = *ctx.accounts.upper_tick.load()?;
         let current_time = Clock::get().unwrap().unix_timestamp as u64;
-
-        calculate_seconds_per_liquidity_inside(lower_tick, upper_tick, pool, current_time);
+        let position = &mut ctx.accounts.position.load_mut()?;
+        position.seconds_per_liquidity_inside =
+            calculate_seconds_per_liquidity_inside(lower_tick, upper_tick, pool, current_time);
+        position.last_slot = Clock::get()?.slot;
         Ok(())
     }
 }

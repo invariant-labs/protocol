@@ -13,7 +13,8 @@ import {
   ERRORS_STAKER,
   STAKER_SEED,
   createToken,
-  tou64
+  tou64,
+  getTime
 } from './utils'
 import { createToken as createTkn } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
@@ -21,6 +22,7 @@ import { signAndSend } from '../sdk-staker/lib/utils'
 import { DENOMINATOR } from '@invariant-labs/sdk'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
+import { sleep } from '@invariant-labs/sdk'
 
 describe('Withdraw tests', () => {
   const provider = Provider.local()
@@ -88,7 +90,7 @@ describe('Withdraw tests', () => {
     ownerTokenAcc = await incentiveToken.createAccount(positionOwner.publicKey)
 
     //mint to founder acc
-    amount = new anchor.BN(100 * 1e6)
+    amount = new anchor.BN(100 * 1e12)
     await incentiveToken.mintTo(founderTokenAcc, wallet, [], tou64(amount))
 
     //create amm and pool
@@ -126,11 +128,11 @@ describe('Withdraw tests', () => {
 
   it('Withdraw', async () => {
     //create incentive
-    const seconds = new Date().valueOf() / 1000
-    const currenTime = new BN(Math.floor(seconds))
-    const reward: Decimal = { v: new BN(10) }
+
+    const currenTime = getTime()
+    const reward: Decimal = { v: new BN(100).mul(DENOMINATOR) }
     const startTime = currenTime.add(new BN(0))
-    const endTime = currenTime.add(new BN(31_000_000))
+    const endTime = currenTime.add(new BN(40000))
 
     const ix = await staker.createIncentiveInstruction({
       reward,
@@ -149,7 +151,7 @@ describe('Withdraw tests', () => {
     //create position
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
     const upperTick = 10
-    const lowerTick = -20
+    const lowerTick = -30
 
     await market.createTick(pair, upperTick, wallet)
     await market.createTick(pair, lowerTick, wallet)
@@ -189,7 +191,9 @@ describe('Withdraw tests', () => {
       pair: pair,
       owner: positionOwner.publicKey,
       lowerTickIndex: lowerTick,
-      upperTickIndex: upperTick
+      upperTickIndex: upperTick,
+      postion: position,
+      index
     })
 
     const ixStake = await staker.stakeInstruction({
@@ -201,9 +205,31 @@ describe('Withdraw tests', () => {
     })
     await signAndSend(new Transaction().add(ixUpdate).add(ixStake), [positionOwner], connection)
 
-    const stake = await staker.getStake(positionOwner.publicKey)
-    let positionStruct = await market.getPosition(positionOwner.publicKey, index)
-    //change seconds per liquidity
+    // Create owner
+    const trader = Keypair.generate()
+    await connection.requestAirdrop(trader.publicKey, 1e9)
+    const amount = new BN(1000)
+
+    const accountX = await tokenX.createAccount(trader.publicKey)
+    const accountY = await tokenY.createAccount(trader.publicKey)
+
+    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
+
+    await sleep(4000)
+
+    // Swap
+    const targetPrice = DENOMINATOR.muln(100).divn(110)
+
+    const tx = await market.swapTransaction(
+      pair,
+      true,
+      amount,
+      targetPrice,
+      accountX,
+      accountY,
+      trader.publicKey
+    )
+    await signAndSend(tx, [trader], connection)
 
     //withdraw
     const ixWithdraw = await staker.withdrawInstruction({
@@ -214,8 +240,14 @@ describe('Withdraw tests', () => {
       incentiveTokenAcc: incentiveTokenAcc,
       ownerTokenAcc: ownerTokenAcc,
       amm: amm,
+      index: index,
       nonce: nonce
     })
-    //await signAndSend(new Transaction().add(ixUpdate).add(ixWithdraw), [positionOwner], connection)
+    await signAndSend(new Transaction().add(ixUpdate).add(ixWithdraw), [positionOwner], connection)
+
+    const balanceAfter = (await incentiveToken.getAccountInfo(ownerTokenAcc)).amount
+
+    const rew = new BN(15000000000)
+    assert.ok(rew.eq(balanceAfter))
   })
 })

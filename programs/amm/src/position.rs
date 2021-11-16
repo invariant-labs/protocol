@@ -26,11 +26,8 @@ impl Pool {
     }
 
     pub fn update_seconds_per_liquidity_global(self: &mut Self, current_timestamp: u64) {
-        let time_passed_past = (self.last_timestamp - self.start_timestamp) as u64;
-        let time_passed_current = (current_timestamp - self.start_timestamp) as u64;
-
         self.seconds_per_liquidity_global = self.seconds_per_liquidity_global
-            + (Decimal::from_integer((time_passed_current - time_passed_past) as u128)
+            + (Decimal::from_integer((current_timestamp - self.last_timestamp) as u128)
                 / self.liquidity);
 
         self.last_timestamp = current_timestamp;

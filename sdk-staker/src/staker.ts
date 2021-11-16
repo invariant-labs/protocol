@@ -126,13 +126,14 @@ export class Staker {
     position,
     owner,
     amm,
+    index,
     nonce
   }: Withdraw) {
     const [userStakeAddress, userStakeBump] = await PublicKey.findProgramAddress(
       [Buffer.from(utils.bytes.utf8.encode(STAKER_SEED)), owner.toBuffer()],
       this.programId
     )
-    return (await this.program.instruction.withdraw(userStakeBump, nonce, {
+    return (await this.program.instruction.withdraw(userStakeBump, nonce, index, {
       accounts: {
         userStake: userStakeAddress,
         incentive: incentive,
@@ -185,6 +186,7 @@ export interface Withdraw {
   position: PublicKey
   owner: PublicKey
   amm: PublicKey
+  index: number
   nonce: number
 }
 export interface IncentiveStructure {

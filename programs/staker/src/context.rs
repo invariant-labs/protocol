@@ -71,10 +71,10 @@ pub struct CreateUserStake<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(bump: u8)]
+#[instruction(bump: u8, index: u32)]
 pub struct Withdraw<'info> {
-    #[account(
-        seeds = [b"userstakev1", owner.to_account_info().key.as_ref(), system_program.to_account_info().key.as_ref()],
+    #[account(mut,
+        seeds = [b"staker", owner.to_account_info().key.as_ref()],
         bump = bump)]
     pub user_stake: Loader<'info, UserStake>,
     #[account(mut,

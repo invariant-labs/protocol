@@ -654,6 +654,11 @@
           "isSigner": false
         },
         {
+          "name": "position",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "tokenX",
           "isMut": true,
           "isSigner": false
@@ -686,6 +691,10 @@
         },
         {
           "name": "upperTickIndex",
+          "type": "i32"
+        },
+        {
+          "name": "index",
           "type": "i32"
         }
       ]

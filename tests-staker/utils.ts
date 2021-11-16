@@ -9,6 +9,7 @@ import {
 } from '@solana/web3.js'
 import { Token, u64 } from '@solana/spl-token'
 import { TokenInstructions } from '@project-serum/serum'
+import { BN } from '@project-serum/anchor'
 
 export enum ERRORS {
   SIGNATURE = 'Error: Signature verification failed',
@@ -34,6 +35,12 @@ export const eqDecimal = (a: Decimal, b: Decimal) => {
 export const tou64 = (amount) => {
   // eslint-disable-next-line new-cap
   return new u64(amount.toString())
+}
+
+export const getTime = () => {
+  const seconds = new Date().valueOf() / 1000
+  const currenTime = new BN(Math.floor(seconds))
+  return currenTime
 }
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
