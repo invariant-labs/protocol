@@ -17,7 +17,7 @@ const wallet = provider.wallet.payer as Keypair
 const main = async () => {
   const recipient = new PublicKey('9ceXFTqXzJMFDzf9s3fQn2UZDV9ihD8TYRMygGNmSL6G')
 
-  // transferUsdcUsdt(recipient)
+  transferUsdcUsdt(recipient)
   transferUsdcSol(recipient)
 }
 
@@ -25,8 +25,8 @@ const transferUsdcUsdt = async (recipient: PublicKey) => {
   const usdc = new Token(connection, new PublicKey(MOCK_TOKENS.USDC), TOKEN_PROGRAM_ID, wallet)
   const usdt = new Token(connection, new PublicKey(MOCK_TOKENS.USDT), TOKEN_PROGRAM_ID, wallet)
 
-  const recipientUsdc = (await usdc.getAccountInfo(recipient)).address
-  const recipientUsdt = (await usdt.getAccountInfo(recipient)).address
+  const recipientUsdc = await usdc.createAccount(recipient)
+  const recipientUsdt = await usdt.createAccount(recipient)
 
   const usdcAmount = new BN(10).pow(new BN(6)).muln(1000) // 1000 USDC
   const usdtAmount = new BN(10).pow(new BN(6)).muln(1000) // 1000 USDT
@@ -38,8 +38,8 @@ const transferUsdcSol = async (recipient: PublicKey) => {
   const usdc = new Token(connection, new PublicKey(MOCK_TOKENS.USDC), TOKEN_PROGRAM_ID, wallet)
   const sol = new Token(connection, new PublicKey(MOCK_TOKENS.SOL), TOKEN_PROGRAM_ID, wallet)
 
-  const recipientUsdc = (await usdc.getAccountInfo(recipient)).address
-  const recipientSol = (await sol.getAccountInfo(recipient)).address
+  const recipientUsdc = await usdc.createAccount(recipient)
+  const recipientSol = await sol.createAccount(recipient)
 
   const usdcAmount = new BN(10).pow(new BN(6)).muln(1000) // 1000 USD
   const solAmount = new BN(10).pow(new BN(9)).muln(5) // 5 SOL
