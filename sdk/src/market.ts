@@ -387,27 +387,34 @@ export class Market {
 
     const tx = new Transaction()
 
-    if (!lowerExists) {
-      tx.add(await this.createTickInstruction(pair, lowerTick, owner))
-    }
-    if (!upperExists) {
-      tx.add(await this.createTickInstruction(pair, upperTick, owner))
-    }
+    // if (!lowerExists) {
+    tx.add(await this.createTickInstruction(pair, lowerTick, owner))
+    // }
+    // if (!upperExists) {
+    tx.add(await this.createTickInstruction(pair, upperTick, owner))
+    // }
 
     return tx.add(await this.initPositionInstruction(initPosition))
   }
 
   async initPosition(initPosition: InitPosition, signer: Keypair) {
-    const { owner, userTokenX, userTokenY } = initPosition
-
     const tx = await this.initPositionTx(initPosition)
     await signAndSend(tx, [signer], this.connection)
   }
 
-  async swap(props: Swap, owner: Keypair) {
+  async swap(
+    { pair, XtoY, amount, priceLimit, accountX, accountY, byAmountIn }: Swap,
+    owner: Keypair
+  ) {
     const tx = await this.swapTransaction({
       owner: owner.publicKey,
-      ...props
+      pair,
+      XtoY,
+      amount,
+      priceLimit,
+      accountX,
+      accountY,
+      byAmountIn
     })
 
     await signAndSend(tx, [owner], this.connection)
@@ -464,7 +471,6 @@ export class Market {
       }
     )
     const tx = new Transaction().add(swapIx)
-
     return tx
   }
 

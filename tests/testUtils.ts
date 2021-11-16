@@ -80,6 +80,10 @@ export const createStandardFeeTiers = async (market: Market, payer: Keypair) => 
   )
 }
 
+export const toDecimal = (x: number, decimals: number = 0): Decimal => {
+  return { v: DENOMINATOR.muln(x).div(new BN(10).pow(new BN(decimals))) }
+}
+
 export const createTokensAndPool = async (
   market: Market,
   connection: Connection,
@@ -137,6 +141,34 @@ export const createUserWithTokens = async (
   return { owner, userAccountX, userAccountY }
 }
 
-export const toDecimal = (x: number, decimals: number = 0): Decimal => {
-  return { v: DENOMINATOR.muln(x).div(new BN(10).pow(new BN(decimals))) }
+export const createPoolWithLiquidity = async (
+  market: Market,
+  connection: Connection,
+  payer: Keypair,
+  liquidity: Decimal = { v: new BN(10).pow(new BN(22)) },
+  lowerTick: number = -1000,
+  upperTick: number = 1000
+) => {
+  const { pair, mintAuthority } = await createTokensAndPool(market, connection, payer)
+  const { owner, userAccountX, userAccountY } = await createUserWithTokens(
+    pair,
+    connection,
+    mintAuthority,
+    new BN(10).pow(new BN(14))
+  )
+  await market.createPositionList(owner)
+  await market.initPosition(
+    {
+      pair,
+      owner: owner.publicKey,
+      userTokenX: userAccountX,
+      userTokenY: userAccountY,
+      lowerTick,
+      upperTick,
+      liquidityDelta: liquidity
+    },
+    owner
+  )
+
+  return { pair, mintAuthority }
 }
