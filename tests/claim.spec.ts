@@ -103,8 +103,8 @@ describe('claim', () => {
     const upperTick = 10
     const lowerTick = -20
 
-    await market.createTick(pair, upperTick, wallet, feeTier)
-    await market.createTick(pair, lowerTick, wallet, feeTier)
+    await market.createTick(pair, upperTick, wallet)
+    await market.createTick(pair, lowerTick, wallet)
 
     const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
     const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
@@ -144,7 +144,7 @@ describe('claim', () => {
     const targetPrice = DENOMINATOR.muln(100).divn(110)
     const reservesBeforeSwap = await market.getReserveBalances(pair, wallet)
 
-    await market.swap(state, pair, true, amount, targetPrice, accountX, accountY, swapper)
+    await market.swap(pair, true, amount, targetPrice, accountX, accountY, swapper)
 
     const poolDataAfter = await market.get(pair)
     assert.ok(poolDataAfter.liquidity.v.eq(poolDataBefore.liquidity.v))

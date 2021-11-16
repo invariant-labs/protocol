@@ -9,6 +9,7 @@ import { assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
 import { ERRORS, fromFee } from '@invariant-labs/sdk/lib/utils'
 import { sleep } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
+import { CreateState } from '@invariant-labs/sdk/src/market'
 
 describe('Position list', () => {
   const provider = Provider.local()
@@ -27,6 +28,10 @@ describe('Position list', () => {
   const feeTier: FeeTier = {
     fee: fromFee(new BN(600)),
     tickSpacing: 3
+  }
+  const state: CreateState = {
+    protocolFee: fromFee(new BN(1000)),
+    admin: admin.publicKey
   }
   let pair: Pair
   let tokenX: Token
@@ -72,6 +77,10 @@ describe('Position list', () => {
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], yOwnerAmount)
   })
   describe('Settings', async () => {
+    it('#createState()', async () => {
+      await market.createState(admin)
+      await market.program.account.state.fetch(await (await market.getStateAddress()).address)
+    })
     it('createFeeTier()', async () => {
       await market.createFeeTier(feeTier, wallet)
     })
@@ -82,7 +91,8 @@ describe('Position list', () => {
         pair,
         signer: admin,
         initTick,
-        feeTier
+        feeTier,
+        state
       })
       await market.createPositionList(positionOwner)
 

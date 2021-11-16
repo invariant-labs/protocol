@@ -18,6 +18,8 @@ import { createStandardFeeTiers, createToken, eqDecimal } from './testUtils'
 import { MAX_TICK } from '@invariant-labs/sdk/lib/math'
 import { MIN_TICK } from '@invariant-labs/sdk/lib/math'
 import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
+import { CreateState } from '@invariant-labs/sdk/src/market'
+import { fromFee } from '@invariant-labs/sdk/src/utils'
 
 describe('position', () => {
   const provider = Provider.local()
@@ -34,6 +36,10 @@ describe('position', () => {
     anchor.workspace.Amm.programId
   )
   const feeTier = FEE_TIERS[0]
+  const state: CreateState = {
+    protocolFee: fromFee(new BN(1000)),
+    admin: admin.publicKey
+  }
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -70,6 +76,10 @@ describe('position', () => {
   it('#createFeeTier()', async () => {
     await createStandardFeeTiers(market, wallet)
   })
+  it('#createState()', async () => {
+    await market.createState(admin)
+    await market.program.account.state.fetch(await (await market.getStateAddress()).address)
+  })
   it('#create()', async () => {
     // fee tier 0.02% / 4
     initTick = -23028
@@ -77,7 +87,8 @@ describe('position', () => {
       pair,
       signer: admin,
       initTick,
-      feeTier
+      feeTier,
+      state
     })
 
     const createdPool = await market.get(pair)
@@ -117,7 +128,7 @@ describe('position', () => {
     const upperTick = 0
 
     it('#createTick(lower)', async () => {
-      const ix = await market.createTickInstruction(pair, lowerTick, wallet.publicKey)
+      const ix = await market.createTickInstruction(pair, lowerTick, wallet.publicKey,)
       await signAndSend(new Transaction().add(ix), [wallet], connection)
 
       const expectedZeroDecimal = new BN(0)

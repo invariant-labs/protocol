@@ -16,6 +16,7 @@ import {
 } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
+import { CreateState } from '@invariant-labs/sdk/src/market'
 
 describe('swap', () => {
   const provider = Provider.local()
@@ -33,6 +34,10 @@ describe('swap', () => {
   const feeTier: FeeTier = {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
+  }
+  const state: CreateState = {
+    protocolFee: fromFee(new BN(1000)),
+    admin: admin.publicKey
   }
   let pair: Pair
   let tokenX: Token
@@ -64,6 +69,10 @@ describe('swap', () => {
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
+  it('#createState()', async () => {
+    await market.createState(admin)
+    await market.program.account.state.fetch(await (await market.getStateAddress()).address)
+  })
   it('#createFeeTier()', async () => {
     await market.createFeeTier(feeTier, wallet)
   })
@@ -72,7 +81,8 @@ describe('swap', () => {
     await market.create({
       pair,
       signer: admin,
-      feeTier
+      feeTier,
+      state
     })
 
     const createdPool = await market.get(pair)

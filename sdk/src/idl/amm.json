@@ -1147,8 +1147,5 @@
       "name": "Unauthorized",
       "msg": "You are not admin"
     }
-  ],
-  "metadata": {
-    "address": "FPr3fREovDnqMfubJTrJAFwopvJB8grXj1o3gkmSyzmw"
-  }
+  ]
 }
