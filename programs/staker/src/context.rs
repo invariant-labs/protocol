@@ -5,6 +5,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, TokenAccount, Transfer};
 
 #[derive(Accounts)]
+#[instruction(bump: u8)]
 pub struct CreateIncentive<'info> {
     #[account(init, payer = founder)]
     pub incentive: Loader<'info, Incentive>,
@@ -18,10 +19,12 @@ pub struct CreateIncentive<'info> {
     )]
     pub founder_token_account: Account<'info, TokenAccount>,
     pub pool: AccountLoader<'info, Pool>,
-
     #[account(mut)]
     pub founder: Signer<'info>,
-    pub staker_authority: AccountInfo<'info>, // TODO validation ??
+    #[account(mut,
+        seeds = [b"staker".as_ref()],
+        bump = bump)]
+    pub staker_authority: AccountInfo<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
     pub amm: Program<'info, Amm>,
@@ -55,12 +58,15 @@ pub struct CreateUserStake<'info> {
         bump = bump)]
     pub user_stake: Loader<'info, UserStake>,
     #[account(mut,
-        constraint = owner.key == &position.load()?.owner
-        // seeds = [b"positionv1",
-        // owner.to_account_info().key.as_ref(),
-        // &index.to_le_bytes()],
-        // bump = position.load()?.bump
-    )] //TODO try to use seed
+        constraint = &Pubkey::find_program_address(
+            &[
+                b"positionv1",
+                owner.to_account_info().key.as_ref(),
+                &index.to_le_bytes(),
+            ],
+            &amm::program::Amm::id(),
+        ).0 == position.to_account_info().key
+    )]
     pub position: AccountLoader<'info, Position>,
     #[account(mut)]
     pub incentive: Loader<'info, Incentive>,
@@ -71,11 +77,11 @@ pub struct CreateUserStake<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(bump: u8, index: u32)]
+#[instruction(index: u32, bump_stake: u8, bump_authority: u8, )]
 pub struct Withdraw<'info> {
     #[account(mut,
         seeds = [b"staker", owner.to_account_info().key.as_ref()],
-        bump = bump)]
+        bump = bump_stake)]
     pub user_stake: Loader<'info, UserStake>,
     #[account(mut,
         constraint = &user_stake.load()?.incentive == incentive.to_account_info().key 
@@ -91,14 +97,20 @@ pub struct Withdraw<'info> {
     )]
     pub owner_token_account: Account<'info, TokenAccount>,
     #[account(mut,
-        constraint = owner.key == &position.load()?.owner
-        // seeds = [b"positionv1",
-        // owner.to_account_info().key.as_ref(),
-        // &index.to_le_bytes()],
-        // bump = position.load()?.bump
-    )] //TODO try to use seed
+        constraint = &Pubkey::find_program_address(
+            &[
+                b"positionv1",
+                owner.to_account_info().key.as_ref(),
+                &index.to_le_bytes(),
+            ],
+            &amm::program::Amm::id(),
+        ).0 == position.to_account_info().key
+    )]
     pub position: AccountLoader<'info, Position>,
-    pub staker_authority: AccountInfo<'info>, // TODO validation with seed
+    #[account(mut,
+        seeds = [b"staker".as_ref()],
+        bump = bump_authority)]
+    pub staker_authority: AccountInfo<'info>,
     pub owner: Signer<'info>,
     pub token_program: AccountInfo<'info>,
     pub amm: Program<'info, Amm>,

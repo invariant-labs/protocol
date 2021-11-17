@@ -647,7 +647,6 @@ export class Market {
     owner,
     lowerTickIndex,
     upperTickIndex,
-    position,
     index
   }: SecondsPerLiquidity) {
     const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTickIndex)
@@ -768,6 +767,5 @@ export interface SecondsPerLiquidity {
   owner: PublicKey
   lowerTickIndex: number
   upperTickIndex: number
-  position: PublicKey
   index: number
 }

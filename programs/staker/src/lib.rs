@@ -23,6 +23,7 @@ pub mod staker {
 
     pub fn create_incentive(
         ctx: Context<CreateIncentive>,
+        bump: u8,
         reward: Decimal,
         start_time: u64,
         end_time: u64,
@@ -55,7 +56,7 @@ pub mod staker {
         Ok(())
     }
 
-    pub fn stake(ctx: Context<CreateUserStake>, index: u32, bump: u8) -> ProgramResult {
+    pub fn stake(ctx: Context<CreateUserStake>, index: i32, bump: u8) -> ProgramResult {
         msg!("STAKE");
         let mut incentive = ctx.accounts.incentive.load_mut()?;
         let current_time = Clock::get().unwrap().unix_timestamp as u64;
@@ -72,13 +73,10 @@ pub mod staker {
         {
             user_stake.position = *ctx.accounts.position.to_account_info().key;
             user_stake.owner = *ctx.accounts.owner.to_account_info().key;
-            user_stake.timestamp = Clock::get().unwrap().unix_timestamp as u64;
             user_stake.liquidity = Decimal::new(position.liquidity.v);
             user_stake.incentive = *ctx.accounts.incentive.to_account_info().key;
             user_stake.seconds_per_liquidity_initial =
                 Decimal::new(position.seconds_per_liquidity_inside.v);
-            user_stake.index = index;
-            user_stake.bump = bump;
             incentive.num_of_stakes += 1;
         }
         let liquidity = user_stake.liquidity;
@@ -86,8 +84,24 @@ pub mod staker {
         Ok(())
     }
 
-    pub fn withdraw(ctx: Context<Withdraw>, bump: u8, nonce: u8, index: u32) -> ProgramResult {
+    pub fn withdraw(
+        ctx: Context<Withdraw>,
+        index: i32,
+        bumpStake: u8,
+        bumpAuthority: u8,
+        nonce: u8,
+    ) -> ProgramResult {
         msg!("WITHDRAW");
+        let constraint = &Pubkey::find_program_address(
+            &[
+                b"positionv1",
+                ctx.accounts.position.to_account_info().key.as_ref(),
+                &index.to_le_bytes(),
+            ],
+            &amm::program::Amm::id(),
+        )
+        .0;
+        msg!("constraint {}", constraint);
         let user_stake = &mut ctx.accounts.user_stake.load_mut()?;
         let position = ctx.accounts.position.load()?;
         let mut incentive = ctx.accounts.incentive.load_mut()?;
@@ -97,6 +111,10 @@ pub mod staker {
         let diff_slot = slot - update_slot;
         require!(diff_slot <= 1, SlotsAreNotEqual);
         require!(user_stake.liquidity.v != 0, ZeroSecondsStaked);
+        require!(
+            user_stake.seconds_per_liquidity_initial.v != 0,
+            ZeroSecPerLiq
+        );
         let seconds_per_liquidity_inside: Decimal =
             Decimal::new(position.seconds_per_liquidity_inside.v);
 
@@ -123,7 +141,6 @@ pub mod staker {
             .sub(Decimal::new(reward as u128));
         user_stake.seconds_per_liquidity_initial = Decimal::from_integer(0);
         user_stake.liquidity = Decimal::from_integer(0);
-        user_stake.timestamp = 0; // TODO timestamp 0 is a good idea ?
 
         let seeds = &[STAKER_SEED.as_bytes(), &[nonce]];
         let signer = &[&seeds[..]];
@@ -160,4 +177,6 @@ pub enum ErrorCode {
     SlotsAreNotEqual = 8,
     #[msg("Zero seconds staked")]
     ZeroSecondsStaked = 9,
+    #[msg("Seconds per liquidity is zero")]
+    ZeroSecPerLiq = 10,
 }

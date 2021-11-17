@@ -21,7 +21,6 @@ export class Staker {
   network: Network
   wallet: IWallet
   programId: PublicKey
-  stakerAuthority: PublicKey
   idl: Idl = idl as Idl
   public program: Program
 
@@ -31,7 +30,6 @@ export class Staker {
     connection: Connection,
     network: Network,
     wallet: IWallet,
-    stakerAuthority: PublicKey,
     programId?: PublicKey,
     opts?: ConfirmOptions
   ) {
@@ -39,7 +37,6 @@ export class Staker {
     this.network = network
     this.wallet = wallet
     this.opts = opts
-    this.stakerAuthority = stakerAuthority
     const provider = new Provider(connection, wallet, opts || Provider.defaultOptions())
     switch (network) {
       case Network.LOCAL:
@@ -60,17 +57,20 @@ export class Staker {
     pool,
     incentiveTokenAcc,
     founderTokenAcc,
-    amm,
-    stakerAuthority
+    amm
   }: CreateIncentive) {
-    return this.program.instruction.createIncentive(reward, startTime, endTime, {
+    const [stakerAuthority, bump] = await PublicKey.findProgramAddress(
+      [Buffer.from(STAKER_SEED)],
+      this.programId
+    )
+    return this.program.instruction.createIncentive(bump, reward, startTime, endTime, {
       accounts: {
         incentive: incentive.publicKey,
         pool: pool,
         incentiveTokenAccount: incentiveTokenAcc,
         founderTokenAccount: founderTokenAcc,
         founder: founder.publicKey,
-        stakerAuthority: stakerAuthority,
+        stakerAuthority,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
         amm: amm,
@@ -120,7 +120,6 @@ export class Staker {
 
   public async withdrawInstruction({
     incentive,
-    stakerAuthority,
     incentiveTokenAcc,
     ownerTokenAcc,
     position,
@@ -129,25 +128,36 @@ export class Staker {
     index,
     nonce
   }: Withdraw) {
+    const [stakerAuthority, stakerAuthorityBump] = await PublicKey.findProgramAddress(
+      [Buffer.from(STAKER_SEED)],
+      this.programId
+    )
+
     const [userStakeAddress, userStakeBump] = await PublicKey.findProgramAddress(
       [Buffer.from(utils.bytes.utf8.encode(STAKER_SEED)), owner.toBuffer()],
       this.programId
     )
-    return (await this.program.instruction.withdraw(userStakeBump, nonce, index, {
-      accounts: {
-        userStake: userStakeAddress,
-        incentive: incentive,
-        incentiveTokenAccount: incentiveTokenAcc,
-        ownerTokenAccount: ownerTokenAcc,
-        position: position,
-        stakerAuthority: stakerAuthority,
-        owner: owner,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        amm: amm,
-        systemProgram: SystemProgram.programId,
-        rent: SYSVAR_RENT_PUBKEY
+    return (await this.program.instruction.withdraw(
+      index,
+      userStakeBump,
+      stakerAuthorityBump,
+      nonce,
+      {
+        accounts: {
+          userStake: userStakeAddress,
+          incentive: incentive,
+          incentiveTokenAccount: incentiveTokenAcc,
+          ownerTokenAccount: ownerTokenAcc,
+          position,
+          stakerAuthority,
+          owner: owner,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          amm: amm,
+          systemProgram: SystemProgram.programId,
+          rent: SYSVAR_RENT_PUBKEY
+        }
       }
-    })) as TransactionInstruction
+    )) as TransactionInstruction
   }
 }
 export interface CreateIncentive {
@@ -160,7 +170,6 @@ export interface CreateIncentive {
   incentiveTokenAcc: PublicKey
   founderTokenAcc: PublicKey
   amm: PublicKey
-  stakerAuthority: PublicKey
 }
 export interface createStake {
   position: PublicKey
@@ -180,7 +189,6 @@ export interface Stake {
 }
 export interface Withdraw {
   incentive: PublicKey
-  stakerAuthority: PublicKey
   incentiveTokenAcc: PublicKey
   ownerTokenAcc: PublicKey
   position: PublicKey

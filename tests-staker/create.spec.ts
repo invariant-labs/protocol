@@ -48,13 +48,7 @@ describe('Create incentive tests', () => {
     )
     stakerAuthority = _mintAuthority
     nonce = _nonce
-    staker = new Staker(
-      connection,
-      Network.LOCAL,
-      provider.wallet,
-      stakerAuthority,
-      program.programId
-    )
+    staker = new Staker(connection, Network.LOCAL, provider.wallet, program.programId)
 
     // create founder account
     founderAccount = Keypair.generate()
@@ -123,7 +117,7 @@ describe('Create incentive tests', () => {
     const startTime = currenTime.add(new BN(0))
     const endTime = currenTime.add(new BN(31_000_000))
     const totalSecondsClaimed: Decimal = { v: new BN(0) }
-    console.log(currenTime.toString())
+
     const ix = await staker.createIncentiveInstruction({
       reward,
       startTime,
@@ -133,8 +127,7 @@ describe('Create incentive tests', () => {
       founder: founderAccount,
       incentiveTokenAcc: incentiveTokenAcc,
       founderTokenAcc: founderTokenAcc,
-      amm: amm,
-      stakerAuthority: stakerAuthority
+      amm: amm
     })
     await signAndSend(new Transaction().add(ix), [incentiveAccount, founderAccount], connection)
 
@@ -170,8 +163,7 @@ describe('Create incentive tests', () => {
       founder: founderAccount,
       incentiveTokenAcc: incentiveTokenAcc,
       founderTokenAcc: founderTokenAcc,
-      amm: amm,
-      stakerAuthority: stakerAuthority
+      amm: amm
     })
 
     await assertThrowsAsync(
@@ -204,8 +196,7 @@ describe('Create incentive tests', () => {
       founder: founderAccount,
       incentiveTokenAcc: incentiveTokenAcc,
       founderTokenAcc: founderTokenAcc,
-      amm: amm,
-      stakerAuthority: stakerAuthority
+      amm: amm
     })
 
     await assertThrowsAsync(
@@ -238,8 +229,7 @@ describe('Create incentive tests', () => {
       founder: founderAccount,
       incentiveTokenAcc: incentiveTokenAcc,
       founderTokenAcc: founderTokenAcc,
-      amm: amm,
-      stakerAuthority: stakerAuthority
+      amm: amm
     })
 
     await assertThrowsAsync(
@@ -272,8 +262,7 @@ describe('Create incentive tests', () => {
       founder: founderAccount,
       incentiveTokenAcc: incentiveTokenAcc,
       founderTokenAcc: founderTokenAcc,
-      amm: amm,
-      stakerAuthority: stakerAuthority
+      amm: amm
     })
     await signAndSend(new Transaction().add(ix), [incentiveAccount, founderAccount], connection)
     const balance = (await incentiveToken.getAccountInfo(incentiveTokenAcc)).amount

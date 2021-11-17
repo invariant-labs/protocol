@@ -32,7 +32,7 @@ export type Staker = {
         },
         {
           "name": "stakerAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -57,6 +57,10 @@ export type Staker = {
         }
       ],
       "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        },
         {
           "name": "reward",
           "type": {
@@ -115,7 +119,7 @@ export type Staker = {
       "args": [
         {
           "name": "index",
-          "type": "u32"
+          "type": "i32"
         },
         {
           "name": "bump",
@@ -148,12 +152,12 @@ export type Staker = {
         },
         {
           "name": "position",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "stakerAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -184,16 +188,20 @@ export type Staker = {
       ],
       "args": [
         {
-          "name": "bump",
+          "name": "index",
+          "type": "i32"
+        },
+        {
+          "name": "bumpStake",
+          "type": "u8"
+        },
+        {
+          "name": "bumpAuthority",
           "type": "u8"
         },
         {
           "name": "nonce",
           "type": "u8"
-        },
-        {
-          "name": "index",
-          "type": "u32"
         }
       ]
     }
@@ -227,10 +235,6 @@ export type Staker = {
             "type": {
               "defined": "Decimal"
             }
-          },
-          {
-            "name": "timestamp",
-            "type": "u64"
           },
           {
             "name": "index",
@@ -348,6 +352,11 @@ export type Staker = {
       "code": 309,
       "name": "ZeroSecondsStaked",
       "msg": "Zero seconds staked"
+    },
+    {
+      "code": 310,
+      "name": "ZeroSecPerLiq",
+      "msg": "Seconds per liquidity is zero"
     }
   ]
 };
@@ -386,7 +395,7 @@ export const IDL: Staker = {
         },
         {
           "name": "stakerAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -411,6 +420,10 @@ export const IDL: Staker = {
         }
       ],
       "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        },
         {
           "name": "reward",
           "type": {
@@ -469,7 +482,7 @@ export const IDL: Staker = {
       "args": [
         {
           "name": "index",
-          "type": "u32"
+          "type": "i32"
         },
         {
           "name": "bump",
@@ -502,12 +515,12 @@ export const IDL: Staker = {
         },
         {
           "name": "position",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "stakerAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -538,16 +551,20 @@ export const IDL: Staker = {
       ],
       "args": [
         {
-          "name": "bump",
+          "name": "index",
+          "type": "i32"
+        },
+        {
+          "name": "bumpStake",
+          "type": "u8"
+        },
+        {
+          "name": "bumpAuthority",
           "type": "u8"
         },
         {
           "name": "nonce",
           "type": "u8"
-        },
-        {
-          "name": "index",
-          "type": "u32"
         }
       ]
     }
@@ -581,10 +598,6 @@ export const IDL: Staker = {
             "type": {
               "defined": "Decimal"
             }
-          },
-          {
-            "name": "timestamp",
-            "type": "u64"
           },
           {
             "name": "index",
@@ -702,6 +715,11 @@ export const IDL: Staker = {
       "code": 309,
       "name": "ZeroSecondsStaked",
       "msg": "Zero seconds staked"
+    },
+    {
+      "code": 310,
+      "name": "ZeroSecPerLiq",
+      "msg": "Seconds per liquidity is zero"
     }
   ]
 };

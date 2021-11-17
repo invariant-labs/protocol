@@ -54,13 +54,7 @@ describe('Stake tests', () => {
     )
     stakerAuthority = _mintAuthority
     nonce = _nonce
-    staker = new Staker(
-      connection,
-      Network.LOCAL,
-      provider.wallet,
-      stakerAuthority,
-      program.programId
-    )
+    staker = new Staker(connection, Network.LOCAL, provider.wallet, program.programId)
 
     incentiveAccount = Keypair.generate()
     positionOwner = Keypair.generate()
@@ -139,8 +133,7 @@ describe('Stake tests', () => {
       founder: founderAccount,
       incentiveTokenAcc: incentiveTokenAcc,
       founderTokenAcc: founderTokenAcc,
-      amm: amm,
-      stakerAuthority: stakerAuthority
+      amm: amm
     })
     await signAndSend(new Transaction().add(ix), [incentiveAccount, founderAccount], connection)
 
@@ -187,7 +180,8 @@ describe('Stake tests', () => {
       pair: pair,
       owner: positionOwner.publicKey,
       lowerTickIndex: lowerTick,
-      upperTickIndex: upperTick
+      upperTickIndex: upperTick,
+      index
     })
 
     const ixStake = await staker.stakeInstruction({

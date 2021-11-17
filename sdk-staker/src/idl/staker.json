@@ -32,7 +32,7 @@
         },
         {
           "name": "stakerAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -57,6 +57,10 @@
         }
       ],
       "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        },
         {
           "name": "reward",
           "type": {
@@ -115,7 +119,7 @@
       "args": [
         {
           "name": "index",
-          "type": "u32"
+          "type": "i32"
         },
         {
           "name": "bump",
@@ -148,12 +152,12 @@
         },
         {
           "name": "position",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "stakerAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -184,16 +188,20 @@
       ],
       "args": [
         {
-          "name": "bump",
+          "name": "index",
+          "type": "i32"
+        },
+        {
+          "name": "bumpStake",
+          "type": "u8"
+        },
+        {
+          "name": "bumpAuthority",
           "type": "u8"
         },
         {
           "name": "nonce",
           "type": "u8"
-        },
-        {
-          "name": "index",
-          "type": "u32"
         }
       ]
     }
@@ -227,10 +235,6 @@
             "type": {
               "defined": "Decimal"
             }
-          },
-          {
-            "name": "timestamp",
-            "type": "u64"
           },
           {
             "name": "index",
@@ -348,6 +352,11 @@
       "code": 309,
       "name": "ZeroSecondsStaked",
       "msg": "Zero seconds staked"
+    },
+    {
+      "code": 310,
+      "name": "ZeroSecPerLiq",
+      "msg": "Seconds per liquidity is zero"
     }
   ]
 }
