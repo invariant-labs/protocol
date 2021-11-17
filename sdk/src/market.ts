@@ -393,9 +393,10 @@ export class Market {
 
     if (account === null) {
       tx.add(await this.createPositionListInstruction(owner))
+      return tx.add(await this.initPositionInstruction(initPosition, true))
     }
 
-    return tx.add(await this.initPositionInstruction(initPosition, true))
+    return tx.add(await this.initPositionInstruction(initPosition, false))
   }
 
   async initPosition(initPosition: InitPosition, signer: Keypair) {
