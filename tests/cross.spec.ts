@@ -5,9 +5,8 @@ import { Keypair, PublicKey } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken } from './testUtils'
 import { Market, Pair, SEED, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@invariant-labs/sdk'
-import { FeeTier } from '@invariant-labs/sdk/lib/market'
+import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { CreateState } from '@invariant-labs/sdk/src/market'
 
 describe('cross', () => {
   const provider = Provider.local()
@@ -26,10 +25,7 @@ describe('cross', () => {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
   }
-  const state: CreateState = {
-    protocolFee: fromFee(new BN(1000)),
-    admin: admin.publicKey
-  }
+  const protocolFee: Decimal = { v: fromFee(new BN(1000))}
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -61,7 +57,7 @@ describe('cross', () => {
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
   it('#createState()', async () => {
-    await market.createState(admin)
+    await market.createState(admin, protocolFee)
     await market.program.account.state.fetch(await (await market.getStateAddress()).address)
   })
   it('#createFeeTier()', async () => {
@@ -72,8 +68,7 @@ describe('cross', () => {
     await market.create({
       pair,
       signer: admin,
-      feeTier,
-      state
+      feeTier
     })
 
     const createdPool = await market.get(pair)

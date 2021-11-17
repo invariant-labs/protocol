@@ -18,8 +18,8 @@ import { createStandardFeeTiers, createToken, eqDecimal } from './testUtils'
 import { MAX_TICK } from '@invariant-labs/sdk/lib/math'
 import { MIN_TICK } from '@invariant-labs/sdk/lib/math'
 import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
-import { CreateState } from '@invariant-labs/sdk/src/market'
 import { fromFee } from '@invariant-labs/sdk/src/utils'
+import { Decimal } from '@invariant-labs/sdk/src/market'
 
 describe('position', () => {
   const provider = Provider.local()
@@ -36,10 +36,7 @@ describe('position', () => {
     anchor.workspace.Amm.programId
   )
   const feeTier = FEE_TIERS[0]
-  const state: CreateState = {
-    protocolFee: fromFee(new BN(1000)),
-    admin: admin.publicKey
-  }
+  const protocolFee: Decimal = { v: fromFee(new BN(1000))}
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -77,7 +74,7 @@ describe('position', () => {
     await createStandardFeeTiers(market, wallet)
   })
   it('#createState()', async () => {
-    await market.createState(admin)
+    await market.createState(admin, protocolFee)
     await market.program.account.state.fetch(await (await market.getStateAddress()).address)
   })
   it('#create()', async () => {
@@ -87,8 +84,7 @@ describe('position', () => {
       pair,
       signer: admin,
       initTick,
-      feeTier,
-      state
+      feeTier
     })
 
     const createdPool = await market.get(pair)

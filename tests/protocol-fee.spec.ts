@@ -2,13 +2,12 @@ import * as anchor from '@project-serum/anchor'
 import { Provider, BN, Program } from '@project-serum/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { Market, Network, Pair, SEED, DENOMINATOR, TICK_LIMIT } from '@invariant-labs/sdk'
-import { FeeTier } from '@invariant-labs/sdk/lib/market'
+import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken } from './testUtils'
 import { assert } from 'chai'
 import { tou64 } from '@invariant-labs/sdk'
-import { CreateState } from '@invariant-labs/sdk/src/market'
 import { assertThrowsAsync, ERRORS } from '@invariant-labs/sdk/src/utils'
 
 describe('protocol-fee', () => {
@@ -29,12 +28,9 @@ describe('protocol-fee', () => {
         fee: fromFee(new BN(600)),
         tickSpacing: 10
     }
-    const state: CreateState = {
-        protocolFee: fromFee(new BN(1000)),
-        admin: admin.publicKey
-      }
     const upperTick = 10
     const lowerTick = -20
+    const protocolFee: Decimal = { v: fromFee(new BN(1000))}
     let pair: Pair
     let tokenX: Token
     let tokenY: Token
@@ -69,7 +65,7 @@ describe('protocol-fee', () => {
         tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
     })
     it('#createState()', async () => {
-        await market.createState(admin)
+        await market.createState(admin, protocolFee)
       })
     it('#createFeeTier()', async () => {
         await market.createFeeTier(feeTier, wallet)
@@ -80,7 +76,6 @@ describe('protocol-fee', () => {
             pair,
             signer: admin,
             feeTier,
-            state
         })
 
     const createdPool = await market.get(pair)

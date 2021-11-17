@@ -26,11 +26,15 @@ pub mod amm {
 
     use super::*;
 
-    pub fn create_state(ctx: Context<CreateState>, bump: u8) -> ProgramResult {
+    pub fn create_state(
+        ctx: Context<CreateState>,
+        bump: u8,
+        protocol_fee: Decimal,
+    ) -> ProgramResult {
         msg!("INVARIANT: CREATE STATE");
         let state = &mut ctx.accounts.state.load_init()?;
         **state = State {
-            protocol_fee: Decimal::from_decimal(1, 1),
+            protocol_fee,
             admin: *ctx.accounts.admin.key,
             bump,
         };

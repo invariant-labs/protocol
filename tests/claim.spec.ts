@@ -9,9 +9,9 @@ import { DENOMINATOR } from '@invariant-labs/sdk'
 import { TICK_LIMIT } from '@invariant-labs/sdk'
 import { tou64 } from '@invariant-labs/sdk'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { FeeTier } from '@invariant-labs/sdk/lib/market'
-import { CreateState} from '@invariant-labs/sdk/src/market'
+import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { sleep } from '@invariant-labs/sdk'
+import { DECIMAL } from '@invariant-labs/sdk/src/utils'
 
 describe('claim', () => {
   const provider = Provider.local()
@@ -31,10 +31,7 @@ describe('claim', () => {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
   }
-  const state: CreateState = {
-    protocolFee: fromFee(new BN(1000)),
-    admin: admin.publicKey
-  }
+  const protocolFee: Decimal = { v: fromFee(new BN(1000))}
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -66,7 +63,7 @@ describe('claim', () => {
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
   it('#createState()', async () => {
-    await market.createState(admin)
+    await market.createState(admin, protocolFee)
   })
   it('#createFeeTier()', async () => {
     await market.createFeeTier(feeTier, wallet)
@@ -77,7 +74,6 @@ describe('claim', () => {
       pair,
       signer: admin,
       feeTier,
-      state
     })
     const createdPool = await market.get(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))

@@ -135,8 +135,8 @@ export class Market {
     return (await this.program.account.feeTier.fetch(address)) as FeeTierStructure
   }
 
-  async getPool(tokenX: PublicKey, tokenY: PublicKey, feeTier: FeeTier) {
-    const address = await new Pair(tokenX, tokenY, feeTier).getAddress(this.program.programId)
+  async getPool(pair: Pair) {
+    const address = await pair.getAddress(this.program.programId)
     return (await this.program.account.pool.fetch(address)) as PoolStructure
   }
 
@@ -280,22 +280,22 @@ export class Market {
     await signAndSend(new Transaction().add(ix), [payer], this.connection)
   }
 
-  async createStateInstruction(payer: PublicKey) {
+  async createStateInstruction(admin: PublicKey, protocol_fee: Decimal) {
     const { address, bump } = await this.getStateAddress()
 
-    return this.program.instruction.createState(bump, {
+    return this.program.instruction.createState(bump, protocol_fee, {
       accounts: {
         state: address,
-        admin: payer,
+        admin,
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId
       }
     })
   }
 
-  async createState(payer: Keypair) {
-    const ix = await this.createStateInstruction(payer.publicKey)
-    await signAndSend(new Transaction().add(ix), [payer], this.connection)
+  async createState(admin: Keypair, protocol_fee: Decimal) {
+    const ix = await this.createStateInstruction(admin.publicKey, protocol_fee)
+    await signAndSend(new Transaction().add(ix), [admin], this.connection)
   }
 
   async getStateAddress() {
@@ -771,19 +771,12 @@ export interface CreatePool {
   signer: Keypair
   initTick?: number
   feeTier: FeeTier
-  state: CreateState
 }
 
 export interface FeeTier {
   fee: BN
   tickSpacing?: number
 }
-
-export interface CreateState {
-  protocolFee: BN
-  admin: PublicKey
-}
-
 export interface ClaimFee {
   pair: Pair
   owner: PublicKey

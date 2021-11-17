@@ -8,8 +8,7 @@ import { createToken, eqDecimal, positionEquals, positionWithoutOwnerEquals } fr
 import { assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
 import { ERRORS, fromFee } from '@invariant-labs/sdk/lib/utils'
 import { sleep } from '@invariant-labs/sdk'
-import { FeeTier } from '@invariant-labs/sdk/lib/market'
-import { CreateState } from '@invariant-labs/sdk/src/market'
+import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 
 describe('Position list', () => {
   const provider = Provider.local()
@@ -29,10 +28,7 @@ describe('Position list', () => {
     fee: fromFee(new BN(600)),
     tickSpacing: 3
   }
-  const state: CreateState = {
-    protocolFee: fromFee(new BN(1000)),
-    admin: admin.publicKey
-  }
+  const protocolFee: Decimal = { v: fromFee(new BN(1000))}
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -78,7 +74,7 @@ describe('Position list', () => {
   })
   describe('Settings', async () => {
     it('#createState()', async () => {
-      await market.createState(admin)
+      await market.createState(admin, protocolFee)
       await market.program.account.state.fetch(await (await market.getStateAddress()).address)
     })
     it('createFeeTier()', async () => {
@@ -91,8 +87,7 @@ describe('Position list', () => {
         pair,
         signer: admin,
         initTick,
-        feeTier,
-        state
+        feeTier
       })
       await market.createPositionList(positionOwner)
 
