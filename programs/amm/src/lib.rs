@@ -70,7 +70,6 @@ pub mod amm {
         let fee_tier = ctx.accounts.fee_tier.load()?;
 
         **pool = Pool {
-            state: *ctx.accounts.state.to_account_info().key,
             token_x: *ctx.accounts.token_x.key,
             token_y: *ctx.accounts.token_y.key,
             token_x_reserve: *ctx.accounts.token_x_reserve.key,

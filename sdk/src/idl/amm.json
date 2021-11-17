@@ -76,11 +76,6 @@
       "name": "create",
       "accounts": [
         {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "pool",
           "isMut": true,
           "isSigner": false
@@ -814,10 +809,6 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "state",
-            "type": "publicKey"
-          },
-          {
             "name": "tokenX",
             "type": "publicKey"
           },
@@ -1147,8 +1138,5 @@
       "name": "Unauthorized",
       "msg": "You are not admin"
     }
-  ],
-  "metadata": {
-    "address": "FPr3fREovDnqMfubJTrJAFwopvJB8grXj1o3gkmSyzmw"
-  }
+  ]
 }
