@@ -67,7 +67,6 @@ describe('claim', () => {
   })
   it('#createState()', async () => {
     await market.createState(admin)
-    await market.program.account.state.fetch(await (await market.getStateAddress()).address)
   })
   it('#createFeeTier()', async () => {
     await market.createFeeTier(feeTier, wallet)
@@ -167,7 +166,6 @@ describe('claim', () => {
     assert.ok(poolDataAfter.feeProtocolTokenY.v.eqn(0))
 
     const reservesBeforeClaim = await market.getReserveBalances(pair, wallet)
-    const positionBeforeClaim = await market.getPosition(positionOwner.publicKey, 0)
     const userTokenXAccountBeforeClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
 
     await market.claimFee(

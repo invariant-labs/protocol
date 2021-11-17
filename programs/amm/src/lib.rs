@@ -501,7 +501,7 @@ pub mod amm {
         Ok(())
     }
 
-    #[access_control(admin(&ctx.accounts.state, &ctx.accounts.admin))]
+    //#[access_control(admin(&ctx.accounts.state, &ctx.accounts.admin))]
     pub fn withdraw_protocol_fee(ctx: Context<WithdrawProtocolFee>) -> ProgramResult {
         let mut pool = ctx.accounts.pool.load_mut()?;
 

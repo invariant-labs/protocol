@@ -23,7 +23,8 @@ export enum ERRORS {
   PANICKED = 'Program failed to complete',
   SERIALIZATION = '0xa4',
   ALLOWANCE = 'custom program error: 0x1',
-  NO_SIGNERS = 'Error: No signers'
+  NO_SIGNERS = 'Error: No signers',
+  CONSTRAINT_RAW = "0x8f"
 }
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {

@@ -8,6 +8,8 @@ import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken } from './testUtils'
 import { assert } from 'chai'
 import { tou64 } from '@invariant-labs/sdk'
+import { CreateState } from '@invariant-labs/sdk/src/market'
+import { assertThrowsAsync, ERRORS } from '@invariant-labs/sdk/src/utils'
 
 describe('protocol-fee', () => {
     const provider = Provider.local()
@@ -27,11 +29,20 @@ describe('protocol-fee', () => {
         fee: fromFee(new BN(600)),
         tickSpacing: 10
     }
+    const state: CreateState = {
+        protocolFee: fromFee(new BN(1000)),
+        admin: admin.publicKey
+      }
+    const upperTick = 10
+    const lowerTick = -20
     let pair: Pair
     let tokenX: Token
     let tokenY: Token
     let programAuthority: PublicKey
     let nonce: number
+    let userTokenXAccount: PublicKey
+    let userTokenYAccount: PublicKey
+    
 
     before(async () => {
         await Promise.all([
@@ -53,11 +64,13 @@ describe('protocol-fee', () => {
         nonce = _nonce
         programAuthority = _programAuthority
 
-        pair = new Pair(tokens[0].publicKey, tokens[1].publicKey)
+        pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
         tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
         tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
     })
-
+    it('#createState()', async () => {
+        await market.createState(admin)
+      })
     it('#createFeeTier()', async () => {
         await market.createFeeTier(feeTier, wallet)
     })
@@ -66,7 +79,8 @@ describe('protocol-fee', () => {
         await market.create({
             pair,
             signer: admin,
-            feeTier
+            feeTier,
+            state
         })
 
     const createdPool = await market.get(pair)
@@ -96,8 +110,8 @@ describe('protocol-fee', () => {
         await market.createTick(pair, upperTick, wallet)
         await market.createTick(pair, lowerTick, wallet)
 
-        const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
-        const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
+        userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
+        userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
         const mintAmount = tou64(new BN(10).pow(new BN(10)))
 
         await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
@@ -120,5 +134,77 @@ describe('protocol-fee', () => {
         )
 
         assert.ok((await market.get(pair)).liquidity.v.eq(liquidityDelta.v))
+    })
+    it("#swap()", async () => {
+    const swapper = Keypair.generate()
+    await connection.requestAirdrop(swapper.publicKey, 1e9)
+
+    const amount = new BN(1000)
+    const accountX = await tokenX.createAccount(swapper.publicKey)
+    const accountY = await tokenY.createAccount(swapper.publicKey)
+
+    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
+
+    const poolDataBefore = await market.get(pair)
+    const targetPrice = DENOMINATOR.muln(100).divn(110)
+    const reservesBeforeSwap = await market.getReserveBalances(pair, wallet)
+
+    await market.swap(pair, true, amount, targetPrice, accountX, accountY, swapper)
+
+    const poolDataAfter = await market.get(pair)
+    assert.ok(poolDataAfter.liquidity.v.eq(poolDataBefore.liquidity.v))
+    assert.ok(poolDataAfter.currentTickIndex == lowerTick)
+    assert.ok(poolDataAfter.sqrtPrice.v.lt(poolDataBefore.sqrtPrice.v))
+
+    const amountX = (await tokenX.getAccountInfo(accountX)).amount
+    const amountY = (await tokenY.getAccountInfo(accountY)).amount
+    const reservesAfterSwap = await market.getReserveBalances(pair, wallet)
+    const reserveXDelta = reservesAfterSwap.x.sub(reservesBeforeSwap.x)
+    const reserveYDelta = reservesBeforeSwap.y.sub(reservesAfterSwap.y)
+
+    assert.ok(amountX.eqn(0))
+    assert.ok(amountY.eq(amount.subn(7)))
+    assert.ok(reserveXDelta.eq(amount))
+    assert.ok(reserveYDelta.eq(amount.subn(7)))
+    assert.ok(poolDataAfter.feeGrowthGlobalX.v.eqn(5400000))
+    assert.ok(poolDataAfter.feeGrowthGlobalY.v.eqn(0))
+    assert.ok(poolDataAfter.feeProtocolTokenX.v.eq(new BN(600000013280)))
+    assert.ok(poolDataAfter.feeProtocolTokenY.v.eqn(0))
+    })
+
+    it("#withdrawProtocolFee()", async () => {
+        const adminAccountX = await tokenX.createAccount(admin.publicKey)
+        const adminAccountY = await tokenY.createAccount(admin.publicKey)
+        await tokenX.mintTo(adminAccountX, mintAuthority.publicKey, [mintAuthority], 1e9)
+        await tokenY.mintTo(adminAccountY, mintAuthority.publicKey, [mintAuthority], 1e9)
+
+        const reservesBeforeClaim = await market.getReserveBalances(pair, wallet)
+        const adminAccountXBeforeClaim = await (await tokenX.getAccountInfo(adminAccountX)).amount
+        const adminAccountYBeforeClaim = await (await tokenY.getAccountInfo(adminAccountY)).amount
+        
+        it("Admin", async () => {
+            await market.withdrawProtocolFee(pair, adminAccountX, adminAccountY, admin)
+
+            const adminAccountXAfterClaim = await (await tokenX.getAccountInfo(adminAccountX)).amount
+            const adminAccountYAfterClaim = await (await tokenY.getAccountInfo(adminAccountY)).amount
+            const reservesAfterClaim = await market.getReserveBalances(pair, wallet)
+        
+            assert.ok(reservesBeforeClaim.x.eq(reservesAfterClaim.x))
+            assert.ok(adminAccountXAfterClaim.eq(adminAccountXBeforeClaim))
+        })
+        
+    })
+
+    it("Not admin", async () => {
+        const user = await Keypair.generate()
+        await Promise.all([
+            await connection.requestAirdrop(user.publicKey, 1e9)
+        ])
+        const userAccountX = await tokenX.createAccount(user.publicKey)
+        const userAccountY = await tokenY.createAccount(user.publicKey)
+        await tokenX.mintTo(userAccountX, mintAuthority.publicKey, [mintAuthority], 1e9)
+        await tokenY.mintTo(userAccountY, mintAuthority.publicKey, [mintAuthority], 1e9)
+
+        await assertThrowsAsync(market.withdrawProtocolFee(pair, userAccountX, userAccountY, user), ERRORS.CONSTRAINT_RAW)
     })
 })

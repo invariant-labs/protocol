@@ -564,6 +564,37 @@ export class Market {
     await signAndSend(new Transaction().add(claimFeeIx), [signer], this.connection)
   }
 
+  async withdrawProtocolFeeInstruction(pair: Pair, accountX: PublicKey,
+    accountY: PublicKey, admin: PublicKey) {
+    const pool = await this.get(pair)
+    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
+
+    return (await this.program.instruction.withdrawProtocolFee(
+      {
+        accounts: {
+          state: await (await this.getStateAddress()).address,
+          pool: await pair.getAddress(this.program.programId),
+          tokenX: pool.tokenX,
+          tokenY: pool.tokenY,
+          feeTier: feeTierAddress,
+          reserveX: pool.tokenXReserve,
+          reserveY: pool.tokenYReserve,
+          accountX,
+          accountY,
+          admin,
+          programAuthority: pool.authority,
+          tokenProgram: TOKEN_PROGRAM_ID
+        }
+      }
+    )) as TransactionInstruction
+  }
+
+  async withdrawProtocolFee(pair: Pair, accountX: PublicKey,
+    accountY: PublicKey, admin: Keypair) {
+      const ix = await this.withdrawProtocolFeeInstruction(pair, accountX, accountY, admin.publicKey)
+      await signAndSend(new Transaction().add(ix), [admin], this.connection)
+    }
+
   async removePositionWithIndexInstruction(
     pair: Pair,
     owner: PublicKey,
