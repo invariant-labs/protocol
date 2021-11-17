@@ -387,12 +387,12 @@ export class Market {
 
     const tx = new Transaction()
 
-    // if (!lowerExists) {
-    tx.add(await this.createTickInstruction(pair, lowerTick, owner))
-    // }
-    // if (!upperExists) {
-    tx.add(await this.createTickInstruction(pair, upperTick, owner))
-    // }
+    if (!lowerExists) {
+      tx.add(await this.createTickInstruction(pair, lowerTick, owner))
+    }
+    if (!upperExists) {
+      tx.add(await this.createTickInstruction(pair, upperTick, owner))
+    }
 
     return tx.add(await this.initPositionInstruction(initPosition))
   }
