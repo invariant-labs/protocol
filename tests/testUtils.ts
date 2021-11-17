@@ -156,7 +156,6 @@ export const createPoolWithLiquidity = async (
     mintAuthority,
     new BN(10).pow(new BN(14))
   )
-  await market.createPositionList(owner)
   await market.initPosition(
     {
       pair,

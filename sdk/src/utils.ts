@@ -8,6 +8,7 @@ import {
   sendAndConfirmRawTransaction,
   Transaction
 } from '@solana/web3.js'
+import { expect } from 'chai'
 import { FeeTier, FEE_TIER } from './market'
 
 export const SEED = 'Invariant'

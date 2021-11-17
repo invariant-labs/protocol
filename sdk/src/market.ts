@@ -325,24 +325,18 @@ export class Market {
     await signAndSend(new Transaction().add(ix), [owner], this.connection)
   }
 
-  async initPositionInstruction({
-    pair,
-    owner,
-    userTokenX,
-    userTokenY,
-    lowerTick,
-    upperTick,
-    liquidityDelta
-  }: InitPosition) {
+  async initPositionInstruction(
+    { pair, owner, userTokenX, userTokenY, lowerTick, upperTick, liquidityDelta }: InitPosition,
+    assumeFirstPosition: boolean = false
+  ) {
     const state = await this.get(pair)
 
     // maybe in the future index cloud be store at market
-    const positionList = await this.getPositionList(owner)
     const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTick)
     const { tickAddress: upperTickAddress } = await this.getTickAddress(pair, upperTick)
     const { positionAddress, positionBump } = await this.getPositionAddress(
       owner,
-      positionList.head
+      assumeFirstPosition ? 0 : (await this.getPositionList(owner)).head
     )
     const { positionListAddress } = await this.getPositionListAddress(owner)
     const poolAddress = await pair.getAddress(this.program.programId)
@@ -394,7 +388,14 @@ export class Market {
       tx.add(await this.createTickInstruction(pair, upperTick, owner))
     }
 
-    return tx.add(await this.initPositionInstruction(initPosition))
+    const { positionListAddress } = await this.getPositionListAddress(owner)
+    const account = await this.connection.getAccountInfo(positionListAddress)
+
+    if (account === null) {
+      tx.add(await this.createPositionListInstruction(owner))
+    }
+
+    return tx.add(await this.initPositionInstruction(initPosition, true))
   }
 
   async initPosition(initPosition: InitPosition, signer: Keypair) {
@@ -420,9 +421,16 @@ export class Market {
     await signAndSend(tx, [owner], this.connection)
   }
 
-  async swapTransaction(
-    { pair, XtoY, amount, priceLimit, accountX, accountY, byAmountIn, owner }: SwapTransaction // pair: Pair, // XtoY: boolean, // amount: BN, // priceLimit: BN, // accountX: PublicKey, // accountY: PublicKey, // owner: PublicKey, // byAmountIn: boolean = true
-  ) {
+  async swapTransaction({
+    pair,
+    XtoY,
+    amount,
+    priceLimit,
+    accountX,
+    accountY,
+    byAmountIn,
+    owner
+  }: SwapTransaction) {
     const state = await this.get(pair)
     const tickmap = await this.getTickmap(pair)
     const feeTier = await pair.getFeeTierAddress(this.program.programId)

@@ -115,7 +115,6 @@ describe('target', () => {
     )
     const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) }
 
-    await market.createPositionList(owner)
     await market.initPosition(
       {
         pair,

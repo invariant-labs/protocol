@@ -1,28 +1,8 @@
 import * as anchor from '@project-serum/anchor'
-import { Provider, Program, BN } from '@project-serum/anchor'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
-import { assert, expect } from 'chai'
-import {
-  assertThrowsAsync,
-  createPoolWithLiquidity,
-  createToken,
-  createTokensAndPool,
-  createUserWithTokens,
-  toDecimal
-} from './testUtils'
-import {
-  Market,
-  Pair,
-  SEED,
-  tou64,
-  DENOMINATOR,
-  signAndSend,
-  TICK_LIMIT,
-  Network
-} from '@invariant-labs/sdk'
-import { FeeTier } from '@invariant-labs/sdk/lib/market'
-import { fromFee } from '@invariant-labs/sdk/lib/utils'
+import { Provider, BN } from '@project-serum/anchor'
+import { Keypair } from '@solana/web3.js'
+import { assertThrowsAsync, createPoolWithLiquidity, createUserWithTokens } from './testUtils'
+import { Market, DENOMINATOR, Network } from '@invariant-labs/sdk'
 
 describe('slippage', () => {
   const provider = Provider.local()
