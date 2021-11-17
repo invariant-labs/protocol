@@ -25,6 +25,8 @@ jobs:
             'npm run test:withdraw',
             'npm run test:position-list',
             'npm run test:claim',
+            'npm run test:target',
+            'npm run test:slippage',
             'cargo test'
           ]
     steps:
