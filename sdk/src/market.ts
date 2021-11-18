@@ -21,7 +21,7 @@ import { Network } from './network'
 const POSITION_SEED = 'positionv1'
 const TICK_SEED = 'tickv1'
 const POSITION_LIST_SEED = 'positionlistv1'
-const STATE_SEED = "invariantstatev1"
+const STATE_SEED = "statev1"
 export const FEE_TIER = 'feetierv1'
 export const DEFAULT_PUBLIC_KEY = new PublicKey(0)
 
@@ -577,11 +577,10 @@ export class Market {
   }
 
   async withdrawProtocolFeeInstruction(pair: Pair, accountX: PublicKey,
-    accountY: PublicKey) {
+    accountY: PublicKey, signer: PublicKey) {
     const pool = await this.get(pair)
     const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
     const stateAddress = await (await this.getStateAddress()).address
-    const state = await this.getState()
 
     return (await this.program.instruction.withdrawProtocolFee(
       {
@@ -595,7 +594,7 @@ export class Market {
           reserveY: pool.tokenYReserve,
           accountX,
           accountY,
-          admin: state.admin,
+          admin: signer,
           programAuthority: pool.authority,
           tokenProgram: TOKEN_PROGRAM_ID
         }
@@ -605,7 +604,7 @@ export class Market {
 
   async withdrawProtocolFee(pair: Pair, accountX: PublicKey,
     accountY: PublicKey, signer: Keypair) {
-      const ix = await this.withdrawProtocolFeeInstruction(pair, accountX, accountY)
+      const ix = await this.withdrawProtocolFeeInstruction(pair, accountX, accountY, signer.publicKey)
       await signAndSend(new Transaction().add(ix), [signer], this.connection)
     }
 

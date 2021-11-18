@@ -36,7 +36,7 @@ describe('position', () => {
     anchor.workspace.Amm.programId
   )
   const feeTier = FEE_TIERS[0]
-  const protocolFee: Decimal = { v: fromFee(new BN(1000))}
+  const protocolFee: Decimal = { v: fromFee(new BN(10000))}
   let pair: Pair
   let tokenX: Token
   let tokenY: Token

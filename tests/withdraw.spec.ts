@@ -34,7 +34,7 @@ describe('withdraw', () => {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
   }
-  const protocolFee: Decimal = { v: fromFee(new BN(1000))}
+  const protocolFee: Decimal = { v: fromFee(new BN(10000))}
   let pair: Pair
   let tokenX: Token
   let tokenY: Token

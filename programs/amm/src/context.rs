@@ -457,7 +457,7 @@ impl<'info> SendTokens<'info> for ClaimFee<'info> {
 
 #[derive(Accounts)]
 pub struct WithdrawProtocolFee<'info> {
-    #[account(seeds = [b"invariantstatev1".as_ref()], bump = state.load()?.bump)]
+    #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: Loader<'info, State>,
     #[account(mut, seeds = [b"poolv1", fee_tier.key.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()], bump = pool.load()?.bump)]
     pub pool: Loader<'info, Pool>,

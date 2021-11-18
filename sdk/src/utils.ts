@@ -24,7 +24,8 @@ export enum ERRORS {
   SERIALIZATION = '0xa4',
   ALLOWANCE = 'custom program error: 0x1',
   NO_SIGNERS = 'Error: No signers',
-  CONSTRAINT_RAW = "0x8f"
+  CONSTRAINT_RAW = "0x8f",
+  CONSTRAINT_SEEDS = "0x92"
 }
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {

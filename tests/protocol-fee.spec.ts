@@ -30,7 +30,7 @@ describe('protocol-fee', () => {
     }
     const upperTick = 10
     const lowerTick = -20
-    const protocolFee: Decimal = { v: fromFee(new BN(1000))}
+    const protocolFee: Decimal = { v: fromFee(new BN(10000))}
     let pair: Pair
     let tokenX: Token
     let tokenY: Token
@@ -167,7 +167,7 @@ describe('protocol-fee', () => {
     assert.ok(poolDataAfter.feeProtocolTokenY.v.eqn(0))
     })
 
-    it("#withdrawProtocolFee()", async () => {
+    it("Admin #withdrawProtocolFee()", async () => {
         const adminAccountX = await tokenX.createAccount(admin.publicKey)
         const adminAccountY = await tokenY.createAccount(admin.publicKey)
         await tokenX.mintTo(adminAccountX, mintAuthority.publicKey, [mintAuthority], 1e9)
@@ -175,22 +175,16 @@ describe('protocol-fee', () => {
 
         const reservesBeforeClaim = await market.getReserveBalances(pair, wallet)
         const adminAccountXBeforeClaim = await (await tokenX.getAccountInfo(adminAccountX)).amount
-        const adminAccountYBeforeClaim = await (await tokenY.getAccountInfo(adminAccountY)).amount
         
-        it("Admin", async () => {
-            await market.withdrawProtocolFee(pair, adminAccountX, adminAccountY, admin)
+        await market.withdrawProtocolFee(pair, adminAccountX, adminAccountY, admin)
 
-            const adminAccountXAfterClaim = await (await tokenX.getAccountInfo(adminAccountX)).amount
-            const adminAccountYAfterClaim = await (await tokenY.getAccountInfo(adminAccountY)).amount
-            const reservesAfterClaim = await market.getReserveBalances(pair, wallet)
+        const adminAccountXAfterClaim = await (await tokenX.getAccountInfo(adminAccountX)).amount
+        const reservesAfterClaim = await market.getReserveBalances(pair, wallet)
         
-            assert.ok(reservesBeforeClaim.x.eq(reservesAfterClaim.x))
-            assert.ok(adminAccountXAfterClaim.eq(adminAccountXBeforeClaim))
-        })
-        
+        assert.ok(reservesBeforeClaim.x.eq(reservesAfterClaim.x))
+        assert.ok(adminAccountXAfterClaim.eq(adminAccountXBeforeClaim))
     })
-
-    it("Not admin", async () => {
+    it("Non-Admin #withdrawProtocolFee()", async () => {
         const user = await Keypair.generate()
         await Promise.all([
             await connection.requestAirdrop(user.publicKey, 1e9)
@@ -200,6 +194,6 @@ describe('protocol-fee', () => {
         await tokenX.mintTo(userAccountX, mintAuthority.publicKey, [mintAuthority], 1e9)
         await tokenY.mintTo(userAccountY, mintAuthority.publicKey, [mintAuthority], 1e9)
 
-        await assertThrowsAsync(market.withdrawProtocolFee(pair, userAccountX, userAccountY, user), ERRORS.CONSTRAINT_RAW)
+        assertThrowsAsync(market.withdrawProtocolFee(pair, userAccountX, userAccountY, user), ERRORS.CONSTRAINT_RAW)
     })
 })
