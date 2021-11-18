@@ -85,7 +85,12 @@ export class Staker {
 
   public async stakeInstruction({ position, incentive, owner, index, amm }: createStake) {
     const [userStakeAddress, userStakeBump] = await PublicKey.findProgramAddress(
-      [Buffer.from(utils.bytes.utf8.encode(STAKER_SEED)), owner.toBuffer()],
+      [
+        Buffer.from(utils.bytes.utf8.encode(STAKER_SEED)),
+        owner.toBuffer(),
+        incentive.toBuffer(),
+        position.toBuffer()
+      ],
       this.programId
     )
 
@@ -102,20 +107,26 @@ export class Staker {
     })) as TransactionInstruction
   }
 
-  public async getStakeAddress(owner: PublicKey) {
-    const [positionAddress, positionBump] = await PublicKey.findProgramAddress(
-      [Buffer.from(utils.bytes.utf8.encode(STAKER_SEED)), owner.toBuffer()],
+  public async getStakeAddress(owner: PublicKey, incentive: PublicKey, position: PublicKey) {
+    const [stakeAddress, stakeBump] = await PublicKey.findProgramAddress(
+      [
+        Buffer.from(utils.bytes.utf8.encode(STAKER_SEED)),
+        owner.toBuffer(),
+        incentive.toBuffer(),
+        position.toBuffer()
+      ],
+
       this.program.programId
     )
     return {
-      positionAddress,
-      positionBump
+      stakeAddress,
+      stakeBump
     }
   }
 
-  public async getStake(owner: PublicKey) {
-    let { positionAddress } = await this.getStakeAddress(owner)
-    return (await this.program.account.userStake.fetch(positionAddress)) as Stake
+  public async getStake(owner: PublicKey, incentive: PublicKey, position: PublicKey) {
+    let { stakeAddress } = await this.getStakeAddress(owner, incentive, position)
+    return (await this.program.account.userStake.fetch(stakeAddress)) as Stake
   }
 
   public async withdrawInstruction({
@@ -134,9 +145,15 @@ export class Staker {
     )
 
     const [userStakeAddress, userStakeBump] = await PublicKey.findProgramAddress(
-      [Buffer.from(utils.bytes.utf8.encode(STAKER_SEED)), owner.toBuffer()],
+      [
+        Buffer.from(utils.bytes.utf8.encode(STAKER_SEED)),
+        owner.toBuffer(),
+        incentive.toBuffer(),
+        position.toBuffer()
+      ],
       this.programId
     )
+
     return (await this.program.instruction.withdraw(
       index,
       userStakeBump,

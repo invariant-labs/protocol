@@ -53,7 +53,7 @@ impl<'info> DepositToken<'info> for CreateIncentive<'info> {
 #[instruction(index: u32, bump: u8)]
 pub struct CreateUserStake<'info> {
     #[account(init,
-        seeds = [b"staker", owner.to_account_info().key.as_ref()],
+        seeds = [b"staker", owner.to_account_info().key.as_ref(), incentive.to_account_info().key.as_ref(), position.to_account_info().key.as_ref()],
         payer = owner,
         bump = bump)]
     pub user_stake: Loader<'info, UserStake>,
@@ -80,7 +80,7 @@ pub struct CreateUserStake<'info> {
 #[instruction(index: u32, bump_stake: u8, bump_authority: u8, )]
 pub struct Withdraw<'info> {
     #[account(mut,
-        seeds = [b"staker", owner.to_account_info().key.as_ref()],
+        seeds = [b"staker", owner.to_account_info().key.as_ref(), incentive.to_account_info().key.as_ref(), position.to_account_info().key.as_ref()],
         bump = bump_stake)]
     pub user_stake: Loader<'info, UserStake>,
     #[account(mut,
@@ -138,7 +138,6 @@ impl<'info> WithdrawToken<'info> for Withdraw<'info> {
 #[derive(Accounts)]
 #[instruction( bump_authority: u8, )]
 pub struct ReturnFounds<'info> {
-    
     #[account(mut,
         constraint = &incentive.load()?.founder == owner.to_account_info().key 
     )]

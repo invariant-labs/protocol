@@ -193,7 +193,11 @@ describe('Stake tests', () => {
     })
     await signAndSend(new Transaction().add(ixUpdate).add(ixStake), [positionOwner], connection)
 
-    const stake = await staker.getStake(positionOwner.publicKey)
+    const stake = await staker.getStake(
+      positionOwner.publicKey,
+      incentiveAccount.publicKey,
+      position
+    )
     let positionStruct = await market.getPosition(positionOwner.publicKey, index)
     const liquidity: Decimal = { v: new BN(liquidityDelta.v) }
 
