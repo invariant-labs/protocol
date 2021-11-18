@@ -152,7 +152,7 @@ export type Staker = {
         },
         {
           "name": "position",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -199,6 +199,62 @@ export type Staker = {
           "name": "bumpAuthority",
           "type": "u8"
         },
+        {
+          "name": "nonce",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "endIncentive",
+      "accounts": [
+        {
+          "name": "incentive",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "incentiveTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "founderTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "stakerAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "amm",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
         {
           "name": "nonce",
           "type": "u8"
@@ -252,6 +308,10 @@ export type Staker = {
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "founder",
+            "type": "publicKey"
+          },
           {
             "name": "tokenAccount",
             "type": "publicKey"
@@ -357,6 +417,21 @@ export type Staker = {
       "code": 310,
       "name": "ZeroSecPerLiq",
       "msg": "Seconds per liquidity is zero"
+    },
+    {
+      "code": 311,
+      "name": "NotEnded",
+      "msg": "Incentive not ended"
+    },
+    {
+      "code": 312,
+      "name": "StakeExist",
+      "msg": "Can't end id stake exists"
+    },
+    {
+      "code": 313,
+      "name": "ZeroReward",
+      "msg": "Remaining reward is 0"
     }
   ]
 };
@@ -515,7 +590,7 @@ export const IDL: Staker = {
         },
         {
           "name": "position",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -562,6 +637,62 @@ export const IDL: Staker = {
           "name": "bumpAuthority",
           "type": "u8"
         },
+        {
+          "name": "nonce",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "endIncentive",
+      "accounts": [
+        {
+          "name": "incentive",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "incentiveTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "founderTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "stakerAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "amm",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
         {
           "name": "nonce",
           "type": "u8"
@@ -615,6 +746,10 @@ export const IDL: Staker = {
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "founder",
+            "type": "publicKey"
+          },
           {
             "name": "tokenAccount",
             "type": "publicKey"
@@ -720,6 +855,21 @@ export const IDL: Staker = {
       "code": 310,
       "name": "ZeroSecPerLiq",
       "msg": "Seconds per liquidity is zero"
+    },
+    {
+      "code": 311,
+      "name": "NotEnded",
+      "msg": "Incentive not ended"
+    },
+    {
+      "code": 312,
+      "name": "StakeExist",
+      "msg": "Can't end id stake exists"
+    },
+    {
+      "code": 313,
+      "name": "ZeroReward",
+      "msg": "Remaining reward is 0"
     }
   ]
 };

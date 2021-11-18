@@ -134,3 +134,49 @@ impl<'info> WithdrawToken<'info> for Withdraw<'info> {
         )
     }
 }
+
+#[derive(Accounts)]
+#[instruction( bump_authority: u8, )]
+pub struct ReturnFounds<'info> {
+    
+    #[account(mut,
+        constraint = &incentive.load()?.founder == owner.to_account_info().key 
+    )]
+    pub incentive: Loader<'info, Incentive>,
+    #[account(mut,
+        constraint = &incentive_token_account.owner == staker_authority.to_account_info().key,
+        constraint = &incentive.load()?.token_account == incentive_token_account.to_account_info().key
+    )]
+    pub incentive_token_account: Account<'info, TokenAccount>,
+    #[account(mut,
+        //constraint = owner_token_account.to_account_info().key != incentive_token_account.to_account_info().key,
+        //constraint = &owner_token_account.owner == owner.to_account_info().key
+    )]
+    pub founder_token_account: Account<'info, TokenAccount>,
+    #[account(mut,
+        seeds = [b"staker".as_ref()],
+        bump = bump_authority)]
+    pub staker_authority: AccountInfo<'info>,
+    pub owner: Signer<'info>,
+    pub token_program: AccountInfo<'info>,
+    pub amm: Program<'info, Amm>,
+    pub system_program: AccountInfo<'info>,
+    pub rent: Sysvar<'info, Rent>,
+}
+
+pub trait ReturnToFounder<'info> {
+    fn return_to_founder(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>>;
+}
+
+impl<'info> ReturnToFounder<'info> for ReturnFounds<'info> {
+    fn return_to_founder(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+        CpiContext::new(
+            self.token_program.to_account_info(),
+            Transfer {
+                from: self.incentive_token_account.to_account_info(),
+                to: self.founder_token_account.to_account_info(),
+                authority: self.staker_authority.to_account_info().clone(),
+            },
+        )
+    }
+}

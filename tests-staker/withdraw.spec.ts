@@ -57,13 +57,7 @@ describe('Withdraw tests', () => {
     )
     stakerAuthority = _mintAuthority
     nonce = _nonce
-    staker = new Staker(
-      connection,
-      Network.LOCAL,
-      provider.wallet,
-      stakerAuthority,
-      program.programId
-    )
+    staker = new Staker(connection, Network.LOCAL, provider.wallet, program.programId)
 
     incentiveAccount = Keypair.generate()
     positionOwner = Keypair.generate()
@@ -143,8 +137,7 @@ describe('Withdraw tests', () => {
       founder: founderAccount,
       incentiveTokenAcc: incentiveTokenAcc,
       founderTokenAcc: founderTokenAcc,
-      amm: amm,
-      stakerAuthority: stakerAuthority
+      amm: amm
     })
     await signAndSend(new Transaction().add(ix), [incentiveAccount, founderAccount], connection)
 
@@ -235,7 +228,6 @@ describe('Withdraw tests', () => {
     const ixWithdraw = await staker.withdrawInstruction({
       incentive: incentiveAccount.publicKey,
       position: position,
-      stakerAuthority: stakerAuthority,
       owner: positionOwner.publicKey,
       incentiveTokenAcc: incentiveTokenAcc,
       ownerTokenAcc: ownerTokenAcc,
@@ -246,7 +238,7 @@ describe('Withdraw tests', () => {
     await signAndSend(new Transaction().add(ixUpdate).add(ixWithdraw), [positionOwner], connection)
 
     const balanceAfter = (await incentiveToken.getAccountInfo(ownerTokenAcc)).amount
-
+    console.log(balanceAfter.toString())
     const rew = new BN(15000000000)
     assert.ok(rew.eq(balanceAfter))
   })

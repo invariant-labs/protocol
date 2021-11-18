@@ -1,6 +1,5 @@
 use crate::ErrorCode;
 use crate::Result;
-use anchor_lang::prelude::*;
 use std::convert::TryInto;
 
 use crate::decimal::{Decimal, Div, Mul, Sub};

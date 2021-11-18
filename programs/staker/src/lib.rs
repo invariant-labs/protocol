@@ -40,6 +40,7 @@ pub mod staker {
         let incentive = &mut ctx.accounts.incentive.load_init()?;
 
         {
+            incentive.founder = *ctx.accounts.founder.to_account_info().key;
             incentive.pool = *ctx.accounts.pool.to_account_info().key;
             incentive.token_account = *ctx.accounts.incentive_token_account.to_account_info().key;
             incentive.total_reward_unclaimed = reward;
@@ -92,16 +93,6 @@ pub mod staker {
         nonce: u8,
     ) -> ProgramResult {
         msg!("WITHDRAW");
-        let constraint = &Pubkey::find_program_address(
-            &[
-                b"positionv1",
-                ctx.accounts.position.to_account_info().key.as_ref(),
-                &index.to_le_bytes(),
-            ],
-            &amm::program::Amm::id(),
-        )
-        .0;
-        msg!("constraint {}", constraint);
         let user_stake = &mut ctx.accounts.user_stake.load_mut()?;
         let position = ctx.accounts.position.load()?;
         let mut incentive = ctx.accounts.incentive.load_mut()?;
@@ -134,7 +125,6 @@ pub mod staker {
         )
         .unwrap();
 
-        incentive.num_of_stakes -= 1; //TODO end incentive if 0 and is after end
         incentive.total_seconds_claimed = incentive.total_seconds_claimed.add(seconds_inside);
         incentive.total_reward_unclaimed = incentive
             .total_reward_unclaimed
@@ -149,10 +139,26 @@ pub mod staker {
 
         token::transfer(cpi_ctx, reward)?;
 
+        incentive.num_of_stakes -= 1;
+
         Ok(())
     }
 
-    //TODO add end incentive
+    pub fn end_incentive(ctx: Context<ReturnFounds>, nonce: u8) -> ProgramResult {
+        let incentive = ctx.accounts.incentive.load_mut()?;
+        let current_time = Clock::get().unwrap().unix_timestamp as u64;
+        require!(current_time > incentive.end_time, NotEnded);
+        require!(incentive.num_of_stakes == 0, StakeExist);
+        require!(incentive.total_reward_unclaimed.v > 0, ZeroReward);
+
+        let seeds = &[STAKER_SEED.as_bytes(), &[nonce]];
+        let signer = &[&seeds[..]];
+        let cpi_ctx = ctx.accounts.return_to_founder().with_signer(signer);
+
+        token::transfer(cpi_ctx, incentive.total_reward_unclaimed.to_u64())?;
+
+        Ok(())
+    }
 }
 
 #[error]
@@ -179,4 +185,10 @@ pub enum ErrorCode {
     ZeroSecondsStaked = 9,
     #[msg("Seconds per liquidity is zero")]
     ZeroSecPerLiq = 10,
+    #[msg("Incentive not ended")]
+    NotEnded = 11,
+    #[msg("Can't end id stake exists")]
+    StakeExist = 12,
+    #[msg("Remaining reward is 0")]
+    ZeroReward = 13,
 }
