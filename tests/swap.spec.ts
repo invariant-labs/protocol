@@ -67,7 +67,6 @@ describe('swap', () => {
   })
   it('#createState()', async () => {
     await market.createState(admin, protocolFee)
-    await market.program.account.state.fetch(await (await market.getStateAddress()).address)
   })
   it('#createFeeTier()', async () => {
     await market.createFeeTier(feeTier, wallet)

@@ -12,7 +12,7 @@ import {
   Signer
 } from '@solana/web3.js'
 import { findInitialized, isInitialized } from './math'
-import { feeToTickSpacing, getFeeTierAddress, SEED, signAndSend, tou64 } from './utils'
+import { feeToTickSpacing, getFeeTierAddress, SEED, signAndSend, tou64, generateTicksArray } from './utils'
 import idl from './idl/amm.json'
 import { IWallet, Pair } from '.'
 import { getMarketAddress } from './network'
@@ -280,10 +280,10 @@ export class Market {
     await signAndSend(new Transaction().add(ix), [payer], this.connection)
   }
 
-  async createStateInstruction(admin: PublicKey, protocol_fee: Decimal) {
+  async createStateInstruction(admin: PublicKey, protocolFee: Decimal) {
     const { address, bump } = await this.getStateAddress()
 
-    return this.program.instruction.createState(bump, protocol_fee, {
+    return this.program.instruction.createState(bump, protocolFee, {
       accounts: {
         state: address,
         admin,
@@ -293,8 +293,8 @@ export class Market {
     })
   }
 
-  async createState(admin: Keypair, protocol_fee: Decimal) {
-    const ix = await this.createStateInstruction(admin.publicKey, protocol_fee)
+  async createState(admin: Keypair, protocolFee: Decimal) {
+    const ix = await this.createStateInstruction(admin.publicKey, protocolFee)
     await signAndSend(new Transaction().add(ix), [admin], this.connection)
   }
 
@@ -312,8 +312,9 @@ export class Market {
     }
   }
 
-  async getState(admin: PublicKey) {
-
+  async getState() {
+    const address = await (await this.getStateAddress()).address
+    return (await this.program.account.state.fetch(address)) as State
   }
 
   async createTickInstruction(pair: Pair, index: number, payer: PublicKey) {
@@ -341,6 +342,17 @@ export class Market {
     await signAndSend(new Transaction().add(lowerIx), [payer], this.connection)
   }
 
+  async createTicksFromRange(pair: Pair, payer: Keypair, start: number, stop: number) {
+    const step = pair.feeTier.tickSpacing ?? feeToTickSpacing(pair.feeTier.fee)
+
+    Promise.all(
+      generateTicksArray(start, stop, step).map(async (tick) => {
+        await this.createTick(pair, tick, payer)
+      })
+    )
+  }
+  
+  
   async createPositionListInstruction(owner: PublicKey) {
     const { positionListAddress, positionListBump } = await this.getPositionListAddress(owner)
 
@@ -565,14 +577,16 @@ export class Market {
   }
 
   async withdrawProtocolFeeInstruction(pair: Pair, accountX: PublicKey,
-    accountY: PublicKey, admin: PublicKey) {
+    accountY: PublicKey) {
     const pool = await this.get(pair)
     const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
+    const stateAddress = await (await this.getStateAddress()).address
+    const state = await this.getState()
 
     return (await this.program.instruction.withdrawProtocolFee(
       {
         accounts: {
-          state: await (await this.getStateAddress()).address,
+          state: stateAddress,
           pool: await pair.getAddress(this.program.programId),
           tokenX: pool.tokenX,
           tokenY: pool.tokenY,
@@ -581,7 +595,7 @@ export class Market {
           reserveY: pool.tokenYReserve,
           accountX,
           accountY,
-          admin,
+          admin: state.admin,
           programAuthority: pool.authority,
           tokenProgram: TOKEN_PROGRAM_ID
         }
@@ -590,9 +604,9 @@ export class Market {
   }
 
   async withdrawProtocolFee(pair: Pair, accountX: PublicKey,
-    accountY: PublicKey, admin: Keypair) {
-      const ix = await this.withdrawProtocolFeeInstruction(pair, accountX, accountY, admin.publicKey)
-      await signAndSend(new Transaction().add(ix), [admin], this.connection)
+    accountY: PublicKey, signer: Keypair) {
+      const ix = await this.withdrawProtocolFeeInstruction(pair, accountX, accountY)
+      await signAndSend(new Transaction().add(ix), [signer], this.connection)
     }
 
   async removePositionWithIndexInstruction(

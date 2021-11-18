@@ -7,7 +7,7 @@ import { createToken } from './testUtils'
 import { Market, Pair, SEED, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { CreateState } from '@invariant-labs/sdk/src/market'
+import { Decimal } from '@invariant-labs/sdk/src/market'
 
 describe('reversed', () => {
   const provider = Provider.local()
@@ -26,10 +26,7 @@ describe('reversed', () => {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
   }
-  const state: CreateState = {
-    protocolFee: fromFee(new BN(1000)),
-    admin: admin.publicKey
-  }
+  const protocolFee: Decimal = { v: fromFee(new BN(1000))}
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -61,8 +58,7 @@ describe('reversed', () => {
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
   it('#createState()', async () => {
-    await market.createState(admin)
-    await market.program.account.state.fetch(await (await market.getStateAddress()).address)
+    await market.createState(admin, protocolFee)
   })
   it('#createFeeTier()', async () => {
     await market.createFeeTier(feeTier, wallet)
@@ -73,7 +69,6 @@ describe('reversed', () => {
       pair,
       signer: admin,
       feeTier,
-      state
     })
 
     const createdPool = await market.get(pair)
