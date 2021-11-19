@@ -16,6 +16,7 @@ import {
 } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
+import { toDecimal } from '@invariant-labs/sdk/src/utils'
 
 describe('swap', () => {
   const provider = Provider.local()
@@ -142,7 +143,6 @@ describe('swap', () => {
 
     // Swap
     const poolDataBefore = await market.get(pair)
-    const priceLimit = DENOMINATOR.muln(100).divn(110)
     const reserveXBefore = (await tokenX.getAccountInfo(poolDataBefore.tokenXReserve)).amount
     const reserveYBefore = (await tokenY.getAccountInfo(poolDataBefore.tokenYReserve)).amount
 
@@ -150,7 +150,8 @@ describe('swap', () => {
       pair,
       XtoY: true,
       amount,
-      priceLimit,
+      knownPrice: poolDataBefore.sqrtPrice,
+      slippage: toDecimal(1, 2),
       accountX,
       accountY,
       byAmountIn: true,

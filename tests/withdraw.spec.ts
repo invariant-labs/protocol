@@ -16,6 +16,7 @@ import {
 } from '@invariant-labs/sdk'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
+import { toDecimal } from '@invariant-labs/sdk/src/utils'
 
 describe('withdraw', () => {
   const provider = Provider.local()
@@ -144,21 +145,21 @@ describe('withdraw', () => {
 
     // Swap
     const poolDataBefore = await market.get(pair)
-    const priceLimit = DENOMINATOR.muln(100).divn(110)
     const reservesBefore = await market.getReserveBalances(pair, wallet)
-
     await market.swap(
       {
         pair,
         XtoY: true,
         amount,
-        priceLimit,
+        knownPrice: poolDataBefore.sqrtPrice,
+        slippage: toDecimal(1, 2),
         accountX,
         accountY,
         byAmountIn: true
       },
       owner
     )
+
     // Check pool
     const poolData = await market.get(pair)
     assert.ok(poolData.liquidity.v.eq(poolDataBefore.liquidity.v))
