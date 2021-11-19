@@ -43,29 +43,6 @@ describe('slippage', () => {
     expectedPrice = (await market.get(pair)).sqrtPrice.v
   })
 
-  it('#swap with target above limit', async () => {
-    const { pair, mintAuthority } = await createPoolWithLiquidity(market, connection, wallet)
-    const { owner, userAccountX, userAccountY } = await createUserWithTokens(
-      pair,
-      connection,
-      mintAuthority
-    )
-    const priceLimit = DENOMINATOR.muln(1000).divn(100)
-    const amount = new BN(1e8)
-    await market.swap(
-      {
-        pair,
-        XtoY: false,
-        amount,
-        priceLimit,
-        accountX: userAccountX,
-        accountY: userAccountY,
-        byAmountIn: true
-      },
-      owner
-    )
-  })
-
   it('#swap with target just above limit', async () => {
     const { pair, mintAuthority } = await createPoolWithLiquidity(market, connection, wallet)
     const { owner, userAccountX, userAccountY } = await createUserWithTokens(
@@ -89,26 +66,29 @@ describe('slippage', () => {
     )
   })
 
-  it('#swap with target at limit', async () => {
+  it.only('#swap with target at limit', async () => {
     const { pair, mintAuthority } = await createPoolWithLiquidity(market, connection, wallet)
     const { owner, userAccountX, userAccountY } = await createUserWithTokens(
       pair,
       connection,
       mintAuthority
     )
-    const priceLimit = expectedPrice.addn(1)
+    // because not every token swapped will change the price price will be reached before all tokens are swapped
+    const priceLimit = expectedPrice
     const amount = new BN(1e8)
-    await market.swap(
-      {
-        pair,
-        XtoY: false,
-        amount,
-        priceLimit,
-        accountX: userAccountX,
-        accountY: userAccountY,
-        byAmountIn: true
-      },
-      owner
+    await assertThrowsAsync(
+      market.swap(
+        {
+          pair,
+          XtoY: false,
+          amount,
+          priceLimit,
+          accountX: userAccountX,
+          accountY: userAccountY,
+          byAmountIn: true
+        },
+        owner
+      )
     )
   })
 

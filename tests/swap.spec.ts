@@ -129,7 +129,6 @@ describe('swap', () => {
       positionOwner
     )
     assert.ok((await market.get(pair)).liquidity.v.eq(liquidityDelta.v))
-    return
 
     // Create owner
     const owner = Keypair.generate()
