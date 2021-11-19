@@ -88,6 +88,7 @@ export const createTokensAndPool = async (
   market: Market,
   connection: Connection,
   payer: Keypair,
+  initTick: number = 0,
   fee: BN = new BN(600),
   tickSpacing: number = 10
 ) => {
@@ -110,7 +111,8 @@ export const createTokensAndPool = async (
   await market.createFeeTier(pair.feeTier, payer)
   await market.create({
     pair,
-    signer: payer
+    signer: payer,
+    initTick
   })
 
   return { tokenX, tokenY, pair, mintAuthority }
@@ -146,10 +148,11 @@ export const createPoolWithLiquidity = async (
   connection: Connection,
   payer: Keypair,
   liquidity: Decimal = { v: new BN(10).pow(new BN(22)) },
+  initialTick: number = 0,
   lowerTick: number = -1000,
   upperTick: number = 1000
 ) => {
-  const { pair, mintAuthority } = await createTokensAndPool(market, connection, payer)
+  const { pair, mintAuthority } = await createTokensAndPool(market, connection, payer, initialTick)
   const { owner, userAccountX, userAccountY } = await createUserWithTokens(
     pair,
     connection,
