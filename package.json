@@ -18,6 +18,7 @@
     "@project-serum/serum": "^0.13.58",
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.25.0",
+    "bn-sqrt": "^1.0.0",
     "ts-mocha": "^8.0.0"
   },
   "devDependencies": {
