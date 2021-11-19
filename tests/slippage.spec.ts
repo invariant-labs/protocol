@@ -30,6 +30,7 @@ describe('slippage', () => {
     )
     knownPrice = (await market.get(pair)).sqrtPrice
     const amount = new BN(1e8)
+
     await market.swap(
       {
         pair,
