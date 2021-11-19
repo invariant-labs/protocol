@@ -9,7 +9,7 @@ import {
   Transaction
 } from '@solana/web3.js'
 import { expect } from 'chai'
-import { FeeTier, FEE_TIER } from './market'
+import { Decimal, FeeTier, FEE_TIER } from './market'
 
 export const SEED = 'Invariant'
 export const DECIMAL = 12
@@ -130,4 +130,8 @@ export const getFeeTierAddress = async ({ fee, tickSpacing }: FeeTier, programId
     address,
     bump
   }
+}
+
+export const toDecimal = (x: number, decimals: number = 0): Decimal => {
+  return { v: DENOMINATOR.muln(x).div(new BN(10).pow(new BN(decimals))) }
 }

@@ -80,10 +80,6 @@ export const createStandardFeeTiers = async (market: Market, payer: Keypair) => 
   )
 }
 
-export const toDecimal = (x: number, decimals: number = 0): Decimal => {
-  return { v: DENOMINATOR.muln(x).div(new BN(10).pow(new BN(decimals))) }
-}
-
 export const createTokensAndPool = async (
   market: Market,
   connection: Connection,
