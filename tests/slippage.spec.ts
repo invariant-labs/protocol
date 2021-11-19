@@ -66,7 +66,7 @@ describe('slippage', () => {
     )
   })
 
-  it.only('#swap with target at limit', async () => {
+  it('#swap with target at limit', async () => {
     const { pair, mintAuthority } = await createPoolWithLiquidity(market, connection, wallet)
     const { owner, userAccountX, userAccountY } = await createUserWithTokens(
       pair,
