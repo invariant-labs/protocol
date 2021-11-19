@@ -198,10 +198,6 @@
         {
           "name": "bumpAuthority",
           "type": "u8"
-        },
-        {
-          "name": "nonce",
-          "type": "u8"
         }
       ]
     },
@@ -239,11 +235,6 @@
           "isSigner": false
         },
         {
-          "name": "amm",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -256,7 +247,7 @@
       ],
       "args": [
         {
-          "name": "nonce",
+          "name": "bumpAuthority",
           "type": "u8"
         }
       ]

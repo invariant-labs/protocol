@@ -198,10 +198,6 @@ export type Staker = {
         {
           "name": "bumpAuthority",
           "type": "u8"
-        },
-        {
-          "name": "nonce",
-          "type": "u8"
         }
       ]
     },
@@ -239,11 +235,6 @@ export type Staker = {
           "isSigner": false
         },
         {
-          "name": "amm",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -256,7 +247,7 @@ export type Staker = {
       ],
       "args": [
         {
-          "name": "nonce",
+          "name": "bumpAuthority",
           "type": "u8"
         }
       ]
@@ -636,10 +627,6 @@ export const IDL: Staker = {
         {
           "name": "bumpAuthority",
           "type": "u8"
-        },
-        {
-          "name": "nonce",
-          "type": "u8"
         }
       ]
     },
@@ -677,11 +664,6 @@ export const IDL: Staker = {
           "isSigner": false
         },
         {
-          "name": "amm",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false
@@ -694,7 +676,7 @@ export const IDL: Staker = {
       ],
       "args": [
         {
-          "name": "nonce",
+          "name": "bumpAuthority",
           "type": "u8"
         }
       ]

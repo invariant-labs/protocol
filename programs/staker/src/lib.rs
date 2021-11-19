@@ -90,7 +90,6 @@ pub mod staker {
         index: i32,
         bumpStake: u8,
         bumpAuthority: u8,
-        nonce: u8,
     ) -> ProgramResult {
         msg!("WITHDRAW");
         let user_stake = &mut ctx.accounts.user_stake.load_mut()?;
@@ -132,7 +131,7 @@ pub mod staker {
         user_stake.seconds_per_liquidity_initial = Decimal::from_integer(0);
         user_stake.liquidity = Decimal::from_integer(0);
 
-        let seeds = &[STAKER_SEED.as_bytes(), &[nonce]];
+        let seeds = &[STAKER_SEED.as_bytes(), &[bumpAuthority]];
         let signer = &[&seeds[..]];
 
         let cpi_ctx = ctx.accounts.withdraw().with_signer(signer);
@@ -144,14 +143,14 @@ pub mod staker {
         Ok(())
     }
 
-    pub fn end_incentive(ctx: Context<ReturnFounds>, nonce: u8) -> ProgramResult {
+    pub fn end_incentive(ctx: Context<ReturnFounds>, bumpAuthority: u8) -> ProgramResult {
         let incentive = ctx.accounts.incentive.load_mut()?;
         let current_time = Clock::get().unwrap().unix_timestamp as u64;
         require!(current_time > incentive.end_time, NotEnded);
         require!(incentive.num_of_stakes == 0, StakeExist);
         require!(incentive.total_reward_unclaimed.v > 0, ZeroReward);
 
-        let seeds = &[STAKER_SEED.as_bytes(), &[nonce]];
+        let seeds = &[STAKER_SEED.as_bytes(), &[bumpAuthority]];
         let signer = &[&seeds[..]];
         let cpi_ctx = ctx.accounts.return_to_founder().with_signer(signer);
 

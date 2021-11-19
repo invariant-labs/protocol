@@ -136,8 +136,7 @@ export class Staker {
     position,
     owner,
     amm,
-    index,
-    nonce
+    index
   }: Withdraw) {
     const [stakerAuthority, stakerAuthorityBump] = await PublicKey.findProgramAddress(
       [Buffer.from(STAKER_SEED)],
@@ -154,27 +153,46 @@ export class Staker {
       this.programId
     )
 
-    return (await this.program.instruction.withdraw(
-      index,
-      userStakeBump,
-      stakerAuthorityBump,
-      nonce,
-      {
-        accounts: {
-          userStake: userStakeAddress,
-          incentive: incentive,
-          incentiveTokenAccount: incentiveTokenAcc,
-          ownerTokenAccount: ownerTokenAcc,
-          position,
-          stakerAuthority,
-          owner: owner,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          amm: amm,
-          systemProgram: SystemProgram.programId,
-          rent: SYSVAR_RENT_PUBKEY
-        }
+    return (await this.program.instruction.withdraw(index, userStakeBump, stakerAuthorityBump, {
+      accounts: {
+        userStake: userStakeAddress,
+        incentive: incentive,
+        incentiveTokenAccount: incentiveTokenAcc,
+        ownerTokenAccount: ownerTokenAcc,
+        position,
+        stakerAuthority,
+        owner: owner,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        amm: amm,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY
       }
-    )) as TransactionInstruction
+    })) as TransactionInstruction
+  }
+
+  public async endIncentiveInstruction({
+    incentive,
+    incentiveTokenAcc,
+    ownerTokenAcc,
+    owner
+  }: EndIncentive) {
+    const [stakerAuthority, stakerAuthorityBump] = await PublicKey.findProgramAddress(
+      [Buffer.from(STAKER_SEED)],
+      this.programId
+    )
+
+    return (await this.program.instruction.endIncentive(stakerAuthorityBump, {
+      accounts: {
+        incentive: incentive,
+        incentiveTokenAccount: incentiveTokenAcc,
+        founderTokenAccount: ownerTokenAcc,
+        stakerAuthority,
+        owner: owner,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY
+      }
+    })) as TransactionInstruction
   }
 }
 export interface CreateIncentive {
@@ -214,6 +232,14 @@ export interface Withdraw {
   index: number
   nonce: number
 }
+
+export interface EndIncentive {
+  incentive: PublicKey
+  incentiveTokenAcc: PublicKey
+  ownerTokenAcc: PublicKey
+  owner: PublicKey
+}
+
 export interface IncentiveStructure {
   tokenAccount: PublicKey
   totalRewardUnclaimed: Decimal

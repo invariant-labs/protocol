@@ -147,10 +147,7 @@ pub struct ReturnFounds<'info> {
         constraint = &incentive.load()?.token_account == incentive_token_account.to_account_info().key
     )]
     pub incentive_token_account: Account<'info, TokenAccount>,
-    #[account(mut,
-        //constraint = owner_token_account.to_account_info().key != incentive_token_account.to_account_info().key,
-        //constraint = &owner_token_account.owner == owner.to_account_info().key
-    )]
+    #[account(mut)]
     pub founder_token_account: Account<'info, TokenAccount>,
     #[account(mut,
         seeds = [b"staker".as_ref()],
@@ -158,7 +155,6 @@ pub struct ReturnFounds<'info> {
     pub staker_authority: AccountInfo<'info>,
     pub owner: Signer<'info>,
     pub token_program: AccountInfo<'info>,
-    pub amm: Program<'info, Amm>,
     pub system_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
 }
