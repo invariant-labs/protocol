@@ -11,7 +11,7 @@ import {
   TransactionInstruction,
   Signer
 } from '@solana/web3.js'
-import { findInitialized, isInitialized } from './math'
+import { calculatePriceAfterSlippage, findInitialized, isInitialized } from './math'
 import { feeToTickSpacing, generateTicksArray, getFeeTierAddress, SEED, signAndSend } from './utils'
 import idl from './idl/amm.json'
 import { IWallet, Pair } from '.'
@@ -404,37 +404,38 @@ export class Market {
     await signAndSend(tx, [signer], this.connection)
   }
 
-  async swap(
-    { pair, XtoY, amount, priceLimit, accountX, accountY, byAmountIn }: Swap,
-    owner: Keypair
-  ) {
-    const tx = await this.swapTransaction({
-      owner: owner.publicKey,
-      pair,
-      XtoY,
-      amount,
-      priceLimit,
-      accountX,
-      accountY,
-      byAmountIn
-    })
+  async swap(swap: Swap, owner: Keypair, overridePriceLimit?: BN) {
+    const tx = await this.swapTransaction(
+      {
+        owner: owner.publicKey,
+        ...swap
+      },
+      overridePriceLimit
+    )
 
     await signAndSend(tx, [owner], this.connection)
   }
 
-  async swapTransaction({
-    pair,
-    XtoY,
-    amount,
-    priceLimit,
-    accountX,
-    accountY,
-    byAmountIn,
-    owner
-  }: SwapTransaction) {
+  async swapTransaction(
+    {
+      pair,
+      XtoY,
+      amount,
+      knownPrice,
+      slippage,
+      accountX,
+      accountY,
+      byAmountIn,
+      owner
+    }: SwapTransaction,
+    overridePriceLimit?: BN
+  ) {
     const state = await this.get(pair)
     const tickmap = await this.getTickmap(pair)
     const feeTier = await pair.getFeeTierAddress(this.program.programId)
+
+    const priceLimit =
+      overridePriceLimit ?? calculatePriceAfterSlippage(knownPrice, slippage, !XtoY).v
 
     const [lowerBound, upperBound] = XtoY
       ? [-RANGE_IN_DIRECTION * state.tickSpacing, RANGE_IN_OTHER_DIRECTION * state.tickSpacing]
@@ -742,7 +743,8 @@ export interface Swap {
   pair: Pair
   XtoY: boolean
   amount: BN
-  priceLimit: BN
+  knownPrice: Decimal
+  slippage: Decimal
   accountX: PublicKey
   accountY: PublicKey
   byAmountIn: boolean

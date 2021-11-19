@@ -10,6 +10,7 @@ import { TICK_LIMIT } from '@invariant-labs/sdk'
 import { tou64 } from '@invariant-labs/sdk'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
+import { toDecimal } from '@invariant-labs/sdk/src/utils'
 
 describe('claim', () => {
   const provider = Provider.local()
@@ -138,7 +139,8 @@ describe('claim', () => {
         pair,
         XtoY: true,
         amount,
-        priceLimit,
+        knownPrice: poolDataBefore.sqrtPrice,
+        slippage: toDecimal(1, 2),
         accountX,
         accountY,
         byAmountIn: true

@@ -3,6 +3,8 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assertThrowsAsync, createPoolWithLiquidity, createUserWithTokens } from './testUtils'
 import { Market, DENOMINATOR, Network } from '@invariant-labs/sdk'
+import { toDecimal } from '@invariant-labs/sdk/src/utils'
+import { Decimal } from '@invariant-labs/sdk/src/market'
 
 describe('slippage', () => {
   const provider = Provider.local()
@@ -16,6 +18,7 @@ describe('slippage', () => {
     anchor.workspace.Amm.programId
   )
 
+  let knownPrice: Decimal
   let expectedPrice: BN
 
   before(async () => {
@@ -25,14 +28,15 @@ describe('slippage', () => {
       connection,
       mintAuthority
     )
-    const priceLimit = DENOMINATOR.muln(1000).divn(100)
+    knownPrice = (await market.get(pair)).sqrtPrice
     const amount = new BN(1e8)
     await market.swap(
       {
         pair,
         XtoY: false,
         amount,
-        priceLimit,
+        knownPrice,
+        slippage: toDecimal(5, 2),
         accountX: userAccountX,
         accountY: userAccountY,
         byAmountIn: true
@@ -57,12 +61,14 @@ describe('slippage', () => {
         pair,
         XtoY: false,
         amount,
-        priceLimit,
+        knownPrice,
+        slippage: toDecimal(5, 2),
         accountX: userAccountX,
         accountY: userAccountY,
         byAmountIn: true
       },
-      owner
+      owner,
+      priceLimit
     )
   })
 
@@ -82,12 +88,14 @@ describe('slippage', () => {
           pair,
           XtoY: false,
           amount,
-          priceLimit,
+          knownPrice,
+          slippage: toDecimal(5, 2),
           accountX: userAccountX,
           accountY: userAccountY,
           byAmountIn: true
         },
-        owner
+        owner,
+        priceLimit
       )
     )
   })
@@ -107,12 +115,14 @@ describe('slippage', () => {
           pair,
           XtoY: false,
           amount,
-          priceLimit,
+          knownPrice,
+          slippage: toDecimal(5, 2),
           accountX: userAccountX,
           accountY: userAccountY,
           byAmountIn: true
         },
-        owner
+        owner,
+        priceLimit
       )
     )
   })
@@ -132,12 +142,14 @@ describe('slippage', () => {
           pair,
           XtoY: false,
           amount,
-          priceLimit,
+          knownPrice,
+          slippage: toDecimal(5, 2),
           accountX: userAccountX,
           accountY: userAccountY,
           byAmountIn: true
         },
-        owner
+        owner,
+        priceLimit
       )
     )
   })
