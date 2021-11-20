@@ -1,10 +1,9 @@
 import { assert } from 'chai'
 import { BN } from '@project-serum/anchor'
+import { calculate_price_sqrt, DENOMINATOR } from '@invariant-labs/sdk'
 import { getLiquidityByX, getLiquidityByY } from '@invariant-labs/sdk/src/tick'
-import { calculate_price_sqrt } from '@invariant-labs/sdk'
-import { calculatePriceAfterSlippage } from '@invariant-labs/sdk/src/math'
-import { DENOMINATOR } from '@invariant-labs/sdk/src'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
+import { calculatePriceAfterSlippage } from '@invariant-labs/sdk/src/math'
 
 describe('Math', () => {
   describe('Test sqrt price calculation', () => {
@@ -183,7 +182,7 @@ describe('Math', () => {
       }
     })
   })
-  describe.only('calculate slippage', () => {
+  describe('calculate slippage', () => {
     it('no slippage up', async () => {
       const price = toDecimal(1)
       const slippage = toDecimal(0)
