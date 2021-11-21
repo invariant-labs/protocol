@@ -76,8 +76,7 @@ describe('position', () => {
     await market.create({
       pair,
       signer: admin,
-      initTick,
-      feeTier
+      initTick
     })
 
     const createdPool = await market.get(pair)

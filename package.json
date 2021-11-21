@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "test:full": "npm run test:swap && npm run test:cross && npm run test:reversed && npm run test:position && npm run test:math && npm run test:withdraw && npm run test:position-list && npm run test:claim",
+    "test:full": "npm run test:swap && npm run test:cross && npm run test:reversed && npm run test:position && npm run test:math && npm run test:withdraw && npm run test:position-list && npm run test:claim && npm run test:target && npm run test:slippage",
     "test:swap": "anchor test --skip-build tests/swap.spec.ts",
     "test:cross": "anchor test --skip-build tests/cross.spec.ts",
     "test:reversed": "anchor test --skip-build tests/reversed.spec.ts",
@@ -9,6 +9,8 @@
     "test:withdraw": "anchor test --skip-build tests/withdraw.spec.ts",
     "test:position-list": "anchor test --skip-build tests/position-list.spec.ts",
     "test:claim": "anchor test --skip-build tests/claim.spec.ts",
+    "test:target": "anchor test --skip-build tests/target.spec.ts",
+    "test:slippage": "anchor test --skip-build tests/slippage.spec.ts",
     "build": "cd sdk && npm run build"
   },
   "dependencies": {
@@ -16,6 +18,7 @@
     "@project-serum/serum": "^0.13.58",
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.25.0",
+    "bn-sqrt": "^1.0.0",
     "ts-mocha": "^8.0.0"
   },
   "devDependencies": {

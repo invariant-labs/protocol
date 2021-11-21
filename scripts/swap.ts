@@ -5,7 +5,7 @@ import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
 import { MINTER } from './minter'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Market, Pair, tou64 } from '@invariant-labs/sdk/src'
-import { DENOMINATOR, FEE_TIERS } from '@invariant-labs/sdk/src/utils'
+import { FEE_TIERS, fromFee } from '@invariant-labs/sdk/src/utils'
 require('dotenv').config()
 
 const provider = Provider.local(clusterApiUrl('devnet'), {
@@ -32,15 +32,19 @@ const main = async () => {
   await usdc.mintTo(minterUsdc, MINTER, [], tou64(2 * amount))
   await usdt.mintTo(minterUsdt, MINTER, [], tou64(2 * amount))
 
-  const priceLimit = DENOMINATOR.muln(100).divn(50)
+  const pool = await market.getPool(pair)
 
   market.swap(
-    pair,
-    false, // y to x
-    tou64(amount),
-    priceLimit,
-    minterUsdt,
-    minterUsdc,
+    {
+      XtoY: false,
+      accountX: minterUsdt,
+      accountY: minterUsdc,
+      amount: tou64(amount),
+      byAmountIn: true,
+      knownPrice: pool.sqrtPrice,
+      slippage: { v: fromFee(new anchor.BN(1000)) },
+      pair: pair
+    },
     MINTER
   )
 }

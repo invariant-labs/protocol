@@ -1,7 +1,9 @@
 import { assert } from 'chai'
 import { BN } from '@project-serum/anchor'
+import { calculate_price_sqrt, DENOMINATOR } from '@invariant-labs/sdk'
 import { getLiquidityByX, getLiquidityByY } from '@invariant-labs/sdk/src/tick'
-import { calculate_price_sqrt } from '@invariant-labs/sdk'
+import { toDecimal } from '@invariant-labs/sdk/src/utils'
+import { calculatePriceAfterSlippage } from '@invariant-labs/sdk/src/math'
 
 describe('Math', () => {
   describe('Test sqrt price calculation', () => {
@@ -178,6 +180,127 @@ describe('Math', () => {
       } catch (e) {
         assert.ok(true)
       }
+    })
+  })
+  describe('calculate slippage', () => {
+    it('no slippage up', async () => {
+      const price = toDecimal(1)
+      const slippage = toDecimal(0)
+
+      const expected = 1e12
+
+      const limitSqrt = calculatePriceAfterSlippage(price, slippage, true)
+      const limit = limitSqrt.v.mul(limitSqrt.v).div(DENOMINATOR)
+
+      assert.equal(limit.toString(), expected.toString())
+    })
+
+    it('no slippage down', async () => {
+      const price = toDecimal(1)
+      const slippage = toDecimal(0)
+
+      const expected = 1e12
+
+      const limitSqrt = calculatePriceAfterSlippage(price, slippage, false)
+      const limit = limitSqrt.v.mul(limitSqrt.v).div(DENOMINATOR)
+
+      assert.equal(limit.toString(), expected.toString())
+    })
+
+    it('slippage of 1% up', async () => {
+      const price = toDecimal(1)
+      const slippage = toDecimal(1, 2)
+
+      const expected = 1009999999999
+
+      const limitSqrt = calculatePriceAfterSlippage(price, slippage, true)
+      const limit = limitSqrt.v.mul(limitSqrt.v).div(DENOMINATOR)
+
+      assert.equal(limit.toString(), expected.toString())
+    })
+
+    it('slippage of 1% down', async () => {
+      const price = toDecimal(1)
+      const slippage = toDecimal(1, 2)
+
+      const expected = 989999999998
+
+      const limitSqrt = calculatePriceAfterSlippage(price, slippage, false)
+      const limit = limitSqrt.v.mul(limitSqrt.v).div(DENOMINATOR)
+
+      assert.equal(limit.toString(), expected.toString())
+    })
+
+    it('slippage of 0,5% up', async () => {
+      const price = toDecimal(1)
+      const slippage = toDecimal(5, 3)
+
+      const expected = 1004999999999
+
+      const limitSqrt = calculatePriceAfterSlippage(price, slippage, true)
+      const limit = limitSqrt.v.mul(limitSqrt.v).div(DENOMINATOR)
+
+      assert.equal(limit.toString(), expected.toString())
+    })
+
+    it('slippage of 0,5% down', async () => {
+      const price = toDecimal(1)
+      const slippage = toDecimal(5, 3)
+
+      const expected = 994999999999
+
+      const limitSqrt = calculatePriceAfterSlippage(price, slippage, false)
+      const limit = limitSqrt.v.mul(limitSqrt.v).div(DENOMINATOR)
+
+      assert.equal(limit.toString(), expected.toString())
+    })
+
+    it('slippage of 0,00001% up', async () => {
+      const price = toDecimal(1)
+      const slippage = toDecimal(3, 7)
+
+      const expected = 1000000299998
+
+      const limitSqrt = calculatePriceAfterSlippage(price, slippage, true)
+      const limit = limitSqrt.v.mul(limitSqrt.v).div(DENOMINATOR)
+
+      assert.equal(limit.toString(), expected.toString())
+    })
+
+    it('slippage of 0,00001% down', async () => {
+      const price = toDecimal(1)
+      const slippage = toDecimal(3, 7)
+
+      const expected = 999999699998
+
+      const limitSqrt = calculatePriceAfterSlippage(price, slippage, false)
+      const limit = limitSqrt.v.mul(limitSqrt.v).div(DENOMINATOR)
+
+      assert.equal(limit.toString(), expected.toString())
+    })
+
+    it('slippage of 100% up', async () => {
+      const price = toDecimal(1)
+      const slippage = toDecimal(1)
+
+      const expected = 1999999999999
+
+      const limitSqrt = calculatePriceAfterSlippage(price, slippage, true)
+      const limit = limitSqrt.v.mul(limitSqrt.v).div(DENOMINATOR)
+
+      assert.equal(limit.toString(), expected.toString())
+    })
+
+    it('slippage of 100% down', async () => {
+      const price = toDecimal(1)
+      const slippage = toDecimal(1)
+
+      const expected = 0
+
+      const limitSqrt = calculatePriceAfterSlippage(price, slippage, false)
+      const limit = limitSqrt.v.mul(limitSqrt.v).div(DENOMINATOR)
+
+      assert.equal(limit.toString(), expected.toString())
     })
   })
 })
