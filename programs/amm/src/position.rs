@@ -1,3 +1,4 @@
+use std::convert::TryInto;
 use std::ops::Mul;
 
 use anchor_lang::require;
@@ -115,10 +116,21 @@ impl Position {
     }
 
     // for future use
-    pub fn get_id(self: Self) -> String {
-        let mut id = self.pool.to_string().to_owned();
-        id.push_str({ self.id }.to_string().as_str());
-        id
+    pub fn get_id(self: Self) -> [u8; 40] {
+        let pool_bytes: &[u8] = &self.pool.to_bytes();
+        let id_bytes: &[u8] = &self.id.to_le_bytes();
+        // convert and check
+        Position::convert_id([pool_bytes, id_bytes].concat())
+    }
+
+    pub fn eq_id(self: Self, other: Self) -> bool {
+        self.get_id() == other.get_id()
+    }
+
+    fn convert_id(v: Vec<u8>) -> [u8; 40] {
+        v.try_into().unwrap_or_else(|v: Vec<u8>| {
+            panic!("Expected a Vec of length {} but it was {}", 40, v.len())
+        })
     }
 
     // TODO: add tests
