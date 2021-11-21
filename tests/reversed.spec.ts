@@ -7,6 +7,7 @@ import { createToken } from './testUtils'
 import { Market, Pair, SEED, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
+import { toDecimal } from '@invariant-labs/sdk/src/utils'
 
 describe('reversed', () => {
   const provider = Provider.local()
@@ -62,8 +63,7 @@ describe('reversed', () => {
     // 0.6% / 10
     await market.create({
       pair,
-      signer: admin,
-      feeTier
+      signer: admin
     })
 
     const createdPool = await market.get(pair)
@@ -149,9 +149,20 @@ describe('reversed', () => {
     const poolDataBefore = await market.get(pair)
     const reservesBefore = await market.getReserveBalances(pair, wallet)
 
-    const targetPrice = DENOMINATOR.muln(110).divn(100)
-    await market.swap(pair, false, amount, targetPrice, accountX, accountY, owner)
-
+    const priceLimit = DENOMINATOR.muln(110).divn(100)
+    await market.swap(
+      {
+        pair,
+        XtoY: false,
+        amount,
+        knownPrice: poolDataBefore.sqrtPrice,
+        slippage: toDecimal(1, 2),
+        accountX,
+        accountY,
+        byAmountIn: true
+      },
+      owner
+    )
     // Check pool
     const poolData = await market.get(pair)
     assert.ok(poolData.liquidity.v.eq(poolDataBefore.liquidity.v.muln(2)))

@@ -1,4 +1,5 @@
 import { BN } from '@project-serum/anchor'
+import sqrt from 'bn-sqrt'
 import { Decimal, Tickmap } from './market'
 import { DENOMINATOR } from './utils'
 
@@ -77,4 +78,12 @@ export const calculate_price_sqrt = (tick_index: number): Decimal => {
   }
 
   return { v: price }
+}
+
+export const calculatePriceAfterSlippage = (priceSqrt: Decimal, slippage: Decimal, up: boolean) => {
+  // using sqrt of slippage, because price is a sqrt
+  const multiplier = up ? slippage.v.add(DENOMINATOR) : DENOMINATOR.sub(slippage.v)
+  const slippageSqrt = sqrt(multiplier.mul(DENOMINATOR))
+
+  return { v: priceSqrt.v.mul(slippageSqrt).div(DENOMINATOR) }
 }

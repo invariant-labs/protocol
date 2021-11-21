@@ -1,4 +1,3 @@
-import * as anchor from '@project-serum/anchor'
 import { Provider } from '@project-serum/anchor'
 import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
 import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
@@ -21,8 +20,7 @@ const main = async () => {
 
   await market.create({
     pair,
-    signer: wallet,
-    feeTier
+    signer: wallet
   })
 }
 main()
