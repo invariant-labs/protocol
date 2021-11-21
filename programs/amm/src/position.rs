@@ -299,6 +299,8 @@ pub fn calculate_amount_delta(
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use super::*;
 
     #[test]
@@ -782,6 +784,70 @@ mod tests {
 
             assert_eq!(result.0, 0);
             assert_eq!(result.1, 1);
+        }
+    }
+
+    #[test]
+    pub fn test_eq_id() {
+        // same pool, same id
+        {
+            let p1 = Position {
+                id: 0,
+                pool: Pubkey::from_str("3URDD3Eutw6SufPBzNm2dbwqwvQjRUFCtqkKVsjk3uSE").unwrap(),
+                ..Default::default()
+            };
+            let p2: Position = Position {
+                id: 0,
+                pool: Pubkey::from_str("3URDD3Eutw6SufPBzNm2dbwqwvQjRUFCtqkKVsjk3uSE").unwrap(),
+                ..Default::default()
+            };
+
+            assert!(p1.eq_id(p2))
+        }
+        // same pool, different id
+        {
+            let p1 = Position {
+                id: 0,
+                pool: Pubkey::from_str("3URDD3Eutw6SufPBzNm2dbwqwvQjRUFCtqkKVsjk3uSE").unwrap(),
+                ..Default::default()
+            };
+            let p2: Position = Position {
+                id: 1,
+                pool: Pubkey::from_str("3URDD3Eutw6SufPBzNm2dbwqwvQjRUFCtqkKVsjk3uSE").unwrap(),
+                ..Default::default()
+            };
+
+            assert!(!p1.eq_id(p2))
+        }
+        // different pool, same id
+        {
+            let p1 = Position {
+                id: 0,
+                pool: Pubkey::from_str("3URDD3Eutw6SufPBzNm2dbwqwvQjRUFCtqkKVsjk3uSE").unwrap(),
+                ..Default::default()
+            };
+            let p2: Position = Position {
+                id: 0,
+                pool: Pubkey::from_str("8tfDNiaEyrV6Q1U4DEXrEigs9DoDtkugzFbybENEbCDz").unwrap(),
+                ..Default::default()
+            };
+
+            assert!(!p1.eq_id(p2))
+        }
+        // different pool, different id
+        {
+            let p1 = Position {
+                id: 0,
+                pool: Pubkey::from_str("3URDD3Eutw6SufPBzNm2dbwqwvQjRUFCtqkKVsjk3uSE").unwrap(),
+                ..Default::default()
+            };
+            let p2: Position = Position {
+                id: 1,
+                pool: Pubkey::from_str("8tfDNiaEyrV6Q1U4DEXrEigs9DoDtkugzFbybENEbCDz").unwrap(),
+                ..Default::default()
+            };
+
+            assert!(!p1.eq_id(p2))
         }
     }
 }
