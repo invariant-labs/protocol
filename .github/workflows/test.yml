@@ -8,7 +8,8 @@ on:
     branches:
       - master
 env:
-  solana_verion: 1.7.11
+  solana_version: 1.7.11
+  anchor_version: 0.18.2
 
 jobs:
   install:
@@ -25,6 +26,8 @@ jobs:
             'npm run test:withdraw',
             'npm run test:position-list',
             'npm run test:claim',
+            'npm run test:target',
+            'npm run test:slippage',
             'cargo test'
           ]
     steps:
@@ -49,7 +52,7 @@ jobs:
           path: |
             ~/.cache/solana/
             ~/.local/share/solana/
-          key: solana-${{ runner.os }}-v0000-${{ env.solana_verion }}
+          key: solana-${{ runner.os }}-v0000-${{ env.solana_version }}
       - uses: actions/cache@v2
         name: Cache target folder
         id: cache-programs
@@ -78,7 +81,6 @@ jobs:
           npm install -g mocha
           npm install -g ts-mocha
           npm install -g typescript
-          npm install -g @project-serum/anchor
           ts-mocha -h
       - name: install essential
         run: |
@@ -87,7 +89,7 @@ jobs:
       - name: install solana
         if: steps.cache-solana.outputs.cache-hit != 'true'
         run: |
-          sh -c "$(curl -sSfL https://release.solana.com/v${{ env.solana_verion }}/install)"
+          sh -c "$(curl -sSfL https://release.solana.com/v${{ env.solana_version }}/install)"
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           solana --version
       - name: setup solana
@@ -99,7 +101,7 @@ jobs:
         if: steps.cache-anchor.outputs.cache-hit != 'true'
         run: |
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
-          cargo install --git https://github.com/project-serum/anchor anchor-cli --locked
+          cargo install --git https://github.com/project-serum/anchor --tag v${{ env.anchor_version }}  anchor-cli --locked
       - name: build programs
         run: |
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
