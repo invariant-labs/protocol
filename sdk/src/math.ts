@@ -1,5 +1,5 @@
 import { BN } from '@project-serum/anchor'
-import sqrt from 'bn-sqrt'
+import sqrt from '../node_modules/bn-sqrt'
 import { Decimal, Tickmap } from './market'
 import { DENOMINATOR } from './utils'
 
