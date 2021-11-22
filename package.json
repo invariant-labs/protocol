@@ -14,7 +14,7 @@
     "build": "cd sdk && npm run build"
   },
   "dependencies": {
-    "@project-serum/anchor": "^0.17.1-beta.1",
+    "@project-serum/anchor": "^0.18.2",
     "@project-serum/serum": "^0.13.58",
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.25.0",

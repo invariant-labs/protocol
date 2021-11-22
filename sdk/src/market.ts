@@ -13,7 +13,7 @@ import {
 } from '@solana/web3.js'
 import { calculatePriceAfterSlippage, findInitialized, isInitialized } from './math'
 import { feeToTickSpacing, generateTicksArray, getFeeTierAddress, SEED, signAndSend } from './utils'
-import idl from './idl/amm.json'
+import { Amm, IDL } from './idl/amm'
 import { IWallet, Pair } from '.'
 import { getMarketAddress } from './network'
 
@@ -65,7 +65,7 @@ export interface Tickmap {
 export class Market {
   private connection: Connection
   private wallet: IWallet
-  public program: Program
+  public program: Program<Amm>
 
   constructor(network: Network, wallet: IWallet, connection: Connection, programId?: PublicKey) {
     this.connection = connection
@@ -73,7 +73,7 @@ export class Market {
     const programAddress = new PublicKey(getMarketAddress(network))
     const provider = new Provider(connection, wallet, Provider.defaultOptions())
 
-    this.program = new Program(idl as Idl, programAddress, provider)
+    this.program = new Program(IDL, programAddress, provider)
   }
 
   async create({ pair, signer, initTick }: CreatePool) {
@@ -276,7 +276,6 @@ export class Market {
 
     const { tickAddress, tickBump } = await this.getTickAddress(pair, index)
     const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
-
     return this.program.instruction.createTick(tickBump, feeTierAddress, index, {
       accounts: {
         tick: tickAddress,
