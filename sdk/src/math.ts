@@ -1,5 +1,4 @@
 import { BN } from '@project-serum/anchor'
-import sqrt from 'bn-sqrt'
 import { Decimal, Tickmap } from './market'
 import { DENOMINATOR } from './utils'
 
@@ -78,6 +77,24 @@ export const calculate_price_sqrt = (tick_index: number): Decimal => {
   }
 
   return { v: price }
+}
+
+export const sqrt = (num: BN): BN => {
+  if (num.lt(new BN(0))) {
+    throw new Error('Sqrt only works on non-negtiave inputs')
+  }
+  if (num.lt(new BN(2))) {
+    return num
+  }
+
+  const smallCand = sqrt(num.shrn(2)).shln(1)
+  const largeCand = smallCand.add(new BN(1))
+
+  if (largeCand.mul(largeCand).gt(num)) {
+    return smallCand
+  } else {
+    return largeCand
+  }
 }
 
 export const calculatePriceAfterSlippage = (priceSqrt: Decimal, slippage: Decimal, up: boolean) => {
