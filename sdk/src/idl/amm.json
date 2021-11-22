@@ -42,7 +42,7 @@
       ]
     },
     {
-      "name": "create",
+      "name": "createPool",
       "accounts": [
         {
           "name": "pool",
@@ -296,7 +296,7 @@
       ]
     },
     {
-      "name": "initPosition",
+      "name": "createPosition",
       "accounts": [
         {
           "name": "position",
@@ -780,89 +780,6 @@
       }
     },
     {
-      "name": "Tickmap",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bitmap",
-            "type": {
-              "array": [
-                "u8",
-                25000
-              ]
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "Tick",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "index",
-            "type": "i32"
-          },
-          {
-            "name": "sign",
-            "type": "bool"
-          },
-          {
-            "name": "liquidityChange",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "liquidityGross",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "sqrtPrice",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "feeGrowthOutsideX",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "feeGrowthOutsideY",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "PositionList",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "head",
-            "type": "u32"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
       "name": "Position",
       "type": {
         "kind": "struct",
@@ -920,6 +837,89 @@
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PositionList",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "head",
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Tick",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "index",
+            "type": "i32"
+          },
+          {
+            "name": "sign",
+            "type": "bool"
+          },
+          {
+            "name": "liquidityChange",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "liquidityGross",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "sqrtPrice",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "feeGrowthOutsideX",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "feeGrowthOutsideY",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Tickmap",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bitmap",
+            "type": {
+              "array": [
+                "u8",
+                25000
+              ]
+            }
           }
         ]
       }
