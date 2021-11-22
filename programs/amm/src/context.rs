@@ -27,13 +27,15 @@ pub struct CreateState<'info> {
 #[derive(Accounts)]
 #[instruction(bump: u8, fee: u64, tick_spacing: u16)]
 pub struct CreateFeeTier<'info> {
+    #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
+    pub state: AccountLoader<'info, State>,
     #[account(init,
         seeds = [b"feetierv1", program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()],
         bump = bump, payer = payer
     )]
     pub fee_tier: Loader<'info, FeeTier>,
-    #[account(mut, signer)]
-    pub payer: AccountInfo<'info>,
+    #[account(mut, constraint = &state.load()?.admin == payer.key)]
+    pub payer: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
     pub system_program: AccountInfo<'info>,
 }
@@ -458,7 +460,7 @@ impl<'info> SendTokens<'info> for ClaimFee<'info> {
 #[derive(Accounts)]
 pub struct WithdrawProtocolFee<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
-    pub state: Loader<'info, State>,
+    pub state: AccountLoader<'info, State>,
     #[account(mut, seeds = [b"poolv1", fee_tier.key.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()], bump = pool.load()?.bump)]
     pub pool: Loader<'info, Pool>,
     pub token_x: Account<'info, Mint>,

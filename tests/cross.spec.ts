@@ -60,7 +60,7 @@ describe('cross', () => {
     await market.createState(admin, protocolFee)
   })
   it('#createFeeTier()', async () => {
-    await market.createFeeTier(feeTier, wallet)
+    await market.createFeeTier(feeTier, admin)
   })
   it('#create()', async () => {
     // 0.6% / 10

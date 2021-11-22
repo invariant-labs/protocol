@@ -43,6 +43,11 @@
       "name": "createFeeTier",
       "accounts": [
         {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "feeTier",
           "isMut": true,
           "isSigner": false
@@ -1144,5 +1149,8 @@
       "name": "Unauthorized",
       "msg": "You are not admin"
     }
-  ]
+  ],
+  "metadata": {
+    "address": "FPr3fREovDnqMfubJTrJAFwopvJB8grXj1o3gkmSyzmw"
+  }
 }

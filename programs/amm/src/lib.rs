@@ -40,7 +40,7 @@ pub mod amm {
         };
         Ok(())
     }
-
+    #[access_control(admin(&ctx.accounts.state, &ctx.accounts.payer))]
     pub fn create_fee_tier(
         ctx: Context<CreateFeeTier>,
         bump: u8,
@@ -564,7 +564,7 @@ pub enum ErrorCode {
     Unauthorized = 15, // 139
 }
 
-fn admin(state_loader: &Loader<State>, signer: &AccountInfo) -> Result<()> {
+fn admin(state_loader: &AccountLoader<State>, signer: &AccountInfo) -> Result<()> {
     let state = state_loader.load()?;
     require!(signer.key.eq(&state.admin), Unauthorized);
     Ok(())

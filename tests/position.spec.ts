@@ -70,11 +70,11 @@ describe('position', () => {
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
-  it('#createFeeTier()', async () => {
-    await createStandardFeeTiers(market, wallet)
-  })
   it('#createState()', async () => {
     await market.createState(admin, protocolFee)
+  })
+  it('#createFeeTier()', async () => {
+    await createStandardFeeTiers(market, admin)
   })
   it('#create()', async () => {
     // fee tier 0.02% / 4

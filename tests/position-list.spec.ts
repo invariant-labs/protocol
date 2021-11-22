@@ -77,7 +77,7 @@ describe('Position list', () => {
       await market.createState(admin, protocolFee)
     })
     it('createFeeTier()', async () => {
-      await market.createFeeTier(feeTier, wallet)
+      await market.createFeeTier(feeTier, admin)
     })
     it('Prepare pool', async () => {
       initTick = -23028

@@ -264,10 +264,12 @@ export class Market {
   async createFeeTierInstruction(feeTier: FeeTier, payer: PublicKey) {
     const { fee, tickSpacing } = feeTier
     const { address, bump } = await this.getFeeTierAddress(feeTier)
+    const stateAddress = await (await this.getStateAddress()).address;
     const ts = tickSpacing ?? feeToTickSpacing(fee)
 
     return this.program.instruction.createFeeTier(bump, fee, ts, {
       accounts: {
+        state: stateAddress,
         feeTier: address,
         payer,
         rent: SYSVAR_RENT_PUBKEY,
