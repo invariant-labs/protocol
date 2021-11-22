@@ -3,6 +3,7 @@ mod context;
 mod decimal;
 mod math;
 mod uint;
+mod util;
 
 use anchor_lang::prelude::*;
 use anchor_spl::token;

@@ -17,8 +17,8 @@ export enum ERRORS {
   ALLOWANCE = 'custom program error: 0x1',
   NO_SIGNERS = 'Error: No signers'
 }
-export enum ERRORS_EXCHANGE {}
-export const STAKER_SEED = 'staker'
+
+export const STAKER_SEED = Buffer.from('staker')
 
 export const signAndSend = async (
   tx: Transaction,

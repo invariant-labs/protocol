@@ -85,12 +85,7 @@ export class Staker {
 
   public async stakeInstruction({ position, incentive, owner, index, amm }: createStake) {
     const [userStakeAddress, userStakeBump] = await PublicKey.findProgramAddress(
-      [
-        Buffer.from(utils.bytes.utf8.encode(STAKER_SEED)),
-        owner.toBuffer(),
-        incentive.toBuffer(),
-        position.toBuffer()
-      ],
+      [Buffer.from(STAKER_SEED), owner.toBuffer(), incentive.toBuffer(), position.toBuffer()],
       this.programId
     )
 
@@ -109,12 +104,7 @@ export class Staker {
 
   public async getStakeAddress(owner: PublicKey, incentive: PublicKey, position: PublicKey) {
     const [stakeAddress, stakeBump] = await PublicKey.findProgramAddress(
-      [
-        Buffer.from(utils.bytes.utf8.encode(STAKER_SEED)),
-        owner.toBuffer(),
-        incentive.toBuffer(),
-        position.toBuffer()
-      ],
+      [Buffer.from(STAKER_SEED), owner.toBuffer(), incentive.toBuffer(), position.toBuffer()],
 
       this.program.programId
     )
@@ -144,12 +134,7 @@ export class Staker {
     )
 
     const [userStakeAddress, userStakeBump] = await PublicKey.findProgramAddress(
-      [
-        Buffer.from(utils.bytes.utf8.encode(STAKER_SEED)),
-        owner.toBuffer(),
-        incentive.toBuffer(),
-        position.toBuffer()
-      ],
+      [Buffer.from(STAKER_SEED), owner.toBuffer(), incentive.toBuffer(), position.toBuffer()],
       this.programId
     )
 

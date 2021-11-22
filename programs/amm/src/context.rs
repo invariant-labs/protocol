@@ -446,24 +446,24 @@ pub struct UpdateSecondsPerLiquitity<'info> {
         seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
         bump = pool.load()?.bump
     )]
-    pub pool: Loader<'info, Pool>,
+    pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
         seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &lower_tick_index.to_le_bytes()],
         bump = lower_tick.load()?.bump
     )]
-    pub lower_tick: Loader<'info, Tick>,
+    pub lower_tick: AccountLoader<'info, Tick>,
     #[account(mut,
         seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &upper_tick_index.to_le_bytes()],
         bump = upper_tick.load()?.bump
     )]
-    pub upper_tick: Loader<'info, Tick>,
+    pub upper_tick: AccountLoader<'info, Tick>,
     #[account(mut,
         seeds = [b"positionv1",
         owner.to_account_info().key.as_ref(),
         &index.to_le_bytes()],
         bump = position.load()?.bump
     )]
-    pub position: Loader<'info, Position>,
+    pub position: AccountLoader<'info, Position>,
     #[account(mut)]
     pub token_x: Account<'info, Mint>,
     #[account(mut)]

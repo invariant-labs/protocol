@@ -20,8 +20,6 @@ export enum ERRORS {
   NO_SIGNERS = 'Error: No signers'
 }
 
-export const STAKER_SEED = Buffer.from('staker')
-
 export enum ERRORS_STAKER {
   ZERO_AMOUNT = '0x12f', //0
   START_IN_PAST = '0x131', //1

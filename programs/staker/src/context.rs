@@ -1,14 +1,19 @@
+//mod util;
+
 use crate::account::*;
+use crate::util::check_position_seeds;
+
 use amm::account::{Pool, Position};
 use amm::program::Amm;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, TokenAccount, Transfer};
 
+
 #[derive(Accounts)]
 #[instruction(bump: u8)]
 pub struct CreateIncentive<'info> {
     #[account(init, payer = founder)]
-    pub incentive: Loader<'info, Incentive>,
+    pub incentive: AccountLoader<'info, Incentive>,
     #[account(mut,
         constraint = &incentive_token_account.owner == staker_authority.to_account_info().key
     )]
@@ -56,20 +61,13 @@ pub struct CreateUserStake<'info> {
         seeds = [b"staker", owner.to_account_info().key.as_ref(), incentive.to_account_info().key.as_ref(), position.to_account_info().key.as_ref()],
         payer = owner,
         bump = bump)]
-    pub user_stake: Loader<'info, UserStake>,
+    pub user_stake: AccountLoader<'info, UserStake>,
     #[account(mut,
-        constraint = &Pubkey::find_program_address(
-            &[
-                b"positionv1",
-                owner.to_account_info().key.as_ref(),
-                &index.to_le_bytes(),
-            ],
-            &amm::program::Amm::id(),
-        ).0 == position.to_account_info().key
+        constraint = check_position_seeds(owner.to_account_info(), position.to_account_info().key, index)
     )]
     pub position: AccountLoader<'info, Position>,
     #[account(mut)]
-    pub incentive: Loader<'info, Incentive>,
+    pub incentive: AccountLoader<'info, Incentive>,
     pub owner: Signer<'info>,
     pub amm: Program<'info, Amm>,
     pub system_program: AccountInfo<'info>,
@@ -82,11 +80,11 @@ pub struct Withdraw<'info> {
     #[account(mut,
         seeds = [b"staker", owner.to_account_info().key.as_ref(), incentive.to_account_info().key.as_ref(), position.to_account_info().key.as_ref()],
         bump = bump_stake)]
-    pub user_stake: Loader<'info, UserStake>,
+    pub user_stake: AccountLoader<'info, UserStake>,
     #[account(mut,
         constraint = &user_stake.load()?.incentive == incentive.to_account_info().key 
     )]
-    pub incentive: Loader<'info, Incentive>,
+    pub incentive: AccountLoader<'info, Incentive>,
     #[account(mut,
         constraint = &incentive_token_account.owner == staker_authority.to_account_info().key
     )]
@@ -97,14 +95,7 @@ pub struct Withdraw<'info> {
     )]
     pub owner_token_account: Account<'info, TokenAccount>,
     #[account(mut,
-        constraint = &Pubkey::find_program_address(
-            &[
-                b"positionv1",
-                owner.to_account_info().key.as_ref(),
-                &index.to_le_bytes(),
-            ],
-            &amm::program::Amm::id(),
-        ).0 == position.to_account_info().key
+        constraint = check_position_seeds(owner.to_account_info(), position.to_account_info().key, index)
     )]
     pub position: AccountLoader<'info, Position>,
     #[account(mut,
@@ -141,7 +132,7 @@ pub struct ReturnFounds<'info> {
     #[account(mut,
         constraint = &incentive.load()?.founder == owner.to_account_info().key 
     )]
-    pub incentive: Loader<'info, Incentive>,
+    pub incentive: AccountLoader<'info, Incentive>,
     #[account(mut,
         constraint = &incentive_token_account.owner == staker_authority.to_account_info().key,
         constraint = &incentive.load()?.token_account == incentive_token_account.to_account_info().key

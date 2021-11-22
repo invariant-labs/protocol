@@ -1,22 +1,14 @@
 import * as anchor from '@project-serum/anchor'
 import { Program, Provider, BN } from '@project-serum/anchor'
-import { SEED, Market, Pair } from '@invariant-labs/sdk'
+import { Market, Pair } from '@invariant-labs/sdk'
 import { Staker as StakerIdl } from '../sdk-staker/src/idl/staker'
 import { Network, Staker } from '../sdk-staker/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
 import { Decimal } from '../sdk-staker/src/staker'
-import {
-  eqDecimal,
-  assertThrowsAsync,
-  ERRORS,
-  ERRORS_STAKER,
-  STAKER_SEED,
-  createToken,
-  tou64
-} from './utils'
+import { STAKER_SEED } from '../sdk-staker/src/utils'
+import { eqDecimal, assertThrowsAsync, ERRORS_STAKER, createToken, tou64 } from './utils'
 import { createToken as createTkn } from '../tests/testUtils'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { signAndSend } from '../sdk-staker/lib/utils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'

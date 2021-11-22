@@ -170,12 +170,6 @@ pub fn close<'info>(
     Ok(())
 }
 
-pub fn get_current_time() -> Result<i64> {
-    let current_time = Clock::get()?.unix_timestamp;
-
-    Ok(current_time)
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
