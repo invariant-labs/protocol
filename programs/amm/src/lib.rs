@@ -526,13 +526,13 @@ pub enum ErrorCode {
     #[msg("Disable empty position pokes")]
     EmptyPositionPokes = 10, // 136
     #[msg("Invalid tick liquidity")]
-    InvalidPositionLiquidity = 11, // 135
+    InvalidPositionLiquidity = 11, // 137
     #[msg("Invalid pool liquidity")]
-    InvalidPoolLiquidity = 12, // 136
+    InvalidPoolLiquidity = 12, // 138
     #[msg("Invalid position index")]
-    InvalidPositionIndex = 13, // 137
+    InvalidPositionIndex = 13, // 139
     #[msg("Position liquidity would be zero")]
-    PositionWithoutLiquidity = 14, // 138
+    PositionWithoutLiquidity = 14, // 13a
     #[msg("Invalid pool token addresses")]
-    InvalidPoolTokenAddresses = 15, // 139
+    InvalidPoolTokenAddresses = 15, // 13b
 }

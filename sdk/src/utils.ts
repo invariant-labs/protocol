@@ -8,7 +8,6 @@ import {
   sendAndConfirmRawTransaction,
   Transaction
 } from '@solana/web3.js'
-import { expect } from 'chai'
 import { Decimal, FeeTier, FEE_TIER } from './market'
 
 export const SEED = 'Invariant'
@@ -25,6 +24,25 @@ export enum ERRORS {
   SERIALIZATION = '0xa4',
   ALLOWANCE = 'custom program error: 0x1',
   NO_SIGNERS = 'Error: No signers'
+}
+
+export enum INVARIANT_ERRORS {
+  ZERO_AMOUNT = '0x12c',
+  ZERO_OUTPUT = '0x12d',
+  WRONG_TICK = '0x12e',
+  WRONG_LIMIT = '0x12f',
+  INVALID_TICK_INDEX = '0x130',
+  INVALID_TICK_INTERVAL = '0x131',
+  NO_MORE_TICKS = '0x132',
+  TICK_NOT_FOUND = '0x133',
+  PRICE_LIMIT_REACHED = '0x134',
+  INVALID_TICK_LIQUIDITY = '0x135',
+  EMPTY_POSITION_POKES = '0x136',
+  INVALID_POSITION_LIQUIDITY = '0x137',
+  INVALID_POOL_LIQUIDITY = '0x138',
+  INVALID_POSITION_INDEX = '0x139',
+  POSITION_WITHOUT_LIQUIDITY = '0x13a',
+  INVALID_POOL_TOKEN_ADDRESSES = '0x13b'
 }
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
