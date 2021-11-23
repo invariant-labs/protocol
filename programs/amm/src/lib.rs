@@ -23,6 +23,8 @@ const SEED: &str = "Invariant";
 #[program]
 pub mod amm {
 
+    use std::cmp::Ordering;
+
     use crate::util::{check_ticks, get_tick_from_price};
 
     use super::*;
@@ -56,6 +58,13 @@ pub mod amm {
         _tick_spacing: u16,
     ) -> ProgramResult {
         msg!("INVARIANT: CREATE POOL");
+
+        let token_x_address = ctx.accounts.token_x.key.to_string();
+        let token_y_address = ctx.accounts.token_y.key.to_string();
+        require!(
+            token_x_address.cmp(&token_y_address) == Ordering::Less,
+            InvalidPoolTokenAddresses
+        );
 
         let pool = &mut ctx.accounts.pool.load_init()?;
         let fee_tier = ctx.accounts.fee_tier.load()?;
@@ -524,4 +533,6 @@ pub enum ErrorCode {
     InvalidPositionIndex = 13, // 137
     #[msg("Position liquidity would be zero")]
     PositionWithoutLiquidity = 14, // 138
+    #[msg("Invalid pool token addresses")]
+    InvalidPoolTokenAddresses = 15, // 139
 }
