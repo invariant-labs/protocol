@@ -10,8 +10,7 @@ import { TICK_LIMIT } from '@invariant-labs/sdk'
 import { tou64 } from '@invariant-labs/sdk'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
-import { sleep } from '@invariant-labs/sdk'
-import { DECIMAL } from '@invariant-labs/sdk/src/utils'
+import { toDecimal } from '@invariant-labs/sdk/src/utils'
 
 describe('claim', () => {
   const provider = Provider.local()
@@ -72,8 +71,7 @@ describe('claim', () => {
     // 0.6% / 10
     await market.create({
       pair,
-      signer: admin,
-      feeTier,
+      signer: admin
     })
     const createdPool = await market.get(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
@@ -136,11 +134,22 @@ describe('claim', () => {
     await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
 
     const poolDataBefore = await market.get(pair)
-    const targetPrice = DENOMINATOR.muln(100).divn(110)
+    const priceLimit = DENOMINATOR.muln(100).divn(110)
     const reservesBeforeSwap = await market.getReserveBalances(pair, wallet)
 
-    await market.swap(pair, true, amount, targetPrice, accountX, accountY, swapper)
-
+    await market.swap(
+      {
+        pair,
+        XtoY: true,
+        amount,
+        knownPrice: poolDataBefore.sqrtPrice,
+        slippage: toDecimal(1, 2),
+        accountX,
+        accountY,
+        byAmountIn: true
+      },
+      swapper
+    )
     const poolDataAfter = await market.get(pair)
     assert.ok(poolDataAfter.liquidity.v.eq(poolDataBefore.liquidity.v))
     assert.ok(poolDataAfter.currentTickIndex == lowerTick)

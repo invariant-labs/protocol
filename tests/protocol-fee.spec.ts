@@ -8,7 +8,7 @@ import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken } from './testUtils'
 import { assert } from 'chai'
 import { tou64 } from '@invariant-labs/sdk'
-import { assertThrowsAsync, ERRORS } from '@invariant-labs/sdk/src/utils'
+import { assertThrowsAsync, ERRORS, toDecimal } from '@invariant-labs/sdk/src/utils'
 
 describe('protocol-fee', () => {
     const provider = Provider.local()
@@ -75,7 +75,6 @@ describe('protocol-fee', () => {
         await market.create({
             pair,
             signer: admin,
-            feeTier,
         })
 
     const createdPool = await market.get(pair)
@@ -144,7 +143,18 @@ describe('protocol-fee', () => {
     const targetPrice = DENOMINATOR.muln(100).divn(110)
     const reservesBeforeSwap = await market.getReserveBalances(pair, wallet)
 
-    await market.swap(pair, true, amount, targetPrice, accountX, accountY, swapper)
+    await market.swap(
+        {
+            pair,
+            XtoY: true, 
+            amount, 
+            knownPrice: poolDataBefore.sqrtPrice, 
+            slippage: toDecimal(1, 2), 
+            accountX, 
+            accountY, 
+            byAmountIn: true
+        }, 
+        swapper)
 
     const poolDataAfter = await market.get(pair)
     assert.ok(poolDataAfter.liquidity.v.eq(poolDataBefore.liquidity.v))

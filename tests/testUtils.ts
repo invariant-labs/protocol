@@ -1,9 +1,14 @@
-import { Connection, Keypair } from '@solana/web3.js'
+import { Connection, Keypair, PublicKey } from '@solana/web3.js'
 import { TokenInstructions } from '@project-serum/serum'
-import { Token } from '@solana/spl-token'
-import { Market, Position } from '@invariant-labs/sdk/lib/market'
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { FeeTier, Market, Position } from '@invariant-labs/sdk/lib/market'
 import { Decimal } from '@invariant-labs/sdk/src/market'
 import { FEE_TIERS } from '@invariant-labs/sdk/src/utils'
+import { fromFee } from '@invariant-labs/sdk/lib/utils'
+import BN from 'bn.js'
+import { Pair } from '@invariant-labs/sdk'
+import { tou64 } from '@invariant-labs/sdk'
+import { DENOMINATOR } from '@invariant-labs/sdk'
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {
@@ -73,4 +78,99 @@ export const createStandardFeeTiers = async (market: Market, payer: Keypair) => 
       await market.createFeeTier(feeTier, payer)
     })
   )
+}
+
+export const createTokensAndPool = async (
+  market: Market,
+  connection: Connection,
+  payer: Keypair,
+  initTick: number = 0,
+  fee: BN = new BN(600),
+  tickSpacing: number = 10
+) => {
+  const mintAuthority = Keypair.generate()
+
+  const promiseResults = await Promise.all([
+    createToken(connection, payer, mintAuthority),
+    createToken(connection, payer, mintAuthority),
+    connection.requestAirdrop(mintAuthority.publicKey, 1e9)
+  ])
+
+  const feeTier: FeeTier = {
+    fee: fromFee(fee),
+    tickSpacing
+  }
+  const pair = new Pair(promiseResults[0].publicKey, promiseResults[1].publicKey, feeTier)
+  const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, payer)
+  const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, payer)
+  const feeTierAccount = await connection.getAccountInfo((await market.getFeeTierAddress(feeTier)).address)
+  if (feeTierAccount === null) {
+    await market.createFeeTier(pair.feeTier, payer)
+  }
+  
+  await market.create({
+    pair,
+    signer: payer,
+    initTick
+  })
+
+  return { tokenX, tokenY, pair, mintAuthority }
+}
+
+export const createUserWithTokens = async (
+  pair: Pair,
+  connection: Connection,
+  mintAuthority: Keypair,
+  mintAmount: BN = new BN(1e9)
+) => {
+  const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, mintAuthority)
+  const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, mintAuthority)
+
+  const owner = Keypair.generate()
+
+  const [userAccountX, userAccountY] = await Promise.all([
+    tokenX.createAccount(owner.publicKey),
+    tokenY.createAccount(owner.publicKey),
+    connection.requestAirdrop(owner.publicKey, 1e9)
+  ])
+
+  await Promise.all([
+    tokenX.mintTo(userAccountX, mintAuthority.publicKey, [mintAuthority], tou64(mintAmount)),
+    tokenY.mintTo(userAccountY, mintAuthority.publicKey, [mintAuthority], tou64(mintAmount))
+  ])
+
+  return { owner, userAccountX, userAccountY }
+}
+
+export const createPoolWithLiquidity = async (
+  market: Market,
+  connection: Connection,
+  payer: Keypair,
+  liquidity: Decimal = { v: new BN(10).pow(new BN(22)) },
+  initialTick: number = 0,
+  lowerTick: number = -1000,
+  upperTick: number = 1000
+) => {
+  const { pair, mintAuthority } = await createTokensAndPool(market, connection, payer, initialTick)
+  const { owner, userAccountX, userAccountY } = await createUserWithTokens(
+    pair,
+    connection,
+    mintAuthority,
+    new BN(10).pow(new BN(14))
+  )
+
+  await market.initPosition(
+    {
+      pair,
+      owner: owner.publicKey,
+      userTokenX: userAccountX,
+      userTokenY: userAccountY,
+      lowerTick,
+      upperTick,
+      liquidityDelta: liquidity
+    },
+    owner
+  )
+
+  return { pair, mintAuthority }
 }

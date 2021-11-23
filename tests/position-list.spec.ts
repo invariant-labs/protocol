@@ -85,8 +85,7 @@ describe('Position list', () => {
       await market.create({
         pair,
         signer: admin,
-        initTick,
-        feeTier
+        initTick
       })
       await market.createPositionList(positionOwner)
 

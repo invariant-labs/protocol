@@ -1,3 +1,4 @@
+use std::convert::TryInto;
 use std::ops::Mul;
 
 use anchor_lang::require;
@@ -115,10 +116,21 @@ impl Position {
     }
 
     // for future use
-    pub fn get_id(self: Self) -> String {
-        let mut id = self.pool.to_string().to_owned();
-        id.push_str({ self.id }.to_string().as_str());
-        id
+    pub fn get_id(self: Self) -> [u8; 40] {
+        let pool_bytes: &[u8] = &self.pool.to_bytes();
+        let id_bytes: &[u8] = &self.id.to_le_bytes();
+        // convert and check
+        Position::convert_id([pool_bytes, id_bytes].concat())
+    }
+
+    pub fn eq_id(self: Self, other: Self) -> bool {
+        self.get_id() == other.get_id()
+    }
+
+    fn convert_id(v: Vec<u8>) -> [u8; 40] {
+        v.try_into().unwrap_or_else(|v: Vec<u8>| {
+            panic!("Expected a Vec of length {} but it was {}", 40, v.len())
+        })
     }
 
     // TODO: add tests
@@ -287,6 +299,8 @@ pub fn calculate_amount_delta(
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use super::*;
 
     #[test]
@@ -770,6 +784,70 @@ mod tests {
 
             assert_eq!(result.0, 0);
             assert_eq!(result.1, 1);
+        }
+    }
+
+    #[test]
+    pub fn test_eq_id() {
+        // same pool, same id
+        {
+            let p1 = Position {
+                id: 0,
+                pool: Pubkey::from_str("3URDD3Eutw6SufPBzNm2dbwqwvQjRUFCtqkKVsjk3uSE").unwrap(),
+                ..Default::default()
+            };
+            let p2: Position = Position {
+                id: 0,
+                pool: Pubkey::from_str("3URDD3Eutw6SufPBzNm2dbwqwvQjRUFCtqkKVsjk3uSE").unwrap(),
+                ..Default::default()
+            };
+
+            assert!(p1.eq_id(p2))
+        }
+        // same pool, different id
+        {
+            let p1 = Position {
+                id: 0,
+                pool: Pubkey::from_str("3URDD3Eutw6SufPBzNm2dbwqwvQjRUFCtqkKVsjk3uSE").unwrap(),
+                ..Default::default()
+            };
+            let p2: Position = Position {
+                id: 1,
+                pool: Pubkey::from_str("3URDD3Eutw6SufPBzNm2dbwqwvQjRUFCtqkKVsjk3uSE").unwrap(),
+                ..Default::default()
+            };
+
+            assert!(!p1.eq_id(p2))
+        }
+        // different pool, same id
+        {
+            let p1 = Position {
+                id: 0,
+                pool: Pubkey::from_str("3URDD3Eutw6SufPBzNm2dbwqwvQjRUFCtqkKVsjk3uSE").unwrap(),
+                ..Default::default()
+            };
+            let p2: Position = Position {
+                id: 0,
+                pool: Pubkey::from_str("8tfDNiaEyrV6Q1U4DEXrEigs9DoDtkugzFbybENEbCDz").unwrap(),
+                ..Default::default()
+            };
+
+            assert!(!p1.eq_id(p2))
+        }
+        // different pool, different id
+        {
+            let p1 = Position {
+                id: 0,
+                pool: Pubkey::from_str("3URDD3Eutw6SufPBzNm2dbwqwvQjRUFCtqkKVsjk3uSE").unwrap(),
+                ..Default::default()
+            };
+            let p2: Position = Position {
+                id: 1,
+                pool: Pubkey::from_str("8tfDNiaEyrV6Q1U4DEXrEigs9DoDtkugzFbybENEbCDz").unwrap(),
+                ..Default::default()
+            };
+
+            assert!(!p1.eq_id(p2))
         }
     }
 }
