@@ -1,9 +1,10 @@
 import { assert } from 'chai'
 import { BN } from '@project-serum/anchor'
-import { calculate_price_sqrt, DENOMINATOR } from '@invariant-labs/sdk'
+import { calculate_price_sqrt, DENOMINATOR, TICK_LIMIT } from '@invariant-labs/sdk'
 import { getLiquidityByX, getLiquidityByY } from '@invariant-labs/sdk/src/tick'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
-import { calculatePriceAfterSlippage } from '@invariant-labs/sdk/src/math'
+import { calculatePriceAfterSlippage, findClosestTicks } from '@invariant-labs/sdk/src/math'
+import { setInitialized } from './testUtils'
 
 describe('Math', () => {
   describe('Test sqrt price calculation', () => {
@@ -301,6 +302,71 @@ describe('Math', () => {
       const limit = limitSqrt.v.mul(limitSqrt.v).div(DENOMINATOR)
 
       assert.equal(limit.toString(), expected.toString())
+    })
+  })
+  describe('find closest ticks', () => {
+    let bitmap = new Array(TICK_LIMIT * 2).fill(0)
+
+    it('simple', async () => {
+      const initialized = [-20, -14, -3, -2, -1, 5, 99]
+      initialized.forEach((i) => setInitialized(bitmap, i))
+
+      const result = findClosestTicks(bitmap, 0, 1, 200)
+      const isEqual = initialized.join(',') === result.join(',')
+
+      assert.ok(isEqual)
+    })
+
+    it('near bottom limit', async () => {
+      const initialized = [-TICK_LIMIT + 1]
+      initialized.forEach((i) => setInitialized(bitmap, i))
+
+      const result = findClosestTicks(bitmap, 0, 1, 200)
+      assert.ok(result[0] == initialized[0])
+    })
+
+    it('near top limit', async () => {
+      const initialized = [TICK_LIMIT]
+      initialized.forEach((i) => setInitialized(bitmap, i))
+
+      const result = findClosestTicks(bitmap, 0, 1, 200)
+      assert.ok(result.pop() == initialized[0])
+    })
+
+    it('with limit', async () => {
+      const initialized = [998, 999, 1000, 1001, 1002, 1003]
+      initialized.forEach((i) => setInitialized(bitmap, i))
+
+      const result = findClosestTicks(bitmap, 1000, 1, 3)
+      const isEqual = [999, 1000, 1001].join(',') === result.join(',')
+      assert.ok(isEqual)
+    })
+
+    it('with range', async () => {
+      const initialized = [998, 999, 1000, 1001, 1002, 1003]
+      initialized.forEach((i) => setInitialized(bitmap, i))
+
+      const result = findClosestTicks(bitmap, 1000, 1, 1000, 2)
+      const isEqual = [999, 1000, 1001, 1002].join(',') === result.join(',')
+      assert.ok(isEqual)
+    })
+
+    it('only up', async () => {
+      const initialized = [998, 999, 1000, 1001, 1002, 1003]
+      initialized.forEach((i) => setInitialized(bitmap, i))
+
+      const result = findClosestTicks(bitmap, 1000, 1, 1000, 10, 'up')
+      const isEqual = [1001, 1002, 1003].join(',') === result.join(',')
+      assert.ok(isEqual)
+    })
+
+    it('only down', async () => {
+      const initialized = [998, 999, 1000, 1001, 1002, 1003]
+      initialized.forEach((i) => setInitialized(bitmap, i))
+
+      const result = findClosestTicks(bitmap, 1000, 1, 1000, 10, 'down')
+      const isEqual = [998, 999, 1000].join(',') === result.join(',')
+      assert.ok(isEqual)
     })
   })
 })

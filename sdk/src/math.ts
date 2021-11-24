@@ -19,29 +19,6 @@ export const isInitialized = (tickmap: Tickmap, index: number, tickSpacing: numb
   return value !== 0
 }
 
-export const findInitialized = (ticks: number[], from: number, to: number, tickSpacing: number) => {
-  if (from > to || from % tickSpacing !== 0 || to % tickSpacing !== 0) {
-    throw Error("invalid arguments can't find initialized ticks")
-  }
-  const fromIndex = Math.floor(from / tickSpacing) + TICK_LIMIT
-  const toIndex = Math.floor(to / tickSpacing) + TICK_LIMIT
-
-  let found: number[] = []
-
-  let byte = Math.floor(fromIndex / 8)
-
-  for (let i = byte; i < Math.floor((toIndex + 7) / 8); i++) {
-    let bit = 8
-
-    while (bit) {
-      bit--
-      if (ticks[i] & (1 << bit)) found.push(byte * 8 + bit - TICK_LIMIT)
-    }
-    byte++
-  }
-  return found.map((i) => i * tickSpacing)
-}
-
 export const fromInteger = (integer: number): { v: BN } => {
   return { v: new BN(integer).mul(DENOMINATOR) }
 }
@@ -81,7 +58,7 @@ export const calculate_price_sqrt = (tick_index: number): Decimal => {
 
 export const sqrt = (num: BN): BN => {
   if (num.lt(new BN(0))) {
-    throw new Error('Sqrt only works on non-negtiave inputs')
+    throw new Error('Sqrt only works on non-negative inputs')
   }
   if (num.lt(new BN(2))) {
     return num
@@ -103,4 +80,51 @@ export const calculatePriceAfterSlippage = (priceSqrt: Decimal, slippage: Decima
   const slippageSqrt = sqrt(multiplier.mul(DENOMINATOR))
 
   return { v: priceSqrt.v.mul(slippageSqrt).div(DENOMINATOR) }
+}
+
+export const findClosestTicks = (
+  ticks: number[],
+  current: number,
+  tickSpacing: number,
+  limit: number,
+  maxRange: number = Infinity,
+  oneWay: 'up' | 'down' | undefined = undefined
+) => {
+  if (current % tickSpacing !== 0) {
+    throw Error("invalid arguments can't find initialized ticks")
+  }
+
+  const currentIndex = Math.floor(current / tickSpacing) + TICK_LIMIT
+
+  let above = currentIndex + 1
+  let below = currentIndex
+
+  let found: number[] = []
+
+  let reachedTop = oneWay === 'down' ? true : false
+  let reachedBottom = oneWay === 'up' ? true : false
+
+  while (found.length < limit && above - below < maxRange * 2) {
+    if (!reachedTop) {
+      const valueAbove = ticks[Math.floor(above / 8)] & (1 << above % 8)
+      if (valueAbove) found.push(above)
+      reachedTop = above >= 2 * TICK_LIMIT
+      above++
+    }
+    if (!reachedBottom) {
+      const valueBelow = ticks[Math.floor(below / 8)] & (1 << below % 8)
+      if (valueBelow) found.unshift(below)
+      reachedBottom = below < 0
+      below--
+    }
+
+    if (reachedTop && reachedBottom) {
+      break
+    }
+  }
+
+  // two can be added in the last iteration
+  if (found.length > limit) found.pop()
+
+  return found.map((i) => (i - TICK_LIMIT) * tickSpacing)
 }

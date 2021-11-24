@@ -11,8 +11,15 @@ import {
   TransactionInstruction,
   Signer
 } from '@solana/web3.js'
-import { calculatePriceAfterSlippage, findInitialized, isInitialized } from './math'
-import { feeToTickSpacing, generateTicksArray, getFeeTierAddress, SEED, signAndSend } from './utils'
+import { calculatePriceAfterSlippage, findClosestTicks, isInitialized } from './math'
+import {
+  feeToTickSpacing,
+  generateTicksArray,
+  getFeeTierAddress,
+  parseLiquidityOnTicks,
+  SEED,
+  signAndSend
+} from './utils'
 import { Amm, IDL } from './idl/amm'
 import { IWallet, Pair } from '.'
 import { getMarketAddress } from './network'
@@ -23,10 +30,6 @@ const TICK_SEED = 'tickv1'
 const POSITION_LIST_SEED = 'positionlistv1'
 export const FEE_TIER = 'feetierv1'
 export const DEFAULT_PUBLIC_KEY = new PublicKey(0)
-
-// in initializable ticks
-const RANGE_IN_DIRECTION = 17
-const RANGE_IN_OTHER_DIRECTION = 2
 
 export interface Decimal {
   v: BN
@@ -167,10 +170,16 @@ export class Market {
     return (await this.program.account.tick.fetch(tickAddress)) as Tick
   }
 
-  async getInitializedTicksInRange(pair: Pair, from: number, to: number) {
+  async getClosestTicks(pair: Pair, limit: number, maxRange?: number) {
     const state = await this.get(pair)
     const tickmap = await this.getTickmap(pair)
-    const indexes = findInitialized(tickmap.bitmap, from, to, state.tickSpacing)
+    const indexes = findClosestTicks(
+      tickmap.bitmap,
+      state.currentTickIndex,
+      state.tickSpacing,
+      limit,
+      maxRange
+    )
 
     return Promise.all(
       indexes.map(async (index) => {
@@ -178,6 +187,14 @@ export class Market {
         return (await this.program.account.tick.fetch(tickAddress)) as Tick
       })
     )
+  }
+
+  async getLiquidityOnTicks(pair: Pair) {
+    const pool = await this.get(pair)
+
+    const ticks = await this.getClosestTicks(pair, Infinity)
+
+    return parseLiquidityOnTicks(ticks, pool)
   }
 
   async getPositionList(owner: PublicKey) {
@@ -436,19 +453,25 @@ export class Market {
     const priceLimit =
       overridePriceLimit ?? calculatePriceAfterSlippage(knownPrice, slippage, !XtoY).v
 
-    const [lowerBound, upperBound] = XtoY
-      ? [-RANGE_IN_DIRECTION * state.tickSpacing, RANGE_IN_OTHER_DIRECTION * state.tickSpacing]
-      : [-RANGE_IN_OTHER_DIRECTION * state.tickSpacing, RANGE_IN_DIRECTION * state.tickSpacing]
-
-    const indexes = findInitialized(
+    const indexesInDirection = findClosestTicks(
       tickmap.bitmap,
-      state.currentTickIndex + lowerBound,
-      state.currentTickIndex + upperBound,
-      state.tickSpacing
+      state.currentTickIndex,
+      state.tickSpacing,
+      15,
+      Infinity,
+      XtoY ? 'down' : 'up'
+    )
+    const indexesInReverse = findClosestTicks(
+      tickmap.bitmap,
+      state.currentTickIndex,
+      state.tickSpacing,
+      3,
+      Infinity,
+      XtoY ? 'up' : 'down'
     )
 
     const remainingAccounts = await Promise.all(
-      indexes.map(async (index) => {
+      indexesInDirection.concat(indexesInReverse).map(async (index) => {
         const { tickAddress } = await this.getTickAddress(pair, index)
         return tickAddress
       })
