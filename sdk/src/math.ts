@@ -104,3 +104,44 @@ export const calculatePriceAfterSlippage = (priceSqrt: Decimal, slippage: Decima
 
   return { v: priceSqrt.v.mul(slippageSqrt).div(DENOMINATOR) }
 }
+
+export const findClosestTicks = (
+  ticks: number[],
+  current: number,
+  tickSpacing: number,
+  limit: number,
+  maxRange: number = Infinity
+) => {
+  if (current % tickSpacing !== 0) {
+    throw Error("invalid arguments can't find initialized ticks")
+  }
+
+  const currentIndex = Math.floor(current / tickSpacing) + TICK_LIMIT
+
+  let above = currentIndex + 1
+  let below = currentIndex
+
+  let found: number[] = []
+
+  while (found.length < limit && above - below < maxRange) {
+    const valueAbove = ticks[Math.floor(above / 8)] & (1 << above % 8)
+    const valueBelow = ticks[Math.floor(below / 8)] & (1 << below % 8)
+
+    if (valueAbove) found.push(above)
+    if (valueBelow) found.unshift(below)
+
+    const reachedTop = above >= 2 * TICK_LIMIT
+    const reachedBottom = below < 0
+
+    if (!reachedTop) above++
+    if (!reachedBottom) below--
+
+    if (reachedTop && reachedBottom) {
+      break
+    }
+  }
+
+  if (found.length > limit) found.pop()
+
+  return found.map((i) => (i - TICK_LIMIT) * tickSpacing)
+}

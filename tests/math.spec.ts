@@ -1,9 +1,10 @@
 import { assert } from 'chai'
 import { BN } from '@project-serum/anchor'
-import { calculate_price_sqrt, DENOMINATOR } from '@invariant-labs/sdk'
+import { calculate_price_sqrt, DENOMINATOR, TICK_LIMIT } from '@invariant-labs/sdk'
 import { getLiquidityByX, getLiquidityByY } from '@invariant-labs/sdk/src/tick'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
-import { calculatePriceAfterSlippage } from '@invariant-labs/sdk/src/math'
+import { calculatePriceAfterSlippage, findClosestTicks } from '@invariant-labs/sdk/src/math'
+import { setInitialized } from './testUtils'
 
 describe('Math', () => {
   describe('Test sqrt price calculation', () => {
@@ -301,6 +302,20 @@ describe('Math', () => {
       const limit = limitSqrt.v.mul(limitSqrt.v).div(DENOMINATOR)
 
       assert.equal(limit.toString(), expected.toString())
+    })
+  })
+  describe.only('find closest ticks', () => {
+    let bitmap = new Array(TICK_LIMIT * 2).fill(0)
+
+    it('simple', async () => {
+      const initialized = [-20, -14, -3, -2, -1, 5, 99]
+      initialized.forEach((i) => setInitialized(bitmap, i))
+
+      const result = findClosestTicks(bitmap, 0, 1, 200)
+      const isEqual = initialized.join(',') === result.join(',')
+
+      console.log('res', result)
+      assert.ok(isEqual)
     })
   })
 })

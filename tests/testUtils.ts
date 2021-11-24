@@ -9,6 +9,7 @@ import BN from 'bn.js'
 import { Pair } from '@invariant-labs/sdk'
 import { tou64 } from '@invariant-labs/sdk'
 import { DENOMINATOR } from '@invariant-labs/sdk'
+import { TICK_LIMIT } from '@invariant-labs/sdk'
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {
@@ -170,4 +171,8 @@ export const createPoolWithLiquidity = async (
   )
 
   return { pair, mintAuthority }
+}
+
+export const setInitialized = (bitmap: number[], index: number) => {
+  bitmap[Math.floor((index + TICK_LIMIT) / 8)] |= 1 << (index + TICK_LIMIT) % 8
 }
