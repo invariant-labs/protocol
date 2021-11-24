@@ -88,7 +88,7 @@ export const findClosestTicks = (
   tickSpacing: number,
   limit: number,
   maxRange: number = Infinity,
-  oneWay: 'up' | 'down' = undefined
+  oneWay: 'up' | 'down' | undefined = undefined
 ) => {
   if (current % tickSpacing !== 0) {
     throw Error("invalid arguments can't find initialized ticks")

@@ -12,7 +12,14 @@ import {
   Signer
 } from '@solana/web3.js'
 import { calculatePriceAfterSlippage, findClosestTicks, isInitialized } from './math'
-import { feeToTickSpacing, generateTicksArray, getFeeTierAddress, SEED, signAndSend } from './utils'
+import {
+  feeToTickSpacing,
+  generateTicksArray,
+  getFeeTierAddress,
+  parseLiquidityOnTicks,
+  SEED,
+  signAndSend
+} from './utils'
 import { Amm, IDL } from './idl/amm'
 import { IWallet, Pair } from '.'
 import { getMarketAddress } from './network'
@@ -180,6 +187,14 @@ export class Market {
         return (await this.program.account.tick.fetch(tickAddress)) as Tick
       })
     )
+  }
+
+  async getLiquidityOnTicks(pair: Pair) {
+    const pool = await this.get(pair)
+
+    const ticks = await this.getClosestTicks(pair, Infinity)
+
+    return parseLiquidityOnTicks(ticks, pool)
   }
 
   async getPositionList(owner: PublicKey) {

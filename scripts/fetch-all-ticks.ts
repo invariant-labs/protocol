@@ -5,7 +5,7 @@ import { MINTER } from './minter'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Market, Pair } from '@invariant-labs/sdk/src'
 import { getLiquidityByX } from '@invariant-labs/sdk/src/tick'
-import { FEE_TIERS, tou64 } from '@invariant-labs/sdk/src/utils'
+import { FEE_TIERS, parseLiquidityOnTicks, tou64 } from '@invariant-labs/sdk/src/utils'
 require('dotenv').config()
 
 const provider = Provider.local(clusterApiUrl('devnet'), {
@@ -22,6 +22,7 @@ const main = async () => {
   const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.SOL), feeTier)
 
   const ticks = await market.getClosestTicks(pair, Infinity)
-  console.log(ticks)
+  const pool = await market.get(pair)
+  console.log(parseLiquidityOnTicks(ticks, pool))
 }
 main()

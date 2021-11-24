@@ -8,8 +8,7 @@ import {
   sendAndConfirmRawTransaction,
   Transaction
 } from '@solana/web3.js'
-import { expect } from 'chai'
-import { Decimal, FeeTier, FEE_TIER } from './market'
+import { Decimal, FeeTier, FEE_TIER, Tick, PoolStructure } from './market'
 
 export const SEED = 'Invariant'
 export const DECIMAL = 12
@@ -134,4 +133,37 @@ export const getFeeTierAddress = async ({ fee, tickSpacing }: FeeTier, programId
 
 export const toDecimal = (x: number, decimals: number = 0): Decimal => {
   return { v: DENOMINATOR.muln(x).div(new BN(10).pow(new BN(decimals))) }
+}
+
+export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
+  let indexOfTickBelow = -1
+  // find first tick
+  for (let i = 0; i < ticks.length; i++) {
+    if (ticks[i].index <= pool.currentTickIndex) {
+      indexOfTickBelow = i
+    } else break
+  }
+
+  const parsed = ticks.map(({ liquidityChange, sign }) => {
+    return { liquidityChange, sign, liquidity: new BN(-1) }
+  })
+  parsed[indexOfTickBelow].liquidity = pool.liquidity.v
+
+  for (let i = indexOfTickBelow + 1; i < parsed.length; i++) {
+    if (ticks[i].sign === true) {
+      parsed[i].liquidity = parsed[i - 1].liquidity.add(ticks[i].liquidityChange.v)
+    } else {
+      parsed[i].liquidity = parsed[i - 1].liquidity.sub(ticks[i].liquidityChange.v)
+    }
+  }
+
+  for (let i = indexOfTickBelow - 1; i >= 0; i--) {
+    if (ticks[i].sign === false) {
+      parsed[i].liquidity = parsed[i + 1].liquidity.add(ticks[i].liquidityChange.v)
+    } else {
+      parsed[i].liquidity = parsed[i + 1].liquidity.sub(ticks[i].liquidityChange.v)
+    }
+  }
+
+  return parsed
 }
