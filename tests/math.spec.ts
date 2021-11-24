@@ -42,12 +42,13 @@ describe('Math', () => {
     const tokenDecimal = 6
     const x = new BN(43 * 10 ** (tokenDecimal - 2)) // 0.43
     const currentTick = 100
+    const currentSqrtPrice = calculate_price_sqrt(100)
 
     it('below current tick', async () => {
       const lowerTick = -50
       const upperTick = 10
       try {
-        getLiquidityByX(x, lowerTick, upperTick, currentTick, true)
+        getLiquidityByX(x, lowerTick, upperTick, currentSqrtPrice, true)
         assert.ok(false)
       } catch (e) {
         assert.ok(true)
@@ -65,14 +66,14 @@ describe('Math', () => {
         x,
         lowerTick,
         upperTick,
-        currentTick,
+        currentSqrtPrice,
         true
       )
       const { liquidity: roundDownLiquidity, y: roundDownY } = getLiquidityByX(
         x,
         lowerTick,
         upperTick,
-        currentTick,
+        currentSqrtPrice,
         false
       )
 
@@ -93,14 +94,14 @@ describe('Math', () => {
         x,
         lowerTick,
         upperTick,
-        currentTick,
+        currentSqrtPrice,
         true
       )
       const { liquidity: roundDownLiquidity, y: roundDownY } = getLiquidityByX(
         x,
         lowerTick,
         upperTick,
-        currentTick,
+        currentSqrtPrice,
         false
       )
 
@@ -114,6 +115,7 @@ describe('Math', () => {
     const tokenDecimal = 9
     const y = new BN(476 * 10 ** (tokenDecimal - 1)) // 47.6
     const currentTick = -20000
+    const currentSqrtPrice = calculate_price_sqrt(currentTick)
 
     it('below current tick', async () => {
       // rust results:
@@ -126,14 +128,14 @@ describe('Math', () => {
         y,
         lowerTick,
         upperTick,
-        currentTick,
+        currentSqrtPrice,
         true
       )
       const { liquidity: roundDownLiquidity, x: roundDownX } = getLiquidityByY(
         y,
         lowerTick,
         upperTick,
-        currentTick,
+        currentSqrtPrice,
         false
       )
 
@@ -155,14 +157,14 @@ describe('Math', () => {
         y,
         lowerTick,
         upperTick,
-        currentTick,
+        currentSqrtPrice,
         true
       )
       const { liquidity: roundDownLiquidity, x: roundDownX } = getLiquidityByY(
         y,
         lowerTick,
         upperTick,
-        currentTick,
+        currentSqrtPrice,
         false
       )
 
@@ -175,7 +177,7 @@ describe('Math', () => {
       const lowerTick = -10000
       const upperTick = 0
       try {
-        getLiquidityByY(y, lowerTick, upperTick, currentTick, true)
+        getLiquidityByY(y, lowerTick, upperTick, currentSqrtPrice, true)
         assert.ok(false)
       } catch (e) {
         assert.ok(true)
