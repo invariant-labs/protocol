@@ -1014,6 +1014,11 @@ export type Amm = {
       "code": 314,
       "name": "PositionWithoutLiquidity",
       "msg": "Position liquidity would be zero"
+    },
+    {
+      "code": 315,
+      "name": "InvalidPoolTokenAddresses",
+      "msg": "Invalid pool token addresses"
     }
   ]
 };
@@ -2034,6 +2039,11 @@ export const IDL: Amm = {
       "code": 314,
       "name": "PositionWithoutLiquidity",
       "msg": "Position liquidity would be zero"
+    },
+    {
+      "code": 315,
+      "name": "InvalidPoolTokenAddresses",
+      "msg": "Invalid pool token addresses"
     }
   ]
 };
