@@ -144,8 +144,8 @@ export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
     } else break
   }
 
-  const parsed = ticks.map(({ liquidityChange, sign }) => {
-    return { liquidityChange, sign, liquidity: new BN(-1) }
+  const parsed = ticks.map(({ liquidityChange, sign, index }) => {
+    return { index, liquidityChange, sign, liquidity: new BN(-1) }
   })
   parsed[indexOfTickBelow].liquidity = pool.liquidity.v
 
