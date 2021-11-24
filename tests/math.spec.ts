@@ -304,7 +304,7 @@ describe('Math', () => {
       assert.equal(limit.toString(), expected.toString())
     })
   })
-  describe.only('find closest ticks', () => {
+  describe('find closest ticks', () => {
     let bitmap = new Array(TICK_LIMIT * 2).fill(0)
 
     it('simple', async () => {
@@ -348,6 +348,24 @@ describe('Math', () => {
 
       const result = findClosestTicks(bitmap, 1000, 1, 1000, 2)
       const isEqual = [999, 1000, 1001, 1002].join(',') === result.join(',')
+      assert.ok(isEqual)
+    })
+
+    it('only up', async () => {
+      const initialized = [998, 999, 1000, 1001, 1002, 1003]
+      initialized.forEach((i) => setInitialized(bitmap, i))
+
+      const result = findClosestTicks(bitmap, 1000, 1, 1000, 10, 'up')
+      const isEqual = [1001, 1002, 1003].join(',') === result.join(',')
+      assert.ok(isEqual)
+    })
+
+    it('only down', async () => {
+      const initialized = [998, 999, 1000, 1001, 1002, 1003]
+      initialized.forEach((i) => setInitialized(bitmap, i))
+
+      const result = findClosestTicks(bitmap, 1000, 1, 1000, 10, 'down')
+      const isEqual = [998, 999, 1000].join(',') === result.join(',')
       assert.ok(isEqual)
     })
   })
