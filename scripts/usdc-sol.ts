@@ -27,7 +27,6 @@ const main = async () => {
   await market.create({
     pair,
     signer: wallet,
-    feeTier,
     initTick
   })
 
