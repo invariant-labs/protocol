@@ -123,24 +123,29 @@ export const findClosestTicks = (
 
   let found: number[] = []
 
-  while (found.length < limit && above - below < maxRange) {
-    const valueAbove = ticks[Math.floor(above / 8)] & (1 << above % 8)
-    const valueBelow = ticks[Math.floor(below / 8)] & (1 << below % 8)
+  let reachedTop = false
+  let reachedBottom = false
 
-    if (valueAbove) found.push(above)
-    if (valueBelow) found.unshift(below)
-
-    const reachedTop = above >= 2 * TICK_LIMIT
-    const reachedBottom = below < 0
-
-    if (!reachedTop) above++
-    if (!reachedBottom) below--
+  while (found.length < limit && above - below < maxRange * 2) {
+    if (!reachedTop) {
+      const valueAbove = ticks[Math.floor(above / 8)] & (1 << above % 8)
+      if (valueAbove) found.push(above)
+      reachedTop = above >= 2 * TICK_LIMIT
+      above++
+    }
+    if (!reachedBottom) {
+      const valueBelow = ticks[Math.floor(below / 8)] & (1 << below % 8)
+      if (valueBelow) found.unshift(below)
+      reachedBottom = below < 0
+      below--
+    }
 
     if (reachedTop && reachedBottom) {
       break
     }
   }
 
+  // two can be added in the last iteration
   if (found.length > limit) found.pop()
 
   return found.map((i) => (i - TICK_LIMIT) * tickSpacing)

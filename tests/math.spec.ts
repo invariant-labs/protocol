@@ -314,7 +314,40 @@ describe('Math', () => {
       const result = findClosestTicks(bitmap, 0, 1, 200)
       const isEqual = initialized.join(',') === result.join(',')
 
-      console.log('res', result)
+      assert.ok(isEqual)
+    })
+
+    it('near bottom limit', async () => {
+      const initialized = [-TICK_LIMIT + 1]
+      initialized.forEach((i) => setInitialized(bitmap, i))
+
+      const result = findClosestTicks(bitmap, 0, 1, 200)
+      assert.ok(result[0] == initialized[0])
+    })
+
+    it('near top limit', async () => {
+      const initialized = [TICK_LIMIT]
+      initialized.forEach((i) => setInitialized(bitmap, i))
+
+      const result = findClosestTicks(bitmap, 0, 1, 200)
+      assert.ok(result.pop() == initialized[0])
+    })
+
+    it('with limit', async () => {
+      const initialized = [998, 999, 1000, 1001, 1002, 1003]
+      initialized.forEach((i) => setInitialized(bitmap, i))
+
+      const result = findClosestTicks(bitmap, 1000, 1, 3)
+      const isEqual = [999, 1000, 1001].join(',') === result.join(',')
+      assert.ok(isEqual)
+    })
+
+    it('with range', async () => {
+      const initialized = [998, 999, 1000, 1001, 1002, 1003]
+      initialized.forEach((i) => setInitialized(bitmap, i))
+
+      const result = findClosestTicks(bitmap, 1000, 1, 1000, 2)
+      const isEqual = [999, 1000, 1001, 1002].join(',') === result.join(',')
       assert.ok(isEqual)
     })
   })
