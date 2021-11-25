@@ -163,6 +163,9 @@ describe('Stake tests', () => {
       positionOwner.publicKey,
       index
     )
+    let positionStructBefore = await market.getPosition(positionOwner.publicKey, index)
+    const poolAddress = positionStructBefore.pool
+    const positionId = positionStructBefore.id
 
     //stake
     const ixUpdate = await market.updateSecondsPerLiquidityInstruction({
@@ -174,6 +177,8 @@ describe('Stake tests', () => {
     })
 
     const ixStake = await staker.stakeInstruction({
+      pool: poolAddress,
+      id: positionId,
       index: index,
       position: position,
       incentive: incentiveAccount.publicKey,
@@ -182,18 +187,15 @@ describe('Stake tests', () => {
     })
     await signAndSend(new Transaction().add(ixUpdate).add(ixStake), [positionOwner], connection)
 
-    const stake = await staker.getStake(
-      positionOwner.publicKey,
-      incentiveAccount.publicKey,
-      position
-    )
-    let positionStruct = await market.getPosition(positionOwner.publicKey, index)
+    const stake = await staker.getStake(incentiveAccount.publicKey, poolAddress, positionId)
+    let positionStructAfter = await market.getPosition(positionOwner.publicKey, index)
     const liquidity: Decimal = { v: new BN(liquidityDelta.v) }
 
     assert.ok(stake.position.equals(position))
-    assert.ok(stake.owner.equals(positionOwner.publicKey))
     assert.ok(stake.incentive.equals(incentiveAccount.publicKey))
-    assert.ok(eqDecimal(stake.secondsPerLiquidityInitial, positionStruct.secondsPerLiquidityInside))
+    assert.ok(
+      eqDecimal(stake.secondsPerLiquidityInitial, positionStructAfter.secondsPerLiquidityInside)
+    )
     assert.ok(eqDecimal(stake.liquidity, liquidity))
   })
 })

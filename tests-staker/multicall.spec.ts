@@ -274,9 +274,17 @@ describe('Multicall test', () => {
       connection
     )
 
+    let firstPositionStructBefore = await market.getPosition(firstPositionOwner.publicKey, index)
+    const firstPositionId = firstPositionStructBefore.id
+
+    let secondPositionStructBefore = await market.getPosition(secondPositionOwner.publicKey, index)
+    const secondPositionId = secondPositionStructBefore.id
+
     //stake first position on first incentive, fisrt case
 
     const ixStakeFisrt = await staker.stakeInstruction({
+      pool: pool,
+      id: firstPositionId,
       index: index,
       position: firstPosition,
       incentive: firstIncentiveAccount.publicKey,
@@ -292,6 +300,8 @@ describe('Multicall test', () => {
     //stake second position on first incentive, second case
 
     const ixStakeSecond = await staker.stakeInstruction({
+      pool: pool,
+      id: secondPositionId,
       index: index,
       position: secondPosition,
       incentive: firstIncentiveAccount.publicKey,
@@ -307,6 +317,8 @@ describe('Multicall test', () => {
     //stake first position on second incentive, third case
 
     const ixStakeThird = await staker.stakeInstruction({
+      pool: pool,
+      id: firstPositionId,
       index: index,
       position: firstPosition,
       incentive: secondIncentiveAccount.publicKey,
@@ -322,6 +334,8 @@ describe('Multicall test', () => {
     //stake second position on second incentive, fourth case
 
     const ixStakeFourth = await staker.stakeInstruction({
+      pool: pool,
+      id: secondPositionId,
       index: index,
       position: secondPosition,
       incentive: secondIncentiveAccount.publicKey,
@@ -362,6 +376,8 @@ describe('Multicall test', () => {
 
     const ixWithdrawFirstCase = await staker.withdrawInstruction({
       incentive: firstIncentiveAccount.publicKey,
+      pool: pool,
+      id: firstPositionId,
       position: firstPosition,
       owner: firstPositionOwner.publicKey,
       incentiveTokenAcc: fisrtIncentiveTokenAcc,
@@ -383,6 +399,8 @@ describe('Multicall test', () => {
 
     const ixWithdrawSecondCase = await staker.withdrawInstruction({
       incentive: firstIncentiveAccount.publicKey,
+      pool: pool,
+      id: secondPositionId,
       position: secondPosition,
       owner: secondPositionOwner.publicKey,
       incentiveTokenAcc: fisrtIncentiveTokenAcc,
@@ -404,6 +422,8 @@ describe('Multicall test', () => {
 
     const ixWithdrawthirdCase = await staker.withdrawInstruction({
       incentive: secondIncentiveAccount.publicKey,
+      pool: pool,
+      id: firstPositionId,
       position: firstPosition,
       owner: firstPositionOwner.publicKey,
       incentiveTokenAcc: secondIncentiveTokenAcc,
@@ -425,6 +445,8 @@ describe('Multicall test', () => {
 
     const ixWithdrawFourthCase = await staker.withdrawInstruction({
       incentive: secondIncentiveAccount.publicKey,
+      pool: pool,
+      id: secondPositionId,
       position: secondPosition,
       owner: secondPositionOwner.publicKey,
       incentiveTokenAcc: secondIncentiveTokenAcc,

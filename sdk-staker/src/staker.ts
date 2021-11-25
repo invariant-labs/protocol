@@ -83,10 +83,21 @@ export class Staker {
     return (await this.program.account.incentive.fetch(incentivePubKey)) as IncentiveStructure
   }
 
-  public async stakeInstruction({ position, incentive, owner, index, amm }: createStake) {
-    const [userStakeAddress, userStakeBump] = await PublicKey.findProgramAddress(
-      [STAKER_SEED, owner.toBuffer(), incentive.toBuffer(), position.toBuffer()],
+  public async getUserStakeAddressAndBump(incentive: PublicKey, pool: PublicKey, id: BN) {
+    const pubBuf = pool.toBuffer()
+    let idBuf = Buffer.alloc(8)
+    idBuf.writeBigUInt64LE(BigInt(id.toString()))
+    return PublicKey.findProgramAddress(
+      [STAKER_SEED, incentive.toBuffer(), pubBuf, idBuf],
       this.programId
+    )
+  }
+
+  public async stakeInstruction({ pool, id, position, incentive, owner, index, amm }: createStake) {
+    const [userStakeAddress, userStakeBump] = await this.getUserStakeAddressAndBump(
+      incentive,
+      pool,
+      id
     )
 
     return (await this.program.instruction.stake(index, userStakeBump, {
@@ -102,25 +113,19 @@ export class Staker {
     })) as TransactionInstruction
   }
 
-  public async getStakeAddress(owner: PublicKey, incentive: PublicKey, position: PublicKey) {
-    const [stakeAddress, stakeBump] = await PublicKey.findProgramAddress(
-      [STAKER_SEED, owner.toBuffer(), incentive.toBuffer(), position.toBuffer()],
-
-      this.program.programId
+  public async getStake(incentive: PublicKey, pool: PublicKey, id: BN) {
+    const [userStakeAddress, userStakeBump] = await this.getUserStakeAddressAndBump(
+      incentive,
+      pool,
+      id
     )
-    return {
-      stakeAddress,
-      stakeBump
-    }
-  }
-
-  public async getStake(owner: PublicKey, incentive: PublicKey, position: PublicKey) {
-    let { stakeAddress } = await this.getStakeAddress(owner, incentive, position)
-    return (await this.program.account.userStake.fetch(stakeAddress)) as Stake
+    return (await this.program.account.userStake.fetch(userStakeAddress)) as Stake
   }
 
   public async withdrawInstruction({
     incentive,
+    pool,
+    id,
     incentiveTokenAcc,
     ownerTokenAcc,
     position,
@@ -133,9 +138,10 @@ export class Staker {
       this.programId
     )
 
-    const [userStakeAddress, userStakeBump] = await PublicKey.findProgramAddress(
-      [STAKER_SEED, owner.toBuffer(), incentive.toBuffer(), position.toBuffer()],
-      this.programId
+    const [userStakeAddress, userStakeBump] = await this.getUserStakeAddressAndBump(
+      incentive,
+      pool,
+      id
     )
 
     return (await this.program.instruction.withdraw(index, userStakeBump, stakerAuthorityBump, {
@@ -192,6 +198,8 @@ export interface CreateIncentive {
   amm: PublicKey
 }
 export interface createStake {
+  pool: PublicKey
+  id: BN
   position: PublicKey
   incentive: PublicKey
   owner: PublicKey
@@ -203,12 +211,13 @@ export interface Stake {
   incentive: PublicKey
   liquidity: Decimal
   secondsPerLiquidityInitial: Decimal
-  owner: PublicKey
   amm: PublicKey
   index: number
 }
 export interface Withdraw {
   incentive: PublicKey
+  pool: PublicKey
+  id: BN
   incentiveTokenAcc: PublicKey
   ownerTokenAcc: PublicKey
   position: PublicKey

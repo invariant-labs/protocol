@@ -70,10 +70,8 @@ pub mod staker {
         let update_slot = position.last_slot as i64;
         let slot = Clock::get()?.slot as i64;
         require!(slot == update_slot, SlotsAreNotEqual);
-
         {
             user_stake.position = *ctx.accounts.position.to_account_info().key;
-            user_stake.owner = *ctx.accounts.owner.to_account_info().key;
             user_stake.liquidity = Decimal::new(position.liquidity.v);
             user_stake.incentive = *ctx.accounts.incentive.to_account_info().key;
             user_stake.seconds_per_liquidity_initial =

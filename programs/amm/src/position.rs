@@ -1,10 +1,9 @@
-use std::ops::Mul;
-
-use anchor_lang::require;
-use anchor_lang::solana_program::clock::UnixTimestamp;
-
 use crate::math::get_delta_y;
 use crate::*;
+use anchor_lang::require;
+use anchor_lang::solana_program::clock::UnixTimestamp;
+use std::convert::TryInto;
+use std::ops::Mul;
 
 impl Pool {
     pub fn update_liquidity_safely(
@@ -128,13 +127,6 @@ impl Position {
     pub fn initialized_id(self: &mut Self, pool: &mut Pool) {
         self.id = pool.position_iterator;
         pool.position_iterator += 1;
-    }
-
-    // for future use
-    pub fn get_id(self: Self) -> String {
-        let mut id = self.pool.to_string().to_owned();
-        id.push_str({ self.id }.to_string().as_str());
-        id
     }
 
     // TODO: add tests

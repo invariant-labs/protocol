@@ -169,17 +169,23 @@ describe('Withdraw tests', () => {
     )
     //wait for some seconds per liquidity
     await sleep(10000)
+
+    let positionStructBefore = await market.getPosition(positionOwner.publicKey, index)
+    const poolAddress = positionStructBefore.pool
+    const positionId = positionStructBefore.id
+
     //stake
     const ixUpdate = await market.updateSecondsPerLiquidityInstruction({
       pair: pair,
       owner: positionOwner.publicKey,
       lowerTickIndex: lowerTick,
       upperTickIndex: upperTick,
-      postion: position,
       index
     })
 
     const ixStake = await staker.stakeInstruction({
+      pool: poolAddress,
+      id: positionId,
       index: index,
       position: position,
       incentive: incentiveAccount.publicKey,
@@ -217,6 +223,8 @@ describe('Withdraw tests', () => {
     //withdraw
     const ixWithdraw = await staker.withdrawInstruction({
       incentive: incentiveAccount.publicKey,
+      pool: poolAddress,
+      id: positionId,
       position: position,
       owner: positionOwner.publicKey,
       incentiveTokenAcc: incentiveTokenAcc,
