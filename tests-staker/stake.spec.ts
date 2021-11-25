@@ -23,19 +23,20 @@ describe('Stake tests', () => {
   const wallet = provider.wallet.payer as Account
   let stakerAuthority: PublicKey
   const mintAuthority = Keypair.generate()
+  const incentiveAccount = Keypair.generate()
+  const founderAccount = Keypair.generate()
+  const positionOwner = Keypair.generate()
+  const admin = Keypair.generate()
   let nonce: number
   let staker: Staker
-  let market
-  let pool
-  let amm
-  let incentiveAccount
-  let incentiveToken
-  let founderAccount
-  let founderTokenAcc
-  let incentiveTokenAcc
-  let amount
-  let pair
-  let positionOwner
+  let market: Market
+  let pool: PublicKey
+  let amm: PublicKey
+  let incentiveToken: Token
+  let founderTokenAcc: PublicKey
+  let incentiveTokenAcc: PublicKey
+  let amount: BN
+  let pair: Pair
   let tokenX: Token
   let tokenY: Token
 
@@ -49,16 +50,12 @@ describe('Stake tests', () => {
     nonce = _nonce
     staker = new Staker(connection, Network.LOCAL, provider.wallet, program.programId)
 
-    incentiveAccount = Keypair.generate()
-    positionOwner = Keypair.generate()
     await Promise.all([
       await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
       await connection.requestAirdrop(positionOwner.publicKey, 1e9),
       await connection.requestAirdrop(incentiveAccount.publicKey, 10e9)
     ])
 
-    // create founder account
-    founderAccount = Keypair.generate()
     //create token
     incentiveToken = await createToken({
       connection: connection,
@@ -77,7 +74,6 @@ describe('Stake tests', () => {
     await incentiveToken.mintTo(founderTokenAcc, wallet, [], tou64(amount))
 
     //create amm and pool
-    const admin = Keypair.generate()
     market = new Market(0, provider.wallet, connection, anchor.workspace.Amm.programId)
 
     const tokens = await Promise.all([

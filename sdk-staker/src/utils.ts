@@ -7,7 +7,7 @@ import {
   sendAndConfirmRawTransaction,
   Transaction
 } from '@solana/web3.js'
-
+import { DENOMINATOR } from '@invariant-labs/sdk'
 // hex code must be at the end of message
 export enum ERRORS {
   SIGNATURE = 'Error: Signature verification failed',
@@ -19,6 +19,10 @@ export enum ERRORS {
 }
 
 export const STAKER_SEED = Buffer.from('staker')
+
+export const fromInteger = (integer: number): { v: BN } => {
+  return { v: new BN(integer).mul(DENOMINATOR) }
+}
 
 export const signAndSend = async (
   tx: Transaction,

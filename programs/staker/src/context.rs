@@ -1,5 +1,3 @@
-//mod util;
-
 use crate::account::*;
 use crate::util::check_position_seeds;
 

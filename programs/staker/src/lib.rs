@@ -69,8 +69,7 @@ pub mod staker {
         let position = ctx.accounts.position.load()?;
         let update_slot = position.last_slot as i64;
         let slot = Clock::get()?.slot as i64;
-        let diff_slot = slot - update_slot;
-        require!(diff_slot <= 1, SlotsAreNotEqual);
+        require!(slot == update_slot, SlotsAreNotEqual);
 
         {
             user_stake.position = *ctx.accounts.position.to_account_info().key;
@@ -99,8 +98,7 @@ pub mod staker {
         let current_time = Clock::get().unwrap().unix_timestamp as u64;
         let update_slot = position.last_slot as i64;
         let slot = Clock::get()?.slot as i64;
-        let diff_slot = slot - update_slot;
-        require!(diff_slot <= 1, SlotsAreNotEqual);
+        require!(slot == update_slot, SlotsAreNotEqual);
         require!(user_stake.liquidity.v != 0, ZeroSecondsStaked);
         require!(
             user_stake.seconds_per_liquidity_initial.v != 0,
@@ -184,7 +182,7 @@ pub enum ErrorCode {
     #[msg("Zero seconds staked")]
     ZeroSecondsStaked = 9,
     #[msg("Seconds per liquidity is zero")]
-    ZeroSecPerLiq = 10,
+    ZeroSecPerLiq = 10, //136
     #[msg("Incentive not ended")]
     NotEnded = 11,
     #[msg("Can't end id stake exists")]

@@ -10,11 +10,12 @@
     "test:position-list": "anchor test --skip-build tests/position-list.spec.ts",
     "test:claim": "anchor test --skip-build tests/claim.spec.ts",
     "test:timestamp": "anchor test --skip-build tests/timestamp.spec.ts",    
-    "test:staker-all": "npm run test:create && npm run test:stake && npm run test:withdraw-staker && npm run test:end-incentive",
+    "test:staker-all": "npm run test:create && npm run test:stake && npm run test:withdraw-staker && npm run test:end-incentive && npm run test:multicall",
     "test:create": "anchor test --skip-build tests-staker/create.spec.ts",
     "test:stake": "anchor test --skip-build tests-staker/stake.spec.ts",
     "test:withdraw-staker": "anchor test --skip-build tests-staker/withdraw.spec.ts",
     "test:end-incentive": "anchor test --skip-build tests-staker/end-incentive.spec.ts",
+    "test:multicall": "anchor test --skip-build tests-staker/multicall.spec.ts",
     "build:invariant": "cd sdk && npm run build",
     "build:staker": "cd sdk-staker && npm run build",
     "build:all": "npm run build:invariant && npm run build:staker"

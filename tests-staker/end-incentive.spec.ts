@@ -13,6 +13,7 @@ import { signAndSend } from '../sdk-staker/lib/utils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { sleep } from '@invariant-labs/sdk'
+import { Token } from '@solana/spl-token'
 
 describe('End incentive tests', () => {
   const provider = Provider.local()
@@ -24,14 +25,14 @@ describe('End incentive tests', () => {
   const mintAuthority = Keypair.generate()
   let nonce: number
   let staker: Staker
-  let pool
-  let amm
-  let incentiveToken
-  let founderAccount
-  let founderTokenAcc
-  let incentiveTokenAcc
-  let amount
-  let pair
+  let pool: PublicKey
+  let amm: PublicKey
+  let incentiveToken: Token
+  const founderAccount = Keypair.generate()
+  let founderTokenAcc: PublicKey
+  let incentiveTokenAcc: PublicKey
+  let amount: BN
+  let pair: Pair
 
   before(async () => {
     //create staker instance
@@ -43,8 +44,6 @@ describe('End incentive tests', () => {
     nonce = _nonce
     staker = new Staker(connection, Network.LOCAL, provider.wallet, program.programId)
 
-    // create founder account
-    founderAccount = Keypair.generate()
     //create token
     incentiveToken = await createToken({
       connection: connection,

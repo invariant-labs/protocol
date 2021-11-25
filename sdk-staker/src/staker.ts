@@ -60,7 +60,7 @@ export class Staker {
     amm
   }: CreateIncentive) {
     const [stakerAuthority, bump] = await PublicKey.findProgramAddress(
-      [Buffer.from(STAKER_SEED)],
+      [STAKER_SEED],
       this.programId
     )
     return this.program.instruction.createIncentive(bump, reward, startTime, endTime, {
@@ -85,7 +85,7 @@ export class Staker {
 
   public async stakeInstruction({ position, incentive, owner, index, amm }: createStake) {
     const [userStakeAddress, userStakeBump] = await PublicKey.findProgramAddress(
-      [Buffer.from(STAKER_SEED), owner.toBuffer(), incentive.toBuffer(), position.toBuffer()],
+      [STAKER_SEED, owner.toBuffer(), incentive.toBuffer(), position.toBuffer()],
       this.programId
     )
 
@@ -104,7 +104,7 @@ export class Staker {
 
   public async getStakeAddress(owner: PublicKey, incentive: PublicKey, position: PublicKey) {
     const [stakeAddress, stakeBump] = await PublicKey.findProgramAddress(
-      [Buffer.from(STAKER_SEED), owner.toBuffer(), incentive.toBuffer(), position.toBuffer()],
+      [STAKER_SEED, owner.toBuffer(), incentive.toBuffer(), position.toBuffer()],
 
       this.program.programId
     )
@@ -129,12 +129,12 @@ export class Staker {
     index
   }: Withdraw) {
     const [stakerAuthority, stakerAuthorityBump] = await PublicKey.findProgramAddress(
-      [Buffer.from(STAKER_SEED)],
+      [STAKER_SEED],
       this.programId
     )
 
     const [userStakeAddress, userStakeBump] = await PublicKey.findProgramAddress(
-      [Buffer.from(STAKER_SEED), owner.toBuffer(), incentive.toBuffer(), position.toBuffer()],
+      [STAKER_SEED, owner.toBuffer(), incentive.toBuffer(), position.toBuffer()],
       this.programId
     )
 
@@ -162,7 +162,7 @@ export class Staker {
     owner
   }: EndIncentive) {
     const [stakerAuthority, stakerAuthorityBump] = await PublicKey.findProgramAddress(
-      [Buffer.from(STAKER_SEED)],
+      [STAKER_SEED],
       this.programId
     )
 

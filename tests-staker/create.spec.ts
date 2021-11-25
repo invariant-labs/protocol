@@ -12,6 +12,7 @@ import { createToken as createTkn } from '../tests/testUtils'
 import { signAndSend } from '../sdk-staker/lib/utils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
+import { Token } from '@solana/spl-token'
 
 describe('Create incentive tests', () => {
   const provider = Provider.local()
@@ -21,16 +22,18 @@ describe('Create incentive tests', () => {
   const wallet = provider.wallet.payer as Account
   let stakerAuthority: PublicKey
   const mintAuthority = Keypair.generate()
+  const founderAccount = Keypair.generate()
+  const admin = Keypair.generate()
   let nonce: number
   let staker: Staker
-  let pool
-  let amm
-  let incentiveToken
-  let founderAccount
-  let founderTokenAcc
-  let incentiveTokenAcc
-  let amount
-  let pair
+  let pool: PublicKey
+  let amm: PublicKey
+  let incentiveToken: Token
+
+  let founderTokenAcc: PublicKey
+  let incentiveTokenAcc: PublicKey
+  let amount: BN
+  let pair: Pair
 
   before(async () => {
     //create staker instance
@@ -42,8 +45,6 @@ describe('Create incentive tests', () => {
     nonce = _nonce
     staker = new Staker(connection, Network.LOCAL, provider.wallet, program.programId)
 
-    // create founder account
-    founderAccount = Keypair.generate()
     //create token
     incentiveToken = await createToken({
       connection: connection,
@@ -63,7 +64,7 @@ describe('Create incentive tests', () => {
 
     ///////////////////////
     //create amm and pool
-    const admin = Keypair.generate()
+
     const market = new Market(0, provider.wallet, connection, anchor.workspace.Amm.programId)
 
     const tokens = await Promise.all([
