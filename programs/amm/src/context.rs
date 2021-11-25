@@ -1,5 +1,6 @@
 use crate::account::*;
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
 pub trait TakeTokens<'info> {
@@ -22,6 +23,7 @@ pub struct CreateFeeTier<'info> {
     #[account(mut, signer)]
     pub payer: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
+    #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }
 #[derive(Accounts)]
@@ -47,6 +49,7 @@ pub struct Create<'info> {
     #[account(mut, signer)]
     pub payer: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
+    #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }
 #[derive(Accounts)]
@@ -152,6 +155,7 @@ pub struct CreateTick<'info> {
     pub token_x: AccountInfo<'info>,
     pub token_y: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
+    #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }
 
@@ -167,6 +171,7 @@ pub struct CreatePositionList<'info> {
     #[account(mut, signer)]
     pub owner: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
+    #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }
 
@@ -296,6 +301,7 @@ pub struct TransferPositionOwnership<'info> {
     pub owner: AccountInfo<'info>,
     pub recipient: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
+    #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }
 
@@ -346,6 +352,7 @@ pub struct InitPosition<'info> {
     pub program_authority: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
+    #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }
 
