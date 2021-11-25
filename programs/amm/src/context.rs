@@ -30,7 +30,11 @@ pub struct CreateFeeTier<'info> {
 #[instruction(bump: u8, nonce: u8, init_tick: i32, fee: u64, tick_spacing: u16)]
 pub struct Create<'info> {
     #[account(init,
-        seeds = [b"poolv1", fee_tier.to_account_info().key.as_ref(), token_x.key.as_ref(), token_y.key.as_ref()],
+        seeds = [b"poolv1",
+        fee_tier.to_account_info().key.as_ref(),
+        token_x.to_account_info().key.as_ref(),
+        token_y.to_account_info().key.as_ref()
+        ],
         bump = bump, payer = payer
     )]
     pub pool: AccountLoader<'info, Pool>,
@@ -41,10 +45,21 @@ pub struct Create<'info> {
     pub fee_tier: AccountLoader<'info, FeeTier>,
     #[account(zero)]
     pub tickmap: AccountLoader<'info, Tickmap>,
-    pub token_x: AccountInfo<'info>,
-    pub token_y: AccountInfo<'info>,
-    pub token_x_reserve: AccountInfo<'info>,
-    pub token_y_reserve: AccountInfo<'info>,
+    pub token_x: Account<'info, anchor_spl::token::Mint>,
+    pub token_y: Account<'info, anchor_spl::token::Mint>,
+    #[account(
+        constraint = &token_x_reserve.mint == token_x.to_account_info().key,
+        constraint = &token_x_reserve.owner == program_authority.key
+    )]
+    pub token_x_reserve: Account<'info, TokenAccount>,
+    #[account(
+        constraint = &token_y_reserve.mint == token_y.to_account_info().key,
+        constraint = &token_y_reserve.owner == program_authority.key
+    )]
+    pub token_y_reserve: Account<'info, TokenAccount>,
+    #[account(
+        constraint = program_authority.key == &pool.load()?.authority
+    )]
     pub program_authority: AccountInfo<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,

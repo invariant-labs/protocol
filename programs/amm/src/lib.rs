@@ -59,8 +59,8 @@ pub mod amm {
     ) -> ProgramResult {
         msg!("INVARIANT: CREATE POOL");
 
-        let token_x_address = ctx.accounts.token_x.key.to_string();
-        let token_y_address = ctx.accounts.token_y.key.to_string();
+        let token_x_address = ctx.accounts.token_x.to_account_info().key.to_string();
+        let token_y_address = ctx.accounts.token_y.to_account_info().key.to_string();
         require!(
             token_x_address.cmp(&token_y_address) == Ordering::Less,
             InvalidPoolTokenAddresses
@@ -70,10 +70,10 @@ pub mod amm {
         let fee_tier = ctx.accounts.fee_tier.load()?;
 
         **pool = Pool {
-            token_x: *ctx.accounts.token_x.key,
-            token_y: *ctx.accounts.token_y.key,
-            token_x_reserve: *ctx.accounts.token_x_reserve.key,
-            token_y_reserve: *ctx.accounts.token_y_reserve.key,
+            token_x: *ctx.accounts.token_x.to_account_info().key,
+            token_y: *ctx.accounts.token_y.to_account_info().key,
+            token_x_reserve: *ctx.accounts.token_x_reserve.to_account_info().key,
+            token_y_reserve: *ctx.accounts.token_y_reserve.to_account_info().key,
             tick_spacing: fee_tier.tick_spacing,
             fee: fee_tier.fee,
             protocol_fee: Decimal::from_decimal(1, 1), // 10%
