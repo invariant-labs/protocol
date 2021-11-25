@@ -19,9 +19,9 @@ pub struct CreateFeeTier<'info> {
         seeds = [b"feetierv1", program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()],
         bump = bump, payer = payer
     )]
-    pub fee_tier: Loader<'info, FeeTier>,
-    #[account(mut, signer)]
-    pub payer: AccountInfo<'info>,
+    pub fee_tier: AccountLoader<'info, FeeTier>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
@@ -33,21 +33,21 @@ pub struct Create<'info> {
         seeds = [b"poolv1", fee_tier.to_account_info().key.as_ref(), token_x.key.as_ref(), token_y.key.as_ref()],
         bump = bump, payer = payer
     )]
-    pub pool: Loader<'info, Pool>,
+    pub pool: AccountLoader<'info, Pool>,
     #[account(
         seeds = [b"feetierv1", program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()],
         bump = fee_tier.load()?.bump
     )]
-    pub fee_tier: Loader<'info, FeeTier>,
+    pub fee_tier: AccountLoader<'info, FeeTier>,
     #[account(zero)]
-    pub tickmap: Loader<'info, Tickmap>,
+    pub tickmap: AccountLoader<'info, Tickmap>,
     pub token_x: AccountInfo<'info>,
     pub token_y: AccountInfo<'info>,
     pub token_x_reserve: AccountInfo<'info>,
     pub token_y_reserve: AccountInfo<'info>,
     pub program_authority: AccountInfo<'info>,
-    #[account(mut, signer)]
-    pub payer: AccountInfo<'info>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
@@ -56,12 +56,12 @@ pub struct Create<'info> {
 #[instruction(fee_tier_address: Pubkey)]
 pub struct Swap<'info> {
     #[account(mut, seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()], bump = pool.load()?.bump)]
-    pub pool: Loader<'info, Pool>,
+    pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
         constraint = tickmap.to_account_info().key == &pool.load()?.tickmap,
         constraint = tickmap.to_account_info().owner == program_id,
     )]
-    pub tickmap: Loader<'info, Tickmap>,
+    pub tickmap: AccountLoader<'info, Tickmap>,
     pub token_x: Account<'info, Mint>,
     pub token_y: Account<'info, Mint>,
     #[account(mut,
@@ -80,8 +80,8 @@ pub struct Swap<'info> {
         constraint = &account_y.mint == token_y.to_account_info().key
     )]
     pub account_y: Box<Account<'info, TokenAccount>>,
-    #[account(signer)]
-    pub owner: AccountInfo<'info>,
+    #[account()]
+    pub owner: Signer<'info>,
     pub program_authority: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
 }
@@ -93,7 +93,7 @@ impl<'info> TakeTokens<'info> for Swap<'info> {
             Transfer {
                 from: self.account_x.to_account_info(),
                 to: self.reserve_x.to_account_info(),
-                authority: self.owner.clone(),
+                authority: self.owner.to_account_info().clone(),
             },
         )
     }
@@ -104,7 +104,7 @@ impl<'info> TakeTokens<'info> for Swap<'info> {
             Transfer {
                 from: self.account_y.to_account_info(),
                 to: self.reserve_y.to_account_info(),
-                authority: self.owner.clone(),
+                authority: self.owner.to_account_info().clone(),
             },
         )
     }
@@ -140,18 +140,18 @@ pub struct CreateTick<'info> {
         seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &index.to_le_bytes()],
         bump = bump, payer = payer
     )]
-    pub tick: Loader<'info, Tick>,
+    pub tick: AccountLoader<'info, Tick>,
     #[account(
         seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
         bump = pool.load()?.bump)]
-    pub pool: Loader<'info, Pool>,
+    pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
         constraint = tickmap.to_account_info().key == &pool.load()?.tickmap,
         constraint = tickmap.to_account_info().owner == program_id,
     )]
-    pub tickmap: Loader<'info, Tickmap>,
-    #[account(mut, signer)]
-    pub payer: AccountInfo<'info>,
+    pub tickmap: AccountLoader<'info, Tickmap>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
     pub token_x: AccountInfo<'info>,
     pub token_y: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
@@ -167,9 +167,9 @@ pub struct CreatePositionList<'info> {
         bump = bump,
         payer = owner
     )]
-    pub position_list: Loader<'info, PositionList>,
-    #[account(mut, signer)]
-    pub owner: AccountInfo<'info>,
+    pub position_list: AccountLoader<'info, PositionList>,
+    #[account(mut)]
+    pub owner: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
@@ -178,20 +178,20 @@ pub struct CreatePositionList<'info> {
 #[derive(Accounts)]
 #[instruction(fee_tier_address: Pubkey, index: i32, lower_tick_index: i32, upper_tick_index: i32)]
 pub struct RemovePosition<'info> {
-    #[account(mut, signer)]
-    pub owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub owner: Signer<'info>,
     #[account(mut,
         seeds = [b"positionv1",
         owner.to_account_info().key.as_ref(),
         &index.to_le_bytes()],
         bump = removed_position.load()?.bump
     )]
-    pub removed_position: Loader<'info, Position>,
+    pub removed_position: AccountLoader<'info, Position>,
     #[account(mut,
         seeds = [b"positionlistv1", owner.to_account_info().key.as_ref()],
         bump = position_list.load()?.bump
     )]
-    pub position_list: Loader<'info, PositionList>,
+    pub position_list: AccountLoader<'info, PositionList>,
     #[account(mut,
         close = owner,
         seeds = [b"positionv1",
@@ -199,27 +199,27 @@ pub struct RemovePosition<'info> {
         &(position_list.load()?.head - 1).to_le_bytes()],
         bump = last_position.load()?.bump
     )]
-    pub last_position: Loader<'info, Position>,
+    pub last_position: AccountLoader<'info, Position>,
     #[account(mut,
         seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
         bump = pool.load()?.bump
     )]
-    pub pool: Loader<'info, Pool>,
+    pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
         constraint = tickmap.to_account_info().key == &pool.load()?.tickmap,
         constraint = tickmap.to_account_info().owner == program_id,
     )]
-    pub tickmap: Loader<'info, Tickmap>,
+    pub tickmap: AccountLoader<'info, Tickmap>,
     #[account(mut,
         seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &lower_tick_index.to_le_bytes()],
         bump = lower_tick.load()?.bump
     )]
-    pub lower_tick: Loader<'info, Tick>,
+    pub lower_tick: AccountLoader<'info, Tick>,
     #[account(mut,
         seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &upper_tick_index.to_le_bytes()],
         bump = upper_tick.load()?.bump
     )]
-    pub upper_tick: Loader<'info, Tick>,
+    pub upper_tick: AccountLoader<'info, Tick>,
 
     #[account(mut)]
     pub token_x: Account<'info, Mint>,
@@ -268,27 +268,27 @@ pub struct TransferPositionOwnership<'info> {
         seeds = [b"positionlistv1", owner.to_account_info().key.as_ref()],
         bump = owner_list.load()?.bump
     )]
-    pub owner_list: Loader<'info, PositionList>,
+    pub owner_list: AccountLoader<'info, PositionList>,
     #[account(mut,
         seeds = [b"positionlistv1", recipient.to_account_info().key.as_ref()],
         bump = recipient_list.load()?.bump,
         constraint = recipient_list.to_account_info().key != owner_list.to_account_info().key
     )]
-    pub recipient_list: Loader<'info, PositionList>,
+    pub recipient_list: AccountLoader<'info, PositionList>,
     #[account(init,
         seeds = [b"positionv1",
         recipient.to_account_info().key.as_ref(),
         &recipient_list.load()?.head.to_le_bytes()],
         bump = bump, payer = owner,
     )]
-    pub new_position: Loader<'info, Position>,
+    pub new_position: AccountLoader<'info, Position>,
     #[account(mut,
         seeds = [b"positionv1",
         owner.to_account_info().key.as_ref(),
         &index.to_le_bytes()],
         bump = removed_position.load()?.bump,
     )]
-    pub removed_position: Loader<'info, Position>,
+    pub removed_position: AccountLoader<'info, Position>,
     #[account(mut,
         close = owner,
         seeds = [b"positionv1",
@@ -296,9 +296,9 @@ pub struct TransferPositionOwnership<'info> {
         &(owner_list.load()?.head - 1).to_le_bytes()],
         bump = last_position.load()?.bump
     )]
-    pub last_position: Loader<'info, Position>,
-    #[account(mut, signer)]
-    pub owner: AccountInfo<'info>,
+    pub last_position: AccountLoader<'info, Position>,
+    #[account(mut)]
+    pub owner: Signer<'info>,
     pub recipient: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]
@@ -314,29 +314,29 @@ pub struct InitPosition<'info> {
         &position_list.load()?.head.to_le_bytes()],
         bump = bump, payer = owner,
     )]
-    pub position: Loader<'info, Position>,
+    pub position: AccountLoader<'info, Position>,
     #[account(mut,
         seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
         bump = pool.load()?.bump
     )]
-    pub pool: Loader<'info, Pool>,
+    pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
         seeds = [b"positionlistv1", owner.to_account_info().key.as_ref()],
         bump = position_list.load()?.bump
     )]
-    pub position_list: Loader<'info, PositionList>,
-    #[account(mut, signer)]
-    pub owner: AccountInfo<'info>,
+    pub position_list: AccountLoader<'info, PositionList>,
+    #[account(mut)]
+    pub owner: Signer<'info>,
     #[account(mut,
         seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &lower_tick_index.to_le_bytes()],
         bump = lower_tick.load()?.bump
     )]
-    pub lower_tick: Loader<'info, Tick>,
+    pub lower_tick: AccountLoader<'info, Tick>,
     #[account(mut,
         seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &upper_tick_index.to_le_bytes()],
         bump = upper_tick.load()?.bump
     )]
-    pub upper_tick: Loader<'info, Tick>,
+    pub upper_tick: AccountLoader<'info, Tick>,
     #[account(mut)]
     pub token_x: Account<'info, Mint>,
     #[account(mut)]
@@ -363,7 +363,7 @@ impl<'info> TakeTokens<'info> for InitPosition<'info> {
             Transfer {
                 from: self.account_x.to_account_info(),
                 to: self.reserve_x.to_account_info(),
-                authority: self.owner.clone(),
+                authority: self.owner.to_account_info().clone(),
             },
         )
     }
@@ -374,7 +374,7 @@ impl<'info> TakeTokens<'info> for InitPosition<'info> {
             Transfer {
                 from: self.account_y.to_account_info(),
                 to: self.reserve_y.to_account_info(),
-                authority: self.owner.clone(),
+                authority: self.owner.to_account_info().clone(),
             },
         )
     }
@@ -387,26 +387,26 @@ pub struct ClaimFee<'info> {
         seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
         bump = pool.load()?.bump
     )]
-    pub pool: Loader<'info, Pool>,
+    pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
         seeds = [b"positionv1",
         owner.to_account_info().key.as_ref(),
         &index.to_le_bytes()],
         bump = position.load()?.bump
     )]
-    pub position: Loader<'info, Position>,
+    pub position: AccountLoader<'info, Position>,
     #[account(mut,
         seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &lower_tick_index.to_le_bytes()],
         bump = lower_tick.load()?.bump
     )]
-    pub lower_tick: Loader<'info, Tick>,
+    pub lower_tick: AccountLoader<'info, Tick>,
     #[account(mut,
         seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &upper_tick_index.to_le_bytes()],
         bump = upper_tick.load()?.bump
     )]
-    pub upper_tick: Loader<'info, Tick>,
-    #[account(mut, signer)]
-    pub owner: AccountInfo<'info>,
+    pub upper_tick: AccountLoader<'info, Tick>,
+    #[account(mut)]
+    pub owner: Signer<'info>,
     #[account(mut)]
     pub token_x: Account<'info, Mint>,
     #[account(mut)]
