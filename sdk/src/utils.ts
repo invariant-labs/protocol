@@ -189,7 +189,7 @@ export const simulateSwapPrice = (swapParameters: SimulateSwapPrice): Decimal =>
   }
 
   let remainingAmount = fromInteger(swapAmount)
-  let amountWeightedPrice: Decimal = {v: new BN(0)}
+  let amountWeightedPriceAccumulator: Decimal = {v: new BN(0)}
 
   while (!remainingAmount.v.eqn(0)) {
     let closestTickIndex: number
@@ -232,7 +232,7 @@ export const simulateSwapPrice = (swapParameters: SimulateSwapPrice): Decimal =>
     } else {
       amountDiff = {v: remainingAmount.v.sub(result.amountOut.v)}
     }
-    amountWeightedPrice = {v: amountWeightedPrice.v.add(pool.sqrtPrice.v.mul(amountDiff.v).div(DENOMINATOR))}
+    amountWeightedPriceAccumulator = {v: amountWeightedPriceAccumulator.v.add(pool.sqrtPrice.v.mul(amountDiff.v).div(DENOMINATOR))}
     remainingAmount = {v: remainingAmount.v.sub(amountDiff.v)}
 
     pool.sqrtPrice = result.nextPrice
@@ -265,7 +265,7 @@ export const simulateSwapPrice = (swapParameters: SimulateSwapPrice): Decimal =>
 
   }
 
-  return {v: amountWeightedPrice.v.mul(DENOMINATOR).divn(swapAmount)}
+  return {v: amountWeightedPriceAccumulator.v.mul(DENOMINATOR).divn(swapAmount)}
 }
 export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
   let indexOfTickBelow = -1
