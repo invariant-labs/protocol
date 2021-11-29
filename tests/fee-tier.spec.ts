@@ -5,9 +5,8 @@ import { assertThrowsAsync } from '@invariant-labs/sdk/lib/utils'
 import { Decimal, FeeTier } from '@invariant-labs/sdk/src/market'
 import { ERRORS, fromFee } from '@invariant-labs/sdk/src/utils'
 import * as anchor from '@project-serum/anchor'
-import { Provider } from '@project-serum/anchor'
+import { Provider, BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
-import { BN } from '../sdk-staker/lib'
 
 describe("fee-tier", () => {
     const provider = Provider.local()
