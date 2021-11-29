@@ -57,9 +57,6 @@ pub struct Create<'info> {
         constraint = &token_y_reserve.owner == program_authority.key
     )]
     pub token_y_reserve: Account<'info, TokenAccount>,
-    #[account(
-        constraint = program_authority.key == &pool.load()?.authority
-    )]
     pub program_authority: AccountInfo<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
