@@ -27,7 +27,6 @@ const main = async () => {
   await market.create({
     pair,
     signer: wallet,
-    feeTier,
     initTick
   })
 
@@ -49,7 +48,7 @@ const main = async () => {
     usdcAmount,
     lowerTick,
     upperTick,
-    pool.currentTickIndex,
+    pool.sqrtPrice,
     true
   )
   console.log(`usdc = ${usdcAmount.toString()}`)

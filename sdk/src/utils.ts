@@ -10,7 +10,7 @@ import {
 } from '@solana/web3.js'
 import { expect } from 'chai'
 import { calculate_price_sqrt, fromInteger, Market, Pair } from '.'
-import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap } from './market'
+import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap, Tick } from './market'
 import { calculatePriceAfterSlippage, calculateSwapStep } from './math'
 import { getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
@@ -28,7 +28,28 @@ export enum ERRORS {
   PANICKED = 'Program failed to complete',
   SERIALIZATION = '0xa4',
   ALLOWANCE = 'custom program error: 0x1',
-  NO_SIGNERS = 'Error: No signers'
+  NO_SIGNERS = 'Error: No signers',
+  CONSTRAINT_RAW = "0x8f",
+  CONSTRAINT_SEEDS = "0x92"
+}
+
+export enum INVARIANT_ERRORS {
+  ZERO_AMOUNT = '0x12c',
+  ZERO_OUTPUT = '0x12d',
+  WRONG_TICK = '0x12e',
+  WRONG_LIMIT = '0x12f',
+  INVALID_TICK_INDEX = '0x130',
+  INVALID_TICK_INTERVAL = '0x131',
+  NO_MORE_TICKS = '0x132',
+  TICK_NOT_FOUND = '0x133',
+  PRICE_LIMIT_REACHED = '0x134',
+  INVALID_TICK_LIQUIDITY = '0x135',
+  EMPTY_POSITION_POKES = '0x136',
+  INVALID_POSITION_LIQUIDITY = '0x137',
+  INVALID_POOL_LIQUIDITY = '0x138',
+  INVALID_POSITION_INDEX = '0x139',
+  POSITION_WITHOUT_LIQUIDITY = '0x13a',
+  INVALID_POOL_TOKEN_ADDRESSES = '0x13b'
 }
 
 export interface SimulateSwapPrice {
@@ -245,4 +266,36 @@ export const simulateSwapPrice = (swapParameters: SimulateSwapPrice): Decimal =>
   }
 
   return {v: amountWeightedPrice.v.mul(DENOMINATOR).divn(swapAmount)}
+}
+export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
+  let indexOfTickBelow = -1
+  // find first tick
+  for (let i = 0; i < ticks.length; i++) {
+    if (ticks[i].index <= pool.currentTickIndex) {
+      indexOfTickBelow = i
+    } else break
+  }
+
+  const parsed = ticks.map(({ liquidityChange, sign, index }) => {
+    return { index, liquidityChange, sign, liquidity: new BN(-1) }
+  })
+  parsed[indexOfTickBelow].liquidity = pool.liquidity.v
+
+  for (let i = indexOfTickBelow + 1; i < parsed.length; i++) {
+    if (ticks[i].sign === true) {
+      parsed[i].liquidity = parsed[i - 1].liquidity.add(ticks[i].liquidityChange.v)
+    } else {
+      parsed[i].liquidity = parsed[i - 1].liquidity.sub(ticks[i].liquidityChange.v)
+    }
+  }
+
+  for (let i = indexOfTickBelow - 1; i >= 0; i--) {
+    if (ticks[i].sign === false) {
+      parsed[i].liquidity = parsed[i + 1].liquidity.add(ticks[i].liquidityChange.v)
+    } else {
+      parsed[i].liquidity = parsed[i + 1].liquidity.sub(ticks[i].liquidityChange.v)
+    }
+  }
+
+  return parsed
 }

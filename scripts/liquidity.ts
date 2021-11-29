@@ -40,7 +40,7 @@ const main = async () => {
   const upperTick = 4
   const pool = await market.getPool(pair)
 
-  const { liquidity } = getLiquidityByX(x, lowerTick, upperTick, pool.currentTickIndex, true)
+  const { liquidity } = getLiquidityByX(x, lowerTick, upperTick, pool.sqrtPrice, true)
 
   await market.initPosition(
     {

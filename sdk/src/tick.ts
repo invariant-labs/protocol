@@ -9,7 +9,7 @@ const mulUp = (a: BN, b: BN) => {
 }
 
 const divUp = (a: BN, b: BN) => {
-  return a.mul(DENOMINATOR).add(b.subn(1)).div(b)
+  return a.add(b).subn(1).div(b)
 }
 
 const calculateY = (priceDiff: BN, liquidity: BN, roundingUp: boolean) => {
@@ -33,12 +33,11 @@ export const getLiquidityByX = (
   x: BN,
   lowerTick: number,
   upperTick: number,
-  currentTick: number,
+  currentSqrtPrice: Decimal,
   roundingUp: boolean
 ) => {
   const lowerSqrtPrice = calculate_price_sqrt(lowerTick)
   const upperSqrtPrice = calculate_price_sqrt(upperTick)
-  const currentSqrtPrice = calculate_price_sqrt(currentTick)
 
   return getLiquidityByXPrice(x, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
 }
@@ -84,12 +83,11 @@ export const getLiquidityByY = (
   y: BN,
   lowerTick: number,
   upperTick: number,
-  currentTick: number,
+  currentSqrtPrice: Decimal,
   roundingUp: boolean
 ) => {
   const lowerSqrtPrice = calculate_price_sqrt(lowerTick)
   const upperSqrtPrice = calculate_price_sqrt(upperTick)
-  const currentSqrtPrice = calculate_price_sqrt(currentTick)
 
   return getLiquidityByYPrice(y, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
 }

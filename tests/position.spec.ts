@@ -18,6 +18,9 @@ import { createStandardFeeTiers, createToken, eqDecimal } from './testUtils'
 import { MAX_TICK } from '@invariant-labs/sdk/lib/math'
 import { MIN_TICK } from '@invariant-labs/sdk/lib/math'
 import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
+import { fromFee } from '@invariant-labs/sdk/src/utils'
+import { Decimal } from '@invariant-labs/sdk/src/market'
+import { assertThrowsAsync, INVARIANT_ERRORS } from '@invariant-labs/sdk/src/utils'
 
 describe('position', () => {
   const provider = Provider.local()
@@ -34,6 +37,7 @@ describe('position', () => {
     anchor.workspace.Amm.programId
   )
   const feeTier = FEE_TIERS[0]
+  const protocolFee: Decimal = { v: fromFee(new BN(10000))}
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -67,8 +71,25 @@ describe('position', () => {
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
+  it('#createState()', async () => {
+    await market.createState(admin, protocolFee)
+  })
   it('#createFeeTier()', async () => {
-    await createStandardFeeTiers(market, wallet)
+    await createStandardFeeTiers(market, admin)
+  })
+  it('#create() should fail because of token addresses', async () => {
+    const spoofPair = new Pair(pair.tokenX, pair.tokenY, feeTier)
+    spoofPair.tokenX = pair.tokenY
+    const tmp = spoofPair.tokenX
+    spoofPair.tokenY = tmp
+
+    assertThrowsAsync(
+      market.create({
+        pair: spoofPair,
+        signer: admin,
+        initTick
+      })
+    ), INVARIANT_ERRORS.INVALID_POOL_TOKEN_ADDRESSES
   })
   it('#create()', async () => {
     // fee tier 0.02% / 4
@@ -116,7 +137,7 @@ describe('position', () => {
     const upperTick = 0
 
     it('#createTick(lower)', async () => {
-      const ix = await market.createTickInstruction(pair, lowerTick, wallet.publicKey)
+      const ix = await market.createTickInstruction(pair, lowerTick, wallet.publicKey,)
       await signAndSend(new Transaction().add(ix), [wallet], connection)
 
       const expectedZeroDecimal = new BN(0)
