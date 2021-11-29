@@ -5,7 +5,7 @@ import { assertThrowsAsync } from '@invariant-labs/sdk/lib/utils'
 import { Decimal, FeeTier } from '@invariant-labs/sdk/src/market'
 import { ERRORS, fromFee } from '@invariant-labs/sdk/src/utils'
 import * as anchor from '@project-serum/anchor'
-import { BN, Provider } from '@project-serum/anchor'
+import { Provider, BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 
 describe("fee-tier", () => {
