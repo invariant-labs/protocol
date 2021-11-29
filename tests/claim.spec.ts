@@ -9,7 +9,7 @@ import { DENOMINATOR } from '@invariant-labs/sdk'
 import { TICK_LIMIT } from '@invariant-labs/sdk'
 import { tou64 } from '@invariant-labs/sdk'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { FeeTier } from '@invariant-labs/sdk/lib/market'
+import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 
 describe('claim', () => {
@@ -30,6 +30,7 @@ describe('claim', () => {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
   }
+  const protocolFee: Decimal = { v: fromFee(new BN(10000))}
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -60,8 +61,11 @@ describe('claim', () => {
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
+  it('#createState()', async () => {
+    await market.createState(admin, protocolFee)
+  })
   it('#createFeeTier()', async () => {
-    await market.createFeeTier(feeTier, wallet)
+    await market.createFeeTier(feeTier, admin)
   })
   it('#create()', async () => {
     // 0.6% / 10
@@ -69,7 +73,6 @@ describe('claim', () => {
       pair,
       signer: admin
     })
-
     const createdPool = await market.get(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
     assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
@@ -168,7 +171,6 @@ describe('claim', () => {
     assert.ok(poolDataAfter.feeProtocolTokenY.v.eqn(0))
 
     const reservesBeforeClaim = await market.getReserveBalances(pair, wallet)
-    const positionBeforeClaim = await market.getPosition(positionOwner.publicKey, 0)
     const userTokenXAccountBeforeClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
 
     await market.claimFee(

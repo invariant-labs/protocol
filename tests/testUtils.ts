@@ -1,4 +1,4 @@
-import { Connection, Keypair } from '@solana/web3.js'
+import { Connection, Keypair, PublicKey } from '@solana/web3.js'
 import { TokenInstructions } from '@project-serum/serum'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { FeeTier, Market, Position } from '@invariant-labs/sdk/lib/market'
@@ -104,8 +104,11 @@ export const createTokensAndPool = async (
   const pair = new Pair(promiseResults[0].publicKey, promiseResults[1].publicKey, feeTier)
   const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, payer)
   const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, payer)
-
-  await market.createFeeTier(pair.feeTier, payer)
+  const feeTierAccount = await connection.getAccountInfo((await market.getFeeTierAddress(feeTier)).address)
+  if (feeTierAccount === null) {
+    await market.createFeeTier(pair.feeTier, payer)
+  }
+  
   await market.create({
     pair,
     signer: payer,

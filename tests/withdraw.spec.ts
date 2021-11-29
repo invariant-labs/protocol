@@ -15,7 +15,7 @@ import {
   Network
 } from '@invariant-labs/sdk'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { FeeTier } from '@invariant-labs/sdk/lib/market'
+import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 
 describe('withdraw', () => {
@@ -35,6 +35,7 @@ describe('withdraw', () => {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
   }
+  const protocolFee: Decimal = { v: fromFee(new BN(10000))}
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -65,8 +66,11 @@ describe('withdraw', () => {
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
+  it('#createState()', async () => {
+    await market.createState(admin, protocolFee)
+  })
   it('#createFeeTier()', async () => {
-    await market.createFeeTier(feeTier, wallet)
+    await market.createFeeTier(feeTier, admin)
   })
   it('#create()', async () => {
     // 0.6% / 10

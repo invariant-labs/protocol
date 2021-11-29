@@ -1,6 +1,6 @@
 import * as anchor from '@project-serum/anchor'
 import { BN, Program, utils, Idl, Provider } from '@project-serum/anchor'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { Token, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token'
 import {
   Connection,
   Keypair,
@@ -28,11 +28,18 @@ import { Network } from './network'
 const POSITION_SEED = 'positionv1'
 const TICK_SEED = 'tickv1'
 const POSITION_LIST_SEED = 'positionlistv1'
+const STATE_SEED = "statev1"
 export const FEE_TIER = 'feetierv1'
 export const DEFAULT_PUBLIC_KEY = new PublicKey(0)
 
 export interface Decimal {
   v: BN
+}
+
+export interface State {
+  protocolFee: Decimal
+  admin: PublicKey,
+  bump: number
 }
 
 export interface FeeTierStructure {
@@ -208,7 +215,7 @@ export class Market {
   }
 
   async getPositionsFromIndexes(owner: PublicKey, indexes: Array<number>) {
-    const positionPromises = indexes.map(async (tick, i) => {
+    const positionPromises = indexes.map(async (i) => {
       return await this.getPosition(owner, i)
     })
     return Promise.all(positionPromises)
@@ -272,10 +279,13 @@ export class Market {
   async createFeeTierInstruction(feeTier: FeeTier, payer: PublicKey) {
     const { fee, tickSpacing } = feeTier
     const { address, bump } = await this.getFeeTierAddress(feeTier)
+    const stateAddress = (await this.getStateAddress()).address;
     const ts = tickSpacing ?? feeToTickSpacing(fee)
+    
 
-    return this.program.instruction.createFeeTier(bump, fee, ts, {
+    return await this.program.instruction.createFeeTier(bump, fee, ts, {
       accounts: {
+        state: stateAddress,
         feeTier: address,
         payer,
         rent: SYSVAR_RENT_PUBKEY,
@@ -285,7 +295,45 @@ export class Market {
   }
   async createFeeTier(feeTier: FeeTier, payer: Keypair) {
     const ix = await this.createFeeTierInstruction(feeTier, payer.publicKey)
-    signAndSend(new Transaction().add(ix), [payer], this.connection)
+    
+    await signAndSend(new Transaction().add(ix), [payer], this.connection)
+  }
+
+  async createStateInstruction(admin: PublicKey, protocolFee: Decimal) {
+    const { address, bump } = await this.getStateAddress()
+
+    return this.program.instruction.createState(bump, protocolFee, {
+      accounts: {
+        state: address,
+        admin,
+        rent: SYSVAR_RENT_PUBKEY,
+        systemProgram: SystemProgram.programId
+      }
+    })
+  }
+
+  async createState(admin: Keypair, protocolFee: Decimal) {
+    const ix = await this.createStateInstruction(admin.publicKey, protocolFee)
+    await signAndSend(new Transaction().add(ix), [admin], this.connection)
+  }
+
+  async getStateAddress() {
+    const [address, bump] = await PublicKey.findProgramAddress(
+      [
+        Buffer.from(utils.bytes.utf8.encode(STATE_SEED))
+      ],
+      this.program.programId
+    )
+
+    return {
+      address,
+      bump
+    }
+  }
+
+  async getState() {
+    const address = await (await this.getStateAddress()).address
+    return (await this.program.account.state.fetch(address)) as State
   }
 
   async createTickInstruction(pair: Pair, index: number, payer: PublicKey) {
@@ -321,7 +369,8 @@ export class Market {
       })
     )
   }
-
+  
+  
   async createPositionListInstruction(owner: PublicKey) {
     const { positionListAddress, positionListBump } = await this.getPositionListAddress(owner)
 
@@ -446,30 +495,30 @@ export class Market {
     }: SwapTransaction,
     overridePriceLimit?: BN
   ) {
-    const state = await this.get(pair)
+    const pool = await this.get(pair)
     const tickmap = await this.getTickmap(pair)
-    const feeTier = await pair.getFeeTierAddress(this.program.programId)
+    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
+    const { address: stateAddress } = await this.getStateAddress();
 
     const priceLimit =
       overridePriceLimit ?? calculatePriceAfterSlippage(knownPrice, slippage, !XtoY).v
 
     const indexesInDirection = findClosestTicks(
       tickmap.bitmap,
-      state.currentTickIndex,
-      state.tickSpacing,
+      pool.currentTickIndex,
+      pool.tickSpacing,
       15,
       Infinity,
       XtoY ? 'down' : 'up'
     )
     const indexesInReverse = findClosestTicks(
       tickmap.bitmap,
-      state.currentTickIndex,
-      state.tickSpacing,
+      pool.currentTickIndex,
+      pool.tickSpacing,
       3,
       Infinity,
       XtoY ? 'up' : 'down'
     )
-
     const remainingAccounts = await Promise.all(
       indexesInDirection.concat(indexesInReverse).map(async (index) => {
         const { tickAddress } = await this.getTickAddress(pair, index)
@@ -478,7 +527,7 @@ export class Market {
     )
 
     const swapIx = await this.program.instruction.swap(
-      feeTier,
+      feeTierAddress,
       XtoY,
       amount,
       byAmountIn,
@@ -488,20 +537,22 @@ export class Market {
           return { pubkey, isWritable: true, isSigner: false }
         }),
         accounts: {
+          state: stateAddress,
           pool: await pair.getAddress(this.program.programId),
-          tickmap: state.tickmap,
-          tokenX: state.tokenX,
-          tokenY: state.tokenY,
-          reserveX: state.tokenXReserve,
-          reserveY: state.tokenYReserve,
+          tickmap: pool.tickmap,
+          tokenX: pool.tokenX,
+          tokenY: pool.tokenY,
+          reserveX: pool.tokenXReserve,
+          reserveY: pool.tokenYReserve,
           owner,
           accountX,
           accountY,
-          programAuthority: state.authority,
+          programAuthority: pool.authority,
           tokenProgram: TOKEN_PROGRAM_ID
         }
       }
     )
+    
     const tx = new Transaction().add(swapIx)
     return tx
   }
@@ -522,7 +573,7 @@ export class Market {
 
   async claimFeeInstruction({ pair, owner, userTokenX, userTokenY, index }: ClaimFee) {
     const state = await this.get(pair)
-    const { positionAddress, positionBump } = await this.getPositionAddress(owner, index)
+    const { positionAddress } = await this.getPositionAddress(owner, index)
     const position = await this.getPosition(owner, index)
     const { tickAddress: lowerTickAddress } = await this.getTickAddress(
       pair,
@@ -571,6 +622,38 @@ export class Market {
     await signAndSend(new Transaction().add(claimFeeIx), [signer], this.connection)
   }
 
+  async withdrawProtocolFeeInstruction(pair: Pair, accountX: PublicKey,
+    accountY: PublicKey, signer: PublicKey) {
+    const pool = await this.get(pair)
+    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
+    const stateAddress = await (await this.getStateAddress()).address
+
+    return (await this.program.instruction.withdrawProtocolFee(
+      {
+        accounts: {
+          state: stateAddress,
+          pool: await pair.getAddress(this.program.programId),
+          tokenX: pool.tokenX,
+          tokenY: pool.tokenY,
+          feeTier: feeTierAddress,
+          reserveX: pool.tokenXReserve,
+          reserveY: pool.tokenYReserve,
+          accountX,
+          accountY,
+          admin: signer,
+          programAuthority: pool.authority,
+          tokenProgram: TOKEN_PROGRAM_ID
+        }
+      }
+    )) as TransactionInstruction
+  }
+
+  async withdrawProtocolFee(pair: Pair, accountX: PublicKey,
+    accountY: PublicKey, signer: Keypair) {
+      const ix = await this.withdrawProtocolFeeInstruction(pair, accountX, accountY, signer.publicKey)
+      await signAndSend(new Transaction().add(ix), [signer], this.connection)
+    }
+
   async removePositionWithIndexInstruction(
     pair: Pair,
     owner: PublicKey,
@@ -585,7 +668,6 @@ export class Market {
       owner,
       lastPositionIndex
     )
-    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
 
     const state = await this.get(pair)
     const position = await this.getPosition(owner, index)
@@ -598,6 +680,7 @@ export class Market {
       pair,
       position.upperTickIndex
     )
+    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
 
     return this.program.instruction.removePosition(
       feeTierAddress,
@@ -752,7 +835,6 @@ export interface FeeTier {
   fee: BN
   tickSpacing?: number
 }
-
 export interface ClaimFee {
   pair: Pair
   owner: PublicKey
