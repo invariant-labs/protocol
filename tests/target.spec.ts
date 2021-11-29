@@ -17,6 +17,7 @@ import {
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
+import { Decimal } from '@invariant-labs/sdk/src/market'
 
 describe('target', () => {
   const provider = Provider.local()
@@ -31,6 +32,7 @@ describe('target', () => {
     connection,
     anchor.workspace.Amm.programId
   )
+  const protocolFee: Decimal = { v: fromFee(new BN(10000))}
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -67,7 +69,8 @@ describe('target', () => {
   })
 
   it('#create()', async () => {
-    await market.createFeeTier(pair.feeTier, wallet)
+    await market.createState(admin, protocolFee)
+    await market.createFeeTier(pair.feeTier, admin)
     await market.create({
       pair,
       signer: admin

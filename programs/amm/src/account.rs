@@ -3,6 +3,14 @@ use anchor_lang::prelude::*;
 
 #[account(zero_copy)]
 #[derive(PartialEq, Default, Debug)]
+pub struct State {
+    pub protocol_fee: Decimal,
+    pub admin: Pubkey,
+    pub bump: u8,
+}
+
+#[account(zero_copy)]
+#[derive(PartialEq, Default, Debug)]
 pub struct FeeTier {
     pub fee: Decimal,
     pub tick_spacing: u16,
@@ -19,7 +27,6 @@ pub struct Pool {
     pub position_iterator: u64,
     pub tick_spacing: u16,
     pub fee: Decimal,
-    pub protocol_fee: Decimal,
     pub liquidity: Decimal,
     pub sqrt_price: Decimal,
     pub current_tick_index: i32, // nearest tick below the current price
