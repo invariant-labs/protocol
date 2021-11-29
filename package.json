@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "test:full": "npm run test:swap && npm run test:cross && npm run test:reversed && npm run test:position && npm run test:math && npm run test:withdraw && npm run test:position-list && npm run test:claim && npm run test:protocol-fee && npm run test:target && npm run test:slippage",
+    "test:full": "npm run test:swap && npm run test:cross && npm run test:reversed && npm run test:position && npm run test:math && npm run test:withdraw && npm run test:position-list && npm run test:claim && npm run test:protocol-fee && npm run test:target && npm run test:slippage && npm run test:fee-tier",
     "test:swap": "anchor test --skip-build tests/swap.spec.ts",
     "test:cross": "anchor test --skip-build tests/cross.spec.ts",
     "test:reversed": "anchor test --skip-build tests/reversed.spec.ts",
@@ -12,6 +12,7 @@
     "test:protocol-fee": "anchor test --skip-build tests/protocol-fee.spec.ts",
     "test:target": "anchor test --skip-build tests/target.spec.ts",
     "test:slippage": "anchor test --skip-build tests/slippage.spec.ts",
+    "test:fee-tier": "anchor test --skip-build tests/fee-tier.spec.ts",
     "build": "cd sdk && npm run build"
   },
   "dependencies": {
