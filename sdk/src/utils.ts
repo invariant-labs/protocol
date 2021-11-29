@@ -9,7 +9,11 @@ import {
   Transaction
 } from '@solana/web3.js'
 import { expect } from 'chai'
-import { Decimal, FeeTier, FEE_TIER } from './market'
+import { calculate_price_sqrt, fromInteger, Market, Pair } from '.'
+import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap } from './market'
+import { calculatePriceAfterSlippage, calculateSwapStep } from './math'
+import { getTickFromPrice } from './tick'
+import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
 
 export const SEED = 'Invariant'
 export const DECIMAL = 12
@@ -25,6 +29,18 @@ export enum ERRORS {
   SERIALIZATION = '0xa4',
   ALLOWANCE = 'custom program error: 0x1',
   NO_SIGNERS = 'Error: No signers'
+}
+
+export interface SimulateSwapPrice {
+  xToY: boolean
+  byAmountIn: boolean
+  swapAmount: number
+  currentPrice: Decimal
+  slippage: Decimal
+  tickmap: Tickmap
+  pool: PoolStructure
+  market: Market
+  pair: Pair
 }
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
@@ -134,4 +150,99 @@ export const getFeeTierAddress = async ({ fee, tickSpacing }: FeeTier, programId
 
 export const toDecimal = (x: number, decimals: number = 0): Decimal => {
   return { v: DENOMINATOR.muln(x).div(new BN(10).pow(new BN(decimals))) }
+}
+
+export const simulateSwapPrice = (swapParameters: SimulateSwapPrice): Decimal => {
+  const {xToY, byAmountIn, swapAmount, slippage, tickmap, pool, market, pair} = swapParameters
+  let {currentTickIndex, tickSpacing, liquidity, fee} = pool
+  const priceLimit = calculatePriceAfterSlippage(pool.sqrtPrice, slippage, !xToY)
+
+  if (xToY) {
+    if (pool.sqrtPrice.v.gt(priceLimit.v)) {
+      throw new Error("Price limit is on the wrong side of price")
+    }
+  } else {
+    if (pool.sqrtPrice.v.lt(priceLimit.v)) {
+      throw new Error("Price limit is on the wrong side of price")
+    }
+  }
+
+  let remainingAmount = fromInteger(swapAmount)
+  let amountWeightedPrice: Decimal = {v: new BN(0)}
+
+  while (!remainingAmount.v.eqn(0)) {
+    let closestTickIndex: number
+    if (xToY) {
+      closestTickIndex = getPreviousTick(tickmap, currentTickIndex, tickSpacing)
+    } else {
+      closestTickIndex = getNextTick(tickmap, currentTickIndex, tickSpacing)
+    }
+
+    let price: Decimal
+    let closerLimit: [swapLimit: Decimal, limitingTick: [index: number, initialized: boolean]]
+    if (closestTickIndex != null) {
+      price = calculate_price_sqrt(closestTickIndex)
+      
+      if (xToY && price.v.gt(priceLimit.v)) {
+        closerLimit = [price, [closestTickIndex, true]]
+      } else if (!xToY && price.v.lt(priceLimit.v)) {
+        closerLimit = [price, [closestTickIndex, true]]
+      } else {
+        closerLimit = [priceLimit, [null, null]]
+      }
+    } else {
+      const index = getSearchLimit(currentTickIndex, tickSpacing, !xToY)
+      price = calculate_price_sqrt(index)
+
+      if (xToY && price.v.gt(priceLimit.v)) {
+        closerLimit = [price, [index, false]]
+      } else if (!xToY && price.v.lt(priceLimit.v)) {
+        closerLimit = [price, [index, false]]
+      } else {
+        closerLimit = [priceLimit, [null, null]]
+      }
+    }
+
+    const result = calculateSwapStep(pool.sqrtPrice, closerLimit[0], liquidity, remainingAmount, byAmountIn, fee)
+
+    let amountDiff: Decimal
+    if (byAmountIn) {
+      amountDiff = {v: remainingAmount.v.sub(result.amountIn.v).sub(result.feeAmount.v)}
+    } else {
+      amountDiff = {v: remainingAmount.v.sub(result.amountOut.v)}
+    }
+    amountWeightedPrice = {v: amountWeightedPrice.v.add(pool.sqrtPrice.v.mul(amountDiff.v).div(DENOMINATOR))}
+    remainingAmount = {v: remainingAmount.v.sub(amountDiff.v)}
+
+    pool.sqrtPrice = result.nextPrice
+
+    if (pool.sqrtPrice.v.eq(priceLimit.v) && remainingAmount.v.gt(new BN(0))) {
+      throw new Error("Price would cross swap limit")
+    }
+
+    if (result.nextPrice.v.eq(closerLimit[0].v) && closerLimit[1][0] != null) {
+      const tickIndex = closerLimit[1][0]
+      const initialized = closerLimit[1][1]
+
+      if (initialized) {
+        market.getTick(pair, tickIndex).then((tick) => {
+          if ((currentTickIndex >= tick.index) !== tick.sign) {
+            liquidity = {v: liquidity.v.add(tick.liquidityChange.v)}
+          } else {
+            liquidity = {v: liquidity.v.sub(tick.liquidityChange.v)}
+          }
+        })
+      }
+      if (xToY && !remainingAmount.v.eq(new BN(0))) {
+        currentTickIndex = tickIndex - tickSpacing
+      } else {
+        currentTickIndex = tickIndex
+      }
+    } else {
+      currentTickIndex = getTickFromPrice(currentTickIndex, tickSpacing, result.nextPrice, xToY)
+    }
+
+  }
+
+  return {v: amountWeightedPrice.v.mul(DENOMINATOR).divn(swapAmount)}
 }

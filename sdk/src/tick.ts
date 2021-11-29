@@ -1,14 +1,15 @@
 import { BN } from '@project-serum/anchor'
-import { DENOMINATOR } from '.'
-import { Decimal } from './market'
-import { calculate_price_sqrt } from './math'
+import { assert } from 'chai'
+import { DENOMINATOR, MAX_TICK, TICK_LIMIT } from '.'
+import { Decimal, Tick, Tickmap } from './market'
+import { calculate_price_sqrt, TICK_SEARCH_RANGE } from './math'
 
 const mulUp = (a: BN, b: BN) => {
   return a.mul(b).add(DENOMINATOR.subn(1)).div(DENOMINATOR)
 }
 
 const divUp = (a: BN, b: BN) => {
-  return a.add(b).subn(1).div(b)
+  return a.mul(DENOMINATOR).add(b.subn(1)).div(b)
 }
 
 const calculateY = (priceDiff: BN, liquidity: BN, roundingUp: boolean) => {
@@ -124,4 +125,50 @@ export const getLiquidityByYPrice = (
     liquidity: { v: liquidity },
     x
   }
+}
+
+export const getTickFromPrice = (currentTick: number, tickSpacing: number, price: Decimal, xToY: boolean): number => {
+  assert.isTrue(currentTick % tickSpacing == 0)
+
+  if (xToY) {
+    return priceToTickInRange(
+      price, 
+      Math.max(-TICK_LIMIT, currentTick - TICK_SEARCH_RANGE), 
+      currentTick, 
+      tickSpacing)
+  } else {
+    return priceToTickInRange(
+      price,
+      currentTick,
+      Math.min(TICK_LIMIT, currentTick + TICK_SEARCH_RANGE),
+      tickSpacing
+    )
+  }
+}
+
+const priceToTickInRange = (price: Decimal, low: number, high: number, step: number): number => {
+  assert.ok(step != 0)
+
+  low = low / step
+  high = high / step
+  let targetValue = price
+
+  while (high - low > 1) {
+    let mid = (high - low) / 2 + low
+    let val = calculate_price_sqrt(mid * step)
+
+    if (val.v.eq(targetValue.v)) {
+      return mid * step
+    }
+
+    if (val.v.lt(targetValue.v)) {
+      low = mid
+    }
+
+    if (val.v.gt(targetValue.v)) {
+      high = mid
+    }
+  }
+
+  return low * step
 }

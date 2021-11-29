@@ -654,11 +654,6 @@ export class Market {
     }) as TransactionInstruction
   }
 }
-
-export interface Decimal {
-  v: BN
-}
-
 export interface PositionList {
   head: number
   bump: number
