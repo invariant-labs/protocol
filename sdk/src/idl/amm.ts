@@ -43,11 +43,6 @@ export type Amm = {
       "name": "createFeeTier",
       "accounts": [
         {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "feeTier",
           "isMut": true,
           "isSigner": false
@@ -84,7 +79,7 @@ export type Amm = {
       ]
     },
     {
-      "name": "create",
+      "name": "createPool",
       "accounts": [
         {
           "name": "pool",
@@ -343,7 +338,7 @@ export type Amm = {
       ]
     },
     {
-      "name": "initPosition",
+      "name": "createPosition",
       "accounts": [
         {
           "name": "position",
@@ -771,28 +766,6 @@ export type Amm = {
   ],
   "accounts": [
     {
-      "name": "state",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "protocolFee",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "admin",
-            "type": "publicKey"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
       "name": "feeTier",
       "type": {
         "kind": "struct",
@@ -909,89 +882,6 @@ export type Amm = {
       }
     },
     {
-      "name": "tickmap",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bitmap",
-            "type": {
-              "array": [
-                "u8",
-                25000
-              ]
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "tick",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "index",
-            "type": "i32"
-          },
-          {
-            "name": "sign",
-            "type": "bool"
-          },
-          {
-            "name": "liquidityChange",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "liquidityGross",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "sqrtPrice",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "feeGrowthOutsideX",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "feeGrowthOutsideY",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "positionList",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "head",
-            "type": "u32"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
       "name": "position",
       "type": {
         "kind": "struct",
@@ -1049,6 +939,111 @@ export type Amm = {
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "positionList",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "head",
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "state",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "protocolFee",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "admin",
+            "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "tick",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "index",
+            "type": "i32"
+          },
+          {
+            "name": "sign",
+            "type": "bool"
+          },
+          {
+            "name": "liquidityChange",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "liquidityGross",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "sqrtPrice",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "feeGrowthOutsideX",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "feeGrowthOutsideY",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "tickmap",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bitmap",
+            "type": {
+              "array": [
+                "u8",
+                25000
+              ]
+            }
           }
         ]
       }
@@ -1202,11 +1197,6 @@ export const IDL: Amm = {
       "name": "createFeeTier",
       "accounts": [
         {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "feeTier",
           "isMut": true,
           "isSigner": false
@@ -1243,7 +1233,7 @@ export const IDL: Amm = {
       ]
     },
     {
-      "name": "create",
+      "name": "createPool",
       "accounts": [
         {
           "name": "pool",
@@ -1502,7 +1492,7 @@ export const IDL: Amm = {
       ]
     },
     {
-      "name": "initPosition",
+      "name": "createPosition",
       "accounts": [
         {
           "name": "position",
@@ -1930,28 +1920,6 @@ export const IDL: Amm = {
   ],
   "accounts": [
     {
-      "name": "state",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "protocolFee",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "admin",
-            "type": "publicKey"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
       "name": "feeTier",
       "type": {
         "kind": "struct",
@@ -2068,89 +2036,6 @@ export const IDL: Amm = {
       }
     },
     {
-      "name": "tickmap",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bitmap",
-            "type": {
-              "array": [
-                "u8",
-                25000
-              ]
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "tick",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "index",
-            "type": "i32"
-          },
-          {
-            "name": "sign",
-            "type": "bool"
-          },
-          {
-            "name": "liquidityChange",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "liquidityGross",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "sqrtPrice",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "feeGrowthOutsideX",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "feeGrowthOutsideY",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "positionList",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "head",
-            "type": "u32"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
       "name": "position",
       "type": {
         "kind": "struct",
@@ -2208,6 +2093,111 @@ export const IDL: Amm = {
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "positionList",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "head",
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "state",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "protocolFee",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "admin",
+            "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "tick",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "index",
+            "type": "i32"
+          },
+          {
+            "name": "sign",
+            "type": "bool"
+          },
+          {
+            "name": "liquidityChange",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "liquidityGross",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "sqrtPrice",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "feeGrowthOutsideX",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "feeGrowthOutsideY",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "tickmap",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bitmap",
+            "type": {
+              "array": [
+                "u8",
+                25000
+              ]
+            }
           }
         ]
       }

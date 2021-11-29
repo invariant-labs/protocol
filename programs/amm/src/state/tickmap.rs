@@ -1,12 +1,21 @@
-use crate::account::Tickmap;
+use anchor_lang::prelude::*;
 use std::convert::TryInto;
-
-// not counting tick_spacing
 
 pub const TICK_LIMIT: i32 = 100_000; // If you change it update length of array as well!
 pub const TICK_SEARCH_RANGE: i32 = 256;
 // const LEN_IN_BYTES: u64 = (TICK_LIMIT / 4) as u64; // Same as in struct but I get errors when i try to use const there
 pub const MAX_TICK: i32 = 221_818; // log(1.0001, sqrt(2^64-1))
+
+#[account(zero_copy)]
+pub struct Tickmap {
+    pub bitmap: [u8; 25000], // Tick limit / 4
+}
+
+impl Default for Tickmap {
+    fn default() -> Self {
+        Tickmap { bitmap: [0; 25000] }
+    }
+}
 
 pub fn get_search_limit(tick: i32, tick_spacing: u16, up: bool) -> i32 {
     assert!(
@@ -28,6 +37,7 @@ pub fn get_search_limit(tick: i32, tick_spacing: u16, up: bool) -> i32 {
             .unwrap()
     }
 }
+
 impl Tickmap {
     pub fn set(&mut self, value: bool, tick: i32, tick_spacing: u16) {
         assert!(
