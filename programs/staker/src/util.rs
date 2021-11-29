@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 
+pub const STAKER_SEED: &str = "staker";
+
 pub fn check_position_seeds<'info>(
     owner: AccountInfo<'info>,
     position: &Pubkey,

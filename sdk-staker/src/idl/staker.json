@@ -255,42 +255,6 @@
   ],
   "accounts": [
     {
-      "name": "UserStake",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "position",
-            "type": "publicKey"
-          },
-          {
-            "name": "incentive",
-            "type": "publicKey"
-          },
-          {
-            "name": "secondsPerLiquidityInitial",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "liquidity",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "index",
-            "type": "u32"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
       "name": "Incentive",
       "type": {
         "kind": "struct",
@@ -330,6 +294,42 @@
           {
             "name": "pool",
             "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UserStake",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "position",
+            "type": "publicKey"
+          },
+          {
+            "name": "incentive",
+            "type": "publicKey"
+          },
+          {
+            "name": "secondsPerLiquidityInitial",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "liquidity",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "index",
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }

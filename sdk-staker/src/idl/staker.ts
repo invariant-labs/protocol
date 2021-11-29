@@ -255,42 +255,6 @@ export type Staker = {
   ],
   "accounts": [
     {
-      "name": "userStake",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "position",
-            "type": "publicKey"
-          },
-          {
-            "name": "incentive",
-            "type": "publicKey"
-          },
-          {
-            "name": "secondsPerLiquidityInitial",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "liquidity",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "index",
-            "type": "u32"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
       "name": "incentive",
       "type": {
         "kind": "struct",
@@ -330,6 +294,42 @@ export type Staker = {
           {
             "name": "pool",
             "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "userStake",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "position",
+            "type": "publicKey"
+          },
+          {
+            "name": "incentive",
+            "type": "publicKey"
+          },
+          {
+            "name": "secondsPerLiquidityInitial",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "liquidity",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "index",
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }
@@ -680,42 +680,6 @@ export const IDL: Staker = {
   ],
   "accounts": [
     {
-      "name": "userStake",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "position",
-            "type": "publicKey"
-          },
-          {
-            "name": "incentive",
-            "type": "publicKey"
-          },
-          {
-            "name": "secondsPerLiquidityInitial",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "liquidity",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "index",
-            "type": "u32"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
       "name": "incentive",
       "type": {
         "kind": "struct",
@@ -755,6 +719,42 @@ export const IDL: Staker = {
           {
             "name": "pool",
             "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "userStake",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "position",
+            "type": "publicKey"
+          },
+          {
+            "name": "incentive",
+            "type": "publicKey"
+          },
+          {
+            "name": "secondsPerLiquidityInitial",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "liquidity",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "index",
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }
