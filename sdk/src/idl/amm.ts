@@ -1148,6 +1148,11 @@ export type Amm = {
       "code": 315,
       "name": "Unauthorized",
       "msg": "You are not admin"
+    },
+    {
+      "code": 316,
+      "name": "InvalidPoolTokenAddresses",
+      "msg": "Invalid pool token addresses"
     }
   ]
 };
@@ -2302,6 +2307,11 @@ export const IDL: Amm = {
       "code": 315,
       "name": "Unauthorized",
       "msg": "You are not admin"
+    },
+    {
+      "code": 316,
+      "name": "InvalidPoolTokenAddresses",
+      "msg": "Invalid pool token addresses"
     }
   ]
 };

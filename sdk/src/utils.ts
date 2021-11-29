@@ -8,8 +8,7 @@ import {
   sendAndConfirmRawTransaction,
   Transaction
 } from '@solana/web3.js'
-import { expect } from 'chai'
-import { Decimal, FeeTier, FEE_TIER } from './market'
+import { Decimal, FeeTier, FEE_TIER, Tick, PoolStructure } from './market'
 
 export const SEED = 'Invariant'
 export const DECIMAL = 12
@@ -27,6 +26,25 @@ export enum ERRORS {
   NO_SIGNERS = 'Error: No signers',
   CONSTRAINT_RAW = "0x8f",
   CONSTRAINT_SEEDS = "0x92"
+}
+
+export enum INVARIANT_ERRORS {
+  ZERO_AMOUNT = '0x12c',
+  ZERO_OUTPUT = '0x12d',
+  WRONG_TICK = '0x12e',
+  WRONG_LIMIT = '0x12f',
+  INVALID_TICK_INDEX = '0x130',
+  INVALID_TICK_INTERVAL = '0x131',
+  NO_MORE_TICKS = '0x132',
+  TICK_NOT_FOUND = '0x133',
+  PRICE_LIMIT_REACHED = '0x134',
+  INVALID_TICK_LIQUIDITY = '0x135',
+  EMPTY_POSITION_POKES = '0x136',
+  INVALID_POSITION_LIQUIDITY = '0x137',
+  INVALID_POOL_LIQUIDITY = '0x138',
+  INVALID_POSITION_INDEX = '0x139',
+  POSITION_WITHOUT_LIQUIDITY = '0x13a',
+  INVALID_POOL_TOKEN_ADDRESSES = '0x13b'
 }
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
@@ -136,4 +154,37 @@ export const getFeeTierAddress = async ({ fee, tickSpacing }: FeeTier, programId
 
 export const toDecimal = (x: number, decimals: number = 0): Decimal => {
   return { v: DENOMINATOR.muln(x).div(new BN(10).pow(new BN(decimals))) }
+}
+
+export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
+  let indexOfTickBelow = -1
+  // find first tick
+  for (let i = 0; i < ticks.length; i++) {
+    if (ticks[i].index <= pool.currentTickIndex) {
+      indexOfTickBelow = i
+    } else break
+  }
+
+  const parsed = ticks.map(({ liquidityChange, sign, index }) => {
+    return { index, liquidityChange, sign, liquidity: new BN(-1) }
+  })
+  parsed[indexOfTickBelow].liquidity = pool.liquidity.v
+
+  for (let i = indexOfTickBelow + 1; i < parsed.length; i++) {
+    if (ticks[i].sign === true) {
+      parsed[i].liquidity = parsed[i - 1].liquidity.add(ticks[i].liquidityChange.v)
+    } else {
+      parsed[i].liquidity = parsed[i - 1].liquidity.sub(ticks[i].liquidityChange.v)
+    }
+  }
+
+  for (let i = indexOfTickBelow - 1; i >= 0; i--) {
+    if (ticks[i].sign === false) {
+      parsed[i].liquidity = parsed[i + 1].liquidity.add(ticks[i].liquidityChange.v)
+    } else {
+      parsed[i].liquidity = parsed[i + 1].liquidity.sub(ticks[i].liquidityChange.v)
+    }
+  }
+
+  return parsed
 }

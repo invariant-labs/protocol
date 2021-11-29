@@ -22,6 +22,9 @@ const SEED: &str = "Invariant";
 
 #[program]
 pub mod amm {
+
+    use std::cmp::Ordering;
+
     use crate::util::{check_ticks, get_tick_from_price};
 
     use super::*;
@@ -70,6 +73,14 @@ pub mod amm {
         _tick_spacing: u16,
     ) -> ProgramResult {
         msg!("INVARIANT: CREATE POOL");
+
+        let token_x_address = ctx.accounts.token_x.key.to_string();
+        let token_y_address = ctx.accounts.token_y.key.to_string();
+        require!(
+            token_x_address.cmp(&token_y_address) == Ordering::Less,
+            InvalidPoolTokenAddresses
+        );
+
         let pool = &mut ctx.accounts.pool.load_init()?;
         let fee_tier = ctx.accounts.fee_tier.load()?;
 
@@ -553,15 +564,17 @@ pub enum ErrorCode {
     #[msg("Disable empty position pokes")]
     EmptyPositionPokes = 10, // 136
     #[msg("Invalid tick liquidity")]
-    InvalidPositionLiquidity = 11, // 135
+    InvalidPositionLiquidity = 11, // 137
     #[msg("Invalid pool liquidity")]
-    InvalidPoolLiquidity = 12, // 136
+    InvalidPoolLiquidity = 12, // 138
     #[msg("Invalid position index")]
-    InvalidPositionIndex = 13, // 137
+    InvalidPositionIndex = 13, // 139
     #[msg("Position liquidity would be zero")]
-    PositionWithoutLiquidity = 14, // 138
+    PositionWithoutLiquidity = 14, // 13a
     #[msg("You are not admin")]
-    Unauthorized = 15, // 139
+    Unauthorized = 15, // 13b
+    #[msg("Invalid pool token addresses")]
+    InvalidPoolTokenAddresses = 16, // 13c
 }
 
 fn admin(state_loader: &AccountLoader<State>, signer: &AccountInfo) -> Result<()> {

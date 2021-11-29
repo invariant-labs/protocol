@@ -20,6 +20,7 @@ import { MIN_TICK } from '@invariant-labs/sdk/lib/math'
 import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
 import { fromFee } from '@invariant-labs/sdk/src/utils'
 import { Decimal } from '@invariant-labs/sdk/src/market'
+import { assertThrowsAsync, INVARIANT_ERRORS } from '@invariant-labs/sdk/src/utils'
 
 describe('position', () => {
   const provider = Provider.local()
@@ -75,6 +76,20 @@ describe('position', () => {
   })
   it('#createFeeTier()', async () => {
     await createStandardFeeTiers(market, admin)
+  })
+  it('#create() should fail because of token addresses', async () => {
+    const spoofPair = new Pair(pair.tokenX, pair.tokenY, feeTier)
+    spoofPair.tokenX = pair.tokenY
+    const tmp = spoofPair.tokenX
+    spoofPair.tokenY = tmp
+
+    assertThrowsAsync(
+      market.create({
+        pair: spoofPair,
+        signer: admin,
+        initTick
+      })
+    ), INVARIANT_ERRORS.INVALID_POOL_TOKEN_ADDRESSES
   })
   it('#create()', async () => {
     // fee tier 0.02% / 4
