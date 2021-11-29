@@ -3,10 +3,12 @@ use anchor_lang::__private::CLOSED_ACCOUNT_DISCRIMINATOR;
 use std::cell::RefMut;
 use std::io::Write;
 
-use crate::account::{Pool, Tick, Tickmap};
 use crate::decimal::Decimal;
 use crate::math::calculate_price_sqrt;
-use crate::tickmap::TICK_SEARCH_RANGE;
+use crate::structs::pool::Pool;
+use crate::structs::tick::Tick;
+use crate::structs::tickmap::Tickmap;
+use crate::structs::tickmap::{get_search_limit, MAX_TICK, TICK_LIMIT, TICK_SEARCH_RANGE};
 use crate::*;
 
 pub fn check_ticks(tick_lower: i32, tick_upper: i32, tick_spacing: u16) -> Result<()> {
