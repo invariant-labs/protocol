@@ -1,9 +1,9 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
-import { Keypair } from '@solana/web3.js'
+import { Keypair, PublicKey } from '@solana/web3.js'
 import { assertThrowsAsync, createPoolWithLiquidity, createUserWithTokens } from './testUtils'
 import { Market, DENOMINATOR, Network } from '@invariant-labs/sdk'
-import { toDecimal } from '@invariant-labs/sdk/src/utils'
+import { fromFee, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { Decimal } from '@invariant-labs/sdk/src/market'
 
 describe('slippage', () => {
@@ -17,11 +17,13 @@ describe('slippage', () => {
     connection,
     anchor.workspace.Amm.programId
   )
-
+  const protocolFee: Decimal = { v: fromFee(new BN(10000))}
+  
   let knownPrice: Decimal
   let expectedPrice: BN
 
   before(async () => {
+    await market.createState(wallet, protocolFee)
     const { pair, mintAuthority } = await createPoolWithLiquidity(market, connection, wallet)
     const { owner, userAccountX, userAccountY } = await createUserWithTokens(
       pair,
@@ -44,12 +46,12 @@ describe('slippage', () => {
       },
       owner
     )
-
     expectedPrice = (await market.get(pair)).sqrtPrice.v
   })
 
   it('#swap with target just above limit', async () => {
     const { pair, mintAuthority } = await createPoolWithLiquidity(market, connection, wallet)
+
     const { owner, userAccountX, userAccountY } = await createUserWithTokens(
       pair,
       connection,

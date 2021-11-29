@@ -1,8 +1,8 @@
 use crate::decimal::Decimal;
 use crate::math::calculate_price_sqrt;
-use crate::state::pool::Pool;
-use crate::state::tick::Tick;
-use crate::state::tickmap::Tickmap;
+use crate::structs::pool::Pool;
+use crate::structs::tick::Tick;
+use crate::structs::tickmap::Tickmap;
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]

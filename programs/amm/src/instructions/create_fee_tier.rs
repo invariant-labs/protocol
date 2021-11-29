@@ -1,5 +1,5 @@
 use crate::decimal::Decimal;
-use crate::state::fee_tier::FeeTier;
+use crate::structs::fee_tier::FeeTier;
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]

@@ -1,5 +1,5 @@
 import { FEE_TIER, Market } from './market'
-import { SEED, tou64, DENOMINATOR, signAndSend, sleep } from './utils'
+import { SEED, tou64, DENOMINATOR, signAndSend, sleep, INVARIANT_ERRORS } from './utils'
 import { TICK_LIMIT, calculate_price_sqrt, fromInteger, MAX_TICK, MIN_TICK } from './math'
 import { PublicKey, Transaction } from '@solana/web3.js'
 import { Pair } from './pair'
@@ -16,6 +16,7 @@ export {
   fromInteger,
   tou64,
   SEED,
+  INVARIANT_ERRORS,
   DENOMINATOR,
   TICK_LIMIT,
   MAX_TICK,

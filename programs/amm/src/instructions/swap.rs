@@ -2,9 +2,9 @@ use crate::decimal::Decimal;
 use crate::interfaces::send_tokens::SendTokens;
 use crate::interfaces::take_tokens::TakeTokens;
 use crate::math::compute_swap_step;
-use crate::state::pool::Pool;
-use crate::state::tick::Tick;
-use crate::state::tickmap::Tickmap;
+use crate::structs::pool::Pool;
+use crate::structs::tick::Tick;
+use crate::structs::tickmap::Tickmap;
 use crate::util::get_closer_limit;
 use crate::*;
 
@@ -14,6 +14,8 @@ use anchor_spl::token::{Mint, TokenAccount, Transfer};
 #[derive(Accounts)]
 #[instruction(fee_tier_address: Pubkey)]
 pub struct Swap<'info> {
+    #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
+    pub state: Loader<'info, State>,
     #[account(mut, seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()], bump = pool.load()?.bump)]
     pub pool: Loader<'info, Pool>,
     #[account(mut,
@@ -106,6 +108,7 @@ pub fn handler(
     let sqrt_price_limit = Decimal::new(sqrt_price_limit);
     let mut pool = ctx.accounts.pool.load_mut()?;
     let tickmap = ctx.accounts.tickmap.load()?;
+    let state = ctx.accounts.state.load()?;
 
     // limit is on the right side of price
     if x_to_y {
@@ -145,7 +148,7 @@ pub fn handler(
         }
 
         // fee has to be added before crossing any ticks
-        let protocol_fee = result.fee_amount * pool.protocol_fee;
+        let protocol_fee = result.fee_amount * state.protocol_fee;
 
         pool.add_fee(result.fee_amount - protocol_fee, x_to_y);
         if x_to_y {

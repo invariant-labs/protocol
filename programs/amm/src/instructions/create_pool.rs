@@ -1,8 +1,10 @@
+use std::cmp::Ordering;
+
 use crate::decimal::Decimal;
 use crate::math::calculate_price_sqrt;
-use crate::state::fee_tier::FeeTier;
-use crate::state::pool::Pool;
-use crate::state::tickmap::Tickmap;
+use crate::structs::fee_tier::FeeTier;
+use crate::structs::pool::Pool;
+use crate::structs::tickmap::Tickmap;
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -41,6 +43,13 @@ pub fn handler(
 ) -> ProgramResult {
     msg!("INVARIANT: CREATE POOL");
 
+    let token_x_address = ctx.accounts.token_x.key.to_string();
+    let token_y_address = ctx.accounts.token_y.key.to_string();
+    require!(
+        token_x_address.cmp(&token_y_address) == Ordering::Less,
+        InvalidPoolTokenAddresses
+    );
+
     let pool = &mut ctx.accounts.pool.load_init()?;
     let fee_tier = ctx.accounts.fee_tier.load()?;
 
@@ -51,7 +60,6 @@ pub fn handler(
         token_y_reserve: *ctx.accounts.token_y_reserve.key,
         tick_spacing: fee_tier.tick_spacing,
         fee: fee_tier.fee,
-        protocol_fee: Decimal::from_decimal(1, 1), // 10%
         liquidity: Decimal::new(0),
         sqrt_price: calculate_price_sqrt(init_tick),
         current_tick_index: init_tick,

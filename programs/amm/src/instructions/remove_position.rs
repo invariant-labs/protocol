@@ -1,10 +1,10 @@
 use crate::decimal::Decimal;
 use crate::interfaces::send_tokens::SendTokens;
-use crate::state::pool::Pool;
-use crate::state::position::Position;
-use crate::state::position_list::PositionList;
-use crate::state::tick::Tick;
-use crate::state::tickmap::Tickmap;
+use crate::structs::pool::Pool;
+use crate::structs::position::Position;
+use crate::structs::position_list::PositionList;
+use crate::structs::tick::Tick;
+use crate::structs::tickmap::Tickmap;
 use crate::util::{check_ticks, close};
 use crate::*;
 use anchor_lang::prelude::*;

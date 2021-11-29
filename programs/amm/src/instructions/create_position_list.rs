@@ -1,4 +1,4 @@
-use crate::state::position_list::PositionList;
+use crate::structs::position_list::PositionList;
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]

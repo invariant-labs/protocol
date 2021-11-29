@@ -1,5 +1,5 @@
-use crate::state::position::Position;
-use crate::state::position_list::PositionList;
+use crate::structs::position::Position;
+use crate::structs::position_list::PositionList;
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]

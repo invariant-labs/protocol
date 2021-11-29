@@ -1,7 +1,7 @@
 use crate::interfaces::send_tokens::SendTokens;
-use crate::state::pool::Pool;
-use crate::state::position::Position;
-use crate::state::tick::Tick;
+use crate::structs::pool::Pool;
+use crate::structs::position::Position;
+use crate::structs::tick::Tick;
 use crate::util::*;
 use crate::*;
 

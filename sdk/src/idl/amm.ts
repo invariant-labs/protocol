@@ -3,6 +3,43 @@ export type Amm = {
   "name": "amm",
   "instructions": [
     {
+      "name": "createState",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        },
+        {
+          "name": "protocolFee",
+          "type": {
+            "defined": "Decimal"
+          }
+        }
+      ]
+    },
+    {
       "name": "createFeeTier",
       "accounts": [
         {
@@ -126,6 +163,11 @@ export type Amm = {
     {
       "name": "swap",
       "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
         {
           "name": "pool",
           "isMut": true,
@@ -654,6 +696,72 @@ export type Amm = {
           "type": "i32"
         }
       ]
+    },
+    {
+      "name": "withdrawProtocolFee",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenX",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenY",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "feeTier",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "reserveX",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveY",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "accountX",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "accountY",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "programAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -710,12 +818,6 @@ export type Amm = {
           },
           {
             "name": "fee",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "protocolFee",
             "type": {
               "defined": "Decimal"
             }
@@ -849,6 +951,28 @@ export type Amm = {
           {
             "name": "head",
             "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "state",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "protocolFee",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "admin",
+            "type": "publicKey"
           },
           {
             "name": "bump",
@@ -1014,6 +1138,16 @@ export type Amm = {
       "code": 314,
       "name": "PositionWithoutLiquidity",
       "msg": "Position liquidity would be zero"
+    },
+    {
+      "code": 315,
+      "name": "Unauthorized",
+      "msg": "You are not admin"
+    },
+    {
+      "code": 316,
+      "name": "InvalidPoolTokenAddresses",
+      "msg": "Invalid pool token addresses"
     }
   ]
 };
@@ -1023,6 +1157,43 @@ export const IDL: Amm = {
   "name": "amm",
   "instructions": [
     {
+      "name": "createState",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        },
+        {
+          "name": "protocolFee",
+          "type": {
+            "defined": "Decimal"
+          }
+        }
+      ]
+    },
+    {
       "name": "createFeeTier",
       "accounts": [
         {
@@ -1146,6 +1317,11 @@ export const IDL: Amm = {
     {
       "name": "swap",
       "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
         {
           "name": "pool",
           "isMut": true,
@@ -1674,6 +1850,72 @@ export const IDL: Amm = {
           "type": "i32"
         }
       ]
+    },
+    {
+      "name": "withdrawProtocolFee",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenX",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenY",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "feeTier",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "reserveX",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveY",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "accountX",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "accountY",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "programAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -1730,12 +1972,6 @@ export const IDL: Amm = {
           },
           {
             "name": "fee",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
-          {
-            "name": "protocolFee",
             "type": {
               "defined": "Decimal"
             }
@@ -1869,6 +2105,28 @@ export const IDL: Amm = {
           {
             "name": "head",
             "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "state",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "protocolFee",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "admin",
+            "type": "publicKey"
           },
           {
             "name": "bump",
@@ -2034,6 +2292,16 @@ export const IDL: Amm = {
       "code": 314,
       "name": "PositionWithoutLiquidity",
       "msg": "Position liquidity would be zero"
+    },
+    {
+      "code": 315,
+      "name": "Unauthorized",
+      "msg": "You are not admin"
+    },
+    {
+      "code": 316,
+      "name": "InvalidPoolTokenAddresses",
+      "msg": "Invalid pool token addresses"
     }
   ]
 };

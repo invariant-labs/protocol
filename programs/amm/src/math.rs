@@ -1,9 +1,9 @@
 use crate::uint::U256;
 
 use crate::decimal::{Decimal, MulUp};
-use crate::state::pool::Pool;
-use crate::state::tick::Tick;
-use crate::state::tickmap::MAX_TICK;
+use crate::structs::pool::Pool;
+use crate::structs::tick::Tick;
+use crate::structs::tickmap::MAX_TICK;
 use crate::*;
 
 #[derive(PartialEq, Debug)]

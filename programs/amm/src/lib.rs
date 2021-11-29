@@ -3,7 +3,7 @@ mod errors;
 mod instructions;
 mod interfaces;
 mod math;
-mod state;
+mod structs;
 mod uint;
 mod util;
 
@@ -11,9 +11,11 @@ use anchor_lang::prelude::*;
 use anchor_spl::token;
 
 use decimal::*;
+use errors::ErrorCode;
 use errors::*;
 use instructions::*;
 use math::*;
+use structs::State;
 use util::*;
 
 use instructions::claim_fee::ClaimFee;
@@ -25,6 +27,14 @@ const SEED: &str = "Invariant";
 pub mod amm {
     use super::*;
 
+    pub fn create_state(
+        ctx: Context<CreateState>,
+        bump: u8,
+        protocol_fee: Decimal,
+    ) -> ProgramResult {
+        instructions::create_state::handler(ctx, bump, protocol_fee)
+    }
+    //#[access_control(admin(&ctx.accounts.state, &ctx.accounts.payer))]
     pub fn create_fee_tier(
         ctx: Context<CreateFeeTier>,
         bump: u8,
@@ -133,4 +143,15 @@ pub mod amm {
             upper_tick_index,
         )
     }
+
+    #[access_control(admin(&ctx.accounts.state, &ctx.accounts.admin))]
+    pub fn withdraw_protocol_fee(ctx: Context<WithdrawProtocolFee>) -> ProgramResult {
+        instructions::withdraw_protocol_fee::handler(ctx, SEED)
+    }
+}
+
+fn admin(state_loader: &AccountLoader<State>, signer: &AccountInfo) -> Result<()> {
+    let state = state_loader.load()?;
+    require!(signer.key.eq(&state.admin), Unauthorized);
+    Ok(())
 }

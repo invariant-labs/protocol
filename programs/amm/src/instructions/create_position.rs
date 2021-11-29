@@ -1,9 +1,9 @@
 use crate::decimal::Decimal;
 use crate::interfaces::take_tokens::TakeTokens;
-use crate::state::pool::Pool;
-use crate::state::position::Position;
-use crate::state::position_list::PositionList;
-use crate::state::tick::Tick;
+use crate::structs::pool::Pool;
+use crate::structs::position::Position;
+use crate::structs::position_list::PositionList;
+use crate::structs::tick::Tick;
 use crate::util::check_ticks;
 use anchor_lang::prelude::*;
 use anchor_spl::token;
