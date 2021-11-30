@@ -37,8 +37,8 @@ pub fn handler(ctx: Context<CreateUserStake>, _index: i32, _bump: u8) -> Program
 
     let user_stake = &mut ctx.accounts.user_stake.load_init()?;
     let position = ctx.accounts.position.load()?;
-    let update_slot = position.last_slot as i64;
-    let slot = Clock::get()?.slot as i64;
+    let update_slot = position.last_slot as u64;
+    let slot = Clock::get()?.slot as u64;
     require!(slot == update_slot, SlotsAreNotEqual);
     {
         user_stake.position = *ctx.accounts.position.to_account_info().key;

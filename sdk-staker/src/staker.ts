@@ -93,7 +93,7 @@ export class Staker {
     )
   }
 
-  public async stakeInstruction({ pool, id, position, incentive, owner, index, amm }: createStake) {
+  public async stakeInstruction({ pool, id, position, incentive, owner, index, amm }: CreateStake) {
     const [userStakeAddress, userStakeBump] = await this.getUserStakeAddressAndBump(
       incentive,
       pool,
@@ -197,7 +197,7 @@ export interface CreateIncentive {
   founderTokenAcc: PublicKey
   amm: PublicKey
 }
-export interface createStake {
+export interface CreateStake {
   pool: PublicKey
   id: BN
   position: PublicKey

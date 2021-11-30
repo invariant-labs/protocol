@@ -74,8 +74,8 @@ pub fn handler(
     let position = ctx.accounts.position.load()?;
     let mut incentive = ctx.accounts.incentive.load_mut()?;
     let current_time = Clock::get().unwrap().unix_timestamp as u64;
-    let update_slot = position.last_slot as i64;
-    let slot = Clock::get()?.slot as i64;
+    let update_slot = position.last_slot as u64;
+    let slot = Clock::get()?.slot as u64;
     require!(slot == update_slot, SlotsAreNotEqual);
     require!(user_stake.liquidity.v != 0, ZeroSecondsStaked);
     require!(
