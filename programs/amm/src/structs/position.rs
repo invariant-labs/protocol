@@ -3,7 +3,6 @@ use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::*;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::clock::UnixTimestamp;
 
 #[account(zero_copy)]
 #[derive(PartialEq, Default, Debug)]
@@ -16,6 +15,8 @@ pub struct Position {
     pub upper_tick_index: i32,
     pub fee_growth_inside_x: Decimal,
     pub fee_growth_inside_y: Decimal,
+    pub seconds_per_liquidity_inside: Decimal,
+    pub last_slot: u64,
     pub tokens_owed_x: Decimal,
     pub tokens_owed_y: Decimal,
     pub bump: u8,

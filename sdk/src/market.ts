@@ -758,6 +758,43 @@ export class Market {
       }
     }) as TransactionInstruction
   }
+
+  async updateSecondsPerLiquidityInstruction({
+    pair,
+    owner,
+    lowerTickIndex,
+    upperTickIndex,
+    index
+  }: SecondsPerLiquidity) {
+    const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTickIndex)
+    const { tickAddress: upperTickAddress } = await this.getTickAddress(pair, upperTickIndex)
+    const poolAddress = await pair.getAddress(this.program.programId)
+    const { positionAddress: positionAddress, positionBump: bump } = await this.getPositionAddress(
+      owner,
+      index
+    )
+    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
+
+    return this.program.instruction.updateSecondsPerLiquidity(
+      feeTierAddress,
+      lowerTickIndex,
+      upperTickIndex,
+      index,
+      {
+        accounts: {
+          pool: poolAddress,
+          lowerTick: lowerTickAddress,
+          upperTick: upperTickAddress,
+          position: positionAddress,
+          tokenX: pair.tokenX,
+          tokenY: pair.tokenY,
+          owner,
+          rent: SYSVAR_RENT_PUBKEY,
+          systemProgram: SystemProgram.programId
+        }
+      }
+    ) as TransactionInstruction
+  }
 }
 
 export interface Decimal {
@@ -788,6 +825,7 @@ export interface Position {
   upperTickIndex: number
   feeGrowthInsideX: Decimal
   feeGrowthInsideY: Decimal
+  secondsPerLiquidityInside: Decimal
   tokensOwedX: Decimal
   tokensOwedY: Decimal
   bump: number
@@ -855,4 +893,12 @@ export interface Swap {
 
 export interface SwapTransaction extends Swap {
   owner: PublicKey
+}
+
+export interface SecondsPerLiquidity {
+  pair: Pair
+  owner: PublicKey
+  lowerTickIndex: number
+  upperTickIndex: number
+  index: number
 }

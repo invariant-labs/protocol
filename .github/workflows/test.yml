@@ -30,7 +30,13 @@ jobs:
             'npm run test:target',
             'npm run test:slippage',
             'npm run test:fee-tier',
-            'npm run test:timestamp'
+            'npm run test:timestamp',
+            'npm run test:create',
+            'npm run test:stake',
+            'npm run test:withdraw-staker',
+            'npm run test:end-incentive',
+            'npm run test:multicall'
+            
             'cargo test'
           ]
     steps:
