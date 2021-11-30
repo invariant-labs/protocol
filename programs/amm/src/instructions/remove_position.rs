@@ -110,6 +110,7 @@ pub fn handler(
     let removed_position = &mut ctx.accounts.removed_position.load_mut()?;
     let pool = &mut ctx.accounts.pool.load_mut()?;
     let tickmap = &mut ctx.accounts.tickmap.load_mut()?;
+    let current_timestamp = Clock::get()?.unix_timestamp as u64;
 
     // closing tick can't be in the same scope as loaded tick
     let close_lower;
@@ -122,8 +123,14 @@ pub fn handler(
         // validate ticks
         check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
         let liquidity_delta = removed_position.liquidity;
-        let (amount_x, amount_y) =
-            removed_position.modify(pool, upper_tick, lower_tick, liquidity_delta, false)?;
+        let (amount_x, amount_y) = removed_position.modify(
+            pool,
+            upper_tick,
+            lower_tick,
+            liquidity_delta,
+            false,
+            current_timestamp,
+        )?;
 
         let amount_x = amount_x + removed_position.tokens_owed_x.to_token_floor();
         let amount_y = amount_y + removed_position.tokens_owed_y.to_token_floor();

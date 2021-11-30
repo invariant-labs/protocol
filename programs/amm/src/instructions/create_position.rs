@@ -98,6 +98,7 @@ pub fn handler(
     let lower_tick = &mut ctx.accounts.lower_tick.load_mut()?;
     let upper_tick = &mut ctx.accounts.upper_tick.load_mut()?;
     let mut position_list = ctx.accounts.position_list.load_mut()?;
+    let current_timestamp = Clock::get()?.unix_timestamp as u64;
 
     // validate ticks
     check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
@@ -121,8 +122,14 @@ pub fn handler(
         bump: bump,
     };
 
-    let (amount_x, amount_y) =
-        position.modify(pool, upper_tick, lower_tick, liquidity_delta, true)?;
+    let (amount_x, amount_y) = position.modify(
+        pool,
+        upper_tick,
+        lower_tick,
+        liquidity_delta,
+        true,
+        current_timestamp,
+    )?;
 
     token::transfer(ctx.accounts.take_x(), amount_x)?;
     token::transfer(ctx.accounts.take_y(), amount_y)?;

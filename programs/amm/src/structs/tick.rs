@@ -12,6 +12,8 @@ pub struct Tick {
     pub sqrt_price: Decimal,
     pub fee_growth_outside_x: Decimal,
     pub fee_growth_outside_y: Decimal,
+    pub seconds_per_liquidity_outside: Decimal,
+    pub seconds_outside: u64,
     pub bump: u8,
 }
 

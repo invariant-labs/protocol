@@ -75,9 +75,21 @@ pub fn get_closer_limit(
     }
 }
 
-pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) {
+pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
     tick.fee_growth_outside_x = pool.fee_growth_global_x - tick.fee_growth_outside_x;
     tick.fee_growth_outside_y = pool.fee_growth_global_y - tick.fee_growth_outside_y;
+
+    let current_timestamp = Clock::get()?.unix_timestamp as u64;
+    let seconds_passed: u64 = (current_timestamp - pool.start_timestamp) as u64;
+    tick.seconds_outside = seconds_passed - tick.seconds_outside;
+
+    if pool.liquidity != Decimal::new(0) {
+        pool.update_seconds_per_liquidity_global(current_timestamp);
+    } else {
+        pool.last_timestamp = current_timestamp;
+    }
+    tick.seconds_per_liquidity_outside =
+        pool.seconds_per_liquidity_global - tick.seconds_per_liquidity_outside;
 
     // When going to higher tick net_liquidity should be added and for going lower subtracted
     if (pool.current_tick_index >= tick.index) ^ tick.sign {
@@ -85,6 +97,8 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) {
     } else {
         pool.liquidity = pool.liquidity - tick.liquidity_change;
     }
+
+    Ok(())
 }
 
 pub fn get_tick_from_price(
