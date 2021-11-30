@@ -29,7 +29,8 @@ jobs:
             'npm run test:protocol-fee',
             'npm run test:target',
             'npm run test:slippage',
-            'npm run test:fee-tier'
+            'npm run test:fee-tier',
+            'npm run test:timestamp'
             'cargo test'
           ]
     steps:

@@ -36,4 +36,6 @@ pub enum ErrorCode {
     Unauthorized = 15, // 13b
     #[msg("Invalid pool token addresses")]
     InvalidPoolTokenAddresses = 16, // 13c
+    #[msg("Time cannot be negative")]
+    NegativeTime = 17,
 }

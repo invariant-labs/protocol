@@ -1,6 +1,7 @@
 use crate::decimal::Decimal;
 use crate::*;
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::clock::UnixTimestamp;
 
 #[account(zero_copy)]
 #[derive(PartialEq, Default, Debug)]
@@ -20,6 +21,9 @@ pub struct Pool {
     pub fee_growth_global_y: Decimal,
     pub fee_protocol_token_x: Decimal,
     pub fee_protocol_token_y: Decimal,
+    pub seconds_per_liquidity_global: Decimal,
+    pub start_timestamp: u64,
+    pub last_timestamp: u64,
     pub bump: u8,
     pub nonce: u8,
     pub authority: Pubkey,
@@ -53,6 +57,14 @@ impl Pool {
         };
 
         Ok(())
+    }
+
+    pub fn update_seconds_per_liquidity_global(self: &mut Self, current_timestamp: u64) {
+        self.seconds_per_liquidity_global = self.seconds_per_liquidity_global
+            + (Decimal::from_integer((current_timestamp - self.last_timestamp) as u128)
+                / self.liquidity);
+
+        self.last_timestamp = current_timestamp;
     }
 }
 

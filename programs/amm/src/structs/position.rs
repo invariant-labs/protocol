@@ -3,6 +3,7 @@ use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::*;
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::clock::UnixTimestamp;
 
 #[account(zero_copy)]
 #[derive(PartialEq, Default, Debug)]
@@ -28,7 +29,14 @@ impl Position {
         lower_tick: &mut Tick,
         liquidity_delta: Decimal,
         add: bool,
+        current_timestamp: u64,
     ) -> Result<(u64, u64)> {
+        if pool.liquidity != Decimal::new(0) {
+            pool.update_seconds_per_liquidity_global(current_timestamp);
+        } else {
+            pool.last_timestamp = current_timestamp;
+        }
+
         // update initialized tick
         lower_tick.update(
             pool.current_tick_index,
