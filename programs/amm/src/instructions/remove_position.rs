@@ -176,6 +176,8 @@ pub fn handler(
             upper_tick_index: last_position.upper_tick_index,
             fee_growth_inside_x: last_position.fee_growth_inside_x,
             fee_growth_inside_y: last_position.fee_growth_inside_y,
+            seconds_per_liquidity_inside: last_position.seconds_per_liquidity_inside,
+            last_slot: last_position.last_slot,
             tokens_owed_x: last_position.tokens_owed_x,
             tokens_owed_y: last_position.tokens_owed_y,
         };
