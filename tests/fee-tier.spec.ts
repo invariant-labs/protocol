@@ -29,21 +29,21 @@ describe("fee-tier", () => {
         fee: fromFee(new BN(700)),
         tickSpacing: 10
     }
-    const protocolFee: Decimal = { v: fromFee(new BN(10000))}
+    const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
 
     before(async () => {
         await Promise.all([
             await connection.requestAirdrop(admin.publicKey, 1e10),
             await connection.requestAirdrop(user.publicKey, 1e10)
         ])
-        
+
     })
 
     it('#createState()', async () => {
         await sleep(1000)
         await market.createState(admin, protocolFee)
     })
-    
+
     it('#createFeeTier()', async () => {
         await sleep(1000)
         await market.createFeeTier(feeTierAdmin, admin)

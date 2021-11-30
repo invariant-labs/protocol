@@ -107,7 +107,7 @@ export class Market {
 
     const bitmapKeypair = Keypair.generate()
 
-    await this.program.rpc.create(bump, nonce, tick, fee, ts, {
+    await this.program.rpc.createPool(bump, nonce, tick, fee, ts, {
       accounts: {
         pool: poolAddress,
         feeTier: feeTierAddress,
@@ -285,7 +285,6 @@ export class Market {
 
     return await this.program.instruction.createFeeTier(bump, fee, ts, {
       accounts: {
-        state: stateAddress,
         feeTier: address,
         payer,
         rent: SYSVAR_RENT_PUBKEY,
@@ -407,7 +406,7 @@ export class Market {
     const poolAddress = await pair.getAddress(this.program.programId)
     const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
 
-    return this.program.instruction.initPosition(
+    return this.program.instruction.createPosition(
       positionBump,
       feeTierAddress,
       lowerTick,

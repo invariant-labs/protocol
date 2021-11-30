@@ -1,7 +1,7 @@
 import { assert } from 'chai'
 import { BN } from '@project-serum/anchor'
 import { calculate_price_sqrt, DENOMINATOR, TICK_LIMIT } from '@invariant-labs/sdk'
-import { getLiquidityByX, getLiquidityByY } from '@invariant-labs/sdk/src/tick'
+import { getLiquidityByX, getLiquidityByY } from '@invariant-labs/sdk/src/math'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { calculatePriceAfterSlippage, findClosestTicks } from '@invariant-labs/sdk/src/math'
 import { setInitialized } from './testUtils'
