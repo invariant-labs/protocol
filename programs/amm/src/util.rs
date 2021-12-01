@@ -131,6 +131,7 @@ pub fn price_to_tick_in_range(price: Decimal, low: i32, high: i32, step: i32) ->
         if val < target_value {
             low = mid;
         }
+        let a = 100u128;
 
         if val > target_value {
             high = mid;
@@ -138,7 +139,43 @@ pub fn price_to_tick_in_range(price: Decimal, low: i32, high: i32, step: i32) ->
     }
     low.checked_mul(step).unwrap()
 }
-
+pub const fn log10(mut val: u128) -> u32 {
+    let mut log = 0;
+    if val >= 100_000_000_000_000_000_000_000_000_000_000 {
+        val /= 100_000_000_000_000_000_000_000_000_000_000;
+        log += 32;
+        return log + less_than_8(val as u32);
+    }
+    if val >= 10_000_000_000_000_000 {
+        val /= 10_000_000_000_000_000;
+        log += 16;
+    }
+    log + less_than_16(val as u64)
+}
+const fn less_than_16(mut val: u64) -> u32 {
+    let mut log = 0;
+    if val >= 100_000_000 {
+        val /= 100_000_000;
+        log += 8;
+    }
+    log + less_than_8(val as u32)
+}
+const fn less_than_8(mut val: u32) -> u32 {
+    let mut log = 0;
+    if val >= 10_000 {
+        val /= 10_000;
+        log += 4;
+    }
+    log + if val >= 1000 {
+        3
+    } else if val >= 100 {
+        2
+    } else if val >= 10 {
+        1
+    } else {
+        0
+    }
+}
 pub fn close<'info>(
     info: AccountInfo<'info>,
     sol_destination: AccountInfo<'info>,
@@ -164,41 +201,72 @@ mod test {
     use super::*;
 
     #[test]
+    fn test_log10() {
+        use std::time::Instant;
+        let now = Instant::now();
+        let target_tick = 0xFFFF;
+        let mut a = 100_000;
+
+        while a > 0 {
+            a -= 1;
+            let c = calculate_price_sqrt(target_tick).v;
+            let b = log10(c);
+        }
+        let a = calculate_price_sqrt(target_tick).v;
+        let b = log10(a);
+        println!("{}", b);
+        let elapsed = now.elapsed();
+        println!("Elapsed: {:.2?}", elapsed);
+    }
+    #[test]
     fn test_price_to_tick_in_range() {
         // Exact
         {
+            use std::time::Instant;
+            let now = Instant::now();
+            let mut a = 100_000;
+            let target_tick = 0xFFFF;
+
+            while a > 0 {
+                a -= 1;
+                price_to_tick_in_range(calculate_price_sqrt(target_tick), 0, 8, 2);
+            }
             let target_tick = 4;
             let result = price_to_tick_in_range(calculate_price_sqrt(target_tick), 0, 8, 2);
+
+            println!("{}", result);
+            let elapsed = now.elapsed();
+            println!("Elapsed: {:.2?}", elapsed);
             assert_eq!(result, target_tick);
         }
-        // Between
-        {
-            let target_tick = 4;
-            let target_price = calculate_price_sqrt(target_tick) + Decimal::new(1);
-            let result = price_to_tick_in_range(target_price, 0, 8, 2);
-            assert_eq!(result, target_tick);
-        }
-        // Big step
-        {
-            let target_tick = 50;
-            let target_price = calculate_price_sqrt(target_tick) + Decimal::new(1);
-            let result = price_to_tick_in_range(target_price, 0, 200, 50);
-            assert_eq!(result, target_tick);
-        }
-        // Big range
-        {
-            let target_tick = 1234;
-            let target_price = calculate_price_sqrt(target_tick);
-            let result = price_to_tick_in_range(target_price, 0, 100_000, 2);
-            assert_eq!(result, target_tick);
-        }
-        // Negative
-        {
-            let target_tick = -50;
-            let target_price = calculate_price_sqrt(target_tick) + Decimal::new(1);
-            let result = price_to_tick_in_range(target_price, -200, 100, 2);
-            assert_eq!(result, target_tick);
-        }
+        // // Between
+        // {
+        //     let target_tick = 4;
+        //     let target_price = calculate_price_sqrt(target_tick) + Decimal::new(1);
+        //     let result = price_to_tick_in_range(target_price, 0, 8, 2);
+        //     assert_eq!(result, target_tick);
+        // }
+        // // Big step
+        // {
+        //     let target_tick = 50;
+        //     let target_price = calculate_price_sqrt(target_tick) + Decimal::new(1);
+        //     let result = price_to_tick_in_range(target_price, 0, 200, 50);
+        //     assert_eq!(result, target_tick);
+        // }
+        // // Big range
+        // {
+        //     let target_tick = 1234;
+        //     let target_price = calculate_price_sqrt(target_tick);
+        //     let result = price_to_tick_in_range(target_price, 0, 100_000, 2);
+        //     assert_eq!(result, target_tick);
+        // }
+        // // Negative
+        // {
+        //     let target_tick = -50;
+        //     let target_price = calculate_price_sqrt(target_tick) + Decimal::new(1);
+        //     let result = price_to_tick_in_range(target_price, -200, 100, 2);
+        //     assert_eq!(result, target_tick);
+        // }
     }
 
     #[test]
