@@ -7,7 +7,7 @@ use anchor_lang::solana_program::system_program;
 #[instruction(bump: u8)]
 pub struct CreateState<'info> {
     #[account(init, seeds = [b"statev1".as_ref()], bump = bump, payer = admin)]
-    pub state: Loader<'info, State>,
+    pub state: AccountLoader<'info, State>,
     #[account(mut)]
     pub admin: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,

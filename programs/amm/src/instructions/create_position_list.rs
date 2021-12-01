@@ -1,5 +1,6 @@
 use crate::structs::position_list::PositionList;
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::system_program;
 
 #[derive(Accounts)]
 #[instruction(bump: u8)]
@@ -9,10 +10,11 @@ pub struct CreatePositionList<'info> {
         bump = bump,
         payer = owner
     )]
-    pub position_list: Loader<'info, PositionList>,
+    pub position_list: AccountLoader<'info, PositionList>,
     #[account(mut, signer)]
     pub owner: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
+    #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }
 

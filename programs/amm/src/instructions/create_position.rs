@@ -6,6 +6,7 @@ use crate::structs::position_list::PositionList;
 use crate::structs::tick::Tick;
 use crate::util::check_ticks;
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::system_program;
 use anchor_spl::token;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
@@ -18,29 +19,29 @@ pub struct CreatePosition<'info> {
         &position_list.load()?.head.to_le_bytes()],
         bump = bump, payer = owner,
     )]
-    pub position: Loader<'info, Position>,
+    pub position: AccountLoader<'info, Position>,
     #[account(mut,
         seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
         bump = pool.load()?.bump
     )]
-    pub pool: Loader<'info, Pool>,
+    pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
         seeds = [b"positionlistv1", owner.to_account_info().key.as_ref()],
         bump = position_list.load()?.bump
     )]
-    pub position_list: Loader<'info, PositionList>,
+    pub position_list: AccountLoader<'info, PositionList>,
     #[account(mut, signer)]
     pub owner: AccountInfo<'info>,
     #[account(mut,
         seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &lower_tick_index.to_le_bytes()],
         bump = lower_tick.load()?.bump
     )]
-    pub lower_tick: Loader<'info, Tick>,
+    pub lower_tick: AccountLoader<'info, Tick>,
     #[account(mut,
         seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &upper_tick_index.to_le_bytes()],
         bump = upper_tick.load()?.bump
     )]
-    pub upper_tick: Loader<'info, Tick>,
+    pub upper_tick: AccountLoader<'info, Tick>,
     #[account(mut)]
     pub token_x: Account<'info, Mint>,
     #[account(mut)]
@@ -56,6 +57,7 @@ pub struct CreatePosition<'info> {
     pub program_authority: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
+    #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }
 

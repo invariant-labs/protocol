@@ -1,6 +1,7 @@
 use crate::structs::position::Position;
 use crate::structs::position_list::PositionList;
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::system_program;
 
 #[derive(Accounts)]
 #[instruction(bump: u8, index: u32)]
@@ -9,27 +10,27 @@ pub struct TransferPositionOwnership<'info> {
         seeds = [b"positionlistv1", owner.to_account_info().key.as_ref()],
         bump = owner_list.load()?.bump
     )]
-    pub owner_list: Loader<'info, PositionList>,
+    pub owner_list: AccountLoader<'info, PositionList>,
     #[account(mut,
         seeds = [b"positionlistv1", recipient.to_account_info().key.as_ref()],
         bump = recipient_list.load()?.bump,
         constraint = recipient_list.to_account_info().key != owner_list.to_account_info().key
     )]
-    pub recipient_list: Loader<'info, PositionList>,
+    pub recipient_list: AccountLoader<'info, PositionList>,
     #[account(init,
         seeds = [b"positionv1",
         recipient.to_account_info().key.as_ref(),
         &recipient_list.load()?.head.to_le_bytes()],
         bump = bump, payer = owner,
     )]
-    pub new_position: Loader<'info, Position>,
+    pub new_position: AccountLoader<'info, Position>,
     #[account(mut,
         seeds = [b"positionv1",
         owner.to_account_info().key.as_ref(),
         &index.to_le_bytes()],
         bump = removed_position.load()?.bump,
     )]
-    pub removed_position: Loader<'info, Position>,
+    pub removed_position: AccountLoader<'info, Position>,
     #[account(mut,
         close = owner,
         seeds = [b"positionv1",
@@ -37,11 +38,12 @@ pub struct TransferPositionOwnership<'info> {
         &(owner_list.load()?.head - 1).to_le_bytes()],
         bump = last_position.load()?.bump
     )]
-    pub last_position: Loader<'info, Position>,
+    pub last_position: AccountLoader<'info, Position>,
     #[account(mut, signer)]
     pub owner: AccountInfo<'info>,
     pub recipient: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
+    #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }
 

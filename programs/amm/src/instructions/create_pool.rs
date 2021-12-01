@@ -6,6 +6,7 @@ use crate::structs::fee_tier::FeeTier;
 use crate::structs::pool::Pool;
 use crate::structs::tickmap::Tickmap;
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::system_program;
 
 #[derive(Accounts)]
 #[instruction(bump: u8, nonce: u8, init_tick: i32, fee: u64, tick_spacing: u16)]
@@ -14,14 +15,14 @@ pub struct CreatePool<'info> {
         seeds = [b"poolv1", fee_tier.to_account_info().key.as_ref(), token_x.key.as_ref(), token_y.key.as_ref()],
         bump = bump, payer = payer
     )]
-    pub pool: Loader<'info, Pool>,
+    pub pool: AccountLoader<'info, Pool>,
     #[account(
         seeds = [b"feetierv1", program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()],
         bump = fee_tier.load()?.bump
     )]
-    pub fee_tier: Loader<'info, FeeTier>,
+    pub fee_tier: AccountLoader<'info, FeeTier>,
     #[account(zero)]
-    pub tickmap: Loader<'info, Tickmap>,
+    pub tickmap: AccountLoader<'info, Tickmap>,
     pub token_x: AccountInfo<'info>,
     pub token_y: AccountInfo<'info>,
     pub token_x_reserve: AccountInfo<'info>,
@@ -30,6 +31,7 @@ pub struct CreatePool<'info> {
     #[account(mut, signer)]
     pub payer: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
+    #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }
 

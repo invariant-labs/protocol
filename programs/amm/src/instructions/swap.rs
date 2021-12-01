@@ -15,14 +15,14 @@ use anchor_spl::token::{Mint, TokenAccount, Transfer};
 #[instruction(fee_tier_address: Pubkey)]
 pub struct Swap<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
-    pub state: Loader<'info, State>,
+    pub state: AccountLoader<'info, State>,
     #[account(mut, seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()], bump = pool.load()?.bump)]
-    pub pool: Loader<'info, Pool>,
+    pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
         constraint = tickmap.to_account_info().key == &pool.load()?.tickmap,
         constraint = tickmap.to_account_info().owner == program_id,
     )]
-    pub tickmap: Loader<'info, Tickmap>,
+    pub tickmap: AccountLoader<'info, Tickmap>,
     pub token_x: Account<'info, Mint>,
     pub token_y: Account<'info, Mint>,
     #[account(mut,

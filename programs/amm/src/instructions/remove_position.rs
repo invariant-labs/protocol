@@ -22,12 +22,12 @@ pub struct RemovePosition<'info> {
         &index.to_le_bytes()],
         bump = removed_position.load()?.bump
     )]
-    pub removed_position: Loader<'info, Position>,
+    pub removed_position: AccountLoader<'info, Position>,
     #[account(mut,
         seeds = [b"positionlistv1", owner.to_account_info().key.as_ref()],
         bump = position_list.load()?.bump
     )]
-    pub position_list: Loader<'info, PositionList>,
+    pub position_list: AccountLoader<'info, PositionList>,
     #[account(mut,
         close = owner,
         seeds = [b"positionv1",
@@ -35,27 +35,27 @@ pub struct RemovePosition<'info> {
         &(position_list.load()?.head - 1).to_le_bytes()],
         bump = last_position.load()?.bump
     )]
-    pub last_position: Loader<'info, Position>,
+    pub last_position: AccountLoader<'info, Position>,
     #[account(mut,
         seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
         bump = pool.load()?.bump
     )]
-    pub pool: Loader<'info, Pool>,
+    pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
         constraint = tickmap.to_account_info().key == &pool.load()?.tickmap,
         constraint = tickmap.to_account_info().owner == program_id,
     )]
-    pub tickmap: Loader<'info, Tickmap>,
+    pub tickmap: AccountLoader<'info, Tickmap>,
     #[account(mut,
         seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &lower_tick_index.to_le_bytes()],
         bump = lower_tick.load()?.bump
     )]
-    pub lower_tick: Loader<'info, Tick>,
+    pub lower_tick: AccountLoader<'info, Tick>,
     #[account(mut,
         seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &upper_tick_index.to_le_bytes()],
         bump = upper_tick.load()?.bump
     )]
-    pub upper_tick: Loader<'info, Tick>,
+    pub upper_tick: AccountLoader<'info, Tick>,
 
     #[account(mut)]
     pub token_x: Account<'info, Mint>,

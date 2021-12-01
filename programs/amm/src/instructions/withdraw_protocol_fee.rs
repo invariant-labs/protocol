@@ -10,7 +10,7 @@ pub struct WithdrawProtocolFee<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
     #[account(mut, seeds = [b"poolv1", fee_tier.key.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()], bump = pool.load()?.bump)]
-    pub pool: Loader<'info, Pool>,
+    pub pool: AccountLoader<'info, Pool>,
     pub token_x: Account<'info, Mint>,
     pub token_y: Account<'info, Mint>,
     pub fee_tier: AccountInfo<'info>,
