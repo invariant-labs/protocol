@@ -8,7 +8,7 @@ export const MAX_TICK = 221_818
 export const MIN_TICK = -MAX_TICK
 export const TICK_SEARCH_RANGE = 256
 
-interface SwapResult {
+export interface SwapResult {
   nextPrice: Decimal,
   amountIn: Decimal,
   amountOut: Decimal,
@@ -105,14 +105,13 @@ fee: Decimal): SwapResult => {
   let feeAmount: Decimal
 
   if (byAmountIn) {
-    const amountAfterFee: Decimal = {v: fromInteger(1).v.sub(fee.v).mul(amount.v)}
+    const amountAfterFee: Decimal = {v: fromInteger(1).v.sub(fee.v).mul(amount.v).div(DENOMINATOR)}
 
     if (aToB) {
       amountIn = getDeltaX(targetPrice, currentPrice, liquidity, true)
     } else {
       amountIn = getDeltaY(targetPrice, currentPrice, liquidity, true)
     }
-
     if (amountAfterFee.v.gte(amountIn.v)) {
       nextPrice = targetPrice
     } else {
@@ -124,7 +123,7 @@ fee: Decimal): SwapResult => {
     } else {
       amountOut = getDeltaX(currentPrice, targetPrice, liquidity, false)
     }
-
+    
     if (amount.v.gte(amountOut.v)) {
       nextPrice = targetPrice
     } else {
@@ -157,7 +156,7 @@ fee: Decimal): SwapResult => {
   if (byAmountIn && !nextPrice.v.eq(targetPrice.v)) {
     feeAmount = {v: amount.v.sub(amountIn.v)}
   } else {
-    feeAmount = {v: amountIn.v.mul(fee.v).add(DENOMINATOR.subn(1)).sub(DENOMINATOR)}
+    feeAmount = {v: amountIn.v.mul(fee.v).add(DENOMINATOR.subn(1)).div(DENOMINATOR)}
   }
 
   return {

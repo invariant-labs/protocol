@@ -9,9 +9,10 @@ import {
   Transaction
 } from '@solana/web3.js'
 import { expect } from 'chai'
-import { calculate_price_sqrt, fromInteger, Market, Pair } from '.'
+import { calculate_price_sqrt, fromInteger, Pair } from '.'
+import { Market } from '.'
 import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap, Tick } from './market'
-import { calculatePriceAfterSlippage, calculateSwapStep } from './math'
+import { calculatePriceAfterSlippage, calculateSwapStep, SwapResult } from './math'
 import { getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
 
@@ -55,7 +56,7 @@ export enum INVARIANT_ERRORS {
 export interface SimulateSwapPrice {
   xToY: boolean
   byAmountIn: boolean
-  swapAmount: number
+  swapAmount: BN
   currentPrice: Decimal
   slippage: Decimal
   tickmap: Tickmap
@@ -177,21 +178,21 @@ export const simulateSwapPrice = (swapParameters: SimulateSwapPrice): Decimal =>
   const {xToY, byAmountIn, swapAmount, slippage, tickmap, pool, market, pair} = swapParameters
   let {currentTickIndex, tickSpacing, liquidity, fee} = pool
   const priceLimit = calculatePriceAfterSlippage(pool.sqrtPrice, slippage, !xToY)
-
   if (xToY) {
-    if (pool.sqrtPrice.v.gt(priceLimit.v)) {
-      throw new Error("Price limit is on the wrong side of price")
-    }
-  } else {
     if (pool.sqrtPrice.v.lt(priceLimit.v)) {
       throw new Error("Price limit is on the wrong side of price")
     }
+  } else {
+    if (pool.sqrtPrice.v.gt(priceLimit.v)) {
+      throw new Error("Price limit is on the wrong side of price")
+    }
   }
+  let remainingAmount: Decimal = {v: swapAmount.mul(DENOMINATOR)}
+  let totalAmountIn: Decimal = {v: new BN(0)}
+  let totalAmountOut: Decimal = {v: new BN(0)}
+  let totalFee: Decimal = {v: new BN(0)}
 
-  let remainingAmount = fromInteger(swapAmount)
-  let amountWeightedPriceAccumulator: Decimal = {v: new BN(0)}
-
-  while (!remainingAmount.v.eqn(0)) {
+  while (!remainingAmount.v.lte(new BN(0))) {
     let closestTickIndex: number
     if (xToY) {
       closestTickIndex = getPreviousTick(tickmap, currentTickIndex, tickSpacing)
@@ -223,16 +224,18 @@ export const simulateSwapPrice = (swapParameters: SimulateSwapPrice): Decimal =>
         closerLimit = [priceLimit, [null, null]]
       }
     }
-
     const result = calculateSwapStep(pool.sqrtPrice, closerLimit[0], liquidity, remainingAmount, byAmountIn, fee)
+    totalAmountIn = {v: totalAmountIn.v.add(result.amountIn.v)}
+    totalAmountOut = {v: totalAmountOut.v.add(result.amountOut.v)}
+    totalFee = {v: totalFee.v.add(result.feeAmount.v)}
 
     let amountDiff: Decimal
     if (byAmountIn) {
-      amountDiff = {v: remainingAmount.v.sub(result.amountIn.v).sub(result.feeAmount.v)}
+      amountDiff = {v: result.amountIn.v.add(result.feeAmount.v)}
     } else {
-      amountDiff = {v: remainingAmount.v.sub(result.amountOut.v)}
+      amountDiff = {v: result.amountOut.v}
     }
-    amountWeightedPriceAccumulator = {v: amountWeightedPriceAccumulator.v.add(pool.sqrtPrice.v.mul(amountDiff.v).div(DENOMINATOR))}
+    
     remainingAmount = {v: remainingAmount.v.sub(amountDiff.v)}
 
     pool.sqrtPrice = result.nextPrice
@@ -264,8 +267,7 @@ export const simulateSwapPrice = (swapParameters: SimulateSwapPrice): Decimal =>
     }
 
   }
-
-  return {v: amountWeightedPriceAccumulator.v.mul(DENOMINATOR).divn(swapAmount)}
+  return {v: totalAmountOut.v.mul(DENOMINATOR).div(totalAmountIn.v)}
 }
 export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
   let indexOfTickBelow = -1

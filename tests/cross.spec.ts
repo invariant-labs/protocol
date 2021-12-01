@@ -7,7 +7,7 @@ import { createToken } from './testUtils'
 import { Market, Pair, SEED, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@invariant-labs/sdk'
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { toDecimal } from '@invariant-labs/sdk/src/utils'
+import { simulateSwapPrice, SimulateSwapPrice, toDecimal } from '@invariant-labs/sdk/src/utils'
 
 describe('cross', () => {
   const provider = Provider.local()
@@ -203,5 +203,22 @@ describe('cross', () => {
     assert.ok(upperTickData.feeGrowthOutsideX.v.eqn(0))
     assert.ok(middleTickData.feeGrowthOutsideX.v.eqn(2700540))
     assert.ok(lowerTickData.feeGrowthOutsideX.v.eqn(0))
+
+    //Mean price
+    const simulateSwapPriceParameters: SimulateSwapPrice = {
+      xToY: true,
+      byAmountIn: true,
+      swapAmount: amount,
+      currentPrice: poolDataBefore.sqrtPrice,
+      slippage: toDecimal(1, 2),
+      tickmap: await market.getTickmap(pair),
+      pool: await market.get(pair),
+      market: market,
+      pair: pair
+    }
+    const meanPrice: Decimal = simulateSwapPrice(simulateSwapPriceParameters)
+
+    console.log(meanPrice.v.toString())
+    console.log()
   })
 })

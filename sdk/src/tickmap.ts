@@ -10,12 +10,12 @@ export const getSearchLimit = (currentTickIndex: number, tickSpacing: number, up
     if (up) {
         return Math.min(Math.min(TICK_LIMIT - 1, index + TICK_SEARCH_RANGE), MAX_TICK / tickSpacing) * tickSpacing
     } else {
-        return Math.max(Math.max(-TICK_LIMIT + 1, index - TICK_SEARCH_RANGE), -MAX_TICK / tickSpacing) * tickSpacing
+        return Math.max(Math.max((-TICK_LIMIT) + 1, index - TICK_SEARCH_RANGE), (-MAX_TICK) / tickSpacing) * tickSpacing
     }
 }
 
 export const getPreviousTick = (tickmap: Tickmap, currentTickIndex: number, tickSpacing: number): number => {
-    if (currentTickIndex % tickSpacing != 0) {
+    if (currentTickIndex % tickSpacing !== 0) {
       throw new Error("Tick not divisible by spacing")
     }
   
@@ -23,17 +23,17 @@ export const getPreviousTick = (tickmap: Tickmap, currentTickIndex: number, tick
     let bitmapIndex = indexWithoutSpacing + TICK_LIMIT
     let limit = getSearchLimit(currentTickIndex, tickSpacing, false) + TICK_LIMIT
   
-    let byteIndex = bitmapIndex / 8
+    let byteIndex = Math.floor(bitmapIndex / 8)
     let bitIndex = Math.abs(bitmapIndex % 8)
   
     while (byteIndex * 8 + bitIndex >= limit) {
       let mask = 1 << bitIndex
       let byte = tickmap.bitmap[byteIndex]
-  
+     // console.log("###", byte, " ", mask)
       if (byte % (mask << 1) > 0) {
-        while ((byte & mask) == 0) {
-          mask >>= 1
-          bitIndex -= 1
+        while ((byte & mask) === 0) {
+          mask = mask >> 1
+          bitIndex = bitIndex - 1
         }
   
         let index = byteIndex * 8 + bitIndex
@@ -51,7 +51,6 @@ export const getPreviousTick = (tickmap: Tickmap, currentTickIndex: number, tick
       byteIndex -= 1
       bitIndex = 7
     }
-  
     return null
   }
   

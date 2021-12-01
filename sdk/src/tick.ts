@@ -25,12 +25,12 @@ export const getTickFromPrice = (currentTick: number, tickSpacing: number, price
 const priceToTickInRange = (price: Decimal, low: number, high: number, step: number): number => {
   assert.ok(step != 0)
 
-  low = low / step
-  high = high / step
+  low = Math.floor(low / step)
+  high = Math.floor(high / step)
   let targetValue = price
 
   while (high - low > 1) {
-    let mid = (high - low) / 2 + low
+    let mid = Math.floor((high - low) / 2) + low
     let val = calculate_price_sqrt(mid * step)
 
     if (val.v.eq(targetValue.v)) {
