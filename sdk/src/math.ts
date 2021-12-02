@@ -352,6 +352,37 @@ const calculateX = (nominator: BN, denominator: BN, liquidity: BN, roundingUp: b
   return common.div(DENOMINATOR)
 }
 
+export const getX = (liquidity: BN, upperSqrtPrice: BN, currentSqrtPrice: BN): BN => {
+  if (upperSqrtPrice.lte(new BN(0)) || currentSqrtPrice.lte(new BN(0))) {
+    throw new Error("Price cannot be 0")
+  }
+  if (upperSqrtPrice.lt(currentSqrtPrice)) {
+    throw new Error("Upper tick price cannot be lower than current tick price")
+  }
+
+  if (upperSqrtPrice.eq(currentSqrtPrice)) {
+    return new BN(0)
+  }
+
+  const denominator = currentSqrtPrice.mul(upperSqrtPrice).div(DENOMINATOR)
+  const nominator = upperSqrtPrice.sub(currentSqrtPrice)
+
+  return liquidity.mul(nominator).div(denominator)
+}
+
+export const getY = (liquidity: BN, currentSqrtPrice: BN, lowerSqrtPrice: BN): BN => {
+  if (lowerSqrtPrice.lte(new BN(0)) || currentSqrtPrice.lte(new BN(0))) {
+    throw new Error("Price cannot be 0")
+  }
+  if (lowerSqrtPrice.gt(currentSqrtPrice)) {
+    throw new Error("Upper tick price cannot be lower than current tick price")
+  }
+
+  const differece = currentSqrtPrice.sub(lowerSqrtPrice)
+
+  return liquidity.mul(differece).div(DENOMINATOR)
+}
+
 export const getLiquidityByX = (
   x: BN,
   lowerTick: number,
