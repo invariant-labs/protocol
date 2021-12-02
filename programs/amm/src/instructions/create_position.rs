@@ -30,8 +30,8 @@ pub struct CreatePosition<'info> {
         bump = position_list.load()?.bump
     )]
     pub position_list: AccountLoader<'info, PositionList>,
-    #[account(mut, signer)]
-    pub owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub owner: Signer<'info>,
     #[account(mut,
         seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &lower_tick_index.to_le_bytes()],
         bump = lower_tick.load()?.bump
@@ -68,7 +68,7 @@ impl<'info> TakeTokens<'info> for CreatePosition<'info> {
             Transfer {
                 from: self.account_x.to_account_info(),
                 to: self.reserve_x.to_account_info(),
-                authority: self.owner.clone(),
+                authority: self.owner.to_account_info().clone(),
             },
         )
     }
@@ -79,7 +79,7 @@ impl<'info> TakeTokens<'info> for CreatePosition<'info> {
             Transfer {
                 from: self.account_y.to_account_info(),
                 to: self.reserve_y.to_account_info(),
-                authority: self.owner.clone(),
+                authority: self.owner.to_account_info().clone(),
             },
         )
     }

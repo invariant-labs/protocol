@@ -14,8 +14,8 @@ use anchor_spl::token::{Mint, TokenAccount, Transfer};
 #[derive(Accounts)]
 #[instruction(fee_tier_address: Pubkey, index: i32, lower_tick_index: i32, upper_tick_index: i32)]
 pub struct RemovePosition<'info> {
-    #[account(mut, signer)]
-    pub owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub owner: Signer<'info>,
     #[account(mut,
         seeds = [b"positionv1",
         owner.to_account_info().key.as_ref(),

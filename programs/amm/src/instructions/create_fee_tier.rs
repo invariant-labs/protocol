@@ -11,8 +11,8 @@ pub struct CreateFeeTier<'info> {
         bump = bump, payer = payer
     )]
     pub fee_tier: AccountLoader<'info, FeeTier>,
-    #[account(mut, signer)]
-    pub payer: AccountInfo<'info>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,

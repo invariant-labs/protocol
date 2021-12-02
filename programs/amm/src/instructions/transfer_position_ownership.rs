@@ -39,8 +39,8 @@ pub struct TransferPositionOwnership<'info> {
         bump = last_position.load()?.bump
     )]
     pub last_position: AccountLoader<'info, Position>,
-    #[account(mut, signer)]
-    pub owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub owner: Signer<'info>,
     pub recipient: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]

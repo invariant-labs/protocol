@@ -28,8 +28,8 @@ pub struct CreatePool<'info> {
     pub token_x_reserve: AccountInfo<'info>,
     pub token_y_reserve: AccountInfo<'info>,
     pub program_authority: AccountInfo<'info>,
-    #[account(mut, signer)]
-    pub payer: AccountInfo<'info>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,

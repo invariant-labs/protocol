@@ -23,8 +23,8 @@ pub struct CreateTick<'info> {
         constraint = tickmap.to_account_info().owner == program_id,
     )]
     pub tickmap: AccountLoader<'info, Tickmap>,
-    #[account(mut, signer)]
-    pub payer: AccountInfo<'info>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
     pub token_x: AccountInfo<'info>,
     pub token_y: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,

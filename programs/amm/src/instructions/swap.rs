@@ -41,8 +41,8 @@ pub struct Swap<'info> {
         constraint = &account_y.mint == token_y.to_account_info().key
     )]
     pub account_y: Box<Account<'info, TokenAccount>>,
-    #[account(signer)]
-    pub owner: AccountInfo<'info>,
+    #[account()]
+    pub owner: Signer<'info>,
     pub program_authority: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
 }
@@ -54,7 +54,7 @@ impl<'info> TakeTokens<'info> for Swap<'info> {
             Transfer {
                 from: self.account_x.to_account_info(),
                 to: self.reserve_x.to_account_info(),
-                authority: self.owner.clone(),
+                authority: self.owner.to_account_info().clone(),
             },
         )
     }
@@ -65,7 +65,7 @@ impl<'info> TakeTokens<'info> for Swap<'info> {
             Transfer {
                 from: self.account_y.to_account_info(),
                 to: self.reserve_y.to_account_info(),
-                authority: self.owner.clone(),
+                authority: self.owner.to_account_info().clone(),
             },
         )
     }
@@ -196,7 +196,7 @@ pub fn handler(
                 let mut tick = loader.load_mut().unwrap();
 
                 // crossing tick
-                cross_tick(&mut tick, &mut pool);
+                cross_tick(&mut tick, &mut pool)?;
             }
 
             // set tick to limit (below if price is going down, because current tick is below price)
