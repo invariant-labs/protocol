@@ -43,6 +43,7 @@ pub fn handler(
     let mut tick = ctx.accounts.tick.load_init()?;
     let mut tickmap = ctx.accounts.tickmap.load_mut()?;
     let pool = ctx.accounts.pool.load()?;
+    let current_timestamp = Clock::get()?.unix_timestamp as u64;
 
     tickmap.set(true, index, pool.tick_spacing);
 
@@ -62,6 +63,11 @@ pub fn handler(
             true => pool.fee_growth_global_y,
             false => Decimal::new(0),
         },
+        seconds_outside: match below_current_tick {
+            true => (current_timestamp - pool.start_timestamp),
+            false => 0,
+        },
+        seconds_per_liquidity_outside: Decimal::new(0),
         bump: bump,
     };
 

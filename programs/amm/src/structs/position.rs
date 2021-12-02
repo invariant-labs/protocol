@@ -15,6 +15,8 @@ pub struct Position {
     pub upper_tick_index: i32,
     pub fee_growth_inside_x: Decimal,
     pub fee_growth_inside_y: Decimal,
+    pub seconds_per_liquidity_inside: Decimal,
+    pub last_slot: u64,
     pub tokens_owed_x: Decimal,
     pub tokens_owed_y: Decimal,
     pub bump: u8,
@@ -28,7 +30,14 @@ impl Position {
         lower_tick: &mut Tick,
         liquidity_delta: Decimal,
         add: bool,
+        current_timestamp: u64,
     ) -> Result<(u64, u64)> {
+        if pool.liquidity != Decimal::new(0) {
+            pool.update_seconds_per_liquidity_global(current_timestamp);
+        } else {
+            pool.last_timestamp = current_timestamp;
+        }
+
         // update initialized tick
         lower_tick.update(
             pool.current_tick_index,

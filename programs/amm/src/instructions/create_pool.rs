@@ -54,6 +54,7 @@ pub fn handler(
 
     let pool = &mut ctx.accounts.pool.load_init()?;
     let fee_tier = ctx.accounts.fee_tier.load()?;
+    let current_timestamp = Clock::get()?.unix_timestamp as u64;
 
     **pool = Pool {
         token_x: *ctx.accounts.token_x.key,
@@ -71,8 +72,11 @@ pub fn handler(
         fee_protocol_token_x: Decimal::new(0),
         fee_protocol_token_y: Decimal::new(0),
         position_iterator: 0,
-        bump,
-        nonce,
+        seconds_per_liquidity_global: Decimal::new(0),
+        start_timestamp: current_timestamp,
+        last_timestamp: current_timestamp,
+        bump: bump,
+        nonce: nonce,
         authority: *ctx.accounts.program_authority.key,
     };
 

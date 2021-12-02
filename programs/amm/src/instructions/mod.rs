@@ -8,6 +8,7 @@ pub mod create_tick;
 pub mod remove_position;
 pub mod swap;
 pub mod transfer_position_ownership;
+pub mod update_seconds_per_liquidity;
 pub mod withdraw_protocol_fee;
 
 pub use claim_fee::*;
@@ -20,4 +21,5 @@ pub use create_tick::*;
 pub use remove_position::*;
 pub use swap::*;
 pub use transfer_position_ownership::*;
+pub use update_seconds_per_liquidity::*;
 pub use withdraw_protocol_fee::*;

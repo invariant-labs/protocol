@@ -28,7 +28,7 @@ import { Network } from './network'
 const POSITION_SEED = 'positionv1'
 const TICK_SEED = 'tickv1'
 const POSITION_LIST_SEED = 'positionlistv1'
-const STATE_SEED = "statev1"
+const STATE_SEED = 'statev1'
 export const FEE_TIER = 'feetierv1'
 export const DEFAULT_PUBLIC_KEY = new PublicKey(0)
 
@@ -38,7 +38,7 @@ export interface Decimal {
 
 export interface State {
   protocolFee: Decimal
-  admin: PublicKey,
+  admin: PublicKey
   bump: number
 }
 
@@ -63,6 +63,9 @@ export interface PoolStructure {
   feeGrowthGlobalY: Decimal
   feeProtocolTokenX: Decimal
   feeProtocolTokenY: Decimal
+  secondsPerLiquidityGlobal: Decimal
+  startTimestamp: BN
+  lastTimestamp: BN
   bump: number
   nonce: number
   authority: PublicKey
@@ -279,9 +282,8 @@ export class Market {
   async createFeeTierInstruction(feeTier: FeeTier, payer: PublicKey) {
     const { fee, tickSpacing } = feeTier
     const { address, bump } = await this.getFeeTierAddress(feeTier)
-    const stateAddress = (await this.getStateAddress()).address;
+    const stateAddress = (await this.getStateAddress()).address
     const ts = tickSpacing ?? feeToTickSpacing(fee)
-    
 
     return await this.program.instruction.createFeeTier(bump, fee, ts, {
       accounts: {
@@ -294,7 +296,7 @@ export class Market {
   }
   async createFeeTier(feeTier: FeeTier, payer: Keypair) {
     const ix = await this.createFeeTierInstruction(feeTier, payer.publicKey)
-    
+
     await signAndSend(new Transaction().add(ix), [payer], this.connection)
   }
 
@@ -318,9 +320,7 @@ export class Market {
 
   async getStateAddress() {
     const [address, bump] = await PublicKey.findProgramAddress(
-      [
-        Buffer.from(utils.bytes.utf8.encode(STATE_SEED))
-      ],
+      [Buffer.from(utils.bytes.utf8.encode(STATE_SEED))],
       this.program.programId
     )
 
@@ -368,8 +368,7 @@ export class Market {
       })
     )
   }
-  
-  
+
   async createPositionListInstruction(owner: PublicKey) {
     const { positionListAddress, positionListBump } = await this.getPositionListAddress(owner)
 
@@ -497,7 +496,7 @@ export class Market {
     const pool = await this.get(pair)
     const tickmap = await this.getTickmap(pair)
     const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
-    const { address: stateAddress } = await this.getStateAddress();
+    const { address: stateAddress } = await this.getStateAddress()
 
     const priceLimit =
       overridePriceLimit ?? calculatePriceAfterSlippage(knownPrice, slippage, !XtoY).v
@@ -551,7 +550,7 @@ export class Market {
         }
       }
     )
-    
+
     const tx = new Transaction().add(swapIx)
     return tx
   }
@@ -621,37 +620,38 @@ export class Market {
     await signAndSend(new Transaction().add(claimFeeIx), [signer], this.connection)
   }
 
-  async withdrawProtocolFeeInstruction(pair: Pair, accountX: PublicKey,
-    accountY: PublicKey, signer: PublicKey) {
+  async withdrawProtocolFeeInstruction(
+    pair: Pair,
+    accountX: PublicKey,
+    accountY: PublicKey,
+    signer: PublicKey
+  ) {
     const pool = await this.get(pair)
     const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
     const stateAddress = await (await this.getStateAddress()).address
 
-    return (await this.program.instruction.withdrawProtocolFee(
-      {
-        accounts: {
-          state: stateAddress,
-          pool: await pair.getAddress(this.program.programId),
-          tokenX: pool.tokenX,
-          tokenY: pool.tokenY,
-          feeTier: feeTierAddress,
-          reserveX: pool.tokenXReserve,
-          reserveY: pool.tokenYReserve,
-          accountX,
-          accountY,
-          admin: signer,
-          programAuthority: pool.authority,
-          tokenProgram: TOKEN_PROGRAM_ID
-        }
+    return (await this.program.instruction.withdrawProtocolFee({
+      accounts: {
+        state: stateAddress,
+        pool: await pair.getAddress(this.program.programId),
+        tokenX: pool.tokenX,
+        tokenY: pool.tokenY,
+        feeTier: feeTierAddress,
+        reserveX: pool.tokenXReserve,
+        reserveY: pool.tokenYReserve,
+        accountX,
+        accountY,
+        admin: signer,
+        programAuthority: pool.authority,
+        tokenProgram: TOKEN_PROGRAM_ID
       }
-    )) as TransactionInstruction
+    })) as TransactionInstruction
   }
 
-  async withdrawProtocolFee(pair: Pair, accountX: PublicKey,
-    accountY: PublicKey, signer: Keypair) {
-      const ix = await this.withdrawProtocolFeeInstruction(pair, accountX, accountY, signer.publicKey)
-      await signAndSend(new Transaction().add(ix), [signer], this.connection)
-    }
+  async withdrawProtocolFee(pair: Pair, accountX: PublicKey, accountY: PublicKey, signer: Keypair) {
+    const ix = await this.withdrawProtocolFeeInstruction(pair, accountX, accountY, signer.publicKey)
+    await signAndSend(new Transaction().add(ix), [signer], this.connection)
+  }
 
   async removePositionWithIndexInstruction(
     pair: Pair,
@@ -758,6 +758,43 @@ export class Market {
       }
     }) as TransactionInstruction
   }
+
+  async updateSecondsPerLiquidityInstruction({
+    pair,
+    owner,
+    lowerTickIndex,
+    upperTickIndex,
+    index
+  }: SecondsPerLiquidity) {
+    const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTickIndex)
+    const { tickAddress: upperTickAddress } = await this.getTickAddress(pair, upperTickIndex)
+    const poolAddress = await pair.getAddress(this.program.programId)
+    const { positionAddress: positionAddress, positionBump: bump } = await this.getPositionAddress(
+      owner,
+      index
+    )
+    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
+
+    return this.program.instruction.updateSecondsPerLiquidity(
+      feeTierAddress,
+      lowerTickIndex,
+      upperTickIndex,
+      index,
+      {
+        accounts: {
+          pool: poolAddress,
+          lowerTick: lowerTickAddress,
+          upperTick: upperTickAddress,
+          position: positionAddress,
+          tokenX: pair.tokenX,
+          tokenY: pair.tokenY,
+          owner,
+          rent: SYSVAR_RENT_PUBKEY,
+          systemProgram: SystemProgram.programId
+        }
+      }
+    ) as TransactionInstruction
+  }
 }
 
 export interface Decimal {
@@ -788,6 +825,7 @@ export interface Position {
   upperTickIndex: number
   feeGrowthInsideX: Decimal
   feeGrowthInsideY: Decimal
+  secondsPerLiquidityInside: Decimal
   tokensOwedX: Decimal
   tokensOwedY: Decimal
   bump: number
@@ -855,4 +893,12 @@ export interface Swap {
 
 export interface SwapTransaction extends Swap {
   owner: PublicKey
+}
+
+export interface SecondsPerLiquidity {
+  pair: Pair
+  owner: PublicKey
+  lowerTickIndex: number
+  upperTickIndex: number
+  index: number
 }

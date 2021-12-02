@@ -1,6 +1,8 @@
 {
   "scripts": {
-    "test:full": "npm run test:swap && npm run test:cross && npm run test:reversed && npm run test:position && npm run test:math && npm run test:withdraw && npm run test:position-list && npm run test:claim && npm run test:protocol-fee && npm run test:target && npm run test:slippage && npm run test:fee-tier",
+    "test:invariant-all": "npm run test:swap && npm run test:cross && npm run test:reversed && npm run test:position && npm run test:math && npm run test:withdraw && npm run test:position-list && npm run test:claim && npm run test:protocol-fee && npm run test:target && npm run test:slippage && npm run test:fee-tier && npm run test:timestamp",
+    "test:staker-all": "npm run test:create && npm run test:stake && npm run test:withdraw-staker && npm run test:end-incentive && npm run test:multicall",
+    "test:all": "npm run test:invariant-all && npm run test:staker-all",
     "test:swap": "anchor test --skip-build tests/swap.spec.ts",
     "test:cross": "anchor test --skip-build tests/cross.spec.ts",
     "test:reversed": "anchor test --skip-build tests/reversed.spec.ts",
@@ -9,11 +11,19 @@
     "test:withdraw": "anchor test --skip-build tests/withdraw.spec.ts",
     "test:position-list": "anchor test --skip-build tests/position-list.spec.ts",
     "test:claim": "anchor test --skip-build tests/claim.spec.ts",
+    "test:timestamp": "anchor test --skip-build tests/timestamp.spec.ts",
+    "test:create": "anchor test --skip-build tests-staker/create.spec.ts",
+    "test:stake": "anchor test --skip-build tests-staker/stake.spec.ts",
+    "test:withdraw-staker": "anchor test --skip-build tests-staker/withdraw.spec.ts",
+    "test:end-incentive": "anchor test --skip-build tests-staker/end-incentive.spec.ts",
+    "test:multicall": "anchor test --skip-build tests-staker/multicall.spec.ts",
     "test:protocol-fee": "anchor test --skip-build tests/protocol-fee.spec.ts",
     "test:target": "anchor test --skip-build tests/target.spec.ts",
     "test:slippage": "anchor test --skip-build tests/slippage.spec.ts",
     "test:fee-tier": "anchor test --skip-build tests/fee-tier.spec.ts",
-    "build": "cd sdk && npm run build"
+    "build:invariant": "cd sdk && npm run build",
+    "build:staker": "cd sdk-staker && npm run build",
+    "build:all": "npm run build:invariant && npm run build:staker"
   },
   "dependencies": {
     "@project-serum/anchor": "^0.18.2",

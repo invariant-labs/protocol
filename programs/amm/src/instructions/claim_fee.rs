@@ -86,11 +86,19 @@ pub fn handler(
     let position = &mut ctx.accounts.position.load_mut()?;
     let lower_tick = &mut ctx.accounts.lower_tick.load_mut()?;
     let upper_tick = &mut ctx.accounts.upper_tick.load_mut()?;
+    let current_timestamp = Clock::get()?.unix_timestamp as u64;
 
     check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
 
     position
-        .modify(pool, upper_tick, lower_tick, Decimal::new(0), true)
+        .modify(
+            pool,
+            upper_tick,
+            lower_tick,
+            Decimal::new(0),
+            true,
+            current_timestamp,
+        )
         .unwrap();
 
     let fee_to_collect_x = position.tokens_owed_x.to_token_floor();
