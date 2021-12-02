@@ -174,7 +174,7 @@ export const toDecimal = (x: number, decimals: number = 0): Decimal => {
   return { v: DENOMINATOR.muln(x).div(new BN(10).pow(new BN(decimals))) }
 }
 
-export const simulateSwapPrice = (swapParameters: SimulateSwapPrice): Decimal => {
+export const calculateAveragePrice = (swapParameters: SimulateSwapPrice): Decimal => {
   const {xToY, byAmountIn, swapAmount, slippage, tickmap, pool, market, pair} = swapParameters
   let {currentTickIndex, tickSpacing, liquidity, fee} = pool
   const priceLimit = calculatePriceAfterSlippage(pool.sqrtPrice, slippage, !xToY)

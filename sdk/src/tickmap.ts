@@ -29,7 +29,6 @@ export const getPreviousTick = (tickmap: Tickmap, currentTickIndex: number, tick
     while (byteIndex * 8 + bitIndex >= limit) {
       let mask = 1 << bitIndex
       let byte = tickmap.bitmap[byteIndex]
-     // console.log("###", byte, " ", mask)
       if (byte % (mask << 1) > 0) {
         while ((byte & mask) === 0) {
           mask = mask >> 1

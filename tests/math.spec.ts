@@ -171,8 +171,6 @@ describe('Math', () => {
 
       assert.ok(expectedL.v.eq(roundUpLiquidity.v))
       assert.ok(expectedL.v.eq(roundDownLiquidity.v))
-      console.log(expectedXRoundUp.toString())
-      console.log(roundUpX.toString())
       assert.ok(expectedXRoundUp.eq(roundUpX))
       assert.ok(expectedXRoundDown.eq(roundDownX))
     })

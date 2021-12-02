@@ -16,7 +16,7 @@ import {
 } from '@invariant-labs/sdk'
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { simulateSwapPrice, SimulateSwapPrice, toDecimal } from '@invariant-labs/sdk/src/utils'
+import { calculateAveragePrice, SimulateSwapPrice, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { sleep } from "@invariant-labs/sdk/lib/utils"
 
 describe('simulate-swap', () => {
@@ -171,8 +171,8 @@ describe('simulate-swap', () => {
             pair: pair
         }
        
-        const estimatedMeanPrice = simulateSwapPrice(simulateSwapPriceParameters)
-
-        const poolDataAfter = await market.get(pair)
+        const estimatedMeanPrice = calculateAveragePrice(simulateSwapPriceParameters)
+        console.log(estimatedMeanPrice.v.toString())
+        assert.ok(estimatedMeanPrice.v.eq(new BN(1103994154149)))
     })
 })
