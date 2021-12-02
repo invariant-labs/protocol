@@ -3,7 +3,7 @@ mod errors;
 mod instructions;
 mod interfaces;
 mod math;
-mod structs;
+pub mod structs;
 mod uint;
 mod util;
 
@@ -141,6 +141,22 @@ pub mod amm {
             index,
             lower_tick_index,
             upper_tick_index,
+        )
+    }
+
+    pub fn update_seconds_per_liquidity(
+        ctx: Context<UpdateSecondsPerLiquitity>,
+        fee_tier_address: Pubkey,
+        lower_tick_index: i32,
+        upper_tick_index: i32,
+        index: i32,
+    ) -> ProgramResult {
+        instructions::update_seconds_per_liquidity::handler(
+            ctx,
+            fee_tier_address,
+            lower_tick_index,
+            upper_tick_index,
+            index,
         )
     }
 

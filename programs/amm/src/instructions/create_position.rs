@@ -98,6 +98,8 @@ pub fn handler(
     let lower_tick = &mut ctx.accounts.lower_tick.load_mut()?;
     let upper_tick = &mut ctx.accounts.upper_tick.load_mut()?;
     let mut position_list = ctx.accounts.position_list.load_mut()?;
+    let current_timestamp = Clock::get()?.unix_timestamp as u64;
+    let slot = Clock::get()?.slot;
 
     // validate ticks
     check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
@@ -116,13 +118,21 @@ pub fn handler(
         upper_tick_index: upper_tick.index,
         fee_growth_inside_x: Decimal::new(0),
         fee_growth_inside_y: Decimal::new(0),
+        seconds_per_liquidity_inside: Decimal::new(0),
+        last_slot: slot,
         tokens_owed_x: Decimal::new(0),
         tokens_owed_y: Decimal::new(0),
         bump: bump,
     };
 
-    let (amount_x, amount_y) =
-        position.modify(pool, upper_tick, lower_tick, liquidity_delta, true)?;
+    let (amount_x, amount_y) = position.modify(
+        pool,
+        upper_tick,
+        lower_tick,
+        liquidity_delta,
+        true,
+        current_timestamp,
+    )?;
 
     token::transfer(ctx.accounts.take_x(), amount_x)?;
     token::transfer(ctx.accounts.take_y(), amount_y)?;

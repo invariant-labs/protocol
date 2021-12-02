@@ -698,6 +698,74 @@ export type Amm = {
       ]
     },
     {
+      "name": "updateSecondsPerLiquidity",
+      "accounts": [
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "lowerTick",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "upperTick",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "position",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenX",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenY",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "feeTierAddress",
+          "type": "publicKey"
+        },
+        {
+          "name": "lowerTickIndex",
+          "type": "i32"
+        },
+        {
+          "name": "upperTickIndex",
+          "type": "i32"
+        },
+        {
+          "name": "index",
+          "type": "i32"
+        }
+      ]
+    },
+    {
       "name": "withdrawProtocolFee",
       "accounts": [
         {
@@ -867,6 +935,20 @@ export type Amm = {
             }
           },
           {
+            "name": "secondsPerLiquidityGlobal",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "startTimestamp",
+            "type": "u64"
+          },
+          {
+            "name": "lastTimestamp",
+            "type": "u64"
+          },
+          {
             "name": "bump",
             "type": "u8"
           },
@@ -923,6 +1005,16 @@ export type Amm = {
             "type": {
               "defined": "Decimal"
             }
+          },
+          {
+            "name": "secondsPerLiquidityInside",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "lastSlot",
+            "type": "u64"
           },
           {
             "name": "tokensOwedX",
@@ -1023,6 +1115,16 @@ export type Amm = {
             "type": {
               "defined": "Decimal"
             }
+          },
+          {
+            "name": "secondsPerLiquidityOutside",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "secondsOutside",
+            "type": "u64"
           },
           {
             "name": "bump",
@@ -1148,6 +1250,11 @@ export type Amm = {
       "code": 316,
       "name": "InvalidPoolTokenAddresses",
       "msg": "Invalid pool token addresses"
+    },
+    {
+      "code": 317,
+      "name": "NegativeTime",
+      "msg": "Time cannot be negative"
     }
   ]
 };
@@ -1852,6 +1959,74 @@ export const IDL: Amm = {
       ]
     },
     {
+      "name": "updateSecondsPerLiquidity",
+      "accounts": [
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "lowerTick",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "upperTick",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "position",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenX",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenY",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "feeTierAddress",
+          "type": "publicKey"
+        },
+        {
+          "name": "lowerTickIndex",
+          "type": "i32"
+        },
+        {
+          "name": "upperTickIndex",
+          "type": "i32"
+        },
+        {
+          "name": "index",
+          "type": "i32"
+        }
+      ]
+    },
+    {
       "name": "withdrawProtocolFee",
       "accounts": [
         {
@@ -2021,6 +2196,20 @@ export const IDL: Amm = {
             }
           },
           {
+            "name": "secondsPerLiquidityGlobal",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "startTimestamp",
+            "type": "u64"
+          },
+          {
+            "name": "lastTimestamp",
+            "type": "u64"
+          },
+          {
             "name": "bump",
             "type": "u8"
           },
@@ -2077,6 +2266,16 @@ export const IDL: Amm = {
             "type": {
               "defined": "Decimal"
             }
+          },
+          {
+            "name": "secondsPerLiquidityInside",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "lastSlot",
+            "type": "u64"
           },
           {
             "name": "tokensOwedX",
@@ -2177,6 +2376,16 @@ export const IDL: Amm = {
             "type": {
               "defined": "Decimal"
             }
+          },
+          {
+            "name": "secondsPerLiquidityOutside",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "secondsOutside",
+            "type": "u64"
           },
           {
             "name": "bump",
@@ -2302,6 +2511,11 @@ export const IDL: Amm = {
       "code": 316,
       "name": "InvalidPoolTokenAddresses",
       "msg": "Invalid pool token addresses"
+    },
+    {
+      "code": 317,
+      "name": "NegativeTime",
+      "msg": "Time cannot be negative"
     }
   ]
 };
