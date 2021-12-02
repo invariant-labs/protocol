@@ -7,7 +7,7 @@ import { createToken } from './testUtils'
 import { Market, Pair, SEED, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@invariant-labs/sdk'
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { toDecimal } from '@invariant-labs/sdk/src/utils'
+import { SimulateSwapPrice, toDecimal } from '@invariant-labs/sdk/src/utils'
 
 describe('cross', () => {
   const provider = Provider.local()

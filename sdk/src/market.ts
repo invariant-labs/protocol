@@ -76,8 +76,8 @@ export interface Tickmap {
 }
 
 export class Market {
-  private connection: Connection
-  private wallet: IWallet
+  public connection: Connection
+  public wallet: IWallet
   public program: Program<Amm>
 
   constructor(network: Network, wallet: IWallet, connection: Connection, programId?: PublicKey) {
@@ -796,11 +796,6 @@ export class Market {
     ) as TransactionInstruction
   }
 }
-
-export interface Decimal {
-  v: BN
-}
-
 export interface PositionList {
   head: number
   bump: number

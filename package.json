@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "test:invariant-all": "npm run test:swap && npm run test:cross && npm run test:reversed && npm run test:position && npm run test:math && npm run test:withdraw && npm run test:position-list && npm run test:claim && npm run test:protocol-fee && npm run test:target && npm run test:slippage && npm run test:fee-tier && npm run test:timestamp",
+    "test:invariant-all": "npm run test:swap && npm run test:cross && npm run test:reversed && npm run test:position && npm run test:math && npm run test:withdraw && npm run test:position-list && npm run test:claim && npm run test:protocol-fee && npm run test:target && npm run test:slippage && npm run test:fee-tier && npm run test:timestamp && npm run test:simulate-swap",
     "test:staker-all": "npm run test:create && npm run test:stake && npm run test:withdraw-staker && npm run test:end-incentive && npm run test:multicall",
     "test:all": "npm run test:invariant-all && npm run test:staker-all",
     "test:swap": "anchor test --skip-build tests/swap.spec.ts",
@@ -21,6 +21,7 @@
     "test:target": "anchor test --skip-build tests/target.spec.ts",
     "test:slippage": "anchor test --skip-build tests/slippage.spec.ts",
     "test:fee-tier": "anchor test --skip-build tests/fee-tier.spec.ts",
+    "test:simulate-swap": "anchor test --skip-build tests/simulate-swap.spec.ts",
     "build:invariant": "cd sdk && npm run build",
     "build:staker": "cd sdk-staker && npm run build",
     "build:all": "npm run build:invariant && npm run build:staker"
@@ -33,7 +34,7 @@
     "ts-mocha": "^8.0.0"
   },
   "devDependencies": {
-    "@invariant-labs/sdk": "./sdk",
+    "@invariant-labs/sdk": "file:sdk",
     "@types/chai": "^4.2.21",
     "@types/mocha": "^9.0.0",
     "chai": "^4.3.4",
