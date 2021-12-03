@@ -16,6 +16,11 @@ export type Amm = {
           "isSigner": true
         },
         {
+          "name": "programAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "rent",
           "isMut": false,
           "isSigner": false
@@ -29,6 +34,10 @@ export type Amm = {
       "args": [
         {
           "name": "bump",
+          "type": "u8"
+        },
+        {
+          "name": "nonce",
           "type": "u8"
         },
         {
@@ -117,11 +126,6 @@ export type Amm = {
           "isSigner": false
         },
         {
-          "name": "programAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "payer",
           "isMut": true,
           "isSigner": true
@@ -140,10 +144,6 @@ export type Amm = {
       "args": [
         {
           "name": "bump",
-          "type": "u8"
-        },
-        {
-          "name": "nonce",
           "type": "u8"
         },
         {
@@ -341,6 +341,11 @@ export type Amm = {
       "name": "createPosition",
       "accounts": [
         {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "position",
           "isMut": true,
           "isSigner": false
@@ -450,9 +455,9 @@ export type Amm = {
       "name": "removePosition",
       "accounts": [
         {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "removedPosition",
@@ -490,6 +495,11 @@ export type Amm = {
           "isSigner": false
         },
         {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
           "name": "tokenX",
           "isMut": true,
           "isSigner": false
@@ -520,12 +530,12 @@ export type Amm = {
           "isSigner": false
         },
         {
-          "name": "tokenProgram",
+          "name": "programAuthority",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "programAuthority",
+          "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -612,6 +622,11 @@ export type Amm = {
     {
       "name": "claimFee",
       "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
         {
           "name": "pool",
           "isMut": true,
@@ -951,14 +966,6 @@ export type Amm = {
           {
             "name": "bump",
             "type": "u8"
-          },
-          {
-            "name": "nonce",
-            "type": "u8"
-          },
-          {
-            "name": "authority",
-            "type": "publicKey"
           }
         ]
       }
@@ -1064,6 +1071,14 @@ export type Amm = {
           },
           {
             "name": "admin",
+            "type": "publicKey"
+          },
+          {
+            "name": "nonce",
+            "type": "u8"
+          },
+          {
+            "name": "authority",
             "type": "publicKey"
           },
           {
@@ -1277,6 +1292,11 @@ export const IDL: Amm = {
           "isSigner": true
         },
         {
+          "name": "programAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "rent",
           "isMut": false,
           "isSigner": false
@@ -1290,6 +1310,10 @@ export const IDL: Amm = {
       "args": [
         {
           "name": "bump",
+          "type": "u8"
+        },
+        {
+          "name": "nonce",
           "type": "u8"
         },
         {
@@ -1378,11 +1402,6 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
-          "name": "programAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "payer",
           "isMut": true,
           "isSigner": true
@@ -1401,10 +1420,6 @@ export const IDL: Amm = {
       "args": [
         {
           "name": "bump",
-          "type": "u8"
-        },
-        {
-          "name": "nonce",
           "type": "u8"
         },
         {
@@ -1602,6 +1617,11 @@ export const IDL: Amm = {
       "name": "createPosition",
       "accounts": [
         {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "position",
           "isMut": true,
           "isSigner": false
@@ -1711,9 +1731,9 @@ export const IDL: Amm = {
       "name": "removePosition",
       "accounts": [
         {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "removedPosition",
@@ -1751,6 +1771,11 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
           "name": "tokenX",
           "isMut": true,
           "isSigner": false
@@ -1781,12 +1806,12 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
-          "name": "tokenProgram",
+          "name": "programAuthority",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "programAuthority",
+          "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -1873,6 +1898,11 @@ export const IDL: Amm = {
     {
       "name": "claimFee",
       "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
         {
           "name": "pool",
           "isMut": true,
@@ -2212,14 +2242,6 @@ export const IDL: Amm = {
           {
             "name": "bump",
             "type": "u8"
-          },
-          {
-            "name": "nonce",
-            "type": "u8"
-          },
-          {
-            "name": "authority",
-            "type": "publicKey"
           }
         ]
       }
@@ -2325,6 +2347,14 @@ export const IDL: Amm = {
           },
           {
             "name": "admin",
+            "type": "publicKey"
+          },
+          {
+            "name": "nonce",
+            "type": "u8"
+          },
+          {
+            "name": "authority",
             "type": "publicKey"
           },
           {
