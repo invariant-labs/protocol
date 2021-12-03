@@ -73,6 +73,10 @@ pub mod amm {
         )
     }
 
+    pub fn initialize_oracle(ctx: Context<InitializeOracle>) -> ProgramResult {
+        instructions::initialize_oracle::handler(ctx)
+    }
+
     pub fn create_tick(
         ctx: Context<CreateTick>,
         bump: u8,
@@ -145,7 +149,7 @@ pub mod amm {
     }
 
     pub fn update_seconds_per_liquidity(
-        ctx: Context<UpdateSecondsPerLiquitity>,
+        ctx: Context<UpdateSecondsPerLiquidity>,
         fee_tier_address: Pubkey,
         lower_tick_index: i32,
         upper_tick_index: i32,
