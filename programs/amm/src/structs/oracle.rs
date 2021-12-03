@@ -1,12 +1,12 @@
 use crate::Decimal;
 use anchor_lang::prelude::*;
 
-const SIZE: u16 = 256;
+const SIZE: u16 = 100; // UPDATE IN ARRAYS AS WELL!
 
 #[account(zero_copy)]
 #[derive(PartialEq, Debug)]
 pub struct Oracle {
-    pub data: [Record; SIZE as usize],
+    pub data: [Record; 100],
     pub head: u16,
     pub amount: u16,
     pub size: u16,
@@ -22,7 +22,7 @@ pub struct Record {
 impl Default for Oracle {
     fn default() -> Oracle {
         Oracle {
-            data: [Record::default(); SIZE as usize],
+            data: [Record::default(); 100],
             head: SIZE - 1,
             amount: 0,
             size: SIZE,
