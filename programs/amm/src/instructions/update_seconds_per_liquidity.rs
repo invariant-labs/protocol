@@ -3,6 +3,7 @@ use crate::structs::pool::Pool;
 use crate::structs::position::Position;
 use crate::structs::tick::Tick;
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::system_program;
 use anchor_spl::token::Mint;
 use math::*;
 
@@ -38,6 +39,7 @@ pub struct UpdateSecondsPerLiquitity<'info> {
     #[account(mut)]
     pub owner: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
+    #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }
 

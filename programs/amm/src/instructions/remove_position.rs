@@ -74,6 +74,7 @@ pub struct RemovePosition<'info> {
         constraint = &state.load()?.authority == program_authority.key
     )]
     pub program_authority: AccountInfo<'info>,
+    #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
 }
 

@@ -62,6 +62,7 @@ pub struct CreatePosition<'info> {
         constraint = &state.load()?.authority == program_authority.key
     )]
     pub program_authority: AccountInfo<'info>,
+    #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]

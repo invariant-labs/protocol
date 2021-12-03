@@ -38,6 +38,7 @@ pub struct Withdraw<'info> {
         bump = bump_authority)]
     pub staker_authority: AccountInfo<'info>,
     pub owner: Signer<'info>,
+    #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
     pub amm: Program<'info, Amm>,
     #[account(address = system_program::ID)]
