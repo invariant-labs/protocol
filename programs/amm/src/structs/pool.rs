@@ -24,6 +24,8 @@ pub struct Pool {
     pub seconds_per_liquidity_global: Decimal,
     pub start_timestamp: u64,
     pub last_timestamp: u64,
+    pub oracle: Pubkey,
+    pub oracle_initialized: bool,
     pub bump: u8,
     pub nonce: u8,
     pub authority: Pubkey,
@@ -65,6 +67,11 @@ impl Pool {
                 / self.liquidity);
 
         self.last_timestamp = current_timestamp;
+    }
+
+    pub fn initialize_oracle(self: &mut Self, address: Pubkey) {
+        self.oracle = address;
+        self.oracle_initialized = true;
     }
 }
 
