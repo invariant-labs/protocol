@@ -30,9 +30,10 @@ pub mod amm {
     pub fn create_state(
         ctx: Context<CreateState>,
         bump: u8,
+        nonce: u8,
         protocol_fee: Decimal,
     ) -> ProgramResult {
-        instructions::create_state::handler(ctx, bump, protocol_fee)
+        instructions::create_state::handler(ctx, bump, nonce, protocol_fee)
     }
     //#[access_control(admin(&ctx.accounts.state, &ctx.accounts.payer))]
     pub fn create_fee_tier(
@@ -47,12 +48,11 @@ pub mod amm {
     pub fn create_pool(
         ctx: Context<CreatePool>,
         bump: u8,
-        nonce: u8,
         init_tick: i32,
         _fee: u64,
         _tick_spacing: u16,
     ) -> ProgramResult {
-        instructions::create_pool::handler(ctx, bump, nonce, init_tick, _fee, _tick_spacing)
+        instructions::create_pool::handler(ctx, bump, init_tick, _fee, _tick_spacing)
     }
 
     pub fn swap(

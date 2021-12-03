@@ -38,7 +38,7 @@ pub fn handler(
     _fee_tier_address: Pubkey,
     index: i32,
 ) -> ProgramResult {
-    msg!("CREATE_TICK");
+    msg!("INVARIANT: CREATE_TICK");
 
     let mut tick = ctx.accounts.tick.load_init()?;
     let mut tickmap = ctx.accounts.tickmap.load_mut()?;
@@ -68,7 +68,7 @@ pub fn handler(
             false => 0,
         },
         seconds_per_liquidity_outside: Decimal::new(0),
-        bump: bump,
+        bump,
     };
 
     Ok(())

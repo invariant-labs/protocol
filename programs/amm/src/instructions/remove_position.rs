@@ -14,8 +14,8 @@ use anchor_spl::token::{Mint, TokenAccount, Transfer};
 #[derive(Accounts)]
 #[instruction(fee_tier_address: Pubkey, index: i32, lower_tick_index: i32, upper_tick_index: i32)]
 pub struct RemovePosition<'info> {
-    #[account(mut)]
-    pub owner: Signer<'info>,
+    #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
+    pub state: AccountLoader<'info, State>,
     #[account(mut,
         seeds = [b"positionv1",
         owner.to_account_info().key.as_ref(),
@@ -56,7 +56,8 @@ pub struct RemovePosition<'info> {
         bump = upper_tick.load()?.bump
     )]
     pub upper_tick: AccountLoader<'info, Tick>,
-
+    #[account(mut)]
+    pub owner: Signer<'info>,
     #[account(mut)]
     pub token_x: Account<'info, Mint>,
     #[account(mut)]
@@ -69,8 +70,11 @@ pub struct RemovePosition<'info> {
     pub reserve_x: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub reserve_y: Box<Account<'info, TokenAccount>>,
-    pub token_program: AccountInfo<'info>,
+    #[account(
+        constraint = &state.load()?.authority == program_authority.key
+    )]
     pub program_authority: AccountInfo<'info>,
+    pub token_program: AccountInfo<'info>,
 }
 
 impl<'info> SendTokens<'info> for RemovePosition<'info> {
@@ -104,8 +108,9 @@ pub fn handler(
     lower_tick_index: i32,
     upper_tick_index: i32,
 ) -> ProgramResult {
-    msg!("REMOVE POSITION");
+    msg!("INVARIANT: REMOVE POSITION");
 
+    let state = ctx.accounts.state.load()?;
     let mut position_list = ctx.accounts.position_list.load_mut()?;
     let removed_position = &mut ctx.accounts.removed_position.load_mut()?;
     let pool = &mut ctx.accounts.pool.load_mut()?;
@@ -183,7 +188,7 @@ pub fn handler(
         };
     }
 
-    let seeds = &[SEED.as_bytes(), &[pool.nonce]];
+    let seeds = &[SEED.as_bytes(), &[state.nonce]];
     let signer = &[&seeds[..]];
 
     token::transfer(ctx.accounts.send_x().with_signer(signer), amount_x)?;

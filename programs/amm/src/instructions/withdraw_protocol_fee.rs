@@ -33,6 +33,9 @@ pub struct WithdrawProtocolFee<'info> {
     #[account(mut,
         constraint = &state.load()?.admin == admin.key)]
     pub admin: Signer<'info>,
+    #[account(
+        constraint = &state.load()?.authority == program_authority.key
+    )]
     pub program_authority: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
 }
@@ -62,6 +65,9 @@ impl<'info> SendTokens<'info> for WithdrawProtocolFee<'info> {
 }
 
 pub fn handler(ctx: Context<WithdrawProtocolFee>, seed: &str) -> ProgramResult {
+    msg!("INVARIANT: WITHDRAW PROTOCOL FEE");
+
+    let state = ctx.accounts.state.load()?;
     let mut pool = ctx.accounts.pool.load_mut()?;
 
     let fee_to_collect_x = pool.fee_protocol_token_x.to_token_floor();
@@ -71,7 +77,7 @@ pub fn handler(ctx: Context<WithdrawProtocolFee>, seed: &str) -> ProgramResult {
     pool.fee_protocol_token_y =
         pool.fee_protocol_token_y - Decimal::from_integer(fee_to_collect_y.into());
 
-    let seeds = &[seed.as_bytes(), &[pool.nonce]];
+    let seeds = &[seed.as_bytes(), &[state.nonce]];
     let signer = &[&seeds[..]];
 
     let cpi_ctx_x = ctx.accounts.send_x().with_signer(signer);

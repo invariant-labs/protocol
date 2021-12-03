@@ -11,6 +11,8 @@ use anchor_spl::token::{Mint, TokenAccount, Transfer};
 #[derive(Accounts)]
 #[instruction(fee_tier_address: Pubkey, index: u32, lower_tick_index: i32, upper_tick_index: i32)]
 pub struct ClaimFee<'info> {
+    #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
+    pub state: AccountLoader<'info, State>,
     #[account(mut,
         seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
         bump = pool.load()?.bump
@@ -47,6 +49,9 @@ pub struct ClaimFee<'info> {
     pub reserve_x: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub reserve_y: Box<Account<'info, TokenAccount>>,
+    #[account(
+        constraint = &state.load()?.authority == program_authority.key
+    )]
     pub program_authority: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
 }
@@ -82,6 +87,9 @@ pub fn handler(
     _lower_tick_index: i32,
     _upper_tick_index: i32,
 ) -> ProgramResult {
+    msg!("INVARIANT: CLAIM FEE");
+
+    let state = ctx.accounts.state.load()?;
     let pool = &mut ctx.accounts.pool.load_mut()?;
     let position = &mut ctx.accounts.position.load_mut()?;
     let lower_tick = &mut ctx.accounts.lower_tick.load_mut()?;
@@ -108,7 +116,7 @@ pub fn handler(
     position.tokens_owed_y =
         position.tokens_owed_y - Decimal::from_integer(fee_to_collect_y.into());
 
-    let seeds = &[SEED.as_bytes(), &[pool.nonce]];
+    let seeds = &[SEED.as_bytes(), &[state.nonce]];
     let signer = &[&seeds[..]];
 
     let cpi_ctx_x = ctx.accounts.send_x().with_signer(signer);

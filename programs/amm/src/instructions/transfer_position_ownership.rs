@@ -48,7 +48,7 @@ pub struct TransferPositionOwnership<'info> {
 }
 
 pub fn handler(ctx: Context<TransferPositionOwnership>, bump: u8, index: u32) -> ProgramResult {
-    msg!("TRANSFER POSITION");
+    msg!("INVARIANT: TRANSFER POSITION");
 
     let mut owner_list = ctx.accounts.owner_list.load_mut()?;
     let mut recipient_list = ctx.accounts.recipient_list.load_mut()?;

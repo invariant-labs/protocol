@@ -5,14 +5,18 @@ use crate::structs::position::Position;
 use crate::structs::position_list::PositionList;
 use crate::structs::tick::Tick;
 use crate::util::check_ticks;
+use crate::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
+
 use anchor_spl::token;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
 #[derive(Accounts)]
 #[instruction(bump: u8, fee_tier_address: Pubkey, lower_tick_index: i32, upper_tick_index: i32)]
 pub struct CreatePosition<'info> {
+    #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
+    pub state: AccountLoader<'info, State>,
     #[account(init,
         seeds = [b"positionv1",
         owner.to_account_info().key.as_ref(),
@@ -54,6 +58,9 @@ pub struct CreatePosition<'info> {
     pub reserve_x: Box<Account<'info, TokenAccount>>,
     #[account(mut)]
     pub reserve_y: Box<Account<'info, TokenAccount>>,
+    #[account(
+        constraint = &state.load()?.authority == program_authority.key
+    )]
     pub program_authority: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
@@ -93,7 +100,7 @@ pub fn handler(
     _upper_tick_index: i32,
     liquidity_delta: Decimal,
 ) -> ProgramResult {
-    msg!("INIT_POSITION");
+    msg!("INVARIANT: CREATE POSITION");
 
     let mut position = ctx.accounts.position.load_init()?;
     let mut pool = &mut ctx.accounts.pool.load_mut()?;
@@ -124,7 +131,7 @@ pub fn handler(
         last_slot: slot,
         tokens_owed_x: Decimal::new(0),
         tokens_owed_y: Decimal::new(0),
-        bump: bump,
+        bump,
     };
 
     let (amount_x, amount_y) = position.modify(

@@ -48,7 +48,7 @@ pub fn handler(
     _upper_tick_index: i32,
     _index: i32,
 ) -> ProgramResult {
-    msg!("UPDATE SECOND PER LIQUIDITY");
+    msg!("INVARIANT: UPDATE SECOND PER LIQUIDITY");
     let pool = &mut ctx.accounts.pool.load_mut()?;
     let lower_tick = *ctx.accounts.lower_tick.load()?;
     let upper_tick = *ctx.accounts.upper_tick.load()?;

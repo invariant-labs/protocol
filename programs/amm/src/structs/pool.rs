@@ -24,8 +24,6 @@ pub struct Pool {
     pub start_timestamp: u64,
     pub last_timestamp: u64,
     pub bump: u8,
-    pub nonce: u8,
-    pub authority: Pubkey,
 }
 
 impl Pool {

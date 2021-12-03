@@ -43,6 +43,9 @@ pub struct Swap<'info> {
     pub account_y: Box<Account<'info, TokenAccount>>,
     #[account()]
     pub owner: Signer<'info>,
+    #[account(
+        constraint = &state.load()?.authority == program_authority.key
+    )]
     pub program_authority: AccountInfo<'info>,
     pub token_program: AccountInfo<'info>,
 }
@@ -102,7 +105,7 @@ pub fn handler(
     by_amount_in: bool, // whether amount specifies input or output
     sqrt_price_limit: u128,
 ) -> ProgramResult {
-    msg!("SWAP");
+    msg!("INVARIANT: SWAP");
     require!(amount != 0, ZeroAmount);
 
     let sqrt_price_limit = Decimal::new(sqrt_price_limit);
@@ -223,7 +226,7 @@ pub fn handler(
         (ctx.accounts.take_y(), ctx.accounts.send_x())
     };
 
-    let seeds = &[SEED.as_bytes(), &[pool.nonce]];
+    let seeds = &[SEED.as_bytes(), &[state.nonce]];
     let signer = &[&seeds[..]];
 
     // Maybe rounding error should be counted?

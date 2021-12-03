@@ -9,7 +9,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 
 #[derive(Accounts)]
-#[instruction(bump: u8, nonce: u8, init_tick: i32, fee: u64, tick_spacing: u16)]
+#[instruction(bump: u8, init_tick: i32, fee: u64, tick_spacing: u16)]
 pub struct CreatePool<'info> {
     #[account(init,
         seeds = [b"poolv1", fee_tier.to_account_info().key.as_ref(), token_x.key.as_ref(), token_y.key.as_ref()],
@@ -27,7 +27,6 @@ pub struct CreatePool<'info> {
     pub token_y: AccountInfo<'info>,
     pub token_x_reserve: AccountInfo<'info>,
     pub token_y_reserve: AccountInfo<'info>,
-    pub program_authority: AccountInfo<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
@@ -38,7 +37,6 @@ pub struct CreatePool<'info> {
 pub fn handler(
     ctx: Context<CreatePool>,
     bump: u8,
-    nonce: u8,
     init_tick: i32,
     _fee: u64,
     _tick_spacing: u16,
@@ -75,9 +73,7 @@ pub fn handler(
         seconds_per_liquidity_global: Decimal::new(0),
         start_timestamp: current_timestamp,
         last_timestamp: current_timestamp,
-        bump: bump,
-        nonce: nonce,
-        authority: *ctx.accounts.program_authority.key,
+        bump,
     };
 
     Ok(())
