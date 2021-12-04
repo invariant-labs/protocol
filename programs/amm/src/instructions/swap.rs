@@ -42,13 +42,13 @@ pub struct Swap<'info> {
         constraint = &reserve_x.owner == program_authority.key,
         constraint = reserve_x.to_account_info().key == &pool.load()?.token_x_reserve
     )]
-    pub reserve_x: Account<'info, TokenAccount>,
+    pub reserve_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
         constraint = &reserve_y.mint == token_y.to_account_info().key,
         constraint = &reserve_y.owner == program_authority.key,
         constraint = reserve_y.to_account_info().key == &pool.load()?.token_y_reserve
     )]
-    pub reserve_y: Account<'info, TokenAccount>,
+    pub reserve_y: Box<Account<'info, TokenAccount>>,
     #[account()]
     pub owner: Signer<'info>,
     #[account(constraint = &state.load()?.authority == program_authority.key)]

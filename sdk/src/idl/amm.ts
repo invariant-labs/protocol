@@ -794,28 +794,18 @@ export type Amm = {
           "isSigner": false
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "feeTier",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "reserveX",
+          "name": "tokenX",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "reserveY",
-          "isMut": true,
+          "name": "tokenY",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -825,6 +815,16 @@ export type Amm = {
         },
         {
           "name": "accountY",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveX",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveY",
           "isMut": true,
           "isSigner": false
         },
@@ -2070,28 +2070,18 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "feeTier",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "reserveX",
+          "name": "tokenX",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "reserveY",
-          "isMut": true,
+          "name": "tokenY",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -2101,6 +2091,16 @@ export const IDL: Amm = {
         },
         {
           "name": "accountY",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveX",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveY",
           "isMut": true,
           "isSigner": false
         },
