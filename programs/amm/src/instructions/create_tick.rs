@@ -25,7 +25,9 @@ pub struct CreateTick<'info> {
     pub tickmap: AccountLoader<'info, Tickmap>,
     #[account(mut)]
     pub payer: Signer<'info>,
+    #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x)]
     pub token_x: AccountInfo<'info>,
+    #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y)]
     pub token_y: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]

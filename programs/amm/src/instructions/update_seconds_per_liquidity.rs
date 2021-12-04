@@ -32,9 +32,13 @@ pub struct UpdateSecondsPerLiquitity<'info> {
         bump = position.load()?.bump
     )]
     pub position: AccountLoader<'info, Position>,
-    #[account(mut)]
+    #[account(mut,
+        constraint = token_x.to_account_info().key == &pool.load()?.token_x,
+    )]
     pub token_x: Account<'info, Mint>,
-    #[account(mut)]
+    #[account(mut,
+        constraint = token_y.to_account_info().key == &pool.load()?.token_y,
+    )]
     pub token_y: Account<'info, Mint>,
     #[account(mut)]
     pub owner: Signer<'info>,
@@ -51,6 +55,7 @@ pub fn handler(
     _index: i32,
 ) -> ProgramResult {
     msg!("INVARIANT: UPDATE SECOND PER LIQUIDITY");
+
     let pool = &mut ctx.accounts.pool.load_mut()?;
     let lower_tick = *ctx.accounts.lower_tick.load()?;
     let upper_tick = *ctx.accounts.upper_tick.load()?;

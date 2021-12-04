@@ -23,29 +23,35 @@ pub struct Swap<'info> {
         constraint = tickmap.to_account_info().owner == program_id,
     )]
     pub tickmap: AccountLoader<'info, Tickmap>,
+    #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x,)]
     pub token_x: Account<'info, Mint>,
+    #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y,)]
     pub token_y: Account<'info, Mint>,
     #[account(mut,
-        constraint = &reserve_x.mint == token_x.to_account_info().key
-    )]
-    pub reserve_x: Account<'info, TokenAccount>,
-    #[account(mut,
-        constraint = &reserve_y.mint == token_y.to_account_info().key
-    )]
-    pub reserve_y: Account<'info, TokenAccount>,
-    #[account(mut,
-        constraint = &account_x.mint == token_x.to_account_info().key
+        constraint = &account_x.mint == token_x.to_account_info().key,
+        constraint = &account_x.owner == owner.key,
     )]
     pub account_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = &account_y.mint == token_y.to_account_info().key
+        constraint = &account_y.mint == token_y.to_account_info().key,
+        constraint = &account_y.owner == owner.key	
     )]
     pub account_y: Box<Account<'info, TokenAccount>>,
+    #[account(mut,
+        constraint = &reserve_x.mint == token_x.to_account_info().key,
+        constraint = &reserve_x.owner == program_authority.key,
+        constraint = reserve_x.to_account_info().key == &pool.load()?.token_x_reserve
+    )]
+    pub reserve_x: Account<'info, TokenAccount>,
+    #[account(mut,
+        constraint = &reserve_y.mint == token_y.to_account_info().key,
+        constraint = &reserve_y.owner == program_authority.key,
+        constraint = reserve_y.to_account_info().key == &pool.load()?.token_y_reserve
+    )]
+    pub reserve_y: Account<'info, TokenAccount>,
     #[account()]
     pub owner: Signer<'info>,
-    #[account(
-        constraint = &state.load()?.authority == program_authority.key
-    )]
+    #[account(constraint = &state.load()?.authority == program_authority.key)]
     pub program_authority: AccountInfo<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,

@@ -7,12 +7,13 @@ use crate::structs::pool::Pool;
 use crate::structs::tickmap::Tickmap;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
+use anchor_spl::token::{Mint, TokenAccount};
 
 #[derive(Accounts)]
 #[instruction(bump: u8, init_tick: i32, fee: u64, tick_spacing: u16)]
 pub struct CreatePool<'info> {
     #[account(init,
-        seeds = [b"poolv1", fee_tier.to_account_info().key.as_ref(), token_x.key.as_ref(), token_y.key.as_ref()],
+        seeds = [b"poolv1", fee_tier.to_account_info().key.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
         bump = bump, payer = payer
     )]
     pub pool: AccountLoader<'info, Pool>,
@@ -23,10 +24,12 @@ pub struct CreatePool<'info> {
     pub fee_tier: AccountLoader<'info, FeeTier>,
     #[account(zero)]
     pub tickmap: AccountLoader<'info, Tickmap>,
-    pub token_x: AccountInfo<'info>,
-    pub token_y: AccountInfo<'info>,
-    pub token_x_reserve: AccountInfo<'info>,
-    pub token_y_reserve: AccountInfo<'info>,
+    pub token_x: Account<'info, Mint>,
+    pub token_y: Account<'info, Mint>,
+    #[account(constraint = &token_x_reserve.mint == token_x.to_account_info().key,)]
+    pub token_x_reserve: Account<'info, TokenAccount>,
+    #[account(constraint = &token_y_reserve.mint == token_y.to_account_info().key,)]
+    pub token_y_reserve: Account<'info, TokenAccount>,
     #[account(mut)]
     pub payer: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
@@ -43,10 +46,13 @@ pub fn handler(
 ) -> ProgramResult {
     msg!("INVARIANT: CREATE POOL");
 
-    let token_x_address = ctx.accounts.token_x.key.to_string();
-    let token_y_address = ctx.accounts.token_y.key.to_string();
+    let token_x_address = ctx.accounts.token_x.to_account_info().key;
+    let token_y_address = ctx.accounts.token_y.to_account_info().key;
     require!(
-        token_x_address.cmp(&token_y_address) == Ordering::Less,
+        token_x_address
+            .to_string()
+            .cmp(&token_y_address.to_string())
+            == Ordering::Less,
         InvalidPoolTokenAddresses
     );
 
@@ -55,10 +61,10 @@ pub fn handler(
     let current_timestamp = Clock::get()?.unix_timestamp as u64;
 
     **pool = Pool {
-        token_x: *ctx.accounts.token_x.key,
-        token_y: *ctx.accounts.token_y.key,
-        token_x_reserve: *ctx.accounts.token_x_reserve.key,
-        token_y_reserve: *ctx.accounts.token_y_reserve.key,
+        token_x: *token_x_address,
+        token_y: *token_y_address,
+        token_x_reserve: *ctx.accounts.token_x_reserve.to_account_info().key,
+        token_y_reserve: *ctx.accounts.token_y_reserve.to_account_info().key,
         tick_spacing: fee_tier.tick_spacing,
         fee: fee_tier.fee,
         liquidity: Decimal::new(0),

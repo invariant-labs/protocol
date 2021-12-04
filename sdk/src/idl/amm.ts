@@ -189,22 +189,22 @@ export type Amm = {
           "isSigner": false
         },
         {
-          "name": "reserveX",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "reserveY",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "accountX",
           "isMut": true,
           "isSigner": false
         },
         {
           "name": "accountY",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveX",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveY",
           "isMut": true,
           "isSigner": false
         },
@@ -1465,22 +1465,22 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
-          "name": "reserveX",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "reserveY",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "accountX",
           "isMut": true,
           "isSigner": false
         },
         {
           "name": "accountY",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveX",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveY",
           "isMut": true,
           "isSigner": false
         },
