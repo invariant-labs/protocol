@@ -12,7 +12,6 @@ const MAX_TIME_BEFORE_START: u64 = 3_600; //hour in sec
 const MAX_DURATION: u64 = 31_556_926; //year in sec
 
 #[derive(Accounts)]
-#[instruction(bump: u8)]
 pub struct CreateIncentive<'info> {
     #[account(init, payer = founder)]
     pub incentive: AccountLoader<'info, Incentive>,
@@ -25,16 +24,15 @@ pub struct CreateIncentive<'info> {
         constraint = &founder_token_account.owner == founder.to_account_info().key
     )]
     pub founder_token_account: Account<'info, TokenAccount>,
+    //TODO: Add token account and validate mints
     pub pool: AccountLoader<'info, Pool>,
     #[account(mut)]
     pub founder: Signer<'info>,
-    #[account(mut,
-        seeds = [b"staker".as_ref()],
-        bump = bump)]
+    //TODO: save staker_authority in state
     pub staker_authority: AccountInfo<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
-    pub amm: Program<'info, Amm>,
+    pub amm: Program<'info, Amm>, //TODO: Add program validation
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
@@ -59,7 +57,7 @@ impl<'info> DepositToken<'info> for CreateIncentive<'info> {
 
 pub fn handler(
     ctx: Context<CreateIncentive>,
-    _bump: u8,
+    nonce: u8,
     reward: Decimal,
     start_time: u64,
     end_time: u64,
@@ -84,6 +82,7 @@ pub fn handler(
         num_of_stakes: 0,
         start_time,
         end_time,
+        nonce,
     };
 
     //send tokens to incentive

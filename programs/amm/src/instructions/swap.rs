@@ -31,12 +31,12 @@ pub struct Swap<'info> {
         constraint = &account_x.mint == token_x.to_account_info().key,
         constraint = &account_x.owner == owner.key,
     )]
-    pub account_x: Box<Account<'info, TokenAccount>>,
+    pub account_x: Account<'info, TokenAccount>,
     #[account(mut,
         constraint = &account_y.mint == token_y.to_account_info().key,
         constraint = &account_y.owner == owner.key	
     )]
-    pub account_y: Box<Account<'info, TokenAccount>>,
+    pub account_y: Account<'info, TokenAccount>,
     #[account(mut,
         constraint = &reserve_x.mint == token_x.to_account_info().key,
         constraint = &reserve_x.owner == program_authority.key,

@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use crate::structs::*;
 use crate::decimal::*;
 use crate::math::*;
@@ -10,11 +12,11 @@ use anchor_spl::token::{self, TokenAccount, Transfer};
 use anchor_lang::solana_program::system_program;
 
 #[derive(Accounts)]
-#[instruction(index: u32, bump_stake: u8, bump_authority: u8, )]
+#[instruction(index: u32)]
 pub struct Withdraw<'info> {
     #[account(mut,
-        seeds = [b"staker", incentive.to_account_info().key.as_ref(), &position.load()?.pool.as_ref(), &position.load()?.id.to_le_bytes() ],
-        bump = bump_stake)]
+        seeds = [b"staker", incentive.to_account_info().key.as_ref(), &position.load()?.pool.as_ref(), &position.load()?.id.to_le_bytes()],
+        bump = user_stake.load()?.bump)]
     pub user_stake: AccountLoader<'info, UserStake>,
     #[account(mut,
         constraint = &user_stake.load()?.incentive == incentive.to_account_info().key 
@@ -29,18 +31,13 @@ pub struct Withdraw<'info> {
         constraint = &owner_token_account.owner == owner.to_account_info().key
     )]
     pub owner_token_account: Account<'info, TokenAccount>,
-    #[account(mut,
-        constraint = check_position_seeds(owner.to_account_info(), position.to_account_info().key, index)
-    )]
+    #[account(constraint = check_position_seeds(owner.to_account_info(), position.to_account_info().key, index))]
     pub position: AccountLoader<'info, Position>,
-    #[account(mut,
-        seeds = [b"staker".as_ref()],
-        bump = bump_authority)]
-    pub staker_authority: AccountInfo<'info>,
+    pub staker_authority: AccountInfo<'info>, // validate with state 
     pub owner: Signer<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
-    pub amm: Program<'info, Amm>,
+    pub amm: Program<'info, Amm>, //TODO: program address
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
@@ -67,16 +64,16 @@ impl<'info> WithdrawToken<'info> for Withdraw<'info> {
 pub fn handler(
     ctx: Context<Withdraw>,
     _index: i32,
-    _bump_stake: u8,
-    bump_authority: u8,
+    nonce: u8
 ) -> ProgramResult {
     msg!("WITHDRAW");
     let user_stake = &mut ctx.accounts.user_stake.load_mut()?;
     let position = ctx.accounts.position.load()?;
     let mut incentive = ctx.accounts.incentive.load_mut()?;
-    let current_time = Clock::get().unwrap().unix_timestamp as u64;
-    let update_slot = position.last_slot as u64;
-    let slot = Clock::get()?.slot as u64;
+    let current_time: u64 = Clock::get().unwrap().unix_timestamp.try_into().unwrap();
+    let update_slot = position.last_slot;
+    let slot: u64 = Clock::get()?.slot.try_into().unwrap();
+
     require!(slot == update_slot, SlotsAreNotEqual);
     require!(user_stake.liquidity.v != 0, ZeroSecondsStaked);
     require!(
@@ -109,7 +106,7 @@ pub fn handler(
     user_stake.seconds_per_liquidity_initial = Decimal::from_integer(0);
     user_stake.liquidity = Decimal::from_integer(0);
 
-    let seeds = &[STAKER_SEED.as_bytes(), &[bump_authority]];
+    let seeds = &[STAKER_SEED.as_bytes(), &[nonce]];
     let signer = &[&seeds[..]];
 
     let cpi_ctx = ctx.accounts.withdraw().with_signer(signer);
