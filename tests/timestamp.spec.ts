@@ -47,10 +47,10 @@ describe('timestamp', () => {
 
     await market.createState(admin, { v: fromFee(new BN(10000)) })
     await market.build()
-    await market.createFeeTier(feeTier, wallet)
+    await market.createFeeTier(feeTier, admin)
   })
   it('#create()', async () => {
-    const current_timestamp = await new BN(new Date().valueOf() / 1000).toString()
+    const currentTimestamp = new BN(new Date().valueOf() / 1000).toString()
     await market.create({
       pair,
       signer: admin
@@ -74,6 +74,7 @@ describe('timestamp', () => {
     assert.ok(tickmapData.bitmap.every((v) => v == 0))
   })
 
+  // TODO: why is this commented?
   // it('#timestamp', async () => {
   //     const mintAmount = tou64(new BN(10).pow(new BN(10)))
 
