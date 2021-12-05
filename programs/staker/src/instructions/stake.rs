@@ -40,6 +40,8 @@ pub fn handler(ctx: Context<CreateUserStake>, _index: i32, _bump: u8) -> Program
     let update_slot = position.last_slot as u64;
     let slot = Clock::get()?.slot as u64;
     require!(slot == update_slot, SlotsAreNotEqual);
+    // FIX: please use dereferenced assignments (in init account case we have sure that we do not miss any fields)
+    // FIX: it's impossible in init account that _bump is unused
     {
         user_stake.position = *ctx.accounts.position.to_account_info().key;
         user_stake.liquidity = Decimal::new(position.liquidity.v);

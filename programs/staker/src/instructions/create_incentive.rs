@@ -75,15 +75,16 @@ pub fn handler(
     require!((current_time + MAX_DURATION) >= end_time, TooLongDuration);
     let incentive = &mut ctx.accounts.incentive.load_init()?;
 
-    {
-        incentive.founder = *ctx.accounts.founder.to_account_info().key;
-        incentive.pool = *ctx.accounts.pool.to_account_info().key;
-        incentive.token_account = *ctx.accounts.incentive_token_account.to_account_info().key;
-        incentive.total_reward_unclaimed = reward;
-        incentive.total_seconds_claimed = Decimal::from_integer(0);
-        incentive.start_time = start_time;
-        incentive.end_time = end_time;
-    }
+    **incentive = Incentive {
+        founder: *ctx.accounts.founder.to_account_info().key,
+        pool: *ctx.accounts.pool.to_account_info().key,
+        token_account: *ctx.accounts.incentive_token_account.to_account_info().key,
+        total_reward_unclaimed: reward,
+        total_seconds_claimed: Decimal::from_integer(0),
+        num_of_stakes: 0,
+        start_time,
+        end_time,
+    };
 
     //send tokens to incentive
     let cpi_ctx = ctx.accounts.deposit();
