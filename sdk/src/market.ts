@@ -837,6 +837,7 @@ export interface Position {
   feeGrowthInsideX: Decimal
   feeGrowthInsideY: Decimal
   secondsPerLiquidityInside: Decimal
+  lastSlot: BN,
   tokensOwedX: Decimal
   tokensOwedY: Decimal
   bump: number
