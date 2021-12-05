@@ -96,7 +96,7 @@ describe('Withdraw tests', () => {
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
     await market.createState(admin, protocolFee)
     await market.build()
-    await market.createFeeTier(feeTier, wallet)
+    await market.createFeeTier(feeTier, admin)
     await market.create({
       pair,
       signer: admin

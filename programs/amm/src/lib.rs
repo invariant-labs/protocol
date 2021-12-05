@@ -161,8 +161,11 @@ pub mod amm {
     }
 
     #[access_control(admin(&ctx.accounts.state, &ctx.accounts.admin))]
-    pub fn withdraw_protocol_fee(ctx: Context<WithdrawProtocolFee>) -> ProgramResult {
-        instructions::withdraw_protocol_fee::handler(ctx, SEED)
+    pub fn withdraw_protocol_fee(
+        ctx: Context<WithdrawProtocolFee>,
+        _fee_tier_address: Pubkey,
+    ) -> ProgramResult {
+        instructions::withdraw_protocol_fee::handler(ctx, SEED, _fee_tier_address)
     }
 }
 

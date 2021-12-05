@@ -6,14 +6,14 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, TokenAccount, Transfer};
 
 #[derive(Accounts)]
+#[instruction(fee_tier_address: Pubkey)]
 pub struct WithdrawProtocolFee<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
     #[account(mut,
-        seeds = [b"poolv1", fee_tier.key.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()], bump = pool.load()?.bump
+        seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()], bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,
-    pub fee_tier: AccountInfo<'info>, //TODO: pass this fee tier by
     #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x)]
     pub token_x: Account<'info, Mint>,
     #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y)]
@@ -70,7 +70,11 @@ impl<'info> SendTokens<'info> for WithdrawProtocolFee<'info> {
     }
 }
 
-pub fn handler(ctx: Context<WithdrawProtocolFee>, seed: &str) -> ProgramResult {
+pub fn handler(
+    ctx: Context<WithdrawProtocolFee>,
+    seed: &str,
+    _fee_tier_address: Pubkey,
+) -> ProgramResult {
     msg!("INVARIANT: WITHDRAW PROTOCOL FEE");
 
     let state = ctx.accounts.state.load()?;

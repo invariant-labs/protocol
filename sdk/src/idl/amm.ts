@@ -799,11 +799,6 @@ export type Amm = {
           "isSigner": false
         },
         {
-          "name": "feeTier",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "tokenX",
           "isMut": false,
           "isSigner": false
@@ -849,7 +844,12 @@ export type Amm = {
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "feeTierAddress",
+          "type": "publicKey"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -2080,11 +2080,6 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
-          "name": "feeTier",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "tokenX",
           "isMut": false,
           "isSigner": false
@@ -2130,7 +2125,12 @@ export const IDL: Amm = {
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "feeTierAddress",
+          "type": "publicKey"
+        }
+      ]
     }
   ],
   "accounts": [

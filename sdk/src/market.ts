@@ -603,13 +603,12 @@ export class Market {
     const pool = await this.get(pair)
     const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
 
-    return (this.program.instruction.withdrawProtocolFee({
+    return (this.program.instruction.withdrawProtocolFee(feeTierAddress, {
       accounts: {
         state: this.stateAddress,
         pool: await pair.getAddress(this.program.programId),
         tokenX: pool.tokenX,
         tokenY: pool.tokenY,
-        feeTier: feeTierAddress,
         reserveX: pool.tokenXReserve,
         reserveY: pool.tokenYReserve,
         accountX,
