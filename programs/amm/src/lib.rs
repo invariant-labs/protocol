@@ -35,7 +35,7 @@ pub mod amm {
     ) -> ProgramResult {
         instructions::create_state::handler(ctx, bump, nonce, protocol_fee)
     }
-    //#[access_control(admin(&ctx.accounts.state, &ctx.accounts.payer))]
+    #[access_control(admin(&ctx.accounts.state, &ctx.accounts.admin))]
     pub fn create_fee_tier(
         ctx: Context<CreateFeeTier>,
         bump: u8,

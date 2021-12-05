@@ -42,6 +42,7 @@ describe("fee-tier", () => {
     it('#createState()', async () => {
         await sleep(1000)
         await market.createState(admin, protocolFee)
+        await market.build()
     })
 
     it('#createFeeTier()', async () => {

@@ -257,8 +257,9 @@ export class Market {
 
     return this.program.instruction.createFeeTier(bump, fee, ts, {
       accounts: {
+        state: this.stateAddress,
         feeTier: address,
-        payer,
+        admin: payer,
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId
       }
