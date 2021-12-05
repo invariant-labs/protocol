@@ -9,12 +9,11 @@ use anchor_spl::token::{self, Mint, TokenAccount, Transfer};
 pub struct WithdrawProtocolFee<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
-    #[account(mut, seeds = [b"poolv1", fee_tier.key.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()], bump = pool.load()?.bump)]
-    pub pool: AccountLoader<'info, Pool>,
-    pub fee_tier: AccountInfo<'info>,
     #[account(mut,
-        constraint = &reserve_x.mint == token_x.to_account_info().key
+        seeds = [b"poolv1", fee_tier.key.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()], bump = pool.load()?.bump
     )]
+    pub pool: AccountLoader<'info, Pool>,
+    pub fee_tier: AccountInfo<'info>, //TODO: pass this fee tier by
     #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x)]
     pub token_x: Account<'info, Mint>,
     #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y)]
@@ -39,9 +38,7 @@ pub struct WithdrawProtocolFee<'info> {
         constraint = reserve_y.to_account_info().key == &pool.load()?.token_y_reserve
     )]
     pub reserve_y: Account<'info, TokenAccount>,
-    #[account(mut,
-        constraint = &state.load()?.admin == admin.key
-    )]
+    #[account(constraint = &state.load()?.admin == admin.key)]
     pub admin: Signer<'info>,
     #[account(constraint = &state.load()?.authority == program_authority.key)]
     pub program_authority: AccountInfo<'info>,

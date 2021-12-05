@@ -46,13 +46,9 @@ pub struct CreatePosition<'info> {
         bump = upper_tick.load()?.bump
     )]
     pub upper_tick: AccountLoader<'info, Tick>,
-    #[account(mut,
-        constraint = token_x.to_account_info().key == &pool.load()?.token_x,
-    )]
+    #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x,)]
     pub token_x: Account<'info, Mint>,
-    #[account(mut,
-        constraint = token_y.to_account_info().key == &pool.load()?.token_y,
-    )]
+    #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y,)]
     pub token_y: Account<'info, Mint>,
     #[account(mut,
         constraint = &account_x.mint == token_x.to_account_info().key,

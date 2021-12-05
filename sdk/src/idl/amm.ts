@@ -377,12 +377,12 @@ export type Amm = {
         },
         {
           "name": "tokenX",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "tokenY",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -501,12 +501,12 @@ export type Amm = {
         },
         {
           "name": "tokenX",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "tokenY",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -649,17 +649,17 @@ export type Amm = {
         },
         {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {
           "name": "tokenX",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "tokenY",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -722,12 +722,12 @@ export type Amm = {
         },
         {
           "name": "lowerTick",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "upperTick",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -737,17 +737,17 @@ export type Amm = {
         },
         {
           "name": "tokenX",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "tokenY",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -800,7 +800,7 @@ export type Amm = {
         },
         {
           "name": "tokenX",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -830,7 +830,7 @@ export type Amm = {
         },
         {
           "name": "admin",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -1653,12 +1653,12 @@ export const IDL: Amm = {
         },
         {
           "name": "tokenX",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "tokenY",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1777,12 +1777,12 @@ export const IDL: Amm = {
         },
         {
           "name": "tokenX",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "tokenY",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1925,17 +1925,17 @@ export const IDL: Amm = {
         },
         {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {
           "name": "tokenX",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "tokenY",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1998,12 +1998,12 @@ export const IDL: Amm = {
         },
         {
           "name": "lowerTick",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "upperTick",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -2013,17 +2013,17 @@ export const IDL: Amm = {
         },
         {
           "name": "tokenX",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "tokenY",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -2076,7 +2076,7 @@ export const IDL: Amm = {
         },
         {
           "name": "tokenX",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -2106,7 +2106,7 @@ export const IDL: Amm = {
         },
         {
           "name": "admin",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {

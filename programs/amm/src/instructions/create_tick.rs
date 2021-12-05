@@ -16,7 +16,8 @@ pub struct CreateTick<'info> {
     pub tick: AccountLoader<'info, Tick>,
     #[account(
         seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
-        bump = pool.load()?.bump)]
+        bump = pool.load()?.bump
+    )]
     pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
         constraint = tickmap.to_account_info().key == &pool.load()?.tickmap,
@@ -52,7 +53,7 @@ pub fn handler(
     // init tick
     let below_current_tick = index <= pool.current_tick_index;
     *tick = Tick {
-        index: index,
+        index,
         sign: true,
         liquidity_change: Decimal::new(0),
         liquidity_gross: Decimal::new(0),

@@ -12,7 +12,7 @@ pub struct CreateFeeTier<'info> {
     )]
     pub fee_tier: AccountLoader<'info, FeeTier>,
     #[account(mut)]
-    pub payer: Signer<'info>,
+    pub payer: Signer<'info>, //TODO: change to admin add validation [constraint = &state.load()?.admin == admin.key]
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,

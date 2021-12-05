@@ -49,7 +49,6 @@ pub struct Swap<'info> {
         constraint = reserve_y.to_account_info().key == &pool.load()?.token_y_reserve
     )]
     pub reserve_y: Box<Account<'info, TokenAccount>>,
-    #[account()]
     pub owner: Signer<'info>,
     #[account(constraint = &state.load()?.authority == program_authority.key)]
     pub program_authority: AccountInfo<'info>,
