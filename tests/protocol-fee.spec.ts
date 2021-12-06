@@ -18,12 +18,7 @@ describe('protocol-fee', () => {
     const mintAuthority = Keypair.generate()
     const positionOwner = Keypair.generate()
     const admin = Keypair.generate()
-    const market = new Market(
-        Network.LOCAL,
-        provider.wallet,
-        connection,
-        anchor.workspace.Amm.programId
-    )
+    let market: Market
     const feeTier: FeeTier = {
         fee: fromFee(new BN(600)),
         tickSpacing: 10
@@ -39,6 +34,13 @@ describe('protocol-fee', () => {
 
 
     before(async () => {
+        market = await Market.build(
+            Network.LOCAL,
+            provider.wallet,
+            connection,
+            anchor.workspace.Amm.programId
+        )
+
         await Promise.all([
             await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
             await connection.requestAirdrop(admin.publicKey, 1e9),
@@ -55,7 +57,6 @@ describe('protocol-fee', () => {
         tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
         await market.createState(admin, protocolFee)
-        await market.build()
         await market.createFeeTier(feeTier, admin)
     })
 

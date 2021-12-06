@@ -20,12 +20,7 @@ describe('claim', () => {
   const mintAuthority = Keypair.generate()
   const positionOwner = Keypair.generate()
   const admin = Keypair.generate()
-  const market = new Market(
-    Network.LOCAL,
-    provider.wallet,
-    connection,
-    anchor.workspace.Amm.programId
-  )
+  let market: Market
   const feeTier: FeeTier = {
     fee: fromFee(new BN(600)), // 0.6%
     tickSpacing: 10
@@ -36,6 +31,13 @@ describe('claim', () => {
   let tokenY: Token
 
   before(async () => {
+    market = await Market.build(
+      Network.LOCAL,
+      provider.wallet,
+      connection,
+      anchor.workspace.Amm.programId
+    )
+
     await Promise.all([
       connection.requestAirdrop(mintAuthority.publicKey, 1e9),
       connection.requestAirdrop(admin.publicKey, 1e9),
@@ -52,7 +54,6 @@ describe('claim', () => {
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
     await market.createState(admin, protocolFee)
-    await market.build()
   })
   it('#createState()', async () => {
     const state = await market.getState()

@@ -18,12 +18,7 @@ describe('Position list', () => {
   const mintAuthority = Keypair.generate()
   const positionOwner = Keypair.generate()
   const admin = Keypair.generate()
-  const market = new Market(
-    Network.LOCAL,
-    provider.wallet,
-    connection,
-    anchor.workspace.Amm.programId
-  )
+  let market: Market
   const feeTier: FeeTier = {
     fee: fromFee(new BN(600)),
     tickSpacing: 3
@@ -40,6 +35,13 @@ describe('Position list', () => {
   let userTokenYAccount: PublicKey
 
   before(async () => {
+    market = await Market.build(
+      Network.LOCAL,
+      provider.wallet,
+      connection,
+      anchor.workspace.Amm.programId
+    )
+
     // Request airdrops
     await Promise.all([
       await connection.requestAirdrop(wallet.publicKey, 1e9),
@@ -64,7 +66,6 @@ describe('Position list', () => {
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], yOwnerAmount)
 
     await market.createState(admin, protocolFee)
-    await market.build()
     await market.createFeeTier(feeTier, admin)
   })
   describe('Settings', async () => {

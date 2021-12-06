@@ -11,20 +11,21 @@ describe('slippage', () => {
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
-  const market = new Market(
-    Network.LOCAL,
-    provider.wallet,
-    connection,
-    anchor.workspace.Amm.programId
-  )
+  let market: Market
   const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
 
   let knownPrice: Decimal
   let expectedPrice: BN
 
   before(async () => {
+    market = await Market.build(
+      Network.LOCAL,
+      provider.wallet,
+      connection,
+      anchor.workspace.Amm.programId
+    )
+
     await market.createState(wallet, protocolFee)
-    await market.build()
 
     const { pair, mintAuthority } = await createPoolWithLiquidity(market, connection, wallet)
     const { owner, userAccountX, userAccountY } = await createUserWithTokens(
