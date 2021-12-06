@@ -10,6 +10,7 @@ pub struct CreateState<'info> {
     pub state: AccountLoader<'info, State>,
     #[account(mut)]
     pub admin: Signer<'info>,
+    // REVIEW Lack of check if authority is PDA
     pub program_authority: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]

@@ -12,6 +12,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
 #[derive(Accounts)]
+// REVIEW why pass address via params not context?
 #[instruction(fee_tier_address: Pubkey)]
 pub struct Swap<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
@@ -19,7 +20,9 @@ pub struct Swap<'info> {
     #[account(mut, seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()], bump = pool.load()?.bump)]
     pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
-        constraint = tickmap.to_account_info().key == &pool.load()?.tickmap,
+        // REVIEW you should avoid using to_account_info() when you can use the key directly
+        // Comment about entire repo
+        constraint = &tickmap.key() == &pool.load()?.tickmap,
         constraint = tickmap.to_account_info().owner == program_id,
     )]
     pub tickmap: AccountLoader<'info, Tickmap>,
@@ -172,6 +175,7 @@ pub fn handler(
         total_amount_out = total_amount_out + result.amount_out;
 
         // Fail if price would go over swap limit
+        // REVIEW shouldn't it be >= instead of == ?
         if { pool.sqrt_price } == sqrt_price_limit && remaining_amount > Decimal::new(0) {
             Err(ErrorCode::PriceLimitReached)?;
         }
@@ -226,6 +230,7 @@ pub fn handler(
     }
 
     // Execute swap
+    // REVIEW use match pattern instead of if-else
     let (take_ctx, send_ctx) = if x_to_y {
         (ctx.accounts.take_x(), ctx.accounts.send_y())
     } else {
@@ -236,6 +241,8 @@ pub fn handler(
     let signer = &[&seeds[..]];
 
     // Maybe rounding error should be counted?
+    // REVIEW if we can count error it should be added to admin fee
+    // can be solved later in production
     token::transfer(take_ctx, total_amount_in.to_token_ceil())?;
     token::transfer(
         send_ctx.with_signer(signer),

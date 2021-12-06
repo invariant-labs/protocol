@@ -7,6 +7,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 
 #[derive(Accounts)]
+// REVIEW i think we should pass all Pubkey via context
 #[instruction(bump: u8, fee_tier_address: Pubkey, index: i32)]
 pub struct CreateTick<'info> {
     #[account(init,
@@ -27,9 +28,9 @@ pub struct CreateTick<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x)]
-    pub token_x: AccountInfo<'info>,
+    pub token_x: AccountInfo<'info>, // REVIEW we should validate account data
     #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y)]
-    pub token_y: AccountInfo<'info>,
+    pub token_y: AccountInfo<'info>, // REVIEW we should validate account data
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
@@ -47,7 +48,7 @@ pub fn handler(
     let mut tickmap = ctx.accounts.tickmap.load_mut()?;
     let pool = ctx.accounts.pool.load()?;
     let current_timestamp = Clock::get()?.unix_timestamp as u64;
-
+    // REVIEW IMO tick should be only initialized when there is liquidity there not when it is created
     tickmap.set(true, index, pool.tick_spacing);
 
     // init tick
@@ -70,7 +71,7 @@ pub fn handler(
             true => (current_timestamp - pool.start_timestamp),
             false => 0,
         },
-        seconds_per_liquidity_outside: Decimal::new(0),
+        seconds_per_liquidity_outside: Decimal::new(0), // REVIEW are you sure ? this seems to not match with rest
         bump,
     };
 

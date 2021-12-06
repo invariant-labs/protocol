@@ -26,9 +26,12 @@ pub struct CreatePool<'info> {
     pub tickmap: AccountLoader<'info, Tickmap>,
     pub token_x: Account<'info, Mint>,
     pub token_y: Account<'info, Mint>,
-    #[account(constraint = &token_x_reserve.mint == token_x.to_account_info().key,)]
+    #[account(constraint = &token_x_reserve.mint == token_x.to_account_info().key)]
+    // REVIEW Lack of check if reserve is owned by PDA
+    // we can also initialize those accounts in create_pool
     pub token_x_reserve: Account<'info, TokenAccount>,
-    #[account(constraint = &token_y_reserve.mint == token_y.to_account_info().key,)]
+    #[account(constraint = &token_y_reserve.mint == token_y.to_account_info().key)]
+    // REVIEW Lack of check if reserve is owned by PDA
     pub token_y_reserve: Account<'info, TokenAccount>,
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -46,8 +49,8 @@ pub fn handler(
 ) -> ProgramResult {
     msg!("INVARIANT: CREATE POOL");
 
-    let token_x_address = ctx.accounts.token_x.to_account_info().key;
-    let token_y_address = ctx.accounts.token_y.to_account_info().key;
+    let token_x_address = &ctx.accounts.token_x.key();
+    let token_y_address = &ctx.accounts.token_y.key();
     require!(
         token_x_address
             .to_string()
