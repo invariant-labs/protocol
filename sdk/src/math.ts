@@ -360,10 +360,6 @@ export const getX = (liquidity: BN, upperSqrtPrice: BN, currentSqrtPrice: BN): B
     throw new Error("Upper tick price cannot be lower than current tick price")
   }
 
-  if (upperSqrtPrice.eq(currentSqrtPrice)) {
-    return new BN(0)
-  }
-
   const denominator = currentSqrtPrice.mul(upperSqrtPrice).div(DENOMINATOR)
   const nominator = upperSqrtPrice.sub(currentSqrtPrice)
 
@@ -378,9 +374,9 @@ export const getY = (liquidity: BN, currentSqrtPrice: BN, lowerSqrtPrice: BN): B
     throw new Error("Upper tick price cannot be lower than current tick price")
   }
 
-  const differece = currentSqrtPrice.sub(lowerSqrtPrice)
+  const difference = currentSqrtPrice.sub(lowerSqrtPrice)
 
-  return liquidity.mul(differece).div(DENOMINATOR)
+  return liquidity.mul(difference).div(DENOMINATOR)
 }
 
 export const getLiquidityByX = (

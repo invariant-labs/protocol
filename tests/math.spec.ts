@@ -1,8 +1,8 @@
 import { assert } from 'chai'
 import { BN } from '@project-serum/anchor'
 import { calculate_price_sqrt, DENOMINATOR, TICK_LIMIT } from '@invariant-labs/sdk'
-import { getLiquidityByX, getLiquidityByY } from '@invariant-labs/sdk/src/math'
-import { toDecimal } from '@invariant-labs/sdk/src/utils'
+import { getLiquidityByX, getLiquidityByY, getX, getY } from '@invariant-labs/sdk/src/math'
+import { assertThrowsAsync, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { calculatePriceAfterSlippage, findClosestTicks } from '@invariant-labs/sdk/src/math'
 import { setInitialized } from './testUtils'
 
@@ -371,4 +371,150 @@ describe('Math', () => {
       assert.ok(isEqual)
     })
   })
+  describe("calculate x having price and liquidity", () => {
+    const liquidity = new BN(2000).mul(DENOMINATOR)
+
+    it("upperSqrtPrice > currentSqrtPrice", async () => {
+      const upperTick = 110
+      const currentTick = 80
+
+      const upperSqrtPrice = calculate_price_sqrt(upperTick)
+      const currentSqrtPrice = calculate_price_sqrt(currentTick)
+
+      const x = getX(liquidity, upperSqrtPrice.v, currentSqrtPrice.v)
+
+      assert.ok(x.eq(new BN(2985635497947)))
+    })
+
+    it("upperSqrtPrice = currentSqrtPrice", async () => {
+      const upperTick = 80
+      const currentTick = 80
+
+      const upperSqrtPrice = calculate_price_sqrt(upperTick)
+      const currentSqrtPrice = calculate_price_sqrt(currentTick)
+      
+      const x = getX(liquidity, upperSqrtPrice.v, currentSqrtPrice.v)
+
+      assert.ok(x.eq(new BN(0)))
+      
+    })
+
+    it("upperSqrtPrice < currentSqrtPrice", async () => {
+      const currentTick = 110
+      const upperTick = 80
+
+      const upperSqrtPrice = calculate_price_sqrt(upperTick)
+      const currentSqrtPrice = calculate_price_sqrt(currentTick)
+
+      try {
+        getX(liquidity, upperSqrtPrice.v, currentSqrtPrice.v)
+      } catch (e: any) {
+        assert.isTrue(true)
+        return
+      }
+
+      assert.isTrue(false)
+    })
+
+    it("upperSqrtPrice = 0", async () => {
+      const upperSqrtPrice = new BN(0)
+      const currentSqrtPrice = calculate_price_sqrt(10)
+
+      try {
+        getX(liquidity, upperSqrtPrice, currentSqrtPrice.v)
+      } catch (e: any) {
+        assert.isTrue(true)
+        return
+      }
+
+      assert.isTrue(false)
+    })
+
+    it("currentSqrtPrice = 0", async () => {
+      const currentSqrtPrice = new BN(0)
+      const upperSqrtPrice = calculate_price_sqrt(10)
+
+      try {
+        getX(liquidity, upperSqrtPrice.v, currentSqrtPrice)
+      } catch (e: any) {
+        assert.isTrue(true)
+        return
+      }
+
+      assert.isTrue(false)
+    })
+  })
+
+  describe("calculate y having liquidity and price", () => {
+    const liquidity = new BN(2000).mul(DENOMINATOR)
+
+    it("lowerSqrtPrice < currentSqrtPrice", async () => {
+      const lowerTick = 50
+      const currentTick = 80
+
+      const lowerSqrtPrice = calculate_price_sqrt(lowerTick)
+      const currentSqrtPrice = calculate_price_sqrt(currentTick)
+
+      const y = getY(liquidity, currentSqrtPrice.v, lowerSqrtPrice.v)
+
+      assert.ok(y.eq(new BN(3009615174000)))
+    })
+
+    it("lowerSqrtPrice = currentSqrtPrice", async () => {
+      const lowerTick = 80
+      const currentTick = 80
+
+      const lowerSqrtPrice = calculate_price_sqrt(lowerTick)
+      const currentSqrtPrice = calculate_price_sqrt(currentTick)
+
+      const y = getY(liquidity, currentSqrtPrice.v, lowerSqrtPrice.v)
+
+      assert.ok(y.eq(new BN(0)))
+    })
+
+    it("lowerSqrtPrice > currentSqrtPrice", async () => {
+      const lowerTick = 80
+      const currentTick = 50
+
+      const lowerSqrtPrice = calculate_price_sqrt(lowerTick)
+      const currentSqrtPrice = calculate_price_sqrt(currentTick)
+
+      try {
+        getY(liquidity, currentSqrtPrice.v, lowerSqrtPrice.v)
+      } catch (e: any) {
+        assert.isTrue(true)
+        return
+      }
+
+      assert.isTrue(false)
+    })
+
+    it("lowerSqrtPrice = 0", async () => {
+      const lowerSqrtPrice = new BN(0)
+      const currentSqrtPrice = calculate_price_sqrt(0)
+
+      try {
+        getY(liquidity, currentSqrtPrice.v, lowerSqrtPrice)
+      } catch (e: any) {
+        assert.isTrue(true)
+        return
+      }
+
+      assert.isTrue(false)
+    })
+
+    it("currentSqrtPrice = 0", async () => {
+      const currentSqrtPrice = new BN(0)
+      const lowerSqrtPrice = calculate_price_sqrt(0)
+
+      try {
+        getY(liquidity, currentSqrtPrice, lowerSqrtPrice.v)
+      } catch (e: any) {
+        assert.isTrue(true)
+        return
+      }
+
+      assert.isTrue(false)
+    })
+  }) 
 })
