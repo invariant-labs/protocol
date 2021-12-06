@@ -3,7 +3,7 @@ import { Program, Provider, BN } from '@project-serum/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { Network, SEED, Market, Pair } from '@invariant-labs/sdk'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { createToken } from './testUtils'
+import { createToken, eqDecimal } from './testUtils'
 import { assert } from 'chai'
 import { DENOMINATOR } from '@invariant-labs/sdk'
 import { TICK_LIMIT } from '@invariant-labs/sdk'
@@ -27,21 +27,19 @@ describe('claim', () => {
     anchor.workspace.Amm.programId
   )
   const feeTier: FeeTier = {
-    fee: fromFee(new BN(600)),
+    fee: fromFee(new BN(600)), // 0.6%
     tickSpacing: 10
   }
-  const protocolFee: Decimal = { v: fromFee(new BN(10000))}
+  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
-  let programAuthority: PublicKey
-  let nonce: number
 
   before(async () => {
     await Promise.all([
-      await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
-      await connection.requestAirdrop(admin.publicKey, 1e9),
-      await connection.requestAirdrop(positionOwner.publicKey, 1e9)
+      connection.requestAirdrop(mintAuthority.publicKey, 1e9),
+      connection.requestAirdrop(admin.publicKey, 1e9),
+      connection.requestAirdrop(positionOwner.publicKey, 1e9)
     ])
 
     const tokens = await Promise.all([
@@ -49,29 +47,31 @@ describe('claim', () => {
       createToken(connection, wallet, mintAuthority)
     ])
 
-    const swaplineProgram = anchor.workspace.Amm as Program
-    const [_programAuthority, _nonce] = await anchor.web3.PublicKey.findProgramAddress(
-      [Buffer.from(SEED)],
-      swaplineProgram.programId
-    )
-    nonce = _nonce
-    programAuthority = _programAuthority
-
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+
+    await market.createState(admin, protocolFee)
+    await market.build()
   })
   it('#createState()', async () => {
-    await market.createState(admin, protocolFee)
+    const state = await market.getState()
+    const { bump } = await market.getStateAddress()
+    const { programAuthority, nonce } = await market.getProgramAuthority()
+
+    assert.ok(state.admin.equals(admin.publicKey))
+    assert.ok(state.authority.equals(programAuthority))
+    assert.ok(eqDecimal(state.protocolFee, protocolFee))
+    assert.ok(state.nonce === nonce)
+    assert.ok(state.bump === bump)
   })
   it('#createFeeTier()', async () => {
     await market.createFeeTier(feeTier, admin)
   })
   it('#create()', async () => {
-    // 0.6% / 10
     await market.create({
       pair,
-      signer: admin
+      signer: positionOwner
     })
     const createdPool = await market.get(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
@@ -85,8 +85,6 @@ describe('claim', () => {
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
     assert.ok(createdPool.feeProtocolTokenX.v.eqn(0))
     assert.ok(createdPool.feeProtocolTokenY.v.eqn(0))
-    assert.ok(createdPool.authority.equals(programAuthority))
-    assert.ok(createdPool.nonce == nonce)
 
     const tickmapData = await market.getTickmap(pair)
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)

@@ -12,4 +12,5 @@ pub struct Incentive {
     pub end_time: u64,
     pub num_of_stakes: u64,
     pub pool: Pubkey,
+    pub nonce: u8,
 }

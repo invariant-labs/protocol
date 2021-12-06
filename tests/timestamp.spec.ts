@@ -29,8 +29,6 @@ describe('timestamp', () => {
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
-  let programAuthority: PublicKey
-  let nonce: number
 
   before(async () => {
     await Promise.all([
@@ -43,25 +41,16 @@ describe('timestamp', () => {
       createToken(connection, wallet, mintAuthority)
     ])
 
-    const swaplineProgram = anchor.workspace.Amm as Program
-    const [_programAuthority, _nonce] = await anchor.web3.PublicKey.findProgramAddress(
-      [Buffer.from(SEED)],
-      swaplineProgram.programId
-    )
-    nonce = _nonce
-    programAuthority = _programAuthority
-
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
-  })
 
-  it('createFeeTier()', async () => {
-    await market.createFeeTier(feeTier, wallet)
+    await market.createState(admin, { v: fromFee(new BN(10000)) })
+    await market.build()
+    await market.createFeeTier(feeTier, admin)
   })
-
   it('#create()', async () => {
-    const current_timestamp = await new BN(new Date().valueOf() / 1000).toString()
+    const currentTimestamp = new BN(new Date().valueOf() / 1000).toString()
     await market.create({
       pair,
       signer: admin
@@ -78,15 +67,14 @@ describe('timestamp', () => {
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
     assert.ok(createdPool.feeProtocolTokenX.v.eqn(0))
     assert.ok(createdPool.feeProtocolTokenY.v.eqn(0))
-    assert.ok(createdPool.authority.equals(programAuthority))
     assert.ok(createdPool.secondsPerLiquidityGlobal.v.eqn(0))
-    assert.equal(createdPool.nonce, nonce)
 
     const tickmapData = await market.getTickmap(pair)
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
     assert.ok(tickmapData.bitmap.every((v) => v == 0))
   })
 
+  // TODO: why is this commented?
   // it('#timestamp', async () => {
   //     const mintAmount = tou64(new BN(10).pow(new BN(10)))
 
