@@ -1,7 +1,6 @@
 use crate::decimal::Decimal;
 use crate::*;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::clock::UnixTimestamp;
 
 #[account(zero_copy)]
 #[derive(PartialEq, Default, Debug)]
@@ -25,8 +24,6 @@ pub struct Pool {
     pub start_timestamp: u64,
     pub last_timestamp: u64,
     pub bump: u8,
-    pub nonce: u8,
-    pub authority: Pubkey,
 }
 
 impl Pool {

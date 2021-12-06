@@ -17,13 +17,15 @@ describe('slippage', () => {
     connection,
     anchor.workspace.Amm.programId
   )
-  const protocolFee: Decimal = { v: fromFee(new BN(10000))}
-  
+  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
+
   let knownPrice: Decimal
   let expectedPrice: BN
 
   before(async () => {
     await market.createState(wallet, protocolFee)
+    await market.build()
+
     const { pair, mintAuthority } = await createPoolWithLiquidity(market, connection, wallet)
     const { owner, userAccountX, userAccountY } = await createUserWithTokens(
       pair,

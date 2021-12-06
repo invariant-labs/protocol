@@ -4,6 +4,7 @@ use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::structs::tickmap::Tickmap;
 use anchor_lang::prelude::*;
+use anchor_lang::solana_program::system_program;
 
 #[derive(Accounts)]
 #[instruction(bump: u8, fee_tier_address: Pubkey, index: i32)]
@@ -12,21 +13,25 @@ pub struct CreateTick<'info> {
         seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &index.to_le_bytes()],
         bump = bump, payer = payer
     )]
-    pub tick: Loader<'info, Tick>,
+    pub tick: AccountLoader<'info, Tick>,
     #[account(
         seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
-        bump = pool.load()?.bump)]
-    pub pool: Loader<'info, Pool>,
+        bump = pool.load()?.bump
+    )]
+    pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
         constraint = tickmap.to_account_info().key == &pool.load()?.tickmap,
         constraint = tickmap.to_account_info().owner == program_id,
     )]
-    pub tickmap: Loader<'info, Tickmap>,
-    #[account(mut, signer)]
-    pub payer: AccountInfo<'info>,
+    pub tickmap: AccountLoader<'info, Tickmap>,
+    #[account(mut)]
+    pub payer: Signer<'info>,
+    #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x)]
     pub token_x: AccountInfo<'info>,
+    #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y)]
     pub token_y: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
+    #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }
 
@@ -36,7 +41,7 @@ pub fn handler(
     _fee_tier_address: Pubkey,
     index: i32,
 ) -> ProgramResult {
-    msg!("CREATE_TICK");
+    msg!("INVARIANT: CREATE_TICK");
 
     let mut tick = ctx.accounts.tick.load_init()?;
     let mut tickmap = ctx.accounts.tickmap.load_mut()?;
@@ -48,7 +53,7 @@ pub fn handler(
     // init tick
     let below_current_tick = index <= pool.current_tick_index;
     *tick = Tick {
-        index: index,
+        index,
         sign: true,
         liquidity_change: Decimal::new(0),
         liquidity_gross: Decimal::new(0),
@@ -66,7 +71,7 @@ pub fn handler(
             false => 0,
         },
         seconds_per_liquidity_outside: Decimal::new(0),
-        bump: bump,
+        bump,
     };
 
     Ok(())
