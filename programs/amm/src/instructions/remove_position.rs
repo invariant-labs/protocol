@@ -149,7 +149,7 @@ pub fn handler(
             false,
             current_timestamp,
         )?;
-
+        // REVIEW are fee tokens updated ?
         let amount_x = amount_x + removed_position.tokens_owed_x.to_token_floor();
         let amount_y = amount_y + removed_position.tokens_owed_y.to_token_floor();
 
