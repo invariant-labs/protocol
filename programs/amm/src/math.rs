@@ -1099,7 +1099,7 @@ mod tests {
         let current_timestamp = 100;
 
         {
-            let tick_current = -10;
+            pool.current_tick_index = -10;
             let seconds_per_liquidity_inside = calculate_seconds_per_liquidity_inside(
                 tick_lower,
                 tick_upper,
@@ -1110,7 +1110,7 @@ mod tests {
         }
 
         {
-            let tick_current = 0;
+            pool.current_tick_index = 0;
             let seconds_per_liquidity_inside = calculate_seconds_per_liquidity_inside(
                 tick_lower,
                 tick_upper,
@@ -1123,7 +1123,7 @@ mod tests {
         {
             tick_lower.seconds_per_liquidity_outside = Decimal::new(2012333200);
             tick_upper.seconds_per_liquidity_outside = Decimal::new(3012333310);
-            let tick_current = 20;
+            pool.current_tick_index = 20;
             let seconds_per_liquidity_inside = calculate_seconds_per_liquidity_inside(
                 tick_lower,
                 tick_upper,
