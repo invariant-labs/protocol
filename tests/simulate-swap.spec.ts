@@ -167,7 +167,6 @@ describe('simulate-swap', () => {
         }
 
         const estimatedMeanPrice = calculateAveragePrice(simulateSwapPriceParameters)
-        console.log(estimatedMeanPrice.v.toString())
         assert.ok(estimatedMeanPrice.v.eq(new BN(1103994154149)))
     })
 })
