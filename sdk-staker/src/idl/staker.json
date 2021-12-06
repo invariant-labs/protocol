@@ -32,7 +32,7 @@
         },
         {
           "name": "stakerAuthority",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -58,7 +58,7 @@
       ],
       "args": [
         {
-          "name": "bump",
+          "name": "nonce",
           "type": "u8"
         },
         {
@@ -87,7 +87,7 @@
         },
         {
           "name": "position",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -97,7 +97,7 @@
         },
         {
           "name": "owner",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -152,12 +152,12 @@
         },
         {
           "name": "position",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "stakerAuthority",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -192,11 +192,7 @@
           "type": "i32"
         },
         {
-          "name": "bumpStake",
-          "type": "u8"
-        },
-        {
-          "name": "bumpAuthority",
+          "name": "nonce",
           "type": "u8"
         }
       ]
@@ -206,7 +202,7 @@
       "accounts": [
         {
           "name": "incentive",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -221,7 +217,7 @@
         },
         {
           "name": "stakerAuthority",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -294,6 +290,10 @@
           {
             "name": "pool",
             "type": "publicKey"
+          },
+          {
+            "name": "nonce",
+            "type": "u8"
           }
         ]
       }
@@ -420,8 +420,5 @@
       "name": "ZeroReward",
       "msg": "Remaining reward is 0"
     }
-  ],
-  "metadata": {
-    "address": "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
-  }
+  ]
 }

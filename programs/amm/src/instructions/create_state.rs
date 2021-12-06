@@ -4,7 +4,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 
 #[derive(Accounts)]
-#[instruction(bump: u8, nonce: u8)]
+#[instruction(bump: u8)]
 pub struct CreateState<'info> {
     #[account(init, seeds = [b"statev1".as_ref()], bump = bump, payer = admin)]
     pub state: AccountLoader<'info, State>,
