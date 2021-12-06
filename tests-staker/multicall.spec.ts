@@ -103,7 +103,7 @@ describe('Multicall test', () => {
 
     //create amm and pool
 
-    market = new Market(0, provider.wallet, connection, anchor.workspace.Amm.programId)
+    market = await Market.build(0, provider.wallet, connection, anchor.workspace.Amm.programId)
 
     const tokens = await Promise.all([
       createTkn(connection, wallet, mintAuthority),
@@ -122,7 +122,6 @@ describe('Multicall test', () => {
 
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
     await market.createState(admin, protocolFee)
-    await market.build()
     await market.createFeeTier(feeTier, admin)
     await market.create({
       pair,

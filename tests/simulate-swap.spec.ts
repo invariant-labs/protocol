@@ -25,12 +25,7 @@ describe('simulate-swap', () => {
     const wallet = provider.wallet.payer as Keypair
     const mintAuthority = Keypair.generate()
     const admin = Keypair.generate()
-    const market = new Market(
-        Network.LOCAL,
-        provider.wallet,
-        connection,
-        anchor.workspace.Amm.programId
-    )
+    let market: Market
     const feeTier: FeeTier = {
         fee: fromFee(new BN(600)),
         tickSpacing: 10
@@ -43,6 +38,13 @@ describe('simulate-swap', () => {
     let nonce: number
 
     before(async () => {
+        market = await Market.build(
+            Network.LOCAL,
+            provider.wallet,
+            connection,
+            anchor.workspace.Amm.programId
+        )
+
         await Promise.all([
             await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
             await connection.requestAirdrop(admin.publicKey, 1e9)
@@ -66,7 +68,6 @@ describe('simulate-swap', () => {
         tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
         await market.createState(admin, protocolFee)
-        await market.build()
         await market.createFeeTier(feeTier, admin)
     })
     it('#create()', async () => {

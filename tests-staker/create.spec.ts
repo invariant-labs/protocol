@@ -65,7 +65,7 @@ describe('Create incentive tests', () => {
 
     //create amm and pool
 
-    const market = new Market(0, provider.wallet, connection, anchor.workspace.Amm.programId)
+    const market = await Market.build(0, provider.wallet, connection, anchor.workspace.Amm.programId)
 
     const tokens = await Promise.all([
       createTkn(connection, wallet, mintAuthority),
@@ -84,7 +84,6 @@ describe('Create incentive tests', () => {
 
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
     await market.createState(admin, protocolFee)
-    await market.build()
     await market.createFeeTier(feeTier, admin)
     await market.create({
       pair,

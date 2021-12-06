@@ -36,11 +36,12 @@ export class Market {
   public connection: Connection
   public wallet: IWallet
   public program: Program<Amm>
-  private state: State
   private stateAddress: PublicKey
   private programAuthority: PublicKey
 
-  constructor(network: Network, wallet: IWallet, connection: Connection, programId?: PublicKey) {
+  private constructor(
+    network: Network, wallet: IWallet, connection: Connection, programId?: PublicKey
+  ) {
     this.connection = connection
     this.wallet = wallet
     const programAddress = new PublicKey(getMarketAddress(network))
@@ -49,10 +50,12 @@ export class Market {
     this.program = new Program(IDL, programAddress, provider)
   }
 
-  async build() {
-    this.stateAddress = (await this.getStateAddress()).address
-    this.programAuthority = (await this.getProgramAuthority()).programAuthority
-    this.state = await this.getState()
+  public static async build(network: Network, wallet: IWallet, connection: Connection, programId?: PublicKey): Promise<Market> {
+    const instance = new Market(network, wallet, connection, programId)
+    instance.stateAddress = (await instance.getStateAddress()).address
+    instance.programAuthority = (await instance.getProgramAuthority()).programAuthority
+
+    return instance
   }
 
   async create({ pair, signer, initTick }: CreatePool) {
@@ -399,7 +402,7 @@ export class Market {
           accountY: userTokenY,
           reserveX: state.tokenXReserve,
           reserveY: state.tokenYReserve,
-          programAuthority: this.state.authority,
+          programAuthority: this.programAuthority,
           tokenProgram: TOKEN_PROGRAM_ID,
           rent: SYSVAR_RENT_PUBKEY,
           systemProgram: SystemProgram.programId
@@ -518,7 +521,7 @@ export class Market {
           owner,
           accountX,
           accountY,
-          programAuthority: this.state.authority,
+          programAuthority: this.programAuthority,
           tokenProgram: TOKEN_PROGRAM_ID
         }
       }
@@ -575,7 +578,7 @@ export class Market {
           accountY: userTokenY,
           reserveX: state.tokenXReserve,
           reserveY: state.tokenYReserve,
-          programAuthority: this.state.authority,
+          programAuthority: this.programAuthority,
           tokenProgram: TOKEN_PROGRAM_ID
         }
       }
@@ -614,7 +617,7 @@ export class Market {
         accountX,
         accountY,
         admin: signer,
-        programAuthority: this.state.authority,
+        programAuthority: this.programAuthority,
         tokenProgram: TOKEN_PROGRAM_ID
       }
     })) as TransactionInstruction
@@ -675,7 +678,7 @@ export class Market {
           accountY: userTokenY,
           reserveX: state.tokenXReserve,
           reserveY: state.tokenYReserve,
-          programAuthority: this.state.authority,
+          programAuthority: this.programAuthority,
           tokenProgram: TOKEN_PROGRAM_ID
         }
       }

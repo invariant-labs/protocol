@@ -30,12 +30,7 @@ describe('position', () => {
   const mintAuthority = Keypair.generate()
   const positionOwner = Keypair.generate()
   const admin = Keypair.generate()
-  const market = new Market(
-    Network.LOCAL,
-    provider.wallet,
-    connection,
-    anchor.workspace.Amm.programId
-  )
+  let market: Market
   const feeTier = FEE_TIERS[0]
   const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   let pair: Pair
@@ -48,6 +43,13 @@ describe('position', () => {
   let yOwnerAmount: u64
 
   before(async () => {
+    market = await Market.build(
+      Network.LOCAL,
+      provider.wallet,
+      connection,
+      anchor.workspace.Amm.programId
+    )
+
     // Request airdrops
     await Promise.all([
       await connection.requestAirdrop(wallet.publicKey, 1e9),
@@ -65,7 +67,6 @@ describe('position', () => {
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
     await market.createState(admin, protocolFee)
-    await market.build()
     await createStandardFeeTiers(market, admin)
   })
   it('#create() should fail because of token addresses', async () => {

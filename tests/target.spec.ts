@@ -26,12 +26,7 @@ describe('target', () => {
   const wallet = provider.wallet.payer as Keypair
   const mintAuthority = Keypair.generate()
   const admin = Keypair.generate()
-  const market = new Market(
-    Network.LOCAL,
-    provider.wallet,
-    connection,
-    anchor.workspace.Amm.programId
-  )
+  let market: Market
   const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   let pair: Pair
   let tokenX: Token
@@ -40,6 +35,13 @@ describe('target', () => {
   let nonce: number
 
   before(async () => {
+    market = await Market.build(
+      Network.LOCAL,
+      provider.wallet,
+      connection,
+      anchor.workspace.Amm.programId
+    )
+
     // Request airdrops
     await Promise.all([
       connection.requestAirdrop(mintAuthority.publicKey, 1e9),
@@ -60,7 +62,6 @@ describe('target', () => {
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
     await market.createState(admin, protocolFee)
-    await market.build()
     await market.createFeeTier(pair.feeTier, admin)
   })
   it('#create()', async () => {
