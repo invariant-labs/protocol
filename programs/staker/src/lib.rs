@@ -34,14 +34,14 @@ pub mod staker {
     pub fn withdraw(
         ctx: Context<Withdraw>,
         index: i32,
-        bumpStake: u8,
-        bumpAuthority: u8,
+        bump_stake: u8,
+        bump_authority: u8,
     ) -> ProgramResult {
-        instructions::withdraw::handler(ctx, index, bumpStake, bumpAuthority)
+        instructions::withdraw::handler(ctx, index, bump_stake, bump_authority)
     }
 
-    pub fn end_incentive(ctx: Context<ReturnFounds>, bumpAuthority: u8) -> ProgramResult {
-        instructions::end_incentive::handler(ctx, bumpAuthority)
+    pub fn end_incentive(ctx: Context<ReturnFounds>, bump_authority: u8) -> ProgramResult {
+        instructions::end_incentive::handler(ctx, bump_authority)
     }
 }
 

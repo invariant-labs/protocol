@@ -27,7 +27,8 @@ pub fn handler(ctx: Context<InitializeOracle>) -> ProgramResult {
     let pool = &mut ctx.accounts.pool.load_mut()?;
 
     pool.initialize_oracle(ctx.accounts.oracle.key());
-    **oracle = Oracle::default();
+
+    assert_eq!({ oracle.head }, { oracle.size } - 1);
 
     Ok(())
 }

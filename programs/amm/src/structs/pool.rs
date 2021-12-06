@@ -1,7 +1,6 @@
 use crate::decimal::Decimal;
 use crate::*;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::clock::UnixTimestamp;
 
 #[account(zero_copy)]
 #[derive(PartialEq, Default, Debug)]

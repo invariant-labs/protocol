@@ -32,7 +32,7 @@ impl Position {
         add: bool,
         current_timestamp: u64,
     ) -> Result<(u64, u64)> {
-        if pool.liquidity != Decimal::new(0) {
+        if { pool.liquidity } != Decimal::new(0) {
             pool.update_seconds_per_liquidity_global(current_timestamp);
         } else {
             pool.last_timestamp = current_timestamp;

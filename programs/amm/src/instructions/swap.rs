@@ -196,7 +196,7 @@ pub fn handler(
                 let mut tick = loader.load_mut().unwrap();
 
                 // crossing tick
-                cross_tick(&mut tick, &mut pool);
+                cross_tick(&mut tick, &mut pool).unwrap();
             }
 
             // set tick to limit (below if price is going down, because current tick is below price)
