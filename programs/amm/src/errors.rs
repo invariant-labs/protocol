@@ -37,5 +37,7 @@ pub enum ErrorCode {
     #[msg("Invalid pool token addresses")]
     InvalidPoolTokenAddresses = 16, // 13c
     #[msg("Time cannot be negative")]
-    NegativeTime = 17,
+    NegativeTime = 17, // 13d
+    #[msg("Oracle is already initialized")]
+    OracleAlreadyInitialized = 18, // 13e
 }

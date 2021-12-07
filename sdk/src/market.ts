@@ -40,7 +40,10 @@ export class Market {
   private programAuthority: PublicKey
 
   private constructor(
-    network: Network, wallet: IWallet, connection: Connection, programId?: PublicKey
+    network: Network,
+    wallet: IWallet,
+    connection: Connection,
+    programId?: PublicKey
   ) {
     this.connection = connection
     this.wallet = wallet
@@ -50,7 +53,12 @@ export class Market {
     this.program = new Program(IDL, programAddress, provider)
   }
 
-  public static async build(network: Network, wallet: IWallet, connection: Connection, programId?: PublicKey): Promise<Market> {
+  public static async build(
+    network: Network,
+    wallet: IWallet,
+    connection: Connection,
+    programId?: PublicKey
+  ): Promise<Market> {
     const instance = new Market(network, wallet, connection, programId)
     instance.stateAddress = (await instance.getStateAddress()).address
     instance.programAuthority = (await instance.getProgramAuthority()).programAuthority
@@ -559,7 +567,7 @@ export class Market {
     )
     const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
 
-    return (this.program.instruction.claimFee(
+    return this.program.instruction.claimFee(
       feeTierAddress,
       index,
       position.lowerTickIndex,
@@ -582,7 +590,7 @@ export class Market {
           tokenProgram: TOKEN_PROGRAM_ID
         }
       }
-    )) as TransactionInstruction
+    ) as TransactionInstruction
   }
 
   async claimFee({ pair, owner, userTokenX, userTokenY, index }: ClaimFee, signer: Keypair) {
@@ -606,7 +614,7 @@ export class Market {
     const pool = await this.get(pair)
     const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
 
-    return (this.program.instruction.withdrawProtocolFee(feeTierAddress, {
+    return this.program.instruction.withdrawProtocolFee(feeTierAddress, {
       accounts: {
         state: this.stateAddress,
         pool: await pair.getAddress(this.program.programId),
@@ -620,7 +628,7 @@ export class Market {
         programAuthority: this.programAuthority,
         tokenProgram: TOKEN_PROGRAM_ID
       }
-    })) as TransactionInstruction
+    }) as TransactionInstruction
   }
 
   async withdrawProtocolFee(pair: Pair, accountX: PublicKey, accountY: PublicKey, signer: Keypair) {
@@ -771,6 +779,31 @@ export class Market {
       }
     ) as TransactionInstruction
   }
+
+  async initializeOracle(pair: Pair, payer: Keypair) {
+    const oracleKeypair = Keypair.generate()
+    const poolAddress = await pair.getAddress(this.program.programId)
+    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
+
+    return await this.program.rpc.initializeOracle(feeTierAddress, {
+      accounts: {
+        pool: poolAddress,
+        oracle: oracleKeypair.publicKey,
+        tokenX: pair.tokenX,
+        tokenY: pair.tokenY,
+        payer: payer.publicKey,
+        rent: SYSVAR_RENT_PUBKEY,
+        systemProgram: SystemProgram.programId
+      },
+      signers: [payer, oracleKeypair],
+      instructions: [await this.program.account.oracle.createInstruction(oracleKeypair)]
+    })
+  }
+
+  async getOracle(pair: Pair) {
+    const pool = await this.get(pair)
+    return await this.program.account.oracle.fetch(pool.oracleAddress)
+  }
 }
 
 export interface Decimal {
@@ -809,6 +842,8 @@ export interface PoolStructure {
   secondsPerLiquidityGlobal: Decimal
   startTimestamp: BN
   lastTimestamp: BN
+  oracleAddress: PublicKey
+  oracleInitialized: boolean
   bump: number
 }
 
@@ -840,7 +875,7 @@ export interface Position {
   feeGrowthInsideX: Decimal
   feeGrowthInsideY: Decimal
   secondsPerLiquidityInside: Decimal
-  lastSlot: BN,
+  lastSlot: BN
   tokensOwedX: Decimal
   tokensOwedY: Decimal
   bump: number
