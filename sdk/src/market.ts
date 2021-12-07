@@ -40,7 +40,10 @@ export class Market {
   private programAuthority: PublicKey
 
   private constructor(
-    network: Network, wallet: IWallet, connection: Connection, programId?: PublicKey
+    network: Network,
+    wallet: IWallet,
+    connection: Connection,
+    programId?: PublicKey
   ) {
     this.connection = connection
     this.wallet = wallet
@@ -50,7 +53,12 @@ export class Market {
     this.program = new Program(IDL, programAddress, provider)
   }
 
-  public static async build(network: Network, wallet: IWallet, connection: Connection, programId?: PublicKey): Promise<Market> {
+  public static async build(
+    network: Network,
+    wallet: IWallet,
+    connection: Connection,
+    programId?: PublicKey
+  ): Promise<Market> {
     const instance = new Market(network, wallet, connection, programId)
     instance.stateAddress = (await instance.getStateAddress()).address
     instance.programAuthority = (await instance.getProgramAuthority()).programAuthority
@@ -93,6 +101,7 @@ export class Market {
   }
 
   async get(pair: Pair) {
+    // REVIEW get what ?
     const address = await pair.getAddress(this.program.programId)
     return (await this.program.account.pool.fetch(address)) as PoolStructure
   }
@@ -128,7 +137,7 @@ export class Market {
     const poolAddress = await new Pair(tokenX, tokenY, feeTier).getAddress(this.program.programId)
 
     this.program.account.pool
-      .subscribe(poolAddress, 'singleGossip')
+      .subscribe(poolAddress, 'singleGossip') // REVIEW use recent commitment + allow overwrite via props
       .on('change', (poolStructure: PoolStructure) => {
         fn(poolStructure)
       })
@@ -269,6 +278,7 @@ export class Market {
     })
   }
   async createFeeTier(feeTier: FeeTier, payer: Keypair) {
+    // REVIEW This method is not used and will not be ever
     const ix = await this.createFeeTierInstruction(feeTier, payer.publicKey)
 
     await signAndSend(new Transaction().add(ix), [payer], this.connection)
@@ -331,6 +341,7 @@ export class Market {
   }
 
   async createTick(pair: Pair, index: number, payer: Keypair) {
+    // REVIEW passing payer here is bad practice make it optional and use default wallet instead
     const lowerIx = await this.createTickInstruction(pair, index, payer.publicKey)
     await signAndSend(new Transaction().add(lowerIx), [payer], this.connection)
   }
@@ -359,6 +370,8 @@ export class Market {
   }
 
   async createPositionList(owner: Keypair) {
+    // REVIEW passing owner here is bad practice make it optional and use default wallet instead
+
     const ix = await this.createPositionListInstruction(owner.publicKey)
 
     await signAndSend(new Transaction().add(ix), [owner], this.connection)
@@ -440,11 +453,15 @@ export class Market {
   }
 
   async initPosition(initPosition: InitPosition, signer: Keypair) {
+    // REVIEW signer owner here is bad practice make it optional and use default wallet instead
+
     const tx = await this.initPositionTx(initPosition)
     await signAndSend(tx, [signer], this.connection)
   }
 
   async swap(swap: Swap, owner: Keypair, overridePriceLimit?: BN) {
+    // REVIEW signer owner here is bad practice make it optional and use default wallet instead
+
     const tx = await this.swapTransaction(
       {
         owner: owner.publicKey,
@@ -457,6 +474,7 @@ export class Market {
   }
 
   async swapTransaction(
+    // REVIEW why transaction? return instruction?
     {
       pair,
       XtoY,
@@ -532,6 +550,8 @@ export class Market {
   }
 
   async getReserveBalances(pair: Pair, payer: Signer) {
+    // REVIEW why you need payer here?
+
     const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, payer)
     const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, payer)
 
@@ -559,7 +579,7 @@ export class Market {
     )
     const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
 
-    return (this.program.instruction.claimFee(
+    return this.program.instruction.claimFee(
       feeTierAddress,
       index,
       position.lowerTickIndex,
@@ -582,10 +602,12 @@ export class Market {
           tokenProgram: TOKEN_PROGRAM_ID
         }
       }
-    )) as TransactionInstruction
+    ) as TransactionInstruction
   }
 
   async claimFee({ pair, owner, userTokenX, userTokenY, index }: ClaimFee, signer: Keypair) {
+    // REVIEW signer owner here is bad practice make it optional and use default wallet instead
+
     const claimFeeIx = await this.claimFeeInstruction({
       pair,
       owner,
@@ -606,7 +628,7 @@ export class Market {
     const pool = await this.get(pair)
     const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
 
-    return (this.program.instruction.withdrawProtocolFee(feeTierAddress, {
+    return this.program.instruction.withdrawProtocolFee(feeTierAddress, {
       accounts: {
         state: this.stateAddress,
         pool: await pair.getAddress(this.program.programId),
@@ -620,10 +642,12 @@ export class Market {
         programAuthority: this.programAuthority,
         tokenProgram: TOKEN_PROGRAM_ID
       }
-    })) as TransactionInstruction
+    }) as TransactionInstruction
   }
 
   async withdrawProtocolFee(pair: Pair, accountX: PublicKey, accountY: PublicKey, signer: Keypair) {
+    // REVIEW signer owner here is bad practice make it optional and use default wallet instead
+
     const ix = await this.withdrawProtocolFeeInstruction(pair, accountX, accountY, signer.publicKey)
     await signAndSend(new Transaction().add(ix), [signer], this.connection)
   }
@@ -840,7 +864,7 @@ export interface Position {
   feeGrowthInsideX: Decimal
   feeGrowthInsideY: Decimal
   secondsPerLiquidityInside: Decimal
-  lastSlot: BN,
+  lastSlot: BN
   tokensOwedX: Decimal
   tokensOwedY: Decimal
   bump: number

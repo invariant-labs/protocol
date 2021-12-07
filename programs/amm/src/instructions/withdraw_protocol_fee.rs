@@ -72,7 +72,7 @@ impl<'info> SendTokens<'info> for WithdrawProtocolFee<'info> {
 
 pub fn handler(
     ctx: Context<WithdrawProtocolFee>,
-    seed: &str,
+    seed: &str, // REVIEW why is this seed pasted in params?
     _fee_tier_address: Pubkey,
 ) -> ProgramResult {
     msg!("INVARIANT: WITHDRAW PROTOCOL FEE");

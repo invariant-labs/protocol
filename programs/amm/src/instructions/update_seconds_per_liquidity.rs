@@ -56,6 +56,7 @@ pub fn handler(
     let pool = &mut ctx.accounts.pool.load_mut()?;
     let lower_tick = *ctx.accounts.lower_tick.load()?;
     let upper_tick = *ctx.accounts.upper_tick.load()?;
+    // REVIEW i am getting sick of this Clock sb create method for this `getTimestamp()`
     let current_time = Clock::get().unwrap().unix_timestamp.try_into().unwrap();
     let position = &mut ctx.accounts.position.load_mut()?;
     position.seconds_per_liquidity_inside =
