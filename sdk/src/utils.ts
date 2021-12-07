@@ -11,7 +11,7 @@ import {
 import { expect } from 'chai'
 import { calculate_price_sqrt, fromInteger, Pair } from '.'
 import { Market } from '.'
-import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap, Tick } from './market'
+import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap, Tick, Position } from './market'
 import { calculatePriceAfterSlippage, calculateSwapStep, SwapResult } from './math'
 import { getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
@@ -63,6 +63,20 @@ export interface SimulateSwapPrice {
   pool: PoolStructure
   market: Market
   pair: Pair
+}
+
+export interface SimulateClaim {
+  position: Position
+  feeGrowthInsideX: Decimal
+  feeGrowthInsideY: Decimal
+}
+
+export interface CalculateFee {
+  tickLower: Tick
+  tickUpper: Tick
+  tickCurrent: number
+  feeGrowthGlobalX: Decimal
+  feeGrowthGlobalY: Decimal
 }
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
@@ -175,22 +189,22 @@ export const toDecimal = (x: number, decimals: number = 0): Decimal => {
 }
 
 export const calculateAveragePrice = (swapParameters: SimulateSwapPrice): Decimal => {
-  const {xToY, byAmountIn, swapAmount, slippage, tickmap, pool, market, pair} = swapParameters
-  let {currentTickIndex, tickSpacing, liquidity, fee} = pool
+  const { xToY, byAmountIn, swapAmount, slippage, tickmap, pool, market, pair } = swapParameters
+  let { currentTickIndex, tickSpacing, liquidity, fee } = pool
   const priceLimit = calculatePriceAfterSlippage(pool.sqrtPrice, slippage, !xToY)
   if (xToY) {
     if (pool.sqrtPrice.v.lt(priceLimit.v)) {
-      throw new Error("Price limit is on the wrong side of price")
+      throw new Error('Price limit is on the wrong side of price')
     }
   } else {
     if (pool.sqrtPrice.v.gt(priceLimit.v)) {
-      throw new Error("Price limit is on the wrong side of price")
+      throw new Error('Price limit is on the wrong side of price')
     }
   }
-  let remainingAmount: Decimal = {v: swapAmount.mul(DENOMINATOR)}
-  let totalAmountIn: Decimal = {v: new BN(0)}
-  let totalAmountOut: Decimal = {v: new BN(0)}
-  let totalFee: Decimal = {v: new BN(0)}
+  let remainingAmount: Decimal = { v: swapAmount.mul(DENOMINATOR) }
+  let totalAmountIn: Decimal = { v: new BN(0) }
+  let totalAmountOut: Decimal = { v: new BN(0) }
+  let totalFee: Decimal = { v: new BN(0) }
 
   while (!remainingAmount.v.lte(new BN(0))) {
     let closestTickIndex: number
@@ -204,7 +218,7 @@ export const calculateAveragePrice = (swapParameters: SimulateSwapPrice): Decima
     let closerLimit: [swapLimit: Decimal, limitingTick: [index: number, initialized: boolean]]
     if (closestTickIndex != null) {
       price = calculate_price_sqrt(closestTickIndex)
-      
+
       if (xToY && price.v.gt(priceLimit.v)) {
         closerLimit = [price, [closestTickIndex, true]]
       } else if (!xToY && price.v.lt(priceLimit.v)) {
@@ -224,24 +238,31 @@ export const calculateAveragePrice = (swapParameters: SimulateSwapPrice): Decima
         closerLimit = [priceLimit, [null, null]]
       }
     }
-    const result = calculateSwapStep(pool.sqrtPrice, closerLimit[0], liquidity, remainingAmount, byAmountIn, fee)
-    totalAmountIn = {v: totalAmountIn.v.add(result.amountIn.v)}
-    totalAmountOut = {v: totalAmountOut.v.add(result.amountOut.v)}
-    totalFee = {v: totalFee.v.add(result.feeAmount.v)}
+    const result = calculateSwapStep(
+      pool.sqrtPrice,
+      closerLimit[0],
+      liquidity,
+      remainingAmount,
+      byAmountIn,
+      fee
+    )
+    totalAmountIn = { v: totalAmountIn.v.add(result.amountIn.v) }
+    totalAmountOut = { v: totalAmountOut.v.add(result.amountOut.v) }
+    totalFee = { v: totalFee.v.add(result.feeAmount.v) }
 
     let amountDiff: Decimal
     if (byAmountIn) {
-      amountDiff = {v: result.amountIn.v.add(result.feeAmount.v)}
+      amountDiff = { v: result.amountIn.v.add(result.feeAmount.v) }
     } else {
-      amountDiff = {v: result.amountOut.v}
+      amountDiff = { v: result.amountOut.v }
     }
-    
-    remainingAmount = {v: remainingAmount.v.sub(amountDiff.v)}
+
+    remainingAmount = { v: remainingAmount.v.sub(amountDiff.v) }
 
     pool.sqrtPrice = result.nextPrice
 
     if (pool.sqrtPrice.v.eq(priceLimit.v) && remainingAmount.v.gt(new BN(0))) {
-      throw new Error("Price would cross swap limit")
+      throw new Error('Price would cross swap limit')
     }
 
     if (result.nextPrice.v.eq(closerLimit[0].v) && closerLimit[1][0] != null) {
@@ -250,10 +271,10 @@ export const calculateAveragePrice = (swapParameters: SimulateSwapPrice): Decima
 
       if (initialized) {
         market.getTick(pair, tickIndex).then((tick) => {
-          if ((currentTickIndex >= tick.index) !== tick.sign) {
-            liquidity = {v: liquidity.v.add(tick.liquidityChange.v)}
+          if (currentTickIndex >= tick.index !== tick.sign) {
+            liquidity = { v: liquidity.v.add(tick.liquidityChange.v) }
           } else {
-            liquidity = {v: liquidity.v.sub(tick.liquidityChange.v)}
+            liquidity = { v: liquidity.v.sub(tick.liquidityChange.v) }
           }
         })
       }
@@ -265,9 +286,8 @@ export const calculateAveragePrice = (swapParameters: SimulateSwapPrice): Decima
     } else {
       currentTickIndex = getTickFromPrice(currentTickIndex, tickSpacing, result.nextPrice, xToY)
     }
-
   }
-  return {v: totalAmountOut.v.mul(DENOMINATOR).div(totalAmountIn.v)}
+  return { v: totalAmountOut.v.mul(DENOMINATOR).div(totalAmountIn.v) }
 }
 export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
   let indexOfTickBelow = -1
@@ -300,4 +320,66 @@ export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
   }
 
   return parsed
+}
+
+export const calculateFeeGrowthInside = ({
+  tickLower,
+  tickUpper,
+  tickCurrent,
+  feeGrowthGlobalX,
+  feeGrowthGlobalY
+}: CalculateFee) => {
+  // determine position relative to current tick
+  let current_above_lower = tickCurrent >= tickLower.index
+  let current_below_upper = tickCurrent < tickUpper.index
+  let feeGrowthBelowX: BN
+  let feeGrowthBelowY: BN
+  let feeGrowthAboveX: BN
+  let feeGrowthAboveY: BN
+
+  // calculate fee growth below
+  if (current_above_lower) {
+    feeGrowthBelowX = tickLower.feeGrowthOutsideX.v
+  } else {
+    feeGrowthBelowX = feeGrowthGlobalX.v.sub(tickLower.feeGrowthOutsideX.v)
+  }
+  if (current_above_lower) {
+    feeGrowthBelowY = tickLower.feeGrowthOutsideY.v
+  } else {
+    feeGrowthBelowY = feeGrowthGlobalY.v.sub(tickLower.feeGrowthOutsideY.v)
+  }
+
+  // calculate fee growth above
+  if (current_below_upper) {
+    feeGrowthAboveX = tickUpper.feeGrowthOutsideX.v
+  } else {
+    feeGrowthAboveX = feeGrowthGlobalX.v.sub(tickUpper.feeGrowthOutsideX.v)
+  }
+  if (current_below_upper) {
+    feeGrowthAboveY = tickUpper.feeGrowthOutsideY.v
+  } else {
+    feeGrowthAboveY = feeGrowthGlobalY.v.sub(tickUpper.feeGrowthOutsideY.v)
+  }
+
+  // calculate fee growth inside
+  let feeGrowthInsideX = feeGrowthGlobalX.v.sub(feeGrowthBelowX.sub(feeGrowthAboveX))
+  let feeGrowthInsideY = feeGrowthGlobalY.v.sub(feeGrowthBelowY.sub(feeGrowthAboveY))
+
+  return [feeGrowthInsideX, feeGrowthInsideY]
+}
+
+export const calculateClaimAmount = ({
+  position,
+  feeGrowthInsideX,
+  feeGrowthInsideY
+}: SimulateClaim) => {
+  let tokensOwedX = position.liquidity.v
+    .mul(feeGrowthInsideX.v.sub(feeGrowthInsideX.v))
+    .div(DENOMINATOR)
+  let tokensOwedY = position.liquidity.v
+    .mul(feeGrowthInsideY.v.sub(feeGrowthInsideY.v))
+    .div(DENOMINATOR)
+  let tokensOwedXTotal = tokensOwedX.add(feeGrowthInsideX.v)
+  let tokensOwedYTotal = tokensOwedY.add(feeGrowthInsideY.v)
+  return [tokensOwedXTotal, tokensOwedYTotal]
 }

@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "test:invariant-all": "npm run test:swap && npm run test:cross && npm run test:reversed && npm run test:position && npm run test:math && npm run test:withdraw && npm run test:position-list && npm run test:claim && npm run test:protocol-fee && npm run test:target && npm run test:slippage && npm run test:fee-tier && npm run test:timestamp && npm run test:simulate-swap && npm run test:oracle",
+    "test:invariant-all": "npm run test:swap && npm run test:cross && npm run test:reversed && npm run test:position && npm run test:math && npm run test:withdraw && npm run test:position-list && npm run test:claim && npm run test:protocol-fee && npm run test:target && npm run test:slippage && npm run test:fee-tier && npm run test:timestamp && npm run test:simulate-swap && npm run test:claim-amount && npm run test:oracle",
     "test:staker-all": "npm run test:create && npm run test:stake && npm run test:withdraw-staker && npm run test:end-incentive && npm run test:multicall",
     "test:all": "npm run test:invariant-all && npm run test:staker-all",
     "test:swap": "anchor test --skip-build tests/swap.spec.ts",
@@ -12,6 +12,7 @@
     "test:withdraw": "anchor test --skip-build tests/withdraw.spec.ts",
     "test:position-list": "anchor test --skip-build tests/position-list.spec.ts",
     "test:claim": "anchor test --skip-build tests/claim.spec.ts",
+    "test:claim-amount": "anchor test --skip-build tests/simulate-claim-amount.spec.ts",
     "test:timestamp": "anchor test --skip-build tests/timestamp.spec.ts",
     "test:create": "anchor test --skip-build tests-staker/create.spec.ts",
     "test:stake": "anchor test --skip-build tests-staker/stake.spec.ts",
