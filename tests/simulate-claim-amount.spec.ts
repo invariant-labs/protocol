@@ -1,13 +1,11 @@
 import * as anchor from '@project-serum/anchor'
 import { Program, Provider, BN } from '@project-serum/anchor'
-import { Market, Pair } from '@invariant-labs/sdk'
+import { Market, Network, Pair } from '@invariant-labs/sdk'
 import { Staker as StakerIdl } from '../sdk-staker/src/idl/staker'
-import { Network, Staker } from '../sdk-staker/src'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { Decimal } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
-import { createToken, tou64 } from '../tests-staker/utils'
-import { createToken as createTkn } from '../tests/testUtils'
+import { createToken as createTkn, createToken } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { signAndSend, toDecimal } from '../sdk-staker/lib/utils'
 import { DENOMINATOR } from '@invariant-labs/sdk'
@@ -15,9 +13,10 @@ import { assert } from 'chai'
 import {
   fromFee,
   calculateFeeGrowthInside,
-  calculateClaimAmount
+  calculateClaimAmount,
+  tou64
 } from '@invariant-labs/sdk/lib/utils'
-import { FeeTier } from '@invariant-labs/sdk/lib/market'
+import { FeeTier } from '@invariant-labs/sdk/src/market'
 
 describe('Withdraw tests', () => {
   const provider = Provider.local()
@@ -31,85 +30,54 @@ describe('Withdraw tests', () => {
   const founderAccount = Keypair.generate()
   const admin = Keypair.generate()
   const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
-  let nonce: number
-  let staker: Staker
+  const feeTier: FeeTier = {
+    fee: fromFee(new BN(600)),
+    tickSpacing: 10
+  }
   let market: Market
   let pool: PublicKey
   let amm: PublicKey
-  let incentiveToken: Token
-  let founderTokenAcc: PublicKey
-  let incentiveTokenAcc: PublicKey
-  let ownerTokenAcc: PublicKey
-  let stakerAuthority: PublicKey
-  let amount: BN
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
 
   before(async () => {
-    //create staker
-    const [_mintAuthority, _nonce] = await anchor.web3.PublicKey.findProgramAddress(
-      [STAKER_SEED],
-      program.programId
+    market = await Market.build(
+      Network.LOCAL,
+      provider.wallet,
+      connection,
+      anchor.workspace.Amm.programId
     )
-    stakerAuthority = _mintAuthority
-    nonce = _nonce
-    staker = new Staker(connection, Network.LOCAL, provider.wallet, program.programId)
 
     await Promise.all([
-      await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
-      await connection.requestAirdrop(positionOwner.publicKey, 1e9),
-      await connection.requestAirdrop(incentiveAccount.publicKey, 10e9)
+      connection.requestAirdrop(mintAuthority.publicKey, 1e9),
+      connection.requestAirdrop(admin.publicKey, 1e9),
+      connection.requestAirdrop(positionOwner.publicKey, 1e9)
     ])
-
-    //create token
-    incentiveToken = await createToken({
-      connection: connection,
-      payer: wallet,
-      mintAuthority: wallet.publicKey
-    })
-    //add SOL to founder acc
-    await connection.requestAirdrop(founderAccount.publicKey, 10e9)
-
-    //create taken acc for founder and staker
-    founderTokenAcc = await incentiveToken.createAccount(founderAccount.publicKey)
-    incentiveTokenAcc = await incentiveToken.createAccount(stakerAuthority)
-    ownerTokenAcc = await incentiveToken.createAccount(positionOwner.publicKey)
-
-    //mint to founder acc
-    amount = new anchor.BN(5000 * 1e12)
-    await incentiveToken.mintTo(founderTokenAcc, wallet, [], tou64(amount))
-
-    //create amm and pool
-    market = new Market(0, provider.wallet, connection, anchor.workspace.Amm.programId)
 
     const tokens = await Promise.all([
-      createTkn(connection, wallet, mintAuthority),
-      createTkn(connection, wallet, mintAuthority),
-      await connection.requestAirdrop(admin.publicKey, 1e9)
+      createToken(connection, wallet, mintAuthority),
+      createToken(connection, wallet, mintAuthority)
     ])
 
-    // create pool
-
-    const feeTier: FeeTier = {
-      fee: fromFee(new BN(600)),
-      tickSpacing: 10
-    }
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
+    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
+    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+
     await market.createState(admin, protocolFee)
-    await market.createFeeTier(feeTier, wallet)
+    await market.createFeeTier(feeTier, admin)
     await market.create({
       pair,
       signer: admin
     })
+
     pool = await pair.getAddress(anchor.workspace.Amm.programId)
     amm = anchor.workspace.Amm.programId
 
-    //create tokens
+    // create tokens
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
-
   it('Claim', async () => {
     //create position
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
