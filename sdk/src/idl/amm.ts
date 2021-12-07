@@ -928,7 +928,7 @@ export type Amm = {
                 {
                   "defined": "Record"
                 },
-                100
+                256
               ]
             }
           },
@@ -2312,7 +2312,7 @@ export const IDL: Amm = {
                 {
                   "defined": "Record"
                 },
-                100
+                256
               ]
             }
           },

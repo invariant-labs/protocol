@@ -12,19 +12,20 @@ describe('oracle', () => {
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
-  const market = new Market(
-    Network.LOCAL,
-    provider.wallet,
-    connection,
-    anchor.workspace.Amm.programId
-  )
 
+  let market: Market
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
   let mintAuthority: Keypair
 
   before(async () => {
+    market = await Market.build(
+      Network.LOCAL,
+      provider.wallet,
+      connection,
+      anchor.workspace.Amm.programId
+    )
     const createdPool = await createPoolWithLiquidity(market, connection, wallet)
     pair = createdPool.pair
     mintAuthority = createdPool.mintAuthority
