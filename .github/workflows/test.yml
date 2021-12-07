@@ -37,6 +37,7 @@ jobs:
             'npm run test:withdraw-staker',
             'npm run test:end-incentive',
             'npm run test:multicall'
+            'npm run test:oracle'
             
             'cargo test'
           ]
