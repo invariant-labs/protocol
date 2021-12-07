@@ -19,29 +19,24 @@ pub mod staker {
 
     pub fn create_incentive(
         ctx: Context<CreateIncentive>,
-        bump: u8,
+        nonce: u8,
         reward: Decimal,
         start_time: u64,
         end_time: u64,
     ) -> ProgramResult {
-        instructions::create_incentive::handler(ctx, bump, reward, start_time, end_time)
+        instructions::create_incentive::handler(ctx, nonce, reward, start_time, end_time)
     }
 
     pub fn stake(ctx: Context<CreateUserStake>, index: i32, bump: u8) -> ProgramResult {
         instructions::stake::handler(ctx, index, bump)
     }
 
-    pub fn withdraw(
-        ctx: Context<Withdraw>,
-        index: i32,
-        bump_stake: u8,
-        bump_authority: u8,
-    ) -> ProgramResult {
-        instructions::withdraw::handler(ctx, index, bump_stake, bump_authority)
+    pub fn withdraw(ctx: Context<Withdraw>, _index: i32, nonce: u8) -> ProgramResult {
+        instructions::withdraw::handler(ctx, _index, nonce)
     }
 
-    pub fn end_incentive(ctx: Context<ReturnFounds>, bump_authority: u8) -> ProgramResult {
-        instructions::end_incentive::handler(ctx, bump_authority)
+    pub fn end_incentive(ctx: Context<ReturnFounds>, _bump_authority: u8) -> ProgramResult {
+        instructions::end_incentive::handler(ctx, _bump_authority)
     }
 }
 

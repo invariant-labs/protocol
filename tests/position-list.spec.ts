@@ -18,22 +18,15 @@ describe('Position list', () => {
   const mintAuthority = Keypair.generate()
   const positionOwner = Keypair.generate()
   const admin = Keypair.generate()
-  const market = new Market(
-    Network.LOCAL,
-    provider.wallet,
-    connection,
-    anchor.workspace.Amm.programId
-  )
+  let market: Market
   const feeTier: FeeTier = {
     fee: fromFee(new BN(600)),
     tickSpacing: 3
   }
-  const protocolFee: Decimal = { v: fromFee(new BN(10000))}
+  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
-  let programAuthority: PublicKey
-  let nonce: number
   let initTick: number
   let ticksIndexes: Array<number>
   let xOwnerAmount: u64
@@ -42,13 +35,13 @@ describe('Position list', () => {
   let userTokenYAccount: PublicKey
 
   before(async () => {
-    const swaplineProgram = anchor.workspace.Amm as Program
-    const [_programAuthority, _nonce] = await anchor.web3.PublicKey.findProgramAddress(
-      [Buffer.from(SEED)],
-      swaplineProgram.programId
+    market = await Market.build(
+      Network.LOCAL,
+      provider.wallet,
+      connection,
+      anchor.workspace.Amm.programId
     )
-    nonce = _nonce
-    programAuthority = _programAuthority
+
     // Request airdrops
     await Promise.all([
       await connection.requestAirdrop(wallet.publicKey, 1e9),
@@ -71,14 +64,11 @@ describe('Position list', () => {
 
     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], xOwnerAmount)
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], yOwnerAmount)
+
+    await market.createState(admin, protocolFee)
+    await market.createFeeTier(feeTier, admin)
   })
   describe('Settings', async () => {
-    it('#createState()', async () => {
-      await market.createState(admin, protocolFee)
-    })
-    it('createFeeTier()', async () => {
-      await market.createFeeTier(feeTier, admin)
-    })
     it('Prepare pool', async () => {
       initTick = -23028
 

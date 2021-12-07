@@ -5,19 +5,18 @@ import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken } from './testUtils'
 import {
-  Market,
-  Pair,
-  SEED,
-  tou64,
-  DENOMINATOR,
-  signAndSend,
-  TICK_LIMIT,
-  Network
+    Market,
+    Pair,
+    SEED,
+    tou64,
+    DENOMINATOR,
+    signAndSend,
+    TICK_LIMIT,
+    Network
 } from '@invariant-labs/sdk'
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { calculateAveragePrice, SimulateSwapPrice, toDecimal } from '@invariant-labs/sdk/src/utils'
-import { sleep } from "@invariant-labs/sdk/lib/utils"
 
 describe('simulate-swap', () => {
     const provider = Provider.local()
@@ -26,17 +25,12 @@ describe('simulate-swap', () => {
     const wallet = provider.wallet.payer as Keypair
     const mintAuthority = Keypair.generate()
     const admin = Keypair.generate()
-    const market = new Market(
-        Network.LOCAL,
-        provider.wallet,
-        connection,
-        anchor.workspace.Amm.programId
-    )
+    let market: Market
     const feeTier: FeeTier = {
         fee: fromFee(new BN(600)),
         tickSpacing: 10
     }
-    const protocolFee: Decimal = {v: fromFee(new BN(10000))}
+    const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
     let pair: Pair
     let tokenX: Token
     let tokenY: Token
@@ -44,6 +38,13 @@ describe('simulate-swap', () => {
     let nonce: number
 
     before(async () => {
+        market = await Market.build(
+            Network.LOCAL,
+            provider.wallet,
+            connection,
+            anchor.workspace.Amm.programId
+        )
+
         await Promise.all([
             await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
             await connection.requestAirdrop(admin.publicKey, 1e9)
@@ -65,16 +66,13 @@ describe('simulate-swap', () => {
         pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
         tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
         tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
-    })
-    it('#createState()', async () => {
+
         await market.createState(admin, protocolFee)
-    })
-    it('#createFeeTier()', async () => {
         await market.createFeeTier(feeTier, admin)
     })
     it('#create()', async () => {
-        await market.create({pair, signer:admin, initTick: 1000})
-    
+        await market.create({ pair, signer: admin, initTick: 1000 })
+
         const createdPool = await market.get(pair)
         assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
         assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
@@ -87,8 +85,6 @@ describe('simulate-swap', () => {
         assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
         assert.ok(createdPool.feeProtocolTokenX.v.eqn(0))
         assert.ok(createdPool.feeProtocolTokenY.v.eqn(0))
-        assert.ok(createdPool.authority.equals(programAuthority))
-        assert.equal(createdPool.nonce, nonce)
 
         const tickmapData = await market.getTickmap(pair)
         assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
@@ -105,7 +101,7 @@ describe('simulate-swap', () => {
         const mintAmount = tou64(new BN(10).pow(new BN(10)))
         await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
         await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-        
+
         await market.createPositionList(positionOwner)
         await market.initPosition(
             {
@@ -115,7 +111,7 @@ describe('simulate-swap', () => {
                 userTokenY: userTokenYAccount,
                 lowerTick: 910,
                 upperTick: 960,
-                liquidityDelta: {v: new BN(1550000).mul(DENOMINATOR)}
+                liquidityDelta: { v: new BN(1550000).mul(DENOMINATOR) }
             },
             positionOwner
         )
@@ -127,7 +123,7 @@ describe('simulate-swap', () => {
                 userTokenY: userTokenYAccount,
                 lowerTick: 950,
                 upperTick: 990,
-                liquidityDelta: {v: new BN(1220000).mul(DENOMINATOR)}
+                liquidityDelta: { v: new BN(1220000).mul(DENOMINATOR) }
             },
             positionOwner
         )
@@ -139,7 +135,7 @@ describe('simulate-swap', () => {
                 userTokenY: userTokenYAccount,
                 lowerTick: 980,
                 upperTick: 1010,
-                liquidityDelta: {v: new BN(1970000).mul(DENOMINATOR)}
+                liquidityDelta: { v: new BN(1970000).mul(DENOMINATOR) }
             },
             positionOwner
         )
@@ -154,7 +150,7 @@ describe('simulate-swap', () => {
         const { tokenYReserve } = await market.get(pair)
         await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
         await tokenY.mintTo(accountY, mintAuthority.publicKey, [mintAuthority], tou64(amount))
-        
+
         const poolDataBefore = await market.get(pair)
         const reservesBefore = await market.getReserveBalances(pair, wallet)
         const tick = await market.getTick(pair, 1000)
@@ -170,9 +166,8 @@ describe('simulate-swap', () => {
             market: market,
             pair: pair
         }
-       
+
         const estimatedMeanPrice = calculateAveragePrice(simulateSwapPriceParameters)
-        console.log(estimatedMeanPrice.v.toString())
         assert.ok(estimatedMeanPrice.v.eq(new BN(1103994154149)))
     })
 })

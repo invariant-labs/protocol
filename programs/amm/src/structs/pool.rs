@@ -26,8 +26,6 @@ pub struct Pool {
     pub oracle_address: Pubkey,
     pub oracle_initialized: bool,
     pub bump: u8,
-    pub nonce: u8,
-    pub authority: Pubkey,
 }
 
 impl Pool {
