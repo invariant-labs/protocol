@@ -90,7 +90,7 @@ describe('swap', () => {
   it('#swap() within a tick', async () => {
     // Deposit
     const upperTick = 10
-    const upperIx = await market.createTickInstruction(pair, upperTick, wallet.publicKey)
+    const upperIx = await market.createTickInstruction(pair, upperTick, wallet.publicKey) // REVIEW please dont use wallet.publicKey for anything
     await signAndSend(new Transaction().add(upperIx), [wallet], connection)
 
     const lowerTick = -20
@@ -108,7 +108,8 @@ describe('swap', () => {
 
     const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) }
 
-    await market.createPositionList(positionOwner)
+    await market.createPositionList(positionOwner) // REVIEW this SDK api will not work with phantom
+    // use IWALLET interface
     await market.initPosition(
       {
         pair,
@@ -149,7 +150,10 @@ describe('swap', () => {
       byAmountIn: true,
       owner: owner.publicKey
     })
-    await signAndSend(tx, [owner], connection)
+    await signAndSend(tx, [owner], connection) // REVIEW this is not consistent sometimes you use SDK and pass Signer there
+    // sometimes you create instructions etc be consistent
+    // you should only use instructions when you want to sign with specific account
+    // default account should be passed into SDK so flow will be same as with phantom
 
     // Check pool
     const poolData = await market.get(pair)
