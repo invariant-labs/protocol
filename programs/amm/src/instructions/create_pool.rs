@@ -76,7 +76,7 @@ pub fn handler(
         bump: bump,
         nonce: nonce,
         authority: *ctx.accounts.program_authority.key,
-        oracle: Pubkey::default(),
+        oracle_address: Pubkey::default(),
         oracle_initialized: false,
     };
 
