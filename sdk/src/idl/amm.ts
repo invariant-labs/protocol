@@ -277,7 +277,7 @@ export type Amm = {
         },
         {
           "name": "payer",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -1666,7 +1666,7 @@ export const IDL: Amm = {
         },
         {
           "name": "payer",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {

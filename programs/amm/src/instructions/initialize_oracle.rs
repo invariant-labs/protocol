@@ -15,12 +15,11 @@ pub struct InitializeOracle<'info> {
     )]
     pub pool: AccountLoader<'info, Pool>,
     #[account(zero)]
-    pub oracle: Loader<'info, Oracle>,
+    pub oracle: AccountLoader<'info, Oracle>,
     #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x,)]
     pub token_x: Account<'info, Mint>,
     #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y,)]
     pub token_y: Account<'info, Mint>,
-    #[account(mut)]
     pub payer: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]
