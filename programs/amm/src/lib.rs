@@ -73,7 +73,10 @@ pub mod amm {
         )
     }
 
-    pub fn initialize_oracle(ctx: Context<InitializeOracle>) -> ProgramResult {
+    pub fn initialize_oracle(
+        ctx: Context<InitializeOracle>,
+        _fee_tier_address: Pubkey,
+    ) -> ProgramResult {
         instructions::initialize_oracle::handler(ctx)
     }
 

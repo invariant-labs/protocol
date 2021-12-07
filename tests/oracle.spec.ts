@@ -1,17 +1,20 @@
 import * as anchor from '@project-serum/anchor'
-import { Provider } from '@project-serum/anchor'
+import { Provider, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { assertThrowsAsync, createPoolWithLiquidity } from './testUtils'
 import { Market, Pair, TICK_LIMIT, Network } from '@invariant-labs/sdk'
 import { DEFAULT_PUBLIC_KEY } from '@invariant-labs/sdk/src/market'
+import { fromFee } from '@invariant-labs/sdk/lib/utils'
+import { Decimal } from '@invariant-labs/sdk/lib/market'
 
 describe('oracle', () => {
   const provider = Provider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
+  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
 
   let market: Market
   let pair: Pair
@@ -26,6 +29,8 @@ describe('oracle', () => {
       connection,
       anchor.workspace.Amm.programId
     )
+    await market.createState(wallet, protocolFee)
+
     const createdPool = await createPoolWithLiquidity(market, connection, wallet)
     pair = createdPool.pair
     mintAuthority = createdPool.mintAuthority
@@ -51,8 +56,8 @@ describe('oracle', () => {
 
     const oracle = await market.getOracle(pair)
 
-    assert.equal(oracle.size, 100)
-    assert.equal(oracle.head, 99)
+    assert.equal(oracle.size, 256)
+    assert.equal(oracle.head, 255)
     assert.equal(oracle.amount, 0)
   })
 

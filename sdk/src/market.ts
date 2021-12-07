@@ -783,8 +783,9 @@ export class Market {
   async initializeOracle(pair: Pair, payer: Keypair) {
     const oracleKeypair = Keypair.generate()
     const poolAddress = await pair.getAddress(this.program.programId)
+    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
 
-    return await this.program.rpc.initializeOracle({
+    return await this.program.rpc.initializeOracle(feeTierAddress, {
       accounts: {
         pool: poolAddress,
         oracle: oracleKeypair.publicKey,

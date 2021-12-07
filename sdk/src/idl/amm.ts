@@ -291,7 +291,12 @@ export type Amm = {
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "feeTierAddress",
+          "type": "publicKey"
+        }
+      ]
     },
     {
       "name": "createTick",
@@ -1675,7 +1680,12 @@ export const IDL: Amm = {
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "feeTierAddress",
+          "type": "publicKey"
+        }
+      ]
     },
     {
       "name": "createTick",
