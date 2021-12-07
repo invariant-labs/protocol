@@ -5,7 +5,7 @@ import { assertThrowsAsync } from '@invariant-labs/sdk/lib/utils'
 import { Decimal, FeeTier } from '@invariant-labs/sdk/src/market'
 import { ERRORS, fromFee } from '@invariant-labs/sdk/src/utils'
 import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
+import { BN, Provider } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 
 describe("fee-tier", () => {
@@ -15,12 +15,7 @@ describe("fee-tier", () => {
     const wallet = provider.wallet.payer as Keypair
     const admin = Keypair.generate()
     const user = Keypair.generate()
-    const market = new Market(
-        Network.LOCAL,
-        provider.wallet,
-        connection,
-        anchor.workspace.Amm.programId
-    )
+    let market: Market
     const feeTierAdmin: FeeTier = {
         fee: fromFee(new BN(600)),
         tickSpacing: 10
@@ -32,6 +27,13 @@ describe("fee-tier", () => {
     const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
 
     before(async () => {
+        market = await Market.build(
+            Network.LOCAL,
+            provider.wallet,
+            connection,
+            anchor.workspace.Amm.programId
+        )
+
         await Promise.all([
             await connection.requestAirdrop(admin.publicKey, 1e10),
             await connection.requestAirdrop(user.publicKey, 1e10)

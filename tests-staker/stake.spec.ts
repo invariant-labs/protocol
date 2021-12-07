@@ -76,7 +76,7 @@ describe('Stake tests', () => {
 
     //create amm and pool
 
-    market = new Market(0, provider.wallet, connection, anchor.workspace.Amm.programId)
+    market = await Market.build(0, provider.wallet, connection, anchor.workspace.Amm.programId)
 
     const tokens = await Promise.all([
       createTkn(connection, wallet, mintAuthority),

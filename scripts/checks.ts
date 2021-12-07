@@ -17,21 +17,24 @@ const wallet = provider.wallet.payer as Keypair
 
 const main = async () => {
   const feeTier = FEE_TIERS[0]
-  const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.USDT), feeTier)
+  const pair = new Pair(new PublicKey(MOCK_TOKENS.USDT), new PublicKey(MOCK_TOKENS.USDC), feeTier)
 
-  // const feeTierStruct = await market.getFeeTier(feeTier)
-  // console.log(feeTierStruct)
+  const currentTick = 12
+  const lowerFailed = -40
+  const lowerSuccess = -44
+  const upper = -20
 
   const pool = await market.getPool(pair)
-  console.log(pool)
+  console.log(pool.currentTickIndex)
 
-  // const tick = await market.getTick(pair, -4)
-  // console.log(tick)
+  const array = await Promise.all([
+    market.getPool(pair),
+    market.getTick(pair, currentTick),
+    market.getTick(pair, lowerFailed),
+    market.getTick(pair, lowerSuccess),
+    market.getTick(pair, upper)
+  ])
 
-  // const positionList = await market.getPositionList(MINTER.publicKey)
-  // console.log(positionList)
-
-  // const position = await market.getPosition(MINTER.publicKey, 0)
-  // console.log(position)
+  console.log(array)
 }
 main()

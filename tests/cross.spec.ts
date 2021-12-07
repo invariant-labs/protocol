@@ -3,7 +3,7 @@ import { Provider, Program, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { assert } from 'chai'
-import { createToken } from './testUtils'
+import { createToken, eqDecimal } from './testUtils'
 import { Market, Pair, SEED, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@invariant-labs/sdk'
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
@@ -16,24 +16,24 @@ describe('cross', () => {
   const wallet = provider.wallet.payer as Keypair
   const mintAuthority = Keypair.generate()
   const admin = Keypair.generate()
-  const market = new Market(
-    Network.LOCAL,
-    provider.wallet,
-    connection,
-    anchor.workspace.Amm.programId
-  )
+  let market: Market
   const feeTier: FeeTier = {
-    fee: fromFee(new BN(600)),
+    fee: fromFee(new BN(600)), // 0.6%
     tickSpacing: 10
   }
-  const protocolFee: Decimal = { v: fromFee(new BN(10000))}
+  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
-  let programAuthority: PublicKey
-  let nonce: number
 
   before(async () => {
+    market = await Market.build(
+      Network.LOCAL,
+      provider.wallet,
+      connection,
+      anchor.workspace.Amm.programId
+    )
+
     // Request airdrops
     await Promise.all([
       await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
@@ -45,26 +45,14 @@ describe('cross', () => {
       createToken(connection, wallet, mintAuthority)
     ])
 
-    const swaplineProgram = anchor.workspace.Amm as Program
-    const [_programAuthority, _nonce] = await anchor.web3.PublicKey.findProgramAddress(
-      [Buffer.from(SEED)],
-      swaplineProgram.programId
-    )
-    nonce = _nonce
-    programAuthority = _programAuthority
-
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
-  })
-  it('#createState()', async () => {
+
     await market.createState(admin, protocolFee)
-  })
-  it('#createFeeTier()', async () => {
     await market.createFeeTier(feeTier, admin)
   })
   it('#create()', async () => {
-    // 0.6% / 10
     await market.create({
       pair,
       signer: admin
@@ -82,9 +70,6 @@ describe('cross', () => {
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
     assert.ok(createdPool.feeProtocolTokenX.v.eqn(0))
     assert.ok(createdPool.feeProtocolTokenY.v.eqn(0))
-    assert.ok(createdPool.authority.equals(programAuthority))
-    assert.equal(createdPool.nonce, nonce)
-
     const tickmapData = await market.getTickmap(pair)
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
     assert.ok(tickmapData.bitmap.every((v) => v == 0))

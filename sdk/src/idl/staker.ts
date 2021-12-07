@@ -32,7 +32,7 @@ export type Staker = {
         },
         {
           "name": "stakerAuthority",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -58,7 +58,7 @@ export type Staker = {
       ],
       "args": [
         {
-          "name": "bump",
+          "name": "nonce",
           "type": "u8"
         },
         {
@@ -87,7 +87,7 @@ export type Staker = {
         },
         {
           "name": "position",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -97,7 +97,7 @@ export type Staker = {
         },
         {
           "name": "owner",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -152,12 +152,12 @@ export type Staker = {
         },
         {
           "name": "position",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "stakerAuthority",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -192,11 +192,7 @@ export type Staker = {
           "type": "i32"
         },
         {
-          "name": "bumpStake",
-          "type": "u8"
-        },
-        {
-          "name": "bumpAuthority",
+          "name": "nonce",
           "type": "u8"
         }
       ]
@@ -206,7 +202,7 @@ export type Staker = {
       "accounts": [
         {
           "name": "incentive",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -221,7 +217,7 @@ export type Staker = {
         },
         {
           "name": "stakerAuthority",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -294,6 +290,10 @@ export type Staker = {
           {
             "name": "pool",
             "type": "publicKey"
+          },
+          {
+            "name": "nonce",
+            "type": "u8"
           }
         ]
       }
@@ -457,7 +457,7 @@ export const IDL: Staker = {
         },
         {
           "name": "stakerAuthority",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -483,7 +483,7 @@ export const IDL: Staker = {
       ],
       "args": [
         {
-          "name": "bump",
+          "name": "nonce",
           "type": "u8"
         },
         {
@@ -512,7 +512,7 @@ export const IDL: Staker = {
         },
         {
           "name": "position",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -522,7 +522,7 @@ export const IDL: Staker = {
         },
         {
           "name": "owner",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -577,12 +577,12 @@ export const IDL: Staker = {
         },
         {
           "name": "position",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "stakerAuthority",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -617,11 +617,7 @@ export const IDL: Staker = {
           "type": "i32"
         },
         {
-          "name": "bumpStake",
-          "type": "u8"
-        },
-        {
-          "name": "bumpAuthority",
+          "name": "nonce",
           "type": "u8"
         }
       ]
@@ -631,7 +627,7 @@ export const IDL: Staker = {
       "accounts": [
         {
           "name": "incentive",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -646,7 +642,7 @@ export const IDL: Staker = {
         },
         {
           "name": "stakerAuthority",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -719,6 +715,10 @@ export const IDL: Staker = {
           {
             "name": "pool",
             "type": "publicKey"
+          },
+          {
+            "name": "nonce",
+            "type": "u8"
           }
         ]
       }

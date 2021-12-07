@@ -65,7 +65,7 @@ describe('End incentive tests', () => {
     ///////////////////////
     //create amm and pool
     const admin = Keypair.generate()
-    const market = new Market(0, provider.wallet, connection, anchor.workspace.Amm.programId)
+    const market = await Market.build(0, provider.wallet, connection, anchor.workspace.Amm.programId)
 
     const tokens = await Promise.all([
       createTkn(connection, wallet, mintAuthority),
