@@ -32,11 +32,13 @@ jobs:
             'npm run test:fee-tier',
             'npm run test:simulate-swap',
             'npm run test:timestamp',
+            'npm run test:claim-amount',
             'npm run test:create',
             'npm run test:stake',
             'npm run test:withdraw-staker',
             'npm run test:end-incentive',
             'npm run test:multicall'
+            
             
             'cargo test'
           ]
