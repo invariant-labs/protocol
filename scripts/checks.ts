@@ -11,28 +11,29 @@ const provider = Provider.local(clusterApiUrl('devnet'), {
 })
 
 const connection = provider.connection
-const market = new Market(Network.DEV, provider.wallet, connection)
 // @ts-expect-error
 const wallet = provider.wallet.payer as Keypair
 
 const main = async () => {
+  const market = await Market.build(Network.DEV, provider.wallet, connection)
   const feeTier = FEE_TIERS[0]
-  const pair = new Pair(new PublicKey(MOCK_TOKENS.USDT), new PublicKey(MOCK_TOKENS.USDC), feeTier)
+  const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.SOL), feeTier)
+  // const pair = new Pair(new PublicKey(MOCK_TOKENS.USDT), new PublicKey(MOCK_TOKENS.USDC), feeTier)
 
-  const currentTick = 12
-  const lowerFailed = -40
-  const lowerSuccess = -44
-  const upper = -20
+  // const currentTick = 12
+  // const lowerFailed = -40
+  // const lowerSuccess = -44
+  // const upper = -20
 
   const pool = await market.getPool(pair)
   console.log(pool.currentTickIndex)
 
   const array = await Promise.all([
     market.getPool(pair),
-    market.getTick(pair, currentTick),
-    market.getTick(pair, lowerFailed),
-    market.getTick(pair, lowerSuccess),
-    market.getTick(pair, upper)
+    // market.getTick(pair, currentTick),
+    // market.getTick(pair, lowerFailed),
+    // market.getTick(pair, lowerSuccess),
+    // market.getTick(pair, upper)
   ])
 
   console.log(array)
