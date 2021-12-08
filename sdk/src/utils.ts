@@ -195,36 +195,36 @@ export const calculateAveragePrice = (swapParameters: SimulateSwapPrice): Decima
   while (!remainingAmount.v.lte(new BN(0))) {
     let closestTickIndex: number
     if (xToY) {
-      closestTickIndex = getPreviousTick(tickmap, currentTickIndex, tickSpacing)
+      closestTickIndex = getPreviousTick(tickmap, currentTickIndex, tickSpacing).valueOf()
     } else {
-      closestTickIndex = getNextTick(tickmap, currentTickIndex, tickSpacing)
+      closestTickIndex = getNextTick(tickmap, currentTickIndex, tickSpacing).valueOf()
     }
 
     let price: Decimal
-    let closerLimit: [swapLimit: Decimal, limitingTick: [index: number, initialized: boolean]]
+    let closerLimit: {swapLimit: Decimal, limitingTick: {index: Number, initialized: Boolean}}
     if (closestTickIndex != null) {
       price = calculate_price_sqrt(closestTickIndex)
       
       if (xToY && price.v.gt(priceLimit.v)) {
-        closerLimit = [price, [closestTickIndex, true]]
+        closerLimit = {swapLimit: price, limitingTick: {index: new Number(closestTickIndex), initialized: new Boolean(true)}}
       } else if (!xToY && price.v.lt(priceLimit.v)) {
-        closerLimit = [price, [closestTickIndex, true]]
+        closerLimit = {swapLimit: price, limitingTick: {index: new Number(closestTickIndex), initialized: new Boolean(true)}}
       } else {
-        closerLimit = [priceLimit, [null, null]]
+        closerLimit = {swapLimit: priceLimit, limitingTick: {index: new Number(null), initialized: new Boolean(null)}}
       }
     } else {
       const index = getSearchLimit(currentTickIndex, tickSpacing, !xToY)
       price = calculate_price_sqrt(index)
 
       if (xToY && price.v.gt(priceLimit.v)) {
-        closerLimit = [price, [index, false]]
+        closerLimit = {swapLimit: price, limitingTick: {index: new Number(closestTickIndex), initialized: new Boolean(false)}}
       } else if (!xToY && price.v.lt(priceLimit.v)) {
-        closerLimit = [price, [index, false]]
+        closerLimit = {swapLimit: price, limitingTick: {index: new Number(closestTickIndex), initialized: new Boolean(false)}}
       } else {
-        closerLimit = [priceLimit, [null, null]]
+        closerLimit = {swapLimit: priceLimit, limitingTick: {index: new Number(null), initialized: new Boolean(null)}}
       }
     }
-    const result = calculateSwapStep(pool.sqrtPrice, closerLimit[0], liquidity, remainingAmount, byAmountIn, fee)
+    const result = calculateSwapStep(pool.sqrtPrice, closerLimit.swapLimit, liquidity, remainingAmount, byAmountIn, fee)
     totalAmountIn = {v: totalAmountIn.v.add(result.amountIn.v)}
     totalAmountOut = {v: totalAmountOut.v.add(result.amountOut.v)}
     totalFee = {v: totalFee.v.add(result.feeAmount.v)}
@@ -244,12 +244,12 @@ export const calculateAveragePrice = (swapParameters: SimulateSwapPrice): Decima
       throw new Error("Price would cross swap limit")
     }
 
-    if (result.nextPrice.v.eq(closerLimit[0].v) && closerLimit[1][0] != null) {
-      const tickIndex = closerLimit[1][0]
-      const initialized = closerLimit[1][1]
+    if (result.nextPrice.v.eq(closerLimit.swapLimit.v) && closerLimit.limitingTick.index != undefined) {
+      const tickIndex = closerLimit.limitingTick.index
+      const initialized = closerLimit.limitingTick.initialized
 
       if (initialized) {
-        market.getTick(pair, tickIndex).then((tick) => {
+        market.getTick(pair, tickIndex.valueOf()).then((tick) => {
           if ((currentTickIndex >= tick.index) !== tick.sign) {
             liquidity = {v: liquidity.v.add(tick.liquidityChange.v)}
           } else {
@@ -258,9 +258,9 @@ export const calculateAveragePrice = (swapParameters: SimulateSwapPrice): Decima
         })
       }
       if (xToY && !remainingAmount.v.eq(new BN(0))) {
-        currentTickIndex = tickIndex - tickSpacing
+        currentTickIndex = tickIndex.valueOf() - tickSpacing
       } else {
-        currentTickIndex = tickIndex
+        currentTickIndex = tickIndex.valueOf()
       }
     } else {
       currentTickIndex = getTickFromPrice(currentTickIndex, tickSpacing, result.nextPrice, xToY)

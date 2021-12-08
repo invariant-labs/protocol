@@ -37,13 +37,12 @@ pub fn handler(
     index: i32,
 ) -> ProgramResult {
     msg!("CREATE_TICK");
-
     let mut tick = ctx.accounts.tick.load_init()?;
     let mut tickmap = ctx.accounts.tickmap.load_mut()?;
     let pool = ctx.accounts.pool.load()?;
     let current_timestamp = Clock::get()?.unix_timestamp as u64;
 
-    tickmap.set(true, index, pool.tick_spacing);
+    tickmap.flip(true, index, pool.tick_spacing);
 
     // init tick
     let below_current_tick = index <= pool.current_tick_index;

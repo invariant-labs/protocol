@@ -1,6 +1,6 @@
 import { BN } from '@project-serum/anchor'
 import { assert } from 'chai'
-import { Decimal, Tickmap } from './market'
+import { Decimal, Tick, Tickmap } from './market'
 import { DENOMINATOR } from './utils'
 
 export const TICK_LIMIT = 100_000
@@ -446,4 +446,40 @@ export const getLiquidityByYPrice = (
     liquidity: { v: liquidity },
     x
   }
+}
+
+export const calculateFeeGrowthInside = (
+  lowerTick: Tick,
+  upperTick: Tick,
+  currentTick: number,
+  feeGrowthGlobalX: Decimal,
+  feeGrowthGlobalY: Decimal
+  ): [Decimal, Decimal] => {
+  const currentAboveLower = currentTick >= lowerTick.index
+  const currentBelowUpper = currentTick < upperTick.index
+
+  let feeGrowthBelowX: Decimal
+  let feeGrowthBelowY: Decimal
+  if (currentAboveLower) {
+    feeGrowthBelowX = lowerTick.feeGrowthOutsideX
+    feeGrowthBelowY = lowerTick.feeGrowthOutsideY
+  } else {
+    feeGrowthBelowX = { v: feeGrowthGlobalX.v.sub(lowerTick.feeGrowthOutsideX.v) }
+    feeGrowthBelowY = { v: feeGrowthGlobalY.v.sub(lowerTick.feeGrowthOutsideY.v)}
+  }
+
+  let feeGrowthAboveX: Decimal
+  let feeGrowthAboveY: Decimal
+  if (currentBelowUpper) {
+    feeGrowthAboveX = upperTick.feeGrowthOutsideX
+    feeGrowthAboveY = upperTick.feeGrowthOutsideY
+  } else {
+    feeGrowthAboveX = { v: feeGrowthGlobalX.v.sub(upperTick.feeGrowthOutsideX.v) }
+    feeGrowthAboveY = { v: feeGrowthGlobalY.v.sub(upperTick.feeGrowthOutsideY.v)}
+  }
+
+  const feeGrowthInsideX: Decimal = { v: feeGrowthGlobalX.v.sub(feeGrowthBelowX.v).sub(feeGrowthAboveX.v)}
+  const feeGrowthInsideY: Decimal = { v: feeGrowthGlobalY.v.sub(feeGrowthBelowY.v).sub(feeGrowthAboveY.v)}
+
+  return [feeGrowthInsideX, feeGrowthInsideY]
 }

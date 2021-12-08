@@ -220,7 +220,7 @@ mod test {
     #[test]
     fn test_get_closer_limit() {
         let tickmap = &mut Tickmap::default();
-        tickmap.set(true, 0, 1);
+        tickmap.flip(true, 0, 1);
 
         // tick limit closer
         {
