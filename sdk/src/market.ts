@@ -207,10 +207,15 @@ export class Market {
   }
 
   async getPositionsFromRange(owner: PublicKey, lowerIndex: number, upperIndex: number) {
-    return this.getPositionsFromIndexes(
-      owner,
-      Array.from({ length: upperIndex - lowerIndex + 1 }, (_, i) => i + lowerIndex)
-    )
+    try {
+      await this.getPositionList(owner)
+      return this.getPositionsFromIndexes(
+        owner,
+        Array.from({ length: upperIndex - lowerIndex + 1 }, (_, i) => i + lowerIndex)
+      )
+    } catch (e) {
+      return []
+    }
   }
 
   async getTickAddress(pair, index: number) {
