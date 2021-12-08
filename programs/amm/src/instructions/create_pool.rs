@@ -79,6 +79,8 @@ pub fn handler(
         seconds_per_liquidity_global: Decimal::new(0),
         start_timestamp: current_timestamp,
         last_timestamp: current_timestamp,
+        oracle_address: Pubkey::default(),
+        oracle_initialized: false,
         bump,
     };
 

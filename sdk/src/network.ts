@@ -8,7 +8,7 @@ export const getMarketAddress = (network: Network) => {
     case Network.LOCAL:
       return 'FPr3fREovDnqMfubJTrJAFwopvJB8grXj1o3gkmSyzmw'
     case Network.DEV:
-      return 'Mu6q1PtrKAKkFWZhe6vXz21U4fkQD9L5hnKCGP7FUQM'
+      return 'Asx8HEFtysawo1r7NF9SqdtBawW2bnf1DY1bCVLvcbWW'
     default:
       throw new Error('Unknown network')
   }

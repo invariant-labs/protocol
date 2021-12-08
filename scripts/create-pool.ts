@@ -10,16 +10,15 @@ const provider = Provider.local(clusterApiUrl('devnet'), {
 })
 
 const connection = provider.connection
-const market = new Market(Network.DEV, provider.wallet, connection)
 // @ts-expect-error
 const wallet = provider.wallet.payer as Keypair
+const feeTier = FEE_TIERS[0]
 
 const main = async () => {
   const market = await Market.build(Network.DEV, provider.wallet, connection)
 
   await createUsdcUsdt(market)
   await createUsdcSol(market)
-  await createUsdcSolPricier(market)
 }
 const createUsdcUsdt = async (market: Market) => {
   const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.USDT), feeTier)
@@ -34,21 +33,7 @@ const createUsdcSol = async (market: Market) => {
 
   await market.create({
     pair,
-    signer: wallet,
-    initTick: 16000
-  })
-}
-const createUsdcSolPricier = async (market: Market) => {
-  const pair = new Pair(
-    new PublicKey(MOCK_TOKENS.USDC),
-    new PublicKey(MOCK_TOKENS.SOL),
-    FEE_TIERS[1]
-  )
-
-  await market.create({
-    pair,
-    signer: wallet,
-    initTick: 16000
+    signer: wallet
   })
 }
 
