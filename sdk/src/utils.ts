@@ -163,17 +163,13 @@ export const generateTicksArray = (start: number, stop: number, step: number) =>
 
 export const getFeeTierAddress = async ({ fee, tickSpacing }: FeeTier, programId: PublicKey) => {
   const ts = tickSpacing ?? feeToTickSpacing(fee)
-  const tickSpacingBuffer = Buffer.alloc(2)
-  const feeBuffer = Buffer.alloc(8)
-  tickSpacingBuffer.writeUInt16LE(ts)
-  feeBuffer.writeBigUInt64LE(BigInt(fee.toString()))
 
   const [address, bump] = await PublicKey.findProgramAddress(
     [
       Buffer.from(utils.bytes.utf8.encode(FEE_TIER)),
       programId.toBuffer(),
-      feeBuffer,
-      tickSpacingBuffer
+      bigNumberToBuffer(fee, 128),
+      bigNumberToBuffer(new BN(ts), 16)
     ],
     programId
   )
@@ -405,20 +401,17 @@ export const calculateClaimAmount = ({
   return [tokensOwedXTotal, tokensOwedYTotal]
 }
 
-export const bigNumberToBuffer = (n: BN, size: 32 | 64 | 128 | 256) => {
-  let words = []
+export const bigNumberToBuffer = (n: BN, size: 16 | 32 | 64 | 128 | 256) => {
   const chunk = new BN(2).pow(new BN(16))
 
+  const buffer = Buffer.alloc(size / 8)
+  let offset = 0
+
   while (n.gt(new BN(0))) {
-    const buffer = Buffer.alloc(2)
-    buffer.writeUInt16LE(n.mod(chunk).toNumber(), 0)
-    words.push(buffer)
+    buffer.writeUInt16LE(n.mod(chunk).toNumber(), offset)
     n = n.div(chunk)
+    offset += 2
   }
 
-  while (words.length * 16 < size) {
-    words.push(Buffer.alloc(2))
-  }
-
-  return Buffer.concat(words)
+  return buffer
 }

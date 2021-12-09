@@ -84,7 +84,7 @@ export type Amm = {
         },
         {
           "name": "fee",
-          "type": "u64"
+          "type": "u128"
         },
         {
           "name": "tickSpacing",
@@ -154,14 +154,6 @@ export type Amm = {
         {
           "name": "initTick",
           "type": "i32"
-        },
-        {
-          "name": "fee",
-          "type": "u64"
-        },
-        {
-          "name": "tickSpacing",
-          "type": "u16"
         }
       ]
     },
@@ -1473,7 +1465,7 @@ export const IDL: Amm = {
         },
         {
           "name": "fee",
-          "type": "u64"
+          "type": "u128"
         },
         {
           "name": "tickSpacing",
@@ -1543,14 +1535,6 @@ export const IDL: Amm = {
         {
           "name": "initTick",
           "type": "i32"
-        },
-        {
-          "name": "fee",
-          "type": "u64"
-        },
-        {
-          "name": "tickSpacing",
-          "type": "u16"
         }
       ]
     },

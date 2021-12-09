@@ -82,7 +82,7 @@ export class Market {
 
     const bitmapKeypair = Keypair.generate()
 
-    await this.program.rpc.createPool(bump, tick, fee, ts, {
+    await this.program.rpc.createPool(bump, tick, {
       accounts: {
         pool: poolAddress,
         feeTier: feeTierAddress,

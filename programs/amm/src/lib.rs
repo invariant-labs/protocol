@@ -39,20 +39,14 @@ pub mod amm {
     pub fn create_fee_tier(
         ctx: Context<CreateFeeTier>,
         bump: u8,
-        fee: u64,
+        fee: u128,
         tick_spacing: u16,
     ) -> ProgramResult {
         instructions::create_fee_tier::handler(ctx, bump, fee, tick_spacing)
     }
 
-    pub fn create_pool(
-        ctx: Context<CreatePool>,
-        bump: u8,
-        init_tick: i32,
-        _fee: u64,
-        _tick_spacing: u16,
-    ) -> ProgramResult {
-        instructions::create_pool::handler(ctx, bump, init_tick, _fee, _tick_spacing)
+    pub fn create_pool(ctx: Context<CreatePool>, bump: u8, init_tick: i32) -> ProgramResult {
+        instructions::create_pool::handler(ctx, bump, init_tick)
     }
 
     pub fn swap(
