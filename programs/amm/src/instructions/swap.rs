@@ -12,11 +12,13 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
 #[derive(Accounts)]
-#[instruction(fee_tier_address: Pubkey)]
 pub struct Swap<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
-    #[account(mut, seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()], bump = pool.load()?.bump)]
+    #[account(mut,         
+        seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref(), &pool.load()?.fee.v.to_le_bytes(), &pool.load()?.tick_spacing.to_le_bytes()],
+        bump = pool.load()?.bump
+    )]
     pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
         constraint = tickmap.to_account_info().key == &pool.load()?.tickmap,
@@ -105,7 +107,6 @@ impl<'info> SendTokens<'info> for Swap<'info> {
 
 pub fn handler(
     ctx: Context<Swap>,
-    _fee_tier_address: Pubkey,
     x_to_y: bool,
     amount: u64,
     by_amount_in: bool, // whether amount specifies input or output

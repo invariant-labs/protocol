@@ -223,10 +223,6 @@ export type Amm = {
       ],
       "args": [
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
-        },
-        {
           "name": "xToY",
           "type": "bool"
         },
@@ -338,10 +334,6 @@ export type Amm = {
         {
           "name": "bump",
           "type": "u8"
-        },
-        {
-          "name": "feeTierAddress",
-          "type": "publicKey"
         },
         {
           "name": "index",
@@ -475,10 +467,6 @@ export type Amm = {
           "type": "u8"
         },
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
-        },
-        {
           "name": "lowerTickIndex",
           "type": "i32"
         },
@@ -584,10 +572,6 @@ export type Amm = {
         }
       ],
       "args": [
-        {
-          "name": "feeTierAddress",
-          "type": "publicKey"
-        },
         {
           "name": "index",
           "type": "u32"
@@ -738,10 +722,6 @@ export type Amm = {
       ],
       "args": [
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
-        },
-        {
           "name": "index",
           "type": "u32"
         },
@@ -882,12 +862,7 @@ export type Amm = {
           "isSigner": false
         }
       ],
-      "args": [
-        {
-          "name": "feeTierAddress",
-          "type": "publicKey"
-        }
-      ]
+      "args": []
     }
   ],
   "accounts": [
@@ -1604,10 +1579,6 @@ export const IDL: Amm = {
       ],
       "args": [
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
-        },
-        {
           "name": "xToY",
           "type": "bool"
         },
@@ -1719,10 +1690,6 @@ export const IDL: Amm = {
         {
           "name": "bump",
           "type": "u8"
-        },
-        {
-          "name": "feeTierAddress",
-          "type": "publicKey"
         },
         {
           "name": "index",
@@ -1856,10 +1823,6 @@ export const IDL: Amm = {
           "type": "u8"
         },
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
-        },
-        {
           "name": "lowerTickIndex",
           "type": "i32"
         },
@@ -1965,10 +1928,6 @@ export const IDL: Amm = {
         }
       ],
       "args": [
-        {
-          "name": "feeTierAddress",
-          "type": "publicKey"
-        },
         {
           "name": "index",
           "type": "u32"
@@ -2119,10 +2078,6 @@ export const IDL: Amm = {
       ],
       "args": [
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
-        },
-        {
           "name": "index",
           "type": "u32"
         },
@@ -2263,12 +2218,7 @@ export const IDL: Amm = {
           "isSigner": false
         }
       ],
-      "args": [
-        {
-          "name": "feeTierAddress",
-          "type": "publicKey"
-        }
-      ]
+      "args": []
     }
   ],
   "accounts": [
