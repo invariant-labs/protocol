@@ -67,9 +67,7 @@ export class Market {
   }
 
   async create({ pair, signer, initTick }: CreatePool) {
-    const { fee, tickSpacing } = pair.feeTier
     const tick = initTick || 0
-    const ts = tickSpacing ?? feeToTickSpacing(fee)
 
     const [poolAddress, bump] = await pair.getAddressAndBump(this.program.programId)
     const { address: feeTierAddress } = await this.getFeeTierAddress(pair.feeTier)
@@ -773,7 +771,6 @@ export class Market {
   async initializeOracle(pair: Pair, payer: Keypair) {
     const oracleKeypair = Keypair.generate()
     const poolAddress = await pair.getAddress(this.program.programId)
-    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
 
     return await this.program.rpc.initializeOracle({
       accounts: {

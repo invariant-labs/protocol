@@ -59,10 +59,7 @@ pub mod amm {
         instructions::swap::handler(ctx, x_to_y, amount, by_amount_in, sqrt_price_limit)
     }
 
-    pub fn initialize_oracle(
-        ctx: Context<InitializeOracle>,
-        _fee_tier_address: Pubkey,
-    ) -> ProgramResult {
+    pub fn initialize_oracle(ctx: Context<InitializeOracle>) -> ProgramResult {
         instructions::initialize_oracle::handler(ctx)
     }
 

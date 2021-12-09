@@ -1,7 +1,7 @@
 import { PublicKey } from '@solana/web3.js'
 import { utils, BN } from '@project-serum/anchor'
 import { FeeTier } from './market'
-import { bigNumberToBuffer, getFeeTierAddress } from './utils'
+import { bigNumberToBuffer, feeToTickSpacing, getFeeTierAddress } from './utils'
 
 const POOL_SEED = 'poolv1'
 
@@ -24,6 +24,10 @@ export class Pair {
     }
     this.feeTier = feeTier
     this.feeTierAddress = null
+
+    if (this.feeTier.tickSpacing == null) {
+      this.feeTier.tickSpacing = feeToTickSpacing(this.feeTier.fee)
+    }
   }
 
   async getAddressAndBump(programId: PublicKey): Promise<[PublicKey, number]> {
