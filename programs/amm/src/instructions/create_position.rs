@@ -108,9 +108,6 @@ impl<'info> TakeTokens<'info> for CreatePosition<'info> {
 pub fn handler(
     ctx: Context<CreatePosition>,
     bump: u8,
-    _fee_tier_address: Pubkey,
-    _lower_tick_index: i32,
-    _upper_tick_index: i32,
     liquidity_delta: Decimal,
 ) -> ProgramResult {
     msg!("INVARIANT: CREATE POSITION");

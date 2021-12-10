@@ -63,7 +63,6 @@ impl<'info> WithdrawToken<'info> for Withdraw<'info> {
 
 pub fn handler(
     ctx: Context<Withdraw>,
-    _index: i32,
     nonce: u8
 ) -> ProgramResult {
     msg!("WITHDRAW");

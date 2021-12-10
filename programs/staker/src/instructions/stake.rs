@@ -29,7 +29,7 @@ pub struct CreateUserStake<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn handler(ctx: Context<CreateUserStake>, _index: i32, bump: u8) -> ProgramResult {
+pub fn handler(ctx: Context<CreateUserStake>, bump: u8) -> ProgramResult {
     msg!("STAKE");
     let mut incentive = ctx.accounts.incentive.load_mut()?;
     let current_time = Clock::get().unwrap().unix_timestamp as u64;

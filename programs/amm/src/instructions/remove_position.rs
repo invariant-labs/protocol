@@ -116,7 +116,6 @@ impl<'info> SendTokens<'info> for RemovePosition<'info> {
 
 pub fn handler(
     ctx: Context<RemovePosition>,
-    _fee_tier_address: Pubkey,
     index: u32,
     lower_tick_index: i32,
     upper_tick_index: i32,
