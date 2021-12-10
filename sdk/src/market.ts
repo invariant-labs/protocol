@@ -37,7 +37,7 @@ export class Market {
   public wallet: IWallet
   public program: Program<Amm>
   public stateAddress: PublicKey = PublicKey.default
-  private programAuthority: PublicKey = PublicKey.default
+  public programAuthority: PublicKey = PublicKey.default
 
   private constructor(
     network: Network,
