@@ -115,14 +115,12 @@ pub mod amm {
 
     pub fn update_seconds_per_liquidity(
         ctx: Context<UpdateSecondsPerLiquidity>,
-        fee_tier_address: Pubkey,
         lower_tick_index: i32,
         upper_tick_index: i32,
         index: i32,
     ) -> ProgramResult {
         instructions::update_seconds_per_liquidity::handler(
             ctx,
-            fee_tier_address,
             lower_tick_index,
             upper_tick_index,
             index,

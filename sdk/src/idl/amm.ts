@@ -781,10 +781,6 @@ export type Amm = {
       ],
       "args": [
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
-        },
-        {
           "name": "lowerTickIndex",
           "type": "i32"
         },
@@ -2131,10 +2127,6 @@ export const IDL: Amm = {
         }
       ],
       "args": [
-        {
-          "name": "feeTierAddress",
-          "type": "publicKey"
-        },
         {
           "name": "lowerTickIndex",
           "type": "i32"
