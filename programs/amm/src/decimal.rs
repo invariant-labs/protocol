@@ -72,6 +72,15 @@ impl Decimal {
             .try_into()
             .unwrap()
     }
+
+    pub fn big_mul(self, other: Decimal) -> Decimal {
+        Decimal::new(
+            U256::from(self.v)
+                .mul(U256::from(other.v))
+                .div(U256::from(DENOMINATOR))
+                .as_u128(),
+        )
+    }
 }
 
 pub trait Pow<T>: Sized {
@@ -422,6 +431,39 @@ mod tests {
 
             assert_eq!(d.to_token_floor(), 1);
             assert_eq!(d.to_token_ceil(), 2);
+        }
+    }
+
+    #[test]
+    fn test_big_mul() {
+        // precision
+        {
+            let a = Decimal::from_integer(1);
+            let b = Decimal::from_integer(1);
+            let c = a.big_mul(b);
+            assert_eq!(c, Decimal::from_integer(1));
+        }
+        // simple
+        {
+            let a = Decimal::from_integer(2);
+            let b = Decimal::from_integer(3);
+            let c = a.big_mul(b);
+            assert_eq!(c, Decimal::from_integer(6));
+        }
+        // big
+        {
+            let a = Decimal::new(2u128.pow(127));
+            let b = Decimal::from_integer(1);
+            let c = a.big_mul(b);
+            assert_eq!(c, a);
+        }
+        // random
+        {
+            let a = Decimal::new(87932487422289);
+            let b = Decimal::from_integer(982383286787);
+            let c = a.big_mul(b);
+            // 87932487422289 * 982383286787
+            assert_eq!(c, Decimal::new(86383406009264805062995443));
         }
     }
 }
