@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use crate::interfaces::send_tokens::SendTokens;
 use crate::structs::pool::Pool;
 use crate::structs::position::Position;
@@ -106,7 +108,7 @@ pub fn handler(
     let position = &mut ctx.accounts.position.load_mut()?;
     let lower_tick = &mut ctx.accounts.lower_tick.load_mut()?;
     let upper_tick = &mut ctx.accounts.upper_tick.load_mut()?;
-    let current_timestamp = Clock::get()?.unix_timestamp as u64;
+    let current_timestamp = Clock::get()?.unix_timestamp.try_into().unwrap();
 
     check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
 
