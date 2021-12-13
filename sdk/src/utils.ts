@@ -191,13 +191,15 @@ export const toDecimal = (x: number, decimals: number = 0): Decimal => {
 export const calculateAveragePrice = (swapParameters: SimulateSwapPrice): Decimal => {
   const { xToY, byAmountIn, swapAmount, slippage, tickmap, pool, market, pair } = swapParameters
   let { currentTickIndex, tickSpacing, liquidity, fee } = pool
-  const priceLimit = calculatePriceAfterSlippage(pool.sqrtPrice, slippage, !xToY)
+  let currentSqrtPrice = pool.sqrtPrice 
+
+  const priceLimit = calculatePriceAfterSlippage(currentSqrtPrice, slippage, !xToY)
   if (xToY) {
-    if (pool.sqrtPrice.v.lt(priceLimit.v)) {
+    if (currentSqrtPrice.v.lt(priceLimit.v)) {
       throw new Error("Price limit is on the wrong side of price")
     }
   } else {
-    if (pool.sqrtPrice.v.gt(priceLimit.v)) {
+    if (currentSqrtPrice.v.gt(priceLimit.v)) {
       throw new Error("Price limit is on the wrong side of price")
     }
   }
@@ -238,7 +240,7 @@ export const calculateAveragePrice = (swapParameters: SimulateSwapPrice): Decima
         closerLimit = { swapLimit: priceLimit, limitingTick: { index: new Number(null), initialized: new Boolean(null) } }
       }
     }
-    const result = calculateSwapStep(pool.sqrtPrice, closerLimit.swapLimit, liquidity, remainingAmount, byAmountIn, fee)
+    const result = calculateSwapStep(currentSqrtPrice, closerLimit.swapLimit, liquidity, remainingAmount, byAmountIn, fee)
     totalAmountIn = { v: totalAmountIn.v.add(result.amountIn.v) }
     totalAmountOut = { v: totalAmountOut.v.add(result.amountOut.v) }
     totalFee = { v: totalFee.v.add(result.feeAmount.v) }
@@ -252,9 +254,9 @@ export const calculateAveragePrice = (swapParameters: SimulateSwapPrice): Decima
 
     remainingAmount = { v: remainingAmount.v.sub(amountDiff.v) }
 
-    pool.sqrtPrice = result.nextPrice
+    currentSqrtPrice = result.nextPrice
 
-    if (pool.sqrtPrice.v.eq(priceLimit.v) && remainingAmount.v.gt(new BN(0))) {
+    if (currentSqrtPrice.v.eq(priceLimit.v) && remainingAmount.v.gt(new BN(0))) {
       throw new Error("Price would cross swap limit")
     }
 
