@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use crate::structs::*;
 use crate::util;
 use anchor_lang::prelude::*;
@@ -46,7 +48,7 @@ impl<'info> ReturnToFounder<'info> for ReturnFounds<'info> {
 
 pub fn handler(ctx: Context<ReturnFounds>, bump_authority: u8) -> ProgramResult {
     let incentive = ctx.accounts.incentive.load()?;
-    let current_time = Clock::get().unwrap().unix_timestamp as u64;
+    let current_time: u64 = Clock::get()?.unix_timestamp.try_into().unwrap();
     require!(current_time > incentive.end_time, NotEnded);
     require!(incentive.num_of_stakes == 0, StakeExist);
     require!(incentive.total_reward_unclaimed.v > 0, ZeroReward);

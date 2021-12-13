@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use crate::decimal::Decimal;
 use crate::interfaces::send_tokens::SendTokens;
 use crate::structs::pool::Pool;
@@ -127,7 +129,7 @@ pub fn handler(
     let removed_position = &mut ctx.accounts.removed_position.load_mut()?;
     let pool = &mut ctx.accounts.pool.load_mut()?;
     let tickmap = &mut ctx.accounts.tickmap.load_mut()?;
-    let current_timestamp = Clock::get()?.unix_timestamp as u64;
+    let current_timestamp = Clock::get()?.unix_timestamp.try_into().unwrap();
 
     // closing tick can't be in the same scope as loaded tick
     let close_lower;
