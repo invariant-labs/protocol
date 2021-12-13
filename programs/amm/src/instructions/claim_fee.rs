@@ -94,10 +94,6 @@ impl<'info> interfaces::SendTokens<'info> for ClaimFee<'info> {
 
 pub fn handler(
     ctx: Context<ClaimFee>,
-    _fee_tier_address: Pubkey,
-    _index: u32,
-    _lower_tick_index: i32,
-    _upper_tick_index: i32,
 ) -> ProgramResult {
     msg!("INVARIANT: CLAIM FEE");
 

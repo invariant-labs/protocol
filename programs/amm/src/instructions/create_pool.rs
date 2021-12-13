@@ -37,13 +37,7 @@ pub struct CreatePool<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
-pub fn handler(
-    ctx: Context<CreatePool>,
-    bump: u8,
-    init_tick: i32,
-    _fee: u64,
-    _tick_spacing: u16,
-) -> ProgramResult {
+pub fn handler(ctx: Context<CreatePool>, bump: u8, init_tick: i32) -> ProgramResult {
     msg!("INVARIANT: CREATE POOL");
 
     let token_x_address = ctx.accounts.token_x.to_account_info().key;

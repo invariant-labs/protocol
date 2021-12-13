@@ -365,6 +365,7 @@ export class Market {
       accounts: {
         positionList: positionListAddress,
         owner: owner,
+        signer: owner,
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId
       }

@@ -35,12 +35,7 @@ pub struct CreateTick<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
-pub fn handler(
-    ctx: Context<CreateTick>,
-    bump: u8,
-    _fee_tier_address: Pubkey,
-    index: i32,
-) -> ProgramResult {
+pub fn handler(ctx: Context<CreateTick>, bump: u8, index: i32) -> ProgramResult {
     msg!("INVARIANT: CREATE_TICK");
 
     let mut tick = ctx.accounts.tick.load_init()?;
