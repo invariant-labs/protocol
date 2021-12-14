@@ -33,10 +33,11 @@ impl Pool {
         if amount == Decimal::new(0) || { self.liquidity } == Decimal::new(0) {
             return;
         }
+        let fee_growth = amount.big_div(self.liquidity);
         if x {
-            self.fee_growth_global_x = self.fee_growth_global_x + (amount / self.liquidity);
+            self.fee_growth_global_x = self.fee_growth_global_x + fee_growth;
         } else {
-            self.fee_growth_global_y = self.fee_growth_global_y + (amount / self.liquidity);
+            self.fee_growth_global_y = self.fee_growth_global_y + fee_growth;
         }
     }
 

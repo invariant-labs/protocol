@@ -62,7 +62,7 @@ describe('limits', () => {
     // calculation of liquidity might not be exactly equal on both tokens so taking smaller one
     const liquidityDelta = liquidityByY.v.lt(liquidityByX.v) ? liquidityByY : liquidityByX
 
-    market.initPosition(
+    await market.initPosition(
       {
         pair,
         owner: owner.publicKey,
@@ -74,9 +74,23 @@ describe('limits', () => {
       },
       owner
     )
+
+    await market.swap(
+      {
+        pair,
+        XtoY: true,
+        amount: new BN(1),
+        knownPrice,
+        slippage: toDecimal(5, 2),
+        accountX: userAccountX,
+        accountY: userAccountY,
+        byAmountIn: true
+      },
+      owner
+    )
   })
 
-  it('big deposit only X', async () => {
+  it.only('big deposit only X', async () => {
     const mintAmount = new BN(2).pow(new BN(64)).subn(1)
     const { owner, userAccountX, userAccountY } = await createUserWithTokens(
       pair,
@@ -111,6 +125,20 @@ describe('limits', () => {
 
     assert.ok((await tokenX.getAccountInfo(userAccountX)).amount.eqn(0))
     assert.ok((await tokenY.getAccountInfo(userAccountY)).amount.eq(mintAmount))
+
+    await market.swap(
+      {
+        pair,
+        XtoY: false,
+        amount: mintAmount,
+        knownPrice,
+        slippage: toDecimal(5, 2),
+        accountX: userAccountX,
+        accountY: userAccountY,
+        byAmountIn: true
+      },
+      owner
+    )
   })
 
   it('big deposit only Y', async () => {

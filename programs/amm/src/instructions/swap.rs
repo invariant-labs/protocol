@@ -157,7 +157,7 @@ pub fn handler(
         }
 
         // fee has to be added before crossing any ticks
-        let protocol_fee = result.fee_amount * state.protocol_fee;
+        let protocol_fee = result.fee_amount.big_mul(state.protocol_fee);
 
         pool.add_fee(result.fee_amount - protocol_fee, x_to_y);
         if x_to_y {
