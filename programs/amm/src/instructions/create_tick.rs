@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use crate::decimal::Decimal;
 use crate::math::calculate_price_sqrt;
 use crate::structs::pool::Pool;
@@ -41,9 +43,9 @@ pub fn handler(ctx: Context<CreateTick>, bump: u8, index: i32) -> ProgramResult 
     let mut tick = ctx.accounts.tick.load_init()?;
     let mut tickmap = ctx.accounts.tickmap.load_mut()?;
     let pool = ctx.accounts.pool.load()?;
-    let current_timestamp = Clock::get()?.unix_timestamp as u64;
+    let current_timestamp: u64 = Clock::get()?.unix_timestamp.try_into().unwrap();
 
-    tickmap.set(true, index, pool.tick_spacing);
+    tickmap.flip(true, index, pool.tick_spacing);
 
     // init tick
     let below_current_tick = index <= pool.current_tick_index;

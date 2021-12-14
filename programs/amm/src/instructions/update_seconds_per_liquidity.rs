@@ -44,12 +44,7 @@ pub struct UpdateSecondsPerLiquidity<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
-pub fn handler(
-    ctx: Context<UpdateSecondsPerLiquidity>,
-    _lower_tick_index: i32,
-    _upper_tick_index: i32,
-    _index: i32,
-) -> ProgramResult {
+pub fn handler(ctx: Context<UpdateSecondsPerLiquidity>) -> ProgramResult {
     msg!("INVARIANT: UPDATE SECOND PER LIQUIDITY");
 
     let pool = &mut ctx.accounts.pool.load_mut()?;

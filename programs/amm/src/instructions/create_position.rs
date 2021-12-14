@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use crate::decimal::Decimal;
 use crate::interfaces::take_tokens::TakeTokens;
 use crate::structs::pool::Pool;
@@ -108,8 +110,6 @@ impl<'info> TakeTokens<'info> for CreatePosition<'info> {
 pub fn handler(
     ctx: Context<CreatePosition>,
     bump: u8,
-    _lower_tick_index: i32,
-    _upper_tick_index: i32,
     liquidity_delta: Decimal,
 ) -> ProgramResult {
     msg!("INVARIANT: CREATE POSITION");
@@ -119,7 +119,7 @@ pub fn handler(
     let lower_tick = &mut ctx.accounts.lower_tick.load_mut()?;
     let upper_tick = &mut ctx.accounts.upper_tick.load_mut()?;
     let mut position_list = ctx.accounts.position_list.load_mut()?;
-    let current_timestamp = Clock::get()?.unix_timestamp as u64;
+    let current_timestamp = Clock::get()?.unix_timestamp.try_into().unwrap();
     let slot = Clock::get()?.slot;
 
     // validate ticks

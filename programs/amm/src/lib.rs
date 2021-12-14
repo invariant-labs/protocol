@@ -78,13 +78,7 @@ pub mod amm {
         _upper_tick_index: i32,
         liquidity_delta: Decimal,
     ) -> ProgramResult {
-        instructions::create_position::handler(
-            ctx,
-            bump,
-            _lower_tick_index,
-            _upper_tick_index,
-            liquidity_delta,
-        )
+        instructions::create_position::handler(ctx, bump, liquidity_delta)
     }
 
     pub fn remove_position(
@@ -106,30 +100,25 @@ pub mod amm {
 
     pub fn claim_fee(
         ctx: Context<ClaimFee>,
-        index: u32,
-        lower_tick_index: i32,
-        upper_tick_index: i32,
+        _index: u32,
+        _lower_tick_index: i32,
+        _upper_tick_index: i32,
     ) -> ProgramResult {
-        instructions::claim_fee::handler(ctx, index, lower_tick_index, upper_tick_index)
+        instructions::claim_fee::handler(ctx)
     }
 
     pub fn update_seconds_per_liquidity(
         ctx: Context<UpdateSecondsPerLiquidity>,
-        lower_tick_index: i32,
-        upper_tick_index: i32,
-        index: i32,
+        _lower_tick_index: i32,
+        _upper_tick_index: i32,
+        _index: i32,
     ) -> ProgramResult {
-        instructions::update_seconds_per_liquidity::handler(
-            ctx,
-            lower_tick_index,
-            upper_tick_index,
-            index,
-        )
+        instructions::update_seconds_per_liquidity::handler(ctx)
     }
 
     #[access_control(admin(&ctx.accounts.state, &ctx.accounts.admin))]
     pub fn withdraw_protocol_fee(ctx: Context<WithdrawProtocolFee>) -> ProgramResult {
-        instructions::withdraw_protocol_fee::handler(ctx, SEED)
+        instructions::withdraw_protocol_fee::handler(ctx)
     }
 }
 

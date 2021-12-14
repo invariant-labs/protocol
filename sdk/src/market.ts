@@ -36,8 +36,8 @@ export class Market {
   public connection: Connection
   public wallet: IWallet
   public program: Program<Amm>
-  private stateAddress: PublicKey = PublicKey.default
-  private programAuthority: PublicKey = PublicKey.default
+  public stateAddress: PublicKey = PublicKey.default
+  public programAuthority: PublicKey = PublicKey.default
 
   private constructor(
     network: Network,
@@ -362,6 +362,7 @@ export class Market {
       accounts: {
         positionList: positionListAddress,
         owner: owner,
+        signer: owner,
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId
       }

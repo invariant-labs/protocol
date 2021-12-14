@@ -181,3 +181,102 @@ export const createPoolWithLiquidity = async (
 export const setInitialized = (bitmap: number[], index: number) => {
   bitmap[Math.floor((index + TICK_LIMIT) / 8)] |= 1 << (index + TICK_LIMIT) % 8
 }
+
+export const createPosition = async (
+  lowerTick: number, 
+  upperTick: number, 
+  liquidity: BN,
+  owner: Keypair,
+  ownerTokenXAccount: PublicKey,
+  ownerTokenYAccount: PublicKey,
+  tokenX: Token,
+  tokenY: Token,
+  pair: Pair,
+  market: Market,
+  wallet: Keypair,
+  mintAuthority: Keypair) => {
+    try {
+      await market.getTick(pair, lowerTick)
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        await market.createTick(pair, lowerTick, wallet)
+      }
+    }
+
+    try {
+      await market.getTick(pair, upperTick)
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        await market.createTick(pair, upperTick, wallet)
+      }
+    }
+
+    const mintAmount = tou64(new BN(10).pow(new BN(10)))
+    if ((await tokenX.getAccountInfo(ownerTokenXAccount)).amount.eq(new BN(0))) {
+      await tokenX.mintTo(ownerTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+    }
+    if ((await tokenY.getAccountInfo(ownerTokenYAccount)).amount.eq(new BN(0))) {
+      await tokenY.mintTo(ownerTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+    }
+    
+    try {
+      await market.getPositionList(owner.publicKey)
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        await market.createPositionList(owner)
+      }
+    }
+    console.log("liquidity: ", liquidity.toString())
+    await market.initPosition(
+      {
+        pair,
+        owner: owner.publicKey,
+        userTokenX: ownerTokenXAccount,
+        userTokenY: ownerTokenYAccount,
+        lowerTick,
+        upperTick,
+        liquidityDelta: { v: liquidity }
+      },
+      owner
+    )
+  }
+
+export const performSwap = async (
+  pair: Pair,
+  xToY: boolean,
+  amount: BN,
+  currentPrice: Decimal,
+  slippage: Decimal,
+  byAmountIn: boolean,
+  connection: Connection,
+  market: Market,
+  tokenX: Token,
+  tokenY: Token,
+  mintAuthority: Keypair
+  ) => {
+    const swapper = Keypair.generate()
+    await connection.requestAirdrop(swapper.publicKey, 1e12)
+
+    const accountX = await tokenX.createAccount(swapper.publicKey)
+    const accountY = await tokenY.createAccount(swapper.publicKey)
+
+    if (xToY) {
+      await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
+    } else {
+      await tokenY.mintTo(accountY, mintAuthority.publicKey, [mintAuthority], tou64(amount))
+    }
+
+    await market.swap(
+      {
+        pair,
+        XtoY: xToY,
+        amount,
+        knownPrice: currentPrice,
+        slippage,
+        accountX,
+        accountY,
+        byAmountIn
+      },
+      swapper
+    )
+}

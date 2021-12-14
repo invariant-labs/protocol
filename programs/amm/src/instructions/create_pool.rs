@@ -1,4 +1,4 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, convert::TryInto};
 
 use crate::decimal::Decimal;
 use crate::math::calculate_price_sqrt;
@@ -52,7 +52,7 @@ pub fn handler(ctx: Context<CreatePool>, bump: u8, init_tick: i32) -> ProgramRes
 
     let pool = &mut ctx.accounts.pool.load_init()?;
     let fee_tier = ctx.accounts.fee_tier.load()?;
-    let current_timestamp = Clock::get()?.unix_timestamp as u64;
+    let current_timestamp: u64 = Clock::get()?.unix_timestamp.try_into().unwrap();
 
     **pool = Pool {
         token_x: *token_x_address,

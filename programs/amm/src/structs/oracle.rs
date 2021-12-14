@@ -4,7 +4,7 @@ use anchor_lang::prelude::*;
 const SIZE: u16 = 256; // UPDATE IN ARRAYS AS WELL!
 
 #[account(zero_copy)]
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq)]
 pub struct Oracle {
     pub data: [Record; 256],
     pub head: u16,

@@ -7,7 +7,10 @@ import {
   sendAndConfirmRawTransaction,
   Transaction
 } from '@solana/web3.js'
-import { DENOMINATOR } from '@invariant-labs/sdk'
+
+export const DECIMAL = 12
+export const DENOMINATOR = new BN(10).pow(new BN(DECIMAL))
+
 // hex code must be at the end of message
 export enum ERRORS {
   SIGNATURE = 'Error: Signature verification failed',

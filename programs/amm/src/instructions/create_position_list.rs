@@ -11,8 +11,9 @@ pub struct CreatePositionList<'info> {
         payer = owner
     )]
     pub position_list: AccountLoader<'info, PositionList>,
+    pub owner: AccountInfo<'info>,
     #[account(mut)]
-    pub owner: Signer<'info>,
+    pub signer: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
