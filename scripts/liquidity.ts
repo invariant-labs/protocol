@@ -20,6 +20,10 @@ const wallet = provider.wallet.payer as Keypair
 const main = async () => {
   const market = await Market.build(Network.DEV, provider.wallet, connection)
 
+  await usdtUsdcCreatePosition(market)
+}
+
+const usdtUsdcCreatePosition = async (market: Market) => {
   const pair = new Pair(
     new PublicKey(MOCK_TOKENS.USDC),
     new PublicKey(MOCK_TOKENS.USDT),
@@ -28,21 +32,26 @@ const main = async () => {
 
   const usdc = new Token(connection, new PublicKey(MOCK_TOKENS.USDC), TOKEN_PROGRAM_ID, wallet)
   const usdt = new Token(connection, new PublicKey(MOCK_TOKENS.USDT), TOKEN_PROGRAM_ID, wallet)
-  const minterUsdc = await usdc.createAccount(MINTER.publicKey)
-  const minterUsdt = await usdt.createAccount(MINTER.publicKey)
   const amount = tou64(1000 * 10 ** 6)
 
-  await usdc.mintTo(minterUsdc, MINTER, [], amount)
-  await usdt.mintTo(minterUsdt, MINTER, [], amount)
+  const [minterUsdc, minterUsdt] = await Promise.all(
+    [
+      usdc.createAccount(MINTER.publicKey),
+      usdt.createAccount(MINTER.publicKey)
+    ]
+  )
+  await Promise.all(
+    [
+      usdc.mintTo(minterUsdc, MINTER, [], amount),
+      usdt.mintTo(minterUsdt, MINTER, [], amount)
+    ]
+  )
 
   const x = new anchor.BN(500 * 10 ** 6)
   const lowerTick = -4
   const upperTick = 4
   const pool = await market.getPool(pair)
-
   const { liquidity } = getLiquidityByX(x, lowerTick, upperTick, pool.sqrtPrice, true)
-
-  console.log('creating position..')
 
   await market.initPosition(
     {
@@ -57,4 +66,5 @@ const main = async () => {
     MINTER
   )
 }
+
 main()

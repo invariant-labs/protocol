@@ -13,11 +13,13 @@ const provider = Provider.local(clusterApiUrl('devnet'), {
 })
 
 const connection = provider.connection
-const market = new Market(Network.DEV, provider.wallet, connection)
+
 // @ts-expect-error
 const wallet = provider.wallet.payer as Keypair
 
 const main = async () => {
+  const market = await Market.build(Network.DEV, provider.wallet, connection)
+
   const pair = new Pair(
     new PublicKey(MOCK_TOKENS.USDC),
     new PublicKey(MOCK_TOKENS.USDT),
