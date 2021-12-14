@@ -14,24 +14,19 @@ import { calculateFeeGrowthInside } from '@invariant-labs/sdk/src/math'
 
 
 describe('big-swap', () => {
-const provider = Provider.local()
+  const provider = Provider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
   const mintAuthority = Keypair.generate()
   const positionOwner = Keypair.generate()
   const admin = Keypair.generate()
-  const market = new Market(
-    Network.LOCAL,
-    provider.wallet,
-    connection,
-    anchor.workspace.Amm.programId
-  )
+  let market: Market
   const feeTier: FeeTier = {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
   }
-  const protocolFee: Decimal = { v: fromFee(new BN(10000))}
+  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -39,6 +34,13 @@ const provider = Provider.local()
   let nonce: number
 
   before(async () => {
+    market = await Market.build(
+      Network.LOCAL,
+      provider.wallet,
+      connection,
+      anchor.workspace.Amm.programId
+    )
+
     await Promise.all([
       await connection.requestAirdrop(mintAuthority.publicKey, 1e12),
       await connection.requestAirdrop(admin.publicKey, 1e12),
@@ -89,8 +91,6 @@ const provider = Provider.local()
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
     assert.ok(createdPool.feeProtocolTokenX.v.eqn(0))
     assert.ok(createdPool.feeProtocolTokenY.v.eqn(0))
-    assert.ok(createdPool.authority.equals(programAuthority))
-    assert.ok(createdPool.nonce == nonce)
 
     const tickmapData = await market.getTickmap(pair)
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
@@ -102,38 +102,38 @@ const provider = Provider.local()
     const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
 
     const positionsInfo: Array<[ticks: [lower: number, upper: number], liquidity: BN]> = [
-        [[0, 20], new BN(1000000).mul(DENOMINATOR)],
-        [[-10, 30], new BN(1800000).mul(DENOMINATOR)],
-        [[-30, 0], new BN(1400000).mul(DENOMINATOR)],
-        [[-40, 10], new BN(1900000).mul(DENOMINATOR)],
-        [[20, 50], new BN(1500000).mul(DENOMINATOR)],
-        [[0, 30], new BN(950000).mul(DENOMINATOR)],
-        [[-30, 30], new BN(1150000).mul(DENOMINATOR)],
-        [[-20, 20], new BN(1350000).mul(DENOMINATOR)],
-        [[-10, 50], new BN(1250000).mul(DENOMINATOR)],
-        [[-40, 0], new BN(1550000).mul(DENOMINATOR)]
+      [[0, 20], new BN(1000000).mul(DENOMINATOR)],
+      [[-10, 30], new BN(1800000).mul(DENOMINATOR)],
+      [[-30, 0], new BN(1400000).mul(DENOMINATOR)],
+      [[-40, 10], new BN(1900000).mul(DENOMINATOR)],
+      [[20, 50], new BN(1500000).mul(DENOMINATOR)],
+      [[0, 30], new BN(950000).mul(DENOMINATOR)],
+      [[-30, 30], new BN(1150000).mul(DENOMINATOR)],
+      [[-20, 20], new BN(1350000).mul(DENOMINATOR)],
+      [[-10, 50], new BN(1250000).mul(DENOMINATOR)],
+      [[-40, 0], new BN(1550000).mul(DENOMINATOR)]
     ]
-      
+
     for (let i = 0; i < positionsInfo.length; i++) {
-        await createPosition(
-            positionsInfo[i][0][0],
-            positionsInfo[i][0][1],
-            positionsInfo[i][1],
-            positionOwner,
-            userTokenXAccount,
-            userTokenYAccount,
-            tokenX,
-            tokenY,
-            pair,
-            market,
-            wallet,
-            mintAuthority
-        )
-        console.log(i)
+      await createPosition(
+        positionsInfo[i][0][0],
+        positionsInfo[i][0][1],
+        positionsInfo[i][1],
+        positionOwner,
+        userTokenXAccount,
+        userTokenYAccount,
+        tokenX,
+        tokenY,
+        pair,
+        market,
+        wallet,
+        mintAuthority
+      )
+      console.log(i)
     }
 
 
-  
+
     const swaps: Array<[xToY: boolean, amount: BN]> = [
       [true, new BN(3000)],
       [true, new BN(3260)],
@@ -154,22 +154,22 @@ const provider = Provider.local()
     ]
 
     for (let i = 0; i < swaps.length; i++) {
-        let pool = await market.get(pair)
-        console.log("swap ", i)
-        console.log("liquidity: ", pool.liquidity.v.toString())
-        await performSwap(
-            pair,
-            swaps[i][0],
-            swaps[i][1],
-            pool.sqrtPrice,
-            toDecimal(1, 2),
-            true,
-            connection,
-            market,
-            tokenX,
-            tokenY,
-            mintAuthority
-        )
+      let pool = await market.get(pair)
+      console.log("swap ", i)
+      console.log("liquidity: ", pool.liquidity.v.toString())
+      await performSwap(
+        pair,
+        swaps[i][0],
+        swaps[i][1],
+        pool.sqrtPrice,
+        toDecimal(1, 2),
+        true,
+        connection,
+        market,
+        tokenX,
+        tokenY,
+        mintAuthority
+      )
     }
 
     let poolAfterSwaps = await market.get(pair)
@@ -182,25 +182,25 @@ const provider = Provider.local()
           continue
         }
       }
-        for (let j = i + 10; j <= 50; j += 10) {
-          let upperTick
-          try {
-            upperTick = await market.getTick(pair, j)
-          } catch(e: unknown) {
-            if (e instanceof Error) {
-              continue
-            }
+      for (let j = i + 10; j <= 50; j += 10) {
+        let upperTick
+        try {
+          upperTick = await market.getTick(pair, j)
+        } catch (e: unknown) {
+          if (e instanceof Error) {
+            continue
           }
-          let [feeGrowthInsideX, feeGrowthInsideY] = calculateFeeGrowthInside(
-            lowerTick,
-            upperTick,
-            poolAfterSwaps.currentTickIndex,
-            poolAfterSwaps.feeGrowthGlobalX,
-            poolAfterSwaps.feeGrowthGlobalY
-          );
-          assert.ok(feeGrowthInsideX.v.gte(new BN(0)))
-          assert.ok(feeGrowthInsideY.v.gte(new BN(0)))
         }
+        let [feeGrowthInsideX, feeGrowthInsideY] = calculateFeeGrowthInside(
+          lowerTick,
+          upperTick,
+          poolAfterSwaps.currentTickIndex,
+          poolAfterSwaps.feeGrowthGlobalX,
+          poolAfterSwaps.feeGrowthGlobalY
+        );
+        assert.ok(feeGrowthInsideX.v.gte(new BN(0)))
+        assert.ok(feeGrowthInsideY.v.gte(new BN(0)))
+      }
     }
 
     market.removePositionInstruction(pair, positionOwner.publicKey, 1, userTokenXAccount, userTokenYAccount)
@@ -220,18 +220,18 @@ const provider = Provider.local()
 
     for (let i = 0; i < positionsInfo.length; i++) {
       await createPosition(
-          positionsInfo[i][0][0],
-          positionsInfo[i][0][1],
-          positionsInfo[i][1],
-          positionOwner,
-          userTokenXAccount,
-          userTokenYAccount,
-          tokenX,
-          tokenY,
-          pair,
-          market,
-          wallet,
-          mintAuthority
+        positionsInfo[i][0][0],
+        positionsInfo[i][0][1],
+        positionsInfo[i][1],
+        positionOwner,
+        userTokenXAccount,
+        userTokenYAccount,
+        tokenX,
+        tokenY,
+        pair,
+        market,
+        wallet,
+        mintAuthority
       )
       console.log(i)
     }
@@ -260,17 +260,17 @@ const provider = Provider.local()
       console.log("swap ", i)
       console.log("liquidity: ", pool.liquidity.v.toString())
       await performSwap(
-          pair,
-          swaps2[i][0],
-          swaps2[i][1],
-          pool.sqrtPrice,
-          toDecimal(1, 2),
-          true,
-          connection,
-          market,
-          tokenX,
-          tokenY,
-          mintAuthority
+        pair,
+        swaps2[i][0],
+        swaps2[i][1],
+        pool.sqrtPrice,
+        toDecimal(1, 2),
+        true,
+        connection,
+        market,
+        tokenX,
+        tokenY,
+        mintAuthority
       )
     }
 
@@ -284,25 +284,25 @@ const provider = Provider.local()
           continue
         }
       }
-        for (let j = i + 10; j <= 50; j += 10) {
-          let upperTick
-          try {
-            upperTick = await market.getTick(pair, j)
-          } catch(e: unknown) {
-            if (e instanceof Error) {
-              continue
-            }
+      for (let j = i + 10; j <= 50; j += 10) {
+        let upperTick
+        try {
+          upperTick = await market.getTick(pair, j)
+        } catch (e: unknown) {
+          if (e instanceof Error) {
+            continue
           }
-          let [feeGrowthInsideX, feeGrowthInsideY] = calculateFeeGrowthInside(
-            lowerTick,
-            upperTick,
-            poolAfterSwaps2.currentTickIndex,
-            poolAfterSwaps2.feeGrowthGlobalX,
-            poolAfterSwaps2.feeGrowthGlobalY
-          );
-          assert.ok(feeGrowthInsideX.v.gte(new BN(0)))
-          assert.ok(feeGrowthInsideY.v.gte(new BN(0)))
         }
+        let [feeGrowthInsideX, feeGrowthInsideY] = calculateFeeGrowthInside(
+          lowerTick,
+          upperTick,
+          poolAfterSwaps2.currentTickIndex,
+          poolAfterSwaps2.feeGrowthGlobalX,
+          poolAfterSwaps2.feeGrowthGlobalY
+        );
+        assert.ok(feeGrowthInsideX.v.gte(new BN(0)))
+        assert.ok(feeGrowthInsideY.v.gte(new BN(0)))
+      }
     }
   })
 })

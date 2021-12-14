@@ -37,7 +37,7 @@ export class Pair {
         this.tokenX.toBuffer(),
         this.tokenY.toBuffer(),
         bigNumberToBuffer(this.feeTier.fee, 128),
-        bigNumberToBuffer(new BN(this.feeTier.tickSpacing), 16)
+        bigNumberToBuffer(new BN(this.feeTier.tickSpacing as number), 16)
       ],
       programId
     )

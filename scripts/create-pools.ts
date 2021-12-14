@@ -25,7 +25,8 @@ const createUsdcUsdt = async (market: Market) => {
 
   await market.create({
     pair,
-    signer: wallet
+    signer: wallet,
+    initTick: 0
   })
 }
 const createUsdcSol = async (market: Market) => {
@@ -33,7 +34,8 @@ const createUsdcSol = async (market: Market) => {
 
   await market.create({
     pair,
-    signer: wallet
+    signer: wallet,
+    initTick: 18000
   })
 }
 
