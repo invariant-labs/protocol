@@ -108,31 +108,13 @@ impl Position {
         );
 
         // calculate accumulated fee
-        let tokens_owed_x = match fee_growth_inside_x < { self.fee_growth_inside_x } {
-            true => {
-                Decimal {
-                    v: fee_growth_inside_x.v + (u128::MAX - self.fee_growth_inside_x.v),
-                } * self.liquidity
-            }
-            false => {
-                Decimal {
-                    v: fee_growth_inside_x.v - self.fee_growth_inside_x.v,
-                } * self.liquidity
-            }
-        };
+        let tokens_owed_x = Decimal {
+            v: fee_growth_inside_x.v - self.fee_growth_inside_x.v,
+        } * self.liquidity;
 
-        let tokens_owed_y = match fee_growth_inside_y < { self.fee_growth_inside_y } {
-            true => {
-                Decimal {
-                    v: fee_growth_inside_y.v + (u128::MAX - self.fee_growth_inside_y.v),
-                } * self.liquidity
-            }
-            false => {
-                Decimal {
-                    v: fee_growth_inside_y.v - self.fee_growth_inside_y.v,
-                } * self.liquidity
-            }
-        };
+        let tokens_owed_y = Decimal {
+            v: fee_growth_inside_y.v - self.fee_growth_inside_y.v,
+        } * self.liquidity;
 
         self.liquidity = self.calculate_new_liquidity_safely(sign, liquidity_delta)?;
         self.fee_growth_inside_x = fee_growth_inside_x;
