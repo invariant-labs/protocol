@@ -31,6 +31,7 @@ jobs:
             'npm run test:slippage',
             'npm run test:fee-tier',
             'npm run test:simulate-swap',
+            'npm run test:big-swap',
             'npm run test:timestamp',
             'npm run test:claim-amount',
             'npm run test:create',

@@ -45,7 +45,7 @@ pub fn handler(ctx: Context<CreateTick>, bump: u8, index: i32) -> ProgramResult 
     let pool = ctx.accounts.pool.load()?;
     let current_timestamp: u64 = Clock::get()?.unix_timestamp.try_into().unwrap();
 
-    tickmap.set(true, index, pool.tick_spacing);
+    tickmap.flip(true, index, pool.tick_spacing);
 
     // init tick
     let below_current_tick = index <= pool.current_tick_index;

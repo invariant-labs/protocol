@@ -166,7 +166,7 @@ pub fn handler(
             ctx.accounts.owner.to_account_info(),
         )
         .unwrap();
-        tickmap.set(false, lower_tick_index, pool.tick_spacing);
+        tickmap.flip(false, lower_tick_index, pool.tick_spacing);
     }
     if close_upper {
         close(
@@ -174,7 +174,7 @@ pub fn handler(
             ctx.accounts.owner.to_account_info(),
         )
         .unwrap();
-        tickmap.set(false, upper_tick_index, pool.tick_spacing);
+        tickmap.flip(false, upper_tick_index, pool.tick_spacing);
     }
 
     // Remove empty position

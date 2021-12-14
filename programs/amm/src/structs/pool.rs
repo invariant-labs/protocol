@@ -34,9 +34,13 @@ impl Pool {
             return;
         }
         if x {
-            self.fee_growth_global_x = self.fee_growth_global_x + (amount / self.liquidity);
+            self.fee_growth_global_x = Decimal {
+                v: self.fee_growth_global_x.v + (amount.v / self.liquidity.v),
+            };
         } else {
-            self.fee_growth_global_y = self.fee_growth_global_y + (amount / self.liquidity);
+            self.fee_growth_global_y = Decimal {
+                v: self.fee_growth_global_y.v + (amount.v / self.liquidity.v),
+            };
         }
     }
 
