@@ -14,7 +14,7 @@ use anchor_spl::token;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
 #[derive(Accounts)]
-#[instruction(fee_tier_address: Pubkey, index: i32, lower_tick_index: i32, upper_tick_index: i32)]
+#[instruction( index: i32, lower_tick_index: i32, upper_tick_index: i32)]
 pub struct RemovePosition<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
@@ -39,7 +39,7 @@ pub struct RemovePosition<'info> {
     )]
     pub last_position: AccountLoader<'info, Position>,
     #[account(mut,
-        seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
+        seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref(), &pool.load()?.fee.v.to_le_bytes(), &pool.load()?.tick_spacing.to_le_bytes()],
         bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,

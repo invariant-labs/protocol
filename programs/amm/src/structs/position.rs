@@ -39,23 +39,9 @@ impl Position {
         }
 
         // update initialized tick
-        lower_tick.update(
-            pool.current_tick_index,
-            liquidity_delta,
-            pool.fee_growth_global_x,
-            pool.fee_growth_global_y,
-            false,
-            add,
-        )?;
+        lower_tick.update(liquidity_delta, false, add)?;
 
-        upper_tick.update(
-            pool.current_tick_index,
-            liquidity_delta,
-            pool.fee_growth_global_x,
-            pool.fee_growth_global_y,
-            true,
-            add,
-        )?;
+        upper_tick.update(liquidity_delta, true, add)?;
 
         // update fee inside position
         let (fee_growth_inside_x, fee_growth_inside_y) = calculate_fee_growth_inside(

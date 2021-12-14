@@ -39,25 +39,18 @@ pub mod amm {
     pub fn create_fee_tier(
         ctx: Context<CreateFeeTier>,
         bump: u8,
-        fee: u64,
+        fee: u128,
         tick_spacing: u16,
     ) -> ProgramResult {
         instructions::create_fee_tier::handler(ctx, bump, fee, tick_spacing)
     }
 
-    pub fn create_pool(
-        ctx: Context<CreatePool>,
-        bump: u8,
-        init_tick: i32,
-        _fee: u64,
-        _tick_spacing: u16,
-    ) -> ProgramResult {
+    pub fn create_pool(ctx: Context<CreatePool>, bump: u8, init_tick: i32) -> ProgramResult {
         instructions::create_pool::handler(ctx, bump, init_tick)
     }
 
     pub fn swap(
         ctx: Context<Swap>,
-        _fee_tier_address: Pubkey,
         x_to_y: bool,
         amount: u64,
         by_amount_in: bool, // whether amount specifies input or output
@@ -66,19 +59,11 @@ pub mod amm {
         instructions::swap::handler(ctx, x_to_y, amount, by_amount_in, sqrt_price_limit)
     }
 
-    pub fn initialize_oracle(
-        ctx: Context<InitializeOracle>,
-        _fee_tier_address: Pubkey,
-    ) -> ProgramResult {
+    pub fn initialize_oracle(ctx: Context<InitializeOracle>) -> ProgramResult {
         instructions::initialize_oracle::handler(ctx)
     }
 
-    pub fn create_tick(
-        ctx: Context<CreateTick>,
-        bump: u8,
-        _fee_tier_address: Pubkey,
-        index: i32,
-    ) -> ProgramResult {
+    pub fn create_tick(ctx: Context<CreateTick>, bump: u8, index: i32) -> ProgramResult {
         instructions::create_tick::handler(ctx, bump, index)
     }
 
@@ -89,7 +74,6 @@ pub mod amm {
     pub fn create_position(
         ctx: Context<CreatePosition>,
         bump: u8,
-        _fee_tier_address: Pubkey,
         _lower_tick_index: i32,
         _upper_tick_index: i32,
         liquidity_delta: Decimal,
@@ -99,7 +83,6 @@ pub mod amm {
 
     pub fn remove_position(
         ctx: Context<RemovePosition>,
-        _fee_tier_address: Pubkey,
         index: u32,
         lower_tick_index: i32,
         upper_tick_index: i32,
@@ -117,7 +100,6 @@ pub mod amm {
 
     pub fn claim_fee(
         ctx: Context<ClaimFee>,
-        _fee_tier_address: Pubkey,
         _index: u32,
         _lower_tick_index: i32,
         _upper_tick_index: i32,
@@ -127,7 +109,6 @@ pub mod amm {
 
     pub fn update_seconds_per_liquidity(
         ctx: Context<UpdateSecondsPerLiquidity>,
-        _fee_tier_address: Pubkey,
         _lower_tick_index: i32,
         _upper_tick_index: i32,
         _index: i32,
@@ -136,10 +117,7 @@ pub mod amm {
     }
 
     #[access_control(admin(&ctx.accounts.state, &ctx.accounts.admin))]
-    pub fn withdraw_protocol_fee(
-        ctx: Context<WithdrawProtocolFee>,
-        _fee_tier_address: Pubkey,
-    ) -> ProgramResult {
+    pub fn withdraw_protocol_fee(ctx: Context<WithdrawProtocolFee>) -> ProgramResult {
         instructions::withdraw_protocol_fee::handler(ctx)
     }
 }
