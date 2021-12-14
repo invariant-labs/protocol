@@ -47,7 +47,6 @@ impl Position {
             false,
             add,
         )?;
-        println!("lower tick {}", lower_tick.fee_growth_outside_x.v);
 
         upper_tick.update(
             pool.current_tick_index,
@@ -58,8 +57,6 @@ impl Position {
             add,
         )?;
 
-        println!("upper tick {}", upper_tick.fee_growth_outside_x.v);
-
         // update fee inside position
         let (fee_growth_inside_x, fee_growth_inside_y) = calculate_fee_growth_inside(
             *lower_tick,
@@ -68,8 +65,6 @@ impl Position {
             pool.fee_growth_global_x,
             pool.fee_growth_global_y,
         );
-
-        println!("fee_growth_inside_x {}", fee_growth_inside_x.v);
 
         self.update(
             add,
@@ -100,11 +95,6 @@ impl Position {
         require!(
             liquidity_delta.v != 0 || self.liquidity.v != 0,
             ErrorCode::EmptyPositionPokes
-        );
-        println!("self.fee_growth_inside {}", self.fee_growth_inside_x.v);
-        println!(
-            "Difference {}",
-            fee_growth_inside_x.v - self.fee_growth_inside_x.v
         );
 
         // calculate accumulated fee
