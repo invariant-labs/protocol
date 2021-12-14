@@ -29,11 +29,7 @@ pub struct ReturnFounds<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub trait ReturnToFounder<'info> {
-    fn return_to_founder(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>>;
-}
-
-impl<'info> ReturnToFounder<'info> for ReturnFounds<'info> {
+impl<'info> ReturnFounds<'info> {
     fn return_to_founder(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
         CpiContext::new(
             self.token_program.to_account_info(),

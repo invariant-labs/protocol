@@ -43,11 +43,7 @@ pub struct Withdraw<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub trait WithdrawToken<'info> {
-    fn withdraw(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>>;
-}
-
-impl<'info> WithdrawToken<'info> for Withdraw<'info> {
+impl<'info> Withdraw<'info> {
     fn withdraw(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
         CpiContext::new(
             self.token_program.to_account_info(),

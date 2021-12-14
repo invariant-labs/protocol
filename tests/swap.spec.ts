@@ -85,7 +85,6 @@ describe('swap', () => {
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
     assert.ok(tickmapData.bitmap.every((v) => v == 0))
   })
-
   it('#swap() within a tick', async () => {
     // Deposit
     const upperTick = 10
@@ -100,11 +99,10 @@ describe('swap', () => {
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
     const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
     const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
-
     const mintAmount = tou64(new BN(10).pow(new BN(10)))
+
     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-
     const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) }
 
     await market.createPositionList(positionOwner)
@@ -120,16 +118,16 @@ describe('swap', () => {
       },
       positionOwner
     )
+
     assert.ok((await market.get(pair)).liquidity.v.eq(liquidityDelta.v))
 
     // Create owner
     const owner = Keypair.generate()
     await connection.requestAirdrop(owner.publicKey, 1e9)
-    const amount = new BN(1000)
 
+    const amount = new BN(1000)
     const accountX = await tokenX.createAccount(owner.publicKey)
     const accountY = await tokenY.createAccount(owner.publicKey)
-
     await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
 
     // Swap
@@ -168,7 +166,6 @@ describe('swap', () => {
     assert.ok(amountY.eq(amount.subn(7)))
     assert.ok(reserveXDelta.eq(amount))
     assert.ok(reserveYDelta.eq(amount.subn(7)))
-
     assert.ok(poolData.feeGrowthGlobalX.v.eqn(5400000)) // 0.6 % of amount - protocol fee
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
     assert.ok(poolData.feeProtocolTokenX.v.eq(new BN(600000013280)))

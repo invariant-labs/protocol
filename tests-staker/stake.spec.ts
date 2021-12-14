@@ -85,9 +85,6 @@ describe('Stake tests', () => {
     ])
 
     // create pool
-    const fee = 600
-    const tickSpacing = 10
-
     const feeTier: FeeTier = {
       fee: fromFee(new BN(600)),
       tickSpacing: 10
@@ -111,21 +108,21 @@ describe('Stake tests', () => {
   it('Stake', async () => {
     //create incentive
     const seconds = new Date().valueOf() / 1000
-    const currenTime = new BN(Math.floor(seconds))
+    const currentTime = new BN(Math.floor(seconds))
     const reward: Decimal = { v: new BN(10) }
-    const startTime = currenTime.add(new BN(0))
-    const endTime = currenTime.add(new BN(31_000_000))
+    const startTime = currentTime.add(new BN(0))
+    const endTime = currentTime.add(new BN(31_000_000))
 
     const ix = await staker.createIncentiveInstruction({
       reward,
       startTime,
       endTime,
       incentive: incentiveAccount,
-      pool: pool,
+      pool,
       founder: founderAccount,
       incentiveTokenAcc: incentiveTokenAcc,
       founderTokenAcc: founderTokenAcc,
-      amm: amm
+      amm
     })
     await signAndSend(new Transaction().add(ix), [incentiveAccount, founderAccount], connection)
 
@@ -162,7 +159,7 @@ describe('Stake tests', () => {
 
     let index = 0
 
-    const { positionAddress: position, positionBump: bump } = await market.getPositionAddress(
+    const { positionAddress: position } = await market.getPositionAddress(
       positionOwner.publicKey,
       index
     )
