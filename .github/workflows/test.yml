@@ -119,11 +119,16 @@ jobs:
         run: |
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           anchor build
-      - name: build sdk
+      - name: build amm sdk
         run: |
           npm install
           npm run build
         working-directory: ./sdk
+      - name: build staker sdk
+        run: |
+          npm install
+          npm run build
+        working-directory: ./sdk-staker
       - name: install
         run: |
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
