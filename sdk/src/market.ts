@@ -36,8 +36,8 @@ export class Market {
   public connection: Connection
   public wallet: IWallet
   public program: Program<Amm>
-  public stateAddress: PublicKey
-  private programAuthority: PublicKey
+  public stateAddress: PublicKey = PublicKey.default
+  public programAuthority: PublicKey = PublicKey.default
 
   private constructor(
     network: Network,
@@ -211,10 +211,15 @@ export class Market {
   }
 
   async getPositionsFromRange(owner: PublicKey, lowerIndex: number, upperIndex: number) {
-    return this.getPositionsFromIndexes(
-      owner,
-      Array.from({ length: upperIndex - lowerIndex + 1 }, (_, i) => i + lowerIndex)
-    )
+    try {
+      await this.getPositionList(owner)
+      return this.getPositionsFromIndexes(
+        owner,
+        Array.from({ length: upperIndex - lowerIndex + 1 }, (_, i) => i + lowerIndex)
+      )
+    } catch (e) {
+      return []
+    }
   }
 
   async getTickAddress(pair, index: number) {
@@ -369,6 +374,7 @@ export class Market {
       accounts: {
         positionList: positionListAddress,
         owner: owner,
+        signer: owner,
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId
       }
@@ -801,6 +807,31 @@ export class Market {
       }
     ) as TransactionInstruction
   }
+
+  async initializeOracle(pair: Pair, payer: Keypair) {
+    const oracleKeypair = Keypair.generate()
+    const poolAddress = await pair.getAddress(this.program.programId)
+    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
+
+    return await this.program.rpc.initializeOracle(feeTierAddress, {
+      accounts: {
+        pool: poolAddress,
+        oracle: oracleKeypair.publicKey,
+        tokenX: pair.tokenX,
+        tokenY: pair.tokenY,
+        payer: payer.publicKey,
+        rent: SYSVAR_RENT_PUBKEY,
+        systemProgram: SystemProgram.programId
+      },
+      signers: [payer, oracleKeypair],
+      instructions: [await this.program.account.oracle.createInstruction(oracleKeypair)]
+    })
+  }
+
+  async getOracle(pair: Pair) {
+    const pool = await this.get(pair)
+    return await this.program.account.oracle.fetch(pool.oracleAddress)
+  }
 }
 
 export interface Decimal {
@@ -839,6 +870,8 @@ export interface PoolStructure {
   secondsPerLiquidityGlobal: Decimal
   startTimestamp: BN
   lastTimestamp: BN
+  oracleAddress: PublicKey
+  oracleInitialized: boolean
   bump: number
 }
 

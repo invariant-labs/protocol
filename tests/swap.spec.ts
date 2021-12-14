@@ -7,7 +7,6 @@ import { createToken } from './testUtils'
 import {
   Market,
   Pair,
-  SEED,
   tou64,
   DENOMINATOR,
   signAndSend,

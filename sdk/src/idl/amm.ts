@@ -258,6 +258,52 @@ export type Amm = {
       ]
     },
     {
+      "name": "initializeOracle",
+      "accounts": [
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "oracle",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenX",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenY",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "feeTierAddress",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
       "name": "createTick",
       "accounts": [
         {
@@ -335,6 +381,11 @@ export type Amm = {
         },
         {
           "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "signer",
           "isMut": true,
           "isSigner": true
         },
@@ -890,6 +941,37 @@ export type Amm = {
       }
     },
     {
+      "name": "oracle",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "data",
+            "type": {
+              "array": [
+                {
+                  "defined": "Record"
+                },
+                256
+              ]
+            }
+          },
+          {
+            "name": "head",
+            "type": "u16"
+          },
+          {
+            "name": "amount",
+            "type": "u16"
+          },
+          {
+            "name": "size",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
       "name": "pool",
       "type": {
         "kind": "struct",
@@ -981,6 +1063,14 @@ export type Amm = {
           {
             "name": "lastTimestamp",
             "type": "u64"
+          },
+          {
+            "name": "oracleAddress",
+            "type": "publicKey"
+          },
+          {
+            "name": "oracleInitialized",
+            "type": "bool"
           },
           {
             "name": "bump",
@@ -1197,6 +1287,24 @@ export type Amm = {
           }
         ]
       }
+    },
+    {
+      "name": "Record",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timestamp",
+            "type": "u64"
+          },
+          {
+            "name": "price",
+            "type": {
+              "defined": "Decimal"
+            }
+          }
+        ]
+      }
     }
   ],
   "errors": [
@@ -1289,6 +1397,11 @@ export type Amm = {
       "code": 317,
       "name": "NegativeTime",
       "msg": "Time cannot be negative"
+    },
+    {
+      "code": 318,
+      "name": "OracleAlreadyInitialized",
+      "msg": "Oracle is already initialized"
     }
   ]
 };
@@ -1553,6 +1666,52 @@ export const IDL: Amm = {
       ]
     },
     {
+      "name": "initializeOracle",
+      "accounts": [
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "oracle",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenX",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenY",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "feeTierAddress",
+          "type": "publicKey"
+        }
+      ]
+    },
+    {
       "name": "createTick",
       "accounts": [
         {
@@ -1630,6 +1789,11 @@ export const IDL: Amm = {
         },
         {
           "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "signer",
           "isMut": true,
           "isSigner": true
         },
@@ -2185,6 +2349,37 @@ export const IDL: Amm = {
       }
     },
     {
+      "name": "oracle",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "data",
+            "type": {
+              "array": [
+                {
+                  "defined": "Record"
+                },
+                256
+              ]
+            }
+          },
+          {
+            "name": "head",
+            "type": "u16"
+          },
+          {
+            "name": "amount",
+            "type": "u16"
+          },
+          {
+            "name": "size",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
       "name": "pool",
       "type": {
         "kind": "struct",
@@ -2276,6 +2471,14 @@ export const IDL: Amm = {
           {
             "name": "lastTimestamp",
             "type": "u64"
+          },
+          {
+            "name": "oracleAddress",
+            "type": "publicKey"
+          },
+          {
+            "name": "oracleInitialized",
+            "type": "bool"
           },
           {
             "name": "bump",
@@ -2492,6 +2695,24 @@ export const IDL: Amm = {
           }
         ]
       }
+    },
+    {
+      "name": "Record",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timestamp",
+            "type": "u64"
+          },
+          {
+            "name": "price",
+            "type": {
+              "defined": "Decimal"
+            }
+          }
+        ]
+      }
     }
   ],
   "errors": [
@@ -2584,6 +2805,11 @@ export const IDL: Amm = {
       "code": 317,
       "name": "NegativeTime",
       "msg": "Time cannot be negative"
+    },
+    {
+      "code": 318,
+      "name": "OracleAlreadyInitialized",
+      "msg": "Oracle is already initialized"
     }
   ]
 };

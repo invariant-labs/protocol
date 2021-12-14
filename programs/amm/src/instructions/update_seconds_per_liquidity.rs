@@ -11,7 +11,7 @@ use math::*;
 
 #[derive(Accounts)]
 #[instruction(fee_tier_address: Pubkey, lower_tick_index: i32, upper_tick_index: i32, index: i32)]
-pub struct UpdateSecondsPerLiquitity<'info> {
+pub struct UpdateSecondsPerLiquidity<'info> {
     #[account(mut,
         seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
         bump = pool.load()?.bump
@@ -44,13 +44,7 @@ pub struct UpdateSecondsPerLiquitity<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
-pub fn handler(
-    ctx: Context<UpdateSecondsPerLiquitity>,
-    _fee_tier_address: Pubkey,
-    _lower_tick_index: i32,
-    _upper_tick_index: i32,
-    _index: i32,
-) -> ProgramResult {
+pub fn handler(ctx: Context<UpdateSecondsPerLiquidity>) -> ProgramResult {
     msg!("INVARIANT: UPDATE SECOND PER LIQUIDITY");
 
     let pool = &mut ctx.accounts.pool.load_mut()?;

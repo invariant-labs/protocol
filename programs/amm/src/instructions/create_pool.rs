@@ -1,4 +1,4 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, convert::TryInto};
 
 use crate::math::calculate_price_sqrt;
 use crate::structs::fee_tier::FeeTier;
@@ -46,13 +46,7 @@ pub struct CreatePool<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
-pub fn handler(
-    ctx: Context<CreatePool>,
-    bump: u8,
-    init_tick: i32,
-    _fee: u64,
-    _tick_spacing: u16,
-) -> ProgramResult {
+pub fn handler(ctx: Context<CreatePool>, bump: u8, init_tick: i32) -> ProgramResult {
     msg!("INVARIANT: CREATE POOL");
 
     let token_x_address = &ctx.accounts.token_x.key();
@@ -67,7 +61,7 @@ pub fn handler(
 
     let pool = &mut ctx.accounts.pool.load_init()?;
     let fee_tier = ctx.accounts.fee_tier.load()?;
-    let current_timestamp = Clock::get()?.unix_timestamp as u64;
+    let current_timestamp: u64 = Clock::get()?.unix_timestamp.try_into().unwrap();
 
     **pool = Pool {
         token_x: *token_x_address,
@@ -88,6 +82,8 @@ pub fn handler(
         seconds_per_liquidity_global: Decimal::new(0),
         start_timestamp: current_timestamp,
         last_timestamp: current_timestamp,
+        oracle_address: Pubkey::default(),
+        oracle_initialized: false,
         bump,
     };
 

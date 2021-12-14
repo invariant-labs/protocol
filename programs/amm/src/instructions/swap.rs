@@ -108,7 +108,6 @@ impl<'info> SendTokens<'info> for Swap<'info> {
 
 pub fn handler(
     ctx: Context<Swap>,
-    _fee_tier_address: Pubkey,
     x_to_y: bool,
     amount: u64,
     by_amount_in: bool, // whether amount specifies input or output
