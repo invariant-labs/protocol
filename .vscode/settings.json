@@ -8,6 +8,7 @@
     "initializable",
     "localnet",
     "muln",
+    "multicall",
     "poolv",
     "positionlistv",
     "positionv",

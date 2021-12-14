@@ -158,17 +158,13 @@ export const generateTicksArray = (start: number, stop: number, step: number) =>
 
 export const getFeeTierAddress = async ({ fee, tickSpacing }: FeeTier, programId: PublicKey) => {
   const ts = tickSpacing ?? feeToTickSpacing(fee)
-  const tickSpacingBuffer = Buffer.alloc(2)
-  const feeBuffer = Buffer.alloc(8)
-  tickSpacingBuffer.writeUInt16LE(ts)
-  feeBuffer.writeBigUInt64LE(BigInt(fee.toString()))
 
   const [address, bump] = await PublicKey.findProgramAddress(
     [
       Buffer.from(utils.bytes.utf8.encode(FEE_TIER)),
       programId.toBuffer(),
-      feeBuffer,
-      tickSpacingBuffer
+      bigNumberToBuffer(fee, 128),
+      bigNumberToBuffer(new BN(ts), 16)
     ],
     programId
   )
@@ -190,11 +186,11 @@ export const calculateAveragePrice = (swapParameters: SimulateSwapPrice): Decima
 
   const priceLimit = calculatePriceAfterSlippage(currentSqrtPrice, slippage, !xToY)
   if (xToY) {
-    if (currentSqrtPrice.v.lt(priceLimit.v)) {
+    if (pool.sqrtPrice.v.lt(priceLimit.v)) {
       throw new Error('Price limit is on the wrong side of price')
     }
   } else {
-    if (currentSqrtPrice.v.gt(priceLimit.v)) {
+    if (pool.sqrtPrice.v.gt(priceLimit.v)) {
       throw new Error('Price limit is on the wrong side of price')
     }
   }
@@ -393,4 +389,19 @@ export const calculateClaimAmount = ({
   let tokensOwedXTotal = position.tokensOwedX.v.add(tokensOwedX)
   let tokensOwedYTotal = position.tokensOwedY.v.add(tokensOwedY)
   return [tokensOwedXTotal, tokensOwedYTotal]
+}
+
+export const bigNumberToBuffer = (n: BN, size: 16 | 32 | 64 | 128 | 256) => {
+  const chunk = new BN(2).pow(new BN(16))
+
+  const buffer = Buffer.alloc(size / 8)
+  let offset = 0
+
+  while (n.gt(new BN(0))) {
+    buffer.writeUInt16LE(n.mod(chunk).toNumber(), offset)
+    n = n.div(chunk)
+    offset += 2
+  }
+
+  return buffer
 }

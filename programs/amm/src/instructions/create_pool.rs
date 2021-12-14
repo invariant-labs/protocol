@@ -10,15 +10,15 @@ use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{Mint, TokenAccount};
 
 #[derive(Accounts)]
-#[instruction(bump: u8, init_tick: i32, fee: u64, tick_spacing: u16)]
+#[instruction(bump: u8)]
 pub struct CreatePool<'info> {
     #[account(init,
-        seeds = [b"poolv1", fee_tier.to_account_info().key.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
+        seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref(), &fee_tier.load()?.fee.v.to_le_bytes(), &fee_tier.load()?.tick_spacing.to_le_bytes()],
         bump = bump, payer = payer
     )]
     pub pool: AccountLoader<'info, Pool>,
     #[account(
-        seeds = [b"feetierv1", program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()],
+        seeds = [b"feetierv1", program_id.as_ref(), &fee_tier.load()?.fee.v.to_le_bytes(), &fee_tier.load()?.tick_spacing.to_le_bytes()],
         bump = fee_tier.load()?.bump
     )]
     pub fee_tier: AccountLoader<'info, FeeTier>,
