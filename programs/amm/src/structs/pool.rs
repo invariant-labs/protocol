@@ -35,11 +35,11 @@ impl Pool {
         }
         if x {
             self.fee_growth_global_x = Decimal {
-                v: self.fee_growth_global_x.v + (amount.v / self.liquidity.v),
+                v: self.fee_growth_global_x.v + (amount / self.liquidity).v,
             };
         } else {
             self.fee_growth_global_y = Decimal {
-                v: self.fee_growth_global_y.v + (amount.v / self.liquidity.v),
+                v: self.fee_growth_global_y.v + (amount / self.liquidity).v,
             };
         }
     }
