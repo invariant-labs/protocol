@@ -8,7 +8,6 @@ import {
   sendAndConfirmRawTransaction,
   Transaction
 } from '@solana/web3.js'
-import { expect } from 'chai'
 import { calculate_price_sqrt, fromInteger, Pair } from '.'
 import { Market } from '.'
 import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap, Tick, Position } from './market'
