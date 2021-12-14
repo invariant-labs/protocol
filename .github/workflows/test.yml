@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node:
+        case:
           [
             'npm run test:swap',
             'npm run test:cross',
@@ -40,15 +40,13 @@ jobs:
             'npm run test:end-incentive',
             'npm run test:multicall'
             'npm run test:oracle'
-            
-            
             'cargo test'
           ]
     steps:
       - uses: actions/checkout@v2
       - name: test
         run: |
-          echo "${{ matrix.node }}"
+          echo "${{ matrix.case }}"
       - uses: actions/cache@v2
         name: Cache Cargo registry + index
         id: cache-anchor
@@ -133,4 +131,4 @@ jobs:
       - name: test
         run: |
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
-          ${{ matrix.node }}
+          ${{ matrix.case }}
