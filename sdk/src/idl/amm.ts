@@ -16,6 +16,11 @@ export type Amm = {
           "isSigner": true
         },
         {
+          "name": "programAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "rent",
           "isMut": false,
           "isSigner": false
@@ -29,6 +34,10 @@ export type Amm = {
       "args": [
         {
           "name": "bump",
+          "type": "u8"
+        },
+        {
+          "name": "nonce",
           "type": "u8"
         },
         {
@@ -48,7 +57,12 @@ export type Amm = {
           "isSigner": false
         },
         {
-          "name": "payer",
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
           "isMut": true,
           "isSigner": true
         },
@@ -117,11 +131,6 @@ export type Amm = {
           "isSigner": false
         },
         {
-          "name": "programAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "payer",
           "isMut": true,
           "isSigner": true
@@ -140,10 +149,6 @@ export type Amm = {
       "args": [
         {
           "name": "bump",
-          "type": "u8"
-        },
-        {
-          "name": "nonce",
           "type": "u8"
         },
         {
@@ -189,22 +194,22 @@ export type Amm = {
           "isSigner": false
         },
         {
-          "name": "reserveX",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "reserveY",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "accountX",
           "isMut": true,
           "isSigner": false
         },
         {
           "name": "accountY",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveX",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveY",
           "isMut": true,
           "isSigner": false
         },
@@ -244,6 +249,52 @@ export type Amm = {
         {
           "name": "sqrtPriceLimit",
           "type": "u128"
+        }
+      ]
+    },
+    {
+      "name": "initializeOracle",
+      "accounts": [
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "oracle",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenX",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenY",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "feeTierAddress",
+          "type": "publicKey"
         }
       ]
     },
@@ -316,6 +367,11 @@ export type Amm = {
         },
         {
           "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "signer",
           "isMut": true,
           "isSigner": true
         },
@@ -340,6 +396,11 @@ export type Amm = {
     {
       "name": "createPosition",
       "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
         {
           "name": "position",
           "isMut": true,
@@ -372,12 +433,12 @@ export type Amm = {
         },
         {
           "name": "tokenX",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "tokenY",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -450,9 +511,9 @@ export type Amm = {
       "name": "removePosition",
       "accounts": [
         {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "removedPosition",
@@ -490,13 +551,18 @@ export type Amm = {
           "isSigner": false
         },
         {
-          "name": "tokenX",
+          "name": "owner",
           "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenX",
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "tokenY",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -520,12 +586,12 @@ export type Amm = {
           "isSigner": false
         },
         {
-          "name": "tokenProgram",
+          "name": "programAuthority",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "programAuthority",
+          "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -613,6 +679,11 @@ export type Amm = {
       "name": "claimFee",
       "accounts": [
         {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "pool",
           "isMut": true,
           "isSigner": false
@@ -634,17 +705,17 @@ export type Amm = {
         },
         {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {
           "name": "tokenX",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "tokenY",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -707,12 +778,12 @@ export type Amm = {
         },
         {
           "name": "lowerTick",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "upperTick",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -722,17 +793,17 @@ export type Amm = {
         },
         {
           "name": "tokenX",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "tokenY",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -789,8 +860,13 @@ export type Amm = {
           "isSigner": false
         },
         {
-          "name": "feeTier",
-          "isMut": false,
+          "name": "accountX",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "accountY",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -804,18 +880,8 @@ export type Amm = {
           "isSigner": false
         },
         {
-          "name": "accountX",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "accountY",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "admin",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -829,7 +895,12 @@ export type Amm = {
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "feeTierAddress",
+          "type": "publicKey"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -851,6 +922,37 @@ export type Amm = {
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "oracle",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "data",
+            "type": {
+              "array": [
+                {
+                  "defined": "Record"
+                },
+                256
+              ]
+            }
+          },
+          {
+            "name": "head",
+            "type": "u16"
+          },
+          {
+            "name": "amount",
+            "type": "u16"
+          },
+          {
+            "name": "size",
+            "type": "u16"
           }
         ]
       }
@@ -949,16 +1051,16 @@ export type Amm = {
             "type": "u64"
           },
           {
+            "name": "oracleAddress",
+            "type": "publicKey"
+          },
+          {
+            "name": "oracleInitialized",
+            "type": "bool"
+          },
+          {
             "name": "bump",
             "type": "u8"
-          },
-          {
-            "name": "nonce",
-            "type": "u8"
-          },
-          {
-            "name": "authority",
-            "type": "publicKey"
           }
         ]
       }
@@ -1067,6 +1169,14 @@ export type Amm = {
             "type": "publicKey"
           },
           {
+            "name": "nonce",
+            "type": "u8"
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
             "name": "bump",
             "type": "u8"
           }
@@ -1163,6 +1273,24 @@ export type Amm = {
           }
         ]
       }
+    },
+    {
+      "name": "Record",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timestamp",
+            "type": "u64"
+          },
+          {
+            "name": "price",
+            "type": {
+              "defined": "Decimal"
+            }
+          }
+        ]
+      }
     }
   ],
   "errors": [
@@ -1255,6 +1383,11 @@ export type Amm = {
       "code": 317,
       "name": "NegativeTime",
       "msg": "Time cannot be negative"
+    },
+    {
+      "code": 318,
+      "name": "OracleAlreadyInitialized",
+      "msg": "Oracle is already initialized"
     }
   ]
 };
@@ -1277,6 +1410,11 @@ export const IDL: Amm = {
           "isSigner": true
         },
         {
+          "name": "programAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "rent",
           "isMut": false,
           "isSigner": false
@@ -1290,6 +1428,10 @@ export const IDL: Amm = {
       "args": [
         {
           "name": "bump",
+          "type": "u8"
+        },
+        {
+          "name": "nonce",
           "type": "u8"
         },
         {
@@ -1309,7 +1451,12 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
-          "name": "payer",
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
           "isMut": true,
           "isSigner": true
         },
@@ -1378,11 +1525,6 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
-          "name": "programAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "payer",
           "isMut": true,
           "isSigner": true
@@ -1401,10 +1543,6 @@ export const IDL: Amm = {
       "args": [
         {
           "name": "bump",
-          "type": "u8"
-        },
-        {
-          "name": "nonce",
           "type": "u8"
         },
         {
@@ -1450,22 +1588,22 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
-          "name": "reserveX",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "reserveY",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "accountX",
           "isMut": true,
           "isSigner": false
         },
         {
           "name": "accountY",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveX",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "reserveY",
           "isMut": true,
           "isSigner": false
         },
@@ -1505,6 +1643,52 @@ export const IDL: Amm = {
         {
           "name": "sqrtPriceLimit",
           "type": "u128"
+        }
+      ]
+    },
+    {
+      "name": "initializeOracle",
+      "accounts": [
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "oracle",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenX",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenY",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "feeTierAddress",
+          "type": "publicKey"
         }
       ]
     },
@@ -1577,6 +1761,11 @@ export const IDL: Amm = {
         },
         {
           "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "signer",
           "isMut": true,
           "isSigner": true
         },
@@ -1601,6 +1790,11 @@ export const IDL: Amm = {
     {
       "name": "createPosition",
       "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
         {
           "name": "position",
           "isMut": true,
@@ -1633,12 +1827,12 @@ export const IDL: Amm = {
         },
         {
           "name": "tokenX",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "tokenY",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1711,9 +1905,9 @@ export const IDL: Amm = {
       "name": "removePosition",
       "accounts": [
         {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "removedPosition",
@@ -1751,13 +1945,18 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
-          "name": "tokenX",
+          "name": "owner",
           "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenX",
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "tokenY",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1781,12 +1980,12 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
-          "name": "tokenProgram",
+          "name": "programAuthority",
           "isMut": false,
           "isSigner": false
         },
         {
-          "name": "programAuthority",
+          "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
         }
@@ -1874,6 +2073,11 @@ export const IDL: Amm = {
       "name": "claimFee",
       "accounts": [
         {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "pool",
           "isMut": true,
           "isSigner": false
@@ -1895,17 +2099,17 @@ export const IDL: Amm = {
         },
         {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {
           "name": "tokenX",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "tokenY",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1968,12 +2172,12 @@ export const IDL: Amm = {
         },
         {
           "name": "lowerTick",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "upperTick",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1983,17 +2187,17 @@ export const IDL: Amm = {
         },
         {
           "name": "tokenX",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "tokenY",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "owner",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -2050,8 +2254,13 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
-          "name": "feeTier",
-          "isMut": false,
+          "name": "accountX",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "accountY",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -2065,18 +2274,8 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
-          "name": "accountX",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "accountY",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "admin",
-          "isMut": true,
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -2090,7 +2289,12 @@ export const IDL: Amm = {
           "isSigner": false
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "feeTierAddress",
+          "type": "publicKey"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -2112,6 +2316,37 @@ export const IDL: Amm = {
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "oracle",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "data",
+            "type": {
+              "array": [
+                {
+                  "defined": "Record"
+                },
+                256
+              ]
+            }
+          },
+          {
+            "name": "head",
+            "type": "u16"
+          },
+          {
+            "name": "amount",
+            "type": "u16"
+          },
+          {
+            "name": "size",
+            "type": "u16"
           }
         ]
       }
@@ -2210,16 +2445,16 @@ export const IDL: Amm = {
             "type": "u64"
           },
           {
+            "name": "oracleAddress",
+            "type": "publicKey"
+          },
+          {
+            "name": "oracleInitialized",
+            "type": "bool"
+          },
+          {
             "name": "bump",
             "type": "u8"
-          },
-          {
-            "name": "nonce",
-            "type": "u8"
-          },
-          {
-            "name": "authority",
-            "type": "publicKey"
           }
         ]
       }
@@ -2328,6 +2563,14 @@ export const IDL: Amm = {
             "type": "publicKey"
           },
           {
+            "name": "nonce",
+            "type": "u8"
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
             "name": "bump",
             "type": "u8"
           }
@@ -2424,6 +2667,24 @@ export const IDL: Amm = {
           }
         ]
       }
+    },
+    {
+      "name": "Record",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "timestamp",
+            "type": "u64"
+          },
+          {
+            "name": "price",
+            "type": {
+              "defined": "Decimal"
+            }
+          }
+        ]
+      }
     }
   ],
   "errors": [
@@ -2516,6 +2777,11 @@ export const IDL: Amm = {
       "code": 317,
       "name": "NegativeTime",
       "msg": "Time cannot be negative"
+    },
+    {
+      "code": 318,
+      "name": "OracleAlreadyInitialized",
+      "msg": "Oracle is already initialized"
     }
   ]
 };

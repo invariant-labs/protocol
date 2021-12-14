@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use crate::decimal::*;
 use crate::structs::*;
 use amm::program::Amm;
@@ -10,7 +12,6 @@ const MAX_TIME_BEFORE_START: u64 = 3_600; //hour in sec
 const MAX_DURATION: u64 = 31_556_926; //year in sec
 
 #[derive(Accounts)]
-#[instruction(bump: u8)]
 pub struct CreateIncentive<'info> {
     #[account(init, payer = founder)]
     pub incentive: AccountLoader<'info, Incentive>,
@@ -23,16 +24,15 @@ pub struct CreateIncentive<'info> {
         constraint = &founder_token_account.owner == founder.to_account_info().key
     )]
     pub founder_token_account: Account<'info, TokenAccount>,
+    //TODO: Add token account and validate mints
     pub pool: AccountLoader<'info, Pool>,
     #[account(mut)]
     pub founder: Signer<'info>,
-    #[account(mut,
-        seeds = [b"staker".as_ref()],
-        bump = bump)]
+    //TODO: save staker_authority in state
     pub staker_authority: AccountInfo<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
-    pub amm: Program<'info, Amm>,
+    pub amm: Program<'info, Amm>, //TODO: Add program validation
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
@@ -57,14 +57,14 @@ impl<'info> DepositToken<'info> for CreateIncentive<'info> {
 
 pub fn handler(
     ctx: Context<CreateIncentive>,
-    _bump: u8,
+    nonce: u8,
     reward: Decimal,
     start_time: u64,
     end_time: u64,
 ) -> ProgramResult {
     msg!("CREATE INCENTIVE");
     require!(reward != Decimal::new(0), ZeroAmount);
-    let current_time: u64 = Clock::get().unwrap().unix_timestamp as u64; //not sure if that is safe
+    let current_time: u64 = Clock::get().unwrap().unix_timestamp.try_into().unwrap();
 
     require!(
         (start_time + MAX_TIME_BEFORE_START) >= current_time,
@@ -73,15 +73,17 @@ pub fn handler(
     require!((current_time + MAX_DURATION) >= end_time, TooLongDuration);
     let incentive = &mut ctx.accounts.incentive.load_init()?;
 
-    {
-        incentive.founder = *ctx.accounts.founder.to_account_info().key;
-        incentive.pool = *ctx.accounts.pool.to_account_info().key;
-        incentive.token_account = *ctx.accounts.incentive_token_account.to_account_info().key;
-        incentive.total_reward_unclaimed = reward;
-        incentive.total_seconds_claimed = Decimal::from_integer(0);
-        incentive.start_time = start_time;
-        incentive.end_time = end_time;
-    }
+    **incentive = Incentive {
+        founder: *ctx.accounts.founder.to_account_info().key,
+        pool: *ctx.accounts.pool.to_account_info().key,
+        token_account: *ctx.accounts.incentive_token_account.to_account_info().key,
+        total_reward_unclaimed: reward,
+        total_seconds_claimed: Decimal::from_integer(0),
+        num_of_stakes: 0,
+        start_time,
+        end_time,
+        nonce,
+    };
 
     //send tokens to incentive
     let cpi_ctx = ctx.accounts.deposit();

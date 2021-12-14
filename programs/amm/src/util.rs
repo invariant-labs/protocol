@@ -1,6 +1,7 @@
 use anchor_lang::__private::ErrorCode;
 use anchor_lang::__private::CLOSED_ACCOUNT_DISCRIMINATOR;
 use std::cell::RefMut;
+use std::convert::TryInto;
 use std::io::Write;
 
 use crate::decimal::Decimal;
@@ -83,11 +84,11 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
         v: pool.fee_growth_global_y.v - tick.fee_growth_outside_y.v,
     };
 
-    let current_timestamp = Clock::get()?.unix_timestamp as u64;
-    let seconds_passed: u64 = (current_timestamp - pool.start_timestamp) as u64;
+    let current_timestamp: u64 = Clock::get()?.unix_timestamp.try_into().unwrap();
+    let seconds_passed: u64 = current_timestamp - pool.start_timestamp;
     tick.seconds_outside = seconds_passed - tick.seconds_outside;
 
-    if pool.liquidity != Decimal::new(0) {
+    if { pool.liquidity } != Decimal::new(0) {
         pool.update_seconds_per_liquidity_global(current_timestamp);
     } else {
         pool.last_timestamp = current_timestamp;

@@ -15,35 +15,44 @@ use anchor_spl::token::{Mint, TokenAccount, Transfer};
 #[instruction(fee_tier_address: Pubkey)]
 pub struct Swap<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
-    pub state: Loader<'info, State>,
+    pub state: AccountLoader<'info, State>,
     #[account(mut, seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()], bump = pool.load()?.bump)]
-    pub pool: Loader<'info, Pool>,
+    pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
         constraint = tickmap.to_account_info().key == &pool.load()?.tickmap,
         constraint = tickmap.to_account_info().owner == program_id,
     )]
-    pub tickmap: Loader<'info, Tickmap>,
+    pub tickmap: AccountLoader<'info, Tickmap>,
+    #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x,)]
     pub token_x: Account<'info, Mint>,
+    #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y,)]
     pub token_y: Account<'info, Mint>,
     #[account(mut,
-        constraint = &reserve_x.mint == token_x.to_account_info().key
+        constraint = &account_x.mint == token_x.to_account_info().key,
+        constraint = &account_x.owner == owner.key,
     )]
-    pub reserve_x: Account<'info, TokenAccount>,
+    pub account_x: Account<'info, TokenAccount>,
     #[account(mut,
-        constraint = &reserve_y.mint == token_y.to_account_info().key
+        constraint = &account_y.mint == token_y.to_account_info().key,
+        constraint = &account_y.owner == owner.key	
     )]
-    pub reserve_y: Account<'info, TokenAccount>,
+    pub account_y: Account<'info, TokenAccount>,
     #[account(mut,
-        constraint = &account_x.mint == token_x.to_account_info().key
+        constraint = &reserve_x.mint == token_x.to_account_info().key,
+        constraint = &reserve_x.owner == program_authority.key,
+        constraint = reserve_x.to_account_info().key == &pool.load()?.token_x_reserve
     )]
-    pub account_x: Box<Account<'info, TokenAccount>>,
+    pub reserve_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = &account_y.mint == token_y.to_account_info().key
+        constraint = &reserve_y.mint == token_y.to_account_info().key,
+        constraint = &reserve_y.owner == program_authority.key,
+        constraint = reserve_y.to_account_info().key == &pool.load()?.token_y_reserve
     )]
-    pub account_y: Box<Account<'info, TokenAccount>>,
-    #[account(signer)]
-    pub owner: AccountInfo<'info>,
+    pub reserve_y: Box<Account<'info, TokenAccount>>,
+    pub owner: Signer<'info>,
+    #[account(constraint = &state.load()?.authority == program_authority.key)]
     pub program_authority: AccountInfo<'info>,
+    #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
 }
 
@@ -54,7 +63,7 @@ impl<'info> TakeTokens<'info> for Swap<'info> {
             Transfer {
                 from: self.account_x.to_account_info(),
                 to: self.reserve_x.to_account_info(),
-                authority: self.owner.clone(),
+                authority: self.owner.to_account_info().clone(),
             },
         )
     }
@@ -65,7 +74,7 @@ impl<'info> TakeTokens<'info> for Swap<'info> {
             Transfer {
                 from: self.account_y.to_account_info(),
                 to: self.reserve_y.to_account_info(),
-                authority: self.owner.clone(),
+                authority: self.owner.to_account_info().clone(),
             },
         )
     }
@@ -96,13 +105,12 @@ impl<'info> SendTokens<'info> for Swap<'info> {
 
 pub fn handler(
     ctx: Context<Swap>,
-    _fee_tier_address: Pubkey,
     x_to_y: bool,
     amount: u64,
     by_amount_in: bool, // whether amount specifies input or output
     sqrt_price_limit: u128,
 ) -> ProgramResult {
-    msg!("SWAP");
+    msg!("INVARIANT: SWAP");
     require!(amount != 0, ZeroAmount);
 
     let sqrt_price_limit = Decimal::new(sqrt_price_limit);
@@ -196,7 +204,7 @@ pub fn handler(
                 let mut tick = loader.load_mut().unwrap();
 
                 // crossing tick
-                cross_tick(&mut tick, &mut pool);
+                cross_tick(&mut tick, &mut pool)?;
             }
 
             // set tick to limit (below if price is going down, because current tick is below price)
@@ -223,7 +231,7 @@ pub fn handler(
         (ctx.accounts.take_y(), ctx.accounts.send_x())
     };
 
-    let seeds = &[SEED.as_bytes(), &[pool.nonce]];
+    let seeds = &[SEED.as_bytes(), &[state.nonce]];
     let signer = &[&seeds[..]];
 
     // Maybe rounding error should be counted?

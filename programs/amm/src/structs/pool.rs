@@ -1,7 +1,6 @@
 use crate::decimal::Decimal;
 use crate::*;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::clock::UnixTimestamp;
 
 #[account(zero_copy)]
 #[derive(PartialEq, Default, Debug)]
@@ -24,9 +23,9 @@ pub struct Pool {
     pub seconds_per_liquidity_global: Decimal,
     pub start_timestamp: u64,
     pub last_timestamp: u64,
+    pub oracle_address: Pubkey,
+    pub oracle_initialized: bool,
     pub bump: u8,
-    pub nonce: u8,
-    pub authority: Pubkey,
 }
 
 impl Pool {
@@ -69,6 +68,11 @@ impl Pool {
                 / self.liquidity);
 
         self.last_timestamp = current_timestamp;
+    }
+
+    pub fn set_oracle(self: &mut Self, address: Pubkey) {
+        self.oracle_address = address;
+        self.oracle_initialized = true;
     }
 }
 

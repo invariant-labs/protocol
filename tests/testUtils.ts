@@ -68,6 +68,8 @@ export const positionWithoutOwnerEquals = (a: Position, b: Position) => {
     a.upperTickIndex == b.upperTickIndex &&
     a.pool.equals(b.pool) &&
     a.id.eq(b.id) &&
+    a.lastSlot.eq(b.lastSlot) &&
+    eqDecimal(a.secondsPerLiquidityInside, b.secondsPerLiquidityInside) &&
     eqDecimal(a.tokensOwedX, b.tokensOwedX) &&
     eqDecimal(a.tokensOwedY, b.tokensOwedY)
   )
@@ -108,7 +110,7 @@ export const createTokensAndPool = async (
   if (feeTierAccount === null) {
     await market.createFeeTier(pair.feeTier, payer)
   }
-  
+
   await market.create({
     pair,
     signer: payer,

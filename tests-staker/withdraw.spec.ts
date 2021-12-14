@@ -79,7 +79,7 @@ describe('Withdraw tests', () => {
     await incentiveToken.mintTo(founderTokenAcc, wallet, [], tou64(amount))
 
     //create amm and pool
-    market = new Market(0, provider.wallet, connection, anchor.workspace.Amm.programId)
+    market = await Market.build(0, provider.wallet, connection, anchor.workspace.Amm.programId)
 
     const tokens = await Promise.all([
       createTkn(connection, wallet, mintAuthority),
@@ -95,7 +95,7 @@ describe('Withdraw tests', () => {
     }
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
     await market.createState(admin, protocolFee)
-    await market.createFeeTier(feeTier, wallet)
+    await market.createFeeTier(feeTier, admin)
     await market.create({
       pair,
       signer: admin
