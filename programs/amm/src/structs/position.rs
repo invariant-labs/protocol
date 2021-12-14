@@ -47,6 +47,8 @@ impl Position {
             false,
             add,
         )?;
+        println!("lower tick {}", lower_tick.fee_growth_outside_x.v);
+
         upper_tick.update(
             pool.current_tick_index,
             liquidity_delta,
@@ -56,6 +58,8 @@ impl Position {
             add,
         )?;
 
+        println!("upper tick {}", upper_tick.fee_growth_outside_x.v);
+
         // update fee inside position
         let (fee_growth_inside_x, fee_growth_inside_y) = calculate_fee_growth_inside(
             *lower_tick,
@@ -64,6 +68,8 @@ impl Position {
             pool.fee_growth_global_x,
             pool.fee_growth_global_y,
         );
+
+        println!("fee_growth_inside_x {}", fee_growth_inside_x.v);
 
         self.update(
             add,
@@ -95,16 +101,38 @@ impl Position {
             liquidity_delta.v != 0 || self.liquidity.v != 0,
             ErrorCode::EmptyPositionPokes
         );
+        println!("self.fee_growth_inside {}", self.fee_growth_inside_x.v);
+        println!(
+            "Difference {}",
+            fee_growth_inside_x.v - self.fee_growth_inside_x.v
+        );
 
         // calculate accumulated fee
-        let tokens_owed_x = self.liquidity
-            * (Decimal {
-                v: fee_growth_inside_x.v - self.fee_growth_inside_x.v,
-            });
-        let tokens_owed_y = self.liquidity
-            * (Decimal {
-                v: fee_growth_inside_y.v - self.fee_growth_inside_y.v,
-            });
+        let tokens_owed_x = match fee_growth_inside_x < { self.fee_growth_inside_x } {
+            true => {
+                Decimal {
+                    v: fee_growth_inside_x.v + (u128::MAX - self.fee_growth_inside_x.v),
+                } * self.liquidity
+            }
+            false => {
+                Decimal {
+                    v: fee_growth_inside_x.v - self.fee_growth_inside_x.v,
+                } * self.liquidity
+            }
+        };
+
+        let tokens_owed_y = match fee_growth_inside_y < { self.fee_growth_inside_y } {
+            true => {
+                Decimal {
+                    v: fee_growth_inside_y.v + (u128::MAX - self.fee_growth_inside_y.v),
+                } * self.liquidity
+            }
+            false => {
+                Decimal {
+                    v: fee_growth_inside_y.v - self.fee_growth_inside_y.v,
+                } * self.liquidity
+            }
+        };
 
         self.liquidity = self.calculate_new_liquidity_safely(sign, liquidity_delta)?;
         self.fee_growth_inside_x = fee_growth_inside_x;
@@ -147,6 +175,8 @@ impl Position {
 
 #[cfg(test)]
 mod tests {
+    use std::convert::TryInto;
+
     use super::*;
 
     #[test]
@@ -277,6 +307,58 @@ mod tests {
             assert_eq!({ position.fee_growth_inside_y }, Decimal::from_integer(5));
             assert_eq!({ position.tokens_owed_x }, Decimal::from_integer(101));
             assert_eq!({ position.tokens_owed_y }, Decimal::from_integer(101));
+        }
+    }
+
+    #[test]
+    fn test_modify() {
+        // owed tokens after overflow
+        {
+            let mut position = Position {
+                liquidity: Decimal::from_integer(123),
+                fee_growth_inside_x: Decimal::new(u128::MAX) - Decimal::from_integer(1234),
+                fee_growth_inside_y: Decimal::new(u128::MAX) - Decimal::from_integer(1234),
+                tokens_owed_x: Decimal::from_integer(0),
+                tokens_owed_y: Decimal::from_integer(0),
+                ..Default::default()
+            };
+            let mut pool = Pool {
+                current_tick_index: 0,
+                fee_growth_global_x: Decimal::from_integer(20),
+                fee_growth_global_y: Decimal::from_integer(20),
+                ..Default::default()
+            };
+            let mut upper_tick = Tick {
+                index: -10,
+                fee_growth_outside_x: Decimal::from_integer(15),
+                fee_growth_outside_y: Decimal::from_integer(15),
+                liquidity_gross: Decimal::from_integer(123),
+                ..Default::default()
+            };
+            let mut lower_tick = Tick {
+                index: -20,
+                fee_growth_outside_x: Decimal::from_integer(20),
+                fee_growth_outside_y: Decimal::from_integer(20),
+                liquidity_gross: Decimal::from_integer(123),
+                ..Default::default()
+            };
+            let liquidity_delta = Decimal::from_integer(0);
+            let add = true;
+            let current_timestamp: u64 = 1234567890;
+
+            position.modify(
+                &mut pool,
+                &mut upper_tick,
+                &mut lower_tick,
+                liquidity_delta,
+                add,
+                current_timestamp,
+            );
+
+            assert_eq!(
+                { position.tokens_owed_x },
+                (Decimal::from_integer(1234 - 5) + Decimal::new(1)) * Decimal::from_integer(123)
+            )
         }
     }
 }
