@@ -97,8 +97,14 @@ impl Position {
         );
 
         // calculate accumulated fee
-        let tokens_owed_x = self.liquidity * (fee_growth_inside_x - self.fee_growth_inside_x);
-        let tokens_owed_y = self.liquidity * (fee_growth_inside_y - self.fee_growth_inside_y);
+        let tokens_owed_x = self.liquidity
+            * (Decimal {
+                v: fee_growth_inside_x.v - self.fee_growth_inside_x.v,
+            });
+        let tokens_owed_y = self.liquidity
+            * (Decimal {
+                v: fee_growth_inside_y.v - self.fee_growth_inside_y.v,
+            });
 
         self.liquidity = self.calculate_new_liquidity_safely(sign, liquidity_delta)?;
         self.fee_growth_inside_x = fee_growth_inside_x;

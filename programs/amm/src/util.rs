@@ -76,8 +76,12 @@ pub fn get_closer_limit(
 }
 
 pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
-    tick.fee_growth_outside_x = pool.fee_growth_global_x - tick.fee_growth_outside_x;
-    tick.fee_growth_outside_y = pool.fee_growth_global_y - tick.fee_growth_outside_y;
+    tick.fee_growth_outside_x = Decimal {
+        v: pool.fee_growth_global_x.v - tick.fee_growth_outside_x.v,
+    };
+    tick.fee_growth_outside_y = Decimal {
+        v: pool.fee_growth_global_y.v - tick.fee_growth_outside_y.v,
+    };
 
     let current_timestamp = Clock::get()?.unix_timestamp as u64;
     let seconds_passed: u64 = (current_timestamp - pool.start_timestamp) as u64;

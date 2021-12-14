@@ -322,29 +322,41 @@ pub fn calculate_fee_growth_inside(
     let fee_growth_below_x = if current_above_lower {
         tick_lower.fee_growth_outside_x
     } else {
-        fee_growth_global_x - tick_lower.fee_growth_outside_x
+        Decimal {
+            v: fee_growth_global_x.v - tick_lower.fee_growth_outside_x.v,
+        }
     };
     let fee_growth_below_y = if current_above_lower {
         tick_lower.fee_growth_outside_y
     } else {
-        fee_growth_global_y - tick_lower.fee_growth_outside_y
+        Decimal {
+            v: fee_growth_global_y.v - tick_lower.fee_growth_outside_y.v,
+        }
     };
 
     // calculate fee growth above
     let fee_growth_above_x = if current_below_upper {
         tick_upper.fee_growth_outside_x
     } else {
-        fee_growth_global_x - tick_upper.fee_growth_outside_x
+        Decimal {
+            v: fee_growth_global_x.v - tick_upper.fee_growth_outside_x.v,
+        }
     };
     let fee_growth_above_y = if current_below_upper {
         tick_upper.fee_growth_outside_y
     } else {
-        fee_growth_global_y - tick_upper.fee_growth_outside_y
+        Decimal {
+            v: fee_growth_global_y.v - tick_upper.fee_growth_outside_y.v,
+        }
     };
 
     // calculate fee growth inside
-    let fee_growth_inside_x = fee_growth_global_x - fee_growth_below_x - fee_growth_above_x;
-    let fee_growth_inside_y = fee_growth_global_y - fee_growth_below_y - fee_growth_above_y;
+    let fee_growth_inside_x = Decimal {
+        v: fee_growth_global_x.v - fee_growth_below_x.v - fee_growth_above_x.v,
+    };
+    let fee_growth_inside_y = Decimal {
+        v: fee_growth_global_y.v - fee_growth_below_y.v - fee_growth_above_y.v,
+    };
 
     (fee_growth_inside_x, fee_growth_inside_y)
 }

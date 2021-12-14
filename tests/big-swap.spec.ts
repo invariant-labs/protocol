@@ -7,13 +7,10 @@ import { createPosition, createToken, performSwap } from './testUtils'
 import { assert } from 'chai'
 import { DENOMINATOR } from '@invariant-labs/sdk'
 import { TICK_LIMIT } from '@invariant-labs/sdk'
-import { tou64 } from '@invariant-labs/sdk'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
-import { sleep } from '@invariant-labs/sdk'
 import { calculateFeeGrowthInside } from '@invariant-labs/sdk/src/math'
-import { Tick } from '@invariant-labs/sdk/src/market'
 
 
 describe('big-swap', () => {
