@@ -72,7 +72,7 @@ describe('claim', () => {
   it('#create()', async () => {
     await market.create({
       pair,
-      signer: positionOwner
+      signer: admin
     })
     const createdPool = await market.get(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))

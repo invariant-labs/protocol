@@ -3,20 +3,23 @@ use crate::math::calculate_price_sqrt;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::structs::tickmap::Tickmap;
+use crate::structs::FeeTier;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
+use anchor_spl::token::{Mint, Token};
 
 #[derive(Accounts)]
-// REVIEW i think we should pass all Pubkey via context
-#[instruction(bump: u8, fee_tier_address: Pubkey, index: i32)]
+#[instruction(bump: u8, fee: u64, tick_spacing: u16, index: i32)]
 pub struct CreateTick<'info> {
     #[account(init,
         seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &index.to_le_bytes()],
         bump = bump, payer = payer
     )]
     pub tick: AccountLoader<'info, Tick>,
+    #[account(seeds = [b"feetierv1", program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()], bump = fee_tier.load()?.bump)]
+    pub fee_tier: AccountLoader<'info, FeeTier>,
     #[account(
-        seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
+        seeds = [b"poolv1", fee_tier.to_account_info().key.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
         bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,
@@ -27,10 +30,11 @@ pub struct CreateTick<'info> {
     pub tickmap: AccountLoader<'info, Tickmap>,
     #[account(mut)]
     pub payer: Signer<'info>,
-    #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x)]
-    pub token_x: AccountInfo<'info>, // REVIEW we should validate account data
+    #[account(
+        constraint = token_x.to_account_info().key == &pool.load()?.token_x,    )]
+    pub token_x: Account<'info, Mint>, // REVIEW we should validate account data
     #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y)]
-    pub token_y: AccountInfo<'info>, // REVIEW we should validate account data
+    pub token_y: Account<'info, Mint>, // REVIEW we should validate account data
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
@@ -39,7 +43,8 @@ pub struct CreateTick<'info> {
 pub fn handler(
     ctx: Context<CreateTick>,
     bump: u8,
-    _fee_tier_address: Pubkey,
+    _fee: u64,
+    _tick_spacing: u16,
     index: i32,
 ) -> ProgramResult {
     msg!("INVARIANT: CREATE_TICK");
@@ -71,7 +76,10 @@ pub fn handler(
             true => (current_timestamp - pool.start_timestamp),
             false => 0,
         },
-        seconds_per_liquidity_outside: Decimal::new(0), // REVIEW are you sure ? this seems to not match with rest
+        seconds_per_liquidity_outside: match below_current_tick {
+            true => pool.seconds_per_liquidity_global,
+            false => Decimal::new(0),
+        },
         bump,
     };
 

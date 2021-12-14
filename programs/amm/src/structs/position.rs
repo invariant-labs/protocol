@@ -44,6 +44,7 @@ impl Position {
             liquidity_delta,
             pool.fee_growth_global_x,
             pool.fee_growth_global_y,
+            pool.seconds_per_liquidity_global,
             false,
             add,
         )?;
@@ -52,6 +53,7 @@ impl Position {
             liquidity_delta,
             pool.fee_growth_global_x,
             pool.fee_growth_global_y,
+            pool.seconds_per_liquidity_global,
             true,
             add,
         )?;

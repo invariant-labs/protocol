@@ -36,7 +36,7 @@ export class Market {
   public connection: Connection
   public wallet: IWallet
   public program: Program<Amm>
-  private stateAddress: PublicKey
+  public stateAddress: PublicKey
   private programAuthority: PublicKey
 
   private constructor(
@@ -71,6 +71,8 @@ export class Market {
     const tick = initTick || 0
     const ts = tickSpacing ?? feeToTickSpacing(fee)
 
+    const { address: stateAddress } = await this.getStateAddress()
+
     const [poolAddress, bump] = await pair.getAddressAndBump(this.program.programId)
     const { address: feeTierAddress } = await this.getFeeTierAddress(pair.feeTier)
 
@@ -81,9 +83,9 @@ export class Market {
     const tokenYReserve = await tokenY.createAccount(this.programAuthority)
 
     const bitmapKeypair = Keypair.generate()
-
     await this.program.rpc.createPool(bump, tick, fee, ts, {
       accounts: {
+        state: stateAddress,
         pool: poolAddress,
         feeTier: feeTierAddress,
         tickmap: bitmapKeypair.publicKey,
@@ -98,6 +100,7 @@ export class Market {
       signers: [signer, bitmapKeypair],
       instructions: [await this.program.account.tickmap.createInstruction(bitmapKeypair)]
     })
+    
   }
 
   async get(pair: Pair) {
@@ -325,10 +328,13 @@ export class Market {
     const state = await this.get(pair)
 
     const { tickAddress, tickBump } = await this.getTickAddress(pair, index)
+    const fee = pair.feeTier.fee
+    const tickSpacing = pair.feeTier.tickSpacing
     const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
-    return this.program.instruction.createTick(tickBump, feeTierAddress, index, {
+    return this.program.instruction.createTick(tickBump, fee, tickSpacing, index, {
       accounts: {
         tick: tickAddress,
+        feeTier: feeTierAddress,
         pool: await pair.getAddress(this.program.programId),
         tickmap: state.tickmap,
         payer,

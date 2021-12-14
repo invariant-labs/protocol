@@ -127,7 +127,7 @@ pub fn handler(
     check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
 
     // update position_list head
-    position_list.head += 1; // REVIEW do we have overflow protection?
+    position_list.head.checked_add(1).unwrap();
     position.initialized_id(&mut pool);
 
     // init position

@@ -76,10 +76,11 @@ pub mod amm {
     pub fn create_tick(
         ctx: Context<CreateTick>,
         bump: u8,
-        _fee_tier_address: Pubkey,
+        fee: u64,
+        tick_spacing: u16,
         index: i32,
     ) -> ProgramResult {
-        instructions::create_tick::handler(ctx, bump, _fee_tier_address, index)
+        instructions::create_tick::handler(ctx, bump, fee, tick_spacing, index)
     }
 
     pub fn create_position_list(ctx: Context<CreatePositionList>, bump: u8) -> ProgramResult {

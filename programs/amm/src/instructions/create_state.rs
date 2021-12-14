@@ -4,13 +4,13 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 
 #[derive(Accounts)]
-#[instruction(bump: u8)]
+#[instruction(bump: u8, nonce: u8)]
 pub struct CreateState<'info> {
     #[account(init, seeds = [b"statev1".as_ref()], bump = bump, payer = admin)]
     pub state: AccountLoader<'info, State>,
     #[account(mut)]
     pub admin: Signer<'info>,
-    // REVIEW Lack of check if authority is PDA
+    #[account(seeds = [b"Invariant".as_ref()], bump = nonce)]
     pub program_authority: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]

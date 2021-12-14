@@ -1,10 +1,10 @@
 use std::cmp::Ordering;
 
-use crate::decimal::Decimal;
 use crate::math::calculate_price_sqrt;
 use crate::structs::fee_tier::FeeTier;
 use crate::structs::pool::Pool;
 use crate::structs::tickmap::Tickmap;
+use crate::{decimal::Decimal, structs::State};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{Mint, TokenAccount};
@@ -12,6 +12,8 @@ use anchor_spl::token::{Mint, TokenAccount};
 #[derive(Accounts)]
 #[instruction(bump: u8, init_tick: i32, fee: u64, tick_spacing: u16)]
 pub struct CreatePool<'info> {
+    #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
+    pub state: AccountLoader<'info, State>,
     #[account(init,
         seeds = [b"poolv1", fee_tier.to_account_info().key.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
         bump = bump, payer = payer
@@ -26,12 +28,16 @@ pub struct CreatePool<'info> {
     pub tickmap: AccountLoader<'info, Tickmap>,
     pub token_x: Account<'info, Mint>,
     pub token_y: Account<'info, Mint>,
-    #[account(constraint = &token_x_reserve.mint == token_x.to_account_info().key)]
-    // REVIEW Lack of check if reserve is owned by PDA
+    #[account(
+        constraint = &token_x_reserve.mint == token_x.to_account_info().key,
+        constraint = token_x_reserve.owner == state.load()?.authority    
+    )]
     // we can also initialize those accounts in create_pool
     pub token_x_reserve: Account<'info, TokenAccount>,
-    #[account(constraint = &token_y_reserve.mint == token_y.to_account_info().key)]
-    // REVIEW Lack of check if reserve is owned by PDA
+    #[account(
+        constraint = &token_y_reserve.mint == token_y.to_account_info().key,
+        constraint = token_y_reserve.owner == state.load()?.authority   
+    )]
     pub token_y_reserve: Account<'info, TokenAccount>,
     #[account(mut)]
     pub payer: Signer<'info>,

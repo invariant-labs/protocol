@@ -96,6 +96,11 @@ export type Amm = {
       "name": "createPool",
       "accounts": [
         {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "pool",
           "isMut": true,
           "isSigner": false
@@ -261,6 +266,11 @@ export type Amm = {
           "isSigner": false
         },
         {
+          "name": "feeTier",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "pool",
           "isMut": false,
           "isSigner": false
@@ -302,8 +312,12 @@ export type Amm = {
           "type": "u8"
         },
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "tickSpacing",
+          "type": "u16"
         },
         {
           "name": "index",
@@ -1377,6 +1391,11 @@ export const IDL: Amm = {
       "name": "createPool",
       "accounts": [
         {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "pool",
           "isMut": true,
           "isSigner": false
@@ -1542,6 +1561,11 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
+          "name": "feeTier",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "pool",
           "isMut": false,
           "isSigner": false
@@ -1583,8 +1607,12 @@ export const IDL: Amm = {
           "type": "u8"
         },
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "tickSpacing",
+          "type": "u16"
         },
         {
           "name": "index",
