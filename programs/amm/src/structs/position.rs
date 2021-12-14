@@ -147,8 +147,6 @@ impl Position {
 
 #[cfg(test)]
 mod tests {
-    use std::convert::TryInto;
-
     use super::*;
 
     #[test]
@@ -318,14 +316,16 @@ mod tests {
             let add = true;
             let current_timestamp: u64 = 1234567890;
 
-            position.modify(
-                &mut pool,
-                &mut upper_tick,
-                &mut lower_tick,
-                liquidity_delta,
-                add,
-                current_timestamp,
-            );
+            position
+                .modify(
+                    &mut pool,
+                    &mut upper_tick,
+                    &mut lower_tick,
+                    liquidity_delta,
+                    add,
+                    current_timestamp,
+                )
+                .unwrap();
 
             assert_eq!(
                 { position.tokens_owed_x },

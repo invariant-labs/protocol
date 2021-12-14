@@ -12,7 +12,6 @@ import { DENOMINATOR } from '@invariant-labs/sdk'
 import { assert } from 'chai'
 import {
   fromFee,
-  calculateFeeGrowthInside,
   calculateClaimAmount,
   tou64
 } from '@invariant-labs/sdk/lib/utils'
