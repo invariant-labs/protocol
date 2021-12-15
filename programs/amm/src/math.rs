@@ -98,7 +98,7 @@ pub fn compute_swap_step(
     by_amount_in: bool,
     fee: Decimal,
 ) -> SwapResult {
-    let a_to_b = current_price_sqrt >= target_price_sqrt;
+    let x_to_y = current_price_sqrt >= target_price_sqrt;
     let exact_in = by_amount_in;
 
     let next_price_sqrt;
@@ -109,7 +109,7 @@ pub fn compute_swap_step(
     if exact_in {
         let amount_after_fee = amount.big_mul(Decimal::one() - fee);
 
-        amount_in = if a_to_b {
+        amount_in = if x_to_y {
             get_delta_x(target_price_sqrt, current_price_sqrt, liquidity, true)
         } else {
             get_delta_y(current_price_sqrt, target_price_sqrt, liquidity, true)
@@ -123,11 +123,11 @@ pub fn compute_swap_step(
                 current_price_sqrt,
                 liquidity,
                 amount_after_fee,
-                a_to_b,
+                x_to_y,
             )
         };
     } else {
-        amount_out = if a_to_b {
+        amount_out = if x_to_y {
             get_delta_y(target_price_sqrt, current_price_sqrt, liquidity, false)
         } else {
             get_delta_x(current_price_sqrt, target_price_sqrt, liquidity, false)
@@ -137,13 +137,13 @@ pub fn compute_swap_step(
             next_price_sqrt = target_price_sqrt
         } else {
             next_price_sqrt =
-                get_next_sqrt_price_from_output(current_price_sqrt, liquidity, amount, a_to_b)
+                get_next_sqrt_price_from_output(current_price_sqrt, liquidity, amount, x_to_y)
         }
     }
 
     let max = target_price_sqrt == next_price_sqrt;
 
-    if a_to_b {
+    if x_to_y {
         amount_in = if max && exact_in {
             amount_in
         } else {
@@ -175,7 +175,7 @@ pub fn compute_swap_step(
     if exact_in && next_price_sqrt != target_price_sqrt {
         fee_amount = amount - amount_in
     } else {
-        fee_amount = amount_in.mul_up(fee)
+        fee_amount = amount_in.big_mul_up(fee)
     }
     // fee_amount = Decimal::new(0);
 
@@ -231,12 +231,12 @@ fn get_next_sqrt_price_from_input(
     price_sqrt: Decimal,
     liquidity: Decimal,
     amount: Decimal,
-    a_to_b: bool,
+    x_to_y: bool,
 ) -> Decimal {
     assert!(price_sqrt > Decimal::new(0));
     assert!(liquidity > Decimal::new(0));
 
-    if a_to_b {
+    if x_to_y {
         get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true)
     } else {
         get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true)
@@ -247,12 +247,12 @@ fn get_next_sqrt_price_from_output(
     price_sqrt: Decimal,
     liquidity: Decimal,
     amount: Decimal,
-    a_to_b: bool,
+    x_to_y: bool,
 ) -> Decimal {
     assert!(price_sqrt > Decimal::new(0));
     assert!(liquidity > Decimal::new(0));
 
-    if a_to_b {
+    if x_to_y {
         get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, false)
     } else {
         get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false)
@@ -272,8 +272,8 @@ fn get_next_sqrt_price_x_up(
     };
 
     let denominator = match add {
-        true => liquidity + (amount * price_sqrt),
-        false => liquidity - (amount * price_sqrt),
+        true => liquidity + (amount.big_mul(price_sqrt)),
+        false => liquidity - (amount.big_mul(price_sqrt)),
     };
 
     liquidity.big_mul_up(price_sqrt).big_div_up(denominator)
