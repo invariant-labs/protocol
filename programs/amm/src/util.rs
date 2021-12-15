@@ -209,12 +209,16 @@ mod test {
 
         let x_decimal = calculate_price_sqrt(target_tick);
         let x = x_decimal.v as f64 / DENOMINATOR as f64;
+        let log0001 = 0.00004342727;
         println!("1.0001 {:?}", x.powf(2.0).log(1.0001));
-        let a = x.powf(2.0).log(1.0001).ceil() as u128;
+        let t = log10((x.powf(2.0) * DENOMINATOR as f64) as u128);
+        println!("t {:?}", t);
+        println!("1.0001 {:?}", t as f64 / log0001);
+        // let a = x.powf(2.0).log(1.0001).ceil() as u128;
         // println!("x_decimal {:?}", x_decimal);
         // println!("x {}", x);
         // println!("(x as f64 + 1f64).ln() {}", (x as f64 + 1f64).ln());
-        println!("x {}", a);
+        // println!("x {}", a);
         let fl = 1.232f64;
 
         // let result = price_to_tick_in_range(x_decimal, 0, 8, 2);
