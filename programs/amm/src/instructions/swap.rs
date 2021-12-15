@@ -8,7 +8,7 @@ use crate::structs::tickmap::Tickmap;
 use crate::util::get_closer_limit;
 use crate::*;
 
-use anchor_lang::prelude::*;
+use anchor_lang::{prelude::*, solana_program::log::sol_log_compute_units};
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
 #[derive(Accounts)]
@@ -104,7 +104,43 @@ impl<'info> SendTokens<'info> for Swap<'info> {
         )
     }
 }
-
+pub const fn log10(mut val: u128) -> u32 {
+    let mut log = 0;
+    if val >= 100_000_000_000_000_000_000_000_000_000_000 {
+        val /= 100_000_000_000_000_000_000_000_000_000_000;
+        log += 32;
+        return log + less_than_8(val as u32);
+    }
+    if val >= 10_000_000_000_000_000 {
+        val /= 10_000_000_000_000_000;
+        log += 16;
+    }
+    log + less_than_16(val as u64)
+}
+const fn less_than_16(mut val: u64) -> u32 {
+    let mut log = 0;
+    if val >= 100_000_000 {
+        val /= 100_000_000;
+        log += 8;
+    }
+    log + less_than_8(val as u32)
+}
+const fn less_than_8(mut val: u32) -> u32 {
+    let mut log = 0;
+    if val >= 10_000 {
+        val /= 10_000;
+        log += 4;
+    }
+    log + if val >= 1000 {
+        3
+    } else if val >= 100 {
+        2
+    } else if val >= 10 {
+        1
+    } else {
+        0
+    }
+}
 pub fn handler(
     ctx: Context<Swap>,
     x_to_y: bool,
@@ -114,6 +150,18 @@ pub fn handler(
 ) -> ProgramResult {
     msg!("INVARIANT: SWAP");
     require!(amount != 0, ZeroAmount);
+
+    sol_log_compute_units();
+    let target_tick = 4;
+
+    let x_decimal = calculate_price_sqrt(target_tick);
+    let x = x_decimal.v as f64 / DENOMINATOR as f64;
+    let log0001 = 0.00004342727;
+    let t = log10((x.powf(2.0) * DENOMINATOR as f64) as u128);
+    msg!("t {:?}", t);
+    msg!("target_tick_expected {}", target_tick);
+    msg!("target_tick {}", t as f64 / log0001);
+    sol_log_compute_units();
 
     let sqrt_price_limit = Decimal::new(sqrt_price_limit);
     let mut pool = ctx.accounts.pool.load_mut()?;

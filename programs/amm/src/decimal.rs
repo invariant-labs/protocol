@@ -7,7 +7,7 @@ use std::{
 };
 
 const SCALE: u8 = 12;
-const DENOMINATOR: u128 = 10u128.pow(SCALE as u32);
+pub const DENOMINATOR: u128 = 10u128.pow(SCALE as u32);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TokenAmount(pub u64);
