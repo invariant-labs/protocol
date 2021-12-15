@@ -1,12 +1,7 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
-import { Keypair, PublicKey } from '@solana/web3.js'
-import {
-  assertThrowsAsync,
-  createPoolWithLiquidity,
-  createTokensAndPool,
-  createUserWithTokens
-} from './testUtils'
+import { Keypair, Transaction } from '@solana/web3.js'
+import { createTokensAndPool, createUserWithTokens } from './testUtils'
 import { Market, DENOMINATOR, Network } from '@invariant-labs/sdk'
 import { fromFee, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { Decimal } from '@invariant-labs/sdk/src/market'
@@ -15,6 +10,7 @@ import { getLiquidityByX, getLiquidityByY } from '@invariant-labs/sdk/src/math'
 import { beforeEach } from 'mocha'
 import { assert } from 'chai'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { signAndSend } from '@invariant-labs/sdk'
 
 describe('limits', () => {
   const provider = Provider.local()
@@ -196,68 +192,6 @@ describe('limits', () => {
 
     assert.ok((await tokenX.getAccountInfo(userAccountX)).amount.eqn(0))
     assert.isFalse((await tokenY.getAccountInfo(userAccountY)).amount.eqn(0))
-    console.log(
-      (await tokenY.getAccountInfo(userAccountY)).amount.toString(),
-      mintAmount.toString()
-    )
-  })
-
-  it('big deposit Y and swap X', async () => {
-    const mintAmount = new BN(2).pow(new BN(64)).subn(1)
-    const { owner, userAccountX, userAccountY } = await createUserWithTokens(
-      pair,
-      connection,
-      mintAuthority,
-      mintAmount
-    )
-
-    const lowerTick = -10
-    const upperTick = 0
-
-    const liquidityDelta = getLiquidityByY(
-      mintAmount,
-      lowerTick,
-      upperTick,
-      { v: DENOMINATOR },
-      true
-    ).liquidity
-
-    await market.initPosition(
-      {
-        pair,
-        owner: owner.publicKey,
-        userTokenX: userAccountX,
-        userTokenY: userAccountY,
-        lowerTick,
-        upperTick,
-        liquidityDelta
-      },
-      owner
-    )
-
-    assert.ok((await tokenX.getAccountInfo(userAccountX)).amount.eq(mintAmount))
-    assert.ok((await tokenY.getAccountInfo(userAccountY)).amount.eqn(0))
-
-    await market.swap(
-      {
-        pair,
-        XtoY: true,
-        amount: mintAmount,
-        knownPrice,
-        slippage: toDecimal(5, 2),
-        accountX: userAccountX,
-        accountY: userAccountY,
-        byAmountIn: true
-      },
-      owner
-    )
-
-    assert.ok((await tokenX.getAccountInfo(userAccountX)).amount.eqn(0))
-    assert.isFalse((await tokenY.getAccountInfo(userAccountY)).amount.eqn(0))
-    console.log(
-      (await tokenY.getAccountInfo(userAccountY)).amount.toString(),
-      mintAmount.toString()
-    )
   })
 
   it('big deposit and swaps', async () => {
@@ -346,5 +280,84 @@ describe('limits', () => {
       },
       owner
     )
+  })
+
+  it.only('big fee', async () => {
+    const mintAmount = new BN(2).pow(new BN(64)).subn(1)
+    const { owner, userAccountX, userAccountY } = await createUserWithTokens(
+      pair,
+      connection,
+      mintAuthority,
+      mintAmount
+    )
+
+    const lowerTick = -10000
+    const upperTick = 10000
+    const liquidityDelta = DENOMINATOR.mul(new BN(10).pow(new BN(18)))
+
+    await market.initPosition(
+      {
+        pair,
+        owner: owner.publicKey,
+        userTokenX: userAccountX,
+        userTokenY: userAccountY,
+        lowerTick,
+        upperTick,
+        liquidityDelta: { v: liquidityDelta }
+      },
+      owner
+    )
+
+    const amount = new BN(1e10)
+
+    let priceBefore = (await market.get(pair)).sqrtPrice.v
+    let prevFee = (await market.get(pair)).feeGrowthGlobalX.v
+
+    const chunk = 100
+
+    while (true) {
+      const swaps = new Array(chunk).fill(0).map(async (_, i) => {
+        const oneWayTx = market.swapTransaction({
+          pair,
+          XtoY: true,
+          amount,
+          knownPrice,
+          slippage: toDecimal(5000 + i, 5),
+          accountX: userAccountX,
+          accountY: userAccountY,
+          byAmountIn: true,
+          owner: owner.publicKey
+        })
+
+        const otherWayTx = market.swapTransaction({
+          pair,
+          XtoY: false,
+          amount: amount.subn(6),
+          knownPrice,
+          slippage: toDecimal(5000 + i, 5),
+          accountX: userAccountX,
+          accountY: userAccountY,
+          byAmountIn: false,
+          owner: owner.publicKey
+        })
+
+        const ixs = await Promise.all([oneWayTx, otherWayTx])
+
+        await signAndSend(new Transaction().add(ixs[0]).add(ixs[1]), [owner], connection)
+      })
+
+      await Promise.all(swaps)
+
+      const poolAfter = await market.get(pair)
+      const priceAfter = poolAfter.sqrtPrice.v
+
+      console.log(
+        `price before: ${priceBefore}, price after: ${priceAfter}, feeGrowth: ${
+          poolAfter.feeGrowthGlobalX.v
+        } feeGrowthDelta: ${poolAfter.feeGrowthGlobalX.v.sub(prevFee)}`
+      )
+      prevFee = poolAfter.feeGrowthGlobalX.v
+      priceBefore = priceAfter
+    }
   })
 })
