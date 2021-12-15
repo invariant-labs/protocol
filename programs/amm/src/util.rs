@@ -204,19 +204,76 @@ mod test {
     fn test_log10() {
         use std::time::Instant;
         let now = Instant::now();
-        let target_tick = 0xFFFF;
-        let mut a = 100_000;
+        let target_tick = 4;
+        let DENOMINATOR: u128 = 10u128.pow(12 as u32);
 
-        while a > 0 {
-            a -= 1;
-            let c = calculate_price_sqrt(target_tick).v;
-            let b = log10(c);
+        let x_decimal = calculate_price_sqrt(target_tick);
+        let x = x_decimal.v as f64 / DENOMINATOR as f64;
+        println!("1.0001 {:?}", x.powf(2.0).log(1.0001));
+        let a = x.powf(2.0).log(1.0001).ceil() as u128;
+        // println!("x_decimal {:?}", x_decimal);
+        // println!("x {}", x);
+        // println!("(x as f64 + 1f64).ln() {}", (x as f64 + 1f64).ln());
+        println!("x {}", a);
+        let fl = 1.232f64;
+
+        // let result = price_to_tick_in_range(x_decimal, 0, 8, 2);
+
+        // println!("{}", result);
+        // let b = log10(c);
+        // let a = calculate_price_sqrt(target_tick).v;
+        // let b = log10(a);
+        // println!("{}", b);
+        // let elapsed = now.elapsed();
+        // println!("Elapsed: {:.2?}", elapsed);
+    }
+    #[test]
+    fn test_ln() {
+        // Exact
+        {
+            use std::time::Instant;
+            let now = Instant::now();
+            let mut a = 100;
+            let target_tick = 22;
+            let DENOMINATOR: u128 = 10u128.pow(12 as u32);
+
+            let price = calculate_price_sqrt(target_tick).v as f64 / DENOMINATOR as f64;
+            println!("{}", price);
+
+            while a > 0 {
+                let p2 = price * price;
+                a -= 1;
+                p2.log(1.0001).ceil() as u128;
+            }
+            let p2 = price * price;
+            let result = p2.log(1.0001).abs().ceil() as u128;
+
+            println!("{}", result);
+            let elapsed = now.elapsed();
+            println!("Elapsed: {:.2?}", elapsed);
         }
-        let a = calculate_price_sqrt(target_tick).v;
-        let b = log10(a);
-        println!("{}", b);
-        let elapsed = now.elapsed();
-        println!("Elapsed: {:.2?}", elapsed);
+    }
+    #[test]
+    fn test_ln_full() {
+        // Exact
+        {
+            let mut a = -MAX_TICK;
+            let DENOMINATOR: u128 = 10u128.pow(12 as u32);
+
+            while a < MAX_TICK {
+                let target_tick = a;
+                let price = calculate_price_sqrt(target_tick).v as f64 / DENOMINATOR as f64;
+                let p2 = price * price;
+                let r = p2.log(1.0001);
+                let result = match r > 0.0 {
+                    true => r.ceil() as i32,
+                    false => -r.abs().floor() as i32,
+                };
+                println!("{}", result);
+                a += 1;
+                assert_eq!(result, target_tick);
+            }
+        }
     }
     #[test]
     fn test_price_to_tick_in_range() {
@@ -224,15 +281,15 @@ mod test {
         {
             use std::time::Instant;
             let now = Instant::now();
-            let mut a = 100_000;
-            let target_tick = 0xFFFF;
+            let mut a = 100_000_0;
+            let target_tick = 20000;
 
             while a > 0 {
                 a -= 1;
-                price_to_tick_in_range(calculate_price_sqrt(target_tick), 0, 8, 2);
+                price_to_tick_in_range(calculate_price_sqrt(target_tick), 19990, 20020, 10);
             }
-            let target_tick = 4;
-            let result = price_to_tick_in_range(calculate_price_sqrt(target_tick), 0, 8, 2);
+            let result =
+                price_to_tick_in_range(calculate_price_sqrt(target_tick), 19990, 20020, 10);
 
             println!("{}", result);
             let elapsed = now.elapsed();
