@@ -1,4 +1,6 @@
-use crate::decimal::Decimal;
+use std::convert::TryInto;
+
+use crate::{decimal::Decimal, structs::FeeTier};
 use crate::interfaces::send_tokens::SendTokens;
 use crate::interfaces::take_tokens::TakeTokens;
 use crate::math::compute_swap_step;
@@ -13,43 +15,46 @@ use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
 #[derive(Accounts)]
 // REVIEW why pass address via params not context?
-#[instruction(fee_tier_address: Pubkey)]
+#[instruction(fee: u64, tick_spacing: u16)]
 pub struct Swap<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
-    #[account(mut, seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()], bump = pool.load()?.bump)]
+    #[account(mut, seeds = [b"poolv1", fee_tier.key().as_ref(), token_x.key().as_ref(), token_y.key().as_ref()], bump = pool.load()?.bump)]
     pub pool: AccountLoader<'info, Pool>,
+    #[account(
+        seeds = [b"feetierv1", program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()],
+        bump = fee_tier.load()?.bump
+    )]
+    pub fee_tier: AccountLoader<'info, FeeTier>,
     #[account(mut,
-        // REVIEW you should avoid using to_account_info() when you can use the key directly
-        // Comment about entire repo
         constraint = &tickmap.key() == &pool.load()?.tickmap,
         constraint = tickmap.to_account_info().owner == program_id,
     )]
     pub tickmap: AccountLoader<'info, Tickmap>,
-    #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x,)]
+    #[account(constraint = &token_x.key() == &pool.load()?.token_x,)]
     pub token_x: Account<'info, Mint>,
-    #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y,)]
+    #[account(constraint = &token_y.key() == &pool.load()?.token_y,)]
     pub token_y: Account<'info, Mint>,
     #[account(mut,
-        constraint = &account_x.mint == token_x.to_account_info().key,
-        constraint = &account_x.owner == owner.key,
+        constraint = &account_x.mint == &token_x.key(),
+        constraint = &account_x.owner == &owner.key(),
     )]
     pub account_x: Account<'info, TokenAccount>,
     #[account(mut,
-        constraint = &account_y.mint == token_y.to_account_info().key,
-        constraint = &account_y.owner == owner.key	
+        constraint = &account_y.mint == &token_y.key(),
+        constraint = &account_y.owner == &owner.key()	
     )]
     pub account_y: Account<'info, TokenAccount>,
     #[account(mut,
-        constraint = &reserve_x.mint == token_x.to_account_info().key,
+        constraint = &reserve_x.mint == &token_x.key(),
         constraint = &reserve_x.owner == program_authority.key,
-        constraint = reserve_x.to_account_info().key == &pool.load()?.token_x_reserve
+        constraint = &reserve_x.key() == &pool.load()?.token_x_reserve
     )]
     pub reserve_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = &reserve_y.mint == token_y.to_account_info().key,
+        constraint = &reserve_y.mint == &token_y.key(),
         constraint = &reserve_y.owner == program_authority.key,
-        constraint = reserve_y.to_account_info().key == &pool.load()?.token_y_reserve
+        constraint = &reserve_y.key() == &pool.load()?.token_y_reserve
     )]
     pub reserve_y: Box<Account<'info, TokenAccount>>,
     pub owner: Signer<'info>,
@@ -159,7 +164,7 @@ pub fn handler(
         }
 
         // fee has to be added before crossing any ticks
-        let protocol_fee = result.fee_amount * state.protocol_fee;
+        let protocol_fee = result.fee_amount * pool.protocol_fee;
 
         pool.add_fee(result.fee_amount - protocol_fee, x_to_y);
         if x_to_y {
@@ -175,7 +180,10 @@ pub fn handler(
 
         // Fail if price would go over swap limit
         // REVIEW shouldn't it be >= instead of == ?
-        if { pool.sqrt_price } == sqrt_price_limit && remaining_amount > Decimal::new(0) {
+        if x_to_y && { pool.sqrt_price } <= sqrt_price_limit && remaining_amount > Decimal::new(0) {
+            Err(ErrorCode::PriceLimitReached)?;
+        }
+        if !x_to_y && { pool.sqrt_price } >= sqrt_price_limit && remaining_amount > Decimal::new(0) {
             Err(ErrorCode::PriceLimitReached)?;
         }
 
@@ -230,23 +238,33 @@ pub fn handler(
 
     // Execute swap
     // REVIEW use match pattern instead of if-else
-    let (take_ctx, send_ctx) = if x_to_y {
-        (ctx.accounts.take_x(), ctx.accounts.send_y())
-    } else {
-        (ctx.accounts.take_y(), ctx.accounts.send_x())
+    let (take_ctx, send_ctx) = match x_to_y {
+        true => (ctx.accounts.take_x(), ctx.accounts.send_y()),
+        false => (ctx.accounts.take_y(), ctx.accounts.send_x())
     };
 
     let seeds = &[SEED.as_bytes(), &[state.nonce]];
     let signer = &[&seeds[..]];
 
-    // Maybe rounding error should be counted?
-    // REVIEW if we can count error it should be added to admin fee
-    // can be solved later in production
     token::transfer(take_ctx, total_amount_in.to_token_ceil())?;
     token::transfer(
         send_ctx.with_signer(signer),
         total_amount_out.to_token_floor(),
     )?;
+
+    let amount_in_to_protocol = Decimal::from_integer(total_amount_in.to_token_ceil().try_into().unwrap()) - total_amount_in;
+    let amount_out_to_protocol = total_amount_out - Decimal::from_integer(total_amount_out.to_token_floor().try_into().unwrap());
+    
+    match x_to_y {
+        true => {
+            pool.fee_protocol_token_x = pool.fee_protocol_token_x + amount_in_to_protocol;
+            pool.fee_protocol_token_y = pool.fee_protocol_token_y + amount_out_to_protocol 
+        },
+        false => {
+            pool.fee_protocol_token_x = pool.fee_protocol_token_x + amount_out_to_protocol;
+            pool.fee_protocol_token_y = pool.fee_protocol_token_y + amount_in_to_protocol 
+        }
+    }
 
     Ok(())
 }

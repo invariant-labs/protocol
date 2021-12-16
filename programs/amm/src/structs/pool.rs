@@ -9,9 +9,10 @@ pub struct Pool {
     pub token_y: Pubkey,
     pub token_x_reserve: Pubkey,
     pub token_y_reserve: Pubkey,
-    pub position_iterator: u64,
+    pub position_iterator: u128,
     pub tick_spacing: u16,
     pub fee: Decimal,
+    pub protocol_fee: Decimal,
     pub liquidity: Decimal,
     pub sqrt_price: Decimal,
     pub current_tick_index: i32, // nearest tick below the current price

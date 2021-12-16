@@ -80,7 +80,7 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
     tick.fee_growth_outside_x = pool.fee_growth_global_x - tick.fee_growth_outside_x;
     tick.fee_growth_outside_y = pool.fee_growth_global_y - tick.fee_growth_outside_y;
 
-    let current_timestamp: u64 = Clock::get()?.unix_timestamp.try_into().unwrap();
+    let current_timestamp = get_current_timestamp();
     let seconds_passed: u64 = current_timestamp - pool.start_timestamp;
     tick.seconds_outside = seconds_passed - tick.seconds_outside;
 
@@ -154,6 +154,14 @@ pub fn price_to_tick_in_range(price: Decimal, low: i32, high: i32, step: i32) ->
         }
     }
     low.checked_mul(step).unwrap()
+}
+
+pub fn get_current_timestamp() -> u64 {
+    Clock::get().unwrap().unix_timestamp.try_into().unwrap()
+}
+
+pub fn get_current_slot() -> u64 {
+    Clock::get().unwrap().slot
 }
 
 pub fn close<'info>(

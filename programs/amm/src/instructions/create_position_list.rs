@@ -6,7 +6,7 @@ use anchor_lang::solana_program::system_program;
 #[instruction(bump: u8)]
 pub struct CreatePositionList<'info> {
     #[account(init,
-        seeds = [b"positionlistv1", owner.to_account_info().key.as_ref()],
+        seeds = [b"positionlistv1", owner.key().as_ref()],
         bump = bump,
         payer = owner
     )]

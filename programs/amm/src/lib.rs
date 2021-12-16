@@ -27,13 +27,8 @@ const SEED: &str = "Invariant";
 pub mod amm {
     use super::*;
 
-    pub fn create_state(
-        ctx: Context<CreateState>,
-        bump: u8,
-        nonce: u8,
-        protocol_fee: Decimal,
-    ) -> ProgramResult {
-        instructions::create_state::handler(ctx, bump, nonce, protocol_fee)
+    pub fn create_state(ctx: Context<CreateState>, bump: u8, nonce: u8) -> ProgramResult {
+        instructions::create_state::handler(ctx, bump, nonce)
     }
     #[access_control(admin(&ctx.accounts.state, &ctx.accounts.admin))]
     pub fn create_fee_tier(
@@ -51,24 +46,27 @@ pub mod amm {
         init_tick: i32,
         _fee: u64,
         _tick_spacing: u16,
+        protocol_fee: Decimal,
     ) -> ProgramResult {
-        instructions::create_pool::handler(ctx, bump, init_tick)
+        instructions::create_pool::handler(ctx, bump, init_tick, protocol_fee)
     }
 
     pub fn swap(
         ctx: Context<Swap>,
-        _fee_tier_address: Pubkey,
         x_to_y: bool,
         amount: u64,
         by_amount_in: bool, // whether amount specifies input or output
         sqrt_price_limit: u128,
+        _fee: u64,
+        _tick_spacing: u16,
     ) -> ProgramResult {
         instructions::swap::handler(ctx, x_to_y, amount, by_amount_in, sqrt_price_limit)
     }
 
     pub fn initialize_oracle(
         ctx: Context<InitializeOracle>,
-        _fee_tier_address: Pubkey,
+        _fee: u64,
+        _tick_spacing: u16,
     ) -> ProgramResult {
         instructions::initialize_oracle::handler(ctx)
     }
@@ -76,8 +74,8 @@ pub mod amm {
     pub fn create_tick(
         ctx: Context<CreateTick>,
         bump: u8,
-        fee: u64,
-        tick_spacing: u16,
+        _fee: u64,
+        _tick_spacing: u16,
         index: i32,
     ) -> ProgramResult {
         instructions::create_tick::handler(ctx, bump, index)
@@ -90,9 +88,10 @@ pub mod amm {
     pub fn create_position(
         ctx: Context<CreatePosition>,
         bump: u8,
-        _fee_tier_address: Pubkey,
         _lower_tick_index: i32,
         _upper_tick_index: i32,
+        _fee: u64,
+        _tick_spacing: u16,
         liquidity_delta: Decimal,
     ) -> ProgramResult {
         instructions::create_position::handler(ctx, bump, liquidity_delta)
@@ -100,10 +99,11 @@ pub mod amm {
 
     pub fn remove_position(
         ctx: Context<RemovePosition>,
-        _fee_tier_address: Pubkey,
         index: u32,
         lower_tick_index: i32,
         upper_tick_index: i32,
+        _fee: u64,
+        _tick_spacing: u16,
     ) -> ProgramResult {
         instructions::remove_position::handler(ctx, index, lower_tick_index, upper_tick_index)
     }
@@ -118,20 +118,22 @@ pub mod amm {
 
     pub fn claim_fee(
         ctx: Context<ClaimFee>,
-        _fee_tier_address: Pubkey,
         _index: u32,
         _lower_tick_index: i32,
         _upper_tick_index: i32,
+        _fee: u64,
+        _tick_spacing: u16,
     ) -> ProgramResult {
         instructions::claim_fee::handler(ctx)
     }
 
     pub fn update_seconds_per_liquidity(
         ctx: Context<UpdateSecondsPerLiquidity>,
-        _fee_tier_address: Pubkey,
         _lower_tick_index: i32,
         _upper_tick_index: i32,
         _index: i32,
+        _fee: u64,
+        _tick_spacing: u16,
     ) -> ProgramResult {
         instructions::update_seconds_per_liquidity::handler(ctx)
     }
@@ -139,9 +141,20 @@ pub mod amm {
     #[access_control(admin(&ctx.accounts.state, &ctx.accounts.admin))]
     pub fn withdraw_protocol_fee(
         ctx: Context<WithdrawProtocolFee>,
-        _fee_tier_address: Pubkey,
+        _fee: u64,
+        _tick_spacing: u16,
     ) -> ProgramResult {
         instructions::withdraw_protocol_fee::handler(ctx)
+    }
+
+    #[access_control(admin(&ctx.accounts.state, &ctx.accounts.admin))]
+    pub fn change_protocol_fee(
+        ctx: Context<ChangeProtocolFee>,
+        protocol_fee: Decimal,
+        _fee: u64,
+        _tick_spacing: u16,
+    ) -> ProgramResult {
+        instructions::change_protocol_fee::handler(ctx, protocol_fee)
     }
 }
 

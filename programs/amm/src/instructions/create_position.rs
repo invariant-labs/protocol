@@ -2,6 +2,7 @@ use std::convert::TryInto;
 
 use crate::decimal::Decimal;
 use crate::interfaces::take_tokens::TakeTokens;
+use crate::structs::{Tickmap, FeeTier};
 use crate::structs::pool::Pool;
 use crate::structs::position::Position;
 use crate::structs::position_list::PositionList;
@@ -15,7 +16,7 @@ use anchor_spl::token;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
 #[derive(Accounts)]
-#[instruction(bump: u8, fee_tier_address: Pubkey, lower_tick_index: i32, upper_tick_index: i32)]
+#[instruction(bump: u8, lower_tick_index: i32, upper_tick_index: i32, fee: u64, tick_spacing: u16)]
 pub struct CreatePosition<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
@@ -27,51 +28,61 @@ pub struct CreatePosition<'info> {
     )]
     pub position: AccountLoader<'info, Position>,
     #[account(mut,
-        seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
+        seeds = [b"poolv1", fee_tier.key().as_ref(), token_x.key().as_ref(), token_y.key().as_ref()],
         bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,
+    #[account(
+        seeds = [b"feetierv1", program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()],
+        bump = fee_tier.load()?.bump
+    )]
+    pub fee_tier: AccountLoader<'info, FeeTier>,
     #[account(mut,
-        seeds = [b"positionlistv1", owner.to_account_info().key.as_ref()],
+        seeds = [b"positionlistv1", owner.key().as_ref()],
         bump = position_list.load()?.bump
     )]
     pub position_list: AccountLoader<'info, PositionList>,
     #[account(mut)]
     pub owner: Signer<'info>,
     #[account(mut,
-        seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &lower_tick_index.to_le_bytes()],
+        seeds = [b"tickv1", pool.key().as_ref(), &lower_tick_index.to_le_bytes()],
         bump = lower_tick.load()?.bump
     )]
     pub lower_tick: AccountLoader<'info, Tick>,
     #[account(mut,
-        seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &upper_tick_index.to_le_bytes()],
+        seeds = [b"tickv1", pool.key().as_ref(), &upper_tick_index.to_le_bytes()],
         bump = upper_tick.load()?.bump
     )]
     pub upper_tick: AccountLoader<'info, Tick>,
-    #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x,)]
+    #[account(mut,
+        constraint = &tickmap.key() == &pool.load()?.tickmap,
+        constraint = tickmap.to_account_info().owner == program_id,
+    )]
+    pub tickmap: AccountLoader<'info, Tickmap>,
+    #[account(constraint = &token_x.key() == &pool.load()?.token_x,)]
     pub token_x: Account<'info, Mint>,
-    #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y,)]
+    #[account(constraint = &token_y.key() == &pool.load()?.token_y,)]
     pub token_y: Account<'info, Mint>,
     #[account(mut,
-        constraint = &account_x.mint == token_x.to_account_info().key,
+        constraint = &account_x.mint == &token_x.key(),
         constraint = &account_x.owner == owner.key,
     )]
     pub account_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = &account_y.mint == token_y.to_account_info().key,
+        constraint = &account_y.mint == &token_y.key(),
         constraint = &account_y.owner == owner.key	
     )]
     pub account_y: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = &reserve_x.mint == token_x.to_account_info().key,
+        constraint = &reserve_x.mint == &token_x.key(),
         constraint = &reserve_x.owner == program_authority.key,
-        constraint = reserve_x.to_account_info().key == &pool.load()?.token_x_reserve
+        constraint = &reserve_x.key() == &pool.load()?.token_x_reserve
     )]
     pub reserve_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = &reserve_y.mint == token_y.to_account_info().key,
+        constraint = &reserve_y.mint == &token_y.key(),
         constraint = &reserve_y.owner == program_authority.key,
-        constraint = reserve_y.to_account_info().key == &pool.load()?.token_y_reserve
+        constraint = &reserve_y.key() == &pool.load()?.token_y_reserve
     )]
     pub reserve_y: Box<Account<'info, TokenAccount>>,
     #[account(constraint = &state.load()?.authority == program_authority.key)]
@@ -119,11 +130,18 @@ pub fn handler(
     let lower_tick = &mut ctx.accounts.lower_tick.load_mut()?;
     let upper_tick = &mut ctx.accounts.upper_tick.load_mut()?;
     let mut position_list = ctx.accounts.position_list.load_mut()?;
-    let current_timestamp = Clock::get()?.unix_timestamp.try_into().unwrap();
-    let slot = Clock::get()?.slot;
-
+    let current_timestamp = get_current_timestamp();
+    let mut tickmap = ctx.accounts.tickmap.load_mut()?;
+    let slot = get_current_slot();
     // validate ticks
     check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
+
+    if !tickmap.get(lower_tick.index, pool.tick_spacing) {
+        tickmap.set(true, lower_tick.index, pool.tick_spacing)
+    }
+    if !tickmap.get(upper_tick.index, pool.tick_spacing) {
+        tickmap.set(true, upper_tick.index, pool.tick_spacing)
+    }
 
     // update position_list head
     position_list.head.checked_add(1).unwrap();

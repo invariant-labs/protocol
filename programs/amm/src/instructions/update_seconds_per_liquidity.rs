@@ -1,42 +1,47 @@
-use std::convert::TryInto;
-
 use crate::math;
 use crate::structs::pool::Pool;
 use crate::structs::position::Position;
 use crate::structs::tick::Tick;
+use crate::structs::FeeTier;
+use crate::util::{get_current_slot, get_current_timestamp};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::Mint;
 use math::*;
 
 #[derive(Accounts)]
-#[instruction(fee_tier_address: Pubkey, lower_tick_index: i32, upper_tick_index: i32, index: i32)]
+#[instruction(lower_tick_index: i32, upper_tick_index: i32, index: i32, fee: u64, tick_spacing: u16)]
 pub struct UpdateSecondsPerLiquidity<'info> {
     #[account(mut,
-        seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
+        seeds = [b"poolv1", fee_tier.key().as_ref(), token_x.key().as_ref(), token_y.key().as_ref()],
         bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,
     #[account(
-        seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &lower_tick_index.to_le_bytes()],
+        seeds = [b"feetierv1", program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()],
+        bump = fee_tier.load()?.bump
+    )]
+    pub fee_tier: AccountLoader<'info, FeeTier>,
+    #[account(
+        seeds = [b"tickv1", pool.key().as_ref(), &lower_tick_index.to_le_bytes()],
         bump = lower_tick.load()?.bump
     )]
     pub lower_tick: AccountLoader<'info, Tick>,
     #[account(
-        seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &upper_tick_index.to_le_bytes()],
+        seeds = [b"tickv1", pool.key().as_ref(), &upper_tick_index.to_le_bytes()],
         bump = upper_tick.load()?.bump
     )]
     pub upper_tick: AccountLoader<'info, Tick>,
     #[account(mut,
         seeds = [b"positionv1",
-        owner.to_account_info().key.as_ref(),
+        owner.key().as_ref(),
         &index.to_le_bytes()],
         bump = position.load()?.bump
     )]
     pub position: AccountLoader<'info, Position>,
-    #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x,)]
+    #[account(constraint = &token_x.key() == &pool.load()?.token_x,)]
     pub token_x: Account<'info, Mint>,
-    #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y,)]
+    #[account(constraint = &token_y.key() == &pool.load()?.token_y,)]
     pub token_y: Account<'info, Mint>,
     pub owner: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
@@ -50,12 +55,11 @@ pub fn handler(ctx: Context<UpdateSecondsPerLiquidity>) -> ProgramResult {
     let pool = &mut ctx.accounts.pool.load_mut()?;
     let lower_tick = *ctx.accounts.lower_tick.load()?;
     let upper_tick = *ctx.accounts.upper_tick.load()?;
-    // REVIEW i am getting sick of this Clock sb create method for this `getTimestamp()`
-    let current_time = Clock::get().unwrap().unix_timestamp.try_into().unwrap();
+    let current_time = get_current_timestamp();
     let position = &mut ctx.accounts.position.load_mut()?;
     position.seconds_per_liquidity_inside =
         calculate_seconds_per_liquidity_inside(lower_tick, upper_tick, pool, current_time);
-    position.last_slot = Clock::get()?.slot;
+    position.last_slot = get_current_slot();
 
     Ok(())
 }

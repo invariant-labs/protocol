@@ -2,6 +2,7 @@ use std::convert::TryInto;
 
 use crate::decimal::*;
 use crate::structs::*;
+use crate::util::get_current_timestamp;
 use amm::program::Amm;
 use amm::structs::Pool;
 use anchor_lang::prelude::*;
@@ -64,7 +65,7 @@ pub fn handler(
 ) -> ProgramResult {
     msg!("CREATE INCENTIVE");
     require!(reward != Decimal::new(0), ZeroAmount);
-    let current_time: u64 = Clock::get().unwrap().unix_timestamp.try_into().unwrap();
+    let current_time = get_current_timestamp();
 
     require!(
         (start_time + MAX_TIME_BEFORE_START) >= current_time,

@@ -1,42 +1,47 @@
-use crate::decimal::Decimal;
 use crate::interfaces::SendTokens;
 use crate::structs::pool::Pool;
 use crate::structs::state::State;
 use crate::SEED;
+use crate::{decimal::Decimal, structs::FeeTier};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, TokenAccount, Transfer};
 
 #[derive(Accounts)]
-#[instruction(fee_tier_address: Pubkey)]
+#[instruction(fee: u64, tick_spacing: u16)]
 pub struct WithdrawProtocolFee<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
     #[account(mut,
-        seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()], bump = pool.load()?.bump
+        seeds = [b"poolv1", fee_tier.key().as_ref(), token_x.key().as_ref(), token_y.key().as_ref()], bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,
-    #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x)]
+    #[account(
+        seeds = [b"feetierv1", program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()],
+        bump = fee_tier.load()?.bump
+    )]
+    pub fee_tier: AccountLoader<'info, FeeTier>,
+    #[account(constraint = &token_x.key() == &pool.load()?.token_x)]
     pub token_x: Account<'info, Mint>,
-    #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y)]
+    #[account(constraint = &token_y.key() == &pool.load()?.token_y)]
     pub token_y: Account<'info, Mint>,
     #[account(mut,
-        constraint = &account_x.mint == token_x.to_account_info().key
+        constraint = &account_x.mint == &token_x.key()
     )]
     pub account_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = &account_y.mint == token_y.to_account_info().key
+        constraint = &account_y.mint == &token_y.key()
     )]
     pub account_y: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = &reserve_x.mint == token_x.to_account_info().key,
+        constraint = &reserve_x.mint == &token_x.key(),
         constraint = &reserve_x.owner == program_authority.key,
-        constraint = reserve_x.to_account_info().key == &pool.load()?.token_x_reserve
+        constraint = &reserve_x.key() == &pool.load()?.token_x_reserve
     )]
     pub reserve_x: Account<'info, TokenAccount>,
     #[account(mut,
-        constraint = &reserve_y.mint == token_y.to_account_info().key,
+        constraint = &reserve_y.mint == &token_y.key(),
         constraint = &reserve_y.owner == program_authority.key,
-        constraint = reserve_y.to_account_info().key == &pool.load()?.token_y_reserve
+        constraint = &reserve_y.key() == &pool.load()?.token_y_reserve
     )]
     pub reserve_y: Account<'info, TokenAccount>,
     #[account(constraint = &state.load()?.admin == admin.key)]

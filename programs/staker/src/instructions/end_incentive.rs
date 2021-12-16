@@ -2,6 +2,7 @@ use std::convert::TryInto;
 
 use crate::structs::*;
 use crate::util;
+use crate::util::get_current_timestamp;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{self, TokenAccount, Transfer};
@@ -48,7 +49,7 @@ impl<'info> ReturnToFounder<'info> for ReturnFounds<'info> {
 
 pub fn handler(ctx: Context<ReturnFounds>, bump_authority: u8) -> ProgramResult {
     let incentive = ctx.accounts.incentive.load()?;
-    let current_time: u64 = Clock::get()?.unix_timestamp.try_into().unwrap();
+    let current_time = get_current_timestamp();
     require!(current_time > incentive.end_time, NotEnded);
     require!(incentive.num_of_stakes == 0, StakeExist);
     require!(incentive.total_reward_unclaimed.v > 0, ZeroReward);

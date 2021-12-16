@@ -9,7 +9,7 @@ use anchor_lang::prelude::*;
 pub struct Position {
     pub owner: Pubkey,
     pub pool: Pubkey,
-    pub id: u64, // unique inside pool
+    pub id: u128, // unique inside pool
     pub liquidity: Decimal,
     pub lower_tick_index: i32,
     pub upper_tick_index: i32,

@@ -39,12 +39,6 @@ export type Amm = {
         {
           "name": "nonce",
           "type": "u8"
-        },
-        {
-          "name": "protocolFee",
-          "type": {
-            "defined": "Decimal"
-          }
         }
       ]
     },
@@ -167,6 +161,12 @@ export type Amm = {
         {
           "name": "tickSpacing",
           "type": "u16"
+        },
+        {
+          "name": "protocolFee",
+          "type": {
+            "defined": "Decimal"
+          }
         }
       ]
     },
@@ -181,6 +181,11 @@ export type Amm = {
         {
           "name": "pool",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feeTier",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -236,10 +241,6 @@ export type Amm = {
       ],
       "args": [
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
-        },
-        {
           "name": "xToY",
           "type": "bool"
         },
@@ -254,6 +255,14 @@ export type Amm = {
         {
           "name": "sqrtPriceLimit",
           "type": "u128"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "tickSpacing",
+          "type": "u16"
         }
       ]
     },
@@ -263,6 +272,11 @@ export type Amm = {
         {
           "name": "pool",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feeTier",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -298,8 +312,12 @@ export type Amm = {
       ],
       "args": [
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "tickSpacing",
+          "type": "u16"
         }
       ]
     },
@@ -426,6 +444,11 @@ export type Amm = {
           "isSigner": false
         },
         {
+          "name": "feeTier",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "positionList",
           "isMut": true,
           "isSigner": false
@@ -442,6 +465,11 @@ export type Amm = {
         },
         {
           "name": "upperTick",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickmap",
           "isMut": true,
           "isSigner": false
         },
@@ -502,16 +530,20 @@ export type Amm = {
           "type": "u8"
         },
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
-        },
-        {
           "name": "lowerTickIndex",
           "type": "i32"
         },
         {
           "name": "upperTickIndex",
           "type": "i32"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "tickSpacing",
+          "type": "u16"
         },
         {
           "name": "liquidityDelta",
@@ -547,6 +579,11 @@ export type Amm = {
         {
           "name": "pool",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feeTier",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -612,10 +649,6 @@ export type Amm = {
       ],
       "args": [
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
-        },
-        {
           "name": "index",
           "type": "u32"
         },
@@ -626,6 +659,14 @@ export type Amm = {
         {
           "name": "upperTickIndex",
           "type": "i32"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "tickSpacing",
+          "type": "u16"
         }
       ]
     },
@@ -703,6 +744,11 @@ export type Amm = {
           "isSigner": false
         },
         {
+          "name": "feeTier",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "position",
           "isMut": true,
           "isSigner": false
@@ -765,10 +811,6 @@ export type Amm = {
       ],
       "args": [
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
-        },
-        {
           "name": "index",
           "type": "u32"
         },
@@ -779,6 +821,14 @@ export type Amm = {
         {
           "name": "upperTickIndex",
           "type": "i32"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "tickSpacing",
+          "type": "u16"
         }
       ]
     },
@@ -788,6 +838,11 @@ export type Amm = {
         {
           "name": "pool",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feeTier",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -833,10 +888,6 @@ export type Amm = {
       ],
       "args": [
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
-        },
-        {
           "name": "lowerTickIndex",
           "type": "i32"
         },
@@ -847,6 +898,14 @@ export type Amm = {
         {
           "name": "index",
           "type": "i32"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "tickSpacing",
+          "type": "u16"
         }
       ]
     },
@@ -861,6 +920,11 @@ export type Amm = {
         {
           "name": "pool",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feeTier",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -911,8 +975,63 @@ export type Amm = {
       ],
       "args": [
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "tickSpacing",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "changeProtocolFee",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feeTier",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenX",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenY",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "protocolFee",
+          "type": {
+            "defined": "Decimal"
+          }
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "tickSpacing",
+          "type": "u16"
         }
       ]
     }
@@ -994,7 +1113,7 @@ export type Amm = {
           },
           {
             "name": "positionIterator",
-            "type": "u64"
+            "type": "u128"
           },
           {
             "name": "tickSpacing",
@@ -1002,6 +1121,12 @@ export type Amm = {
           },
           {
             "name": "fee",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "protocolFee",
             "type": {
               "defined": "Decimal"
             }
@@ -1094,7 +1219,7 @@ export type Amm = {
           },
           {
             "name": "id",
-            "type": "u64"
+            "type": "u128"
           },
           {
             "name": "liquidity",
@@ -1172,12 +1297,6 @@ export type Amm = {
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "protocolFee",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
           {
             "name": "admin",
             "type": "publicKey"
@@ -1447,12 +1566,6 @@ export const IDL: Amm = {
         {
           "name": "nonce",
           "type": "u8"
-        },
-        {
-          "name": "protocolFee",
-          "type": {
-            "defined": "Decimal"
-          }
         }
       ]
     },
@@ -1575,6 +1688,12 @@ export const IDL: Amm = {
         {
           "name": "tickSpacing",
           "type": "u16"
+        },
+        {
+          "name": "protocolFee",
+          "type": {
+            "defined": "Decimal"
+          }
         }
       ]
     },
@@ -1589,6 +1708,11 @@ export const IDL: Amm = {
         {
           "name": "pool",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feeTier",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1644,10 +1768,6 @@ export const IDL: Amm = {
       ],
       "args": [
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
-        },
-        {
           "name": "xToY",
           "type": "bool"
         },
@@ -1662,6 +1782,14 @@ export const IDL: Amm = {
         {
           "name": "sqrtPriceLimit",
           "type": "u128"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "tickSpacing",
+          "type": "u16"
         }
       ]
     },
@@ -1671,6 +1799,11 @@ export const IDL: Amm = {
         {
           "name": "pool",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feeTier",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1706,8 +1839,12 @@ export const IDL: Amm = {
       ],
       "args": [
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "tickSpacing",
+          "type": "u16"
         }
       ]
     },
@@ -1834,6 +1971,11 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
+          "name": "feeTier",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "positionList",
           "isMut": true,
           "isSigner": false
@@ -1850,6 +1992,11 @@ export const IDL: Amm = {
         },
         {
           "name": "upperTick",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickmap",
           "isMut": true,
           "isSigner": false
         },
@@ -1910,16 +2057,20 @@ export const IDL: Amm = {
           "type": "u8"
         },
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
-        },
-        {
           "name": "lowerTickIndex",
           "type": "i32"
         },
         {
           "name": "upperTickIndex",
           "type": "i32"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "tickSpacing",
+          "type": "u16"
         },
         {
           "name": "liquidityDelta",
@@ -1955,6 +2106,11 @@ export const IDL: Amm = {
         {
           "name": "pool",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feeTier",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -2020,10 +2176,6 @@ export const IDL: Amm = {
       ],
       "args": [
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
-        },
-        {
           "name": "index",
           "type": "u32"
         },
@@ -2034,6 +2186,14 @@ export const IDL: Amm = {
         {
           "name": "upperTickIndex",
           "type": "i32"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "tickSpacing",
+          "type": "u16"
         }
       ]
     },
@@ -2111,6 +2271,11 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
+          "name": "feeTier",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "position",
           "isMut": true,
           "isSigner": false
@@ -2173,10 +2338,6 @@ export const IDL: Amm = {
       ],
       "args": [
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
-        },
-        {
           "name": "index",
           "type": "u32"
         },
@@ -2187,6 +2348,14 @@ export const IDL: Amm = {
         {
           "name": "upperTickIndex",
           "type": "i32"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "tickSpacing",
+          "type": "u16"
         }
       ]
     },
@@ -2196,6 +2365,11 @@ export const IDL: Amm = {
         {
           "name": "pool",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feeTier",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -2241,10 +2415,6 @@ export const IDL: Amm = {
       ],
       "args": [
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
-        },
-        {
           "name": "lowerTickIndex",
           "type": "i32"
         },
@@ -2255,6 +2425,14 @@ export const IDL: Amm = {
         {
           "name": "index",
           "type": "i32"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "tickSpacing",
+          "type": "u16"
         }
       ]
     },
@@ -2269,6 +2447,11 @@ export const IDL: Amm = {
         {
           "name": "pool",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feeTier",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -2319,8 +2502,63 @@ export const IDL: Amm = {
       ],
       "args": [
         {
-          "name": "feeTierAddress",
-          "type": "publicKey"
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "tickSpacing",
+          "type": "u16"
+        }
+      ]
+    },
+    {
+      "name": "changeProtocolFee",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "feeTier",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenX",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenY",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "protocolFee",
+          "type": {
+            "defined": "Decimal"
+          }
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        },
+        {
+          "name": "tickSpacing",
+          "type": "u16"
         }
       ]
     }
@@ -2402,7 +2640,7 @@ export const IDL: Amm = {
           },
           {
             "name": "positionIterator",
-            "type": "u64"
+            "type": "u128"
           },
           {
             "name": "tickSpacing",
@@ -2410,6 +2648,12 @@ export const IDL: Amm = {
           },
           {
             "name": "fee",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "protocolFee",
             "type": {
               "defined": "Decimal"
             }
@@ -2502,7 +2746,7 @@ export const IDL: Amm = {
           },
           {
             "name": "id",
-            "type": "u64"
+            "type": "u128"
           },
           {
             "name": "liquidity",
@@ -2580,12 +2824,6 @@ export const IDL: Amm = {
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "protocolFee",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
           {
             "name": "admin",
             "type": "publicKey"
