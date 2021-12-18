@@ -10,6 +10,45 @@ pub fn decimal_to_x128(decimal: Decimal) -> U256 {
         .unwrap()
 }
 
+pub fn log2_floor_x128(sqrt_price_x128: U256) -> U256 {
+    let mut sqrt_price_x128 = sqrt_price_x128;
+    let mut log2_floor = U256::from(0);
+
+    if sqrt_price_x128 >= U256::from(1) << 128 {
+        sqrt_price_x128 >>= 128;
+        log2_floor += U256::from(128);
+    };
+    if sqrt_price_x128 >= U256::from(1) << 64 {
+        sqrt_price_x128 >>= 64;
+        log2_floor += U256::from(64);
+    };
+    if sqrt_price_x128 >= U256::from(1) << 32 {
+        sqrt_price_x128 >>= 32;
+        log2_floor += U256::from(32);
+    };
+    if sqrt_price_x128 >= U256::from(1) << 16 {
+        sqrt_price_x128 >>= 16;
+        log2_floor += U256::from(16);
+    };
+    if sqrt_price_x128 >= U256::from(1) << 8 {
+        sqrt_price_x128 >>= 8;
+        log2_floor += U256::from(8);
+    };
+    if sqrt_price_x128 >= U256::from(1) << 4 {
+        sqrt_price_x128 >>= 4;
+        log2_floor += U256::from(4);
+    };
+    if sqrt_price_x128 >= U256::from(1) << 2 {
+        sqrt_price_x128 >>= 2;
+        log2_floor += U256::from(2);
+    };
+    if sqrt_price_x128 >= U256::from(1) << 1 {
+        log2_floor += U256::from(1);
+    };
+
+    log2_floor
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -50,4 +89,7 @@ mod tests {
             assert!(min_sqrt_price_x96.eq(&expected_min_sqrt_price_x96));
         }
     }
+
+    #[test]
+    fn test_log2_floor_x128() {}
 }
