@@ -63,6 +63,10 @@ impl Decimal {
         self.v.checked_div(DENOMINATOR).unwrap().try_into().unwrap()
     }
 
+    pub fn to_u256(self) -> U256 {
+        U256::from(self.v)
+    }
+
     pub fn to_token_ceil(self) -> u64 {
         self.v
             .checked_add(DENOMINATOR.checked_sub(1).unwrap())
