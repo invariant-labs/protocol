@@ -11,6 +11,7 @@ import { beforeEach } from 'mocha'
 import { assert } from 'chai'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { signAndSend } from '@invariant-labs/sdk'
+import { FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
 
 describe('limits', () => {
   const provider = Provider.local()
@@ -24,6 +25,7 @@ describe('limits', () => {
   let pair: Pair
   let mintAuthority: Keypair
   let knownPrice: Decimal = { v: new BN(DENOMINATOR) }
+  const feeTier = FEE_TIERS[0]
 
   before(async () => {
     market = await Market.build(
@@ -36,7 +38,7 @@ describe('limits', () => {
   })
 
   beforeEach(async () => {
-    const result = await createTokensAndPool(market, connection, wallet)
+    const result = await createTokensAndPool(market, connection, wallet, 0, feeTier)
     pair = result.pair
     mintAuthority = result.mintAuthority
 
@@ -53,8 +55,23 @@ describe('limits', () => {
       mintAmount
     )
 
-    const liquidityByY = getLiquidityByY(mintAmount, -10, 10, { v: DENOMINATOR }, false).liquidity
-    const liquidityByX = getLiquidityByY(mintAmount, -10, 10, { v: DENOMINATOR }, false).liquidity
+    const upperTick = pair.feeTier.tickSpacing ?? 0
+    const lowerTick = -(pair.feeTier.tickSpacing ?? 0)
+
+    const liquidityByY = getLiquidityByY(
+      mintAmount,
+      lowerTick,
+      upperTick,
+      { v: DENOMINATOR },
+      false
+    ).liquidity
+    const liquidityByX = getLiquidityByY(
+      mintAmount,
+      lowerTick,
+      upperTick,
+      { v: DENOMINATOR },
+      false
+    ).liquidity
     // calculation of liquidity might not be exactly equal on both tokens so taking smaller one
     const liquidityDelta = liquidityByY.v.lt(liquidityByX.v) ? liquidityByY : liquidityByX
 
@@ -64,8 +81,8 @@ describe('limits', () => {
         owner: owner.publicKey,
         userTokenX: userAccountX,
         userTokenY: userAccountY,
-        lowerTick: -10,
-        upperTick: 10,
+        lowerTick,
+        upperTick,
         liquidityDelta
       },
       owner
@@ -96,7 +113,7 @@ describe('limits', () => {
     )
 
     const lowerTick = 0
-    const upperTick = 10
+    const upperTick = lowerTick + (pair.feeTier.tickSpacing ?? 0)
 
     const liquidityDelta = getLiquidityByX(
       mintAmount,
@@ -149,8 +166,8 @@ describe('limits', () => {
       mintAmount
     )
 
-    const lowerTick = -10
     const upperTick = 0
+    const lowerTick = upperTick - (pair.feeTier.tickSpacing ?? 0)
 
     const liquidityDelta = getLiquidityByY(
       mintAmount,
@@ -203,9 +220,24 @@ describe('limits', () => {
       mintAmount
     )
 
+    const upperTick = pair.feeTier.tickSpacing ?? 0
+    const lowerTick = -(pair.feeTier.tickSpacing ?? 0)
+
     const posAmount = mintAmount.divn(2)
-    const liquidityByY = getLiquidityByY(posAmount, -10, 10, { v: DENOMINATOR }, false).liquidity
-    const liquidityByX = getLiquidityByY(posAmount, -10, 10, { v: DENOMINATOR }, false).liquidity
+    const liquidityByY = getLiquidityByY(
+      posAmount,
+      lowerTick,
+      upperTick,
+      { v: DENOMINATOR },
+      false
+    ).liquidity
+    const liquidityByX = getLiquidityByY(
+      posAmount,
+      lowerTick,
+      upperTick,
+      { v: DENOMINATOR },
+      false
+    ).liquidity
     // calculation of liquidity might not be exactly equal on both tokens so taking smaller one
     const liquidityDelta = liquidityByY.v.lt(liquidityByX.v) ? liquidityByY : liquidityByX
 
@@ -215,8 +247,8 @@ describe('limits', () => {
         owner: owner.publicKey,
         userTokenX: userAccountX,
         userTokenY: userAccountY,
-        lowerTick: -10,
-        upperTick: 10,
+        lowerTick,
+        upperTick,
         liquidityDelta
       },
       owner
@@ -282,7 +314,7 @@ describe('limits', () => {
     )
   })
 
-  it.only('big fee', async () => {
+  it.skip('big fee', async () => {
     const mintAmount = new BN(2).pow(new BN(64)).subn(1)
     const { owner, userAccountX, userAccountY } = await createUserWithTokens(
       pair,
@@ -308,14 +340,15 @@ describe('limits', () => {
       owner
     )
 
-    const amount = new BN(1e10)
+    const amount = new BN(1e8)
 
     let priceBefore = (await market.get(pair)).sqrtPrice.v
     let prevFee = (await market.get(pair)).feeGrowthGlobalX.v
 
-    const chunk = 100
+    const chunk = 1
+    const repeats = 1
 
-    while (true) {
+    for (let i = 0; i < repeats; i++) {
       const swaps = new Array(chunk).fill(0).map(async (_, i) => {
         const oneWayTx = market.swapTransaction({
           pair,
@@ -359,5 +392,14 @@ describe('limits', () => {
       prevFee = poolAfter.feeGrowthGlobalX.v
       priceBefore = priceAfter
     }
+  })
+
+  it.only('high price', async () => {
+    const result = await createTokensAndPool(market, connection, wallet, 0, feeTier)
+    pair = result.pair
+    mintAuthority = result.mintAuthority
+
+    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
+    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
 })
