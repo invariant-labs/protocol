@@ -394,7 +394,7 @@ describe('limits', () => {
     }
   })
 
-  it.only('high price', async () => {
+  it.skip('high price', async () => {
     const result = await createTokensAndPool(market, connection, wallet, 0, feeTier)
     pair = result.pair
     mintAuthority = result.mintAuthority
