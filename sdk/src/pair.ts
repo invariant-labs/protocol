@@ -1,7 +1,7 @@
 import { PublicKey } from '@solana/web3.js'
 import { utils } from '@project-serum/anchor'
 import { FeeTier } from './market'
-import { getFeeTierAddress } from './utils'
+import { feeToTickSpacing, getFeeTierAddress } from './utils'
 
 const POOL_SEED = 'poolv1'
 
@@ -22,7 +22,11 @@ export class Pair {
       this.tokenX = second
       this.tokenY = first
     }
-    this.feeTier = feeTier
+
+    this.feeTier = {
+      fee: feeTier.fee,
+      tickSpacing: feeTier.tickSpacing ?? feeToTickSpacing(feeTier.fee)
+    }
     this.feeTierAddress = null
   }
 

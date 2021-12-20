@@ -88,8 +88,7 @@ export const createTokensAndPool = async (
   connection: Connection,
   payer: Keypair,
   initTick: number = 0,
-  fee: BN = new BN(600),
-  tickSpacing: number = 10
+  feeTier: FeeTier = FEE_TIERS[0]
 ) => {
   const mintAuthority = Keypair.generate()
 
@@ -99,14 +98,14 @@ export const createTokensAndPool = async (
     connection.requestAirdrop(mintAuthority.publicKey, 1e9)
   ])
 
-  const feeTier: FeeTier = {
-    fee: fromFee(fee),
-    tickSpacing
-  }
   const pair = new Pair(promiseResults[0].publicKey, promiseResults[1].publicKey, feeTier)
   const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, payer)
   const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, payer)
-  const feeTierAccount = await connection.getAccountInfo((await market.getFeeTierAddress(feeTier)).address)
+  const feeTierAccount = await connection.getAccountInfo(
+    (
+      await market.getFeeTierAddress(feeTier)
+    ).address
+  )
   if (feeTierAccount === null) {
     await market.createFeeTier(pair.feeTier, payer)
   }
