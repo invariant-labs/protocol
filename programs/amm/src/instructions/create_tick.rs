@@ -5,6 +5,7 @@ use crate::math::calculate_price_sqrt;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::structs::tickmap::Tickmap;
+use crate::util::check_tick;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 
@@ -45,6 +46,7 @@ pub fn handler(ctx: Context<CreateTick>, bump: u8, index: i32) -> ProgramResult 
     let pool = ctx.accounts.pool.load()?;
     let current_timestamp: u64 = Clock::get()?.unix_timestamp.try_into().unwrap();
 
+    check_tick(index, pool.tick_spacing)?;
     tickmap.flip(true, index, pool.tick_spacing);
 
     // init tick
