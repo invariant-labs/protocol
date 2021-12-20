@@ -67,9 +67,7 @@ export class Market {
   }
 
   async create({ pair, signer, initTick }: CreatePool) {
-    const { fee, tickSpacing } = pair.feeTier
     const tick = initTick || 0
-    const ts = tickSpacing ?? feeToTickSpacing(fee)
 
     const [poolAddress, bump] = await pair.getAddressAndBump(this.program.programId)
     const { address: feeTierAddress } = await this.getFeeTierAddress(pair.feeTier)
@@ -82,7 +80,7 @@ export class Market {
 
     const bitmapKeypair = Keypair.generate()
 
-    await this.program.rpc.createPool(bump, tick, fee, ts, {
+    await this.program.rpc.createPool(bump, tick, {
       accounts: {
         pool: poolAddress,
         feeTier: feeTierAddress,
@@ -328,8 +326,7 @@ export class Market {
     const state = await this.get(pair)
 
     const { tickAddress, tickBump } = await this.getTickAddress(pair, index)
-    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
-    return this.program.instruction.createTick(tickBump, feeTierAddress, index, {
+    return this.program.instruction.createTick(tickBump, index, {
       accounts: {
         tick: tickAddress,
         pool: await pair.getAddress(this.program.programId),
@@ -365,6 +362,7 @@ export class Market {
       accounts: {
         positionList: positionListAddress,
         owner: owner,
+        signer: owner,
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId
       }
@@ -392,11 +390,9 @@ export class Market {
     )
     const { positionListAddress } = await this.getPositionListAddress(owner)
     const poolAddress = await pair.getAddress(this.program.programId)
-    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
 
     return this.program.instruction.createPosition(
       positionBump,
-      feeTierAddress,
       lowerTick,
       upperTick,
       liquidityDelta,
@@ -516,32 +512,25 @@ export class Market {
       })
     )
 
-    const swapIx = this.program.instruction.swap(
-      feeTierAddress,
-      XtoY,
-      amount,
-      byAmountIn,
-      priceLimit,
-      {
-        remainingAccounts: remainingAccounts.map((pubkey) => {
-          return { pubkey, isWritable: true, isSigner: false }
-        }),
-        accounts: {
-          state: this.stateAddress,
-          pool: poolAddress,
-          tickmap: pool.tickmap,
-          tokenX: pool.tokenX,
-          tokenY: pool.tokenY,
-          reserveX: pool.tokenXReserve,
-          reserveY: pool.tokenYReserve,
-          owner,
-          accountX,
-          accountY,
-          programAuthority: this.programAuthority,
-          tokenProgram: TOKEN_PROGRAM_ID
-        }
+    const swapIx = this.program.instruction.swap(XtoY, amount, byAmountIn, priceLimit, {
+      remainingAccounts: remainingAccounts.map((pubkey) => {
+        return { pubkey, isWritable: true, isSigner: false }
+      }),
+      accounts: {
+        state: this.stateAddress,
+        pool: poolAddress,
+        tickmap: pool.tickmap,
+        tokenX: pool.tokenX,
+        tokenY: pool.tokenY,
+        reserveX: pool.tokenXReserve,
+        reserveY: pool.tokenYReserve,
+        owner,
+        accountX,
+        accountY,
+        programAuthority: this.programAuthority,
+        tokenProgram: TOKEN_PROGRAM_ID
       }
-    )
+    })
 
     const tx = new Transaction().add(swapIx)
     return tx
@@ -576,7 +565,6 @@ export class Market {
     const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
 
     return this.program.instruction.claimFee(
-      feeTierAddress,
       index,
       position.lowerTickIndex,
       position.upperTickIndex,
@@ -622,7 +610,7 @@ export class Market {
     const pool = await this.get(pair)
     const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
 
-    return this.program.instruction.withdrawProtocolFee(feeTierAddress, {
+    return this.program.instruction.withdrawProtocolFee({
       accounts: {
         state: this.stateAddress,
         pool: await pair.getAddress(this.program.programId),
@@ -670,10 +658,8 @@ export class Market {
       pair,
       position.upperTickIndex
     )
-    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
 
     return this.program.instruction.removePosition(
-      feeTierAddress,
       index,
       position.lowerTickIndex,
       position.upperTickIndex,
@@ -765,10 +751,8 @@ export class Market {
       owner,
       index
     )
-    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
 
     return this.program.instruction.updateSecondsPerLiquidity(
-      feeTierAddress,
       lowerTickIndex,
       upperTickIndex,
       index,
@@ -791,9 +775,8 @@ export class Market {
   async initializeOracle(pair: Pair, payer: Keypair) {
     const oracleKeypair = Keypair.generate()
     const poolAddress = await pair.getAddress(this.program.programId)
-    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
 
-    return await this.program.rpc.initializeOracle(feeTierAddress, {
+    return await this.program.rpc.initializeOracle({
       accounts: {
         pool: poolAddress,
         oracle: oracleKeypair.publicKey,

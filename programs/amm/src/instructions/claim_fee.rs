@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use crate::interfaces::send_tokens::SendTokens;
 use crate::structs::pool::Pool;
 use crate::structs::position::Position;
@@ -9,15 +11,16 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
 #[derive(Accounts)]
-#[instruction(fee_tier_address: Pubkey, index: u32, lower_tick_index: i32, upper_tick_index: i32)]
+#[instruction( index: u32, lower_tick_index: i32, upper_tick_index: i32)]
 pub struct ClaimFee<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
     #[account(mut,
-        seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
+        seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref(), &pool.load()?.fee.v.to_le_bytes(), &pool.load()?.tick_spacing.to_le_bytes()],
         bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,
+    
     #[account(mut,
         seeds = [b"positionv1",
         owner.to_account_info().key.as_ref(),
@@ -94,10 +97,6 @@ impl<'info> interfaces::SendTokens<'info> for ClaimFee<'info> {
 
 pub fn handler(
     ctx: Context<ClaimFee>,
-    _fee_tier_address: Pubkey,
-    _index: u32,
-    _lower_tick_index: i32,
-    _upper_tick_index: i32,
 ) -> ProgramResult {
     msg!("INVARIANT: CLAIM FEE");
 
@@ -106,7 +105,7 @@ pub fn handler(
     let position = &mut ctx.accounts.position.load_mut()?;
     let lower_tick = &mut ctx.accounts.lower_tick.load_mut()?;
     let upper_tick = &mut ctx.accounts.upper_tick.load_mut()?;
-    let current_timestamp = Clock::get()?.unix_timestamp as u64;
+    let current_timestamp = Clock::get()?.unix_timestamp.try_into().unwrap();
 
     check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
 

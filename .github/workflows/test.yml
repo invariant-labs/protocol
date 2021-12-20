@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node:
+        case:
           [
             'npm run test:swap',
             'npm run test:cross',
@@ -31,23 +31,22 @@ jobs:
             'npm run test:slippage',
             'npm run test:fee-tier',
             'npm run test:simulate-swap',
+            'npm run test:big-swap',
             'npm run test:timestamp',
             'npm run test:claim-amount',
             'npm run test:create',
             'npm run test:stake',
             'npm run test:withdraw-staker',
             'npm run test:end-incentive',
-            'npm run test:multicall'
-            'npm run test:oracle'
-            
-            
+            'npm run test:multicall',
+            'npm run test:oracle',
             'cargo test'
           ]
     steps:
       - uses: actions/checkout@v2
       - name: test
         run: |
-          echo "${{ matrix.node }}"
+          echo "${{ matrix.case }}"
       - uses: actions/cache@v2
         name: Cache Cargo registry + index
         id: cache-anchor
@@ -94,6 +93,7 @@ jobs:
           npm install -g mocha
           npm install -g ts-mocha
           npm install -g typescript
+          npm install -g @project-serum/anchor
           ts-mocha -h
       - name: install essential
         run: |
@@ -119,17 +119,21 @@ jobs:
         run: |
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           anchor build
-      - name: build sdk
+      - name: build amm sdk
         run: |
           npm install
           npm run build
         working-directory: ./sdk
+      - name: build staker sdk
+        run: |
+          npm install
+          npm run build
+        working-directory: ./sdk-staker
       - name: install
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: |
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           npm install
       - name: test
         run: |
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
-          ${{ matrix.node }}
+          ${{ matrix.case }}

@@ -12,7 +12,6 @@ import { DENOMINATOR } from '@invariant-labs/sdk'
 import { assert } from 'chai'
 import {
   fromFee,
-  calculateFeeGrowthInside,
   calculateClaimAmount,
   tou64
 } from '@invariant-labs/sdk/lib/utils'
@@ -153,23 +152,16 @@ describe('Withdraw tests', () => {
     const tickLower = await market.getTick(pair, -50)
     const createdPool = await market.get(pair)
 
-    //calculate fee growth inside
-    const [fee_growth_inside_x, fee_growth_inside_y] = calculateFeeGrowthInside({
-      tickUpper: tickUpper,
+    //calculate claim amount
+    const [tokens_owed_x_total, tokens_owed_y_total] = calculateClaimAmount({
+      position: positionStruct,
       tickLower: tickLower,
+      tickUpper: tickUpper,
       tickCurrent: createdPool.currentTickIndex,
       feeGrowthGlobalX: createdPool.feeGrowthGlobalX,
       feeGrowthGlobalY: createdPool.feeGrowthGlobalY
     })
-
-    //calculate claim amount
-    const [tokens_owed_x_total, tokens_owed_y_total] = calculateClaimAmount({
-      position: positionStruct,
-      feeGrowthInsideX: { v: fee_growth_inside_x },
-      feeGrowthInsideY: { v: fee_growth_inside_y }
-    })
-
-    assert.ok(tokens_owed_x_total.eq(new BN(5400000)))
-    assert.ok(tokens_owed_y_total.eq(new BN(10800000)))
+    assert.ok(tokens_owed_x_total.eq(new BN(5400000000000)))
+    assert.ok(tokens_owed_y_total.eq(new BN(10800000000000)))
   })
 })

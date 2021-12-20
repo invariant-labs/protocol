@@ -6,11 +6,9 @@ use anchor_lang::solana_program::system_program;
 use anchor_spl::token::Mint;
 
 #[derive(Accounts)]
-#[instruction(fee_tier_address: Pubkey)]
-
 pub struct InitializeOracle<'info> {
     #[account(mut,
-        seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
+        seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref(), &pool.load()?.fee.v.to_le_bytes(), &pool.load()?.tick_spacing.to_le_bytes()],
         bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,

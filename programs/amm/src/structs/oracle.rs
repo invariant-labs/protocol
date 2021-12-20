@@ -4,7 +4,6 @@ use anchor_lang::prelude::*;
 const SIZE: u16 = 256; // UPDATE IN ARRAYS AS WELL!
 
 #[account(zero_copy)]
-#[derive(PartialEq, Debug)]
 pub struct Oracle {
     pub data: [Record; 256],
     pub head: u16,
@@ -13,21 +12,9 @@ pub struct Oracle {
 }
 
 #[zero_copy]
-#[derive(PartialEq, Default, Debug)]
 pub struct Record {
     pub timestamp: u64,
     pub price: Decimal,
-}
-
-impl Default for Oracle {
-    fn default() -> Oracle {
-        Oracle {
-            data: [Record::default(); 256],
-            head: SIZE - 1,
-            amount: 0,
-            size: SIZE,
-        }
-    }
 }
 
 impl Oracle {
@@ -54,7 +41,15 @@ mod tests {
 
     #[test]
     fn add_recording() {
-        let mut oracle = Oracle::default();
+        let mut oracle = Oracle {
+            data: [Record {
+                price: Decimal::from_integer(0),
+                timestamp: 0,
+            }; 256],
+            head: SIZE - 1,
+            amount: 0,
+            size: SIZE,
+        };
         assert_eq!({ oracle.size }, SIZE);
 
         let mut index: u64 = 0;

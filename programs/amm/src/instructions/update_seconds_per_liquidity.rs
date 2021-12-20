@@ -10,10 +10,10 @@ use anchor_spl::token::Mint;
 use math::*;
 
 #[derive(Accounts)]
-#[instruction(fee_tier_address: Pubkey, lower_tick_index: i32, upper_tick_index: i32, index: i32)]
+#[instruction(lower_tick_index: i32, upper_tick_index: i32, index: i32)]
 pub struct UpdateSecondsPerLiquidity<'info> {
     #[account(mut,
-        seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
+        seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref(), &pool.load()?.fee.v.to_le_bytes(), &pool.load()?.tick_spacing.to_le_bytes()],
         bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,
@@ -44,13 +44,7 @@ pub struct UpdateSecondsPerLiquidity<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
-pub fn handler(
-    ctx: Context<UpdateSecondsPerLiquidity>,
-    _fee_tier_address: Pubkey,
-    _lower_tick_index: i32,
-    _upper_tick_index: i32,
-    _index: i32,
-) -> ProgramResult {
+pub fn handler(ctx: Context<UpdateSecondsPerLiquidity>) -> ProgramResult {
     msg!("INVARIANT: UPDATE SECOND PER LIQUIDITY");
 
     let pool = &mut ctx.accounts.pool.load_mut()?;

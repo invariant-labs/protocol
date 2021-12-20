@@ -81,7 +81,8 @@ describe('position', () => {
         signer: admin,
         initTick
       })
-    ), INVARIANT_ERRORS.INVALID_POOL_TOKEN_ADDRESSES
+    ),
+      INVARIANT_ERRORS.INVALID_POOL_TOKEN_ADDRESSES
   })
   it('#create()', async () => {
     // fee tier 0.02% / 4
@@ -127,7 +128,7 @@ describe('position', () => {
     const upperTick = 0
 
     it('#createTick(lower)', async () => {
-      const ix = await market.createTickInstruction(pair, lowerTick, wallet.publicKey,)
+      const ix = await market.createTickInstruction(pair, lowerTick, wallet.publicKey)
       await signAndSend(new Transaction().add(ix), [wallet], connection)
 
       const expectedZeroDecimal = new BN(0)

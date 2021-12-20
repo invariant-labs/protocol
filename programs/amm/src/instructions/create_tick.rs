@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use crate::decimal::Decimal;
 use crate::math::calculate_price_sqrt;
 use crate::structs::pool::Pool;
@@ -7,7 +9,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 
 #[derive(Accounts)]
-#[instruction(bump: u8, fee_tier_address: Pubkey, index: i32)]
+#[instruction(bump: u8, index: i32)]
 pub struct CreateTick<'info> {
     #[account(init,
         seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &index.to_le_bytes()],
@@ -15,7 +17,7 @@ pub struct CreateTick<'info> {
     )]
     pub tick: AccountLoader<'info, Tick>,
     #[account(
-        seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
+        seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref(), &pool.load()?.fee.v.to_le_bytes(), &pool.load()?.tick_spacing.to_le_bytes()],
         bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,
@@ -35,20 +37,15 @@ pub struct CreateTick<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
-pub fn handler(
-    ctx: Context<CreateTick>,
-    bump: u8,
-    _fee_tier_address: Pubkey,
-    index: i32,
-) -> ProgramResult {
+pub fn handler(ctx: Context<CreateTick>, bump: u8, index: i32) -> ProgramResult {
     msg!("INVARIANT: CREATE_TICK");
 
     let mut tick = ctx.accounts.tick.load_init()?;
     let mut tickmap = ctx.accounts.tickmap.load_mut()?;
     let pool = ctx.accounts.pool.load()?;
-    let current_timestamp = Clock::get()?.unix_timestamp as u64;
+    let current_timestamp: u64 = Clock::get()?.unix_timestamp.try_into().unwrap();
 
-    tickmap.set(true, index, pool.tick_spacing);
+    tickmap.flip(true, index, pool.tick_spacing);
 
     // init tick
     let below_current_tick = index <= pool.current_tick_index;

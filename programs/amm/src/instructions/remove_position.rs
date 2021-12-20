@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use crate::decimal::Decimal;
 use crate::interfaces::send_tokens::SendTokens;
 use crate::structs::pool::Pool;
@@ -12,7 +14,7 @@ use anchor_spl::token;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
 #[derive(Accounts)]
-#[instruction(fee_tier_address: Pubkey, index: i32, lower_tick_index: i32, upper_tick_index: i32)]
+#[instruction( index: i32, lower_tick_index: i32, upper_tick_index: i32)]
 pub struct RemovePosition<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
@@ -37,7 +39,7 @@ pub struct RemovePosition<'info> {
     )]
     pub last_position: AccountLoader<'info, Position>,
     #[account(mut,
-        seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
+        seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref(), &pool.load()?.fee.v.to_le_bytes(), &pool.load()?.tick_spacing.to_le_bytes()],
         bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,
@@ -116,7 +118,6 @@ impl<'info> SendTokens<'info> for RemovePosition<'info> {
 
 pub fn handler(
     ctx: Context<RemovePosition>,
-    _fee_tier_address: Pubkey,
     index: u32,
     lower_tick_index: i32,
     upper_tick_index: i32,
@@ -128,7 +129,7 @@ pub fn handler(
     let removed_position = &mut ctx.accounts.removed_position.load_mut()?;
     let pool = &mut ctx.accounts.pool.load_mut()?;
     let tickmap = &mut ctx.accounts.tickmap.load_mut()?;
-    let current_timestamp = Clock::get()?.unix_timestamp as u64;
+    let current_timestamp = Clock::get()?.unix_timestamp.try_into().unwrap();
 
     // closing tick can't be in the same scope as loaded tick
     let close_lower;
@@ -165,7 +166,7 @@ pub fn handler(
             ctx.accounts.owner.to_account_info(),
         )
         .unwrap();
-        tickmap.set(false, lower_tick_index, pool.tick_spacing);
+        tickmap.flip(false, lower_tick_index, pool.tick_spacing);
     }
     if close_upper {
         close(
@@ -173,7 +174,7 @@ pub fn handler(
             ctx.accounts.owner.to_account_info(),
         )
         .unwrap();
-        tickmap.set(false, upper_tick_index, pool.tick_spacing);
+        tickmap.flip(false, upper_tick_index, pool.tick_spacing);
     }
 
     // Remove empty position

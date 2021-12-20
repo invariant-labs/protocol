@@ -2,16 +2,17 @@ use crate::decimal::Decimal;
 use crate::interfaces::SendTokens;
 use crate::structs::pool::Pool;
 use crate::structs::state::State;
+use crate::SEED;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, TokenAccount, Transfer};
 
 #[derive(Accounts)]
-#[instruction(fee_tier_address: Pubkey)]
 pub struct WithdrawProtocolFee<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
     #[account(mut,
-        seeds = [b"poolv1", fee_tier_address.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()], bump = pool.load()?.bump
+        seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref(), &pool.load()?.fee.v.to_le_bytes(), &pool.load()?.tick_spacing.to_le_bytes()],
+        bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,
     #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x)]
@@ -70,11 +71,7 @@ impl<'info> SendTokens<'info> for WithdrawProtocolFee<'info> {
     }
 }
 
-pub fn handler(
-    ctx: Context<WithdrawProtocolFee>,
-    seed: &str,
-    _fee_tier_address: Pubkey,
-) -> ProgramResult {
+pub fn handler(ctx: Context<WithdrawProtocolFee>) -> ProgramResult {
     msg!("INVARIANT: WITHDRAW PROTOCOL FEE");
 
     let state = ctx.accounts.state.load()?;
@@ -87,7 +84,7 @@ pub fn handler(
     pool.fee_protocol_token_y =
         pool.fee_protocol_token_y - Decimal::from_integer(fee_to_collect_y.into());
 
-    let seeds = &[seed.as_bytes(), &[state.nonce]];
+    let seeds = &[SEED.as_bytes(), &[state.nonce]];
     let signer = &[&seeds[..]];
 
     let cpi_ctx_x = ctx.accounts.send_x().with_signer(signer);

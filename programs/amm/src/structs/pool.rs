@@ -35,9 +35,9 @@ impl Pool {
         }
         let fee_growth = amount.big_div(self.liquidity);
         if x {
-            self.fee_growth_global_x = self.fee_growth_global_x + fee_growth;
+            self.fee_growth_global_x.v = self.fee_growth_global_x.v + fee_growth.v;
         } else {
-            self.fee_growth_global_y = self.fee_growth_global_y + fee_growth;
+            self.fee_growth_global_y.v = self.fee_growth_global_y.v + fee_growth.v;
         }
     }
 

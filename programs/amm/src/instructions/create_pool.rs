@@ -1,4 +1,4 @@
-use std::cmp::Ordering;
+use std::{cmp::Ordering, convert::TryInto};
 
 use crate::decimal::Decimal;
 use crate::math::calculate_price_sqrt;
@@ -10,15 +10,15 @@ use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{Mint, TokenAccount};
 
 #[derive(Accounts)]
-#[instruction(bump: u8, init_tick: i32, fee: u64, tick_spacing: u16)]
+#[instruction(bump: u8)]
 pub struct CreatePool<'info> {
     #[account(init,
-        seeds = [b"poolv1", fee_tier.to_account_info().key.as_ref(), token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref()],
+        seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref(), &fee_tier.load()?.fee.v.to_le_bytes(), &fee_tier.load()?.tick_spacing.to_le_bytes()],
         bump = bump, payer = payer
     )]
     pub pool: AccountLoader<'info, Pool>,
     #[account(
-        seeds = [b"feetierv1", program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()],
+        seeds = [b"feetierv1", program_id.as_ref(), &fee_tier.load()?.fee.v.to_le_bytes(), &fee_tier.load()?.tick_spacing.to_le_bytes()],
         bump = fee_tier.load()?.bump
     )]
     pub fee_tier: AccountLoader<'info, FeeTier>,
@@ -37,13 +37,7 @@ pub struct CreatePool<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
-pub fn handler(
-    ctx: Context<CreatePool>,
-    bump: u8,
-    init_tick: i32,
-    _fee: u64,
-    _tick_spacing: u16,
-) -> ProgramResult {
+pub fn handler(ctx: Context<CreatePool>, bump: u8, init_tick: i32) -> ProgramResult {
     msg!("INVARIANT: CREATE POOL");
 
     let token_x_address = ctx.accounts.token_x.to_account_info().key;
@@ -58,7 +52,7 @@ pub fn handler(
 
     let pool = &mut ctx.accounts.pool.load_init()?;
     let fee_tier = ctx.accounts.fee_tier.load()?;
-    let current_timestamp = Clock::get()?.unix_timestamp as u64;
+    let current_timestamp: u64 = Clock::get()?.unix_timestamp.try_into().unwrap();
 
     **pool = Pool {
         token_x: *token_x_address,
