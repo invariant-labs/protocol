@@ -14,18 +14,14 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
 #[derive(Accounts)]
-// REVIEW why pass address via params not context?
-#[instruction(fee: u64, tick_spacing: u16)]
 pub struct Swap<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
-    #[account(mut, seeds = [b"poolv1", fee_tier.key().as_ref(), token_x.key().as_ref(), token_y.key().as_ref()], bump = pool.load()?.bump)]
-    pub pool: AccountLoader<'info, Pool>,
-    #[account(
-        seeds = [b"feetierv1", program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()],
-        bump = fee_tier.load()?.bump
+    #[account(mut,         
+        seeds = [b"poolv1", token_x.key().as_ref(), token_y.key().as_ref(), &pool.load()?.fee.v.to_le_bytes(), &pool.load()?.tick_spacing.to_le_bytes()],
+        bump = pool.load()?.bump
     )]
-    pub fee_tier: AccountLoader<'info, FeeTier>,
+    pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
         constraint = &tickmap.key() == &pool.load()?.tickmap,
         constraint = tickmap.to_account_info().owner == program_id,

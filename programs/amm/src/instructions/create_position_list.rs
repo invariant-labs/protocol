@@ -8,7 +8,7 @@ pub struct CreatePositionList<'info> {
     #[account(init,
         seeds = [b"positionlistv1", owner.key().as_ref()],
         bump = bump,
-        payer = owner
+        payer = signer
     )]
     pub position_list: AccountLoader<'info, PositionList>,
     pub owner: AccountInfo<'info>,

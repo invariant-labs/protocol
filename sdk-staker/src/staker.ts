@@ -114,11 +114,7 @@ export class Staker {
   }
 
   public async getStake(incentive: PublicKey, pool: PublicKey, id: BN) {
-    const [userStakeAddress, userStakeBump] = await this.getUserStakeAddressAndBump(
-      incentive,
-      pool,
-      id
-    )
+    const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
     return (await this.program.account.userStake.fetch(userStakeAddress)) as Stake
   }
 
@@ -138,11 +134,7 @@ export class Staker {
       this.programId
     )
 
-    const [userStakeAddress, _] = await this.getUserStakeAddressAndBump(
-      incentive,
-      pool,
-      id
-    )
+    const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
 
     return (await this.program.instruction.withdraw(index, nonce, {
       accounts: {

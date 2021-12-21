@@ -66,12 +66,11 @@ export class Market {
     return instance
   }
 
-  async create({ pair, signer, initTick }: CreatePool) {
-    const { fee, tickSpacing } = pair.feeTier
+  async create({ pair, signer, initTick, protocolFee }: CreatePool) {
     const tick = initTick || 0
-    const ts = tickSpacing ?? feeToTickSpacing(fee)
 
     const { address: stateAddress } = await this.getStateAddress()
+    console.log("stateAddress: ", stateAddress.toString())
 
     const [poolAddress, bump] = await pair.getAddressAndBump(this.program.programId)
     const { address: feeTierAddress } = await this.getFeeTierAddress(pair.feeTier)
@@ -83,7 +82,9 @@ export class Market {
     const tokenYReserve = await tokenY.createAccount(this.programAuthority)
 
     const bitmapKeypair = Keypair.generate()
-    await this.program.rpc.createPool(bump, tick, fee, ts, {
+    
+    console.log("############################")
+    await this.program.rpc.createPool(bump, tick, protocolFee, {
       accounts: {
         state: stateAddress,
         pool: poolAddress,
@@ -100,6 +101,7 @@ export class Market {
       signers: [signer, bitmapKeypair],
       instructions: [await this.program.account.tickmap.createInstruction(bitmapKeypair)]
     })
+    console.log("############################")
     
   }
 
@@ -347,15 +349,11 @@ export class Market {
 
   async createTickInstruction(pair: Pair, index: number, payer: PublicKey) {
     const state = await this.getPool(pair)
-
     const { tickAddress, tickBump } = await this.getTickAddress(pair, index)
-    const fee = pair.feeTier.fee
-    const tickSpacing = pair.feeTier.tickSpacing
-    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
-    return this.program.instruction.createTick(tickBump, fee, tickSpacing, index, {
+
+    return this.program.instruction.createTick(tickBump, index, {
       accounts: {
         tick: tickAddress,
-        feeTier: feeTierAddress,
         pool: await pair.getAddress(this.program.programId),
         tickmap: state.tickmap,
         payer,
@@ -428,22 +426,17 @@ export class Market {
     )
     const { positionListAddress } = await this.getPositionListAddress(owner)
     const poolAddress = await pair.getAddress(this.program.programId)
-    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
-    const { fee, tickSpacing } = pair.feeTier
     const tickmapAddress = await this.getTickmap(pair)
 
     return this.program.instruction.createPosition(
       positionBump,
       lowerTick,
       upperTick,
-      fee,
-      tickSpacing,
       liquidityDelta,
       {
         accounts: {
           state: this.stateAddress,
           pool: poolAddress,
-          feeTier: feeTierAddress,
           positionList: positionListAddress,
           position: positionAddress,
           tickmap: tickmapAddress,
@@ -523,8 +516,6 @@ export class Market {
     const { pair, owner, XtoY, amount, knownPrice, slippage, accountX, accountY, byAmountIn} = swap
     const pool = await this.getPool(pair)
     const tickmap = await this.getTickmap(pair)
-    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
-    const { fee, tickSpacing } = pair.feeTier
 
     const priceLimit =
       overridePriceLimit ?? calculatePriceAfterSlippage(knownPrice, slippage, !XtoY).v
@@ -552,34 +543,28 @@ export class Market {
       })
     )
 
-    return this.program.instruction.swap(
-      XtoY,
-      amount,
-      byAmountIn,
-      priceLimit,
-      fee,
-      tickSpacing,
-      {
-        remainingAccounts: remainingAccounts.map((pubkey) => {
-          return { pubkey, isWritable: true, isSigner: false }
-        }),
-        accounts: {
-          state: this.stateAddress,
-          pool: await pair.getAddress(this.program.programId),
-          feeTier: feeTierAddress,
-          tickmap: pool.tickmap,
-          tokenX: pool.tokenX,
-          tokenY: pool.tokenY,
-          reserveX: pool.tokenXReserve,
-          reserveY: pool.tokenYReserve,
-          owner,
-          accountX,
-          accountY,
-          programAuthority: this.programAuthority,
-          tokenProgram: TOKEN_PROGRAM_ID
-        }
+    const swapIx = this.program.instruction.swap(XtoY, amount, byAmountIn, priceLimit, {
+      remainingAccounts: remainingAccounts.map((pubkey) => {
+        return { pubkey, isWritable: true, isSigner: false }
+      }),
+      accounts: {
+        state: this.stateAddress,
+        pool: await pair.getAddress(this.program.programId),
+        tickmap: pool.tickmap,
+        tokenX: pool.tokenX,
+        tokenY: pool.tokenY,
+        reserveX: pool.tokenXReserve,
+        reserveY: pool.tokenYReserve,
+        owner,
+        accountX,
+        accountY,
+        programAuthority: this.programAuthority,
+        tokenProgram: TOKEN_PROGRAM_ID
       }
-    )
+    })
+
+    const tx = new Transaction().add(swapIx)
+    return tx
   }
 
   async getReserveBalances(pair: Pair, tokenX: Token, tokenY: Token) {
@@ -606,20 +591,15 @@ export class Market {
       pair,
       position.upperTickIndex
     )
-    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
-    const { fee, tickSpacing } = pair.feeTier
 
     return this.program.instruction.claimFee(
       index,
       position.lowerTickIndex,
       position.upperTickIndex,
-      fee,
-      tickSpacing,
       {
         accounts: {
           state: this.stateAddress,
           pool: await pair.getAddress(this.program.programId),
-          feeTier: feeTierAddress,
           position: positionAddress,
           lowerTick: lowerTickAddress,
           upperTick: upperTickAddress,
@@ -652,14 +632,11 @@ export class Market {
   async withdrawProtocolFeeInstruction(withdrawProtocolFee: WithdrawProtocolFee) {
     const { pair, accountX, accountY, admin } = withdrawProtocolFee
     const pool = await this.getPool(pair)
-    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
-    const { fee, tickSpacing } = pair.feeTier
 
-    return this.program.instruction.withdrawProtocolFee(fee, tickSpacing, {
+    return this.program.instruction.withdrawProtocolFee({
       accounts: {
         state: this.stateAddress,
         pool: await pair.getAddress(this.program.programId),
-        feeTier: feeTierAddress,
         tokenX: pool.tokenX,
         tokenY: pool.tokenY,
         reserveX: pool.tokenXReserve,
@@ -708,19 +685,14 @@ export class Market {
       pair,
       position.upperTickIndex
     )
-    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
-    const { fee, tickSpacing } = pair.feeTier
 
     return this.program.instruction.removePosition(
       index,
       position.lowerTickIndex,
       position.upperTickIndex,
-      fee,
-      tickSpacing,
       {
         accounts: {
           state: this.stateAddress,
-          feeTier: feeTierAddress,
           owner: owner,
           removedPosition: removedPositionAddress,
           positionList: positionListAddress,
@@ -804,19 +776,14 @@ export class Market {
       owner,
       index
     )
-    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
-    const { fee, tickSpacing } = pair.feeTier
 
     return this.program.instruction.updateSecondsPerLiquidity(
       lowerTickIndex,
       upperTickIndex,
       index,
-      fee,
-      tickSpacing,
       {
         accounts: {
           pool: poolAddress,
-          feeTier: feeTierAddress,
           lowerTick: lowerTickAddress,
           upperTick: upperTickAddress,
           position: positionAddress,
@@ -833,13 +800,10 @@ export class Market {
   async initializeOracle(pair: Pair, payer: Keypair) {
     const oracleKeypair = Keypair.generate()
     const poolAddress = await pair.getAddress(this.program.programId)
-    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
-    const { fee, tickSpacing } = pair.feeTier
 
-    return await this.program.rpc.initializeOracle(fee, tickSpacing, {
+    return await this.program.rpc.initializeOracle({
       accounts: {
         pool: poolAddress,
-        feeTier: feeTierAddress,
         oracle: oracleKeypair.publicKey,
         tokenX: pair.tokenX,
         tokenY: pair.tokenY,
@@ -972,6 +936,7 @@ export interface CreatePool {
   pair: Pair
   signer: Keypair
   initTick?: number
+  protocolFee: Decimal
 }
 export interface ClaimFee {
   pair: Pair

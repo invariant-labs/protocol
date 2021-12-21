@@ -39,7 +39,7 @@ pub fn get_search_limit(tick: i32, tick_spacing: u16, up: bool) -> i32 {
 }
 
 impl Tickmap {
-    pub fn set(&mut self, value: bool, tick: i32, tick_spacing: u16) {
+    pub fn flip(&mut self, value: bool, tick: i32, tick_spacing: u16) {
         assert!(
             self.get(tick, tick_spacing) != value,
             "tick initialize tick again"
@@ -235,9 +235,9 @@ mod tests {
                 let index = 0;
 
                 assert_eq!(map.get(index, 1), false);
-                map.set(true, index, 1);
+                map.flip(true, index, 1);
                 assert_eq!(map.get(index, 1), true);
-                map.set(false, index, 1);
+                map.flip(false, index, 1);
                 assert_eq!(map.get(index, 1), false);
             }
             // small
@@ -245,9 +245,9 @@ mod tests {
                 let index = 7;
 
                 assert_eq!(map.get(index, 1), false);
-                map.set(true, index, 1);
+                map.flip(true, index, 1);
                 assert_eq!(map.get(index, 1), true);
-                map.set(false, index, 1);
+                map.flip(false, index, 1);
                 assert_eq!(map.get(index, 1), false);
             }
             // big
@@ -255,9 +255,9 @@ mod tests {
                 let index = TICK_LIMIT - 1;
 
                 assert_eq!(map.get(index, 1), false);
-                map.set(true, index, 1);
+                map.flip(true, index, 1);
                 assert_eq!(map.get(index, 1), true);
-                map.set(false, index, 1);
+                map.flip(false, index, 1);
                 assert_eq!(map.get(index, 1), false);
             }
             // negative
@@ -265,9 +265,9 @@ mod tests {
                 let index = TICK_LIMIT - 40;
 
                 assert_eq!(map.get(index, 1), false);
-                map.set(true, index, 1);
+                map.flip(true, index, 1);
                 assert_eq!(map.get(index, 1), true);
-                map.set(false, index, 1);
+                map.flip(false, index, 1);
                 assert_eq!(map.get(index, 1), false);
             }
             // tick spacing
@@ -276,9 +276,9 @@ mod tests {
                 let tick_spacing = 1000;
 
                 assert_eq!(map.get(index, tick_spacing), false);
-                map.set(true, index, tick_spacing);
+                map.flip(true, index, tick_spacing);
                 assert_eq!(map.get(index, tick_spacing), true);
-                map.set(false, index, tick_spacing);
+                map.flip(false, index, tick_spacing);
                 assert_eq!(map.get(index, tick_spacing), false);
             }
         }
@@ -289,14 +289,14 @@ mod tests {
         // Simple
         {
             let mut map = Tickmap::default();
-            map.set(true, 5, 1);
+            map.flip(true, 5, 1);
             assert_eq!(map.next_initialized(0, 1), Some(5));
         }
         // Multiple
         {
             let mut map = Tickmap::default();
-            map.set(true, 50, 10);
-            map.set(true, 100, 10);
+            map.flip(true, 50, 10);
+            map.flip(true, 100, 10);
             assert_eq!(map.next_initialized(0, 10), Some(50));
             assert_eq!(map.next_initialized(50, 10), Some(100));
         }
@@ -304,28 +304,28 @@ mod tests {
         {
             let mut map = Tickmap::default();
 
-            map.set(true, 0, 10);
+            map.flip(true, 0, 10);
             assert_eq!(map.next_initialized(0, 10), None);
         }
         // Just below limit
         {
             let mut map = Tickmap::default();
 
-            map.set(true, 0, 1);
+            map.flip(true, 0, 1);
             assert_eq!(map.next_initialized(-TICK_SEARCH_RANGE, 1), Some(0));
         }
         // At limit
         {
             let mut map = Tickmap::default();
 
-            map.set(true, 0, 1);
+            map.flip(true, 0, 1);
             assert_eq!(map.next_initialized(-TICK_SEARCH_RANGE - 1, 1), None);
         }
         // Farther than limit
         {
             let mut map = Tickmap::default();
 
-            map.set(true, TICK_LIMIT - 10, 1);
+            map.flip(true, TICK_LIMIT - 10, 1);
             assert_eq!(map.next_initialized(-TICK_LIMIT + 1, 1), None);
         }
     }
@@ -335,14 +335,14 @@ mod tests {
         // Simple
         {
             let mut map = Tickmap::default();
-            map.set(true, -5, 1);
+            map.flip(true, -5, 1);
             assert_eq!(map.prev_initialized(0, 1), Some(-5));
         }
         // Multiple
         {
             let mut map = Tickmap::default();
-            map.set(true, -50, 10);
-            map.set(true, -100, 10);
+            map.flip(true, -50, 10);
+            map.flip(true, -100, 10);
             assert_eq!(map.prev_initialized(0, 10), Some(-50));
             assert_eq!(map.prev_initialized(-50, 10), Some(-50));
         }
@@ -350,35 +350,35 @@ mod tests {
         {
             let mut map = Tickmap::default();
 
-            map.set(true, 0, 10);
+            map.flip(true, 0, 10);
             assert_eq!(map.prev_initialized(0, 10), Some(0));
         }
         // Next is last
         {
             let mut map = Tickmap::default();
 
-            map.set(true, 10, 10);
+            map.flip(true, 10, 10);
             assert_eq!(map.prev_initialized(0, 10), None);
         }
         // Just below limit
         {
             let mut map = Tickmap::default();
 
-            map.set(true, 0, 1);
+            map.flip(true, 0, 1);
             assert_eq!(map.prev_initialized(TICK_SEARCH_RANGE, 1), Some(0));
         }
         // At limit
         {
             let mut map = Tickmap::default();
 
-            map.set(true, 0, 1);
+            map.flip(true, 0, 1);
             assert_eq!(map.prev_initialized(TICK_SEARCH_RANGE + 1, 1), None);
         }
         // Farther than limit
         {
             let mut map = Tickmap::default();
 
-            map.set(true, -TICK_LIMIT + 1, 1);
+            map.flip(true, -TICK_LIMIT + 1, 1);
             assert_eq!(map.prev_initialized(TICK_LIMIT - 1, 1), None);
         }
     }

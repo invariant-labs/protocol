@@ -11,17 +11,15 @@ use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{Mint, Token};
 
 #[derive(Accounts)]
-#[instruction(bump: u8, fee: u64, tick_spacing: u16, index: i32)]
+#[instruction(bump: u8, index: i32)]
 pub struct CreateTick<'info> {
     #[account(init,
         seeds = [b"tickv1", pool.key().as_ref(), &index.to_le_bytes()],
         bump = bump, payer = payer
     )]
     pub tick: AccountLoader<'info, Tick>,
-    #[account(seeds = [b"feetierv1", program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()], bump = fee_tier.load()?.bump)]
-    pub fee_tier: AccountLoader<'info, FeeTier>,
     #[account(
-        seeds = [b"poolv1", fee_tier.key().as_ref(), token_x.key().as_ref(), token_y.key().as_ref()],
+        seeds = [b"poolv1", token_x.key().as_ref(), token_y.key().as_ref(), &pool.load()?.fee.v.to_le_bytes(), &pool.load()?.tick_spacing.to_le_bytes()],
         bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,

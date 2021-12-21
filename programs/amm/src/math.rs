@@ -321,29 +321,41 @@ pub fn calculate_fee_growth_inside(
     let fee_growth_below_x = if current_above_lower {
         tick_lower.fee_growth_outside_x
     } else {
-        fee_growth_global_x - tick_lower.fee_growth_outside_x
+        Decimal {
+            v: fee_growth_global_x.v - tick_lower.fee_growth_outside_x.v,
+        }
     };
     let fee_growth_below_y = if current_above_lower {
         tick_lower.fee_growth_outside_y
     } else {
-        fee_growth_global_y - tick_lower.fee_growth_outside_y
+        Decimal {
+            v: fee_growth_global_y.v - tick_lower.fee_growth_outside_y.v,
+        }
     };
 
     // calculate fee growth above
     let fee_growth_above_x = if current_below_upper {
         tick_upper.fee_growth_outside_x
     } else {
-        fee_growth_global_x - tick_upper.fee_growth_outside_x
+        Decimal {
+            v: fee_growth_global_x.v - tick_upper.fee_growth_outside_x.v,
+        }
     };
     let fee_growth_above_y = if current_below_upper {
         tick_upper.fee_growth_outside_y
     } else {
-        fee_growth_global_y - tick_upper.fee_growth_outside_y
+        Decimal {
+            v: fee_growth_global_y.v - tick_upper.fee_growth_outside_y.v,
+        }
     };
 
     // calculate fee growth inside
-    let fee_growth_inside_x = fee_growth_global_x - fee_growth_below_x - fee_growth_above_x;
-    let fee_growth_inside_y = fee_growth_global_y - fee_growth_below_y - fee_growth_above_y;
+    let fee_growth_inside_x = Decimal {
+        v: fee_growth_global_x.v - fee_growth_below_x.v - fee_growth_above_x.v,
+    };
+    let fee_growth_inside_y = Decimal {
+        v: fee_growth_global_y.v - fee_growth_below_y.v - fee_growth_above_y.v,
+    };
 
     (fee_growth_inside_x, fee_growth_inside_y)
 }
@@ -812,7 +824,7 @@ mod tests {
         let mut tick_upper = Tick {
             index: 2,
             fee_growth_outside_x: Decimal::from_integer(0),
-            fee_growth_outside_y: Decimal::new(0),
+            fee_growth_outside_y: Decimal::from_integer(0),
             ..Default::default()
         };
         // current tick inside range
@@ -923,6 +935,41 @@ mod tests {
 
             assert_eq!(fee_growth_inside.0, Decimal::from_integer(13)); // x fee growth inside
             assert_eq!(fee_growth_inside.1, Decimal::from_integer(12)); // y fee growth inside
+        }
+
+        {
+            let tick_current = 0;
+            let fee_growth_global_x = Decimal::from_integer(20);
+            let fee_growth_global_y = Decimal::from_integer(20);
+            tick_lower = Tick {
+                index: -20,
+                fee_growth_outside_x: Decimal::from_integer(20),
+                fee_growth_outside_y: Decimal::from_integer(20),
+                ..Default::default()
+            };
+            tick_upper = Tick {
+                index: -10,
+                fee_growth_outside_x: Decimal::from_integer(15),
+                fee_growth_outside_y: Decimal::from_integer(15),
+                ..Default::default()
+            };
+
+            let fee_growth_inside = calculate_fee_growth_inside(
+                tick_lower,
+                tick_upper,
+                tick_current,
+                fee_growth_global_x,
+                fee_growth_global_y,
+            );
+
+            assert_eq!(
+                fee_growth_inside.0,
+                Decimal::new(u128::MAX) - Decimal::from_integer(5) + Decimal::new(1)
+            );
+            assert_eq!(
+                fee_growth_inside.1,
+                Decimal::new(u128::MAX) - Decimal::from_integer(5) + Decimal::new(1)
+            );
         }
     }
 

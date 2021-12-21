@@ -4,7 +4,7 @@ import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
 import { MINTER } from './minter'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Market, Pair } from '@invariant-labs/sdk/src'
-import { getLiquidityByX } from '@invariant-labs/sdk/src/tick'
+import { getLiquidityByX } from '@invariant-labs/sdk/src/math'
 import { FEE_TIERS, tou64 } from '@invariant-labs/sdk/src/utils'
 require('dotenv').config()
 
@@ -13,11 +13,12 @@ const provider = Provider.local(clusterApiUrl('devnet'), {
 })
 
 const connection = provider.connection
-const market = new Market(Network.DEV, provider.wallet, connection)
 // @ts-expect-error
 const wallet = provider.wallet.payer as Keypair
 
 const main = async () => {
+  const market = await Market.build(Network.DEV, provider.wallet, connection)
+
   const feeTier = FEE_TIERS[0]
   const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.SOL), feeTier)
 
@@ -29,9 +30,6 @@ const main = async () => {
     signer: wallet,
     initTick
   })
-
-  // TICKS
-  await market.createTicksFromRange(pair, wallet, 15960, 16040)
 
   // ADD LIQUIDITY
   const usdc = new Token(connection, new PublicKey(MOCK_TOKENS.USDC), TOKEN_PROGRAM_ID, wallet)

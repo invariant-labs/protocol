@@ -16,7 +16,7 @@ use anchor_spl::token;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
 #[derive(Accounts)]
-#[instruction(bump: u8, lower_tick_index: i32, upper_tick_index: i32, fee: u64, tick_spacing: u16)]
+#[instruction(bump: u8, lower_tick_index: i32, upper_tick_index: i32)]
 pub struct CreatePosition<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
@@ -28,15 +28,10 @@ pub struct CreatePosition<'info> {
     )]
     pub position: AccountLoader<'info, Position>,
     #[account(mut,
-        seeds = [b"poolv1", fee_tier.key().as_ref(), token_x.key().as_ref(), token_y.key().as_ref()],
+        seeds = [b"poolv1", token_x.key().as_ref(), token_y.key().as_ref(), &pool.load()?.fee.v.to_le_bytes(), &pool.load()?.tick_spacing.to_le_bytes()],
         bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,
-    #[account(
-        seeds = [b"feetierv1", program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()],
-        bump = fee_tier.load()?.bump
-    )]
-    pub fee_tier: AccountLoader<'info, FeeTier>,
     #[account(mut,
         seeds = [b"positionlistv1", owner.key().as_ref()],
         bump = position_list.load()?.bump
@@ -137,10 +132,10 @@ pub fn handler(
     check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
 
     if !tickmap.get(lower_tick.index, pool.tick_spacing) {
-        tickmap.set(true, lower_tick.index, pool.tick_spacing)
+        tickmap.flip(true, lower_tick.index, pool.tick_spacing)
     }
     if !tickmap.get(upper_tick.index, pool.tick_spacing) {
-        tickmap.set(true, upper_tick.index, pool.tick_spacing)
+        tickmap.flip(true, upper_tick.index, pool.tick_spacing)
     }
 
     // update position_list head

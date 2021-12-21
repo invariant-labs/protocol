@@ -10,7 +10,7 @@ use anchor_lang::prelude::*;
 use decimal::*;
 use instructions::*;
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("G5iMvLKhBKKscSMUazjiWKZXzacjL7oikJAm9FWRTvk");
 
 #[program]
 pub mod staker {

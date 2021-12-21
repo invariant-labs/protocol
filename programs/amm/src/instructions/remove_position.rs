@@ -15,7 +15,7 @@ use anchor_spl::token;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
 #[derive(Accounts)]
-#[instruction(index: i32, lower_tick_index: i32, upper_tick_index: i32, fee: u64, tick_spacing: u16)]
+#[instruction( index: i32, lower_tick_index: i32, upper_tick_index: i32)]
 pub struct RemovePosition<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
@@ -40,15 +40,10 @@ pub struct RemovePosition<'info> {
     )]
     pub last_position: AccountLoader<'info, Position>,
     #[account(mut,
-        seeds = [b"poolv1", fee_tier.key().as_ref(), token_x.key().as_ref(), token_y.key().as_ref()],
+        seeds = [b"poolv1", token_x.key().as_ref(), token_y.key().as_ref(), &pool.load()?.fee.v.to_le_bytes(), &pool.load()?.tick_spacing.to_le_bytes()],
         bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,
-    #[account(
-        seeds = [b"feetierv1", program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()],
-        bump = fee_tier.load()?.bump
-    )]
-    pub fee_tier: AccountLoader<'info, FeeTier>,
     #[account(mut,
         constraint = &tickmap.key() == &pool.load()?.tickmap,
         constraint = tickmap.to_account_info().owner == program_id,
@@ -172,7 +167,7 @@ pub fn handler(
             ctx.accounts.owner.to_account_info(),
         )
         .unwrap();
-        tickmap.set(false, lower_tick_index, pool.tick_spacing);
+        tickmap.flip(false, lower_tick_index, pool.tick_spacing);
     }
     if close_upper {
         close(
@@ -180,7 +175,7 @@ pub fn handler(
             ctx.accounts.owner.to_account_info(),
         )
         .unwrap();
-        tickmap.set(false, upper_tick_index, pool.tick_spacing);
+        tickmap.flip(false, upper_tick_index, pool.tick_spacing);
     }
 
     // Remove empty position

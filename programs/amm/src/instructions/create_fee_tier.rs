@@ -5,7 +5,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 
 #[derive(Accounts)]
-#[instruction(bump: u8, fee: u64, tick_spacing: u16)]
+#[instruction(bump: u8, fee: u128, tick_spacing: u16)]
 pub struct CreateFeeTier<'info> {
     #[account(init,
         seeds = [b"feetierv1", program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()],
@@ -24,7 +24,7 @@ pub struct CreateFeeTier<'info> {
 pub fn handler(
     ctx: Context<CreateFeeTier>,
     bump: u8,
-    fee: u64,
+    fee: u128,
     tick_spacing: u16,
 ) -> ProgramResult {
     msg!("INVARIANT: CREATE FEE TIER");
