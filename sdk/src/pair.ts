@@ -22,7 +22,11 @@ export class Pair {
       this.tokenX = second
       this.tokenY = first
     }
-    this.feeTier = feeTier
+
+    this.feeTier = {
+      fee: feeTier.fee,
+      tickSpacing: feeTier.tickSpacing ?? feeToTickSpacing(feeTier.fee)
+    }
     this.feeTierAddress = null
 
     if (this.feeTier.tickSpacing == null) {

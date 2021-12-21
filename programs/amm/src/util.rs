@@ -16,22 +16,25 @@ pub fn check_ticks(tick_lower: i32, tick_upper: i32, tick_spacing: u16) -> Resul
     // Check order
     require!(tick_lower < tick_upper, InvalidTickIndex);
 
+    check_tick(tick_lower, tick_spacing)?;
+    check_tick(tick_upper, tick_spacing)?;
+
+    Ok(())
+}
+
+pub fn check_tick(tick_index: i32, tick_spacing: u16) -> Result<()> {
+    // Check order
     require!(
-        tick_lower.checked_rem(tick_spacing.into()) == Some(0),
-        InvalidTickIndex
-    );
-    require!(
-        tick_upper.checked_rem(tick_spacing.into()) == Some(0),
+        tick_index.checked_rem(tick_spacing.into()) == Some(0),
         InvalidTickIndex
     );
 
-    let scaled_lower = tick_lower.checked_div(tick_spacing.into()).unwrap();
-    let scaled_upper = tick_upper.checked_div(tick_spacing.into()).unwrap();
+    let tickmap_index = tick_index.checked_div(tick_spacing.into()).unwrap();
 
-    require!(scaled_upper > (-TICK_LIMIT), InvalidTickInterval);
-    require!(scaled_lower < TICK_LIMIT, InvalidTickInterval);
-    require!(tick_lower > (-MAX_TICK), InvalidTickInterval);
-    require!(tick_upper < MAX_TICK, InvalidTickInterval);
+    require!(tickmap_index > (-TICK_LIMIT), InvalidTickIndex);
+    require!(tickmap_index < TICK_LIMIT - 1, InvalidTickIndex);
+    require!(tick_index > (-MAX_TICK), InvalidTickIndex);
+    require!(tick_index < MAX_TICK, InvalidTickIndex);
     Ok(())
 }
 

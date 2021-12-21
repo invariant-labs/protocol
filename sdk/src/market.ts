@@ -479,9 +479,12 @@ export class Market {
     }: SwapTransaction,
     overridePriceLimit?: BN
   ) {
-    const pool = await this.get(pair)
-    const tickmap = await this.getTickmap(pair)
-    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
+    const [pool, tickmap, feeTierAddress, poolAddress] = await Promise.all([
+      this.get(pair),
+      this.getTickmap(pair),
+      pair.getFeeTierAddress(this.program.programId),
+      pair.getAddress(this.program.programId)
+    ])
 
     const priceLimit =
       overridePriceLimit ?? calculatePriceAfterSlippage(knownPrice, slippage, !XtoY).v
@@ -515,7 +518,7 @@ export class Market {
       }),
       accounts: {
         state: this.stateAddress,
-        pool: await pair.getAddress(this.program.programId),
+        pool: poolAddress,
         tickmap: pool.tickmap,
         tokenX: pool.tokenX,
         tokenY: pool.tokenY,
