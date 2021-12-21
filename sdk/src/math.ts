@@ -481,7 +481,7 @@ export const getLiquidityByYPrice = (
     throw new Error('liquidity cannot be determined')
   }
 
-  if (upperSqrtPrice.v.lt(currentSqrtPrice.v)) {
+  if (upperSqrtPrice.v.lte(currentSqrtPrice.v)) {
     const priceDiff = upperSqrtPrice.v.sub(lowerSqrtPrice.v)
     const liquidity = y.mul(DENOMINATOR).mul(DENOMINATOR).div(priceDiff)
 
@@ -509,7 +509,7 @@ export const calculateFeeGrowthInside = (
   currentTick: number,
   feeGrowthGlobalX: Decimal,
   feeGrowthGlobalY: Decimal
-  ): [Decimal, Decimal] => {
+): [Decimal, Decimal] => {
   const currentAboveLower = currentTick >= lowerTick.index
   const currentBelowUpper = currentTick < upperTick.index
 
@@ -520,7 +520,7 @@ export const calculateFeeGrowthInside = (
     feeGrowthBelowY = lowerTick.feeGrowthOutsideY
   } else {
     feeGrowthBelowX = { v: feeGrowthGlobalX.v.sub(lowerTick.feeGrowthOutsideX.v) }
-    feeGrowthBelowY = { v: feeGrowthGlobalY.v.sub(lowerTick.feeGrowthOutsideY.v)}
+    feeGrowthBelowY = { v: feeGrowthGlobalY.v.sub(lowerTick.feeGrowthOutsideY.v) }
   }
 
   let feeGrowthAboveX: Decimal
@@ -530,11 +530,15 @@ export const calculateFeeGrowthInside = (
     feeGrowthAboveY = upperTick.feeGrowthOutsideY
   } else {
     feeGrowthAboveX = { v: feeGrowthGlobalX.v.sub(upperTick.feeGrowthOutsideX.v) }
-    feeGrowthAboveY = { v: feeGrowthGlobalY.v.sub(upperTick.feeGrowthOutsideY.v)}
+    feeGrowthAboveY = { v: feeGrowthGlobalY.v.sub(upperTick.feeGrowthOutsideY.v) }
   }
 
-  const feeGrowthInsideX: Decimal = { v: feeGrowthGlobalX.v.sub(feeGrowthBelowX.v).sub(feeGrowthAboveX.v)}
-  const feeGrowthInsideY: Decimal = { v: feeGrowthGlobalY.v.sub(feeGrowthBelowY.v).sub(feeGrowthAboveY.v)}
+  const feeGrowthInsideX: Decimal = {
+    v: feeGrowthGlobalX.v.sub(feeGrowthBelowX.v).sub(feeGrowthAboveX.v)
+  }
+  const feeGrowthInsideY: Decimal = {
+    v: feeGrowthGlobalY.v.sub(feeGrowthBelowY.v).sub(feeGrowthAboveY.v)
+  }
 
   return [feeGrowthInsideX, feeGrowthInsideY]
 }
