@@ -226,61 +226,59 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_set() {
+    fn test_flip() {
+        let mut map = Tickmap::default();
+
+        //zero
         {
-            let mut map = Tickmap::default();
+            let index = 0;
 
-            //zero
-            {
-                let index = 0;
+            assert_eq!(map.get(index, 1), false);
+            map.flip(true, index, 1);
+            assert_eq!(map.get(index, 1), true);
+            map.flip(false, index, 1);
+            assert_eq!(map.get(index, 1), false);
+        }
+        // small
+        {
+            let index = 7;
 
-                assert_eq!(map.get(index, 1), false);
-                map.flip(true, index, 1);
-                assert_eq!(map.get(index, 1), true);
-                map.flip(false, index, 1);
-                assert_eq!(map.get(index, 1), false);
-            }
-            // small
-            {
-                let index = 7;
+            assert_eq!(map.get(index, 1), false);
+            map.flip(true, index, 1);
+            assert_eq!(map.get(index, 1), true);
+            map.flip(false, index, 1);
+            assert_eq!(map.get(index, 1), false);
+        }
+        // big
+        {
+            let index = TICK_LIMIT - 1;
 
-                assert_eq!(map.get(index, 1), false);
-                map.flip(true, index, 1);
-                assert_eq!(map.get(index, 1), true);
-                map.flip(false, index, 1);
-                assert_eq!(map.get(index, 1), false);
-            }
-            // big
-            {
-                let index = TICK_LIMIT - 1;
+            assert_eq!(map.get(index, 1), false);
+            map.flip(true, index, 1);
+            assert_eq!(map.get(index, 1), true);
+            map.flip(false, index, 1);
+            assert_eq!(map.get(index, 1), false);
+        }
+        // negative
+        {
+            let index = TICK_LIMIT - 40;
 
-                assert_eq!(map.get(index, 1), false);
-                map.flip(true, index, 1);
-                assert_eq!(map.get(index, 1), true);
-                map.flip(false, index, 1);
-                assert_eq!(map.get(index, 1), false);
-            }
-            // negative
-            {
-                let index = TICK_LIMIT - 40;
+            assert_eq!(map.get(index, 1), false);
+            map.flip(true, index, 1);
+            assert_eq!(map.get(index, 1), true);
+            map.flip(false, index, 1);
+            assert_eq!(map.get(index, 1), false);
+        }
+        // tick spacing
+        {
+            let index = 20000;
+            let tick_spacing = 1000;
 
-                assert_eq!(map.get(index, 1), false);
-                map.flip(true, index, 1);
-                assert_eq!(map.get(index, 1), true);
-                map.flip(false, index, 1);
-                assert_eq!(map.get(index, 1), false);
-            }
-            // tick spacing
-            {
-                let index = 20000;
-                let tick_spacing = 1000;
-
-                assert_eq!(map.get(index, tick_spacing), false);
-                map.flip(true, index, tick_spacing);
-                assert_eq!(map.get(index, tick_spacing), true);
-                map.flip(false, index, tick_spacing);
-                assert_eq!(map.get(index, tick_spacing), false);
-            }
+            assert_eq!(map.get(index, tick_spacing), false);
+            map.flip(true, index, tick_spacing);
+            assert_eq!(map.get(index, tick_spacing), true);
+            map.flip(false, index, tick_spacing);
+            assert_eq!(map.get(index, tick_spacing), false);
         }
     }
 
