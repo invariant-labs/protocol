@@ -105,7 +105,8 @@ pub fn compute_swap_step(
     let mut amount_in = Decimal::new(0);
     let mut amount_out = Decimal::new(0);
     let fee_amount;
-
+    msg!("###### current_price_sqrt {}", current_price_sqrt.v);
+    msg!("###### target_price_sqrt {}", target_price_sqrt.v);
     if exact_in {
         let amount_after_fee = amount.big_mul(Decimal::one() - fee);
 
@@ -142,6 +143,8 @@ pub fn compute_swap_step(
     }
 
     let max = target_price_sqrt == next_price_sqrt;
+    msg!("###### next_price_sqrt {}", next_price_sqrt.v);
+    msg!("###### current_price_sqrt {}", current_price_sqrt.v);
 
     if x_to_y {
         amount_in = if max && exact_in {
@@ -178,7 +181,7 @@ pub fn compute_swap_step(
         fee_amount = amount_in.big_mul_up(fee)
     }
     // fee_amount = Decimal::new(0);
-
+    msg!("############ {}", amount_out.v);
     SwapResult {
         next_price_sqrt,
         amount_in,

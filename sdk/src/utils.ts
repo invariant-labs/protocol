@@ -317,6 +317,117 @@ export const calculateAveragePrice = (swapParameters: SimulateSwapPrice): Decima
   }
   return { v: totalAmountOut.v.mul(DENOMINATOR).div(totalAmountIn.v) }
 }
+
+export const predictSwap = (swapParameters: SimulateSwapPrice): BN[] => {
+  const { xToY, byAmountIn, swapAmount, slippage, tickmap, pool, market, pair } = swapParameters
+  let { currentTickIndex, tickSpacing, liquidity, fee } = pool
+  const amountPerTick: BN[] = []
+  let accumulatedAmount: BN = new BN(0)
+  const priceLimit = calculatePriceAfterSlippage(pool.sqrtPrice, slippage, !xToY)
+  if (xToY) {
+    if (pool.sqrtPrice.v.lt(priceLimit.v)) {
+      throw new Error('Price limit is on the wrong side of price')
+    }
+  } else {
+    if (pool.sqrtPrice.v.gt(priceLimit.v)) {
+      throw new Error('Price limit is on the wrong side of price')
+    }
+  }
+  let remainingAmount: Decimal = { v: swapAmount.mul(DENOMINATOR) }
+
+  while (!remainingAmount.v.lte(new BN(0))) {
+    console.log('############## ITER ')
+    //find closest initielized tick
+    let closestTickIndex: number
+    if (xToY) {
+      closestTickIndex = getPreviousTick(tickmap, currentTickIndex, tickSpacing).valueOf()
+    } else {
+      closestTickIndex = getNextTick(tickmap, currentTickIndex, tickSpacing).valueOf()
+    }
+
+    let price: Decimal
+    let closerLimit: [swapLimit: Decimal, limitingTick: [index: number, initialized: boolean]]
+    if (closestTickIndex != null) {
+      price = calculate_price_sqrt(closestTickIndex)
+      if (xToY && price.v.gt(priceLimit.v)) {
+        closerLimit = [price, [closestTickIndex, true]]
+      } else if (!xToY && price.v.lt(priceLimit.v)) {
+        closerLimit = [price, [closestTickIndex, true]]
+      } else {
+        closerLimit = [priceLimit, [null, null]]
+      }
+    } else {
+      const index = getSearchLimit(currentTickIndex, tickSpacing, !xToY)
+      price = calculate_price_sqrt(index)
+
+      if (xToY && price.v.gt(priceLimit.v)) {
+        closerLimit = [price, [index, false]]
+      } else if (!xToY && price.v.lt(priceLimit.v)) {
+        closerLimit = [price, [index, false]]
+      } else {
+        closerLimit = [priceLimit, [null, null]]
+      }
+    }
+
+    const result = calculateSwapStep(
+      pool.sqrtPrice,
+      closerLimit[0],
+      liquidity,
+      remainingAmount,
+      byAmountIn,
+      fee
+    )
+    let amountDiff: Decimal
+    if (byAmountIn) {
+      amountDiff = {
+        v: result.amountIn.v.add(result.feeAmount.v)
+      }
+    } else {
+      amountDiff = { v: result.amountOut.v }
+    }
+    console.log(' amountOut ', result.amountOut.v.toString())
+    remainingAmount = { v: remainingAmount.v.sub(amountDiff.v) }
+    console.log(' amountDiff ', amountDiff.v.toString())
+    console.log(' remainingAmount ', remainingAmount.v.toString())
+    pool.sqrtPrice = result.nextPrice
+
+    if (pool.sqrtPrice.v.eq(priceLimit.v) && remainingAmount.v.gt(new BN(0))) {
+      throw new Error('Price would cross swap limit')
+    }
+
+    //crossing tick
+    if (result.nextPrice.v.eq(closerLimit[0].v) && closerLimit[1][0] != null) {
+      const tickIndex = closerLimit[1][0]
+      const initialized = closerLimit[1][1]
+
+      if (initialized) {
+        market.getTick(pair, tickIndex).then((tick) => {
+          if (currentTickIndex >= tick.index !== tick.sign) {
+            liquidity = { v: liquidity.v.add(tick.liquidityChange.v) }
+          } else {
+            liquidity = { v: liquidity.v.sub(tick.liquidityChange.v) }
+          }
+        })
+      }
+      if (xToY && !remainingAmount.v.eq(new BN(0))) {
+        currentTickIndex = tickIndex - tickSpacing
+      } else {
+        currentTickIndex = tickIndex
+      }
+    } else {
+      currentTickIndex = getTickFromPrice(currentTickIndex, tickSpacing, result.nextPrice, xToY)
+    }
+
+    // add amount to array if tick was initialized otherwise accumulate amount for next iteration
+    accumulatedAmount = accumulatedAmount.add(amountDiff.v)
+    if (closerLimit[1][1] || remainingAmount.v.eqn(0)) {
+      amountPerTick.push(accumulatedAmount)
+      accumulatedAmount = new BN(0)
+    }
+  }
+  return amountPerTick
+}
+
 export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
   let indexOfTickBelow = -1
   // find first tick

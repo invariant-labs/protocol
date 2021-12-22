@@ -4,6 +4,7 @@
     "test:staker-all": "npm run test:create && npm run test:stake && npm run test:withdraw-staker && npm run test:end-incentive && npm run test:multicall",
     "test:all": "npm run test:invariant-all && npm run test:staker-all",
     "test:swap": "anchor test --skip-build tests/swap.spec.ts",
+    "test:predict-swap": "anchor test --skip-build tests/predict-swap.spec.ts",
     "test:oracle": "anchor test --skip-build tests/oracle.spec.ts",
     "test:cross": "anchor test --skip-build tests/cross.spec.ts",
     "test:reversed": "anchor test --skip-build tests/reversed.spec.ts",

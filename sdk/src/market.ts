@@ -18,7 +18,10 @@ import {
   getFeeTierAddress,
   parseLiquidityOnTicks,
   SEED,
-  signAndSend
+  signAndSend,
+  SimulateSwapPrice,
+  predictSwap,
+  DENOMINATOR
 } from './utils'
 import { Amm, IDL } from './idl/amm'
 import { IWallet, Pair } from '.'
@@ -486,6 +489,23 @@ export class Market {
       pair.getAddress(this.program.programId)
     ])
 
+    //simulate swap to get exact amount of tokens swaped between tick croses
+    const swapParameters: SimulateSwapPrice = {
+      xToY: XtoY,
+      byAmountIn: byAmountIn,
+      swapAmount: amount,
+      currentPrice: pool.sqrtPrice,
+      slippage: slippage,
+      tickmap,
+      pool: pool,
+      market: this,
+      pair: pair
+    }
+    let amountPerTick: BN[] = predictSwap(swapParameters)
+    console.log('####### size ', amountPerTick.length.toString())
+    // for (let data of amountPerTick) {
+    //   console.log('#####', data.toString())
+    // }
     const priceLimit =
       overridePriceLimit ?? calculatePriceAfterSlippage(knownPrice, slippage, !XtoY).v
 
@@ -493,7 +513,7 @@ export class Market {
       tickmap.bitmap,
       pool.currentTickIndex,
       pool.tickSpacing,
-      15,
+      10,
       Infinity,
       XtoY ? 'down' : 'up'
     )
@@ -512,6 +532,36 @@ export class Market {
       })
     )
 
+    const tx: Transaction = new Transaction()
+    let halfAmount: BN = new BN(0)
+    const ticksPerIx = 1
+    let remaining: BN = new BN(0)
+
+    // for (let i = 0; i < amountPerTick.length; i++) {
+    //   //offset swap amounts by half relative to initialized ticks to avoid ending swap exact on initialized tick
+    //   // if ((i + 1) % ticksPerIx == 0) {
+    //   //   halfAmount = amountPerTick[i].div(new BN(2))
+    //   //   amountIx = amountIx.add(amountPerTick[i].sub(halfAmount))
+    //   // } else {
+    //   //   amountIx = amountIx.add(halfAmount)
+    //   //   amountIx = amountIx.add(amountPerTick[i])
+
+    //   //   halfAmount = new BN(0)
+    //   // }
+    //   //number of ticks per instruction is equal to ticksPerIx
+
+    //   let amountIx: BN = amountPerTick[i].div(DENOMINATOR)
+    //   remaining = remaining.add(amountPerTick[i].sub(amountIx.mul(DENOMINATOR)))
+
+    //   if (i + 1 == amountPerTick.length) {
+    //     amountIx = amountIx.add(remaining.div(DENOMINATOR))
+    //   }
+
+    //   if (
+    //     ((i + 1) % ticksPerIx == 0 || i == amountPerTick.length - 1) &&
+    //     !amountPerTick[i].eq(new BN(0))
+    //   ) {
+    //console.log('$$$$$$$', amountIx.toString())
     const swapIx = this.program.instruction.swap(XtoY, amount, byAmountIn, priceLimit, {
       remainingAccounts: remainingAccounts.map((pubkey) => {
         return { pubkey, isWritable: true, isSigner: false }
@@ -531,8 +581,10 @@ export class Market {
         tokenProgram: TOKEN_PROGRAM_ID
       }
     })
-
-    const tx = new Transaction().add(swapIx)
+    tx.add(swapIx)
+    //   amountIx = new BN(0)
+    // }
+    //}
     return tx
   }
 

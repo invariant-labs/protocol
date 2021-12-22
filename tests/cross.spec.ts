@@ -144,7 +144,7 @@ describe('cross', () => {
       {
         pair,
         XtoY: true,
-        amount,
+        amount: new BN(1000),
         knownPrice: poolDataBefore.sqrtPrice,
         slippage: toDecimal(1, 2),
         accountX,
@@ -167,13 +167,13 @@ describe('cross', () => {
     const reserveYDelta = reservesBefore.y.sub(reservesAfter.y)
 
     assert.ok(amountX.eqn(0))
-    assert.ok(amountY.eq(amount.subn(7)))
-    assert.ok(reserveXDelta.eq(amount))
-    assert.ok(reserveYDelta.eq(amount.subn(7)))
+    assert.ok(amountY.eq(amount.subn(8)))
+    assert.ok(reserveXDelta.eqn(1000))
+    assert.ok(reserveYDelta.eq(amount.subn(8)))
 
-    assert.ok(poolData.feeGrowthGlobalX.v.eqn(4042168)) // 0.6 % of amount - protocol fee
+    assert.ok(poolData.feeGrowthGlobalX.v.eqn(4058416)) // 0.6 % of amount - protocol fee
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(poolData.feeProtocolTokenX.v.eq(new BN(598199692918)))
+    assert.ok(poolData.feeProtocolTokenX.v.eq(new BN(599999779457)))
     assert.ok(poolData.feeProtocolTokenY.v.eqn(0))
 
     // Check ticks
@@ -186,7 +186,7 @@ describe('cross', () => {
     assert.ok(lowerTickData.liquidityChange.v.eq(liquidityDelta.v))
 
     assert.ok(upperTickData.feeGrowthOutsideX.v.eqn(0))
-    assert.ok(middleTickData.feeGrowthOutsideX.v.eqn(2700540))
+    assert.ok(middleTickData.feeGrowthOutsideX.v.eqn(2716837))
     assert.ok(lowerTickData.feeGrowthOutsideX.v.eqn(0))
   })
 })

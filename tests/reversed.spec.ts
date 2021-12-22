@@ -177,15 +177,15 @@ describe('reversed', () => {
     const reserveXDelta = reservesBefore.x.sub(reservesAfter.x)
     const reserveYDelta = reservesAfter.y.sub(reservesBefore.y)
 
-    assert.ok(amountX.eq(amount.subn(7)))
+    assert.ok(amountX.eq(amount.subn(8)))
     assert.ok(amountY.eqn(0))
-    assert.ok(reserveXDelta.eq(amount.subn(7)))
+    assert.ok(reserveXDelta.eq(amount.subn(8)))
     assert.ok(reserveYDelta.eq(amount))
 
     assert.ok(poolData.feeGrowthGlobalX.v.eqn(0))
-    assert.ok(poolData.feeGrowthGlobalY.v.eqn(4042169)) // 0.6 % of amount - protocol fee
+    assert.ok(poolData.feeGrowthGlobalY.v.eqn(4058416)) // 0.6 % of amount - protocol fee
     assert.ok(poolData.feeProtocolTokenX.v.eqn(0))
-    assert.ok(poolData.feeProtocolTokenY.v.eq(new BN(598199800000)))
+    assert.ok(poolData.feeProtocolTokenY.v.eq(new BN(599999600000)))
 
     // Check ticks
     const lowerTickData = await market.getTick(pair, lowerTick)
@@ -197,7 +197,8 @@ describe('reversed', () => {
     assert.ok(lowerTickData.liquidityChange.v.eq(liquidityDelta.v))
 
     assert.ok(upperTickData.feeGrowthOutsideY.v.eqn(0))
-    assert.ok(middleTickData.feeGrowthOutsideY.v.eqn(2700540))
+    console.log(middleTickData.feeGrowthOutsideY.v.toString())
+    assert.ok(middleTickData.feeGrowthOutsideY.v.eqn(2716837))
     assert.ok(lowerTickData.feeGrowthOutsideY.v.eqn(0))
   })
 })
