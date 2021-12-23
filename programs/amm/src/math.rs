@@ -107,6 +107,8 @@ pub fn compute_swap_step(
     let fee_amount;
     msg!("###### current_price_sqrt {}", current_price_sqrt.v);
     msg!("###### target_price_sqrt {}", target_price_sqrt.v);
+    msg!("###### by_amount_in {}", by_amount_in);
+    msg!("###### x_to_y {}", x_to_y);
     if exact_in {
         let amount_after_fee = amount.big_mul(Decimal::one() - fee);
 
@@ -115,8 +117,11 @@ pub fn compute_swap_step(
         } else {
             get_delta_y(current_price_sqrt, target_price_sqrt, liquidity, true)
         };
+        msg!("###### amount_after_fee {}", amount_after_fee.v);
+        msg!("###### amount_in {}", amount_in.v);
 
         // if target price was hit it will be the next price
+        msg!("###### >= {}", amount_after_fee >= amount_in);
         if amount_after_fee >= amount_in {
             next_price_sqrt = target_price_sqrt
         } else {
@@ -143,9 +148,12 @@ pub fn compute_swap_step(
     }
 
     let max = target_price_sqrt == next_price_sqrt;
+    msg!("###### target_price_sqrt {}", target_price_sqrt.v);
     msg!("###### next_price_sqrt {}", next_price_sqrt.v);
-    msg!("###### current_price_sqrt {}", current_price_sqrt.v);
 
+    msg!("###### x_to_y {}", x_to_y);
+    msg!("###### max {}", max);
+    msg!("###### exact_in {}", exact_in);
     if x_to_y {
         amount_in = if max && exact_in {
             amount_in
@@ -181,7 +189,11 @@ pub fn compute_swap_step(
         fee_amount = amount_in.big_mul_up(fee)
     }
     // fee_amount = Decimal::new(0);
+    msg!("############ ");
+    msg!("############ {}", next_price_sqrt.v);
+    msg!("############ {}", amount_in.v);
     msg!("############ {}", amount_out.v);
+    msg!("############ {}", fee_amount.v);
     SwapResult {
         next_price_sqrt,
         amount_in,

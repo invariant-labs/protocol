@@ -349,6 +349,8 @@ export const predictSwap = (swapParameters: SimulateSwapPrice): BN[] => {
     let closerLimit: [swapLimit: Decimal, limitingTick: [index: number, initialized: boolean]]
     if (closestTickIndex != null) {
       price = calculate_price_sqrt(closestTickIndex)
+      console.log('##### tickindex', closestTickIndex.toString())
+      console.log('##### price ', price.v.toString())
       if (xToY && price.v.gt(priceLimit.v)) {
         closerLimit = [price, [closestTickIndex, true]]
       } else if (!xToY && price.v.lt(priceLimit.v)) {
@@ -368,6 +370,8 @@ export const predictSwap = (swapParameters: SimulateSwapPrice): BN[] => {
         closerLimit = [priceLimit, [null, null]]
       }
     }
+    console.log('sqrt price', pool.sqrtPrice.v.toString())
+    console.log('swap limit', closerLimit[0].v.toString())
 
     const result = calculateSwapStep(
       pool.sqrtPrice,

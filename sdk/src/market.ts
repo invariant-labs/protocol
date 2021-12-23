@@ -537,54 +537,55 @@ export class Market {
     const ticksPerIx = 1
     let remaining: BN = new BN(0)
 
-    // for (let i = 0; i < amountPerTick.length; i++) {
-    //   //offset swap amounts by half relative to initialized ticks to avoid ending swap exact on initialized tick
-    //   // if ((i + 1) % ticksPerIx == 0) {
-    //   //   halfAmount = amountPerTick[i].div(new BN(2))
-    //   //   amountIx = amountIx.add(amountPerTick[i].sub(halfAmount))
-    //   // } else {
-    //   //   amountIx = amountIx.add(halfAmount)
-    //   //   amountIx = amountIx.add(amountPerTick[i])
+    for (let i = 0; i < amountPerTick.length; i++) {
+      //offset swap amounts by half relative to initialized ticks to avoid ending swap exact on initialized tick
+      // if ((i + 1) % ticksPerIx == 0) {
+      //   halfAmount = amountPerTick[i].div(new BN(2))
+      //   amountIx = amountIx.add(amountPerTick[i].sub(halfAmount))
+      // } else {
+      //   amountIx = amountIx.add(halfAmount)
+      //   amountIx = amountIx.add(amountPerTick[i])
 
-    //   //   halfAmount = new BN(0)
-    //   // }
-    //   //number of ticks per instruction is equal to ticksPerIx
+      //   halfAmount = new BN(0)
+      // }
+      //number of ticks per instruction is equal to ticksPerIx
 
-    //   let amountIx: BN = amountPerTick[i].div(DENOMINATOR)
-    //   remaining = remaining.add(amountPerTick[i].sub(amountIx.mul(DENOMINATOR)))
+      let amountIx: BN = amountPerTick[i].div(DENOMINATOR)
+      remaining = remaining.add(amountPerTick[i].sub(amountIx.mul(DENOMINATOR)))
 
-    //   if (i + 1 == amountPerTick.length) {
-    //     amountIx = amountIx.add(remaining.div(DENOMINATOR))
-    //   }
-
-    //   if (
-    //     ((i + 1) % ticksPerIx == 0 || i == amountPerTick.length - 1) &&
-    //     !amountPerTick[i].eq(new BN(0))
-    //   ) {
-    //console.log('$$$$$$$', amountIx.toString())
-    const swapIx = this.program.instruction.swap(XtoY, amount, byAmountIn, priceLimit, {
-      remainingAccounts: remainingAccounts.map((pubkey) => {
-        return { pubkey, isWritable: true, isSigner: false }
-      }),
-      accounts: {
-        state: this.stateAddress,
-        pool: poolAddress,
-        tickmap: pool.tickmap,
-        tokenX: pool.tokenX,
-        tokenY: pool.tokenY,
-        reserveX: pool.tokenXReserve,
-        reserveY: pool.tokenYReserve,
-        owner,
-        accountX,
-        accountY,
-        programAuthority: this.programAuthority,
-        tokenProgram: TOKEN_PROGRAM_ID
+      if (i + 1 == amountPerTick.length) {
+        amountIx = amountIx.add(remaining.div(DENOMINATOR))
       }
-    })
-    tx.add(swapIx)
-    //   amountIx = new BN(0)
-    // }
-    //}
+
+      if (
+        ((i + 1) % ticksPerIx == 0 || i == amountPerTick.length - 1) &&
+        !amountPerTick[i].eq(new BN(0))
+      ) {
+        console.log('$$$$$$$', amountIx.toString())
+        const swapIx = this.program.instruction.swap(XtoY, amountIx, byAmountIn, priceLimit, {
+          remainingAccounts: remainingAccounts.map((pubkey) => {
+            return { pubkey, isWritable: true, isSigner: false }
+          }),
+          accounts: {
+            state: this.stateAddress,
+            pool: poolAddress,
+            tickmap: pool.tickmap,
+            tokenX: pool.tokenX,
+            tokenY: pool.tokenY,
+            reserveX: pool.tokenXReserve,
+            reserveY: pool.tokenYReserve,
+            owner,
+            accountX,
+            accountY,
+            programAuthority: this.programAuthority,
+            tokenProgram: TOKEN_PROGRAM_ID
+          }
+        })
+        console.log('add')
+        tx.add(swapIx)
+        amountIx = new BN(0)
+      }
+    }
     return tx
   }
 

@@ -13,7 +13,7 @@ import { assert } from 'chai'
 import { fromFee, calculateClaimAmount, tou64 } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/src/market'
 
-describe('Withdraw tests', () => {
+describe('Claim amount', () => {
   const provider = Provider.local()
   const connection = provider.connection
   const program = anchor.workspace.Staker as Program<StakerIdl>
@@ -141,23 +141,25 @@ describe('Withdraw tests', () => {
       byAmountIn: true,
       owner: trader.publicKey
     })
-    // await signAndSend(tx2, [trader], connection)
-    // const index = 0
-    // const positionStruct = await market.getPosition(positionOwner.publicKey, index)
-    // const tickUpper = await market.getTick(pair, 50)
-    // const tickLower = await market.getTick(pair, -50)
-    // const createdPool = await market.get(pair)
+    await signAndSend(tx2, [trader], connection)
+    const index = 0
+    const positionStruct = await market.getPosition(positionOwner.publicKey, index)
+    const tickUpper = await market.getTick(pair, 50)
+    const tickLower = await market.getTick(pair, -50)
+    const createdPool = await market.get(pair)
 
-    // //calculate claim amount
-    // const [tokens_owed_x_total, tokens_owed_y_total] = calculateClaimAmount({
-    //   position: positionStruct,
-    //   tickLower: tickLower,
-    //   tickUpper: tickUpper,
-    //   tickCurrent: createdPool.currentTickIndex,
-    //   feeGrowthGlobalX: createdPool.feeGrowthGlobalX,
-    //   feeGrowthGlobalY: createdPool.feeGrowthGlobalY
-    // })
-    // assert.ok(tokens_owed_x_total.eq(new BN(5400000000000)))
-    // assert.ok(tokens_owed_y_total.eq(new BN(10800000000000)))
+    //calculate claim amount
+    const [tokens_owed_x_total, tokens_owed_y_total] = calculateClaimAmount({
+      position: positionStruct,
+      tickLower: tickLower,
+      tickUpper: tickUpper,
+      tickCurrent: createdPool.currentTickIndex,
+      feeGrowthGlobalX: createdPool.feeGrowthGlobalX,
+      feeGrowthGlobalY: createdPool.feeGrowthGlobalY
+    })
+    console.log('**********', tokens_owed_x_total.toString())
+    assert.ok(tokens_owed_x_total.eq(new BN(5400000000000)))
+    console.log('**********', tokens_owed_y_total.toString())
+    assert.ok(tokens_owed_y_total.eq(new BN(10800000000000)))
   })
 })
