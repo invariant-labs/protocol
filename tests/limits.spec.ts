@@ -3,15 +3,28 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Keypair, Transaction } from '@solana/web3.js'
 import { createTokensAndPool, createUserWithTokens } from './testUtils'
 import { Market, DENOMINATOR, Network } from '@invariant-labs/sdk'
-import { fromFee, toDecimal } from '@invariant-labs/sdk/src/utils'
+import {
+  assertThrowsAsync,
+  fromFee,
+  getMaxTick,
+  getMinTick,
+  toDecimal
+} from '@invariant-labs/sdk/src/utils'
 import { Decimal } from '@invariant-labs/sdk/src/market'
 import { Pair } from '@invariant-labs/sdk/src'
-import { getLiquidityByX, getLiquidityByY } from '@invariant-labs/sdk/src/math'
+import {
+  calculatePriceAfterSlippage,
+  getLiquidityByX,
+  getLiquidityByY
+} from '@invariant-labs/sdk/src/math'
 import { beforeEach } from 'mocha'
 import { assert } from 'chai'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { signAndSend } from '@invariant-labs/sdk'
-import { FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
+import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
+import { MAX_TICK } from '@invariant-labs/sdk'
+import { TICK_LIMIT } from '@invariant-labs/sdk'
+import { calculate_price_sqrt } from '@invariant-labs/sdk'
 
 describe('limits', () => {
   const provider = Provider.local()
@@ -394,12 +407,85 @@ describe('limits', () => {
     }
   })
 
-  it.skip('high price', async () => {
-    const result = await createTokensAndPool(market, connection, wallet, 0, feeTier)
+  it.only('pool limited bit tickmap', async () => {
+    const tickSpacing = feeToTickSpacing(feeTier.fee)
+    const initTick = getMaxTick(tickSpacing)
+    const result = await createTokensAndPool(market, connection, wallet, initTick, feeTier)
     pair = result.pair
     mintAuthority = result.mintAuthority
 
+    const poolData = await market.get(pair)
+    const knownPrice = poolData.sqrtPrice
+    assert.equal(poolData.currentTickIndex, initTick)
+    assert.equal(knownPrice.v.toString(), calculate_price_sqrt(initTick).v.toString())
+    console.log(`init tick: ${initTick}`)
+
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+
+    const mintAmount = new BN(2).pow(new BN(64)).subn(2)
+    const upperTick = getMaxTick(tickSpacing)
+    const lowerTick = getMinTick(tickSpacing)
+
+    const { owner, userAccountX, userAccountY } = await createUserWithTokens(
+      pair,
+      connection,
+      mintAuthority,
+      mintAmount
+    )
+
+    const liquidityByY = getLiquidityByY(
+      mintAmount,
+      lowerTick,
+      upperTick,
+      poolData.sqrtPrice,
+      false
+    ).liquidity
+    const liquidityByX = getLiquidityByY(
+      mintAmount,
+      lowerTick,
+      upperTick,
+      poolData.sqrtPrice,
+      false
+    ).liquidity
+
+    // calculation of liquidity might not be exactly equal on both tokens so taking smaller one
+    const liquidityDelta = liquidityByY.v.lt(liquidityByX.v) ? liquidityByY : liquidityByX
+
+    await market.initPosition(
+      {
+        pair,
+        owner: owner.publicKey,
+        userTokenX: userAccountX,
+        userTokenY: userAccountY,
+        lowerTick: -Infinity,
+        upperTick: Infinity,
+        liquidityDelta
+      },
+      owner
+    )
+
+    const position = await market.getPosition(owner.publicKey, 0)
+    assert.equal(position.lowerTickIndex, lowerTick)
+    assert.equal(position.upperTickIndex, upperTick)
+
+    console.log(poolData.sqrtPrice.v.toString())
+    console.log(calculatePriceAfterSlippage(knownPrice, toDecimal(5, 2), !false).v.toString())
+
+    await assertThrowsAsync(
+      market.swap(
+        {
+          pair,
+          XtoY: false,
+          amount: new BN(1),
+          knownPrice,
+          slippage: toDecimal(5, 2),
+          accountX: userAccountX,
+          accountY: userAccountY,
+          byAmountIn: true
+        },
+        owner
+      )
+    )
   })
 })
