@@ -23,7 +23,7 @@ pub fn get_search_limit(tick: i32, tick_spacing: u16, up: bool) -> i32 {
         "tick not divisible by spacing"
     );
     let index = tick / tick_spacing as i32;
-    if up {
+    let a = if up {
         (TICK_LIMIT.checked_sub(1).unwrap())
             .min(index.checked_add(TICK_SEARCH_RANGE).unwrap())
             .min(MAX_TICK.checked_div(tick_spacing as i32).unwrap())
@@ -35,7 +35,14 @@ pub fn get_search_limit(tick: i32, tick_spacing: u16, up: bool) -> i32 {
             .max(-MAX_TICK.checked_div(tick_spacing as i32).unwrap())
             .checked_mul(tick_spacing.into())
             .unwrap()
-    }
+    };
+    msg!(
+        "limit by range: {}, limit: {}, min of them: {}",
+        index.checked_add(TICK_SEARCH_RANGE).unwrap(),
+        a,
+        index.checked_add(TICK_SEARCH_RANGE).unwrap().min(a),
+    );
+    a
 }
 
 impl Tickmap {
@@ -90,6 +97,13 @@ impl Tickmap {
             (tick % tick_spacing as i32) == 0,
             "tick not divisible by spacing"
         );
+
+        msg!(
+            "next initialized, tick: {}, tick spacing: {}",
+            tick,
+            tick_spacing
+        );
+
         // add 1 to not check current tick
         let bitmap_index = tick
             .checked_div(tick_spacing.try_into().unwrap())
@@ -101,6 +115,8 @@ impl Tickmap {
         let limit = get_search_limit(tick, tick_spacing, true)
             .checked_add(TICK_LIMIT)
             .unwrap();
+
+        msg!("bitmap index: {}, limit: {}", bitmap_index, limit);
 
         let mut byte_index: usize = (bitmap_index.checked_div(8).unwrap()).try_into().unwrap();
         let mut bit_index: u8 = (bitmap_index.checked_rem(8).unwrap())
@@ -115,6 +131,7 @@ impl Tickmap {
             .unwrap()
             <= limit as usize
         {
+            // msg!("byte index: {}", byte_index);
             let mut shifted = self.bitmap[byte_index] >> bit_index;
 
             // go through all bits in byte until it is zero
@@ -226,6 +243,46 @@ mod tests {
     use super::*;
 
     #[test]
+    fn tmp() {
+        let tick: i32 = 221816;
+        let tick_spacing: u16 = 4;
+
+        assert!(
+            (tick % tick_spacing as i32) == 0,
+            "tick not divisible by spacing"
+        );
+        let index = tick / tick_spacing as i32;
+
+        let array_limit = TICK_LIMIT.checked_sub(1).unwrap();
+        let range_limit = index.checked_add(TICK_SEARCH_RANGE).unwrap();
+        let price_limit = MAX_TICK.checked_div(tick_spacing as i32).unwrap();
+
+        msg!(
+            "array limit: {}, range limit: {}, price limit: {}",
+            array_limit,
+            range_limit,
+            price_limit
+        );
+
+        // let a =
+        //     ().min().unwrap())
+        //         .min()
+        //         .checked_mul(tick_spacing.into())
+        //         .unwrap();
+
+        let a = array_limit
+            .min(range_limit)
+            .min(price_limit)
+            .checked_mul(tick_spacing.into())
+            .unwrap();
+        //         .unwrap();
+
+        let bm = Tickmap::default();
+
+        bm.next_initialized(tick, tick_spacing);
+    }
+
+    #[test]
     fn test_flip() {
         let mut map = Tickmap::default();
 
@@ -325,6 +382,12 @@ mod tests {
 
             map.flip(true, TICK_LIMIT - 10, 1);
             assert_eq!(map.next_initialized(-TICK_LIMIT + 1, 1), None);
+        }
+        // tick spacing
+        {
+            let map = Tickmap::default();
+
+            assert_eq!(map.next_initialized(221816, 4), None);
         }
     }
 
