@@ -469,9 +469,6 @@ describe('limits', () => {
     assert.equal(position.lowerTickIndex, lowerTick)
     assert.equal(position.upperTickIndex, upperTick)
 
-    console.log(poolData.sqrtPrice.v.toString())
-    console.log(calculatePriceAfterSlippage(knownPrice, toDecimal(5, 2), !false).v.toString())
-
     await assertThrowsAsync(
       market.swap(
         {
