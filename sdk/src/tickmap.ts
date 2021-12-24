@@ -85,11 +85,6 @@ export const getNextTick = (
   byteIndex = Math.round(byteIndex)
   let bitIndex = Math.abs(bitmapIndex % 8)
 
-  // console.log('bitmapIndex ', bitmapIndex)
-  // console.log('limit ', limit)
-  // console.log('byteIndex ', byteIndex)
-  // console.log('bitIndex ', bitIndex)
-
   while (byteIndex * 8 + bitIndex <= limit) {
     let shifted = tickmap.bitmap[byteIndex] >> bitIndex
 
@@ -117,6 +112,5 @@ export const getNextTick = (
     byteIndex = byteIndex + 1
     bitIndex = 0
   }
-  console.log('Here 3')
   return new Number(null)
 }

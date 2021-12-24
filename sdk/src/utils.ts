@@ -336,7 +336,6 @@ export const predictSwap = (swapParameters: SimulateSwapPrice): BN[] => {
   let remainingAmount: Decimal = { v: swapAmount.mul(DENOMINATOR) }
 
   while (!remainingAmount.v.lte(new BN(0))) {
-    console.log('############## ITER ')
     //find closest initielized tick
     let closestTickIndex: number
     if (xToY) {
@@ -389,10 +388,7 @@ export const predictSwap = (swapParameters: SimulateSwapPrice): BN[] => {
     } else {
       amountDiff = { v: result.amountOut.v }
     }
-    console.log(' amountOut ', result.amountOut.v.toString())
     remainingAmount = { v: remainingAmount.v.sub(amountDiff.v) }
-    console.log(' amountDiff ', amountDiff.v.toString())
-    console.log(' remainingAmount ', remainingAmount.v.toString())
     pool.sqrtPrice = result.nextPrice
 
     if (pool.sqrtPrice.v.eq(priceLimit.v) && remainingAmount.v.gt(new BN(0))) {

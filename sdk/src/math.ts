@@ -106,10 +106,6 @@ export const calculateSwapStep = (
   let amountOut: Decimal = { v: new BN(0) }
   let feeAmount: Decimal
 
-  console.log('BY AMOUNT IN ', byAmountIn)
-  console.log('XtoY', aToB)
-  console.log('currentPrice ', currentPrice.v.toString())
-  console.log('targetPrice', targetPrice.v.toString())
   if (byAmountIn) {
     const amountAfterFee: Decimal = {
       v: fromInteger(1).v.sub(fee.v).mul(amount.v).div(DENOMINATOR)
@@ -122,8 +118,6 @@ export const calculateSwapStep = (
       amountIn = getDeltaY(targetPrice, currentPrice, liquidity, true)
       console.log('yyyyyyyyy')
     }
-    console.log('$$$ amountAfterFee', amountAfterFee.v.toString())
-    console.log('$$$ amountIn', amountIn.v.toString())
     if (amountAfterFee.v.gte(amountIn.v)) {
       nextPrice = targetPrice
       console.log('here1')
@@ -145,13 +139,8 @@ export const calculateSwapStep = (
       nextPrice = getNextPriceFromOutput(currentPrice, liquidity, amount, aToB)
     }
   }
-  console.log('amountOut before', amountOut.v.toString())
-  const max = targetPrice.v.eq(nextPrice.v)
-  console.log('targetPrice', targetPrice.v.toString())
-  console.log('nextPrice ', nextPrice.v.toString())
 
-  console.log('max', max)
-  console.log('AtoB', aToB)
+  const max = targetPrice.v.eq(nextPrice.v)
   if (aToB) {
     if (!(max && byAmountIn)) {
       amountIn = getDeltaX(nextPrice, currentPrice, liquidity, true)

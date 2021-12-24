@@ -157,9 +157,7 @@ describe('Claim amount', () => {
       feeGrowthGlobalX: createdPool.feeGrowthGlobalX,
       feeGrowthGlobalY: createdPool.feeGrowthGlobalY
     })
-    console.log('**********', tokens_owed_x_total.toString())
     assert.ok(tokens_owed_x_total.eq(new BN(5400000000000)))
-    console.log('**********', tokens_owed_y_total.toString())
     assert.ok(tokens_owed_y_total.eq(new BN(10800000000000)))
   })
 })
