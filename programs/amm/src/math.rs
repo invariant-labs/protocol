@@ -113,11 +113,8 @@ pub fn compute_swap_step(
         } else {
             get_delta_y(current_price_sqrt, target_price_sqrt, liquidity, true)
         };
-        msg!("###### amount_after_fee {}", amount_after_fee.v);
-        msg!("###### amount_in {}", amount_in.v);
 
         // if target price was hit it will be the next price
-        msg!("###### >= {}", amount_after_fee >= amount_in);
         if amount_after_fee >= amount_in {
             next_price_sqrt = target_price_sqrt
         } else {

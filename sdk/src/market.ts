@@ -21,7 +21,8 @@ import {
   signAndSend,
   SimulateSwapPrice,
   predictSwap,
-  DENOMINATOR
+  DENOMINATOR,
+  SimulationResult
 } from './utils'
 import { Amm, IDL } from './idl/amm'
 import { IWallet, Pair } from '.'
@@ -501,7 +502,8 @@ export class Market {
       market: this,
       pair: pair
     }
-    let amountPerTick: BN[] = predictSwap(swapParameters)
+    let simulationResult: SimulationResult = predictSwap(swapParameters)
+    let amountPerTick: BN[] = simulationResult.amountPerTick
 
     const priceLimit =
       overridePriceLimit ?? calculatePriceAfterSlippage(knownPrice, slippage, !XtoY).v
@@ -530,6 +532,7 @@ export class Market {
     )
 
     const tx: Transaction = new Transaction()
+    //this means how many cross tikcks we would like to do per instruction
     const ticksPerIx = 1
     let remaining: BN = new BN(0)
 

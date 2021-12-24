@@ -108,10 +108,6 @@ impl Tickmap {
             .try_into()
             .unwrap();
 
-        // msg!("######1 bitmap_index  {}", bitmap_index);
-        // msg!("######1 limit  {}", limit);
-        // msg!("######1 byte_index  {}", byte_index);
-        // msg!("######1 bit_index  {}", bit_index);
         while byte_index
             .checked_mul(8)
             .unwrap()

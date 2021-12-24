@@ -66,6 +66,11 @@ export interface SimulateSwapPrice {
   pair: Pair
 }
 
+export interface SimulationResult {
+  amountPerTick: BN[]
+  accumulatedAmountOut: BN
+}
+
 export interface SimulateClaim {
   position: Position
   tickLower: Tick
@@ -193,136 +198,12 @@ export const toDecimal = (x: number, decimals: number = 0): Decimal => {
   return { v: DENOMINATOR.muln(x).div(new BN(10).pow(new BN(decimals))) }
 }
 
-export const calculateAveragePrice = (swapParameters: SimulateSwapPrice): Decimal => {
-  const { xToY, byAmountIn, swapAmount, slippage, tickmap, pool, market, pair } = swapParameters
-  let { currentTickIndex, tickSpacing, liquidity, fee } = pool
-  let currentSqrtPrice = pool.sqrtPrice
-
-  const priceLimit = calculatePriceAfterSlippage(currentSqrtPrice, slippage, !xToY)
-  if (xToY) {
-    if (pool.sqrtPrice.v.lt(priceLimit.v)) {
-      throw new Error('Price limit is on the wrong side of price')
-    }
-  } else {
-    if (pool.sqrtPrice.v.gt(priceLimit.v)) {
-      throw new Error('Price limit is on the wrong side of price')
-    }
-  }
-  let remainingAmount: Decimal = { v: swapAmount.mul(DENOMINATOR) }
-  let totalAmountIn: Decimal = { v: new BN(0) }
-  let totalAmountOut: Decimal = { v: new BN(0) }
-  let totalFee: Decimal = { v: new BN(0) }
-
-  while (!remainingAmount.v.lte(new BN(0))) {
-    let closestTickIndex: number
-    if (xToY) {
-      closestTickIndex = getPreviousTick(tickmap, currentTickIndex, tickSpacing).valueOf()
-    } else {
-      closestTickIndex = getNextTick(tickmap, currentTickIndex, tickSpacing).valueOf()
-    }
-
-    let price: Decimal
-    let closerLimit: { swapLimit: Decimal; limitingTick: { index: Number; initialized: Boolean } }
-    if (closestTickIndex != null) {
-      price = calculate_price_sqrt(closestTickIndex)
-
-      if (xToY && price.v.gt(priceLimit.v)) {
-        closerLimit = {
-          swapLimit: price,
-          limitingTick: { index: new Number(closestTickIndex), initialized: new Boolean(true) }
-        }
-      } else if (!xToY && price.v.lt(priceLimit.v)) {
-        closerLimit = {
-          swapLimit: price,
-          limitingTick: { index: new Number(closestTickIndex), initialized: new Boolean(true) }
-        }
-      } else {
-        closerLimit = {
-          swapLimit: priceLimit,
-          limitingTick: { index: new Number(null), initialized: new Boolean(null) }
-        }
-      }
-    } else {
-      const index = getSearchLimit(currentTickIndex, tickSpacing, !xToY)
-      price = calculate_price_sqrt(index)
-
-      if (xToY && price.v.gt(priceLimit.v)) {
-        closerLimit = {
-          swapLimit: price,
-          limitingTick: { index: new Number(closestTickIndex), initialized: new Boolean(false) }
-        }
-      } else if (!xToY && price.v.lt(priceLimit.v)) {
-        closerLimit = {
-          swapLimit: price,
-          limitingTick: { index: new Number(closestTickIndex), initialized: new Boolean(false) }
-        }
-      } else {
-        closerLimit = {
-          swapLimit: priceLimit,
-          limitingTick: { index: new Number(null), initialized: new Boolean(null) }
-        }
-      }
-    }
-    const result = calculateSwapStep(
-      currentSqrtPrice,
-      closerLimit.swapLimit,
-      liquidity,
-      remainingAmount,
-      byAmountIn,
-      fee
-    )
-    totalAmountIn = { v: totalAmountIn.v.add(result.amountIn.v) }
-    totalAmountOut = { v: totalAmountOut.v.add(result.amountOut.v) }
-    totalFee = { v: totalFee.v.add(result.feeAmount.v) }
-
-    let amountDiff: Decimal
-    if (byAmountIn) {
-      amountDiff = { v: result.amountIn.v.add(result.feeAmount.v) }
-    } else {
-      amountDiff = { v: result.amountOut.v }
-    }
-
-    remainingAmount = { v: remainingAmount.v.sub(amountDiff.v) }
-
-    currentSqrtPrice = result.nextPrice
-
-    if (currentSqrtPrice.v.eq(priceLimit.v) && remainingAmount.v.gt(new BN(0))) {
-      throw new Error('Price would cross swap limit')
-    }
-
-    if (
-      result.nextPrice.v.eq(closerLimit.swapLimit.v) &&
-      closerLimit.limitingTick.index != undefined
-    ) {
-      const tickIndex = closerLimit.limitingTick.index
-      const initialized = closerLimit.limitingTick.initialized
-
-      if (initialized) {
-        market.getTick(pair, tickIndex.valueOf()).then((tick) => {
-          if (currentTickIndex >= tick.index !== tick.sign) {
-            liquidity = { v: liquidity.v.add(tick.liquidityChange.v) }
-          } else {
-            liquidity = { v: liquidity.v.sub(tick.liquidityChange.v) }
-          }
-        })
-      }
-      if (xToY && !remainingAmount.v.eq(new BN(0))) {
-        currentTickIndex = tickIndex.valueOf() - tickSpacing
-      } else {
-        currentTickIndex = tickIndex.valueOf()
-      }
-    } else {
-      currentTickIndex = getTickFromPrice(currentTickIndex, tickSpacing, result.nextPrice, xToY)
-    }
-  }
-  return { v: totalAmountOut.v.mul(DENOMINATOR).div(totalAmountIn.v) }
-}
-
-export const predictSwap = (swapParameters: SimulateSwapPrice): BN[] => {
+export const predictSwap = (swapParameters: SimulateSwapPrice): SimulationResult => {
   const { xToY, byAmountIn, swapAmount, slippage, tickmap, pool, market, pair } = swapParameters
   let { currentTickIndex, tickSpacing, liquidity, fee } = pool
   const amountPerTick: BN[] = []
   let accumulatedAmount: BN = new BN(0)
+  let accumulatedAmountOut: BN = new BN(0)
   const priceLimit = calculatePriceAfterSlippage(pool.sqrtPrice, slippage, !xToY)
   if (xToY) {
     if (pool.sqrtPrice.v.lt(priceLimit.v)) {
@@ -348,8 +229,7 @@ export const predictSwap = (swapParameters: SimulateSwapPrice): BN[] => {
     let closerLimit: [swapLimit: Decimal, limitingTick: [index: number, initialized: boolean]]
     if (closestTickIndex != null) {
       price = calculate_price_sqrt(closestTickIndex)
-      console.log('##### tickindex', closestTickIndex.toString())
-      console.log('##### price ', price.v.toString())
+
       if (xToY && price.v.gt(priceLimit.v)) {
         closerLimit = [price, [closestTickIndex, true]]
       } else if (!xToY && price.v.lt(priceLimit.v)) {
@@ -369,8 +249,6 @@ export const predictSwap = (swapParameters: SimulateSwapPrice): BN[] => {
         closerLimit = [priceLimit, [null, null]]
       }
     }
-    console.log('sqrt price', pool.sqrtPrice.v.toString())
-    console.log('swap limit', closerLimit[0].v.toString())
 
     const result = calculateSwapStep(
       pool.sqrtPrice,
@@ -380,6 +258,9 @@ export const predictSwap = (swapParameters: SimulateSwapPrice): BN[] => {
       byAmountIn,
       fee
     )
+
+    accumulatedAmountOut = accumulatedAmountOut.add(result.amountOut.v)
+
     let amountDiff: Decimal
     if (byAmountIn) {
       amountDiff = {
@@ -420,12 +301,17 @@ export const predictSwap = (swapParameters: SimulateSwapPrice): BN[] => {
 
     // add amount to array if tick was initialized otherwise accumulate amount for next iteration
     accumulatedAmount = accumulatedAmount.add(amountDiff.v)
+
     if (closerLimit[1][1] || remainingAmount.v.eqn(0)) {
       amountPerTick.push(accumulatedAmount)
       accumulatedAmount = new BN(0)
     }
   }
-  return amountPerTick
+
+  return {
+    amountPerTick,
+    accumulatedAmountOut
+  }
 }
 
 export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {

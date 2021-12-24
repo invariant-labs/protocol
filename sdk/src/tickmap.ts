@@ -101,10 +101,8 @@ export const getNextTick = (
         if (foundIndex >= TICK_LIMIT) {
           throw new Error('Tick is at limit')
         }
-        console.log('Here 1')
         return new Number(foundIndex * tickSpacing)
       } else {
-        console.log('Here 2')
         return new Number(null)
       }
     }

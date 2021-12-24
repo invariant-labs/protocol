@@ -119,36 +119,38 @@ describe('swap', () => {
     // Create owner
     const owner = Keypair.generate()
     await connection.requestAirdrop(owner.publicKey, 1e9)
-    //const amount = new BN(1000)
 
     const accountX = await tokenX.createAccount(owner.publicKey)
     const accountY = await tokenY.createAccount(owner.publicKey)
 
-    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(new BN(1000000)))
-    await tokenY.mintTo(accountY, mintAuthority.publicKey, [mintAuthority], tou64(new BN(1000000)))
+    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(new BN(10000)))
+    await tokenY.mintTo(accountY, mintAuthority.publicKey, [mintAuthority], tou64(new BN(10000)))
 
     // Swap
     const poolDataBefore = await market.get(pair)
-    // const reserveXBefore = (await tokenX.getAccountInfo(poolDataBefore.tokenXReserve)).amount
-    // const reserveYBefore = (await tokenY.getAccountInfo(poolDataBefore.tokenYReserve)).amount
-    //console.log(poolDataBefore.currentTickIndex)
-    // const txr = await market.swapTransaction({
-    //   pair,
-    //   XtoY: false,
-    //   amount: new BN(500),
-    //   knownPrice: poolDataBefore.sqrtPrice,
-    //   slippage: toDecimal(2, 2),
-    //   accountX,
-    //   accountY,
-    //   byAmountIn: true,
-    //   owner: owner.publicKey
-    // })
-    // await signAndSend(txr, [owner], connection)
+    const reserveXBefore = (await tokenX.getAccountInfo(poolDataBefore.tokenXReserve)).amount
+    const reserveYBefore = (await tokenY.getAccountInfo(poolDataBefore.tokenYReserve)).amount
+    console.log(poolDataBefore.currentTickIndex)
 
+    //make swap into right to move price from tick 0
+    const txr = await market.swapTransaction({
+      pair,
+      XtoY: false,
+      amount: new BN(500),
+      knownPrice: poolDataBefore.sqrtPrice,
+      slippage: toDecimal(2, 2),
+      accountX,
+      accountY,
+      byAmountIn: true,
+      owner: owner.publicKey
+    })
+    await signAndSend(txr, [owner], connection)
+
+    //make swap bigger than cross tick
     const tx = await market.swapTransaction({
       pair,
       XtoY: true,
-      amount: new BN(4000),
+      amount: new BN(3000),
       knownPrice: poolDataBefore.sqrtPrice,
       slippage: toDecimal(2, 2),
       accountX,
@@ -158,29 +160,26 @@ describe('swap', () => {
     })
     await signAndSend(tx, [owner], connection)
 
-    //   // Check pool
-    //const poolData = await market.get(pair)
-    //console.log(poolData.currentTickIndex)
-    //   assert.ok(poolData.liquidity.v.eq(poolDataBefore.liquidity.v))
-    //   assert.equal(poolData.currentTickIndex, lowerTick)
-    //   assert.ok(poolData.sqrtPrice.v.lt(poolDataBefore.sqrtPrice.v))
+    // Check pool
+    const poolData = await market.get(pair)
 
-    //   // Check amounts and fees
-    //   const amountX = (await tokenX.getAccountInfo(accountX)).amount
-    //   const amountY = (await tokenY.getAccountInfo(accountY)).amount
-    //   const reserveXAfter = (await tokenX.getAccountInfo(poolData.tokenXReserve)).amount
-    //   const reserveYAfter = (await tokenY.getAccountInfo(poolData.tokenYReserve)).amount
-    //   const reserveXDelta = reserveXAfter.sub(reserveXBefore)
-    //   const reserveYDelta = reserveYBefore.sub(reserveYAfter)
+    // Check amounts and fees
+    const amountX = (await tokenX.getAccountInfo(accountX)).amount
+    const amountY = (await tokenY.getAccountInfo(accountY)).amount
+    const reserveXAfter = (await tokenX.getAccountInfo(poolData.tokenXReserve)).amount
+    const reserveYAfter = (await tokenY.getAccountInfo(poolData.tokenYReserve)).amount
+    const reserveXDelta = reserveXAfter.sub(reserveXBefore)
+    const reserveYDelta = reserveYBefore.sub(reserveYAfter)
 
-    //   assert.ok(amountX.eqn(0))
-    //   assert.ok(amountY.eq(amount.subn(7)))
-    //   assert.ok(reserveXDelta.eq(amount))
-    //   assert.ok(reserveYDelta.eq(amount.subn(7)))
+    const amount = new BN(1000)
+    assert.ok(amountX.eqn(7496))
+    assert.ok(amountY.eqn(12477))
+    assert.ok(reserveXDelta.eqn(2504))
+    assert.ok(reserveYDelta.eqn(2477))
 
-    //   assert.ok(poolData.feeGrowthGlobalX.v.eqn(5400000)) // 0.6 % of amount - protocol fee
-    //   assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
-    //   assert.ok(poolData.feeProtocolTokenX.v.eq(new BN(600000013280)))
-    //   assert.ok(poolData.feeProtocolTokenY.v.eqn(0))
+    assert.ok(poolData.feeGrowthGlobalX.v.eqn(8099936)) // 0.6 % of amount - protocol fee
+    assert.ok(poolData.feeGrowthGlobalY.v.eqn(1350000))
+    assert.ok(poolData.feeProtocolTokenX.v.eq(new BN(1799986631284)))
+    assert.ok(poolData.feeProtocolTokenY.v.eq(new BN(300000000000)))
   })
 })

@@ -131,7 +131,6 @@ pub fn handler(
 
     let mut total_amount_in = Decimal::new(0);
     let mut total_amount_out = Decimal::new(0);
-    msg!("######1 current index {}", pool.current_tick_index);
     while remaining_amount != Decimal::from_integer(0) {
         let (swap_limit, limiting_tick) = get_closer_limit(
             sqrt_price_limit,
@@ -140,8 +139,6 @@ pub fn handler(
             pool.tick_spacing,
             &tickmap,
         );
-        // msg!("######1 current_price_sqrt {}", pool.sqrt_price.v);
-        // msg!("######1 target_price_sqrt {}", swap_limit.v);
         let result = compute_swap_step(
             pool.sqrt_price,
             swap_limit,

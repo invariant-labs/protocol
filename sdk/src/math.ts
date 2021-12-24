@@ -113,16 +113,12 @@ export const calculateSwapStep = (
 
     if (aToB) {
       amountIn = getDeltaX(targetPrice, currentPrice, liquidity, true)
-      console.log('xxxxxxxxx')
     } else {
       amountIn = getDeltaY(targetPrice, currentPrice, liquidity, true)
-      console.log('yyyyyyyyy')
     }
     if (amountAfterFee.v.gte(amountIn.v)) {
       nextPrice = targetPrice
-      console.log('here1')
     } else {
-      console.log('here2')
       nextPrice = getNextPriceFromInput(currentPrice, liquidity, amountAfterFee, aToB)
     }
   } else {
@@ -132,10 +128,8 @@ export const calculateSwapStep = (
       amountOut = getDeltaX(currentPrice, targetPrice, liquidity, false)
     }
     if (amount.v.gte(amountOut.v)) {
-      console.log('here3')
       nextPrice = targetPrice
     } else {
-      console.log('here4')
       nextPrice = getNextPriceFromOutput(currentPrice, liquidity, amount, aToB)
     }
   }
@@ -166,10 +160,6 @@ export const calculateSwapStep = (
   } else {
     feeAmount = { v: amountIn.v.mul(fee.v).add(DENOMINATOR.subn(1)).div(DENOMINATOR) }
   }
-  console.log('nextprice', nextPrice.v.toString())
-  console.log('amountIn', amountIn.v.toString())
-  console.log('amountOut', amountOut.v.toString())
-  console.log('fee', fee.v.toString())
   return {
     nextPrice,
     amountIn,
