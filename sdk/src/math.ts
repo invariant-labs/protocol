@@ -1,7 +1,7 @@
 import { BN } from '@project-serum/anchor'
 import { assert } from 'chai'
 import { Decimal, Tick, Tickmap } from './market'
-import { DENOMINATOR } from './utils'
+import { DENOMINATOR, getMaxTick, getMinTick } from './utils'
 
 export const TICK_LIMIT = 100_000
 export const MAX_TICK = 221_818
@@ -412,10 +412,17 @@ export const getLiquidityByX = (
   lowerTick: number,
   upperTick: number,
   currentSqrtPrice: Decimal,
-  roundingUp: boolean
+  roundingUp: boolean,
+  tickSpacing?: number
 ) => {
-  const lowerSqrtPrice = calculate_price_sqrt(lowerTick)
-  const upperSqrtPrice = calculate_price_sqrt(upperTick)
+  if ((lowerTick == -Infinity || upperTick == Infinity) && tickSpacing == undefined)
+    throw new Error('tickSpacing is required for calculating full range liquidity')
+
+  const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(tickSpacing)
+  const lowerTickIndex = lowerTick != -Infinity ? lowerTick : getMinTick(tickSpacing)
+
+  const lowerSqrtPrice = calculate_price_sqrt(upperTickIndex)
+  const upperSqrtPrice = calculate_price_sqrt(lowerTickIndex)
 
   return getLiquidityByXPrice(x, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
 }
@@ -462,10 +469,17 @@ export const getLiquidityByY = (
   lowerTick: number,
   upperTick: number,
   currentSqrtPrice: Decimal,
-  roundingUp: boolean
+  roundingUp: boolean,
+  tickSpacing?: number
 ) => {
-  const lowerSqrtPrice = calculate_price_sqrt(lowerTick)
-  const upperSqrtPrice = calculate_price_sqrt(upperTick)
+  if ((lowerTick == -Infinity || upperTick == Infinity) && tickSpacing == undefined)
+    throw new Error('tickSpacing is required for calculating full range liquidity')
+
+  const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(tickSpacing)
+  const lowerTickIndex = lowerTick != -Infinity ? lowerTick : getMinTick(tickSpacing)
+
+  const lowerSqrtPrice = calculate_price_sqrt(upperTickIndex)
+  const upperSqrtPrice = calculate_price_sqrt(lowerTickIndex)
 
   return getLiquidityByYPrice(y, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
 }
@@ -509,7 +523,7 @@ export const calculateFeeGrowthInside = (
   currentTick: number,
   feeGrowthGlobalX: Decimal,
   feeGrowthGlobalY: Decimal
-  ): [Decimal, Decimal] => {
+): [Decimal, Decimal] => {
   const currentAboveLower = currentTick >= lowerTick.index
   const currentBelowUpper = currentTick < upperTick.index
 
@@ -520,7 +534,7 @@ export const calculateFeeGrowthInside = (
     feeGrowthBelowY = lowerTick.feeGrowthOutsideY
   } else {
     feeGrowthBelowX = { v: feeGrowthGlobalX.v.sub(lowerTick.feeGrowthOutsideX.v) }
-    feeGrowthBelowY = { v: feeGrowthGlobalY.v.sub(lowerTick.feeGrowthOutsideY.v)}
+    feeGrowthBelowY = { v: feeGrowthGlobalY.v.sub(lowerTick.feeGrowthOutsideY.v) }
   }
 
   let feeGrowthAboveX: Decimal
@@ -530,11 +544,15 @@ export const calculateFeeGrowthInside = (
     feeGrowthAboveY = upperTick.feeGrowthOutsideY
   } else {
     feeGrowthAboveX = { v: feeGrowthGlobalX.v.sub(upperTick.feeGrowthOutsideX.v) }
-    feeGrowthAboveY = { v: feeGrowthGlobalY.v.sub(upperTick.feeGrowthOutsideY.v)}
+    feeGrowthAboveY = { v: feeGrowthGlobalY.v.sub(upperTick.feeGrowthOutsideY.v) }
   }
 
-  const feeGrowthInsideX: Decimal = { v: feeGrowthGlobalX.v.sub(feeGrowthBelowX.v).sub(feeGrowthAboveX.v)}
-  const feeGrowthInsideY: Decimal = { v: feeGrowthGlobalY.v.sub(feeGrowthBelowY.v).sub(feeGrowthAboveY.v)}
+  const feeGrowthInsideX: Decimal = {
+    v: feeGrowthGlobalX.v.sub(feeGrowthBelowX.v).sub(feeGrowthAboveX.v)
+  }
+  const feeGrowthInsideY: Decimal = {
+    v: feeGrowthGlobalY.v.sub(feeGrowthBelowY.v).sub(feeGrowthAboveY.v)
+  }
 
   return [feeGrowthInsideX, feeGrowthInsideY]
 }

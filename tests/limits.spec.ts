@@ -437,17 +437,19 @@ describe('limits', () => {
 
     const liquidityByY = getLiquidityByY(
       mintAmount,
-      lowerTick,
-      upperTick,
+      -Infinity,
+      Infinity,
       poolData.sqrtPrice,
-      false
+      false,
+      pair.feeTier.tickSpacing
     ).liquidity
     const liquidityByX = getLiquidityByY(
       mintAmount,
-      lowerTick,
-      upperTick,
+      -Infinity,
+      Infinity,
       poolData.sqrtPrice,
-      false
+      false,
+      pair.feeTier.tickSpacing
     ).liquidity
 
     // calculation of liquidity might not be exactly equal on both tokens so taking smaller one
@@ -484,6 +486,19 @@ describe('limits', () => {
         },
         owner
       )
+    )
+    await market.swap(
+      {
+        pair,
+        XtoY: true,
+        amount: new BN(1),
+        knownPrice,
+        slippage: toDecimal(5, 2),
+        accountX: userAccountX,
+        accountY: userAccountY,
+        byAmountIn: true
+      },
+      owner
     )
   })
 })
