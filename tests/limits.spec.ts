@@ -407,9 +407,10 @@ describe('limits', () => {
     }
   })
 
-  it.only('pool limited bit tickmap', async () => {
+  it.only('pool limited by tickmap', async () => {
     const tickSpacing = feeToTickSpacing(feeTier.fee)
     const initTick = getMaxTick(tickSpacing)
+
     const result = await createTokensAndPool(market, connection, wallet, initTick, feeTier)
     pair = result.pair
     mintAuthority = result.mintAuthority
@@ -468,9 +469,6 @@ describe('limits', () => {
     const position = await market.getPosition(owner.publicKey, 0)
     assert.equal(position.lowerTickIndex, lowerTick)
     assert.equal(position.upperTickIndex, upperTick)
-
-    console.log(poolData.sqrtPrice.v.toString())
-    console.log(calculatePriceAfterSlippage(knownPrice, toDecimal(5, 2), !false).v.toString())
 
     await assertThrowsAsync(
       market.swap(

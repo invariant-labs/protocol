@@ -35,6 +35,7 @@ pub fn check_tick(tick_index: i32, tick_spacing: u16) -> Result<()> {
     require!(tickmap_index < TICK_LIMIT - 1, InvalidTickIndex);
     require!(tick_index > (-MAX_TICK), InvalidTickIndex);
     require!(tick_index < MAX_TICK, InvalidTickIndex);
+
     Ok(())
 }
 

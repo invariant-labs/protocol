@@ -41,26 +41,25 @@ pub fn get_search_limit(tick: i32, tick_spacing: u16, up: bool) -> i32 {
         "tick not divisible by spacing"
     );
     let index = tick / tick_spacing as i32;
-    let a = if up {
-        (TICK_LIMIT.checked_sub(1).unwrap())
-            .min(index.checked_add(TICK_SEARCH_RANGE).unwrap())
-            .min(MAX_TICK.checked_div(tick_spacing as i32).unwrap())
-            .checked_mul(tick_spacing.into())
-            .unwrap()
+
+    let limit = if up {
+        // ticks are limited by amount of space in the bitmap...
+        let array_limit = TICK_LIMIT.checked_sub(1).unwrap();
+        // ...search range is limited to 256 at the time ...
+        let range_limit = index.checked_add(TICK_SEARCH_RANGE).unwrap();
+        // ...also ticks for prices over 2^64 aren't needed
+        let price_limit = MAX_TICK.checked_div(tick_spacing as i32).unwrap();
+
+        array_limit.min(range_limit).min(price_limit)
     } else {
-        ((-TICK_LIMIT).checked_add(1).unwrap())
-            .max(index.checked_sub(TICK_SEARCH_RANGE).unwrap())
-            .max(-MAX_TICK.checked_div(tick_spacing as i32).unwrap())
-            .checked_mul(tick_spacing.into())
-            .unwrap()
+        let array_limit = (-TICK_LIMIT).checked_add(1).unwrap();
+        let range_limit = index.checked_sub(TICK_SEARCH_RANGE).unwrap();
+        let price_limit = -MAX_TICK.checked_div(tick_spacing as i32).unwrap();
+
+        array_limit.max(range_limit).max(price_limit)
     };
-    msg!(
-        "limit by range: {}, limit: {}, min of them: {}",
-        index.checked_add(TICK_SEARCH_RANGE).unwrap(),
-        a,
-        index.checked_add(TICK_SEARCH_RANGE).unwrap().min(a),
-    );
-    a
+
+    limit.checked_mul(tick_spacing as i32).unwrap()
 }
 
 impl Tickmap {
@@ -97,26 +96,13 @@ impl Tickmap {
             "tick not divisible by spacing"
         );
 
-        msg!(
-            "next initialized, tick: {}, tick spacing: {}",
-            tick,
-            tick_spacing
-        );
+        let limit = get_search_limit(tick, tick_spacing, true);
 
         // add 1 to not check current tick
         let (mut byte, mut bit) = tick_to_position(tick + tick_spacing as i32, tick_spacing);
+        let (limiting_byte, limiting_bit) = tick_to_position(limit, tick_spacing);
 
-        let limit = get_search_limit(tick, tick_spacing, true)
-            .checked_add(TICK_LIMIT)
-            .unwrap();
-
-        while byte
-            .checked_mul(8)
-            .unwrap()
-            .checked_add(bit.into())
-            .unwrap()
-            <= limit as usize
-        {
+        while byte < limiting_byte || (byte == limiting_byte && bit <= limiting_bit) {
             // ignore some bits on first loop
             let mut shifted = self.bitmap[byte] >> bit;
 
@@ -126,20 +112,19 @@ impl Tickmap {
                     shifted >>= 1;
                     bit = bit.checked_add(1).unwrap();
                 }
-                // Nothing bad would happen if found would be over limit but checking anyway
-                let index: i32 = byte
-                    .checked_mul(8)
-                    .unwrap()
-                    .checked_add(bit.into())
-                    .unwrap()
-                    .try_into()
-                    .unwrap();
 
-                return if index <= limit {
-                    let found_index = index.checked_sub(TICK_LIMIT).unwrap();
-                    assert!(found_index < TICK_LIMIT, "tick would be at limit");
+                return if byte < limiting_byte || (byte == limiting_byte && bit <= limiting_bit) {
+                    let index: i32 = byte
+                        .checked_mul(8)
+                        .unwrap()
+                        .checked_add(bit.into())
+                        .unwrap()
+                        .try_into()
+                        .unwrap();
                     Some(
-                        found_index
+                        index
+                            .checked_sub(TICK_LIMIT)
+                            .unwrap()
                             .checked_mul(tick_spacing.try_into().unwrap())
                             .unwrap(),
                     )
@@ -162,19 +147,11 @@ impl Tickmap {
             "tick not divisible by spacing"
         );
         // don't subtract 1 to check the current tick
+        let limit = get_search_limit(tick, tick_spacing, false);
         let (mut byte, mut bit) = tick_to_position(tick as i32, tick_spacing);
+        let (limiting_byte, limiting_bit) = tick_to_position(limit, tick_spacing);
 
-        let limit = get_search_limit(tick, tick_spacing, false)
-            .checked_add(TICK_LIMIT)
-            .unwrap();
-
-        while byte
-            .checked_mul(8)
-            .unwrap()
-            .checked_add(bit.into())
-            .unwrap()
-            >= limit as usize
-        {
+        while byte > limiting_byte || (byte == limiting_byte && bit >= limiting_bit) {
             let mut mask = 1u16.checked_shl(bit.try_into().unwrap()).unwrap();
             let value = self.bitmap[byte] as u16;
 
@@ -184,20 +161,19 @@ impl Tickmap {
                     bit = bit.checked_sub(1).unwrap();
                 }
 
-                let index: i32 = byte
-                    .checked_mul(8)
-                    .unwrap()
-                    .checked_add(bit.into())
-                    .unwrap()
-                    .try_into()
-                    .unwrap();
-
-                return if index >= limit {
-                    let found_index = index.checked_sub(TICK_LIMIT).unwrap();
-                    assert!(found_index > -TICK_LIMIT, "tick would be at limit");
+                return if byte > limiting_byte || (byte == limiting_byte && bit >= limiting_bit) {
+                    let index: i32 = byte
+                        .checked_mul(8)
+                        .unwrap()
+                        .checked_add(bit.into())
+                        .unwrap()
+                        .try_into()
+                        .unwrap();
 
                     Some(
-                        found_index
+                        index
+                            .checked_sub(TICK_LIMIT)
+                            .unwrap()
                             .checked_mul(tick_spacing.try_into().unwrap())
                             .unwrap(),
                     )
@@ -218,46 +194,6 @@ impl Tickmap {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn tmp() {
-        let tick: i32 = 221816 - 4;
-        let tick_spacing: u16 = 4;
-
-        assert!(
-            (tick % tick_spacing as i32) == 0,
-            "tick not divisible by spacing"
-        );
-        let index = tick / tick_spacing as i32;
-
-        let array_limit = TICK_LIMIT.checked_sub(1).unwrap();
-        let range_limit = index.checked_add(TICK_SEARCH_RANGE).unwrap();
-        let price_limit = MAX_TICK.checked_div(tick_spacing as i32).unwrap();
-
-        msg!(
-            "array limit: {}, range limit: {}, price limit: {}",
-            array_limit,
-            range_limit,
-            price_limit
-        );
-
-        // let a =
-        //     ().min().unwrap())
-        //         .min()
-        //         .checked_mul(tick_spacing.into())
-        //         .unwrap();
-
-        let a = array_limit
-            .min(range_limit)
-            .min(price_limit)
-            .checked_mul(tick_spacing.into())
-            .unwrap();
-        //         .unwrap();
-
-        let bm = Tickmap::default();
-
-        bm.next_initialized(tick, tick_spacing);
-    }
 
     #[test]
     fn test_flip() {
@@ -360,12 +296,18 @@ mod tests {
             map.flip(true, TICK_LIMIT - 10, 1);
             assert_eq!(map.next_initialized(-TICK_LIMIT + 1, 1), None);
         }
-        // // Hitting the limit
-        // {
-        //     let map = Tickmap::default();
+        // Hitting the limit
+        {
+            let map = Tickmap::default();
 
-        //     assert_eq!(map.next_initialized(MAX_TICK - 22, 4), None);
-        // }
+            assert_eq!(map.next_initialized(MAX_TICK - 22, 4), None);
+        }
+        // Already at limit
+        {
+            let map = Tickmap::default();
+
+            assert_eq!(map.next_initialized(MAX_TICK - 2, 4), None);
+        }
     }
 
     #[test]

@@ -209,7 +209,7 @@ pub fn handler(
                 cross_tick(&mut tick, &mut pool)?;
             }
 
-            // set tick to limit (below if price is going down, because current tick is below price)
+            // set tick to limit (below if price is going down, because current tick should always be below price)
             pool.current_tick_index = if x_to_y && remaining_amount != Decimal::new(0) {
                 tick_index - pool.tick_spacing as i32
             } else {
