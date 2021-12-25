@@ -139,7 +139,7 @@ pub fn handler(
             pool.current_tick_index,
             pool.tick_spacing,
             &tickmap,
-        );
+        )?;
 
         let result = compute_swap_step(
             pool.sqrt_price,

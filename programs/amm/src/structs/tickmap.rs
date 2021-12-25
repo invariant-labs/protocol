@@ -18,10 +18,10 @@ impl Default for Tickmap {
 }
 
 fn tick_to_position(tick: i32, tick_spacing: u16) -> (usize, u8) {
-    // assert!(
-    //     (tick % tick_spacing as i32) == 0,
-    //     "tick not divisible by spacing"
-    // );
+    assert!(
+        (tick % tick_spacing as i32) == 0,
+        "tick not divisible by spacing"
+    );
 
     let bitmap_index = tick
         .checked_div(tick_spacing.try_into().unwrap())
@@ -36,17 +36,9 @@ fn tick_to_position(tick: i32, tick_spacing: u16) -> (usize, u8) {
 }
 
 pub fn get_search_limit(tick: i32, tick_spacing: u16, up: bool) -> i32 {
-    // assert!(
-    //     (tick % tick_spacing as i32) == 0,
-    //     "tick not divisible by spacing"
-    // );
     let index = tick / tick_spacing as i32;
-<<<<<<< HEAD
 
     let limit = if up {
-=======
-    if up {
->>>>>>> 313b7a94ebcb2178ba5c2b26ef4af4a0eda4151d
         // ticks are limited by amount of space in the bitmap...
         let array_limit = TICK_LIMIT.checked_sub(1).unwrap();
         // ...search range is limited to 256 at the time ...
@@ -61,13 +53,9 @@ pub fn get_search_limit(tick: i32, tick_spacing: u16, up: bool) -> i32 {
         let price_limit = -MAX_TICK.checked_div(tick_spacing as i32).unwrap();
 
         array_limit.max(range_limit).max(price_limit)
-<<<<<<< HEAD
     };
 
     limit.checked_mul(tick_spacing as i32).unwrap()
-=======
-    }
->>>>>>> 313b7a94ebcb2178ba5c2b26ef4af4a0eda4151d
 }
 
 impl Tickmap {
@@ -76,10 +64,6 @@ impl Tickmap {
             self.get(tick, tick_spacing) != value,
             "tick initialize tick again"
         );
-        // assert!(
-        //     tick % tick_spacing as i32 == 0,
-        //     "tick not divisible by spacing"
-        // );
 
         let (byte, bit) = tick_to_position(tick, tick_spacing);
 
@@ -87,11 +71,6 @@ impl Tickmap {
     }
 
     pub fn get(&self, tick: i32, tick_spacing: u16) -> bool {
-        // assert!(
-        //     (tick % tick_spacing as i32) == 0,
-        //     "tick not divisible by spacing"
-        // );
-
         let (byte, bit) = tick_to_position(tick, tick_spacing);
         let value = (self.bitmap[byte] >> bit) % 2;
 
@@ -99,19 +78,7 @@ impl Tickmap {
     }
 
     pub fn next_initialized(&self, tick: i32, tick_spacing: u16) -> Option<i32> {
-<<<<<<< HEAD
-        assert!(
-            (tick % tick_spacing as i32) == 0,
-            "tick not divisible by spacing"
-        );
-
         let limit = get_search_limit(tick, tick_spacing, true);
-=======
-        // assert!(
-        //     (tick % tick_spacing as i32) == 0,
-        //     "tick not divisible by spacing"
-        // );
->>>>>>> 313b7a94ebcb2178ba5c2b26ef4af4a0eda4151d
 
         // add 1 to not check current tick
         let (mut byte, mut bit) = tick_to_position(tick + tick_spacing as i32, tick_spacing);
@@ -157,10 +124,6 @@ impl Tickmap {
     }
 
     pub fn prev_initialized(&self, tick: i32, tick_spacing: u16) -> Option<i32> {
-        // assert!(
-        //     (tick % tick_spacing as i32) == 0,
-        //     "tick not divisible by spacing"
-        // );
         // don't subtract 1 to check the current tick
         let limit = get_search_limit(tick, tick_spacing, false);
         let (mut byte, mut bit) = tick_to_position(tick as i32, tick_spacing);

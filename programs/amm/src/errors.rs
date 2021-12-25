@@ -40,4 +40,6 @@ pub enum ErrorCode {
     NegativeTime = 17, // 13d
     #[msg("Oracle is already initialized")]
     OracleAlreadyInitialized = 18, // 13e
+    #[msg("Absolute price limit was reached")]
+    LimitReached = 19, // 13f
 }
