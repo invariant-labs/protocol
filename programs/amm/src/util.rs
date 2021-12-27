@@ -56,8 +56,6 @@ pub fn get_closer_limit(
     match closes_tick_index {
         Some(index) => {
             let price = calculate_price_sqrt(index);
-            msg!("index {}", index);
-            msg!("price {}", price.v);
             if x_to_y && price > sqrt_price_limit {
                 (price, Some((index, true)))
             } else if !x_to_y && price < sqrt_price_limit {

@@ -33,6 +33,8 @@ const POSITION_SEED = 'positionv1'
 const TICK_SEED = 'tickv1'
 const POSITION_LIST_SEED = 'positionlistv1'
 const STATE_SEED = 'statev1'
+const MAX_IX = 4
+const TICKS_PER_IX = 1
 export const FEE_TIER = 'feetierv1'
 export const DEFAULT_PUBLIC_KEY = new PublicKey(0)
 
@@ -505,6 +507,10 @@ export class Market {
     let simulationResult: SimulationResult = predictSwap(swapParameters)
     let amountPerTick: BN[] = simulationResult.amountPerTick
 
+    if (amountPerTick.length > MAX_IX) {
+      throw new Error('Instruction limit was exceeded')
+    }
+
     const priceLimit =
       overridePriceLimit ?? calculatePriceAfterSlippage(knownPrice, slippage, !XtoY).v
 
@@ -533,7 +539,6 @@ export class Market {
 
     const tx: Transaction = new Transaction()
     //this means how many cross tikcks we would like to do per instruction
-    const ticksPerIx = 1
     let remaining: BN = new BN(0)
 
     for (let i = 0; i < amountPerTick.length; i++) {
@@ -545,7 +550,7 @@ export class Market {
       }
 
       if (
-        ((i + 1) % ticksPerIx == 0 || i == amountPerTick.length - 1) &&
+        ((i + 1) % TICKS_PER_IX == 0 || i == amountPerTick.length - 1) &&
         !amountPerTick[i].eq(new BN(0))
       ) {
         const swapIx = this.program.instruction.swap(XtoY, amountIx, byAmountIn, priceLimit, {
