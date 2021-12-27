@@ -396,9 +396,14 @@ export type Amm = {
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "payer",
           "isMut": true,
           "isSigner": true
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "lowerTick",
@@ -1753,9 +1758,14 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "payer",
           "isMut": true,
           "isSigner": true
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "lowerTick",
