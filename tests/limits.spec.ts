@@ -407,9 +407,10 @@ describe('limits', () => {
     }
   })
 
-  it.only('pool limited bit tickmap', async () => {
+  it.only('pool limited by tickmap', async () => {
     const tickSpacing = feeToTickSpacing(feeTier.fee)
     const initTick = getMaxTick(tickSpacing)
+
     const result = await createTokensAndPool(market, connection, wallet, initTick, feeTier)
     pair = result.pair
     mintAuthority = result.mintAuthority
@@ -436,17 +437,19 @@ describe('limits', () => {
 
     const liquidityByY = getLiquidityByY(
       mintAmount,
-      lowerTick,
-      upperTick,
+      -Infinity,
+      Infinity,
       poolData.sqrtPrice,
-      false
+      false,
+      pair.feeTier.tickSpacing
     ).liquidity
     const liquidityByX = getLiquidityByY(
       mintAmount,
-      lowerTick,
-      upperTick,
+      -Infinity,
+      Infinity,
       poolData.sqrtPrice,
-      false
+      false,
+      pair.feeTier.tickSpacing
     ).liquidity
 
     // calculation of liquidity might not be exactly equal on both tokens so taking smaller one
@@ -469,9 +472,6 @@ describe('limits', () => {
     assert.equal(position.lowerTickIndex, lowerTick)
     assert.equal(position.upperTickIndex, upperTick)
 
-    console.log(poolData.sqrtPrice.v.toString())
-    console.log(calculatePriceAfterSlippage(knownPrice, toDecimal(5, 2), !false).v.toString())
-
     await assertThrowsAsync(
       market.swap(
         {
@@ -486,6 +486,19 @@ describe('limits', () => {
         },
         owner
       )
+    )
+    await market.swap(
+      {
+        pair,
+        XtoY: true,
+        amount: new BN(1),
+        knownPrice,
+        slippage: toDecimal(5, 2),
+        accountX: userAccountX,
+        accountY: userAccountY,
+        byAmountIn: true
+      },
+      owner
     )
   })
 })
