@@ -418,11 +418,11 @@ export const getLiquidityByX = (
   if ((lowerTick == -Infinity || upperTick == Infinity) && tickSpacing == undefined)
     throw new Error('tickSpacing is required for calculating full range liquidity')
 
-  const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(tickSpacing)
   const lowerTickIndex = lowerTick != -Infinity ? lowerTick : getMinTick(tickSpacing)
+  const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(tickSpacing)
 
-  const lowerSqrtPrice = calculate_price_sqrt(upperTickIndex)
-  const upperSqrtPrice = calculate_price_sqrt(lowerTickIndex)
+  const lowerSqrtPrice = calculate_price_sqrt(lowerTickIndex)
+  const upperSqrtPrice = calculate_price_sqrt(upperTickIndex)
 
   return getLiquidityByXPrice(x, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
 }
@@ -475,11 +475,11 @@ export const getLiquidityByY = (
   if ((lowerTick == -Infinity || upperTick == Infinity) && tickSpacing == undefined)
     throw new Error('tickSpacing is required for calculating full range liquidity')
 
-  const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(tickSpacing)
   const lowerTickIndex = lowerTick != -Infinity ? lowerTick : getMinTick(tickSpacing)
+  const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(tickSpacing)
 
-  const lowerSqrtPrice = calculate_price_sqrt(upperTickIndex)
-  const upperSqrtPrice = calculate_price_sqrt(lowerTickIndex)
+  const lowerSqrtPrice = calculate_price_sqrt(lowerTickIndex)
+  const upperSqrtPrice = calculate_price_sqrt(upperTickIndex)
 
   return getLiquidityByYPrice(y, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
 }

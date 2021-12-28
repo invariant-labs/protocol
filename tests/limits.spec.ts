@@ -78,7 +78,7 @@ describe('limits', () => {
       { v: DENOMINATOR },
       false
     ).liquidity
-    const liquidityByX = getLiquidityByY(
+    const liquidityByX = getLiquidityByX(
       mintAmount,
       lowerTick,
       upperTick,
@@ -327,87 +327,7 @@ describe('limits', () => {
     )
   })
 
-  it.skip('big fee', async () => {
-    const mintAmount = new BN(2).pow(new BN(64)).subn(1)
-    const { owner, userAccountX, userAccountY } = await createUserWithTokens(
-      pair,
-      connection,
-      mintAuthority,
-      mintAmount
-    )
-
-    const lowerTick = -10000
-    const upperTick = 10000
-    const liquidityDelta = DENOMINATOR.mul(new BN(10).pow(new BN(18)))
-
-    await market.initPosition(
-      {
-        pair,
-        owner: owner.publicKey,
-        userTokenX: userAccountX,
-        userTokenY: userAccountY,
-        lowerTick,
-        upperTick,
-        liquidityDelta: { v: liquidityDelta }
-      },
-      owner
-    )
-
-    const amount = new BN(1e8)
-
-    let priceBefore = (await market.get(pair)).sqrtPrice.v
-    let prevFee = (await market.get(pair)).feeGrowthGlobalX.v
-
-    const chunk = 1
-    const repeats = 1
-
-    for (let i = 0; i < repeats; i++) {
-      const swaps = new Array(chunk).fill(0).map(async (_, i) => {
-        const oneWayTx = market.swapTransaction({
-          pair,
-          XtoY: true,
-          amount,
-          knownPrice,
-          slippage: toDecimal(5000 + i, 5),
-          accountX: userAccountX,
-          accountY: userAccountY,
-          byAmountIn: true,
-          owner: owner.publicKey
-        })
-
-        const otherWayTx = market.swapTransaction({
-          pair,
-          XtoY: false,
-          amount: amount.subn(6),
-          knownPrice,
-          slippage: toDecimal(5000 + i, 5),
-          accountX: userAccountX,
-          accountY: userAccountY,
-          byAmountIn: false,
-          owner: owner.publicKey
-        })
-
-        const ixs = await Promise.all([oneWayTx, otherWayTx])
-
-        await signAndSend(new Transaction().add(ixs[0]).add(ixs[1]), [owner], connection)
-      })
-
-      await Promise.all(swaps)
-
-      const poolAfter = await market.get(pair)
-      const priceAfter = poolAfter.sqrtPrice.v
-
-      console.log(
-        `price before: ${priceBefore}, price after: ${priceAfter}, feeGrowth: ${
-          poolAfter.feeGrowthGlobalX.v
-        } feeGrowthDelta: ${poolAfter.feeGrowthGlobalX.v.sub(prevFee)}`
-      )
-      prevFee = poolAfter.feeGrowthGlobalX.v
-      priceBefore = priceAfter
-    }
-  })
-
-  it.only('pool limited by tickmap', async () => {
+  it('swap at upper limit', async () => {
     const tickSpacing = feeToTickSpacing(feeTier.fee)
     const initTick = getMaxTick(tickSpacing)
 
@@ -419,41 +339,29 @@ describe('limits', () => {
     const knownPrice = poolData.sqrtPrice
     assert.equal(poolData.currentTickIndex, initTick)
     assert.equal(knownPrice.v.toString(), calculate_price_sqrt(initTick).v.toString())
-    console.log(`init tick: ${initTick}`)
 
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
-    const mintAmount = new BN(2).pow(new BN(64)).subn(2)
-    const upperTick = getMaxTick(tickSpacing)
-    const lowerTick = getMinTick(tickSpacing)
+    const mintAmount = new BN(2).pow(new BN(64)).subn(1)
+
+    const positionAmount = mintAmount.subn(1)
 
     const { owner, userAccountX, userAccountY } = await createUserWithTokens(
       pair,
       connection,
       mintAuthority,
-      mintAmount
+      positionAmount
     )
 
-    const liquidityByY = getLiquidityByY(
-      mintAmount,
-      -Infinity,
+    const liquidityDelta = getLiquidityByY(
+      positionAmount,
+      0,
       Infinity,
       poolData.sqrtPrice,
       false,
       pair.feeTier.tickSpacing
     ).liquidity
-    const liquidityByX = getLiquidityByY(
-      mintAmount,
-      -Infinity,
-      Infinity,
-      poolData.sqrtPrice,
-      false,
-      pair.feeTier.tickSpacing
-    ).liquidity
-
-    // calculation of liquidity might not be exactly equal on both tokens so taking smaller one
-    const liquidityDelta = liquidityByY.v.lt(liquidityByX.v) ? liquidityByY : liquidityByX
 
     await market.initPosition(
       {
@@ -461,7 +369,7 @@ describe('limits', () => {
         owner: owner.publicKey,
         userTokenX: userAccountX,
         userTokenY: userAccountY,
-        lowerTick: -Infinity,
+        lowerTick: 0,
         upperTick: Infinity,
         liquidityDelta
       },
@@ -469,8 +377,6 @@ describe('limits', () => {
     )
 
     const position = await market.getPosition(owner.publicKey, 0)
-    assert.equal(position.lowerTickIndex, lowerTick)
-    assert.equal(position.upperTickIndex, upperTick)
 
     await assertThrowsAsync(
       market.swap(
@@ -486,19 +392,6 @@ describe('limits', () => {
         },
         owner
       )
-    )
-    await market.swap(
-      {
-        pair,
-        XtoY: true,
-        amount: new BN(1),
-        knownPrice,
-        slippage: toDecimal(5, 2),
-        accountX: userAccountX,
-        accountY: userAccountY,
-        byAmountIn: true
-      },
-      owner
     )
   })
 })

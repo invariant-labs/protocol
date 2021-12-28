@@ -15,6 +15,7 @@
     "test:claim-amount": "anchor test --skip-build tests/simulate-claim-amount.spec.ts",
     "test:timestamp": "anchor test --skip-build tests/timestamp.spec.ts",
     "test:limits": "anchor test --skip-build tests/limits.spec.ts",
+    "test:random": "anchor test --skip-build tests/random.spec.ts",
     "test:create": "anchor test --skip-build tests-staker/create.spec.ts",
     "test:stake": "anchor test --skip-build tests-staker/stake.spec.ts",
     "test:withdraw-staker": "anchor test --skip-build tests-staker/withdraw.spec.ts",
