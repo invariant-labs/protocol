@@ -22,10 +22,12 @@ const main = async () => {
   const usdcToken = await createToken(connection, wallet, MINTER, USDC_DECIMAL)
   const usdtToken = await createToken(connection, wallet, MINTER, USDT_DECIMAL)
   const anaToken = await createToken(connection, wallet, MINTER, USDT_DECIMAL)
+  const msolToken = await createToken(connection, wallet, MINTER, SOL_DECIMAL)
 
   console.log(`SOL: ${solToken.publicKey}`)
   console.log(`USDC: ${usdcToken.publicKey}`)
   console.log(`USDT: ${usdtToken.publicKey}`)
   console.log(`ANA: ${anaToken.publicKey}`)
+  console.log(`MSOL: ${msolToken.publicKey}`)
 }
 main()
