@@ -6,8 +6,8 @@ use std::{
     ops::{Add, Div, Mul, Sub},
 };
 
-const SCALE: u8 = 12;
-const DENOMINATOR: u128 = 10u128.pow(SCALE as u32);
+pub const SCALE: u8 = 12;
+pub const DENOMINATOR: u128 = 10u128.pow(SCALE as u32);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TokenAmount(pub u64);
@@ -76,8 +76,10 @@ impl Decimal {
     pub fn big_mul(self, other: Decimal) -> Decimal {
         Decimal::new(
             U256::from(self.v)
-                .mul(U256::from(other.v))
-                .div(U256::from(DENOMINATOR))
+                .checked_mul(U256::from(other.v))
+                .unwrap()
+                .checked_div(U256::from(DENOMINATOR))
+                .unwrap()
                 .as_u128(),
         )
     }
@@ -85,9 +87,12 @@ impl Decimal {
     pub fn big_mul_up(self, other: Decimal) -> Decimal {
         Decimal::new(
             U256::from(self.v)
-                .mul(U256::from(other.v))
-                .add(U256::from(DENOMINATOR.checked_sub(1).unwrap()))
-                .div(U256::from(DENOMINATOR))
+                .checked_mul(U256::from(other.v))
+                .unwrap()
+                .checked_add(U256::from(DENOMINATOR.checked_sub(1).unwrap()))
+                .unwrap()
+                .checked_div(U256::from(DENOMINATOR))
+                .unwrap()
                 .as_u128(),
         )
     }
@@ -95,8 +100,10 @@ impl Decimal {
     pub fn big_div(self, other: Decimal) -> Decimal {
         Decimal::new(
             U256::from(self.v)
-                .mul(U256::from(DENOMINATOR))
-                .div(U256::from(other.v))
+                .checked_mul(U256::from(DENOMINATOR))
+                .unwrap()
+                .checked_div(U256::from(other.v))
+                .unwrap()
                 .as_u128(),
         )
     }
@@ -104,9 +111,12 @@ impl Decimal {
     pub fn big_div_up(self, other: Decimal) -> Decimal {
         Decimal::new(
             U256::from(self.v)
-                .mul(U256::from(DENOMINATOR))
-                .add(U256::from(other.v.checked_sub(1).unwrap()))
-                .div(U256::from(other.v))
+                .checked_mul(U256::from(DENOMINATOR))
+                .unwrap()
+                .checked_add(U256::from(other.v.checked_sub(1).unwrap()))
+                .unwrap()
+                .checked_div(U256::from(other.v))
+                .unwrap()
                 .as_u128(),
         )
     }
