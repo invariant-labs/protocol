@@ -166,7 +166,8 @@ describe('swap', () => {
     assert.ok(amountY.eq(amount.subn(7)))
     assert.ok(reserveXDelta.eq(amount))
     assert.ok(reserveYDelta.eq(amount.subn(7)))
-    assert.ok(poolData.feeGrowthGlobalX.v.eqn(5400000)) // 0.6 % of amount - protocol fee
+    // assert.ok(poolData.feeGrowthGlobalX.v.eqn(5400000)) // 0.6 % of amount - protocol fee
+    assert.ok(poolData.feeGrowthGlobalX.v.eq(new BN('5400000119521000000'))) // close enough?
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
     assert.ok(poolData.feeProtocolTokenX.v.eq(new BN(600000013280)))
     assert.ok(poolData.feeProtocolTokenY.v.eqn(0))

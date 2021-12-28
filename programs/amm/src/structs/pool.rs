@@ -2,6 +2,8 @@ use crate::decimal::Decimal;
 use crate::*;
 use anchor_lang::prelude::*;
 
+use super::FeeGrowth;
+
 #[account(zero_copy)]
 #[derive(PartialEq, Default, Debug)]
 pub struct Pool {
@@ -16,8 +18,8 @@ pub struct Pool {
     pub sqrt_price: Decimal,
     pub current_tick_index: i32, // nearest tick below the current price
     pub tickmap: Pubkey,
-    pub fee_growth_global_x: Decimal,
-    pub fee_growth_global_y: Decimal,
+    pub fee_growth_global_x: FeeGrowth,
+    pub fee_growth_global_y: FeeGrowth,
     pub fee_protocol_token_x: Decimal,
     pub fee_protocol_token_y: Decimal,
     pub seconds_per_liquidity_global: Decimal,
@@ -33,11 +35,12 @@ impl Pool {
         if amount == Decimal::new(0) || { self.liquidity } == Decimal::new(0) {
             return;
         }
-        let fee_growth = amount.big_div(self.liquidity);
+        let fee_growth = FeeGrowth::from_fee(self.liquidity, amount);
+
         if x {
-            self.fee_growth_global_x.v = self.fee_growth_global_x.v + fee_growth.v;
+            self.fee_growth_global_x = self.fee_growth_global_x + fee_growth;
         } else {
-            self.fee_growth_global_y.v = self.fee_growth_global_y.v + fee_growth.v;
+            self.fee_growth_global_y = self.fee_growth_global_y + fee_growth;
         }
     }
 

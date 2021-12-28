@@ -2,6 +2,8 @@ use crate::decimal::Decimal;
 use crate::*;
 use anchor_lang::prelude::*;
 
+use super::FeeGrowth;
+
 #[account(zero_copy)]
 #[derive(PartialEq, Default, Debug)]
 pub struct Tick {
@@ -10,8 +12,8 @@ pub struct Tick {
     pub liquidity_change: Decimal,
     pub liquidity_gross: Decimal,
     pub sqrt_price: Decimal,
-    pub fee_growth_outside_x: Decimal,
-    pub fee_growth_outside_y: Decimal,
+    pub fee_growth_outside_x: FeeGrowth,
+    pub fee_growth_outside_y: FeeGrowth,
     pub seconds_per_liquidity_outside: Decimal,
     pub seconds_outside: u64,
     pub bump: u8,
@@ -134,8 +136,8 @@ mod tests {
                 sign: true,
                 liquidity_change: Decimal::from_integer(2),
                 liquidity_gross: Decimal::from_integer(2),
-                fee_growth_outside_x: Decimal::from_integer(2),
-                fee_growth_outside_y: Decimal::from_integer(2),
+                fee_growth_outside_x: FeeGrowth::from_integer(2),
+                fee_growth_outside_y: FeeGrowth::from_integer(2),
                 ..Default::default()
             };
             let liquidity_delta: Decimal = Decimal::from_integer(1);
@@ -147,8 +149,8 @@ mod tests {
             assert_eq!(tick.sign, true);
             assert_eq!({ tick.liquidity_change }, Decimal::from_integer(3));
             assert_eq!({ tick.liquidity_gross }, Decimal::from_integer(3));
-            assert_eq!({ tick.fee_growth_outside_x }, Decimal::from_integer(2));
-            assert_eq!({ tick.fee_growth_outside_y }, Decimal::from_integer(2));
+            assert_eq!({ tick.fee_growth_outside_x }, FeeGrowth::from_integer(2));
+            assert_eq!({ tick.fee_growth_outside_y }, FeeGrowth::from_integer(2));
         }
         {
             let mut tick = Tick {
@@ -156,8 +158,8 @@ mod tests {
                 sign: true,
                 liquidity_change: Decimal::from_integer(3),
                 liquidity_gross: Decimal::from_integer(7),
-                fee_growth_outside_x: Decimal::from_integer(13),
-                fee_growth_outside_y: Decimal::from_integer(11),
+                fee_growth_outside_x: FeeGrowth::from_integer(13),
+                fee_growth_outside_y: FeeGrowth::from_integer(11),
                 ..Default::default()
             };
             let liquidity_delta: Decimal = Decimal::from_integer(1);
@@ -169,8 +171,8 @@ mod tests {
             assert_eq!(tick.sign, true);
             assert_eq!({ tick.liquidity_change }, Decimal::from_integer(2));
             assert_eq!({ tick.liquidity_gross }, Decimal::from_integer(8));
-            assert_eq!({ tick.fee_growth_outside_x }, Decimal::from_integer(13));
-            assert_eq!({ tick.fee_growth_outside_y }, Decimal::from_integer(11));
+            assert_eq!({ tick.fee_growth_outside_x }, FeeGrowth::from_integer(13));
+            assert_eq!({ tick.fee_growth_outside_y }, FeeGrowth::from_integer(11));
         }
     }
 }
