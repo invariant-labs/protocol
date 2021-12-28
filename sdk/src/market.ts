@@ -383,8 +383,8 @@ export class Market {
   ) {
     const state = await this.get(pair)
 
-    const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(pair.feeTier.tickSpacing)
-    const lowerTickIndex = lowerTick != -Infinity ? lowerTick : getMinTick(pair.feeTier.tickSpacing)
+    const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(pair.tickSpacing)
+    const lowerTickIndex = lowerTick != -Infinity ? lowerTick : getMinTick(pair.tickSpacing)
 
     // maybe in the future index cloud be store at market
     const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTickIndex)
@@ -427,8 +427,8 @@ export class Market {
 
   async initPositionTx(initPosition: InitPosition) {
     const { owner, pair, lowerTick, upperTick } = initPosition
-    const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(pair.feeTier.tickSpacing)
-    const lowerTickIndex = lowerTick != -Infinity ? lowerTick : getMinTick(pair.feeTier.tickSpacing)
+    const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(pair.tickSpacing)
+    const lowerTickIndex = lowerTick != -Infinity ? lowerTick : getMinTick(pair.tickSpacing)
 
     const [tickmap, pool] = await Promise.all([this.getTickmap(pair), this.get(pair)])
 

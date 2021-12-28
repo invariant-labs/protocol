@@ -1,5 +1,5 @@
 export type Amm = {
-  "version": "0.0.0",
+  "version": "0.1.0",
   "name": "amm",
   "instructions": [
     {
@@ -1253,97 +1253,97 @@ export type Amm = {
   ],
   "errors": [
     {
-      "code": 300,
+      "code": 6000,
       "name": "ZeroAmount",
       "msg": "Amount is zero"
     },
     {
-      "code": 301,
+      "code": 6001,
       "name": "ZeroOutput",
       "msg": "Output would be zero"
     },
     {
-      "code": 302,
+      "code": 6002,
       "name": "WrongTick",
       "msg": "Not the expected tick"
     },
     {
-      "code": 303,
+      "code": 6003,
       "name": "WrongLimit",
       "msg": "Price limit is on the wrong side of price"
     },
     {
-      "code": 304,
+      "code": 6004,
       "name": "InvalidTickIndex",
       "msg": "Tick index not divisible by spacing or over limit"
     },
     {
-      "code": 305,
+      "code": 6005,
       "name": "InvalidTickInterval",
       "msg": "Invalid tick_lower or tick_upper"
     },
     {
-      "code": 306,
+      "code": 6006,
       "name": "NoMoreTicks",
       "msg": "There is no more tick in that direction"
     },
     {
-      "code": 307,
+      "code": 6007,
       "name": "TickNotFound",
       "msg": "Correct tick not found in context"
     },
     {
-      "code": 308,
+      "code": 6008,
       "name": "PriceLimitReached",
       "msg": "Price would cross swap limit"
     },
     {
-      "code": 309,
+      "code": 6009,
       "name": "InvalidTickLiquidity",
       "msg": "Invalid tick liquidity"
     },
     {
-      "code": 310,
+      "code": 6010,
       "name": "EmptyPositionPokes",
       "msg": "Disable empty position pokes"
     },
     {
-      "code": 311,
+      "code": 6011,
       "name": "InvalidPositionLiquidity",
       "msg": "Invalid tick liquidity"
     },
     {
-      "code": 312,
+      "code": 6012,
       "name": "InvalidPoolLiquidity",
       "msg": "Invalid pool liquidity"
     },
     {
-      "code": 313,
+      "code": 6013,
       "name": "InvalidPositionIndex",
       "msg": "Invalid position index"
     },
     {
-      "code": 314,
+      "code": 6014,
       "name": "PositionWithoutLiquidity",
       "msg": "Position liquidity would be zero"
     },
     {
-      "code": 315,
+      "code": 6015,
       "name": "Unauthorized",
       "msg": "You are not admin"
     },
     {
-      "code": 316,
+      "code": 6016,
       "name": "InvalidPoolTokenAddresses",
       "msg": "Invalid pool token addresses"
     },
     {
-      "code": 317,
+      "code": 6017,
       "name": "NegativeTime",
       "msg": "Time cannot be negative"
     },
     {
-      "code": 318,
+      "code": 6018,
       "name": "OracleAlreadyInitialized",
       "msg": "Oracle is already initialized"
     },
@@ -1356,7 +1356,7 @@ export type Amm = {
 };
 
 export const IDL: Amm = {
-  "version": "0.0.0",
+  "version": "0.1.0",
   "name": "amm",
   "instructions": [
     {
@@ -2610,97 +2610,97 @@ export const IDL: Amm = {
   ],
   "errors": [
     {
-      "code": 300,
+      "code": 6000,
       "name": "ZeroAmount",
       "msg": "Amount is zero"
     },
     {
-      "code": 301,
+      "code": 6001,
       "name": "ZeroOutput",
       "msg": "Output would be zero"
     },
     {
-      "code": 302,
+      "code": 6002,
       "name": "WrongTick",
       "msg": "Not the expected tick"
     },
     {
-      "code": 303,
+      "code": 6003,
       "name": "WrongLimit",
       "msg": "Price limit is on the wrong side of price"
     },
     {
-      "code": 304,
+      "code": 6004,
       "name": "InvalidTickIndex",
       "msg": "Tick index not divisible by spacing or over limit"
     },
     {
-      "code": 305,
+      "code": 6005,
       "name": "InvalidTickInterval",
       "msg": "Invalid tick_lower or tick_upper"
     },
     {
-      "code": 306,
+      "code": 6006,
       "name": "NoMoreTicks",
       "msg": "There is no more tick in that direction"
     },
     {
-      "code": 307,
+      "code": 6007,
       "name": "TickNotFound",
       "msg": "Correct tick not found in context"
     },
     {
-      "code": 308,
+      "code": 6008,
       "name": "PriceLimitReached",
       "msg": "Price would cross swap limit"
     },
     {
-      "code": 309,
+      "code": 6009,
       "name": "InvalidTickLiquidity",
       "msg": "Invalid tick liquidity"
     },
     {
-      "code": 310,
+      "code": 6010,
       "name": "EmptyPositionPokes",
       "msg": "Disable empty position pokes"
     },
     {
-      "code": 311,
+      "code": 6011,
       "name": "InvalidPositionLiquidity",
       "msg": "Invalid tick liquidity"
     },
     {
-      "code": 312,
+      "code": 6012,
       "name": "InvalidPoolLiquidity",
       "msg": "Invalid pool liquidity"
     },
     {
-      "code": 313,
+      "code": 6013,
       "name": "InvalidPositionIndex",
       "msg": "Invalid position index"
     },
     {
-      "code": 314,
+      "code": 6014,
       "name": "PositionWithoutLiquidity",
       "msg": "Position liquidity would be zero"
     },
     {
-      "code": 315,
+      "code": 6015,
       "name": "Unauthorized",
       "msg": "You are not admin"
     },
     {
-      "code": 316,
+      "code": 6016,
       "name": "InvalidPoolTokenAddresses",
       "msg": "Invalid pool token addresses"
     },
     {
-      "code": 317,
+      "code": 6017,
       "name": "NegativeTime",
       "msg": "Time cannot be negative"
     },
     {
-      "code": 318,
+      "code": 6018,
       "name": "OracleAlreadyInitialized",
       "msg": "Oracle is already initialized"
     },
