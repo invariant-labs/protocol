@@ -66,25 +66,23 @@ export class Market {
     return instance
   }
 
-  async create({ pair, signer, initTick, protocolFee }: CreatePool) {
+  async createPoolInstruction(
+    { pair, payer, initTick, protocolFee, tokenX, tokenY }: CreatePool,
+    bitmapKeypair?: Keypair
+  ) {
+    payer = payer || this.wallet.publicKey
+    bitmapKeypair = bitmapKeypair || Keypair.generate()
     const tick = initTick || 0
 
     const { address: stateAddress } = await this.getStateAddress()
-    console.log("stateAddress: ", stateAddress.toString())
 
     const [poolAddress, bump] = await pair.getAddressAndBump(this.program.programId)
     const { address: feeTierAddress } = await this.getFeeTierAddress(pair.feeTier)
 
-    const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, signer)
-    const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, signer)
-
     const tokenXReserve = await tokenX.createAccount(this.programAuthority)
     const tokenYReserve = await tokenY.createAccount(this.programAuthority)
 
-    const bitmapKeypair = Keypair.generate()
-    
-    console.log("############################")
-    await this.program.rpc.createPool(bump, tick, protocolFee, {
+    return this.program.instruction.createPool(bump, tick, protocolFee, {
       accounts: {
         state: stateAddress,
         pool: poolAddress,
@@ -94,15 +92,24 @@ export class Market {
         tokenY: tokenY.publicKey,
         tokenXReserve,
         tokenYReserve,
-        payer: signer.publicKey,
+        payer,
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId
       },
-      signers: [signer, bitmapKeypair],
       instructions: [await this.program.account.tickmap.createInstruction(bitmapKeypair)]
     })
-    console.log("############################")
-    
+  }
+
+  async createPoolTransaction(createPool: CreatePool, bitmapKeypair?: Keypair) {
+    const ix = await this.createPoolInstruction(createPool, bitmapKeypair)
+    return new Transaction().add(ix)
+  }
+
+  async createPool(createPool: CreatePool, signer: Keypair) {
+    const bitmapKeypair = Keypair.generate()
+    const tx = await this.createPoolTransaction(createPool, bitmapKeypair)
+
+    await signAndSend(tx, [signer, bitmapKeypair], this.connection)
   }
 
   async getProgramAuthority() {
@@ -126,7 +133,6 @@ export class Market {
     const stateAddress = this.getStateAddress()
     const poolAddress = pair.getAddress(this.program.programId)
     const feeTierAddress = pair.getFeeTierAddress(this.program.programId)
-    
   }
 
   async getPool(pair: Pair) {
@@ -273,7 +279,8 @@ export class Market {
     return this.getPositionAddress(owner, positionList.head)
   }
 
-  async createFeeTierInstruction(feeTier: FeeTier, admin: PublicKey) {
+  async createFeeTierInstruction({ feeTier, admin }: CreateFeeTier) {
+    admin = admin || this.wallet.publicKey
     const { fee, tickSpacing } = feeTier
     const { address, bump } = await this.getFeeTierAddress(feeTier)
     const ts = tickSpacing ?? feeToTickSpacing(fee)
@@ -289,21 +296,20 @@ export class Market {
     })
   }
 
-  //Test-only usage
-  //Admin function
-  async createFeeTier({ feeTier, admin }: CreateFeeTier, signer?: Keypair) {
-    admin = admin || this.wallet.publicKey 
-    const ix = await this.createFeeTierInstruction(feeTier, admin)
-    const tx = new Transaction().add(ix)
-
-    if (signer === undefined) {
-      this.wallet.signTransaction(tx)
-    } else {
-      await signAndSend(new Transaction().add(ix), [signer], this.connection)
-    }
+  async createFeeTierTransaction(createFeeTier: CreateFeeTier) {
+    const ix = await this.createFeeTierInstruction(createFeeTier)
+    return new Transaction().add(ix)
   }
 
-  async createStateInstruction(admin: PublicKey) {
+  //Admin function
+  async createFeeTier(createFeeTier: CreateFeeTier, signer: Keypair) {
+    const tx = await this.createFeeTierTransaction(createFeeTier)
+
+    await signAndSend(tx, [signer], this.connection)
+  }
+
+  async createStateInstruction(admin?: PublicKey) {
+    admin = admin || this.wallet.publicKey
     const { programAuthority, nonce } = await this.getProgramAuthority()
     const { address, bump } = await this.getStateAddress()
 
@@ -318,16 +324,15 @@ export class Market {
     })
   }
 
-  async createState(admin?: Keypair) {
-    const adminPub = admin.publicKey || this.wallet.publicKey
-    const ix = await this.createStateInstruction(adminPub)
-    const tx = new Transaction().add(ix)
+  async createStateTransaction(admin?: PublicKey) {
+    const ix = await this.createStateInstruction(admin)
+    return new Transaction().add(ix)
+  }
 
-    if (admin === undefined) {
-      this.wallet.signTransaction(tx)
-    } else {
-      await signAndSend(new Transaction().add(ix), [admin], this.connection)
-    }
+  async createState(admin: PublicKey, signer: Keypair) {
+    const tx = await this.createStateTransaction(admin)
+
+    await signAndSend(tx, [signer], this.connection)
   }
 
   async getStateAddress() {
@@ -347,7 +352,8 @@ export class Market {
     return (await this.program.account.state.fetch(address)) as State
   }
 
-  async createTickInstruction(pair: Pair, index: number, payer: PublicKey) {
+  async createTickInstruction({ pair, index, payer }: CreateTick) {
+    payer = payer || this.wallet.publicKey
     const state = await this.getPool(pair)
     const { tickAddress, tickBump } = await this.getTickAddress(pair, index)
 
@@ -365,29 +371,34 @@ export class Market {
     }) as TransactionInstruction
   }
 
-  async createTick({ pair, index, payer }: CreateTick, signer?: Keypair) {
-    payer = payer || this.wallet.publicKey
-    const ix = await this.createTickInstruction(pair, index, payer)
-    const tx = new Transaction().add(ix)
-    
-    if (signer === undefined) {
-      this.wallet.signTransaction(tx)
-    } else {
-      await signAndSend(new Transaction().add(ix), [signer], this.connection)
-    }
+  async createTickTransaction(createTick: CreateTick) {
+    const ix = await this.createTickInstruction(createTick)
+    return new Transaction().add(ix)
   }
 
-  async createTicksFromRange({ pair, payer }: CreateTick, start: number, stop: number, signer?: Keypair) {
+  async createTick(createTick: CreateTick, signer: Keypair) {
+    const tx = await this.createTickTransaction(createTick)
+
+    await signAndSend(tx, [signer], this.connection)
+  }
+
+  async createTicksFromRange(
+    { pair, payer }: CreateTick,
+    start: number,
+    stop: number,
+    signer?: Keypair
+  ) {
     const step = pair.feeTier.tickSpacing ?? feeToTickSpacing(pair.feeTier.fee)
 
     Promise.all(
       generateTicksArray(start, stop, step).map(async (index) => {
-        await this.createTick({pair, index, payer}, signer)
+        await this.createTick({ pair, index, payer }, signer)
       })
     )
   }
 
-  async createPositionListInstruction(owner: PublicKey) {
+  async createPositionListInstruction(owner?: PublicKey) {
+    owner = owner || this.wallet.publicKey
     const { positionListAddress, positionListBump } = await this.getPositionListAddress(owner)
 
     return this.program.instruction.createPositionList(positionListBump, {
@@ -401,22 +412,22 @@ export class Market {
     }) as TransactionInstruction
   }
 
-  async createPositionList(owner?: PublicKey, signer?: Keypair) {
-    let ownerPub = owner || this.wallet.publicKey
-    const ix = await this.createPositionListInstruction(ownerPub)
-    const tx = new Transaction().add(ix)
-    
-    if (signer === undefined) {
-      this.wallet.signTransaction(tx)
-    } else {
-      await signAndSend(new Transaction().add(ix), [signer], this.connection)
-    }
+  async createPositionListTransaction(owner?) {
+    const ix = await this.createPositionListInstruction(owner)
+    return new Transaction().add(ix)
   }
 
-  async initPositionInstruction(initPosition: InitPosition, assumeFirstPosition: boolean = false) {
-    const { pair, owner, userTokenX, userTokenY, lowerTick, upperTick, liquidityDelta } = initPosition
-    const state = await this.getPool(pair)
+  async createPositionList(owner: PublicKey, signer: Keypair) {
+    const tx = await this.createPositionListTransaction(owner)
 
+    await signAndSend(tx, [signer], this.connection)
+  }
+
+  async initPositionInstruction(
+    { pair, owner, userTokenX, userTokenY, lowerTick, upperTick, liquidityDelta }: InitPosition,
+    assumeFirstPosition: boolean = false
+  ) {
+    const state = await this.getPool(pair)
     // maybe in the future index cloud be store at market
     const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTick)
     const { tickAddress: upperTickAddress } = await this.getTickAddress(pair, upperTick)
@@ -459,8 +470,8 @@ export class Market {
   }
 
   async initPositionTx(initPosition: InitPosition) {
-    const { owner, pair, lowerTick, upperTick } = initPosition
-
+    const { pair, lowerTick, upperTick } = initPosition
+    const payer = initPosition.owner || this.wallet.publicKey
     const [tickmap, pool] = await Promise.all([this.getTickmap(pair), this.getPool(pair)])
 
     const lowerExists = isInitialized(tickmap, lowerTick, pool.tickSpacing)
@@ -469,51 +480,33 @@ export class Market {
     const tx = new Transaction()
 
     if (!lowerExists) {
-      tx.add(await this.createTickInstruction(pair, lowerTick, owner))
+      tx.add(await this.createTickInstruction({ pair, index: lowerTick, payer }))
     }
     if (!upperExists) {
-      tx.add(await this.createTickInstruction(pair, upperTick, owner))
+      tx.add(await this.createTickInstruction({ pair, index: upperTick, payer }))
     }
 
-    const { positionListAddress } = await this.getPositionListAddress(owner)
+    const { positionListAddress } = await this.getPositionListAddress(payer)
     const account = await this.connection.getAccountInfo(positionListAddress)
 
     if (account === null) {
-      tx.add(await this.createPositionListInstruction(owner))
+      tx.add(await this.createPositionListInstruction(payer))
       return tx.add(await this.initPositionInstruction(initPosition, true))
     }
 
     return tx.add(await this.initPositionInstruction(initPosition, false))
   }
 
-  async initPosition(initPosition: InitPosition, signer?: Keypair) {
-    initPosition.owner = initPosition.owner || this.wallet.publicKey
+  async initPosition(initPosition: InitPosition, signer: Keypair) {
     const tx = await this.initPositionTx(initPosition)
-    if (signer === undefined) {
-      this.wallet.signTransaction(tx)
-    } else {
-      await signAndSend(tx, [signer], this.connection)
-    }
+
+    await signAndSend(tx, [signer], this.connection)
   }
 
-  async swap(swap: Swap, signer?: Keypair, overridePriceLimit?: BN) {
-    swap.owner = swap.owner || this.wallet.publicKey
-    const ix = await this.swapInstruction(swap, overridePriceLimit)
-    const tx = new Transaction().add(ix)
+  async swapInstruction(swap: Swap, overridePriceLimit?: BN) {
+    const { pair, XtoY, amount, knownPrice, slippage, accountX, accountY, byAmountIn } = swap
+    const owner = swap.owner || this.wallet.publicKey
 
-    if (signer === undefined) {
-      this.wallet.signTransaction(tx)
-    } else {
-      await signAndSend(tx, [signer], this.connection)
-    }
-    
-  }
-
-  async swapInstruction(
-    swap: Swap,
-    overridePriceLimit?: BN
-  ) {
-    const { pair, owner, XtoY, amount, knownPrice, slippage, accountX, accountY, byAmountIn} = swap
     const pool = await this.getPool(pair)
     const tickmap = await this.getTickmap(pair)
 
@@ -543,7 +536,7 @@ export class Market {
       })
     )
 
-    const swapIx = this.program.instruction.swap(XtoY, amount, byAmountIn, priceLimit, {
+    return this.program.instruction.swap(XtoY, amount, byAmountIn, priceLimit, {
       remainingAccounts: remainingAccounts.map((pubkey) => {
         return { pubkey, isWritable: true, isSigner: false }
       }),
@@ -562,9 +555,17 @@ export class Market {
         tokenProgram: TOKEN_PROGRAM_ID
       }
     })
+  }
 
-    const tx = new Transaction().add(swapIx)
-    return tx
+  async swapTransaction(swap: Swap, overridePriceLimit?: BN) {
+    const ix = await this.swapInstruction(swap, overridePriceLimit)
+    return new Transaction().add(ix)
+  }
+
+  async swap(swap: Swap, signer: Keypair, overridePriceLimit?: BN) {
+    const tx = await this.swapTransaction(swap, overridePriceLimit)
+
+    await signAndSend(tx, [signer], this.connection)
   }
 
   async getReserveBalances(pair: Pair, tokenX: Token, tokenY: Token) {
@@ -579,7 +580,9 @@ export class Market {
   }
 
   async claimFeeInstruction(claimFee: ClaimFee) {
-    const { pair, owner, userTokenX, userTokenY, index } = claimFee
+    const { pair, userTokenX, userTokenY, index } = claimFee
+    const owner = claimFee.owner || this.wallet.publicKey
+    
     const state = await this.getPool(pair)
     const { positionAddress } = await this.getPositionAddress(owner, index)
     const position = await this.getPosition(owner, index)
@@ -617,20 +620,21 @@ export class Market {
     ) as TransactionInstruction
   }
 
-  async claimFee(claimFee: ClaimFee, signer?: Keypair) {
-    claimFee.owner = claimFee.owner || this.wallet.publicKey
+  async claimFeeTransaction(claimFee: ClaimFee) {
     const ix = await this.claimFeeInstruction(claimFee)
-    const tx = new Transaction().add(ix)
+    return new Transaction().add(ix)
+  }
 
-    if (signer === undefined) {
-      this.wallet.signTransaction(tx)
-    } else {
-      await signAndSend(tx, [signer], this.connection)
-    }
+  async claimFee(claimFee: ClaimFee, signer: Keypair) {
+    const tx = await this.claimFeeTransaction(claimFee)
+
+    await signAndSend(tx, [signer], this.connection)
   }
 
   async withdrawProtocolFeeInstruction(withdrawProtocolFee: WithdrawProtocolFee) {
-    const { pair, accountX, accountY, admin } = withdrawProtocolFee
+    const { pair, accountX, accountY } = withdrawProtocolFee
+    const admin = withdrawProtocolFee.admin || this.wallet.publicKey
+
     const pool = await this.getPool(pair)
 
     return this.program.instruction.withdrawProtocolFee({
@@ -650,23 +654,23 @@ export class Market {
     }) as TransactionInstruction
   }
 
-  //Admin function
-  async withdrawProtocolFee(withdrawProtocolFee: WithdrawProtocolFee, signer?: Keypair) {
-    withdrawProtocolFee.admin = withdrawProtocolFee.admin || this.wallet.publicKey
+  async withdrawProtocolFeeTransaction(withdrawProtocolFee: WithdrawProtocolFee) {
     const ix = await this.withdrawProtocolFeeInstruction(withdrawProtocolFee)
-    const tx = new Transaction().add(ix)
-    
-    if (signer === undefined) {
-      this.wallet.signTransaction(tx)
-    } else {
-      await signAndSend(tx, [signer], this.connection)
-    }
-    
+    return new Transaction().add(ix)
+  }
+
+  //Admin function
+  async withdrawProtocolFee(withdrawProtocolFee: WithdrawProtocolFee, signer: Keypair) {
+    const tx = await this.withdrawProtocolFeeTransaction(withdrawProtocolFee)
+
+    await signAndSend(tx, [signer], this.connection)
   }
 
   async removePositionInstruction(removePosition: RemovePosition): Promise<TransactionInstruction> {
+    const { pair, index, userTokenX, userTokenY } = removePosition
+    const owner = removePosition.owner || this.wallet.publicKey
+
     const positionList = await this.getPositionList(removePosition.owner)
-    const { pair, owner, index, userTokenX, userTokenY} = removePosition
     const { positionListAddress } = await this.getPositionListAddress(owner)
     const { positionAddress: removedPositionAddress } = await this.getPositionAddress(owner, index)
     const { positionAddress: lastPositionAddress } = await this.getPositionAddress(
@@ -714,20 +718,24 @@ export class Market {
     ) as TransactionInstruction
   }
 
-  async removePosition(removePosition: RemovePosition, signer?: Keypair) {
-    removePosition.owner = removePosition.owner || this.wallet.publicKey
+  async removePositionTransaction(removePosition: RemovePosition) {
     const ix = await this.removePositionInstruction(removePosition)
-    const tx = new Transaction().add(ix)
-
-    if (signer === undefined) {
-      this.wallet.signTransaction(tx)
-    } else {
-      signAndSend(tx, [signer], this.connection)
-    }
+    return new Transaction().add(ix)
   }
 
-  async transferPositionOwnershipInstruction(transferPositionOwnership: TransferPositionOwnership): Promise<TransactionInstruction> {
-    const {owner, recipient, index} = transferPositionOwnership
+  async removePosition(removePosition: RemovePosition, signer: Keypair) {
+    const tx = await this.removePositionTransaction(removePosition)
+
+    await signAndSend(tx, [signer], this.connection)
+  }
+
+  async transferPositionOwnershipInstruction(
+    transferPositionOwnership: TransferPositionOwnership
+  ): Promise<TransactionInstruction> {
+    const { index } = transferPositionOwnership
+    const owner = transferPositionOwnership.owner || this.wallet.publicKey
+    const recipient = transferPositionOwnership.recipient || this.wallet.publicKey
+
     const { positionListAddress: ownerList } = await this.getPositionListAddress(owner)
     const { positionListAddress: recipientList } = await this.getPositionListAddress(recipient)
 
@@ -755,27 +763,28 @@ export class Market {
     }) as TransactionInstruction
   }
 
-  async transferPositionOwnership(transferPositionOwnership: TransferPositionOwnership, signer?: Keypair) {
-    transferPositionOwnership.owner = transferPositionOwnership.owner || this.wallet.publicKey
+  async transferPositionOwnershipTransaction(transferPositionOwnership: TransferPositionOwnership) {
     const ix = await this.transferPositionOwnershipInstruction(transferPositionOwnership)
-    const tx = new Transaction().add(ix)
+    return new Transaction().add(ix)
+  }
 
-    if (signer === undefined) {
-      this.wallet.signTransaction(tx)
-    } else {
-      signAndSend(tx, [signer], this.connection)
-    }
+  async transferPositionOwnership(
+    transferPositionOwnership: TransferPositionOwnership,
+    signer: Keypair
+  ) {
+    const tx = await this.transferPositionOwnershipTransaction(transferPositionOwnership)
+
+    await signAndSend(tx, [signer], this.connection)
   }
 
   async updateSecondsPerLiquidityInstruction(updateSecondsPerLiquidity: UpdateSecondsPerLiquidity) {
-    const {pair, owner, lowerTickIndex, upperTickIndex, index } = updateSecondsPerLiquidity
+    const { pair, lowerTickIndex, upperTickIndex, index } = updateSecondsPerLiquidity
+    const owner = updateSecondsPerLiquidity.owner || this.wallet.publicKey
+
     const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTickIndex)
     const { tickAddress: upperTickAddress } = await this.getTickAddress(pair, upperTickIndex)
     const poolAddress = await pair.getAddress(this.program.programId)
-    const { positionAddress: positionAddress } = await this.getPositionAddress(
-      owner,
-      index
-    )
+    const { positionAddress: positionAddress } = await this.getPositionAddress(owner, index)
 
     return this.program.instruction.updateSecondsPerLiquidity(
       lowerTickIndex,
@@ -797,23 +806,46 @@ export class Market {
     ) as TransactionInstruction
   }
 
-  async initializeOracle(pair: Pair, payer: Keypair) {
-    const oracleKeypair = Keypair.generate()
+  async updateSecondsPerLiquidityTransaction(updateSecondsPerLiquidity: UpdateSecondsPerLiquidity) {
+    const ix = await this.updateSecondsPerLiquidityInstruction(updateSecondsPerLiquidity)
+    return new Transaction().add(ix)
+  }
+
+  async updateSecondsPerLiquidity(updateSecondsPerLiquidity: UpdateSecondsPerLiquidity, signer: Keypair) {
+    const tx = await this.updateSecondsPerLiquidityTransaction(updateSecondsPerLiquidity)
+
+    await signAndSend(tx, [signer], this.connection)
+  }
+
+  async initializeOracleInstruction({ pair, payer }: InitializeOracle, oracleKeypair?: Keypair) {
+    payer = payer || this.wallet.publicKey
+    oracleKeypair = oracleKeypair || Keypair.generate()
     const poolAddress = await pair.getAddress(this.program.programId)
 
-    return await this.program.rpc.initializeOracle({
+    return this.program.instruction.initializeOracle({
       accounts: {
         pool: poolAddress,
         oracle: oracleKeypair.publicKey,
         tokenX: pair.tokenX,
         tokenY: pair.tokenY,
-        payer: payer.publicKey,
+        payer,
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId
       },
-      signers: [payer, oracleKeypair],
       instructions: [await this.program.account.oracle.createInstruction(oracleKeypair)]
     })
+  }
+
+  async initializeOracleTransaction(initializeOracle: InitializeOracle, oracleKeypair?: Keypair) {
+    const ix = await this.initializeOracleInstruction(initializeOracle, oracleKeypair)
+    return new Transaction().add(ix)
+  }
+
+  async initializeOracle(initializeOracle: InitializeOracle, signer: Keypair) {
+    const oracleKeypair = Keypair.generate()
+    const tx = await this.initializeOracleTransaction(initializeOracle, oracleKeypair)
+
+    signAndSend(tx, [signer ,oracleKeypair], this.connection)
   }
 
   async getOracle(pair: Pair) {
@@ -934,9 +966,11 @@ export interface ModifyPosition {
 
 export interface CreatePool {
   pair: Pair
-  signer: Keypair
+  payer: PublicKey
   initTick?: number
   protocolFee: Decimal
+  tokenX: Token
+  tokenY: Token
 }
 export interface ClaimFee {
   pair: Pair
@@ -964,29 +998,34 @@ export interface UpdateSecondsPerLiquidity {
   index: number
 }
 export interface CreateFeeTier {
-  feeTier: FeeTier,
+  feeTier: FeeTier
   admin?: PublicKey
 }
 export interface CreateTick {
-  pair: Pair,
-  index: number,
+  pair: Pair
+  index: number
   payer?: PublicKey
 }
 export interface WithdrawProtocolFee {
-  pair: Pair,
-  accountX: PublicKey,
-  accountY: PublicKey,
+  pair: Pair
+  accountX: PublicKey
+  accountY: PublicKey
   admin?: PublicKey
 }
 export interface RemovePosition {
-  pair: Pair,
-  owner?: PublicKey,
-  index: number,
-  userTokenX: PublicKey,
+  pair: Pair
+  owner?: PublicKey
+  index: number
+  userTokenX: PublicKey
   userTokenY: PublicKey
 }
 export interface TransferPositionOwnership {
-  owner?: PublicKey,
-  recipient: PublicKey,
+  owner?: PublicKey
+  recipient?: PublicKey
   index: number
+}
+
+export interface InitializeOracle {
+  pair: Pair
+  payer?: PublicKey
 }
