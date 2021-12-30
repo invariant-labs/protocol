@@ -79,8 +79,8 @@ describe('reversed', () => {
     assert.ok(createdPool.currentTickIndex == 0)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenX.v.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenY.v.eqn(0))
+    assert.ok(createdPool.feeProtocolTokenX.eqn(0))
+    assert.ok(createdPool.feeProtocolTokenY.eqn(0))
 
     const tickmapData = await market.getTickmap(pair)
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
@@ -184,8 +184,8 @@ describe('reversed', () => {
 
     assert.ok(poolData.feeGrowthGlobalX.v.eqn(0))
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(4042169)) // 0.6 % of amount - protocol fee
-    assert.ok(poolData.feeProtocolTokenX.v.eqn(0))
-    assert.ok(poolData.feeProtocolTokenY.v.eq(new BN(598199800000)))
+    assert.ok(poolData.feeProtocolTokenX.eqn(0))
+    assert.ok(poolData.feeProtocolTokenY.eq(new BN(598199800000)))
 
     // Check ticks
     const lowerTickData = await market.getTick(pair, lowerTick)

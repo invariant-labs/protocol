@@ -80,8 +80,8 @@ describe('target', () => {
     assert.ok(createdPool.currentTickIndex == 0)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenX.v.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenY.v.eqn(0))
+    assert.ok(createdPool.feeProtocolTokenX.eqn(0))
+    assert.ok(createdPool.feeProtocolTokenY.eqn(0))
 
     const tickmapData = await market.getTickmap(pair)
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
@@ -174,7 +174,7 @@ describe('target', () => {
 
     assert.ok(poolData.feeGrowthGlobalX.v.eqn(5405405)) // 0.6 % of amount - protocol fee
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(poolData.feeProtocolTokenX.v.eq(new BN(600600600600)))
-    assert.ok(poolData.feeProtocolTokenY.v.eqn(0))
+    assert.ok(poolData.feeProtocolTokenX.eq(new BN(600600600600)))
+    assert.ok(poolData.feeProtocolTokenY.eqn(0))
   })
 })

@@ -84,8 +84,8 @@ describe('claim', () => {
     assert.ok(createdPool.currentTickIndex == 0)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenX.v.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenY.v.eqn(0))
+    assert.ok(createdPool.feeProtocolTokenX.eqn(0))
+    assert.ok(createdPool.feeProtocolTokenY.eqn(0))
 
     const tickmapData = await market.getTickmap(pair)
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
@@ -166,8 +166,8 @@ describe('claim', () => {
     assert.ok(reserveYDelta.eq(amount.subn(7)))
     assert.ok(poolDataAfter.feeGrowthGlobalX.v.eqn(5400000))
     assert.ok(poolDataAfter.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(poolDataAfter.feeProtocolTokenX.v.eq(new BN(600000013280)))
-    assert.ok(poolDataAfter.feeProtocolTokenY.v.eqn(0))
+    assert.ok(poolDataAfter.feeProtocolTokenX.eq(new BN(600000013280)))
+    assert.ok(poolDataAfter.feeProtocolTokenY.eqn(0))
 
     const reservesBeforeClaim = await market.getReserveBalances(pair, wallet)
     const userTokenXAccountBeforeClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
