@@ -984,15 +984,11 @@ export type Amm = {
           },
           {
             "name": "feeProtocolTokenX",
-            "type": {
-              "defined": "Decimal"
-            }
+            "type": "u64"
           },
           {
             "name": "feeProtocolTokenY",
-            "type": {
-              "defined": "Decimal"
-            }
+            "type": "u64"
           },
           {
             "name": "secondsPerLiquidityGlobal",
@@ -2348,15 +2344,11 @@ export const IDL: Amm = {
           },
           {
             "name": "feeProtocolTokenX",
-            "type": {
-              "defined": "Decimal"
-            }
+            "type": "u64"
           },
           {
             "name": "feeProtocolTokenY",
-            "type": {
-              "defined": "Decimal"
-            }
+            "type": "u64"
           },
           {
             "name": "secondsPerLiquidityGlobal",
