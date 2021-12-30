@@ -156,7 +156,7 @@ pub fn handler(
         current_timestamp,
     )?;
 
-    token::transfer(ctx.accounts.take_x(), amount_x)?;
-    token::transfer(ctx.accounts.take_y(), amount_y)?;
+    token::transfer(ctx.accounts.take_x(), amount_x.0)?;
+    token::transfer(ctx.accounts.take_y(), amount_y.0)?;
     Ok(())
 }

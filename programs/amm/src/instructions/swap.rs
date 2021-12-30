@@ -1,4 +1,4 @@
-use crate::decimal::Decimal;
+use crate::{decimal::Decimal, structs::TokenAmount};
 use crate::interfaces::send_tokens::SendTokens;
 use crate::interfaces::take_tokens::TakeTokens;
 use crate::math::compute_swap_step;
@@ -127,12 +127,12 @@ pub fn handler(
         require!({ pool.sqrt_price } < sqrt_price_limit, WrongLimit);
     }
 
-    let mut remaining_amount = Decimal::from_integer(amount.into());
+    let mut remaining_amount = TokenAmount(amount);
 
-    let mut total_amount_in = Decimal::new(0);
-    let mut total_amount_out = Decimal::new(0);
+    let mut total_amount_in = TokenAmount(0);
+    let mut total_amount_out = TokenAmount(0);
 
-    while remaining_amount != Decimal::from_integer(0) {
+    while !remaining_amount.is_zero() {
         let (swap_limit, limiting_tick) = get_closer_limit(
             sqrt_price_limit,
             x_to_y,
@@ -157,14 +157,15 @@ pub fn handler(
             remaining_amount = remaining_amount - result.amount_out;
         }
 
+        // TODO: abstract this away
         // fee has to be added before crossing any ticks
-        let protocol_fee = result.fee_amount.big_mul(state.protocol_fee);
+        let protocol_fee = result.fee_amount.big_mul(state.protocol_fee).to_token_ceil();
 
         pool.add_fee(result.fee_amount - protocol_fee, x_to_y);
         if x_to_y {
-            pool.fee_protocol_token_x = pool.fee_protocol_token_x + protocol_fee;
+            pool.fee_protocol_token_x += protocol_fee.0;
         } else {
-            pool.fee_protocol_token_y = pool.fee_protocol_token_y + protocol_fee;
+            pool.fee_protocol_token_y += protocol_fee.0;
         }
 
         pool.sqrt_price = result.next_price_sqrt;
@@ -173,7 +174,7 @@ pub fn handler(
         total_amount_out = total_amount_out + result.amount_out;
 
         // Fail if price would go over swap limit
-        if { pool.sqrt_price } == sqrt_price_limit && remaining_amount > Decimal::new(0) {
+        if { pool.sqrt_price } == sqrt_price_limit && !remaining_amount.is_zero()  {
             Err(ErrorCode::PriceLimitReached)?;
         }
 
@@ -210,7 +211,7 @@ pub fn handler(
             }
 
             // set tick to limit (below if price is going down, because current tick is below price)
-            pool.current_tick_index = if x_to_y && remaining_amount != Decimal::new(0) {
+            pool.current_tick_index = if x_to_y &&  !remaining_amount.is_zero() {
                 tick_index - pool.tick_spacing as i32
             } else {
                 tick_index
@@ -237,10 +238,10 @@ pub fn handler(
     let signer = &[&seeds[..]];
 
     // Maybe rounding error should be counted?
-    token::transfer(take_ctx, total_amount_in.to_token_ceil())?;
+    token::transfer(take_ctx, total_amount_in.0)?;
     token::transfer(
         send_ctx.with_signer(signer),
-        total_amount_out.to_token_floor(),
+        total_amount_out.0,
     )?;
 
     Ok(())
