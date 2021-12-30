@@ -1,4 +1,3 @@
-use crate::decimal::Decimal;
 use crate::interfaces::SendTokens;
 use crate::structs::pool::Pool;
 use crate::structs::state::State;
@@ -77,21 +76,17 @@ pub fn handler(ctx: Context<WithdrawProtocolFee>) -> ProgramResult {
     let state = ctx.accounts.state.load()?;
     let mut pool = ctx.accounts.pool.load_mut()?;
 
-    let fee_to_collect_x = pool.fee_protocol_token_x.to_token_floor();
-    let fee_to_collect_y = pool.fee_protocol_token_y.to_token_floor();
-    pool.fee_protocol_token_x =
-        pool.fee_protocol_token_x - Decimal::from_integer(fee_to_collect_x.into());
-    pool.fee_protocol_token_y =
-        pool.fee_protocol_token_y - Decimal::from_integer(fee_to_collect_y.into());
-
     let seeds = &[SEED.as_bytes(), &[state.nonce]];
     let signer = &[&seeds[..]];
 
     let cpi_ctx_x = ctx.accounts.send_x().with_signer(signer);
     let cpi_ctx_y = ctx.accounts.send_y().with_signer(signer);
 
-    token::transfer(cpi_ctx_x, fee_to_collect_x)?;
-    token::transfer(cpi_ctx_y, fee_to_collect_y)?;
+    token::transfer(cpi_ctx_x, pool.fee_protocol_token_x)?;
+    token::transfer(cpi_ctx_y, pool.fee_protocol_token_y)?;
+
+    pool.fee_protocol_token_x = 0;
+    pool.fee_protocol_token_y = 0;
 
     Ok(())
 }

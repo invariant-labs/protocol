@@ -7,6 +7,7 @@ pub mod position_list;
 pub mod state;
 pub mod tick;
 pub mod tickmap;
+pub mod token_amount;
 
 pub use fee_growth::*;
 pub use fee_tier::*;
@@ -17,3 +18,4 @@ pub use position_list::*;
 pub use state::*;
 pub use tick::*;
 pub use tickmap::*;
+pub use token_amount::*;

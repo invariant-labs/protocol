@@ -5,6 +5,8 @@ use crate::structs::FeeGrowth;
 use crate::*;
 use anchor_lang::prelude::*;
 
+use super::TokenAmount;
+
 #[account(zero_copy)]
 #[derive(PartialEq, Default, Debug)]
 pub struct Position {
@@ -32,7 +34,7 @@ impl Position {
         liquidity_delta: Decimal,
         add: bool,
         current_timestamp: u64,
-    ) -> Result<(u64, u64)> {
+    ) -> Result<(TokenAmount, TokenAmount)> {
         if { pool.liquidity } != Decimal::new(0) {
             pool.update_seconds_per_liquidity_global(current_timestamp);
         } else {

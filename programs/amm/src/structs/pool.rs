@@ -2,7 +2,7 @@ use crate::decimal::Decimal;
 use crate::*;
 use anchor_lang::prelude::*;
 
-use super::FeeGrowth;
+use super::{FeeGrowth, TokenAmount};
 
 #[account(zero_copy)]
 #[derive(PartialEq, Default, Debug)]
@@ -20,8 +20,8 @@ pub struct Pool {
     pub tickmap: Pubkey,
     pub fee_growth_global_x: FeeGrowth,
     pub fee_growth_global_y: FeeGrowth,
-    pub fee_protocol_token_x: Decimal,
-    pub fee_protocol_token_y: Decimal,
+    pub fee_protocol_token_x: u64, // should be changed to TokenAmount when Armani implements tuple structs
+    pub fee_protocol_token_y: u64,
     pub seconds_per_liquidity_global: Decimal,
     pub start_timestamp: u64,
     pub last_timestamp: u64,
@@ -31,8 +31,8 @@ pub struct Pool {
 }
 
 impl Pool {
-    pub fn add_fee(&mut self, amount: Decimal, x: bool) {
-        if amount == Decimal::new(0) || { self.liquidity } == Decimal::new(0) {
+    pub fn add_fee(&mut self, amount: TokenAmount, x: bool) {
+        if amount.is_zero() || self.liquidity.is_zero() {
             return;
         }
         let fee_growth = FeeGrowth::from_fee(self.liquidity, amount);
