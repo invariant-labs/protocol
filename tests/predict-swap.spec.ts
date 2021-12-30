@@ -130,7 +130,6 @@ describe('swap', () => {
     const poolDataBefore = await market.get(pair)
     const reserveXBefore = (await tokenX.getAccountInfo(poolDataBefore.tokenXReserve)).amount
     const reserveYBefore = (await tokenY.getAccountInfo(poolDataBefore.tokenYReserve)).amount
-    console.log(poolDataBefore.currentTickIndex)
 
     //make swap into right to move price from tick 0
     const txr = await market.swapTransaction({

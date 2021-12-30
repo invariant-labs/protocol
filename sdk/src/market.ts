@@ -19,8 +19,8 @@ import {
   parseLiquidityOnTicks,
   SEED,
   signAndSend,
-  SimulateSwapPrice,
-  predictSwap,
+  SimulateSwapInterface,
+  simulateSwap,
   DENOMINATOR,
   SimulationResult
 } from './utils'
@@ -167,7 +167,12 @@ export class Market {
     return (await this.program.account.tick.fetch(tickAddress)) as Tick
   }
 
-  async getClosestTicks(pair: Pair, limit: number, maxRange?: number) {
+  async getClosestTicks(
+    pair: Pair,
+    limit: number,
+    maxRange?: number,
+    oneWay: 'up' | 'down' | undefined = undefined
+  ) {
     const state = await this.get(pair)
     const tickmap = await this.getTickmap(pair)
     const indexes = findClosestTicks(
@@ -175,7 +180,8 @@ export class Market {
       state.currentTickIndex,
       state.tickSpacing,
       limit,
-      maxRange
+      maxRange,
+      oneWay
     )
 
     return Promise.all(
@@ -485,26 +491,39 @@ export class Market {
     }: SwapTransaction,
     overridePriceLimit?: BN
   ) {
-    const [pool, tickmap, feeTierAddress, poolAddress] = await Promise.all([
+    const [pool, tickmap, poolAddress] = await Promise.all([
       this.get(pair),
       this.getTickmap(pair),
-      pair.getFeeTierAddress(this.program.programId),
       pair.getAddress(this.program.programId)
     ])
 
+    let ticksArray: Tick[] = await this.getClosestTicks(
+      pair,
+      Infinity,
+      undefined,
+      XtoY ? 'down' : 'up'
+    )
+
+    let ticks: Map<number, Tick> = new Map<number, Tick>()
+
+    for (var tick of ticksArray) {
+      ticks.set(tick.index, tick)
+    }
+
     //simulate swap to get exact amount of tokens swaped between tick croses
-    const swapParameters: SimulateSwapPrice = {
+    const swapParameters: SimulateSwapInterface = {
       xToY: XtoY,
       byAmountIn: byAmountIn,
       swapAmount: amount,
       currentPrice: pool.sqrtPrice,
       slippage: slippage,
+      ticks: ticks,
       tickmap,
       pool: pool,
       market: this,
       pair: pair
     }
-    let simulationResult: SimulationResult = predictSwap(swapParameters)
+    let simulationResult: SimulationResult = simulateSwap(swapParameters)
     let amountPerTick: BN[] = simulationResult.amountPerTick
 
     if (amountPerTick.length > MAX_IX) {

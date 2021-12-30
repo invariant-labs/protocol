@@ -38,7 +38,6 @@ export const getPreviousTick = (
   let limit = getSearchLimit(currentTickIndex, tickSpacing, false) + TICK_LIMIT
 
   let byteIndex = Math.floor(bitmapIndex / 8)
-  byteIndex = Math.round(byteIndex)
   let bitIndex = Math.abs(bitmapIndex % 8)
 
   while (byteIndex * 8 + bitIndex >= limit) {
@@ -81,8 +80,7 @@ export const getNextTick = (
   let bitmapIndex = indexWithoutSpacing + TICK_LIMIT + 1
   let limit = getSearchLimit(currentTickIndex, tickSpacing, true) + TICK_LIMIT
 
-  let byteIndex = bitmapIndex / 8
-  byteIndex = Math.round(byteIndex)
+  let byteIndex = Math.floor(bitmapIndex / 8)
   let bitIndex = Math.abs(bitmapIndex % 8)
 
   while (byteIndex * 8 + bitIndex <= limit) {

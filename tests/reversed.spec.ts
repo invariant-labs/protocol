@@ -197,7 +197,6 @@ describe('reversed', () => {
     assert.ok(lowerTickData.liquidityChange.v.eq(liquidityDelta.v))
 
     assert.ok(upperTickData.feeGrowthOutsideY.v.eqn(0))
-    console.log(middleTickData.feeGrowthOutsideY.v.toString())
     assert.ok(middleTickData.feeGrowthOutsideY.v.eqn(2716837))
     assert.ok(lowerTickData.feeGrowthOutsideY.v.eqn(0))
   })
