@@ -216,12 +216,12 @@ export const getFeeTierAddress = async ({ fee, tickSpacing }: FeeTier, programId
 
 export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
   let { sqrtPriceLimit, xToY, currentTick, tickSpacing, tickmap } = closerLimit
-  let index: number
+  let index
 
   if (xToY) {
-    index = getPreviousTick(tickmap, currentTick, tickSpacing).valueOf()
+    index = getPreviousTick(tickmap, currentTick, tickSpacing)
   } else {
-    index = getNextTick(tickmap, currentTick, tickSpacing).valueOf()
+    index = getNextTick(tickmap, currentTick, tickSpacing)
   }
 
   let sqrtPrice: Decimal
@@ -234,6 +234,10 @@ export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
     const index: number = getSearchLimit(currentTick, tickSpacing, !xToY)
     sqrtPrice = calculate_price_sqrt(index)
     init = false
+  }
+
+  if (index == null) {
+    throw new Error('Index is undefined')
   }
 
   if (xToY && sqrtPrice.v.gt(sqrtPriceLimit.v)) {
@@ -312,7 +316,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
       const initialized: boolean = limitingTick.initialized
 
       if (initialized) {
-        let tick = ticks.get(tickIndex)
+        let tick = ticks.get(tickIndex) as Tick
 
         if (currentTickIndex >= tick.index !== tick.sign) {
           liquidity = { v: liquidity.v.add(tick.liquidityChange.v) }

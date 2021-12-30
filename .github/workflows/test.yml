@@ -40,7 +40,7 @@ jobs:
             'npm run test:multicall',
             'npm run test:oracle',
             'npm run test:limits',
-            'npm run test:predict-swap',
+            'npm run test:simulate-swap',
             'cargo test'
           ]
     steps:
