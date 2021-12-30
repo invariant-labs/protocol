@@ -163,6 +163,32 @@ export type Amm = {
       ]
     },
     {
+      "name": "createTickmap",
+      "accounts": [
+        {
+          "name": "tickmap",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "swap",
       "accounts": [
         {
@@ -1267,6 +1293,10 @@ export type Amm = {
                 25000
               ]
             }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }
@@ -1568,6 +1598,32 @@ export const IDL: Amm = {
       ]
     },
     {
+      "name": "createTickmap",
+      "accounts": [
+        {
+          "name": "tickmap",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "swap",
       "accounts": [
         {
@@ -2672,6 +2728,10 @@ export const IDL: Amm = {
                 25000
               ]
             }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }

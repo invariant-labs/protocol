@@ -1,8 +1,8 @@
+use crate::decimal::Decimal;
 use crate::interfaces::SendTokens;
 use crate::structs::pool::Pool;
 use crate::structs::state::State;
 use crate::SEED;
-use crate::{decimal::Decimal, structs::FeeTier};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, TokenAccount, Transfer};
 

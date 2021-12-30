@@ -1,8 +1,6 @@
-use std::convert::TryInto;
-
 use crate::decimal::Decimal;
 use crate::interfaces::take_tokens::TakeTokens;
-use crate::structs::{Tickmap, FeeTier};
+use crate::structs::Tickmap;
 use crate::structs::pool::Pool;
 use crate::structs::position::Position;
 use crate::structs::position_list::PositionList;

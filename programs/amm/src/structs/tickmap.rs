@@ -9,11 +9,15 @@ pub const MAX_TICK: i32 = 221_818; // log(1.0001, sqrt(2^64-1))
 #[account(zero_copy)]
 pub struct Tickmap {
     pub bitmap: [u8; 25000], // Tick limit / 4
+    pub bump: u8,
 }
 
 impl Default for Tickmap {
     fn default() -> Self {
-        Tickmap { bitmap: [0; 25000] }
+        Tickmap {
+            bitmap: [0; 25000],
+            bump: 255,
+        }
     }
 }
 

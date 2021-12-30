@@ -1,6 +1,6 @@
 import * as anchor from '@project-serum/anchor'
-import { BN, Program, utils, Idl, Provider } from '@project-serum/anchor'
-import { Token, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token'
+import { BN, Program, utils, Provider } from '@project-serum/anchor'
+import { Token, TOKEN_PROGRAM_ID, } from '@solana/spl-token'
 import {
   Connection,
   Keypair,
@@ -9,16 +9,13 @@ import {
   SYSVAR_RENT_PUBKEY,
   Transaction,
   TransactionInstruction,
-  Signer
 } from '@solana/web3.js'
 import { calculatePriceAfterSlippage, findClosestTicks, isInitialized } from './math'
 import {
   feeToTickSpacing,
-  generateTicksArray,
   getFeeTierAddress,
   parseLiquidityOnTicks,
   SEED,
-  signAndSend
 } from './utils'
 import { Amm, IDL } from './idl/amm'
 import { IWallet, Pair } from '.'
@@ -29,6 +26,7 @@ const POSITION_SEED = 'positionv1'
 const TICK_SEED = 'tickv1'
 const POSITION_LIST_SEED = 'positionlistv1'
 const STATE_SEED = 'statev1'
+const TICKMAP_SEED = 'tickmapv1'
 export const FEE_TIER = 'feetierv1'
 export const DEFAULT_PUBLIC_KEY = new PublicKey(0)
 
@@ -66,6 +64,31 @@ export class Market {
     return instance
   }
 
+  async createTickmapInstruction(payer?: PublicKey) {
+    payer = payer || this.wallet.publicKey
+    const { tickmapAddress, tickmapBump } = await this.getTickmapAddress()
+
+    return this.program.instruction.createTickmap(tickmapBump, {
+      accounts: {
+        tickmap: tickmapAddress,
+        payer,
+        systemProgram: SystemProgram.programId
+      }
+    })
+  }
+
+  async getTickmapAddress() {
+    const [tickmapAddress, tickmapBump] = await PublicKey.findProgramAddress(
+      [Buffer.from(utils.bytes.utf8.encode(TICKMAP_SEED))],
+      this.program.programId
+    )
+
+    return {
+      tickmapAddress,
+      tickmapBump
+    }
+  }
+
   async createPoolInstruction(
     { pair, payer, initTick, protocolFee, tokenX, tokenY }: CreatePool,
     bitmapKeypair?: Keypair
@@ -95,14 +118,14 @@ export class Market {
         payer,
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId
-      },
-      instructions: [await this.program.account.tickmap.createInstruction(bitmapKeypair)]
+      }
     })
   }
 
   async createPoolTransaction(createPool: CreatePool, bitmapKeypair?: Keypair) {
-    const ix = await this.createPoolInstruction(createPool, bitmapKeypair)
-    return new Transaction().add(ix)
+    const createTickmapIx = await this.createTickmapInstruction(createPool.payer)
+    const createPoolIx = await this.createPoolInstruction(createPool, bitmapKeypair)
+    return new Transaction().add(createTickmapIx).add(createPoolIx)
   }
 
   async getProgramAuthority() {

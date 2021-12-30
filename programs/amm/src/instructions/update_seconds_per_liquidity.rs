@@ -2,7 +2,6 @@ use crate::math;
 use crate::structs::pool::Pool;
 use crate::structs::position::Position;
 use crate::structs::tick::Tick;
-use crate::structs::FeeTier;
 use crate::util::{get_current_slot, get_current_timestamp};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;

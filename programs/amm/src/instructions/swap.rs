@@ -1,6 +1,6 @@
 use std::convert::TryInto;
 
-use crate::{decimal::Decimal, structs::FeeTier};
+use crate::decimal::Decimal;
 use crate::interfaces::send_tokens::SendTokens;
 use crate::interfaces::take_tokens::TakeTokens;
 use crate::math::compute_swap_step;

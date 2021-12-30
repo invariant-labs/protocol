@@ -1,6 +1,4 @@
-use std::convert::TryInto;
-
-use crate::{interfaces::send_tokens::SendTokens, structs::FeeTier};
+use crate::interfaces::send_tokens::SendTokens;
 use crate::structs::pool::Pool;
 use crate::structs::position::Position;
 use crate::structs::tick::Tick;

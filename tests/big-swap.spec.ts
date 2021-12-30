@@ -3,7 +3,7 @@ import { Program, Provider, BN } from '@project-serum/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { Network, SEED, Market, Pair } from '@invariant-labs/sdk'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { createPosition, createToken, performSwap } from './testUtils'
+import { createFeeTier, createPool, createPosition, createState, createToken, performSwap } from './testUtils'
 import { assert } from 'chai'
 import { DENOMINATOR } from '@invariant-labs/sdk'
 import { TICK_LIMIT } from '@invariant-labs/sdk'
@@ -11,6 +11,7 @@ import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { calculateFeeGrowthInside } from '@invariant-labs/sdk/src/math'
+import { CreateFeeTier, CreatePool } from '@invariant-labs/sdk/src/market'
 
 
 describe('big-swap', () => {
@@ -66,20 +67,27 @@ describe('big-swap', () => {
   })
 
   it('#createState()', async () => {
-    await market.createState(admin, protocolFee)
+    await createState(market, admin.publicKey, admin)
   })
 
   it('#createFeeTier()', async () => {
-    await market.createFeeTier(feeTier, admin)
+    const createFeeTierVars: CreateFeeTier = {
+      feeTier,
+      admin: admin.publicKey
+    }
+    await createFeeTier(market, createFeeTierVars, admin)
   })
 
   it('#create()', async () => {
-    // 0.6% / 10
-    await market.create({
+    const createPoolVars: CreatePool = {
       pair,
-      signer: admin
-    })
-    const createdPool = await market.get(pair)
+      payer: admin.publicKey,
+      protocolFee,
+      tokenX,
+      tokenY
+    }
+    await createPool(market, createPoolVars, admin)
+    const createdPool = await market.getPool(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
     assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
     assert.ok(createdPool.fee.v.eq(feeTier.fee))
@@ -98,8 +106,8 @@ describe('big-swap', () => {
   })
 
   it('#swap()', async () => {
-    const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
-    const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
+    const userTokenX = await tokenX.createAccount(positionOwner.publicKey)
+    const userTokenY = await tokenY.createAccount(positionOwner.publicKey)
 
     const positionsInfo: Array<[ticks: [lower: number, upper: number], liquidity: BN]> = [
       [[0, 20], new BN(1000000).mul(DENOMINATOR)],
@@ -120,8 +128,8 @@ describe('big-swap', () => {
         positionsInfo[i][0][1],
         positionsInfo[i][1],
         positionOwner,
-        userTokenXAccount,
-        userTokenYAccount,
+        userTokenX,
+        userTokenY,
         tokenX,
         tokenY,
         pair,
@@ -154,7 +162,7 @@ describe('big-swap', () => {
     ]
 
     for (let i = 0; i < swaps.length; i++) {
-      let pool = await market.get(pair)
+      let pool = await market.getPool(pair)
       console.log("swap ", i)
       console.log("liquidity: ", pool.liquidity.v.toString())
       await performSwap(
@@ -172,7 +180,7 @@ describe('big-swap', () => {
       )
     }
 
-    let poolAfterSwaps = await market.get(pair)
+    let poolAfterSwaps = await market.getPool(pair)
     for (let i = -40; i < 50; i += 10) {
       let lowerTick
       try {
@@ -203,10 +211,10 @@ describe('big-swap', () => {
       }
     }
 
-    market.removePositionInstruction(pair, positionOwner.publicKey, 1, userTokenXAccount, userTokenYAccount)
-    market.removePositionInstruction(pair, positionOwner.publicKey, 3, userTokenXAccount, userTokenYAccount)
-    market.removePositionInstruction(pair, positionOwner.publicKey, 4, userTokenXAccount, userTokenYAccount)
-    market.removePositionInstruction(pair, positionOwner.publicKey, 8, userTokenXAccount, userTokenYAccount)
+    market.removePositionInstruction({ pair, owner: positionOwner.publicKey, index: 1, userTokenX, userTokenY })
+    market.removePositionInstruction({ pair, owner: positionOwner.publicKey, index: 3, userTokenX, userTokenY })
+    market.removePositionInstruction({ pair, owner: positionOwner.publicKey, index: 4, userTokenX, userTokenY })
+    market.removePositionInstruction({ pair, owner: positionOwner.publicKey, index: 8, userTokenX, userTokenY })
 
     const positionsInfo2: Array<[ticks: [lower: number, upper: number], liquidity: BN]> = [
       [[-30, 20], new BN(500000).mul(DENOMINATOR)],
@@ -220,12 +228,12 @@ describe('big-swap', () => {
 
     for (let i = 0; i < positionsInfo.length; i++) {
       await createPosition(
-        positionsInfo[i][0][0],
-        positionsInfo[i][0][1],
-        positionsInfo[i][1],
+        positionsInfo2[i][0][0],
+        positionsInfo2[i][0][1],
+        positionsInfo2[i][1],
         positionOwner,
-        userTokenXAccount,
-        userTokenYAccount,
+        userTokenX,
+        userTokenY,
         tokenX,
         tokenY,
         pair,
@@ -256,7 +264,7 @@ describe('big-swap', () => {
     ]
 
     for (let i = 0; i < swaps2.length; i++) {
-      let pool = await market.get(pair)
+      let pool = await market.getPool(pair)
       console.log("swap ", i)
       console.log("liquidity: ", pool.liquidity.v.toString())
       await performSwap(
@@ -274,7 +282,7 @@ describe('big-swap', () => {
       )
     }
 
-    let poolAfterSwaps2 = await market.get(pair)
+    let poolAfterSwaps2 = await market.getPool(pair)
     for (let i = -40; i < 50; i += 10) {
       let lowerTick
       try {

@@ -1,7 +1,6 @@
 use crate::errors::ErrorCode;
 use crate::structs::oracle::Oracle;
 use crate::structs::pool::Pool;
-use crate::structs::FeeTier;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::Mint;

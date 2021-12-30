@@ -1,14 +1,11 @@
-use std::convert::TryInto;
-
 use crate::math::calculate_price_sqrt;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::structs::tickmap::Tickmap;
-use crate::structs::FeeTier;
 use crate::{decimal::Decimal, util::get_current_timestamp};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
-use anchor_spl::token::{Mint, Token};
+use anchor_spl::token::Mint;
 
 #[derive(Accounts)]
 #[instruction(bump: u8, index: i32)]

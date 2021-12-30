@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, convert::TryInto};
+use std::cmp::Ordering;
 
 use crate::math::calculate_price_sqrt;
 use crate::structs::fee_tier::FeeTier;
@@ -31,13 +31,13 @@ pub struct CreatePool<'info> {
     pub token_y: Account<'info, Mint>,
     #[account(
         constraint = &token_x_reserve.mint == &token_x.key(),
-        constraint = token_x_reserve.owner == state.load()?.authority    
+        constraint = token_x_reserve.owner == state.load()?.authority
     )]
     // we can also initialize those accounts in create_pool
     pub token_x_reserve: Account<'info, TokenAccount>,
     #[account(
         constraint = &token_y_reserve.mint == &token_y.key(),
-        constraint = token_y_reserve.owner == state.load()?.authority   
+        constraint = token_y_reserve.owner == state.load()?.authority
     )]
     pub token_y_reserve: Account<'info, TokenAccount>,
     #[account(mut)]
@@ -47,7 +47,12 @@ pub struct CreatePool<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
-pub fn handler(ctx: Context<CreatePool>, bump: u8, init_tick: i32, protocol_fee: Decimal) -> ProgramResult {
+pub fn handler(
+    ctx: Context<CreatePool>,
+    bump: u8,
+    init_tick: i32,
+    protocol_fee: Decimal,
+) -> ProgramResult {
     msg!("INVARIANT: CREATE POOL");
 
     let token_x_address = &ctx.accounts.token_x.key();
@@ -62,7 +67,7 @@ pub fn handler(ctx: Context<CreatePool>, bump: u8, init_tick: i32, protocol_fee:
 
     let pool = &mut ctx.accounts.pool.load_init()?;
     let fee_tier = ctx.accounts.fee_tier.load()?;
-    let current_timestamp= get_current_timestamp();
+    let current_timestamp = get_current_timestamp();
 
     **pool = Pool {
         token_x: *token_x_address,

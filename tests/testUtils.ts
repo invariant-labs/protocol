@@ -323,7 +323,7 @@ export const createPool = async (market: Market, createPool: CreatePool, signer:
   const bitmapKeypair = Keypair.generate()
   const tx = await market.createPoolTransaction(createPool, bitmapKeypair)
 
-  await signAndSend(tx, [signer, bitmapKeypair], market.connection)
+  await signAndSend(tx, [signer], market.connection)
 }
 
 // Admin function
