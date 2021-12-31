@@ -408,6 +408,7 @@ export class Market {
           positionList: positionListAddress,
           position: positionAddress,
           owner,
+          payer: owner,
           lowerTick: lowerTickAddress,
           upperTick: upperTickAddress,
           tokenX: pair.tokenX,
