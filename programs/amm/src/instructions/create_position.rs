@@ -38,7 +38,7 @@ pub struct CreatePosition<'info> {
     pub position_list: AccountLoader<'info, PositionList>,
     #[account(mut)]
     pub payer: Signer<'info>,
-    pub owner: AccountInfo<'info>,
+    pub owner: Signer<'info>,
     #[account(mut,
         seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &lower_tick_index.to_le_bytes()],
         bump = lower_tick.load()?.bump

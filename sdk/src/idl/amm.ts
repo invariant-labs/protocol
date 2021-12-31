@@ -403,7 +403,7 @@ export type Amm = {
         {
           "name": "owner",
           "isMut": false,
-          "isSigner": false
+          "isSigner": true
         },
         {
           "name": "lowerTick",
@@ -1765,7 +1765,7 @@ export const IDL: Amm = {
         {
           "name": "owner",
           "isMut": false,
-          "isSigner": false
+          "isSigner": true
         },
         {
           "name": "lowerTick",
