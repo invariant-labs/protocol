@@ -69,10 +69,10 @@ pub fn calculate_price_sqrt(tick_index: i32) -> Decimal {
     if tick & 0x8000 != 0 {
         price = price * Decimal::new(5146506242525);
     }
-    if tick & 0x10_000 != 0 {
+    if tick & 0x0001_0000 != 0 {
         price = price * Decimal::new(26486526504348);
     }
-    if tick & 0x20_000 != 0 {
+    if tick & 0x0002_0000 != 0 {
         price = price * Decimal::new(701536086265529);
     }
 

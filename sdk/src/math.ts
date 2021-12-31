@@ -495,7 +495,7 @@ export const getLiquidityByYPrice = (
     throw new Error('liquidity cannot be determined')
   }
 
-  if (upperSqrtPrice.v.lt(currentSqrtPrice.v)) {
+  if (upperSqrtPrice.v.lte(currentSqrtPrice.v)) {
     const priceDiff = upperSqrtPrice.v.sub(lowerSqrtPrice.v)
     const liquidity = y.mul(DENOMINATOR).mul(DENOMINATOR).div(priceDiff)
 

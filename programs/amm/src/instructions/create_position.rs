@@ -59,7 +59,7 @@ pub struct CreatePosition<'info> {
     pub account_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
         constraint = &account_y.mint == token_y.to_account_info().key,
-        constraint = &account_y.owner == owner.key	
+        constraint = &account_y.owner == owner.key
     )]
     pub account_y: Box<Account<'info, TokenAccount>>,
     #[account(mut,
@@ -107,11 +107,7 @@ impl<'info> TakeTokens<'info> for CreatePosition<'info> {
     }
 }
 
-pub fn handler(
-    ctx: Context<CreatePosition>,
-    bump: u8,
-    liquidity_delta: Decimal,
-) -> ProgramResult {
+pub fn handler(ctx: Context<CreatePosition>, bump: u8, liquidity_delta: Decimal) -> ProgramResult {
     msg!("INVARIANT: CREATE POSITION");
 
     let mut position = ctx.accounts.position.load_init()?;

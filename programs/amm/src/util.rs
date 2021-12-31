@@ -57,6 +57,7 @@ pub fn get_closer_limit(
     match closes_tick_index {
         Some(index) => {
             let price = calculate_price_sqrt(index);
+            // trunk-ignore(clippy/if_same_then_else)
             if x_to_y && price > sqrt_price_limit {
                 Ok((price, Some((index, true))))
             } else if !x_to_y && price < sqrt_price_limit {
@@ -71,6 +72,7 @@ pub fn get_closer_limit(
 
             require!(current_tick != index, LimitReached);
 
+            // trunk-ignore(clippy/if_same_then_else)
             if x_to_y && price > sqrt_price_limit {
                 Ok((price, Some((index, false))))
             } else if !x_to_y && price < sqrt_price_limit {
@@ -91,7 +93,8 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
     };
 
     let current_timestamp: u64 = Clock::get()?.unix_timestamp.try_into().unwrap();
-    let seconds_passed: u64 = current_timestamp - pool.start_timestamp;
+    let seconds_passed: u64 = current_timestamp.checked_sub(pool.start_timestamp).unwrap();
+    // overflow is valid here
     tick.seconds_outside = seconds_passed - tick.seconds_outside;
 
     if { pool.liquidity } != Decimal::new(0) {

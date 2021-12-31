@@ -120,7 +120,7 @@ impl Tickmap {
             bit = 0;
         }
 
-        return None;
+        None
     }
 
     pub fn prev_initialized(&self, tick: i32, tick_spacing: u16) -> Option<i32> {
@@ -165,7 +165,7 @@ impl Tickmap {
             bit = 7;
         }
 
-        return None;
+        None
     }
 }
 

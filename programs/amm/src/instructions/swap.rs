@@ -15,7 +15,7 @@ use anchor_spl::token::{Mint, TokenAccount, Transfer};
 pub struct Swap<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
-    #[account(mut,         
+    #[account(mut,
         seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref(), &pool.load()?.fee.v.to_le_bytes(), &pool.load()?.tick_spacing.to_le_bytes()],
         bump = pool.load()?.bump
     )]
@@ -36,7 +36,7 @@ pub struct Swap<'info> {
     pub account_x: Account<'info, TokenAccount>,
     #[account(mut,
         constraint = &account_y.mint == token_y.to_account_info().key,
-        constraint = &account_y.owner == owner.key	
+        constraint = &account_y.owner == owner.key
     )]
     pub account_y: Account<'info, TokenAccount>,
     #[account(mut,
@@ -174,7 +174,7 @@ pub fn handler(
 
         // Fail if price would go over swap limit
         if { pool.sqrt_price } == sqrt_price_limit && remaining_amount > Decimal::new(0) {
-            Err(ErrorCode::PriceLimitReached)?;
+            return Err(ErrorCode::PriceLimitReached.into());
         }
 
         // crossing tick
@@ -198,9 +198,7 @@ pub fn handler(
                     .iter()
                     .find(|account| *account.key == tick_address)
                 {
-                    Some(account) => {
-                        Loader::<'_, Tick>::try_from(ctx.program_id, &account).unwrap()
-                    }
+                    Some(account) => Loader::<'_, Tick>::try_from(ctx.program_id, account).unwrap(),
                     None => return Err(ErrorCode::TickNotFound.into()),
                 };
                 let mut tick = loader.load_mut().unwrap();
