@@ -18,7 +18,7 @@ pub struct Record {
 }
 
 impl Oracle {
-    pub fn add_record(self: &mut Self, timestamp: u64, price: Decimal) {
+    pub fn add_record(&mut self, timestamp: u64, price: Decimal) {
         let record = Record { timestamp, price };
 
         self.head = (self.head + 1) % self.size;
@@ -29,7 +29,7 @@ impl Oracle {
         }
     }
 
-    pub fn init(self: &mut Self) {
+    pub fn init(&mut self) {
         self.size = SIZE;
         self.head = SIZE - 1;
     }
