@@ -1,15 +1,15 @@
 use std::convert::TryInto;
 
-use crate::structs::*;
 use crate::decimal::*;
 use crate::math::*;
+use crate::structs::*;
 use crate::util::*;
 
-use amm::structs::Position;
 use amm::program::Amm;
+use amm::structs::Position;
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, TokenAccount, Transfer};
 use anchor_lang::solana_program::system_program;
+use anchor_spl::token::{self, TokenAccount, Transfer};
 
 #[derive(Accounts)]
 #[instruction(index: u32)]
@@ -19,7 +19,7 @@ pub struct Withdraw<'info> {
         bump = user_stake.load()?.bump)]
     pub user_stake: AccountLoader<'info, UserStake>,
     #[account(mut,
-        constraint = &user_stake.load()?.incentive == incentive.to_account_info().key 
+        constraint = &user_stake.load()?.incentive == incentive.to_account_info().key
     )]
     pub incentive: AccountLoader<'info, Incentive>,
     #[account(mut,
@@ -33,7 +33,7 @@ pub struct Withdraw<'info> {
     pub owner_token_account: Account<'info, TokenAccount>,
     #[account(constraint = check_position_seeds(owner.to_account_info(), position.to_account_info().key, index))]
     pub position: AccountLoader<'info, Position>,
-    pub staker_authority: AccountInfo<'info>, // validate with state 
+    pub staker_authority: AccountInfo<'info>, // validate with state
     pub owner: Signer<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
@@ -56,11 +56,7 @@ impl<'info> Withdraw<'info> {
     }
 }
 
-
-pub fn handler(
-    ctx: Context<Withdraw>,
-    nonce: u8
-) -> ProgramResult {
+pub fn handler(ctx: Context<Withdraw>, nonce: u8) -> ProgramResult {
     msg!("WITHDRAW");
     let user_stake = &mut ctx.accounts.user_stake.load_mut()?;
     let position = ctx.accounts.position.load()?;

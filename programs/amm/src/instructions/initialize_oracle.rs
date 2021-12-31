@@ -31,7 +31,7 @@ pub fn handler(ctx: Context<InitializeOracle>) -> ProgramResult {
     let pool = &mut ctx.accounts.pool.load_mut()?;
 
     require!(
-        pool.oracle_initialized == false,
+        !pool.oracle_initialized,
         ErrorCode::OracleAlreadyInitialized
     );
 

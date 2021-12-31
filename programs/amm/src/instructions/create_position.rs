@@ -22,9 +22,9 @@ pub struct CreatePosition<'info> {
     pub state: AccountLoader<'info, State>,
     #[account(init,
         seeds = [b"positionv1",
-        owner.to_account_info().key.as_ref(),
+        owner.key.as_ref(),
         &position_list.load()?.head.to_le_bytes()],
-        bump = bump, payer = owner,
+        bump = bump, payer = payer,
     )]
     pub position: AccountLoader<'info, Position>,
     #[account(mut,
@@ -33,11 +33,12 @@ pub struct CreatePosition<'info> {
     )]
     pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
-        seeds = [b"positionlistv1", owner.to_account_info().key.as_ref()],
+        seeds = [b"positionlistv1", owner.key.as_ref()],
         bump = position_list.load()?.bump
     )]
     pub position_list: AccountLoader<'info, PositionList>,
     #[account(mut)]
+    pub payer: Signer<'info>,
     pub owner: Signer<'info>,
     #[account(mut,
         seeds = [b"tickv1", pool.to_account_info().key.as_ref(), &lower_tick_index.to_le_bytes()],
@@ -60,7 +61,7 @@ pub struct CreatePosition<'info> {
     pub account_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
         constraint = &account_y.mint == token_y.to_account_info().key,
-        constraint = &account_y.owner == owner.key	
+        constraint = &account_y.owner == owner.key
     )]
     pub account_y: Box<Account<'info, TokenAccount>>,
     #[account(mut,
@@ -108,11 +109,7 @@ impl<'info> TakeTokens<'info> for CreatePosition<'info> {
     }
 }
 
-pub fn handler(
-    ctx: Context<CreatePosition>,
-    bump: u8,
-    liquidity_delta: Decimal,
-) -> ProgramResult {
+pub fn handler(ctx: Context<CreatePosition>, bump: u8, liquidity_delta: Decimal) -> ProgramResult {
     msg!("INVARIANT: CREATE POSITION");
 
     let mut position = ctx.accounts.position.load_init()?;

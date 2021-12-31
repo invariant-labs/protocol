@@ -20,7 +20,7 @@ pub struct ClaimFee<'info> {
         bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,
-    
+
     #[account(mut,
         seeds = [b"positionv1",
         owner.to_account_info().key.as_ref(),
@@ -50,7 +50,7 @@ pub struct ClaimFee<'info> {
     pub account_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
         constraint = &account_y.mint == token_y.to_account_info().key,
-        constraint = &account_y.owner == owner.key	
+        constraint = &account_y.owner == owner.key
     )]
     pub account_y: Box<Account<'info, TokenAccount>>,
     #[account(mut,
@@ -95,9 +95,7 @@ impl<'info> interfaces::SendTokens<'info> for ClaimFee<'info> {
     }
 }
 
-pub fn handler(
-    ctx: Context<ClaimFee>,
-) -> ProgramResult {
+pub fn handler(ctx: Context<ClaimFee>) -> ProgramResult {
     msg!("INVARIANT: CLAIM FEE");
 
     let state = ctx.accounts.state.load()?;

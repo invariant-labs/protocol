@@ -1,7 +1,7 @@
 import { BN } from '@project-serum/anchor'
 import { assert } from 'chai'
 import { Decimal, Tick, Tickmap } from './market'
-import { DENOMINATOR } from './utils'
+import { DENOMINATOR, getMaxTick, getMinTick } from './utils'
 
 export const TICK_LIMIT = 100_000
 export const MAX_TICK = 221_818
@@ -412,10 +412,17 @@ export const getLiquidityByX = (
   lowerTick: number,
   upperTick: number,
   currentSqrtPrice: Decimal,
-  roundingUp: boolean
+  roundingUp: boolean,
+  tickSpacing?: number
 ) => {
-  const lowerSqrtPrice = calculate_price_sqrt(lowerTick)
-  const upperSqrtPrice = calculate_price_sqrt(upperTick)
+  if ((lowerTick == -Infinity || upperTick == Infinity) && tickSpacing == undefined)
+    throw new Error('tickSpacing is required for calculating full range liquidity')
+
+  const lowerTickIndex = lowerTick != -Infinity ? lowerTick : getMinTick(tickSpacing)
+  const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(tickSpacing)
+
+  const lowerSqrtPrice = calculate_price_sqrt(lowerTickIndex)
+  const upperSqrtPrice = calculate_price_sqrt(upperTickIndex)
 
   return getLiquidityByXPrice(x, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
 }
@@ -462,10 +469,17 @@ export const getLiquidityByY = (
   lowerTick: number,
   upperTick: number,
   currentSqrtPrice: Decimal,
-  roundingUp: boolean
+  roundingUp: boolean,
+  tickSpacing?: number
 ) => {
-  const lowerSqrtPrice = calculate_price_sqrt(lowerTick)
-  const upperSqrtPrice = calculate_price_sqrt(upperTick)
+  if ((lowerTick == -Infinity || upperTick == Infinity) && tickSpacing == undefined)
+    throw new Error('tickSpacing is required for calculating full range liquidity')
+
+  const lowerTickIndex = lowerTick != -Infinity ? lowerTick : getMinTick(tickSpacing)
+  const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(tickSpacing)
+
+  const lowerSqrtPrice = calculate_price_sqrt(lowerTickIndex)
+  const upperSqrtPrice = calculate_price_sqrt(upperTickIndex)
 
   return getLiquidityByYPrice(y, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
 }

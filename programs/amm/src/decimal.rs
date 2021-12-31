@@ -36,7 +36,7 @@ impl Decimal {
             Decimal::new(val * 10u128.pow((SCALE - scale).into()))
         } else {
             let denominator = 10u128.checked_pow((scale - SCALE).into()).unwrap();
-            return Decimal::new(val.checked_div(denominator).unwrap());
+            Decimal::new(val.checked_div(denominator).unwrap())
         }
     }
 
