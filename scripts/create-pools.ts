@@ -19,6 +19,7 @@ const main = async () => {
 
   await createUsdcUsdt(market)
   await createUsdcSol(market)
+  await createMsolSol(market)
 }
 const createUsdcUsdt = async (market: Market) => {
   const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.USDT), feeTier)
@@ -36,6 +37,16 @@ const createUsdcSol = async (market: Market) => {
     pair,
     signer: wallet,
     initTick: 18000
+  })
+}
+
+const createMsolSol = async (market: Market) => {
+  const pair = new Pair(new PublicKey(MOCK_TOKENS.MSOL), new PublicKey(MOCK_TOKENS.SOL), feeTier)
+
+  await market.create({
+    pair,
+    signer: wallet,
+    initTick: 200
   })
 }
 
