@@ -9,7 +9,7 @@ import {
   Transaction,
   TransactionInstruction
 } from '@solana/web3.js'
-import { calculate_price_sqrt, fromInteger, Pair } from '.'
+import { calculate_price_sqrt, fromInteger, MAX_TICK, Pair, TICK_LIMIT } from '.'
 import { Market } from '.'
 import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap, Tick, Position } from './market'
 import { calculatePriceAfterSlippage, calculateSwapStep, SwapResult } from './math'
@@ -418,4 +418,16 @@ export const bigNumberToBuffer = (n: BN, size: 16 | 32 | 64 | 128 | 256) => {
   }
 
   return buffer
+}
+
+export const getMaxTick = (tickSpacing: number) => {
+  const limitedByPrice = MAX_TICK - (MAX_TICK % tickSpacing)
+  const limitedByTickmap = TICK_LIMIT * tickSpacing
+  return Math.min(limitedByPrice, limitedByTickmap)
+}
+
+export const getMinTick = (tickSpacing: number) => {
+  const limitedByPrice = -MAX_TICK + (MAX_TICK % tickSpacing)
+  const limitedByTickmap = -TICK_LIMIT * tickSpacing
+  return Math.max(limitedByPrice, limitedByTickmap)
 }
