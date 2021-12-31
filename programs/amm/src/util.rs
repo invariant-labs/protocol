@@ -56,6 +56,7 @@ pub fn get_closer_limit(
     match closes_tick_index {
         Some(index) => {
             let price = calculate_price_sqrt(index);
+            // trunk-ignore(clippy/if_same_then_else)
             if x_to_y && price > sqrt_price_limit {
                 (price, Some((index, true)))
             } else if !x_to_y && price < sqrt_price_limit {
@@ -68,6 +69,7 @@ pub fn get_closer_limit(
             let index = get_search_limit(current_tick, tick_spacing, !x_to_y);
             let price = calculate_price_sqrt(index);
 
+            // trunk-ignore(clippy/if_same_then_else)
             if x_to_y && price > sqrt_price_limit {
                 (price, Some((index, false)))
             } else if !x_to_y && price < sqrt_price_limit {

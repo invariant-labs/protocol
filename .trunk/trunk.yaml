@@ -1,0 +1,15 @@
+version: 0.1
+cli:
+  version: 0.4.3-beta
+lint:
+  enabled:
+    - actionlint@1.6.4
+    - clippy@1.56.1
+    - eslint@7.32.0
+    - gitleaks@7.6.1
+    - prettier@2.4.1
+    - rustfmt@1.56.1
+  ignore:
+    - linters: [ALL]
+      paths:
+        - programs/staker/**
