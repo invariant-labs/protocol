@@ -3,15 +3,28 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Keypair, Transaction } from '@solana/web3.js'
 import { createTokensAndPool, createUserWithTokens } from './testUtils'
 import { Market, DENOMINATOR, Network } from '@invariant-labs/sdk'
-import { fromFee, toDecimal } from '@invariant-labs/sdk/src/utils'
+import {
+  assertThrowsAsync,
+  fromFee,
+  getMaxTick,
+  getMinTick,
+  toDecimal
+} from '@invariant-labs/sdk/src/utils'
 import { Decimal } from '@invariant-labs/sdk/src/market'
 import { Pair } from '@invariant-labs/sdk/src'
-import { getLiquidityByX, getLiquidityByY } from '@invariant-labs/sdk/src/math'
+import {
+  calculatePriceAfterSlippage,
+  getLiquidityByX,
+  getLiquidityByY
+} from '@invariant-labs/sdk/src/math'
 import { beforeEach } from 'mocha'
 import { assert } from 'chai'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { signAndSend } from '@invariant-labs/sdk'
-import { FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
+import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
+import { MAX_TICK } from '@invariant-labs/sdk'
+import { TICK_LIMIT } from '@invariant-labs/sdk'
+import { calculate_price_sqrt } from '@invariant-labs/sdk'
 
 describe('limits', () => {
   const provider = Provider.local()
@@ -65,7 +78,7 @@ describe('limits', () => {
       { v: DENOMINATOR },
       false
     ).liquidity
-    const liquidityByX = getLiquidityByY(
+    const liquidityByX = getLiquidityByX(
       mintAmount,
       lowerTick,
       upperTick,
@@ -314,18 +327,41 @@ describe('limits', () => {
     )
   })
 
-  it.skip('big fee', async () => {
+  it('swap at upper limit', async () => {
+    const tickSpacing = feeToTickSpacing(feeTier.fee)
+    const initTick = getMaxTick(tickSpacing)
+
+    const result = await createTokensAndPool(market, connection, wallet, initTick, feeTier)
+    pair = result.pair
+    mintAuthority = result.mintAuthority
+
+    const poolData = await market.get(pair)
+    const knownPrice = poolData.sqrtPrice
+    assert.equal(poolData.currentTickIndex, initTick)
+    assert.equal(knownPrice.v.toString(), calculate_price_sqrt(initTick).v.toString())
+
+    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
+    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+
     const mintAmount = new BN(2).pow(new BN(64)).subn(1)
+
+    const positionAmount = mintAmount.subn(1)
+
     const { owner, userAccountX, userAccountY } = await createUserWithTokens(
       pair,
       connection,
       mintAuthority,
-      mintAmount
+      positionAmount
     )
 
-    const lowerTick = -10000
-    const upperTick = 10000
-    const liquidityDelta = DENOMINATOR.mul(new BN(10).pow(new BN(18)))
+    const liquidityDelta = getLiquidityByY(
+      positionAmount,
+      0,
+      Infinity,
+      poolData.sqrtPrice,
+      false,
+      pair.feeTier.tickSpacing
+    ).liquidity
 
     await market.initPosition(
       {
@@ -333,73 +369,29 @@ describe('limits', () => {
         owner: owner.publicKey,
         userTokenX: userAccountX,
         userTokenY: userAccountY,
-        lowerTick,
-        upperTick,
-        liquidityDelta: { v: liquidityDelta }
+        lowerTick: 0,
+        upperTick: Infinity,
+        liquidityDelta
       },
       owner
     )
 
-    const amount = new BN(1e8)
+    const position = await market.getPosition(owner.publicKey, 0)
 
-    let priceBefore = (await market.get(pair)).sqrtPrice.v
-    let prevFee = (await market.get(pair)).feeGrowthGlobalX.v
-
-    const chunk = 1
-    const repeats = 1
-
-    for (let i = 0; i < repeats; i++) {
-      const swaps = new Array(chunk).fill(0).map(async (_, i) => {
-        const oneWayTx = market.swapTransaction({
-          pair,
-          XtoY: true,
-          amount,
-          knownPrice,
-          slippage: toDecimal(5000 + i, 5),
-          accountX: userAccountX,
-          accountY: userAccountY,
-          byAmountIn: true,
-          owner: owner.publicKey
-        })
-
-        const otherWayTx = market.swapTransaction({
+    await assertThrowsAsync(
+      market.swap(
+        {
           pair,
           XtoY: false,
-          amount: amount.subn(6),
+          amount: new BN(1),
           knownPrice,
-          slippage: toDecimal(5000 + i, 5),
+          slippage: toDecimal(5, 2),
           accountX: userAccountX,
           accountY: userAccountY,
-          byAmountIn: false,
-          owner: owner.publicKey
-        })
-
-        const ixs = await Promise.all([oneWayTx, otherWayTx])
-
-        await signAndSend(new Transaction().add(ixs[0]).add(ixs[1]), [owner], connection)
-      })
-
-      await Promise.all(swaps)
-
-      const poolAfter = await market.get(pair)
-      const priceAfter = poolAfter.sqrtPrice.v
-
-      console.log(
-        `price before: ${priceBefore}, price after: ${priceAfter}, feeGrowth: ${
-          poolAfter.feeGrowthGlobalX.v
-        } feeGrowthDelta: ${poolAfter.feeGrowthGlobalX.v.sub(prevFee)}`
+          byAmountIn: true
+        },
+        owner
       )
-      prevFee = poolAfter.feeGrowthGlobalX.v
-      priceBefore = priceAfter
-    }
-  })
-
-  it.skip('high price', async () => {
-    const result = await createTokensAndPool(market, connection, wallet, 0, feeTier)
-    pair = result.pair
-    mintAuthority = result.mintAuthority
-
-    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+    )
   })
 })

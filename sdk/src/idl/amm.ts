@@ -1280,7 +1280,7 @@ export type Amm = {
     {
       "code": 304,
       "name": "InvalidTickIndex",
-      "msg": "Tick index not divisible by spacing"
+      "msg": "Tick index not divisible by spacing or over limit"
     },
     {
       "code": 305,
@@ -1351,6 +1351,11 @@ export type Amm = {
       "code": 318,
       "name": "OracleAlreadyInitialized",
       "msg": "Oracle is already initialized"
+    },
+    {
+      "code": 319,
+      "name": "LimitReached",
+      "msg": "Absolute price limit was reached"
     }
   ]
 };
@@ -2637,7 +2642,7 @@ export const IDL: Amm = {
     {
       "code": 304,
       "name": "InvalidTickIndex",
-      "msg": "Tick index not divisible by spacing"
+      "msg": "Tick index not divisible by spacing or over limit"
     },
     {
       "code": 305,
@@ -2708,6 +2713,11 @@ export const IDL: Amm = {
       "code": 318,
       "name": "OracleAlreadyInitialized",
       "msg": "Oracle is already initialized"
+    },
+    {
+      "code": 319,
+      "name": "LimitReached",
+      "msg": "Absolute price limit was reached"
     }
   ]
 };
