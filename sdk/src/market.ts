@@ -497,6 +497,38 @@ export class Market {
       pair.getAddress(this.program.programId)
     ])
 
+    const priceLimit =
+      overridePriceLimit ?? calculatePriceAfterSlippage(knownPrice, slippage, !XtoY).v
+
+    const indexesInDirection = findClosestTicks(
+      tickmap.bitmap,
+      pool.currentTickIndex,
+      pool.tickSpacing,
+      10,
+      Infinity,
+      XtoY ? 'down' : 'up'
+    )
+
+    const indexesInReverse = findClosestTicks(
+      tickmap.bitmap,
+      pool.currentTickIndex,
+      pool.tickSpacing,
+      3,
+      Infinity,
+      XtoY ? 'up' : 'down'
+    )
+    const remainingAccounts = await Promise.all(
+      indexesInDirection.concat(indexesInReverse).map(async (index) => {
+        const { tickAddress } = await this.getTickAddress(pair, index)
+        return tickAddress
+      })
+    )
+
+    const ra: Array<{ pubkey: PublicKey; isWritable: boolean; isSigner: boolean }> =
+      remainingAccounts.map((pubkey) => {
+        return { pubkey, isWritable: true, isSigner: false }
+      })
+
     let ticksArray: Tick[] = await this.getClosestTicks(
       pair,
       Infinity,
@@ -525,36 +557,18 @@ export class Market {
     }
     let simulationResult: SimulationResult = simulateSwap(swapParameters)
     let amountPerTick: BN[] = simulationResult.amountPerTick
+    let sum = new BN(0)
+    for (var value of amountPerTick) {
+      sum = sum.add(value)
+    }
+
+    if (!sum.eq(amount.mul(DENOMINATOR))) {
+      throw new Error('Input amount and simulation amount sum are different')
+    }
 
     if (amountPerTick.length > MAX_IX) {
       throw new Error('Instruction limit was exceeded')
     }
-
-    const priceLimit =
-      overridePriceLimit ?? calculatePriceAfterSlippage(knownPrice, slippage, !XtoY).v
-
-    const indexesInDirection = findClosestTicks(
-      tickmap.bitmap,
-      pool.currentTickIndex,
-      pool.tickSpacing,
-      10,
-      Infinity,
-      XtoY ? 'down' : 'up'
-    )
-    const indexesInReverse = findClosestTicks(
-      tickmap.bitmap,
-      pool.currentTickIndex,
-      pool.tickSpacing,
-      3,
-      Infinity,
-      XtoY ? 'up' : 'down'
-    )
-    const remainingAccounts = await Promise.all(
-      indexesInDirection.concat(indexesInReverse).map(async (index) => {
-        const { tickAddress } = await this.getTickAddress(pair, index)
-        return tickAddress
-      })
-    )
 
     const tx: Transaction = new Transaction()
     //this means how many cross tikcks we would like to do per instruction
@@ -573,9 +587,7 @@ export class Market {
         !amountPerTick[i].eq(new BN(0))
       ) {
         const swapIx = this.program.instruction.swap(XtoY, amountIx, byAmountIn, priceLimit, {
-          remainingAccounts: remainingAccounts.map((pubkey) => {
-            return { pubkey, isWritable: true, isSigner: false }
-          }),
+          remainingAccounts: ra,
           accounts: {
             state: this.stateAddress,
             pool: poolAddress,
@@ -595,6 +607,81 @@ export class Market {
         amountIx = new BN(0)
       }
     }
+    return tx
+  }
+
+  async swapTransactionWithoutSimulation(
+    {
+      pair,
+      XtoY,
+      amount,
+      knownPrice,
+      slippage,
+      accountX,
+      accountY,
+      byAmountIn,
+      owner
+    }: SwapTransaction,
+    overridePriceLimit?: BN
+  ) {
+    const [pool, tickmap, poolAddress] = await Promise.all([
+      this.get(pair),
+      this.getTickmap(pair),
+      pair.getAddress(this.program.programId)
+    ])
+
+    const priceLimit =
+      overridePriceLimit ?? calculatePriceAfterSlippage(knownPrice, slippage, !XtoY).v
+
+    const indexesInDirection = findClosestTicks(
+      tickmap.bitmap,
+      pool.currentTickIndex,
+      pool.tickSpacing,
+      10,
+      Infinity,
+      XtoY ? 'down' : 'up'
+    )
+
+    const indexesInReverse = findClosestTicks(
+      tickmap.bitmap,
+      pool.currentTickIndex,
+      pool.tickSpacing,
+      3,
+      Infinity,
+      XtoY ? 'up' : 'down'
+    )
+    const remainingAccounts = await Promise.all(
+      indexesInDirection.concat(indexesInReverse).map(async (index) => {
+        const { tickAddress } = await this.getTickAddress(pair, index)
+        return tickAddress
+      })
+    )
+
+    const ra: Array<{ pubkey: PublicKey; isWritable: boolean; isSigner: boolean }> =
+      remainingAccounts.map((pubkey) => {
+        return { pubkey, isWritable: true, isSigner: false }
+      })
+
+    const tx: Transaction = new Transaction()
+
+    const swapIx = this.program.instruction.swap(XtoY, amount, byAmountIn, priceLimit, {
+      remainingAccounts: ra,
+      accounts: {
+        state: this.stateAddress,
+        pool: poolAddress,
+        tickmap: pool.tickmap,
+        tokenX: pool.tokenX,
+        tokenY: pool.tokenY,
+        reserveX: pool.tokenXReserve,
+        reserveY: pool.tokenYReserve,
+        owner,
+        accountX,
+        accountY,
+        programAuthority: this.programAuthority,
+        tokenProgram: TOKEN_PROGRAM_ID
+      }
+    })
+    tx.add(swapIx)
     return tx
   }
 

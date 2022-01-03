@@ -41,6 +41,7 @@ jobs:
             'npm run test:oracle',
             'npm run test:limits',
             'npm run test:simulate-swap',
+            'npm run test:compare',
             'cargo test'
           ]
     steps:
