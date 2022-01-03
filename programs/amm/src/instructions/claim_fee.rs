@@ -120,10 +120,8 @@ pub fn handler(ctx: Context<ClaimFee>) -> ProgramResult {
 
     let fee_to_collect_x = position.tokens_owed_x.to_token_floor();
     let fee_to_collect_y = position.tokens_owed_y.to_token_floor();
-    position.tokens_owed_x =
-        position.tokens_owed_x - Decimal::from_token_amount(fee_to_collect_x);
-    position.tokens_owed_y =
-        position.tokens_owed_y - Decimal::from_token_amount(fee_to_collect_y);
+    position.tokens_owed_x = position.tokens_owed_x - Decimal::from_token_amount(fee_to_collect_x);
+    position.tokens_owed_y = position.tokens_owed_y - Decimal::from_token_amount(fee_to_collect_y);
 
     let seeds = &[SEED.as_bytes(), &[state.nonce]];
     let signer = &[&seeds[..]];

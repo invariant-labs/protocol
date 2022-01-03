@@ -238,7 +238,6 @@ pub fn handler(
     let seeds = &[SEED.as_bytes(), &[state.nonce]];
     let signer = &[&seeds[..]];
 
-    // Maybe rounding error should be counted?
     token::transfer(take_ctx, total_amount_in.0)?;
     token::transfer(send_ctx.with_signer(signer), total_amount_out.0)?;
 

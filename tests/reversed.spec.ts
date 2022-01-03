@@ -84,7 +84,7 @@ describe('reversed', () => {
 
     const tickmapData = await market.getTickmap(pair)
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
-    assert.ok(tickmapData.bitmap.every((v) => v == 0))
+    assert.ok(tickmapData.bitmap.every(v => v == 0))
   })
   it('#swap() Y for X', async () => {
     // create ticks and owner
@@ -177,15 +177,15 @@ describe('reversed', () => {
     const reserveXDelta = reservesBefore.x.sub(reservesAfter.x)
     const reserveYDelta = reservesAfter.y.sub(reservesBefore.y)
 
-    assert.ok(amountX.eq(amount.subn(7)))
+    assert.ok(amountX.eq(amount.subn(10)))
     assert.ok(amountY.eqn(0))
-    assert.ok(reserveXDelta.eq(amount.subn(7)))
+    assert.ok(reserveXDelta.eq(amount.subn(10)))
     assert.ok(reserveYDelta.eq(amount))
 
     assert.ok(poolData.feeGrowthGlobalX.v.eqn(0))
-    assert.ok(poolData.feeGrowthGlobalY.v.eqn(4042169)) // 0.6 % of amount - protocol fee
+    assert.ok(poolData.feeGrowthGlobalY.v.eq(new BN('4000000000000000000')))
     assert.ok(poolData.feeProtocolTokenX.eqn(0))
-    assert.ok(poolData.feeProtocolTokenY.eq(new BN(598199800000)))
+    assert.ok(poolData.feeProtocolTokenY.eqn(2))
 
     // Check ticks
     const lowerTickData = await market.getTick(pair, lowerTick)
@@ -197,7 +197,7 @@ describe('reversed', () => {
     assert.ok(lowerTickData.liquidityChange.v.eq(liquidityDelta.v))
 
     assert.ok(upperTickData.feeGrowthOutsideY.v.eqn(0))
-    assert.ok(middleTickData.feeGrowthOutsideY.v.eqn(2700540))
+    assert.ok(middleTickData.feeGrowthOutsideY.v.eq(new BN('3000000000000000000')))
     assert.ok(lowerTickData.feeGrowthOutsideY.v.eqn(0))
   })
 })

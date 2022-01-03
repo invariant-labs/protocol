@@ -85,7 +85,7 @@ describe('target', () => {
 
     const tickmapData = await market.getTickmap(pair)
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
-    assert.ok(tickmapData.bitmap.every((v) => v == 0))
+    assert.ok(tickmapData.bitmap.every(v => v == 0))
   })
 
   it('#swap by target', async () => {
@@ -167,14 +167,14 @@ describe('target', () => {
     const reserveXDelta = reservesAfter.x.sub(reservesBefore.x)
     const reserveYDelta = reservesBefore.y.sub(reservesAfter.y)
 
-    assert.ok(amountX.eq(mintAmount.sub(amount).subn(8)))
+    assert.ok(amountX.eq(mintAmount.sub(amount).subn(9)))
     assert.ok(amountY.eq(amount))
-    assert.ok(reserveXDelta.eq(amount.addn(8)))
+    assert.ok(reserveXDelta.eq(amount.addn(9)))
     assert.ok(reserveYDelta.eq(amount))
 
-    assert.ok(poolData.feeGrowthGlobalX.v.eqn(5405405)) // 0.6 % of amount - protocol fee
+    assert.equal(poolData.feeGrowthGlobalX.v.toString(), '6000000000000000000') // 0.6 % of amount - protocol fee
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(poolData.feeProtocolTokenX.eq(new BN(600600600600)))
+    assert.ok(poolData.feeProtocolTokenX.eqn(1))
     assert.ok(poolData.feeProtocolTokenY.eqn(0))
   })
 })

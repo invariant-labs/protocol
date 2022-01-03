@@ -93,7 +93,7 @@ describe('withdraw', () => {
 
     const tickmapData = await market.getTickmap(pair)
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
-    assert.ok(tickmapData.bitmap.every((v) => v == 0))
+    assert.ok(tickmapData.bitmap.every(v => v == 0))
   })
   it('#withdraw', async () => {
     // Deposit
@@ -179,9 +179,9 @@ describe('withdraw', () => {
     assert.ok(reserveXDelta.eq(amount))
     assert.ok(reserveYDelta.eq(amount.subn(7)))
 
-    assert.ok(poolData.feeGrowthGlobalX.v.eqn(5400000)) // 0.6 % of amount - protocol fee
+    assert.ok(poolData.feeGrowthGlobalX.v.eq(new BN('5000000000000000000')))
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(poolData.feeProtocolTokenX.eq(new BN(600000013280)))
+    assert.ok(poolData.feeProtocolTokenX.eqn(1))
     assert.ok(poolData.feeProtocolTokenY.eqn(0))
 
     // Remove position
