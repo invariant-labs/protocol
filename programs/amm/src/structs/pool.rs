@@ -31,16 +31,21 @@ pub struct Pool {
 }
 
 impl Pool {
-    pub fn add_fee(&mut self, amount: TokenAmount, x: bool) {
-        if amount.is_zero() || self.liquidity.is_zero() {
+    pub fn add_fee(&mut self, amount: TokenAmount, in_x: bool, protocol_fee: Decimal) {
+        let protocol_fee = amount.big_mul(protocol_fee).to_token_ceil();
+        let pool_fee = amount - protocol_fee;
+
+        if pool_fee.is_zero() || self.liquidity.is_zero() {
             return;
         }
-        let fee_growth = FeeGrowth::from_fee(self.liquidity, amount);
+        let fee_growth = FeeGrowth::from_fee(self.liquidity, pool_fee);
 
-        if x {
+        if in_x {
             self.fee_growth_global_x = self.fee_growth_global_x + fee_growth;
+            self.fee_protocol_token_x += protocol_fee.0;
         } else {
             self.fee_growth_global_y = self.fee_growth_global_y + fee_growth;
+            self.fee_protocol_token_y += protocol_fee.0;
         }
     }
 

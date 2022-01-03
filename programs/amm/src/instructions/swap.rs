@@ -157,19 +157,7 @@ pub fn handler(
             remaining_amount = remaining_amount - result.amount_out;
         }
 
-        // TODO: abstract this away
-        // fee has to be added before crossing any ticks
-        let protocol_fee = result
-            .fee_amount
-            .big_mul(state.protocol_fee)
-            .to_token_ceil();
-
-        pool.add_fee(result.fee_amount - protocol_fee, x_to_y);
-        if x_to_y {
-            pool.fee_protocol_token_x += protocol_fee.0;
-        } else {
-            pool.fee_protocol_token_y += protocol_fee.0;
-        }
+        pool.add_fee(result.fee_amount, x_to_y, state.protocol_fee);
 
         pool.sqrt_price = result.next_price_sqrt;
 
@@ -235,8 +223,7 @@ pub fn handler(
         (ctx.accounts.take_y(), ctx.accounts.send_x())
     };
 
-    let seeds = &[SEED.as_bytes(), &[state.nonce]];
-    let signer = &[&seeds[..]];
+    let signer: &[&[&[u8]]] = get_signer!(state.nonce);
 
     token::transfer(take_ctx, total_amount_in.0)?;
     token::transfer(send_ctx.with_signer(signer), total_amount_out.0)?;
