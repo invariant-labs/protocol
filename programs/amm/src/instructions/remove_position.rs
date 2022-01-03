@@ -202,9 +202,7 @@ pub fn handler(
         };
     }
 
-    let seeds = &[SEED.as_bytes(), &[state.nonce]];
-    let signer = &[&seeds[..]];
-
+    let signer: &[&[&[u8]]] = get_signer!(state.nonce);
     token::transfer(ctx.accounts.send_x().with_signer(signer), amount_x.0)?;
     token::transfer(ctx.accounts.send_y().with_signer(signer), amount_y.0)?;
 

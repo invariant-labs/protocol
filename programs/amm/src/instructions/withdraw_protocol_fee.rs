@@ -2,6 +2,7 @@ use crate::interfaces::SendTokens;
 use crate::structs::pool::Pool;
 use crate::structs::state::State;
 use crate::SEED;
+use crate::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, TokenAccount, Transfer};
 
@@ -76,8 +77,7 @@ pub fn handler(ctx: Context<WithdrawProtocolFee>) -> ProgramResult {
     let state = ctx.accounts.state.load()?;
     let mut pool = ctx.accounts.pool.load_mut()?;
 
-    let seeds = &[SEED.as_bytes(), &[state.nonce]];
-    let signer = &[&seeds[..]];
+    let signer: &[&[&[u8]]] = get_signer!(state.nonce);
 
     let cpi_ctx_x = ctx.accounts.send_x().with_signer(signer);
     let cpi_ctx_y = ctx.accounts.send_y().with_signer(signer);
