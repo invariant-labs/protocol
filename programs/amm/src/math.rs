@@ -101,14 +101,12 @@ pub fn compute_swap_step(
     fee: Decimal,
 ) -> SwapResult {
     let x_to_y = current_price_sqrt >= target_price_sqrt;
-    let exact_in = by_amount_in;
 
     let next_price_sqrt;
     let mut amount_in = TokenAmount(0);
     let mut amount_out = TokenAmount(0);
-    let fee_amount;
 
-    if exact_in {
+    if by_amount_in {
         let amount_after_fee = amount.big_mul(Decimal::one() - fee).to_token_floor();
 
         amount_in = if x_to_y {
@@ -143,42 +141,34 @@ pub fn compute_swap_step(
         }
     }
 
-    let max = target_price_sqrt == next_price_sqrt;
+    let not_max = target_price_sqrt != next_price_sqrt;
 
     if x_to_y {
-        amount_in = if max && exact_in {
-            amount_in
-        } else {
-            get_delta_x(next_price_sqrt, current_price_sqrt, liquidity, true)
+        if not_max || !by_amount_in {
+            amount_in = get_delta_x(next_price_sqrt, current_price_sqrt, liquidity, true)
         };
-        amount_out = if max && !exact_in {
-            amount_out
-        } else {
-            get_delta_y(next_price_sqrt, current_price_sqrt, liquidity, false)
+        if not_max || by_amount_in {
+            amount_out = get_delta_y(next_price_sqrt, current_price_sqrt, liquidity, false)
         }
     } else {
-        amount_in = if max && exact_in {
-            amount_in
-        } else {
-            get_delta_y(current_price_sqrt, next_price_sqrt, liquidity, true)
+        if not_max || !by_amount_in {
+            amount_in = get_delta_y(current_price_sqrt, next_price_sqrt, liquidity, true)
         };
-        amount_out = if max && !exact_in {
-            amount_out
-        } else {
-            get_delta_x(current_price_sqrt, next_price_sqrt, liquidity, false)
+        if not_max || by_amount_in {
+            amount_out = get_delta_x(current_price_sqrt, next_price_sqrt, liquidity, false)
         }
     }
 
     // Amount out can not exceed amount
-    if !exact_in && amount_out > amount {
+    if !by_amount_in && amount_out > amount {
         amount_out = amount;
     }
 
-    if exact_in && next_price_sqrt != target_price_sqrt {
-        fee_amount = amount - amount_in
+    let fee_amount = if by_amount_in && next_price_sqrt != target_price_sqrt {
+        amount - amount_in
     } else {
-        fee_amount = amount_in.big_mul(fee).to_token_ceil()
-    }
+        amount_in.big_mul(fee).to_token_ceil()
+    };
 
     SwapResult {
         next_price_sqrt,
