@@ -1,3 +1,5 @@
+use std::ops::Div;
+
 use crate::{decimal::Decimal, uint::U256};
 
 pub fn decimal_to_x128(decimal: Decimal) -> U256 {
@@ -10,44 +12,129 @@ pub fn decimal_to_x128(decimal: Decimal) -> U256 {
         .unwrap()
 }
 
-pub fn log2_floor_x128(sqrt_price_x128: U256) -> U256 {
+pub fn log2_msb_x128(sqrt_price_x128: U256) -> U256 {
     let mut sqrt_price_x128 = sqrt_price_x128;
-    let mut log2_floor = U256::from(0);
+    let mut log2_msb = U256::from(0);
 
     if sqrt_price_x128 >= U256::from(1) << 128 {
         sqrt_price_x128 >>= 128;
-        log2_floor += U256::from(128);
+        log2_msb += U256::from(128);
     };
     if sqrt_price_x128 >= U256::from(1) << 64 {
         sqrt_price_x128 >>= 64;
-        log2_floor += U256::from(64);
+        log2_msb += U256::from(64);
     };
     if sqrt_price_x128 >= U256::from(1) << 32 {
         sqrt_price_x128 >>= 32;
-        log2_floor += U256::from(32);
+        log2_msb += U256::from(32);
     };
     if sqrt_price_x128 >= U256::from(1) << 16 {
         sqrt_price_x128 >>= 16;
-        log2_floor += U256::from(16);
+        log2_msb += U256::from(16);
     };
     if sqrt_price_x128 >= U256::from(1) << 8 {
         sqrt_price_x128 >>= 8;
-        log2_floor += U256::from(8);
+        log2_msb += U256::from(8);
     };
     if sqrt_price_x128 >= U256::from(1) << 4 {
         sqrt_price_x128 >>= 4;
-        log2_floor += U256::from(4);
+        log2_msb += U256::from(4);
     };
     if sqrt_price_x128 >= U256::from(1) << 2 {
         sqrt_price_x128 >>= 2;
-        log2_floor += U256::from(2);
+        log2_msb += U256::from(2);
     };
     if sqrt_price_x128 >= U256::from(1) << 1 {
-        log2_floor += U256::from(1);
+        log2_msb += U256::from(1);
     };
 
-    log2_floor
+    log2_msb
 }
+
+pub fn log2(mut sqrt_price_x128: U256, sign: bool) -> (bool, U256) {
+    let scale: U256 = U256::from(1) << 128;
+    let scale_2x: U256 = scale.checked_mul(U256::from(2)).unwrap();
+    let two = U256::from(2);
+
+    // log2(x) = -log2(1/x)
+    if !sign {
+        sqrt_price_x128 = scale
+            .checked_mul(scale)
+            .unwrap()
+            .checked_div(sqrt_price_x128)
+            .unwrap();
+    }
+
+    let msb = log2_msb_x128(sqrt_price_x128.checked_div(scale).unwrap());
+    let mut result = msb.checked_mul(msb).unwrap();
+    // y = x * 2^(-n).
+    let mut y = sqrt_price_x128 >> 2;
+
+    // If y = 1, the fractional part is zero.
+    if y == scale {
+        return (sign, sqrt_price_x128);
+    };
+
+    // Calculate the fractional part via the iterative approximation.
+    // The "delta >>= 1" part is equivalent to "delta /= 2", but shifting bits is faster.
+    let mut delta = scale.checked_div(two).unwrap();
+    while delta > U256::from(0) {
+        y = y.checked_mul(y).unwrap().checked_div(scale).unwrap();
+
+        if y >= scale_2x {
+            result += delta;
+            y /= 2;
+        }
+        // /= 2 can be to >>=
+        delta /= two;
+    }
+    (sign, result)
+}
+
+// PRICE to log
+// 4 * 10^9
+// 2.3 * 10^-10
+// pub fn log10_floor(sqrt_price: Decimal) -> u32 {
+//     log10(sqrt_price.v)
+// }
+
+// pub const fn log10(mut val: u128) -> u32 {
+//     let mut log = 0;
+//     if val >= 100_000_000_000_000_000_000_000_000_000_000 {
+//         val /= 100_000_000_000_000_000_000_000_000_000_000;
+//         log += 32;
+//         return log + less_than_8(val as u32);
+//     }
+//     if val >= 10_000_000_000_000_000 {
+//         val /= 10_000_000_000_000_000;
+//         log += 16;
+//     }
+//     log + less_than_16(val as u64)
+// }
+// const fn less_than_16(mut val: u64) -> u32 {
+//     let mut log = 0;
+//     if val >= 100_000_000 {
+//         val /= 100_000_000;
+//         log += 8;
+//     }
+//     log + less_than_8(val as u32)
+// }
+// const fn less_than_8(mut val: u32) -> u32 {
+//     let mut log = 0;
+//     if val >= 10_000 {
+//         val /= 10_000;
+//         log += 4;
+//     }
+//     log + if val >= 1000 {
+//         3
+//     } else if val >= 100 {
+//         2
+//     } else if val >= 10 {
+//         1
+//     } else {
+//         0
+//     }
+// }
 
 #[cfg(test)]
 mod tests {
@@ -88,6 +175,12 @@ mod tests {
             assert!(max_sqrt_price_x96.eq(&expected_max_sqrt_price_x96));
             assert!(min_sqrt_price_x96.eq(&expected_min_sqrt_price_x96));
         }
+    }
+
+    #[test]
+    fn test_log10() {
+        // TEST CASE:
+        Decimal::from_integer(1);
     }
 
     #[test]
