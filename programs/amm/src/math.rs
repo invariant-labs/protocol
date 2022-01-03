@@ -427,91 +427,78 @@ mod tests {
 
     #[test]
     fn test_swap_step() {
-        // // amount in capped at target price
-        // {
-        //     let price = Decimal::one();
-        //     let target = (Decimal::from_integer(101) / Decimal::from_integer(100)).sqrt();
-        //     let liquidity = Decimal::from_integer(2);
-        //     let amount = TokenAmount(1);
-        //     let fee = Decimal::from_decimal(6, 4);
+        // one token by amount in
+        {
+            let price = Decimal::one();
+            let target = (Decimal::from_integer(101) / Decimal::from_integer(100)).sqrt();
+            let liquidity = Decimal::from_integer(2000);
+            let amount = TokenAmount(1);
+            let fee = Decimal::from_decimal(6, 4);
 
-        //     let result = compute_swap_step(price, target, liquidity, amount, true, fee);
-        //     let expected_result = SwapResult {
-        //         next_price_sqrt: target,
-        //         amount_in: Decimal::new(9975124224),
-        //         amount_out: Decimal::new(9925619579),
-        //         fee_amount: Decimal::new(5985075),
-        //     };
-        //     assert_eq!(result, expected_result)
-        // }
-        // // amount out capped at target price
-        // {
-        //     let price = Decimal::one();
-        //     let target = (Decimal::from_integer(101) / Decimal::from_integer(100)).sqrt();
-        //     let liquidity = Decimal::from_integer(2);
-        //     let amount = TokenAmount(1);
-        //     let fee = Decimal::from_decimal(6, 4);
+            let result = compute_swap_step(price, target, liquidity, amount, true, fee);
 
-        //     let result = compute_swap_step(price, target, liquidity, amount, false, fee);
-        //     let expected_result = SwapResult {
-        //         next_price_sqrt: target,
-        //         amount_in: Decimal::new(9975124224),
-        //         amount_out: Decimal::new(9925619579),
-        //         fee_amount: Decimal::new(5985075),
-        //     };
-        //     assert_eq!(result, expected_result)
-        // }
-        // // amount in not capped
-        // {
-        //     let price = Decimal::one();
-        //     let target = Decimal::from_integer(10).sqrt();
-        //     let liquidity = Decimal::from_integer(2);
-        //     let amount = TokenAmount(1);
-        //     let fee = Decimal::from_decimal(6, 4);
+            let expected_result = SwapResult {
+                next_price_sqrt: price,
+                amount_in: TokenAmount(0),
+                amount_out: TokenAmount(0),
+                fee_amount: TokenAmount(1),
+            };
+            assert_eq!(result, expected_result)
+        }
+        // amount out capped at target price
+        {
+            let price = Decimal::one();
+            let target = (Decimal::from_integer(101) / Decimal::from_integer(100)).sqrt();
+            let liquidity = Decimal::from_integer(2000);
+            let amount = TokenAmount(20);
+            let fee = Decimal::from_decimal(6, 4);
 
-        //     let result = compute_swap_step(price, target, liquidity, amount, true, fee);
-        //     let expected_result = SwapResult {
-        //         next_price_sqrt: Decimal::new(1499700000000),
-        //         amount_in: Decimal::new(999400000000),
-        //         amount_out: Decimal::new(666399946655),
-        //         fee_amount: Decimal::new(600000000),
-        //     };
-        //     assert_eq!(result, expected_result)
-        // }
-        // // amount out not capped
-        // {
-        //     let price = Decimal::one();
-        //     let target = Decimal::from_integer(10).sqrt();
-        //     let liquidity = Decimal::from_integer(2);
-        //     let amount = TokenAmount(1);
-        //     let fee = Decimal::from_decimal(6, 4);
+            let result_in = compute_swap_step(price, target, liquidity, amount, true, fee);
+            let result_out = compute_swap_step(price, target, liquidity, amount, false, fee);
 
-        //     let result = compute_swap_step(price, target, liquidity, amount, false, fee);
-        //     let expected_result = SwapResult {
-        //         next_price_sqrt: Decimal::new(2000000000000),
-        //         amount_in: Decimal::new(2000000000000),
-        //         amount_out: Decimal::one(),
-        //         fee_amount: Decimal::new(1200000000),
-        //     };
-        //     assert_eq!(result, expected_result)
-        // }
-        // // next tests
-        // {
-        //     let price = Decimal::new(20282409603651);
-        //     let target = (Decimal::from_integer(101) / Decimal::from_integer(100)).sqrt();
-        //     let liquidity = Decimal::new(1024);
-        //     let amount = TokenAmount(4);
-        //     let fee = Decimal::from_decimal(3, 3);
+            let expected_result = SwapResult {
+                next_price_sqrt: target,
+                amount_in: TokenAmount(10),
+                amount_out: TokenAmount(9),
+                fee_amount: TokenAmount(1),
+            };
+            assert_eq!(result_in, expected_result);
+            assert_eq!(result_out, expected_result);
+        }
+        // amount in not capped
+        {
+            let price = Decimal::from_integer(101) / Decimal::from_integer(100);
+            let target = Decimal::from_integer(10);
+            let liquidity = Decimal::from_integer(300000000);
+            let amount = TokenAmount(1000000);
+            let fee = Decimal::from_decimal(6, 4);
 
-        //     let result = compute_swap_step(price, target, liquidity, amount, false, fee);
-        //     let expected_result = SwapResult {
-        //         next_price_sqrt: Decimal::new(1004987562112),
-        //         amount_in: Decimal::new(969),
-        //         amount_out: Decimal::new(19740),
-        //         fee_amount: Decimal::new(3),
-        //     };
-        //     assert_eq!(result, expected_result)
-        // }
+            let result = compute_swap_step(price, target, liquidity, amount, true, fee);
+            let expected_result = SwapResult {
+                next_price_sqrt: Decimal::new(1013331333333),
+                amount_in: TokenAmount(999400),
+                amount_out: TokenAmount(976487), // ((1.013331333333 - 1.01) * 300000000) / (1.013331333333 * 1.01)
+                fee_amount: TokenAmount(600),
+            };
+            assert_eq!(result, expected_result)
+        }
+        // amount out not capped
+        {
+            let price = Decimal::from_integer(101);
+            let target = Decimal::from_integer(100);
+            let liquidity = Decimal::from_integer(5000000000000);
+            let amount = TokenAmount(2000000);
+            let fee = Decimal::from_decimal(6, 4);
+
+            let result = compute_swap_step(price, target, liquidity, amount, false, fee);
+            let expected_result = SwapResult {
+                next_price_sqrt: Decimal::new(100999999600000),
+                amount_in: TokenAmount(197), // (5000000000000 * (101 - 100.9999996)) /  (101 * 100.9999996)
+                amount_out: amount,
+                fee_amount: TokenAmount(1),
+            };
+            assert_eq!(result, expected_result)
+        }
     }
 
     #[test]
