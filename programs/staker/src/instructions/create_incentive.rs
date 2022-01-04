@@ -1,5 +1,3 @@
-use std::convert::TryInto;
-
 use crate::decimal::*;
 use crate::structs::*;
 use crate::util::get_current_timestamp;
@@ -13,6 +11,7 @@ const MAX_TIME_BEFORE_START: u64 = 3_600; //hour in sec
 const MAX_DURATION: u64 = 31_556_926; //year in sec
 
 #[derive(Accounts)]
+#[instruction(bump: u8)]
 pub struct CreateIncentive<'info> {
     #[account(init, payer = founder)]
     pub incentive: AccountLoader<'info, Incentive>,

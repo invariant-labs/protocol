@@ -141,13 +141,13 @@ export const createTokensAndPool = async (
 
   const createPoolVars: CreatePool = {
     pair,
-    payer: payer.publicKey,
+    payer: payer,
     initTick,
     protocolFee,
     tokenX,
     tokenY
   }
-  await createPool(market, createPoolVars, payer)
+  await createPool(market, createPoolVars)
 
   return { tokenX, tokenY, pair, mintAuthority }
 }
@@ -226,46 +226,12 @@ export const createPosition = async (
   wallet: Keypair,
   mintAuthority: Keypair
 ) => {
-  try {
-    await market.getTick(pair, lowerTick)
-  } catch (e: unknown) {
-    if (e instanceof Error) {
-      const createTickVars: CreateTick = {
-        pair,
-        index: lowerTick,
-        payer: wallet.publicKey
-      }
-      await createTick(market, createTickVars, wallet)
-    }
-  }
-
-  try {
-    await market.getTick(pair, upperTick)
-  } catch (e: unknown) {
-    if (e instanceof Error) {
-      const createTickVars: CreateTick = {
-        pair,
-        index: upperTick,
-        payer: wallet.publicKey
-      }
-      await createTick(market, createTickVars, wallet)
-    }
-  }
-
   const mintAmount = tou64(new BN(10).pow(new BN(10)))
   if ((await tokenX.getAccountInfo(ownerTokenXAccount)).amount.eq(new BN(0))) {
     await tokenX.mintTo(ownerTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
   }
   if ((await tokenY.getAccountInfo(ownerTokenYAccount)).amount.eq(new BN(0))) {
     await tokenY.mintTo(ownerTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-  }
-
-  try {
-    await market.getPositionList(owner.publicKey)
-  } catch (e: unknown) {
-    if (e instanceof Error) {
-      await createPositionList(market, owner.publicKey, owner)
-    }
   }
 
   const initPositionVars: InitPosition = {
@@ -319,11 +285,8 @@ export const performSwap = async (
   await swap(market, swapVars, swapper)
 }
 
-export const createPool = async (market: Market, createPool: CreatePool, signer: Keypair) => {
-  const bitmapKeypair = Keypair.generate()
-  const tx = await market.createPoolTransaction(createPool, bitmapKeypair)
-
-  await signAndSend(tx, [signer], market.connection)
+export const createPool = async (market: Market, createPool: CreatePool) => {
+  await market.createPool(createPool)
 }
 
 // Admin function
@@ -453,11 +416,7 @@ export const updateSecondsPerLiquidity = async (
 
 export const initializeOracle = async (
   market: Market,
-  initializeOracle: InitializeOracle,
-  signer: Keypair
+  initializeOracle: InitializeOracle
 ) => {
-  const oracleKeypair = Keypair.generate()
-  const tx = await market.initializeOracleTransaction(initializeOracle, oracleKeypair)
-
-  signAndSend(tx, [signer, oracleKeypair], market.connection)
+  await market.initializeOracle(initializeOracle)
 }

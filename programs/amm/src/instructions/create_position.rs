@@ -137,7 +137,7 @@ pub fn handler(
     }
 
     // update position_list head
-    position_list.head.checked_add(1).unwrap();
+    position_list.head = position_list.head.checked_add(1).unwrap();
     position.initialized_id(&mut pool);
 
     // init position

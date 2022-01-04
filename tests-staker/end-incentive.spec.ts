@@ -8,12 +8,13 @@ import { assert } from 'chai'
 import { Decimal } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
 import { createToken, tou64 } from './utils'
-import { createToken as createTkn } from '../tests/testUtils'
+import { createFeeTier, createPool, createState, createToken as createTkn } from '../tests/testUtils'
 import { signAndSend } from '../sdk-staker/lib/utils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { sleep } from '@invariant-labs/sdk'
-import { Token } from '@solana/spl-token'
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { CreateFeeTier, CreatePool } from '@invariant-labs/sdk/src/market'
 
 describe('End incentive tests', () => {
   const provider = Provider.local()
@@ -21,15 +22,17 @@ describe('End incentive tests', () => {
   const program = anchor.workspace.Staker as Program<StakerIdl>
   // @ts-expect-error
   const wallet = provider.wallet.payer as Account
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
-  let stakerAuthority: PublicKey
+  const founderAccount = Keypair.generate()
   const mintAuthority = Keypair.generate()
-  let nonce: number
+  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
+  
+  let stakerAuthority: PublicKey
   let staker: Staker
   let pool: PublicKey
   let amm: PublicKey
   let incentiveToken: Token
-  const founderAccount = Keypair.generate()
+  let tokenX: Token
+  let tokenY: Token
   let founderTokenAcc: PublicKey
   let incentiveTokenAcc: PublicKey
   let amount: BN
@@ -42,7 +45,6 @@ describe('End incentive tests', () => {
       program.programId
     )
     stakerAuthority = _mintAuthority
-    nonce = _nonce
     staker = new Staker(connection, Network.LOCAL, provider.wallet, program.programId)
 
     //create token
@@ -74,21 +76,33 @@ describe('End incentive tests', () => {
     ])
 
     // create pool
-    const fee = 600
-    const tickSpacing = 10
-
     const feeTier: FeeTier = {
       fee: fromFee(new BN(600)),
       tickSpacing: 10
     }
 
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-    await market.createState(admin, protocolFee)
-    await market.createFeeTier(feeTier, admin)
-    await market.create({
+
+    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
+    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+
+    await createState(market, admin.publicKey, admin)
+
+    const createFeeTierVars: CreateFeeTier = {
+      feeTier,
+      admin: admin.publicKey
+    }
+    await createFeeTier(market, createFeeTierVars, admin)
+
+    const createPoolVars: CreatePool = {
       pair,
-      signer: admin
-    })
+      payer: admin,
+      protocolFee,
+      tokenX,
+      tokenY
+    }
+    await createPool(market, createPoolVars)
+
     pool = await pair.getAddress(anchor.workspace.Amm.programId)
     amm = anchor.workspace.Amm.programId
   })
@@ -104,11 +118,10 @@ describe('End incentive tests', () => {
     })
 
     const seconds = new Date().valueOf() / 1000
-    const currenTime = new BN(Math.floor(seconds))
+    const currentTime = new BN(Math.floor(seconds))
     const reward: Decimal = { v: new BN(10) }
-    const startTime = currenTime.add(new BN(0))
-    const endTime = currenTime.add(new BN(10))
-    const totalSecondsClaimed: Decimal = { v: new BN(0) }
+    const startTime = currentTime.add(new BN(0))
+    const endTime = currentTime.add(new BN(10))
 
     const balanceBefore = (await incentiveToken.getAccountInfo(founderTokenAcc)).amount
 
@@ -116,9 +129,9 @@ describe('End incentive tests', () => {
       reward,
       startTime,
       endTime,
-      incentive: incentiveAccount,
+      incentive: incentiveAccount.publicKey,
       pool: pool,
-      founder: founderAccount,
+      founder: founderAccount.publicKey,
       incentiveTokenAcc: incentiveTokenAcc,
       founderTokenAcc: founderTokenAcc,
       amm: amm

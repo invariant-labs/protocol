@@ -49,10 +49,6 @@ pub mod amm {
         instructions::create_pool::handler(ctx, bump, init_tick, protocol_fee)
     }
 
-    pub fn create_tickmap(ctx: Context<CreateTickmap>, bump: u8) -> ProgramResult {
-        instructions::create_tickmap::handler(ctx, bump)
-    }
-
     pub fn swap(
         ctx: Context<Swap>,
         x_to_y: bool,

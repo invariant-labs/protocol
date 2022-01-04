@@ -1,9 +1,16 @@
 import * as anchor from '@project-serum/anchor'
-import { Program, Provider, BN } from '@project-serum/anchor'
-import { Keypair, PublicKey } from '@solana/web3.js'
-import { Network, SEED, Market, Pair } from '@invariant-labs/sdk'
+import { Provider, BN } from '@project-serum/anchor'
+import { Keypair } from '@solana/web3.js'
+import { Network, Market, Pair } from '@invariant-labs/sdk'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { createFeeTier, createPool, createPosition, createState, createToken, performSwap } from './testUtils'
+import {
+  createFeeTier,
+  createPool,
+  createPosition,
+  createState,
+  createToken,
+  performSwap
+} from './testUtils'
 import { assert } from 'chai'
 import { DENOMINATOR } from '@invariant-labs/sdk'
 import { TICK_LIMIT } from '@invariant-labs/sdk'
@@ -12,7 +19,6 @@ import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { calculateFeeGrowthInside } from '@invariant-labs/sdk/src/math'
 import { CreateFeeTier, CreatePool } from '@invariant-labs/sdk/src/market'
-
 
 describe('big-swap', () => {
   const provider = Provider.local()
@@ -31,8 +37,6 @@ describe('big-swap', () => {
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
-  let programAuthority: PublicKey
-  let nonce: number
 
   before(async () => {
     market = await Market.build(
@@ -52,14 +56,6 @@ describe('big-swap', () => {
       createToken(connection, wallet, mintAuthority),
       createToken(connection, wallet, mintAuthority)
     ])
-
-    const swaplineProgram = anchor.workspace.Amm as Program
-    const [_programAuthority, _nonce] = await anchor.web3.PublicKey.findProgramAddress(
-      [Buffer.from(SEED)],
-      swaplineProgram.programId
-    )
-    nonce = _nonce
-    programAuthority = _programAuthority
 
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
@@ -81,12 +77,12 @@ describe('big-swap', () => {
   it('#create()', async () => {
     const createPoolVars: CreatePool = {
       pair,
-      payer: admin.publicKey,
+      payer: admin,
       protocolFee,
       tokenX,
       tokenY
     }
-    await createPool(market, createPoolVars, admin)
+    await createPool(market, createPoolVars)
     const createdPool = await market.getPool(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
     assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
@@ -137,10 +133,7 @@ describe('big-swap', () => {
         wallet,
         mintAuthority
       )
-      console.log(i)
     }
-
-
 
     const swaps: Array<[xToY: boolean, amount: BN]> = [
       [true, new BN(3000)],
@@ -163,8 +156,6 @@ describe('big-swap', () => {
 
     for (let i = 0; i < swaps.length; i++) {
       let pool = await market.getPool(pair)
-      console.log("swap ", i)
-      console.log("liquidity: ", pool.liquidity.v.toString())
       await performSwap(
         pair,
         swaps[i][0],
@@ -205,16 +196,40 @@ describe('big-swap', () => {
           poolAfterSwaps.currentTickIndex,
           poolAfterSwaps.feeGrowthGlobalX,
           poolAfterSwaps.feeGrowthGlobalY
-        );
+        )
         assert.ok(feeGrowthInsideX.v.gte(new BN(0)))
         assert.ok(feeGrowthInsideY.v.gte(new BN(0)))
       }
     }
 
-    market.removePositionInstruction({ pair, owner: positionOwner.publicKey, index: 1, userTokenX, userTokenY })
-    market.removePositionInstruction({ pair, owner: positionOwner.publicKey, index: 3, userTokenX, userTokenY })
-    market.removePositionInstruction({ pair, owner: positionOwner.publicKey, index: 4, userTokenX, userTokenY })
-    market.removePositionInstruction({ pair, owner: positionOwner.publicKey, index: 8, userTokenX, userTokenY })
+    market.removePositionInstruction({
+      pair,
+      owner: positionOwner.publicKey,
+      index: 1,
+      userTokenX,
+      userTokenY
+    })
+    market.removePositionInstruction({
+      pair,
+      owner: positionOwner.publicKey,
+      index: 3,
+      userTokenX,
+      userTokenY
+    })
+    market.removePositionInstruction({
+      pair,
+      owner: positionOwner.publicKey,
+      index: 4,
+      userTokenX,
+      userTokenY
+    })
+    market.removePositionInstruction({
+      pair,
+      owner: positionOwner.publicKey,
+      index: 8,
+      userTokenX,
+      userTokenY
+    })
 
     const positionsInfo2: Array<[ticks: [lower: number, upper: number], liquidity: BN]> = [
       [[-30, 20], new BN(500000).mul(DENOMINATOR)],
@@ -223,10 +238,10 @@ describe('big-swap', () => {
       [[-40, 30], new BN(1000000).mul(DENOMINATOR)],
       [[10, 40], new BN(800000).mul(DENOMINATOR)],
       [[0, 50], new BN(950000).mul(DENOMINATOR)],
-      [[-10, 30], new BN(350000).mul(DENOMINATOR)],
+      [[-10, 30], new BN(350000).mul(DENOMINATOR)]
     ]
 
-    for (let i = 0; i < positionsInfo.length; i++) {
+    for (let i = 0; i < positionsInfo2.length; i++) {
       await createPosition(
         positionsInfo2[i][0][0],
         positionsInfo2[i][0][1],
@@ -241,7 +256,6 @@ describe('big-swap', () => {
         wallet,
         mintAuthority
       )
-      console.log(i)
     }
 
     const swaps2: Array<[xToY: boolean, amount: BN]> = [
@@ -251,7 +265,6 @@ describe('big-swap', () => {
       [true, new BN(3660)],
       [true, new BN(3160)],
       [true, new BN(4030)],
-      [true, new BN(3900)],
       [false, new BN(2940)],
       [false, new BN(3800)],
       [false, new BN(3700)],
@@ -265,8 +278,6 @@ describe('big-swap', () => {
 
     for (let i = 0; i < swaps2.length; i++) {
       let pool = await market.getPool(pair)
-      console.log("swap ", i)
-      console.log("liquidity: ", pool.liquidity.v.toString())
       await performSwap(
         pair,
         swaps2[i][0],
@@ -307,7 +318,7 @@ describe('big-swap', () => {
           poolAfterSwaps2.currentTickIndex,
           poolAfterSwaps2.feeGrowthGlobalX,
           poolAfterSwaps2.feeGrowthGlobalY
-        );
+        )
         assert.ok(feeGrowthInsideX.v.gte(new BN(0)))
         assert.ok(feeGrowthInsideY.v.gte(new BN(0)))
       }

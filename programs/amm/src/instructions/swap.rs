@@ -250,7 +250,6 @@ pub fn handler(
 
     let amount_in_to_protocol = Decimal::from_integer(total_amount_in.to_token_ceil().try_into().unwrap()) - total_amount_in;
     let amount_out_to_protocol = total_amount_out - Decimal::from_integer(total_amount_out.to_token_floor().try_into().unwrap());
-    
     match x_to_y {
         true => {
             pool.fee_protocol_token_x = pool.fee_protocol_token_x + amount_in_to_protocol;

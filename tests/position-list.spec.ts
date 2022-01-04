@@ -1,14 +1,35 @@
 import * as anchor from '@project-serum/anchor'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import { Market, Pair, SEED, tou64, signAndSend, fromInteger, Network } from '@invariant-labs/sdk'
-import { Provider, Program, BN } from '@project-serum/anchor'
+import { Market, Pair, tou64, signAndSend, fromInteger, Network } from '@invariant-labs/sdk'
+import { Provider, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { createToken, eqDecimal, positionEquals, positionWithoutOwnerEquals } from './testUtils'
+import {
+  createFeeTier,
+  createPool,
+  createPositionList,
+  createState,
+  createTick,
+  createToken,
+  eqDecimal,
+  initPosition,
+  positionEquals,
+  positionWithoutOwnerEquals,
+  removePosition,
+  transferPositionOwnership
+} from './testUtils'
 import { assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
 import { ERRORS, fromFee } from '@invariant-labs/sdk/lib/utils'
 import { sleep } from '@invariant-labs/sdk'
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
+import {
+  CreateFeeTier,
+  CreatePool,
+  CreateTick,
+  InitPosition,
+  RemovePosition,
+  TransferPositionOwnership
+} from '@invariant-labs/sdk/src/market'
 
 describe('Position list', () => {
   const provider = Provider.local()
@@ -65,40 +86,52 @@ describe('Position list', () => {
     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], xOwnerAmount)
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], yOwnerAmount)
 
-    await market.createState(admin, protocolFee)
-    await market.createFeeTier(feeTier, admin)
+    await createState(market, admin.publicKey, admin)
+
+    const createFeeTierVars: CreateFeeTier = {
+      feeTier,
+      admin: admin.publicKey
+    }
+    await createFeeTier(market, createFeeTierVars, admin)
   })
   describe('Settings', async () => {
     it('Prepare pool', async () => {
       initTick = -23028
 
-      await market.create({
+      const createPoolVars: CreatePool = {
         pair,
-        signer: admin,
+        payer: admin,
+        protocolFee,
+        tokenX,
+        tokenY,
         initTick
-      })
-      await market.createPositionList(positionOwner)
+      }
+      await createPool(market, createPoolVars)
+      await createPositionList(market, positionOwner.publicKey, positionOwner)
 
       ticksIndexes = [-9780, -42, 0, 9, 276, 32343]
       Promise.all(
         ticksIndexes.map(async (tickIndex) => {
-          const ix = await market.createTickInstruction(pair, tickIndex, wallet.publicKey)
-          await signAndSend(new Transaction().add(ix), [wallet], connection)
+          const createTickVars: CreateTick = {
+            index: tickIndex,
+            pair,
+            payer: admin.publicKey
+          }
+          await createTick(market, createTickVars, wallet)
         })
       )
     })
   })
   describe('#RemovePosition()', async () => {
     it('Remove from empty list should failed', async () => {
-      assertThrowsAsync(
-        market.removePositionInstruction(
-          pair,
-          positionOwner.publicKey,
-          0,
-          userTokenXAccount,
-          userTokenYAccount
-        )
-      )
+      const removePositionVars: RemovePosition = {
+        index: 0,
+        pair,
+        userTokenX: userTokenXAccount,
+        userTokenY: userTokenYAccount,
+        owner: positionOwner.publicKey
+      }
+      assertThrowsAsync(removePosition(market, removePositionVars, positionOwner))
     })
     it('Add multiple position', async () => {
       xOwnerAmount = tou64(1e10)
@@ -107,55 +140,41 @@ describe('Position list', () => {
       await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], xOwnerAmount)
       await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], yOwnerAmount)
 
-      await market.initPosition(
-        {
-          pair,
-          owner: positionOwner.publicKey,
-          userTokenX: userTokenXAccount,
-          userTokenY: userTokenYAccount,
-          lowerTick: ticksIndexes[0],
-          upperTick: ticksIndexes[1],
-          liquidityDelta: fromInteger(1)
-        },
-        positionOwner
-      )
+      const initPositionVars: InitPosition = {
+        pair,
+        owner: positionOwner.publicKey,
+        userTokenX: userTokenXAccount,
+        userTokenY: userTokenYAccount,
+        lowerTick: ticksIndexes[0],
+        upperTick: ticksIndexes[1],
+        liquidityDelta: fromInteger(1)
+      }
+      await initPosition(market, initPositionVars, positionOwner)
+
       // create position with the same tick should pass
-      await market.initPosition(
-        {
-          pair,
-          owner: positionOwner.publicKey,
-          userTokenX: userTokenXAccount,
-          userTokenY: userTokenYAccount,
-          lowerTick: ticksIndexes[0],
-          upperTick: ticksIndexes[1],
-          liquidityDelta: fromInteger(1)
-        },
-        positionOwner
-      )
-      await market.initPosition(
-        {
-          pair,
-          owner: positionOwner.publicKey,
-          userTokenX: userTokenXAccount,
-          userTokenY: userTokenYAccount,
-          lowerTick: ticksIndexes[0],
-          upperTick: ticksIndexes[2],
-          liquidityDelta: fromInteger(1)
-        },
-        positionOwner
-      )
-      await market.initPosition(
-        {
-          pair,
-          owner: positionOwner.publicKey,
-          userTokenX: userTokenXAccount,
-          userTokenY: userTokenYAccount,
-          lowerTick: ticksIndexes[1],
-          upperTick: ticksIndexes[4],
-          liquidityDelta: fromInteger(1)
-        },
-        positionOwner
-      )
+      await initPosition(market, initPositionVars, positionOwner)
+
+      const initPositionVars2: InitPosition = {
+        pair,
+        owner: positionOwner.publicKey,
+        userTokenX: userTokenXAccount,
+        userTokenY: userTokenYAccount,
+        lowerTick: ticksIndexes[0],
+        upperTick: ticksIndexes[2],
+        liquidityDelta: fromInteger(1)
+      }
+      await initPosition(market, initPositionVars2, positionOwner)
+
+      const initPositionVars3: InitPosition = {
+        pair,
+        owner: positionOwner.publicKey,
+        userTokenX: userTokenXAccount,
+        userTokenY: userTokenYAccount,
+        lowerTick: ticksIndexes[1],
+        upperTick: ticksIndexes[4],
+        liquidityDelta: fromInteger(1)
+      }
+      await initPosition(market, initPositionVars3, positionOwner)
     })
     it('Remove middle position', async () => {
       const positionIndexToRemove = 2
@@ -167,14 +186,14 @@ describe('Position list', () => {
       )
       const lastPosition = positionsBefore[positionListBefore.head - 1]
 
-      const ix = await market.removePositionInstruction(
+      const removePositionVars: RemovePosition = {
         pair,
-        positionOwner.publicKey,
-        positionIndexToRemove,
-        userTokenXAccount,
-        userTokenYAccount
-      )
-      await signAndSend(new Transaction().add(ix), [positionOwner], connection)
+        owner: positionOwner.publicKey,
+        index: positionIndexToRemove,
+        userTokenX: userTokenXAccount,
+        userTokenY: userTokenYAccount
+      }
+      await removePosition(market, removePositionVars, positionOwner)
 
       const positionListAfter = await market.getPositionList(positionOwner.publicKey)
       const positionsAfter = await market.getPositionsFromRange(
@@ -200,19 +219,24 @@ describe('Position list', () => {
     })
     it('Add position in place of the removed one', async () => {
       const positionListBefore = await market.getPositionList(positionOwner.publicKey)
-      await market.createTick(pair, ticksIndexes[2], wallet)
-      await market.initPosition(
-        {
-          pair,
-          owner: positionOwner.publicKey,
-          userTokenX: userTokenXAccount,
-          userTokenY: userTokenYAccount,
-          lowerTick: ticksIndexes[1],
-          upperTick: ticksIndexes[2],
-          liquidityDelta: fromInteger(1)
-        },
-        positionOwner
-      )
+
+      const createTickVars: CreateTick = {
+        pair,
+        index: ticksIndexes[2],
+        payer: admin.publicKey
+      }
+      await createTick(market, createTickVars, admin)
+
+      const initPositionVars: InitPosition = {
+        pair,
+        owner: positionOwner.publicKey,
+        userTokenX: userTokenXAccount,
+        userTokenY: userTokenYAccount,
+        lowerTick: ticksIndexes[1],
+        upperTick: ticksIndexes[2],
+        liquidityDelta: fromInteger(1)
+      }
+      await initPosition(market, initPositionVars, positionOwner)
       const positionListAfter = await market.getPositionList(positionOwner.publicKey)
 
       assert.equal(positionListBefore.head + 1, positionListAfter.head)
@@ -220,14 +244,15 @@ describe('Position list', () => {
     it('Remove last position', async () => {
       const lastPositionIndexBefore =
         (await market.getPositionList(positionOwner.publicKey)).head - 1
-      const ix = await market.removePositionInstruction(
+
+      const removePositionVars: RemovePosition = {
         pair,
-        positionOwner.publicKey,
-        lastPositionIndexBefore,
-        userTokenXAccount,
-        userTokenYAccount
-      )
-      await signAndSend(new Transaction().add(ix), [positionOwner], connection)
+        owner: positionOwner.publicKey,
+        index: lastPositionIndexBefore,
+        userTokenX: userTokenXAccount,
+        userTokenY: userTokenYAccount
+      }
+      await removePosition(market, removePositionVars, positionOwner)
 
       const lastPositionIndexAfter =
         (await market.getPositionList(positionOwner.publicKey)).head - 1
@@ -235,7 +260,7 @@ describe('Position list', () => {
     })
     it('Only owner can modify position list', async () => {
       const positionListBefore = await market.getPositionList(positionOwner.publicKey)
-      const initPositionTx = await market.initPositionTx({
+      const initPositionVars: InitPosition = {
         pair,
         owner: positionOwner.publicKey,
         userTokenX: userTokenXAccount,
@@ -243,20 +268,17 @@ describe('Position list', () => {
         lowerTick: ticksIndexes[0],
         upperTick: ticksIndexes[3],
         liquidityDelta: fromInteger(1)
-      })
-      const removePositionIx = await market.removePositionInstruction(
+      }
+      const removePositionVars: RemovePosition = {
         pair,
-        positionOwner.publicKey,
-        0,
-        userTokenXAccount,
-        userTokenYAccount
-      )
+        owner: positionOwner.publicKey,
+        index: 0,
+        userTokenX: userTokenXAccount,
+        userTokenY: userTokenYAccount
+      }
 
-      assertThrowsAsync(signAndSend(initPositionTx, [wallet], connection), ERRORS.SIGNATURE)
-      assertThrowsAsync(
-        signAndSend(new Transaction().add(removePositionIx), [wallet], connection),
-        ERRORS.SIGNATURE
-      )
+      assertThrowsAsync(initPosition(market, initPositionVars, wallet), ERRORS.SIGNATURE)
+      assertThrowsAsync(removePosition(market, removePositionVars, wallet), ERRORS.SIGNATURE)
 
       const positionListAfter = await market.getPositionList(positionOwner.publicKey)
       assert.equal(positionListBefore.head, positionListAfter.head)
@@ -265,34 +287,46 @@ describe('Position list', () => {
       const positionListBefore = await market.getPositionList(positionOwner.publicKey)
 
       for (let i = positionListBefore.head - 1; i >= 0; i--) {
-        const ix = await market.removePositionInstruction(
+        const removePositionVars: RemovePosition = {
           pair,
-          positionOwner.publicKey,
-          i,
-          userTokenXAccount,
-          userTokenYAccount
-        )
-        await signAndSend(new Transaction().add(ix), [positionOwner], connection)
+          owner: positionOwner.publicKey,
+          index: i,
+          userTokenX: userTokenXAccount,
+          userTokenY: userTokenYAccount
+        }
+        await removePosition(market, removePositionVars, positionOwner)
       }
       const positionListAfter = await market.getPositionList(positionOwner.publicKey)
       assert.equal(positionListAfter.head, 0)
     })
     it('Add position to cleared list', async () => {
       const positionListBefore = await market.getPositionList(positionOwner.publicKey)
-      await market.createTick(pair, ticksIndexes[0], wallet)
-      await market.createTick(pair, ticksIndexes[1], wallet)
-      await market.initPosition(
-        {
-          pair,
-          owner: positionOwner.publicKey,
-          userTokenX: userTokenXAccount,
-          userTokenY: userTokenYAccount,
-          lowerTick: ticksIndexes[0],
-          upperTick: ticksIndexes[1],
-          liquidityDelta: fromInteger(1)
-        },
-        positionOwner
-      )
+
+      const createTickVars: CreateTick = {
+        pair,
+        index: ticksIndexes[0],
+        payer: admin.publicKey
+      }
+      await createTick(market, createTickVars, admin)
+
+      const createTickVars2: CreateTick = {
+        pair,
+        index: ticksIndexes[1],
+        payer: admin.publicKey
+      }
+      await createTick(market, createTickVars2, admin)
+
+      const initPositionVars: InitPosition = {
+        pair,
+        owner: positionOwner.publicKey,
+        userTokenX: userTokenXAccount,
+        userTokenY: userTokenYAccount,
+        lowerTick: ticksIndexes[0],
+        upperTick: ticksIndexes[1],
+        liquidityDelta: fromInteger(1)
+      }
+      await initPosition(market, initPositionVars, positionOwner)
+
       const positionListAfter = await market.getPositionList(positionOwner.publicKey)
       assert.equal(positionListBefore.head + 1, positionListAfter.head)
     })
@@ -303,70 +337,64 @@ describe('Position list', () => {
       // prepare recipient
       await connection.requestAirdrop(positionRecipient.publicKey, 1e9)
       await sleep(2000)
-      await market.createPositionList(positionRecipient)
+      createPositionList(market, positionRecipient.publicKey, positionRecipient)
 
-      await market.createTick(pair, ticksIndexes[2], wallet)
-
+      const createTickVars: CreateTick = {
+        pair,
+        index: ticksIndexes[2],
+        payer: admin.publicKey
+      }
+      await createTick(market, createTickVars, admin)
       // init positions
-      await market.initPosition(
-        {
-          pair,
-          owner: positionOwner.publicKey,
-          userTokenX: userTokenXAccount,
-          userTokenY: userTokenYAccount,
-          lowerTick: ticksIndexes[0],
-          upperTick: ticksIndexes[1],
-          liquidityDelta: fromInteger(1)
-        },
-        positionOwner
-      )
-      await market.initPosition(
-        {
-          pair,
-          owner: positionOwner.publicKey,
-          userTokenX: userTokenXAccount,
-          userTokenY: userTokenYAccount,
-          lowerTick: ticksIndexes[1],
-          upperTick: ticksIndexes[2],
-          liquidityDelta: fromInteger(1)
-        },
-        positionOwner
-      )
-      await market.initPosition(
-        {
-          pair,
-          owner: positionOwner.publicKey,
-          userTokenX: userTokenXAccount,
-          userTokenY: userTokenYAccount,
-          lowerTick: ticksIndexes[1],
-          upperTick: ticksIndexes[3],
-          liquidityDelta: fromInteger(1)
-        },
-        positionOwner
-      )
+      const initPositionVars: InitPosition = {
+        pair,
+        owner: positionOwner.publicKey,
+        userTokenX: userTokenXAccount,
+        userTokenY: userTokenYAccount,
+        lowerTick: ticksIndexes[0],
+        upperTick: ticksIndexes[1],
+        liquidityDelta: fromInteger(1)
+      }
+      await initPosition(market, initPositionVars, positionOwner)
+
+      const initPositionVars2: InitPosition = {
+        pair,
+        owner: positionOwner.publicKey,
+        userTokenX: userTokenXAccount,
+        userTokenY: userTokenYAccount,
+        lowerTick: ticksIndexes[1],
+        upperTick: ticksIndexes[2],
+        liquidityDelta: fromInteger(1)
+      }
+      await initPosition(market, initPositionVars2, positionOwner)
+
+      const initPositionVars3: InitPosition = {
+        pair,
+        owner: positionOwner.publicKey,
+        userTokenX: userTokenXAccount,
+        userTokenY: userTokenYAccount,
+        lowerTick: ticksIndexes[1],
+        upperTick: ticksIndexes[3],
+        liquidityDelta: fromInteger(1)
+      }
+      await initPosition(market, initPositionVars3, positionOwner)
     })
     it('only owner can transfer position', async () => {
       const ownerListBefore = await market.getPositionList(positionOwner.publicKey)
       const recipientListBefore = await market.getPositionList(positionRecipient.publicKey)
 
-      const transferPositionOwnershipInstruction =
-        await market.transferPositionOwnershipInstruction(
-          positionOwner.publicKey,
-          positionRecipient.publicKey,
-          0
-        )
+      const transferPositionOwnershipVars: TransferPositionOwnership = {
+        index: 0,
+        owner: positionOwner.publicKey,
+        recipient: positionRecipient.publicKey
+      }
       await assertThrowsAsync(
-        signAndSend(
-          new Transaction().add(transferPositionOwnershipInstruction),
-          [positionRecipient],
-          connection
-        ),
+        transferPositionOwnership(market, transferPositionOwnershipVars, positionRecipient),
         ERRORS.SIGNATURE
       )
 
       const ownerListAfter = await market.getPositionList(positionOwner.publicKey)
       const recipientListAfter = await market.getPositionList(positionRecipient.publicKey)
-
       assert.equal(ownerListBefore.head, ownerListAfter.head)
       assert.equal(recipientListBefore.head, recipientListAfter.head)
     })
@@ -380,17 +408,12 @@ describe('Position list', () => {
         ownerListBefore.head - 1
       )
 
-      const transferPositionOwnershipInstruction =
-        await market.transferPositionOwnershipInstruction(
-          positionOwner.publicKey,
-          positionRecipient.publicKey,
-          transferredIndex
-        )
-      await signAndSend(
-        new Transaction().add(transferPositionOwnershipInstruction),
-        [positionOwner],
-        connection
-      )
+      const transferPositionOwnershipVars: TransferPositionOwnership = {
+        index: transferredIndex,
+        owner: positionOwner.publicKey,
+        recipient: positionRecipient.publicKey
+      }
+      await transferPositionOwnership(market, transferPositionOwnershipVars, positionOwner)
 
       const recipientPosition = await market.getPosition(positionRecipient.publicKey, 0)
       const ownerListAfter = await market.getPositionList(positionOwner.publicKey)
@@ -418,17 +441,12 @@ describe('Position list', () => {
         ownerListBefore.head - 1
       )
 
-      const transferPositionOwnershipInstruction =
-        await market.transferPositionOwnershipInstruction(
-          positionOwner.publicKey,
-          positionRecipient.publicKey,
-          transferredIndex
-        )
-      await signAndSend(
-        new Transaction().add(transferPositionOwnershipInstruction),
-        [positionOwner],
-        connection
-      )
+      const transferPositionOwnershipVars: TransferPositionOwnership = {
+        index: transferredIndex,
+        owner: positionOwner.publicKey,
+        recipient: positionRecipient.publicKey
+      }
+      await transferPositionOwnership(market, transferPositionOwnershipVars, positionOwner)
 
       const ownerListAfter = await market.getPositionList(positionOwner.publicKey)
       const recipientListAfter = await market.getPositionList(positionRecipient.publicKey)
@@ -458,17 +476,12 @@ describe('Position list', () => {
       const recipientListBefore = await market.getPositionList(positionRecipient.publicKey)
       const removedPosition = await market.getPosition(positionOwner.publicKey, transferredIndex)
 
-      const transferPositionOwnershipInstruction =
-        await market.transferPositionOwnershipInstruction(
-          positionOwner.publicKey,
-          positionRecipient.publicKey,
-          transferredIndex
-        )
-      await signAndSend(
-        new Transaction().add(transferPositionOwnershipInstruction),
-        [positionOwner],
-        connection
-      )
+      const transferPositionOwnershipVars: TransferPositionOwnership = {
+        index: transferredIndex,
+        owner: positionOwner.publicKey,
+        recipient: positionRecipient.publicKey
+      }
+      await transferPositionOwnership(market, transferPositionOwnershipVars, positionOwner)
 
       const ownerListAfter = await market.getPositionList(positionOwner.publicKey)
       const recipientListAfter = await market.getPositionList(positionRecipient.publicKey)
@@ -490,17 +503,12 @@ describe('Position list', () => {
       const recipientListBefore = await market.getPositionList(positionRecipient.publicKey)
       const removedPosition = await market.getPosition(positionOwner.publicKey, transferredIndex)
 
-      const transferPositionOwnershipInstruction =
-        await market.transferPositionOwnershipInstruction(
-          positionOwner.publicKey,
-          positionRecipient.publicKey,
-          transferredIndex
-        )
-      await signAndSend(
-        new Transaction().add(transferPositionOwnershipInstruction),
-        [positionOwner],
-        connection
-      )
+      const transferPositionOwnershipVars: TransferPositionOwnership = {
+        index: transferredIndex,
+        owner: positionOwner.publicKey,
+        recipient: positionRecipient.publicKey
+      }
+      await transferPositionOwnership(market, transferPositionOwnershipVars, positionOwner)
 
       const ownerListAfter = await market.getPositionList(positionOwner.publicKey)
       const recipientListAfter = await market.getPositionList(positionRecipient.publicKey)
@@ -530,17 +538,12 @@ describe('Position list', () => {
         transferredIndex
       )
 
-      const transferPositionOwnershipInstruction =
-        await market.transferPositionOwnershipInstruction(
-          positionRecipient.publicKey,
-          positionOwner.publicKey,
-          transferredIndex
-        )
-      await signAndSend(
-        new Transaction().add(transferPositionOwnershipInstruction),
-        [positionRecipient],
-        connection
-      )
+      const transferPositionOwnershipVars: TransferPositionOwnership = {
+        index: transferredIndex,
+        owner: positionRecipient.publicKey,
+        recipient: positionOwner.publicKey
+      }
+      await transferPositionOwnership(market, transferPositionOwnershipVars, positionRecipient)
 
       const ownerListAfter = await market.getPositionList(positionOwner.publicKey)
       const recipientListAfter = await market.getPositionList(positionRecipient.publicKey)

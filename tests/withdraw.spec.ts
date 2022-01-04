@@ -3,7 +3,7 @@ import { Provider, Program, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import { assertThrowsAsync, createToken } from './testUtils'
+import { assertThrowsAsync, createFeeTier, createPool, createPositionList, createState, createTick, createToken, initPosition, removePosition, swap } from './testUtils'
 import {
   Market,
   Pair,
@@ -17,6 +17,7 @@ import {
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
+import { CreateFeeTier, CreatePool, CreateTick, InitPosition, RemovePosition, Swap } from '@invariant-labs/sdk/src/market'
 
 describe('withdraw', () => {
   const provider = Provider.local()
@@ -34,8 +35,6 @@ describe('withdraw', () => {
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
-  let programAuthority: PublicKey
-  let nonce: number
 
   before(async () => {
     market = await Market.build(
@@ -56,29 +55,30 @@ describe('withdraw', () => {
       createToken(connection, wallet, mintAuthority)
     ])
 
-    const swaplineProgram = anchor.workspace.Amm as Program
-    const [_programAuthority, _nonce] = await anchor.web3.PublicKey.findProgramAddress(
-      [Buffer.from(SEED)],
-      swaplineProgram.programId
-    )
-    nonce = _nonce
-    programAuthority = _programAuthority
-
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
-    await market.createState(admin, protocolFee)
-    await market.createFeeTier(feeTier, admin)
+    await createState(market, admin.publicKey, admin)
+
+    const createFeeTierVars: CreateFeeTier = {
+      feeTier,
+      admin: admin.publicKey
+    }
+    await createFeeTier(market, createFeeTierVars, admin)
   })
   it('#create()', async () => {
     // 0.6% / 10
-    await market.create({
+    const createPoolVars: CreatePool = {
       pair,
-      signer: admin
-    })
+      payer: admin,
+      protocolFee,
+      tokenX,
+      tokenY
+    }
+    await createPool(market, createPoolVars)
 
-    const createdPool = await market.get(pair)
+    const createdPool = await market.getPool(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
     assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
     assert.ok(createdPool.fee.v.eq(feeTier.fee))
@@ -98,15 +98,20 @@ describe('withdraw', () => {
   it('#withdraw', async () => {
     // Deposit
     const upperTick = 10
-    const upperIx = await market.createTickInstruction(pair, upperTick, wallet.publicKey)
-    await signAndSend(new Transaction().add(upperIx), [wallet], connection)
+    const createTickVars: CreateTick = {
+      pair,
+      index: upperTick,
+      payer: admin.publicKey
+    }
+    await createTick(market, createTickVars, admin)
 
     const lowerTick = -20
-    const lowerIx = await market.createTickInstruction(pair, lowerTick, wallet.publicKey)
-    await signAndSend(new Transaction().add(lowerIx), [wallet], connection)
-
-    assert.ok(await market.isInitialized(pair, lowerTick))
-    assert.ok(await market.isInitialized(pair, upperTick))
+    const createTickVars2: CreateTick = {
+      pair,
+      index: lowerTick,
+      payer: admin.publicKey
+    }
+    await createTick(market, createTickVars2, admin)
 
     const positionOwner = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
@@ -118,21 +123,20 @@ describe('withdraw', () => {
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
     const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) }
 
-    await market.createPositionList(positionOwner)
-    await market.initPosition(
-      {
-        pair,
+    await createPositionList(market, positionOwner.publicKey, positionOwner)
+
+    const initPositionVars: InitPosition = {
+      pair,
         owner: positionOwner.publicKey,
         userTokenX: userTokenXAccount,
         userTokenY: userTokenYAccount,
         lowerTick,
         upperTick,
         liquidityDelta
-      },
-      positionOwner
-    )
+    }
+    await initPosition(market, initPositionVars, positionOwner)
 
-    assert.ok((await market.get(pair)).liquidity.v.eq(liquidityDelta.v))
+    assert.ok((await market.getPool(pair)).liquidity.v.eq(liquidityDelta.v))
 
     // Create owner
     const owner = Keypair.generate()
@@ -145,24 +149,24 @@ describe('withdraw', () => {
     await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
 
     // Swap
-    const poolDataBefore = await market.get(pair)
-    const reservesBefore = await market.getReserveBalances(pair, wallet)
-    await market.swap(
-      {
-        pair,
-        XtoY: true,
+    const poolDataBefore = await market.getPool(pair)
+    const reservesBefore = await market.getReserveBalances(pair, tokenX, tokenY)
+
+    const swapVars: Swap = {
+      pair,
+        xToY: true,
+        owner: owner.publicKey,
         amount,
         knownPrice: poolDataBefore.sqrtPrice,
         slippage: toDecimal(1, 2),
         accountX,
         accountY,
         byAmountIn: true
-      },
-      owner
-    )
+    }
+    await swap(market, swapVars, owner)
 
     // Check pool
-    const poolData = await market.get(pair)
+    const poolData = await market.getPool(pair)
     assert.ok(poolData.liquidity.v.eq(poolDataBefore.liquidity.v))
     assert.equal(poolData.currentTickIndex, lowerTick)
     assert.ok(poolData.sqrtPrice.v.lt(poolDataBefore.sqrtPrice.v))
@@ -170,7 +174,7 @@ describe('withdraw', () => {
     // Check amounts and fees
     const amountX = (await tokenX.getAccountInfo(accountX)).amount
     const amountY = (await tokenY.getAccountInfo(accountY)).amount
-    const reservesAfter = await market.getReserveBalances(pair, wallet)
+    const reservesAfter = await market.getReserveBalances(pair, tokenX, tokenY)
     const reserveXDelta = reservesAfter.x.sub(reservesBefore.x)
     const reserveYDelta = reservesBefore.y.sub(reservesAfter.y)
 
@@ -182,26 +186,26 @@ describe('withdraw', () => {
     assert.ok(poolData.feeGrowthGlobalX.v.eqn(5400000)) // 0.6 % of amount - protocol fee
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
     assert.ok(poolData.feeProtocolTokenX.v.eq(new BN(600000013280)))
-    assert.ok(poolData.feeProtocolTokenY.v.eqn(0))
+    assert.ok(poolData.feeProtocolTokenY.v.eq(new BN(12945000000)))
 
     // Remove position
-    const reservesBeforeRemove = await market.getReserveBalances(pair, wallet)
+    const reservesBeforeRemove = await market.getReserveBalances(pair, tokenX, tokenY)
 
-    const ix = await market.removePositionInstruction(
+    const removePositionVars: RemovePosition = {
       pair,
-      positionOwner.publicKey,
-      0,
-      userTokenXAccount,
-      userTokenYAccount
-    )
-    await signAndSend(new Transaction().add(ix), [positionOwner], connection)
+      owner: positionOwner.publicKey,
+      index: 0,
+      userTokenX: userTokenXAccount,
+      userTokenY: userTokenYAccount
+    }
+    await removePosition(market, removePositionVars, positionOwner)
 
     // Check position after remove
     const positionList = await market.getPositionList(positionOwner.publicKey)
     assert.equal(positionList.head, 0)
 
     // Check amounts tokens
-    const reservesAfterRemove = await market.getReserveBalances(pair, wallet)
+    const reservesAfterRemove = await market.getReserveBalances(pair, tokenX, tokenY)
     const expectedWithdrawnX = new BN(1493)
     const expectedWithdrawnY = new BN(6)
     const expectedFeeX = new BN(5)

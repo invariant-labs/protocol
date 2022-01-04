@@ -4,7 +4,6 @@ import { assert } from 'chai'
 import {
   Market,
   Pair,
-  SEED,
   tou64,
   TICK_LIMIT,
   signAndSend,
@@ -12,14 +11,23 @@ import {
   fromInteger,
   Network
 } from '@invariant-labs/sdk'
-import { Provider, Program, BN } from '@project-serum/anchor'
+import { Provider, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { createStandardFeeTiers, createToken, eqDecimal } from './testUtils'
+import {
+  createPool,
+  createPositionList,
+  createStandardFeeTiers,
+  createState,
+  createTick,
+  createToken,
+  eqDecimal,
+  initPosition
+} from './testUtils'
 import { MAX_TICK } from '@invariant-labs/sdk/lib/math'
 import { MIN_TICK } from '@invariant-labs/sdk/lib/math'
 import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
 import { fromFee } from '@invariant-labs/sdk/src/utils'
-import { Decimal } from '@invariant-labs/sdk/src/market'
+import { CreatePool, CreateTick, Decimal, InitPosition } from '@invariant-labs/sdk/src/market'
 import { assertThrowsAsync, INVARIANT_ERRORS } from '@invariant-labs/sdk/src/utils'
 
 describe('position', () => {
@@ -36,8 +44,6 @@ describe('position', () => {
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
-  let programAuthority: PublicKey
-  let nonce: number
   let initTick: number
   let xOwnerAmount: u64
   let yOwnerAmount: u64
@@ -66,7 +72,7 @@ describe('position', () => {
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
-    await market.createState(admin, protocolFee)
+    await createState(market, admin.publicKey, admin)
     await createStandardFeeTiers(market, admin)
   })
   it('#create() should fail because of token addresses', async () => {
@@ -75,25 +81,32 @@ describe('position', () => {
     const tmp = spoofPair.tokenX
     spoofPair.tokenY = tmp
 
-    assertThrowsAsync(
-      market.create({
-        pair: spoofPair,
-        signer: admin,
-        initTick
-      })
-    ),
+    const createPoolVars: CreatePool = {
+      pair: spoofPair,
+      payer: admin,
+      protocolFee,
+      tokenX,
+      tokenY,
+      initTick
+    }
+    assertThrowsAsync(createPool(market, createPoolVars)),
       INVARIANT_ERRORS.INVALID_POOL_TOKEN_ADDRESSES
   })
   it('#create()', async () => {
     // fee tier 0.02% / 4
     initTick = -23028
-    await market.create({
-      pair,
-      signer: admin,
-      initTick
-    })
 
-    const createdPool = await market.get(pair)
+    const createPoolVars: CreatePool = {
+      pair,
+      payer: admin,
+      protocolFee,
+      tokenX,
+      tokenY,
+      initTick
+    }
+    await createPool(market, createPoolVars)
+
+    const createdPool = await market.getPool(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
     assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
     assert.ok(createdPool.fee.v.eq(feeTier.fee))
@@ -111,7 +124,7 @@ describe('position', () => {
     assert.ok(tickmapData.bitmap.every((v) => v == 0))
   })
   it('#createPositionList()', async () => {
-    await market.createPositionList(positionOwner)
+    await createPositionList(market, positionOwner.publicKey, positionOwner)
 
     // checks position list
     const positionList = await market.getPositionList(positionOwner.publicKey)
@@ -128,8 +141,12 @@ describe('position', () => {
     const upperTick = 0
 
     it('#createTick(lower)', async () => {
-      const ix = await market.createTickInstruction(pair, lowerTick, wallet.publicKey)
-      await signAndSend(new Transaction().add(ix), [wallet], connection)
+      const createTickVars: CreateTick = {
+        pair,
+        index: lowerTick,
+        payer: admin.publicKey
+      }
+      await createTick(market, createTickVars, admin)
 
       const expectedZeroDecimal = new BN(0)
       const tick = await market.getTick(pair, lowerTick)
@@ -143,8 +160,12 @@ describe('position', () => {
       assert.ok(tick.bump == tickBump)
     })
     it('#createTick(upperTick)', async () => {
-      const ix = await market.createTickInstruction(pair, upperTick, wallet.publicKey)
-      await signAndSend(new Transaction().add(ix), [wallet], connection)
+      const createTickVars: CreateTick = {
+        pair,
+        index: upperTick,
+        payer: admin.publicKey
+      }
+      await createTick(market, createTickVars, admin)
 
       const expectedZeroDecimal = new BN(0)
       const tick = await market.getTick(pair, upperTick)
@@ -170,25 +191,23 @@ describe('position', () => {
       const liquidityDelta = fromInteger(10_000)
       const positionIndex = 0
 
-      await market.initPosition(
-        {
-          pair,
-          owner: positionOwner.publicKey,
-          userTokenX: userTokenXAccount,
-          userTokenY: userTokenYAccount,
-          lowerTick,
-          upperTick,
-          liquidityDelta
-        },
-        positionOwner
-      )
+      const initPositionVars: InitPosition = {
+        pair,
+        owner: positionOwner.publicKey,
+        userTokenX: userTokenXAccount,
+        userTokenY: userTokenYAccount,
+        lowerTick,
+        upperTick,
+        liquidityDelta
+      }
+      await initPosition(market, initPositionVars, positionOwner)
 
       // load state
       const positionState = await market.getPosition(positionOwner.publicKey, positionIndex)
-      const poolState = await market.get(pair)
+      const poolState = await market.getPool(pair)
       const lowerTickState = await market.getTick(pair, lowerTick)
       const upperTickState = await market.getTick(pair, upperTick)
-      const reserveBalances = await market.getReserveBalances(pair, wallet)
+      const reserveBalances = await market.getReserveBalances(pair, tokenX, tokenY)
       const userTokenXBalance = (await tokenX.getAccountInfo(userTokenXAccount)).amount
       const userTokenYBalance = (await tokenY.getAccountInfo(userTokenYAccount)).amount
 
@@ -251,8 +270,12 @@ describe('position', () => {
     const upperTick = MAX_TICK - 10
 
     it('#createTick(lower)', async () => {
-      const ix = await market.createTickInstruction(pair, lowerTick, wallet.publicKey)
-      await signAndSend(new Transaction().add(ix), [wallet], connection)
+      const createTickVars: CreateTick = {
+        index: lowerTick,
+        pair,
+        payer: admin.publicKey
+      }
+      await createTick(market, createTickVars, admin)
 
       const expectedZeroDecimal = new BN(0)
       const tick = await market.getTick(pair, lowerTick)
@@ -266,8 +289,12 @@ describe('position', () => {
       assert.ok(tick.bump == tickBump)
     })
     it('#createTick(upperTick)', async () => {
-      const ix = await market.createTickInstruction(pair, upperTick, wallet.publicKey)
-      await signAndSend(new Transaction().add(ix), [wallet], connection)
+      const createTickVars: CreateTick = {
+        index: upperTick,
+        pair,
+        payer: admin.publicKey
+      }
+      await createTick(market, createTickVars, admin)
 
       const expectedZeroDecimal = new BN(0)
       const tick = await market.getTick(pair, upperTick)
@@ -291,27 +318,25 @@ describe('position', () => {
 
       const liquidityDelta = fromInteger(100)
       const positionIndex = 1
-      const reserveBalancesBefore = await market.getReserveBalances(pair, wallet)
+      const reserveBalancesBefore = await market.getReserveBalances(pair, tokenX, tokenY)
 
-      await market.initPosition(
-        {
-          pair,
-          owner: positionOwner.publicKey,
-          userTokenX: userTokenXAccount,
-          userTokenY: userTokenYAccount,
-          lowerTick,
-          upperTick,
-          liquidityDelta
-        },
-        positionOwner
-      )
+      const initPositionVars: InitPosition = {
+        pair,
+        owner: positionOwner.publicKey,
+        userTokenX: userTokenXAccount,
+        userTokenY: userTokenYAccount,
+        lowerTick,
+        upperTick,
+        liquidityDelta
+      }
+      await initPosition(market, initPositionVars, positionOwner)
 
       // load state
       const positionState = await market.getPosition(positionOwner.publicKey, positionIndex)
-      const poolState = await market.get(pair)
+      const poolState = await market.getPool(pair)
       const lowerTickState = await market.getTick(pair, lowerTick)
       const upperTickState = await market.getTick(pair, upperTick)
-      const reserveBalancesAfter = await market.getReserveBalances(pair, wallet)
+      const reserveBalancesAfter = await market.getReserveBalances(pair, tokenX, tokenY)
       const userTokenXBalance = (await tokenX.getAccountInfo(userTokenXAccount)).amount
       const userTokenYBalance = (await tokenY.getAccountInfo(userTokenYAccount)).amount
 
@@ -374,8 +399,12 @@ describe('position', () => {
     const upperTick = -23040
 
     it('#createTick(lower)', async () => {
-      const ix = await market.createTickInstruction(pair, lowerTick, wallet.publicKey)
-      await signAndSend(new Transaction().add(ix), [wallet], connection)
+      const createTickVars: CreateTick = {
+        pair,
+        index: lowerTick,
+        payer: admin.publicKey
+      }
+      await createTick(market, createTickVars, admin)
 
       const expectedZeroDecimal = new BN(0)
       const tick = await market.getTick(pair, lowerTick)
@@ -389,8 +418,12 @@ describe('position', () => {
       assert.ok(tick.bump == tickBump)
     })
     it('#createTick(upperTick)', async () => {
-      const ix = await market.createTickInstruction(pair, upperTick, wallet.publicKey)
-      await signAndSend(new Transaction().add(ix), [wallet], connection)
+      const createTickVars: CreateTick = {
+        pair,
+        index: upperTick,
+        payer: admin.publicKey
+      }
+      await createTick(market, createTickVars, admin)
 
       const expectedZeroDecimal = new BN(0)
       const tick = await market.getTick(pair, upperTick)
@@ -414,28 +447,26 @@ describe('position', () => {
 
       const liquidityDelta = fromInteger(10_000)
       const positionIndex = 2
-      const reserveBalancesBefore = await market.getReserveBalances(pair, wallet)
-      const poolStateBefore = await market.get(pair)
+      const reserveBalancesBefore = await market.getReserveBalances(pair, tokenX, tokenY)
+      const poolStateBefore = await market.getPool(pair)
 
-      await market.initPosition(
-        {
-          pair,
-          owner: positionOwner.publicKey,
-          userTokenX: userTokenXAccount,
-          userTokenY: userTokenYAccount,
-          lowerTick,
-          upperTick,
-          liquidityDelta
-        },
-        positionOwner
-      )
+      const initPositionVars: InitPosition = {
+        pair,
+        owner: positionOwner.publicKey,
+        userTokenX: userTokenXAccount,
+        userTokenY: userTokenYAccount,
+        lowerTick,
+        upperTick,
+        liquidityDelta
+      }
+      await initPosition(market, initPositionVars, positionOwner)
 
       // load state
       const positionState = await market.getPosition(positionOwner.publicKey, positionIndex)
-      const poolStateAfter = await market.get(pair)
+      const poolStateAfter = await market.getPool(pair)
       const lowerTickState = await market.getTick(pair, lowerTick)
       const upperTickState = await market.getTick(pair, upperTick)
-      const reserveBalancesAfter = await market.getReserveBalances(pair, wallet)
+      const reserveBalancesAfter = await market.getReserveBalances(pair, tokenX, tokenY)
       const userTokenXBalance = (await tokenX.getAccountInfo(userTokenXAccount)).amount
       const userTokenYBalance = (await tokenY.getAccountInfo(userTokenYAccount)).amount
 

@@ -176,7 +176,7 @@ pub fn handler(
     }
 
     // Remove empty position
-    position_list.head -= 1;
+    position_list.head = position_list.head.checked_sub(1).unwrap();
 
     // when removed position is not the last one
     if position_list.head != index {
