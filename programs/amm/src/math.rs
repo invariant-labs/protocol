@@ -194,12 +194,8 @@ pub fn get_delta_x(
     let nominator = liquidity.big_mul(delta_price);
 
     match up {
-        true => nominator
-            .big_div_up(sqrt_price_a * sqrt_price_b)
-            .to_token_ceil(),
-        false => nominator
-            .big_div(sqrt_price_a.mul_up(sqrt_price_b))
-            .to_token_floor(),
+        true => (nominator.big_div_up(sqrt_price_a * sqrt_price_b)).to_token_ceil(),
+        false => (nominator.big_div(sqrt_price_a.mul_up(sqrt_price_b))).to_token_floor(),
     }
 }
 
@@ -678,14 +674,14 @@ mod tests {
 
             assert_eq!(result, Decimal::from_integer(500_000));
         }
-        // {
-        //     let price_sqrt = Decimal::from_integer(3);
-        //     let liquidity = Decimal::new(222);
-        //     let amount = TokenAmount(37);
+        {
+            let price_sqrt = Decimal::new(3_333333333333);
+            let liquidity = Decimal::new(222_222222222222);
+            let amount = TokenAmount(37);
 
-        //     let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
-        //     assert_eq!(result, Decimal::from_integer(6));
-        // }
+            let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
+            assert_eq!(result, Decimal::new(7_490636704119));
+        }
     }
 
     #[test]
