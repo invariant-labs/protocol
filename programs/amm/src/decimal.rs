@@ -4,6 +4,7 @@ use anchor_lang::prelude::*;
 use integer_sqrt::IntegerSquareRoot;
 use std::{
     convert::TryInto,
+    fmt::Display,
     ops::{Add, Div, Mul, Sub},
 };
 
@@ -17,6 +18,17 @@ pub struct Decimal {
     pub v: u128,
 }
 // pub struct Decimal::new(pub u128);
+
+impl Display for Decimal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}.{}",
+            self.v.checked_div(DENOMINATOR).unwrap(),
+            self.v % DENOMINATOR
+        )
+    }
+}
 
 impl Decimal {
     pub fn new(value: u128) -> Decimal {
