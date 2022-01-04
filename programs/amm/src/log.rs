@@ -12,6 +12,52 @@ pub fn decimal_to_x128(decimal: Decimal) -> U256 {
         .unwrap()
 }
 
+pub fn decimal_to_x64(decimal: Decimal) -> u128 {
+    let factor = 1u128 << 64;
+
+    decimal
+        .v
+        .checked_mul(factor)
+        .unwrap()
+        .checked_div(Decimal::one().v)
+        .unwrap()
+}
+
+pub fn msb_x64(sqrt_price_x64: u128) -> u128 {
+    let mut msb = 0;
+    let mut sqrt_price_x64 = sqrt_price_x64;
+
+    if sqrt_price_x64 >= 1u128 << 64 {
+        sqrt_price_x64 >>= 64;
+        msb += 64;
+    };
+    if sqrt_price_x64 >= 1u128 << 32 {
+        sqrt_price_x64 >>= 32;
+        msb += 32;
+    };
+    if sqrt_price_x64 >= 1u128 << 16 {
+        sqrt_price_x64 >>= 16;
+        msb += 16;
+    };
+    if sqrt_price_x64 >= 1u128 << 8 {
+        sqrt_price_x64 >>= 8;
+        msb += 8;
+    };
+    if sqrt_price_x64 >= 1u128 << 4 {
+        sqrt_price_x64 >>= 4;
+        msb += 4;
+    };
+    if sqrt_price_x64 >= 1u128 << 2 {
+        sqrt_price_x64 >>= 2;
+        msb += 2;
+    };
+    if sqrt_price_x64 >= 1u128 << 1 {
+        msb += 1;
+    };
+
+    msb
+}
+
 pub fn log2_msb_x128(sqrt_price_x128: U256) -> U256 {
     let mut sqrt_price_x128 = sqrt_price_x128;
     let mut log2_msb = U256::from(0);
@@ -50,6 +96,13 @@ pub fn log2_msb_x128(sqrt_price_x128: U256) -> U256 {
 
     log2_msb
 }
+
+// pub fn log2_x64(mut sqrt_price_x128: U256, sign: bool) -> (bool, u128) {
+//     let scale: u128 = 1u128 << 128;
+
+//     // TMP solution
+//     (true, 10)
+// }
 
 pub fn log2_x128(mut sqrt_price_x128: U256, sign: bool) -> (bool, U256) {
     let scale: U256 = U256::from(1) << 128;
