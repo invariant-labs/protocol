@@ -51,13 +51,15 @@ pub fn log2_msb_x128(sqrt_price_x128: U256) -> U256 {
     log2_msb
 }
 
-pub fn log2(mut sqrt_price_x128: U256, sign: bool) -> (bool, U256) {
+pub fn log2_x128(mut sqrt_price_x128: U256, sign: bool) -> (bool, U256) {
     let scale: U256 = U256::from(1) << 128;
-    let scale_2x: U256 = scale.checked_mul(U256::from(2)).unwrap();
     let two = U256::from(2);
+    let scale_2x: U256 = scale.checked_mul(two).unwrap();
+    let half_scale: U256 = scale.checked_div(two).unwrap();
 
     // log2(x) = -log2(1/x)
     if !sign {
+        // scale * scale / sqrt_price_x128
         sqrt_price_x128 = scale
             .checked_mul(scale)
             .unwrap()
@@ -65,28 +67,34 @@ pub fn log2(mut sqrt_price_x128: U256, sign: bool) -> (bool, U256) {
             .unwrap();
     }
 
+    // let msb = log2_msb_x128(sqrt_price_x128.checked_div(scale).unwrap());
     let msb = log2_msb_x128(sqrt_price_x128.checked_div(scale).unwrap());
-    let mut result = msb.checked_mul(msb).unwrap();
-    // y = x * 2^(-n).
-    let mut y = sqrt_price_x128 >> 2;
+    println!("msb: {:?}", msb);
+    let mut result = msb.checked_mul(scale).unwrap();
+    // y = x * 2^(-msb).
+
+    let mut y = sqrt_price_x128 >> msb;
+    // let mut y = sqrt_price_x128;
 
     // If y = 1, the fractional part is zero.
+    println!("y = {:?}", y);
     if y == scale {
         return (sign, sqrt_price_x128);
     };
 
     // Calculate the fractional part via the iterative approximation.
     // The "delta >>= 1" part is equivalent to "delta /= 2", but shifting bits is faster.
-    let mut delta = scale.checked_div(two).unwrap();
+    let mut delta = half_scale;
     while delta > U256::from(0) {
         y = y.checked_mul(y).unwrap().checked_div(scale).unwrap();
+        println!("y = {:?}", y);
 
         if y >= scale_2x {
             result += delta;
-            y /= 2;
+            y >>= 1;
         }
         // /= 2 can be to >>=
-        delta /= two;
+        delta >>= 1;
     }
     (sign, result)
 }
@@ -185,4 +193,15 @@ mod tests {
 
     #[test]
     fn test_log2_floor_x128() {}
+
+    #[test]
+    fn test_log2() {
+        let sqrt_price_decimal = Decimal::from_integer(3);
+        // 1020847100762815390390123822295304634368
+        let sqrt_price_x128 = decimal_to_x128(sqrt_price_decimal);
+        println!("x128: {:?}", sqrt_price_x128);
+
+        let log2 = log2_x128(sqrt_price_x128, true);
+        println!("log2: {:?}", log2);
+    }
 }
