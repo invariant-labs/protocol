@@ -126,11 +126,6 @@ mod tests {
                 FeeGrowth::from_fee(Decimal::from_integer(100), TokenAmount(1_000_000));
             assert_eq!(fee_growth.v, GROWTH_DENOMINATOR * 10000)
         }
-        // // Great
-        // {
-        //     let fee_growth = FeeGrowth::from_fee(Decimal::new(1), TokenAmount(u64::MAX));
-        //     assert_eq!(fee_growth.v, GROWTH_DENOMINATOR / 2)
-        // }
     }
 
     #[test]
