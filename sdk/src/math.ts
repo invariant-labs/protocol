@@ -32,33 +32,33 @@ export const fromInteger = (integer: number): { v: BN } => {
   return { v: new BN(integer).mul(DENOMINATOR) }
 }
 
-export const calculate_price_sqrt = (tick_index: number): Decimal => {
-  const tick = Math.abs(tick_index)
+export const calculatePriceSqrt = (tickIndex: number): Decimal => {
+  const tick = Math.abs(tickIndex)
   if (tick > MAX_TICK) {
     throw Error('tick over bounds')
   }
   let price = new BN(DENOMINATOR)
 
-  if ((tick & 0x1) != 0) price = price.mul(new BN('1000049998750')).div(DENOMINATOR)
-  if ((tick & 0x2) != 0) price = price.mul(new BN('1000100000000')).div(DENOMINATOR)
-  if ((tick & 0x4) != 0) price = price.mul(new BN('1000200010000')).div(DENOMINATOR)
-  if ((tick & 0x8) != 0) price = price.mul(new BN('1000400060004')).div(DENOMINATOR)
-  if ((tick & 0x10) != 0) price = price.mul(new BN('1000800280056')).div(DENOMINATOR)
-  if ((tick & 0x20) != 0) price = price.mul(new BN('1001601200560')).div(DENOMINATOR)
-  if ((tick & 0x40) != 0) price = price.mul(new BN('1003204964963')).div(DENOMINATOR)
-  if ((tick & 0x80) != 0) price = price.mul(new BN('1006420201726')).div(DENOMINATOR)
-  if ((tick & 0x100) != 0) price = price.mul(new BN('1012881622442')).div(DENOMINATOR)
-  if ((tick & 0x200) != 0) price = price.mul(new BN('1025929181080')).div(DENOMINATOR)
-  if ((tick & 0x400) != 0) price = price.mul(new BN('1052530684591')).div(DENOMINATOR)
-  if ((tick & 0x800) != 0) price = price.mul(new BN('1107820842005')).div(DENOMINATOR)
-  if ((tick & 0x1000) != 0) price = price.mul(new BN('1227267017980')).div(DENOMINATOR)
-  if ((tick & 0x2000) != 0) price = price.mul(new BN('1506184333421')).div(DENOMINATOR)
-  if ((tick & 0x4000) != 0) price = price.mul(new BN('2268591246242')).div(DENOMINATOR)
-  if ((tick & 0x8000) != 0) price = price.mul(new BN('5146506242525')).div(DENOMINATOR)
-  if ((tick & 0x10000) != 0) price = price.mul(new BN('26486526504348')).div(DENOMINATOR)
-  if ((tick & 0x20000) != 0) price = price.mul(new BN('701536086265529')).div(DENOMINATOR)
+  if ((tick & 0x1) !== 0) price = price.mul(new BN('1000049998750')).div(DENOMINATOR)
+  if ((tick & 0x2) !== 0) price = price.mul(new BN('1000100000000')).div(DENOMINATOR)
+  if ((tick & 0x4) !== 0) price = price.mul(new BN('1000200010000')).div(DENOMINATOR)
+  if ((tick & 0x8) !== 0) price = price.mul(new BN('1000400060004')).div(DENOMINATOR)
+  if ((tick & 0x10) !== 0) price = price.mul(new BN('1000800280056')).div(DENOMINATOR)
+  if ((tick & 0x20) !== 0) price = price.mul(new BN('1001601200560')).div(DENOMINATOR)
+  if ((tick & 0x40) !== 0) price = price.mul(new BN('1003204964963')).div(DENOMINATOR)
+  if ((tick & 0x80) !== 0) price = price.mul(new BN('1006420201726')).div(DENOMINATOR)
+  if ((tick & 0x100) !== 0) price = price.mul(new BN('1012881622442')).div(DENOMINATOR)
+  if ((tick & 0x200) !== 0) price = price.mul(new BN('1025929181080')).div(DENOMINATOR)
+  if ((tick & 0x400) !== 0) price = price.mul(new BN('1052530684591')).div(DENOMINATOR)
+  if ((tick & 0x800) !== 0) price = price.mul(new BN('1107820842005')).div(DENOMINATOR)
+  if ((tick & 0x1000) !== 0) price = price.mul(new BN('1227267017980')).div(DENOMINATOR)
+  if ((tick & 0x2000) !== 0) price = price.mul(new BN('1506184333421')).div(DENOMINATOR)
+  if ((tick & 0x4000) !== 0) price = price.mul(new BN('2268591246242')).div(DENOMINATOR)
+  if ((tick & 0x8000) !== 0) price = price.mul(new BN('5146506242525')).div(DENOMINATOR)
+  if ((tick & 0x10000) !== 0) price = price.mul(new BN('26486526504348')).div(DENOMINATOR)
+  if ((tick & 0x20000) !== 0) price = price.mul(new BN('701536086265529')).div(DENOMINATOR)
 
-  if (tick_index < 0) {
+  if (tickIndex < 0) {
     price = DENOMINATOR.mul(DENOMINATOR).div(price)
   }
 
@@ -325,10 +325,10 @@ export const findClosestTicks = (
   let above = currentIndex + 1
   let below = currentIndex
 
-  let found: number[] = []
+  const found: number[] = []
 
-  let reachedTop = oneWay === 'down' ? true : false
-  let reachedBottom = oneWay === 'up' ? true : false
+  let reachedTop = oneWay === 'down'
+  let reachedBottom = oneWay === 'up'
 
   while (found.length < limit && above - below < maxRange * 2) {
     if (!reachedTop) {
@@ -352,7 +352,7 @@ export const findClosestTicks = (
   // two can be added in the last iteration
   if (found.length > limit) found.pop()
 
-  return found.map((i) => (i - TICK_LIMIT) * tickSpacing)
+  return found.map(i => (i - TICK_LIMIT) * tickSpacing)
 }
 
 const mulUp = (a: BN, b: BN) => {
@@ -415,14 +415,15 @@ export const getLiquidityByX = (
   roundingUp: boolean,
   tickSpacing?: number
 ) => {
-  if ((lowerTick == -Infinity || upperTick == Infinity) && tickSpacing == undefined)
+  if ((lowerTick === -Infinity || upperTick === Infinity) && tickSpacing === undefined) {
     throw new Error('tickSpacing is required for calculating full range liquidity')
+  }
 
-  const lowerTickIndex = lowerTick != -Infinity ? lowerTick : getMinTick(tickSpacing)
-  const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(tickSpacing)
+  const lowerTickIndex = lowerTick !== -Infinity ? lowerTick : getMinTick(tickSpacing as number)
+  const upperTickIndex = upperTick !== Infinity ? upperTick : getMaxTick(tickSpacing as number)
 
-  const lowerSqrtPrice = calculate_price_sqrt(lowerTickIndex)
-  const upperSqrtPrice = calculate_price_sqrt(upperTickIndex)
+  const lowerSqrtPrice = calculatePriceSqrt(lowerTickIndex)
+  const upperSqrtPrice = calculatePriceSqrt(upperTickIndex)
 
   return getLiquidityByXPrice(x, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
 }
@@ -472,14 +473,15 @@ export const getLiquidityByY = (
   roundingUp: boolean,
   tickSpacing?: number
 ) => {
-  if ((lowerTick == -Infinity || upperTick == Infinity) && tickSpacing == undefined)
+  if ((lowerTick === -Infinity || upperTick === Infinity) && tickSpacing === undefined) {
     throw new Error('tickSpacing is required for calculating full range liquidity')
+  }
 
-  const lowerTickIndex = lowerTick != -Infinity ? lowerTick : getMinTick(tickSpacing)
-  const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(tickSpacing)
+  const lowerTickIndex = lowerTick !== -Infinity ? lowerTick : getMinTick(tickSpacing as number)
+  const upperTickIndex = upperTick !== Infinity ? upperTick : getMaxTick(tickSpacing as number)
 
-  const lowerSqrtPrice = calculate_price_sqrt(lowerTickIndex)
-  const upperSqrtPrice = calculate_price_sqrt(upperTickIndex)
+  const lowerSqrtPrice = calculatePriceSqrt(lowerTickIndex)
+  const upperSqrtPrice = calculatePriceSqrt(upperTickIndex)
 
   return getLiquidityByYPrice(y, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
 }
