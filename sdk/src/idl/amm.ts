@@ -401,8 +401,13 @@ export type Amm = {
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "payer",
           "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "owner",
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -1328,7 +1333,7 @@ export type Amm = {
     {
       "code": 6004,
       "name": "InvalidTickIndex",
-      "msg": "Tick index not divisible by spacing"
+      "msg": "Tick index not divisible by spacing or over limit"
     },
     {
       "code": 6005,
@@ -1399,6 +1404,11 @@ export type Amm = {
       "code": 6018,
       "name": "OracleAlreadyInitialized",
       "msg": "Oracle is already initialized"
+    },
+    {
+      "code": 6019,
+      "name": "LimitReached",
+      "msg": "Absolute price limit was reached"
     }
   ]
 };
@@ -1806,8 +1816,13 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "payer",
           "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "owner",
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -2733,7 +2748,7 @@ export const IDL: Amm = {
     {
       "code": 6004,
       "name": "InvalidTickIndex",
-      "msg": "Tick index not divisible by spacing"
+      "msg": "Tick index not divisible by spacing or over limit"
     },
     {
       "code": 6005,
@@ -2804,6 +2819,11 @@ export const IDL: Amm = {
       "code": 6018,
       "name": "OracleAlreadyInitialized",
       "msg": "Oracle is already initialized"
+    },
+    {
+      "code": 6019,
+      "name": "LimitReached",
+      "msg": "Absolute price limit was reached"
     }
   ]
 };

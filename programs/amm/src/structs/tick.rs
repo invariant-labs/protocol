@@ -19,7 +19,7 @@ pub struct Tick {
 
 impl Tick {
     pub fn update(
-        self: &mut Self,
+        &mut self,
         liquidity_delta: Decimal,
         is_upper: bool,
         is_deposit: bool,
@@ -31,7 +31,7 @@ impl Tick {
         Ok(())
     }
 
-    fn update_liquidity_change(self: &mut Self, liquidity_delta: Decimal, add: bool) {
+    fn update_liquidity_change(&mut self, liquidity_delta: Decimal, add: bool) {
         if self.sign ^ add {
             if { self.liquidity_change } > liquidity_delta {
                 self.liquidity_change = self.liquidity_change - liquidity_delta;
@@ -45,7 +45,7 @@ impl Tick {
     }
 
     fn calculate_new_liquidity_gross_safely(
-        self: Self,
+        self,
         sign: bool,
         liquidity_delta: Decimal,
     ) -> Result<Decimal> {

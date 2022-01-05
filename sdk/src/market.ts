@@ -1,4 +1,3 @@
-import * as anchor from '@project-serum/anchor'
 import { BN, Program, utils, Provider } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID, } from '@solana/spl-token'
 import {
@@ -14,11 +13,13 @@ import { calculatePriceAfterSlippage, findClosestTicks, isInitialized } from './
 import {
   feeToTickSpacing,
   getFeeTierAddress,
+  getMaxTick,
+  getMinTick,
   parseLiquidityOnTicks,
   SEED,
 } from './utils'
 import { Amm, IDL } from './idl/amm'
-import { IWallet, Pair } from '.'
+import { ComputeUnitsInstruction, IWallet, Pair } from '.'
 import { getMarketAddress } from './network'
 
 import { Network } from './network'
@@ -26,7 +27,6 @@ const POSITION_SEED = 'positionv1'
 const TICK_SEED = 'tickv1'
 const POSITION_LIST_SEED = 'positionlistv1'
 const STATE_SEED = 'statev1'
-const TICKMAP_SEED = 'tickmapv1'
 export const FEE_TIER = 'feetierv1'
 export const DEFAULT_PUBLIC_KEY = new PublicKey(0)
 
@@ -396,9 +396,13 @@ export class Market {
     assumeFirstPosition: boolean = false
   ) {
     const state = await this.getPool(pair)
+
+    const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(pair.tickSpacing)
+    const lowerTickIndex = lowerTick != -Infinity ? lowerTick : getMinTick(pair.tickSpacing)
+
     // maybe in the future index cloud be store at market
-    const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTick)
-    const { tickAddress: upperTickAddress } = await this.getTickAddress(pair, upperTick)
+    const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTickIndex)
+    const { tickAddress: upperTickAddress } = await this.getTickAddress(pair, upperTickIndex)
     const { positionAddress, positionBump } = await this.getPositionAddress(
       owner,
       assumeFirstPosition ? 0 : (await this.getPositionList(owner)).head
@@ -408,8 +412,8 @@ export class Market {
     
     return this.program.instruction.createPosition(
       positionBump,
-      lowerTick,
-      upperTick,
+      lowerTickIndex,
+      upperTickIndex,
       liquidityDelta,
       {
         accounts: {
@@ -419,6 +423,7 @@ export class Market {
           position: positionAddress,
           tickmap: state.tickmap,
           owner,
+          payer: owner,
           lowerTick: lowerTickAddress,
           upperTick: upperTickAddress,
           tokenX: pair.tokenX,
@@ -440,36 +445,67 @@ export class Market {
     const { pair, lowerTick, upperTick } = initPosition
     const payer = initPosition.owner || this.wallet.publicKey
     const [tickmap, pool] = await Promise.all([this.getTickmap(pair), this.getPool(pair)])
+
+    let lowerInstruction: TransactionInstruction
+    let upperInstruction: TransactionInstruction
+    let listInstruction: TransactionInstruction
+    let positionInstruction: TransactionInstruction
     const tx = new Transaction()
 
+    let lowerExists = true;
     try {
       await this.getTick(pair, lowerTick)
     } catch (e) {
-      tx.add(await this.createTickInstruction({ pair, index: lowerTick, payer }))
+      lowerExists = false
+      lowerInstruction = await this.createTickInstruction({ pair, index: lowerTick, payer })
     }
 
+    let upperExists = true
     try {
       await this.getTick(pair, upperTick)
     } catch (e) {
-      tx.add(await this.createTickInstruction({ pair, index: upperTick, payer }))
+      upperExists = false
+      upperInstruction = await this.createTickInstruction({ pair, index: upperTick, payer })
     }
 
     const { positionListAddress } = await this.getPositionListAddress(payer)
     const account = await this.connection.getAccountInfo(positionListAddress)
 
+    let listExists = true
     if (account === null) {
-      tx.add(await this.createPositionListInstruction(payer))
-      return tx.add(await this.initPositionInstruction(initPosition, true))
+      listExists = false
+      listInstruction = await this.createPositionListInstruction(payer)
+      positionInstruction = await this.initPositionInstruction(initPosition, true)
+    } else {
+      positionInstruction = await this.initPositionInstruction(initPosition, false)
     }
-    return tx.add(await this.initPositionInstruction(initPosition, false))
+    
+    if (!lowerExists && !upperExists && listExists) {
+      tx.add(ComputeUnitsInstruction(400000, payer))
+    }
+    if(!lowerExists) {
+      tx.add(lowerInstruction)
+    }
+    if(!upperExists) {
+      tx.add(upperInstruction)
+    }
+    if(!listExists) {
+      tx.add(listInstruction)
+    }
+
+    return tx.add(positionInstruction)
   }
 
   async swapInstruction(swap: Swap, overridePriceLimit?: BN) {
     const { pair, xToY, amount, knownPrice, slippage, accountX, accountY, byAmountIn } = swap
     const owner = swap.owner || this.wallet.publicKey
 
-    const pool = await this.getPool(pair)
-    const tickmap = await this.getTickmap(pair)
+    const [pool, tickmap, feeTierAddress, poolAddress] = await Promise.all([
+      this.getPool(pair),
+      this.getTickmap(pair),
+      pair.getFeeTierAddress(this.program.programId),
+      pair.getAddress(this.program.programId)
+    ])
 
     const priceLimit =
       overridePriceLimit ?? calculatePriceAfterSlippage(knownPrice, slippage, !xToY).v
@@ -503,7 +539,7 @@ export class Market {
       }),
       accounts: {
         state: this.stateAddress,
-        pool: await pair.getAddress(this.program.programId),
+        pool: poolAddress,
         tickmap: pool.tickmap,
         tokenX: pool.tokenX,
         tokenY: pool.tokenY,

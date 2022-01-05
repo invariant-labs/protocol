@@ -1,5 +1,5 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js'
-import { MARKET_STATE_LAYOUT_V2, TokenInstructions } from '@project-serum/serum'
+import { TokenInstructions } from '@project-serum/serum'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { FeeTier, Market, Position } from '@invariant-labs/sdk/lib/market'
 import {
@@ -24,7 +24,6 @@ import { Pair } from '@invariant-labs/sdk'
 import { tou64 } from '@invariant-labs/sdk'
 import { TICK_LIMIT } from '@invariant-labs/sdk'
 import { signAndSend } from '@invariant-labs/sdk'
-import { Init } from '../sdk-staker/lib/staker'
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {
@@ -107,8 +106,7 @@ export const createTokensAndPool = async (
   connection: Connection,
   payer: Keypair,
   initTick: number = 0,
-  fee: BN = new BN(600),
-  tickSpacing: number = 10
+  feeTier: FeeTier = FEE_TIERS[0]
 ) => {
   const mintAuthority = Keypair.generate()
 
@@ -118,11 +116,6 @@ export const createTokensAndPool = async (
     connection.requestAirdrop(mintAuthority.publicKey, 1e9)
   ])
 
-  const feeTier: FeeTier = {
-    fee: fromFee(fee),
-    tickSpacing
-  }
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   const pair = new Pair(promiseResults[0].publicKey, promiseResults[1].publicKey, feeTier)
   const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, payer)
   const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, payer)
@@ -139,6 +132,7 @@ export const createTokensAndPool = async (
     await createFeeTier(market, createFeeTierVars, payer)
   }
 
+  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   const createPoolVars: CreatePool = {
     pair,
     payer: payer,

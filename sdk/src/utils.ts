@@ -6,14 +6,16 @@ import {
   Keypair,
   PublicKey,
   sendAndConfirmRawTransaction,
-  Transaction
+  Transaction,
+  TransactionInstruction
 } from '@solana/web3.js'
-import { calculate_price_sqrt, Pair } from '.'
+import { calculate_price_sqrt, MAX_TICK, Pair, TICK_LIMIT } from '.'
 import { Market } from '.'
 import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap, Tick, Position } from './market'
 import { calculatePriceAfterSlippage, calculateSwapStep } from './math'
 import { getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
+import { struct, u32, u8 } from '@solana/buffer-layout'
 
 export const SEED = 'Invariant'
 export const DECIMAL = 12
@@ -72,7 +74,20 @@ export interface SimulateClaim {
   feeGrowthGlobalX: Decimal
   feeGrowthGlobalY: Decimal
 }
-
+export const ComputeUnitsInstruction = (units: number, wallet: PublicKey) => {
+  const program = new PublicKey('ComputeBudget111111111111111111111111111111')
+  let params = { instruction: 0, units: units }
+  let layout = struct([u8('instruction'), u32('units')])
+  let data = Buffer.alloc(layout.span)
+  layout.encode(params, data)
+  let keys = [{ pubkey: wallet, isSigner: false, isWritable: false }]
+  const unitsIx = new TransactionInstruction({
+    keys,
+    programId: program,
+    data
+  })
+  return unitsIx
+}
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {
     await fn
@@ -403,4 +418,16 @@ export const bigNumberToBuffer = (n: BN, size: 16 | 32 | 64 | 128 | 256) => {
   }
 
   return buffer
+}
+
+export const getMaxTick = (tickSpacing: number) => {
+  const limitedByPrice = MAX_TICK - (MAX_TICK % tickSpacing)
+  const limitedByTickmap = TICK_LIMIT * tickSpacing
+  return Math.min(limitedByPrice, limitedByTickmap)
+}
+
+export const getMinTick = (tickSpacing: number) => {
+  const limitedByPrice = -MAX_TICK + (MAX_TICK % tickSpacing)
+  const limitedByTickmap = -TICK_LIMIT * tickSpacing
+  return Math.max(limitedByPrice, limitedByTickmap)
 }

@@ -141,7 +141,7 @@ pub fn handler(
             pool.current_tick_index,
             pool.tick_spacing,
             &tickmap,
-        );
+        )?;
 
         let result = compute_swap_step(
             pool.sqrt_price,
@@ -160,7 +160,7 @@ pub fn handler(
         }
 
         // fee has to be added before crossing any ticks
-        let protocol_fee = result.fee_amount * pool.protocol_fee;
+        let protocol_fee = result.fee_amount.big_mul(pool.protocol_fee);
 
         pool.add_fee(result.fee_amount - protocol_fee, x_to_y);
         if x_to_y {
@@ -204,9 +204,7 @@ pub fn handler(
                     .iter()
                     .find(|account| *account.key == tick_address)
                 {
-                    Some(account) => {
-                        Loader::<'_, Tick>::try_from(ctx.program_id, &account).unwrap()
-                    }
+                    Some(account) => Loader::<'_, Tick>::try_from(ctx.program_id, account).unwrap(),
                     None => return Err(ErrorCode::TickNotFound.into()),
                 };
                 let mut tick = loader.load_mut().unwrap();
@@ -215,7 +213,7 @@ pub fn handler(
                 cross_tick(&mut tick, &mut pool)?;
             }
 
-            // set tick to limit (below if price is going down, because current tick is below price)
+            // set tick to limit (below if price is going down, because current tick should always be below price)
             pool.current_tick_index = if x_to_y && remaining_amount != Decimal::new(0) {
                 tick_index - pool.tick_spacing as i32
             } else {

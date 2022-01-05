@@ -1,4 +1,3 @@
-use crate::decimal::Decimal;
 use anchor_lang::prelude::*;
 
 #[account(zero_copy)]

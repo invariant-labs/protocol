@@ -2,6 +2,7 @@ use crate::math::calculate_price_sqrt;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::structs::tickmap::Tickmap;
+use crate::util::check_tick;
 use crate::{decimal::Decimal, util::get_current_timestamp};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
@@ -41,9 +42,10 @@ pub fn handler(ctx: Context<CreateTick>, bump: u8, index: i32) -> ProgramResult 
     msg!("INVARIANT: CREATE_TICK");
 
     let mut tick = ctx.accounts.tick.load_init()?;
-    let mut tickmap = ctx.accounts.tickmap.load_mut()?;
     let pool = ctx.accounts.pool.load()?;
     let current_timestamp = get_current_timestamp();
+
+    check_tick(index, pool.tick_spacing)?;
 
     // init tick
     let below_current_tick = index <= pool.current_tick_index;
@@ -62,7 +64,7 @@ pub fn handler(ctx: Context<CreateTick>, bump: u8, index: i32) -> ProgramResult 
             false => Decimal::new(0),
         },
         seconds_outside: match below_current_tick {
-            true => (current_timestamp - pool.start_timestamp),
+            true => (current_timestamp.checked_sub(pool.start_timestamp).unwrap()),
             false => 0,
         },
         seconds_per_liquidity_outside: match below_current_tick {

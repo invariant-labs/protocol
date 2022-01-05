@@ -1,12 +1,12 @@
-import * as anchor from '@project-serum/anchor'
-import { Provider } from '@project-serum/anchor'
+import { Provider, BN } from '@project-serum/anchor'
 import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
 import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
 import { MINTER } from './minter'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Market, Pair, tou64 } from '@invariant-labs/sdk/src'
-import { getLiquidityByX } from '@invariant-labs/sdk/src/math'
-import { FEE_TIERS } from '@invariant-labs/sdk/src/utils'
+import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/src/utils'
+import { MAX_TICK } from '@invariant-labs/sdk'
+import { getLiquidityByY } from '@invariant-labs/sdk/lib/math'
 import { InitPosition } from '@invariant-labs/sdk/src/market'
 import { initPosition } from '../tests/testUtils'
 require('dotenv').config()
@@ -14,6 +14,13 @@ require('dotenv').config()
 const provider = Provider.local(clusterApiUrl('devnet'), {
   skipPreflight: true
 })
+
+const feeTier = FEE_TIERS[0]
+const tokenA = MOCK_TOKENS.USDC
+const tokenB = MOCK_TOKENS.ANA
+const upperTick = 0
+const lowerTick = -MAX_TICK + (MAX_TICK % (feeTier.tickSpacing ?? feeToTickSpacing(feeTier.fee)))
+const amount = new BN(9e6).muln(1e6)
 
 const connection = provider.connection
 // @ts-expect-error
@@ -26,45 +33,44 @@ const main = async () => {
 }
 
 const usdtUsdcCreatePosition = async (market: Market) => {
-  const pair = new Pair(
-    new PublicKey(MOCK_TOKENS.USDC),
-    new PublicKey(MOCK_TOKENS.USDT),
-    FEE_TIERS[0]
-  )
+  console.log('creating accounts...')
+  const pair = new Pair(new PublicKey(tokenA), new PublicKey(tokenB), FEE_TIERS[0])
+  console.log(`is token A first?: ${pair.tokenX.equals(new PublicKey(tokenA))}`)
+  if (!pair.tokenX.equals(new PublicKey(tokenA)))
+    throw new Error('tokens are in reverse order, ticks should be opposite')
 
-  const usdc = new Token(connection, new PublicKey(MOCK_TOKENS.USDC), TOKEN_PROGRAM_ID, wallet)
-  const usdt = new Token(connection, new PublicKey(MOCK_TOKENS.USDT), TOKEN_PROGRAM_ID, wallet)
-  const amount = tou64(1000 * 10 ** 6)
+  const tokenX = new Token(connection, new PublicKey(pair.tokenX), TOKEN_PROGRAM_ID, wallet)
+  const tokenY = new Token(connection, new PublicKey(pair.tokenY), TOKEN_PROGRAM_ID, wallet)
 
-  const [minterUsdc, minterUsdt] = await Promise.all(
-    [
-      usdc.createAccount(MINTER.publicKey),
-      usdt.createAccount(MINTER.publicKey)
-    ]
-  )
-  await Promise.all(
-    [
-      usdc.mintTo(minterUsdc, MINTER, [], amount),
-      usdt.mintTo(minterUsdt, MINTER, [], amount)
-    ]
-  )
+  const [minterX, minterY] = await Promise.all([
+    tokenX.createAccount(MINTER.publicKey),
+    tokenY.createAccount(MINTER.publicKey)
+  ])
 
-  const x = new anchor.BN(500 * 10 ** 6)
-  const lowerTick = -4
-  const upperTick = 4
+  console.log('minting tokens...')
+  await Promise.all([
+    // tokenX.mintTo(minterX, MINTER, [], amount),
+    tokenY.mintTo(minterY, MINTER, [], tou64(amount))
+  ])
+
+  console.log('calculating position...')
+
+  const y = amount
   const pool = await market.getPool(pair)
-  const { liquidity } = getLiquidityByX(x, lowerTick, upperTick, pool.sqrtPrice, true)
+  const { liquidity } = getLiquidityByY(y, lowerTick, upperTick, pool.sqrtPrice, true)
 
+  console.log('creating position...')
   const initPositionVars: InitPosition = {
     pair,
       owner: MINTER.publicKey,
-      userTokenX: minterUsdt,
-      userTokenY: minterUsdc,
+      userTokenX: minterX,
+      userTokenY: minterY,
       lowerTick,
       upperTick,
-      liquidityDelta: liquidity
+      liquidityDelta: liquidity,
   }
   await initPosition(market, initPositionVars, MINTER)
+  console.log('done')
 }
 
 main()

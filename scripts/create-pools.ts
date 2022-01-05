@@ -23,6 +23,7 @@ const main = async () => {
 
   await createUsdcUsdt(market)
   await createUsdcSol(market)
+  await createMsolSol(market)
 }
 const createUsdcUsdt = async (market: Market) => {
   const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.USDT), feeTier)
@@ -52,6 +53,24 @@ const createUsdcSol = async (market: Market) => {
     tokenX,
     tokenY,
     initTick: 18000
+  }
+  await createPool(market, createPoolVars)
+}
+
+const createMsolSol = async (market: Market) => {
+  const pair = new Pair(new PublicKey(MOCK_TOKENS.MSOL), new PublicKey(MOCK_TOKENS.SOL), feeTier)
+  const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
+  const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+  const protocolFee: Decimal = { v: fromFee(new BN(10000))}
+
+
+  const createPoolVars: CreatePool = {
+    pair,
+    payer: wallet,
+    protocolFee,
+    tokenX,
+    tokenY,
+    initTick: 200
   }
   await createPool(market, createPoolVars)
 }

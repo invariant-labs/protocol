@@ -24,7 +24,7 @@ pub struct Position {
 
 impl Position {
     pub fn modify(
-        self: &mut Self,
+        &mut self,
         pool: &mut Pool,
         upper_tick: &mut Tick,
         lower_tick: &mut Tick,
@@ -72,7 +72,7 @@ impl Position {
     }
 
     pub fn update(
-        self: &mut Self,
+        &mut self,
         sign: bool,
         liquidity_delta: Decimal,
         fee_growth_inside_x: Decimal,
@@ -101,21 +101,21 @@ impl Position {
         Ok(())
     }
 
-    pub fn initialized_id(self: &mut Self, pool: &mut Pool) {
+    pub fn initialized_id(&mut self, pool: &mut Pool) {
         self.id = pool.position_iterator;
         pool.position_iterator += 1; // REVIEW maybe u128 just to make sure we don't overflow 😆
     }
 
     // for future use
-    pub fn get_id(self: Self) -> String {
-        let mut id = self.pool.to_string().to_owned();
+    pub fn get_id(self) -> String {
+        let mut id = self.pool.to_string();
         id.push_str({ self.id }.to_string().as_str());
         id
     }
 
     // TODO: add tests
     fn calculate_new_liquidity_safely(
-        self: &mut Self,
+        &mut self,
         sign: bool,
         liquidity_delta: Decimal,
     ) -> Result<Decimal> {

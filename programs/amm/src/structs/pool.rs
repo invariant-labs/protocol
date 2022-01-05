@@ -34,22 +34,15 @@ impl Pool {
         if amount == Decimal::new(0) || { self.liquidity } == Decimal::new(0) {
             return;
         }
+        let fee_growth = amount.big_div(self.liquidity);
         if x {
-            self.fee_growth_global_x = Decimal {
-                v: self.fee_growth_global_x.v + (amount / self.liquidity).v,
-            };
+            self.fee_growth_global_x.v += fee_growth.v;
         } else {
-            self.fee_growth_global_y = Decimal {
-                v: self.fee_growth_global_y.v + (amount / self.liquidity).v,
-            };
+            self.fee_growth_global_y.v += fee_growth.v;
         }
     }
 
-    pub fn update_liquidity_safely(
-        self: &mut Self,
-        liquidity_delta: Decimal,
-        add: bool,
-    ) -> Result<()> {
+    pub fn update_liquidity_safely(&mut self, liquidity_delta: Decimal, add: bool) -> Result<()> {
         // validate in decrease liquidity case
         if !add && { self.liquidity } < liquidity_delta {
             return Err(ErrorCode::InvalidPoolLiquidity.into());
@@ -63,7 +56,7 @@ impl Pool {
         Ok(())
     }
 
-    pub fn update_seconds_per_liquidity_global(self: &mut Self, current_timestamp: u64) {
+    pub fn update_seconds_per_liquidity_global(&mut self, current_timestamp: u64) {
         self.seconds_per_liquidity_global = self.seconds_per_liquidity_global
             + (Decimal::from_integer((current_timestamp - self.last_timestamp) as u128)
                 / self.liquidity);
@@ -71,7 +64,7 @@ impl Pool {
         self.last_timestamp = current_timestamp;
     }
 
-    pub fn set_oracle(self: &mut Self, address: Pubkey) {
+    pub fn set_oracle(&mut self, address: Pubkey) {
         self.oracle_address = address;
         self.oracle_initialized = true;
     }

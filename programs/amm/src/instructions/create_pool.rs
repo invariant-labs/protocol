@@ -4,6 +4,7 @@ use crate::math::calculate_price_sqrt;
 use crate::structs::fee_tier::FeeTier;
 use crate::structs::pool::Pool;
 use crate::structs::tickmap::Tickmap;
+use crate::util::check_tick;
 use crate::util::get_current_timestamp;
 use crate::{decimal::Decimal, structs::State};
 use anchor_lang::prelude::*;
@@ -68,6 +69,8 @@ pub fn handler(
     let pool = &mut ctx.accounts.pool.load_init()?;
     let fee_tier = ctx.accounts.fee_tier.load()?;
     let current_timestamp = get_current_timestamp();
+
+    check_tick(init_tick, fee_tier.tick_spacing)?;
 
     **pool = Pool {
         token_x: *token_x_address,

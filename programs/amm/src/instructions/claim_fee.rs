@@ -92,9 +92,7 @@ impl<'info> interfaces::SendTokens<'info> for ClaimFee<'info> {
     }
 }
 
-pub fn handler(
-    ctx: Context<ClaimFee>,
-) -> ProgramResult {
+pub fn handler(ctx: Context<ClaimFee>) -> ProgramResult {
     msg!("INVARIANT: CLAIM FEE");
 
     let state = ctx.accounts.state.load()?;

@@ -1,5 +1,3 @@
-use std::convert::TryInto;
-
 use crate::structs::*;
 use crate::util;
 use crate::util::get_current_timestamp;

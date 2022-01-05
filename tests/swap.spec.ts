@@ -184,5 +184,7 @@ describe('swap', () => {
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
     assert.ok(poolData.feeProtocolTokenX.v.eq(new BN(600000013280)))
     assert.ok(poolData.feeProtocolTokenY.v.eq(new BN(12945000000)))
+
+    assert.equal(poolData.currentTickIndex, -20)
   })
 })
