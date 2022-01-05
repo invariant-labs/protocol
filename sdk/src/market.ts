@@ -557,12 +557,12 @@ export class Market {
     }
     let simulationResult: SimulationResult = simulateSwap(swapParameters)
     let amountPerTick: BN[] = simulationResult.amountPerTick
-    let sum = new BN(0)
+    let sum: BN = new BN(0)
     for (var value of amountPerTick) {
       sum = sum.add(value)
     }
 
-    if (!sum.eq(amount.mul(DENOMINATOR))) {
+    if (!sum.eq(amount)) {
       throw new Error('Input amount and simulation amount sum are different')
     }
 
@@ -571,20 +571,15 @@ export class Market {
     }
 
     const tx: Transaction = new Transaction()
-    //this means how many cross tikcks we would like to do per instruction
-    let remaining: BN = new BN(0)
+    //this means how many  tikcks we would like to cross per instruction
+    let remaining: number = 0
 
     for (let i = 0; i < amountPerTick.length; i++) {
-      let amountIx: BN = amountPerTick[i].div(DENOMINATOR)
-      remaining = remaining.add(amountPerTick[i].sub(amountIx.mul(DENOMINATOR)))
-
-      if (i + 1 == amountPerTick.length) {
-        amountIx = amountIx.add(remaining.div(DENOMINATOR))
-      }
+      let amountIx: BN = amountPerTick[i]
 
       if (
         ((i + 1) % TICKS_PER_IX == 0 || i == amountPerTick.length - 1) &&
-        !amountPerTick[i].eq(new BN(0))
+        !amountPerTick[i].eqn(0)
       ) {
         const swapIx = this.program.instruction.swap(XtoY, amountIx, byAmountIn, priceLimit, {
           remainingAccounts: ra,

@@ -270,9 +270,8 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
       throw new Error('Price limit is on the wrong side of price')
     }
   }
-  let remainingAmount: Decimal = { v: swapAmount.mul(DENOMINATOR) }
-
-  while (!remainingAmount.v.lte(new BN(0))) {
+  let remainingAmount: BN = swapAmount
+  while (!remainingAmount.lte(new BN(0))) {
     //find closest initielized tick
     const closerLimit: CloserLimit = {
       sqrtPriceLimit: priceLimit,
@@ -292,21 +291,19 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
       fee
     )
 
-    accumulatedAmountOut = accumulatedAmountOut.add(result.amountOut.v)
-    accumulatedFee = accumulatedFee.add(result.feeAmount.v)
+    accumulatedAmountOut = accumulatedAmountOut.add(result.amountOut)
+    accumulatedFee = accumulatedFee.add(result.feeAmount)
 
-    let amountDiff: Decimal
+    let amountDiff: BN
     if (byAmountIn) {
-      amountDiff = {
-        v: result.amountIn.v.add(result.feeAmount.v)
-      }
+      amountDiff = result.amountIn.add(result.feeAmount)
     } else {
-      amountDiff = { v: result.amountOut.v }
+      amountDiff = result.amountOut
     }
-    remainingAmount = { v: remainingAmount.v.sub(amountDiff.v) }
+    remainingAmount = remainingAmount.sub(amountDiff)
     pool.sqrtPrice = result.nextPrice
 
-    if (pool.sqrtPrice.v.eq(priceLimit.v) && remainingAmount.v.gt(new BN(0))) {
+    if (pool.sqrtPrice.v.eq(priceLimit.v) && remainingAmount.gt(new BN(0))) {
       throw new Error('Price would cross swap limit')
     }
 
@@ -324,7 +321,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
           liquidity = { v: liquidity.v.sub(tick.liquidityChange.v) }
         }
       }
-      if (xToY && !remainingAmount.v.eq(new BN(0))) {
+      if (xToY && !remainingAmount.eq(new BN(0))) {
         currentTickIndex = tickIndex - tickSpacing
       } else {
         currentTickIndex = tickIndex
@@ -334,9 +331,9 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     }
 
     // add amount to array if tick was initialized otherwise accumulate amount for next iteration
-    accumulatedAmount = accumulatedAmount.add(amountDiff.v)
+    accumulatedAmount = accumulatedAmount.add(amountDiff)
 
-    if ((limitingTick != null && limitingTick.initialized) || remainingAmount.v.eqn(0)) {
+    if ((limitingTick != null && limitingTick.initialized) || remainingAmount.eqn(0)) {
       amountPerTick.push(accumulatedAmount)
       accumulatedAmount = new BN(0)
     }

@@ -10,9 +10,9 @@ export const TICK_SEARCH_RANGE = 256
 
 export interface SwapResult {
   nextPrice: Decimal
-  amountIn: Decimal
-  amountOut: Decimal
-  feeAmount: Decimal
+  amountIn: BN
+  amountOut: BN
+  feeAmount: BN
 }
 
 export const isInitialized = (tickmap: Tickmap, index: number, tickSpacing: number) => {
@@ -95,28 +95,26 @@ export const calculateSwapStep = (
   currentPrice: Decimal,
   targetPrice: Decimal,
   liquidity: Decimal,
-  amount: Decimal,
+  amount: BN,
   byAmountIn: boolean,
   fee: Decimal
 ): SwapResult => {
   const aToB = currentPrice.v.gte(targetPrice.v)
 
   let nextPrice: Decimal
-  let amountIn: Decimal = { v: new BN(0) }
-  let amountOut: Decimal = { v: new BN(0) }
-  let feeAmount: Decimal
+  let amountIn: BN
+  let amountOut: BN
+  let feeAmount: BN
 
   if (byAmountIn) {
-    const amountAfterFee: Decimal = {
-      v: fromInteger(1).v.sub(fee.v).mul(amount.v).div(DENOMINATOR)
-    }
+    const amountAfterFee: BN = fromInteger(1).v.sub(fee.v).mul(amount).div(DENOMINATOR)
 
     if (aToB) {
       amountIn = getDeltaX(targetPrice, currentPrice, liquidity, true)
     } else {
       amountIn = getDeltaY(targetPrice, currentPrice, liquidity, true)
     }
-    if (amountAfterFee.v.gte(amountIn.v)) {
+    if (amountAfterFee.gte(amountIn)) {
       nextPrice = targetPrice
     } else {
       nextPrice = getNextPriceFromInput(currentPrice, liquidity, amountAfterFee, aToB)
@@ -127,7 +125,7 @@ export const calculateSwapStep = (
     } else {
       amountOut = getDeltaX(currentPrice, targetPrice, liquidity, false)
     }
-    if (amount.v.gte(amountOut.v)) {
+    if (amount.gte(amountOut)) {
       nextPrice = targetPrice
     } else {
       nextPrice = getNextPriceFromOutput(currentPrice, liquidity, amount, aToB)
@@ -151,14 +149,14 @@ export const calculateSwapStep = (
     }
   }
 
-  if (!byAmountIn && amountOut.v.gt(amount.v)) {
+  if (!byAmountIn && amountOut.gt(amount)) {
     amountOut = amount
   }
 
   if (byAmountIn && !nextPrice.v.eq(targetPrice.v)) {
-    feeAmount = { v: amount.v.sub(amountIn.v) }
+    feeAmount = amount.sub(amountIn)
   } else {
-    feeAmount = { v: amountIn.v.mul(fee.v).add(DENOMINATOR.subn(1)).div(DENOMINATOR) }
+    feeAmount = fee.v.mul(amountIn).add(DENOMINATOR.subn(1)).div(DENOMINATOR)
   }
   return {
     nextPrice,
@@ -168,7 +166,7 @@ export const calculateSwapStep = (
   }
 }
 
-const getDeltaX = (priceA: Decimal, priceB: Decimal, liquidity: Decimal, up: boolean): Decimal => {
+const getDeltaX = (priceA: Decimal, priceB: Decimal, liquidity: Decimal, up: boolean): BN => {
   let deltaPrice: Decimal
   if (priceA.v.gt(priceB.v)) {
     deltaPrice = { v: priceA.v.sub(priceB.v) }
@@ -179,22 +177,18 @@ const getDeltaX = (priceA: Decimal, priceB: Decimal, liquidity: Decimal, up: boo
   const nominator: Decimal = { v: liquidity.v.mul(deltaPrice.v).div(DENOMINATOR) }
 
   if (up) {
-    return {
-      v: nominator.v
-        .mul(DENOMINATOR)
-        .add(priceA.v.mul(priceB.v).div(DENOMINATOR).subn(1))
-        .div(priceA.v.mul(priceB.v).div(DENOMINATOR))
-    }
+    return nominator.v
+      .mul(DENOMINATOR)
+      .add(priceA.v.mul(priceB.v).div(DENOMINATOR).subn(1))
+      .div(priceA.v.mul(priceB.v).div(DENOMINATOR))
   } else {
-    return {
-      v: nominator.v
-        .mul(DENOMINATOR)
-        .div(priceA.v.mul(priceB.v).add(DENOMINATOR.subn(1)).div(DENOMINATOR))
-    }
+    return nominator.v
+      .mul(DENOMINATOR)
+      .div(priceA.v.mul(priceB.v).add(DENOMINATOR.subn(1)).div(DENOMINATOR))
   }
 }
 
-const getDeltaY = (priceA: Decimal, priceB: Decimal, liquidity: Decimal, up: boolean): Decimal => {
+const getDeltaY = (priceA: Decimal, priceB: Decimal, liquidity: Decimal, up: boolean): BN => {
   let deltaPrice: Decimal
   if (priceA.v.gt(priceB.v)) {
     deltaPrice = { v: priceA.v.sub(priceB.v) }
@@ -203,16 +197,16 @@ const getDeltaY = (priceA: Decimal, priceB: Decimal, liquidity: Decimal, up: boo
   }
 
   if (up) {
-    return { v: liquidity.v.mul(deltaPrice.v).add(DENOMINATOR.subn(1)).div(DENOMINATOR) }
+    return liquidity.v.mul(deltaPrice.v).add(DENOMINATOR.subn(1)).div(DENOMINATOR)
   } else {
-    return { v: liquidity.v.mul(deltaPrice.v).div(DENOMINATOR) }
+    return liquidity.v.mul(deltaPrice.v).div(DENOMINATOR)
   }
 }
 
 const getNextPriceFromInput = (
   price: Decimal,
   liquidity: Decimal,
-  amount: Decimal,
+  amount: BN,
   aToB: boolean
 ): Decimal => {
   assert.isTrue(price.v.gt(new BN(0)))
@@ -228,7 +222,7 @@ const getNextPriceFromInput = (
 const getNextPriceFromOutput = (
   price: Decimal,
   liquidity: Decimal,
-  amount: Decimal,
+  amount: BN,
   aToB: boolean
 ): Decimal => {
   assert.isTrue(price.v.gt(new BN(0)))
@@ -241,19 +235,14 @@ const getNextPriceFromOutput = (
   }
 }
 
-const getNextPriceXUp = (
-  price: Decimal,
-  liquidity: Decimal,
-  amount: Decimal,
-  add: boolean
-): Decimal => {
-  if (amount.v.eq(new BN(0))) {
+const getNextPriceXUp = (price: Decimal, liquidity: Decimal, amount: BN, add: boolean): Decimal => {
+  if (amount.eqn(0)) {
     return price
   }
 
-  const product: Decimal = { v: amount.v.mul(price.v).div(DENOMINATOR) }
+  const product: Decimal = { v: amount.mul(price.v).div(DENOMINATOR) }
   if (add) {
-    if (product.v.mul(DENOMINATOR).div(amount.v).eq(price.v)) {
+    if (product.v.mul(DENOMINATOR).div(amount).eq(price.v)) {
       const denominator: Decimal = { v: liquidity.v.add(product.v) }
 
       if (denominator.v.gte(liquidity.v)) {
@@ -271,11 +260,15 @@ const getNextPriceXUp = (
     return {
       v: liquidity.v
         .mul(DENOMINATOR)
-        .add(liquidity.v.mul(DENOMINATOR).div(price.v).add(amount.v).subn(1))
-        .div(liquidity.v.mul(DENOMINATOR).div(price.v).add(amount.v))
+        .add(liquidity.v.mul(DENOMINATOR).div(price.v).add(amount).subn(1))
+        .div(liquidity.v.mul(DENOMINATOR).div(price.v).add(amount))
     }
   } else {
-    assert.isTrue(product.v.mul(DENOMINATOR).div(amount.v).eq(price.v) && liquidity.v.gt(product.v))
+    console.log('#### ', product.v.addn(1).mul(DENOMINATOR).div(amount).toString())
+    console.log('### ', price.v.toString())
+    assert.isTrue(
+      product.v.addn(1).mul(DENOMINATOR).div(amount).eq(price.v) && liquidity.v.gt(product.v)
+    )
     return {
       v: liquidity.v
         .mul(price.v)
@@ -291,14 +284,14 @@ const getNextPriceXUp = (
 const getNextPriceYDown = (
   price: Decimal,
   liquidity: Decimal,
-  amount: Decimal,
+  amount: BN,
   add: boolean
 ): Decimal => {
   if (add) {
-    return { v: amount.v.mul(DENOMINATOR).div(liquidity.v).add(price.v) }
+    return { v: amount.mul(DENOMINATOR).div(liquidity.v).add(price.v) }
   } else {
     const quotient: Decimal = {
-      v: amount.v.mul(DENOMINATOR).add(liquidity.v.subn(1)).div(liquidity.v)
+      v: amount.mul(DENOMINATOR).add(liquidity.v.subn(1)).div(liquidity.v)
     }
     assert.isTrue(price.v.gt(quotient.v))
     return { v: price.v.sub(quotient.v) }
