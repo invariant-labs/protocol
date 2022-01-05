@@ -97,12 +97,45 @@ pub fn log2_msb_x128(sqrt_price_x128: U256) -> U256 {
     log2_msb
 }
 
-// pub fn log2_x64(mut sqrt_price_x128: U256, sign: bool) -> (bool, u128) {
-//     let scale: u128 = 1u128 << 128;
+pub fn log2_x64(mut sqrt_price_x64: u128, sign: bool) -> (bool, u128) {
+    let scale = 1u128 << 64;
+    let scale_2x = scale << 1;
+    let half_scale = scale >> 1;
+    println!("scale = {:?}", scale);
 
-//     // TMP solution
-//     (true, 10)
-// }
+    if !sign {
+        // scale * scale / sqrt_price_x128
+        sqrt_price_x64 = scale
+            .checked_mul(scale)
+            .unwrap()
+            .checked_div(sqrt_price_x64)
+            .unwrap();
+    }
+
+    let msb = msb_x64(sqrt_price_x64.checked_div(scale).unwrap());
+    let mut result = msb.checked_mul(scale).unwrap();
+    let mut y: U256 = U256::from(sqrt_price_x64) >> msb;
+
+    if y == U256::from(scale) {
+        return (sign, sqrt_price_x64);
+    };
+    let mut delta = half_scale;
+    while delta > 0 {
+        y = y
+            .checked_mul(y)
+            .unwrap()
+            .checked_div(U256::from(scale))
+            .unwrap();
+
+        if y >= U256::from(scale_2x) {
+            result += delta;
+            y >>= 1;
+        }
+        // /= 2 can be to >>=
+        delta >>= 1;
+    }
+    (sign, result)
+}
 
 pub fn log2_x128(mut sqrt_price_x128: U256, sign: bool) -> (bool, U256) {
     let scale: U256 = U256::from(1) << 128;
@@ -248,13 +281,22 @@ mod tests {
     fn test_log2_floor_x128() {}
 
     #[test]
-    fn test_log2() {
+    fn test_log2_X128() {
         let sqrt_price_decimal = Decimal::from_integer(3);
         // 1020847100762815390390123822295304634368
         let sqrt_price_x128 = decimal_to_x128(sqrt_price_decimal);
         println!("x128: {:?}", sqrt_price_x128);
 
         let log2 = log2_x128(sqrt_price_x128, true);
+        println!("log2: {:?}", log2);
+    }
+
+    #[test]
+    fn test_log2_x64() {
+        let sqrt_price_decimal = Decimal::from_integer(879);
+
+        let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
+        let log2 = log2_x64(sqrt_price_x64, true);
         println!("log2: {:?}", log2);
     }
 }
