@@ -252,7 +252,7 @@ describe('Multicall test', () => {
       [mintAuthority],
       mintAmount
     )
-
+    
     await createPositionList(market, secondPositionOwner.publicKey, secondPositionOwner)
 
     const initPositionVars2: InitPosition = {
