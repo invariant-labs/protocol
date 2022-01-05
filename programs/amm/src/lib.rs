@@ -15,7 +15,7 @@ use errors::ErrorCode;
 use errors::*;
 use instructions::*;
 use math::*;
-use structs::State;
+use structs::{Pool, State};
 use util::*;
 
 use instructions::claim_fee::ClaimFee;
@@ -116,7 +116,7 @@ pub mod amm {
         instructions::update_seconds_per_liquidity::handler(ctx)
     }
 
-    #[access_control(admin(&ctx.accounts.state, &ctx.accounts.admin))]
+    #[access_control(receiver(&ctx.accounts.pool, &ctx.accounts.authority))]
     pub fn withdraw_protocol_fee(ctx: Context<WithdrawProtocolFee>) -> ProgramResult {
         instructions::withdraw_protocol_fee::handler(ctx)
     }
@@ -125,5 +125,11 @@ pub mod amm {
 fn admin(state_loader: &AccountLoader<State>, signer: &AccountInfo) -> Result<()> {
     let state = state_loader.load()?;
     require!(signer.key.eq(&state.admin), Unauthorized);
+    Ok(())
+}
+
+fn receiver(pool_loader: &AccountLoader<Pool>, signer: &AccountInfo) -> Result<()> {
+    let pool = pool_loader.load()?;
+    require!(signer.key.eq(&pool.fee_receiver), Unauthorized);
     Ok(())
 }
