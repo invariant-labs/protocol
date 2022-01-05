@@ -1,7 +1,7 @@
 import * as anchor from '@project-serum/anchor'
-import { Provider, Program, BN } from '@project-serum/anchor'
+import { Provider, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { Keypair, PublicKey } from '@solana/web3.js'
+import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import {
   createFeeTier,
@@ -13,7 +13,7 @@ import {
   initPosition,
   swap
 } from './testUtils'
-import { Market, Pair, SEED, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@invariant-labs/sdk'
+import { Market, Pair, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import {

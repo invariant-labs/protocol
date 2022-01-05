@@ -9,7 +9,7 @@ import {
   swap
 } from './testUtils'
 import { Market, Network } from '@invariant-labs/sdk'
-import { fromFee, toDecimal } from '@invariant-labs/sdk/src/utils'
+import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { Decimal, Swap } from '@invariant-labs/sdk/src/market'
 import { sleep } from '@invariant-labs/sdk'
 

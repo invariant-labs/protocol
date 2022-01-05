@@ -8,10 +8,10 @@ import {
   sendAndConfirmRawTransaction,
   Transaction
 } from '@solana/web3.js'
-import { calculate_price_sqrt, fromInteger, Pair } from '.'
+import { calculate_price_sqrt, Pair } from '.'
 import { Market } from '.'
 import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap, Tick, Position } from './market'
-import { calculatePriceAfterSlippage, calculateSwapStep, SwapResult } from './math'
+import { calculatePriceAfterSlippage, calculateSwapStep } from './math'
 import { getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
 

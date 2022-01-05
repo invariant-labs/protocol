@@ -1,7 +1,7 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
-import { Market, Network, Pair, SEED, DENOMINATOR, TICK_LIMIT } from '@invariant-labs/sdk'
+import { Market, Network, Pair, DENOMINATOR, TICK_LIMIT } from '@invariant-labs/sdk'
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'

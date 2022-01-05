@@ -99,6 +99,20 @@ export const updatePositionAndCreateStake = async (
   await signAndSend(tx, signers, connection)
 }
 
+export const updatePositionAndWithdraw = async (
+  market: Market,
+  staker: Staker,
+  updateSecondsPerLiquidity: UpdateSecondsPerLiquidity,
+  withdraw: Withdraw,
+  signers: Keypair[],
+  connection: Connection
+) => {
+  let tx = await market.updateSecondsPerLiquidityTransaction(updateSecondsPerLiquidity)
+  tx.add(await staker.withdrawInstruction(withdraw))
+  
+  await signAndSend(tx, signers, connection)
+}
+
 export const almostEqual = (num1: BN, num2: BN, epsilon: BN = new BN(10)) => {
   return num1.sub(num2).abs().lt(epsilon)
 }

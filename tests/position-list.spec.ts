@@ -1,7 +1,7 @@
 import * as anchor from '@project-serum/anchor'
-import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
+import { Keypair, PublicKey } from '@solana/web3.js'
 import { assert } from 'chai'
-import { Market, Pair, tou64, signAndSend, fromInteger, Network } from '@invariant-labs/sdk'
+import { Market, Pair, tou64, fromInteger, Network } from '@invariant-labs/sdk'
 import { Provider, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import {

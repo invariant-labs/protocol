@@ -41,17 +41,15 @@ pub fn handler(ctx: Context<CreateUserStake>, bump: u8) -> ProgramResult {
     let update_slot = position.last_slot;
     let slot = get_current_slot();
     require!(slot == update_slot, SlotsAreNotEqual);
-    // FIX: please use dereferenced assignments (in init account case we have sure that we do not miss any fields)
-    // FIX: it's impossible in init account that _bump is unused
-    {
-        user_stake.position = *ctx.accounts.position.to_account_info().key;
-        user_stake.liquidity = Decimal::new(position.liquidity.v);
-        user_stake.incentive = *ctx.accounts.incentive.to_account_info().key;
-        user_stake.bump = bump;
-        user_stake.seconds_per_liquidity_initial =
-            Decimal::new(position.seconds_per_liquidity_inside.v);
-        incentive.num_of_stakes += 1;
-    }
+
+    **user_stake = UserStake {
+        position: *ctx.accounts.position.to_account_info().key,
+        liquidity: Decimal::new(position.liquidity.v),
+        incentive: *ctx.accounts.incentive.to_account_info().key,
+        bump,
+        seconds_per_liquidity_initial: Decimal::new(position.seconds_per_liquidity_inside.v),
+    };
+    incentive.num_of_stakes += 1;
     let liquidity = user_stake.liquidity;
     require!(liquidity > Decimal::from_integer(0), ZeroLiquidity);
     Ok(())

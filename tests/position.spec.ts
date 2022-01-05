@@ -1,12 +1,11 @@
 import * as anchor from '@project-serum/anchor'
-import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
+import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import {
   Market,
   Pair,
   tou64,
   TICK_LIMIT,
-  signAndSend,
   calculate_price_sqrt,
   fromInteger,
   Network

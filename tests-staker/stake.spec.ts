@@ -3,17 +3,18 @@ import { Program, Provider, BN } from '@project-serum/anchor'
 import { Market, Pair } from '@invariant-labs/sdk'
 import { Staker as StakerIdl } from '../sdk-staker/src/idl/staker'
 import { Network, Staker } from '../sdk-staker/src'
-import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
+import { Keypair, PublicKey } from '@solana/web3.js'
 import { assert } from 'chai'
 import { Decimal } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
-import { eqDecimal, createToken, tou64 } from './utils'
-import { createToken as createTkn } from '../tests/testUtils'
+import { eqDecimal, createToken, tou64, createIncentive, updatePositionAndCreateStake } from './utils'
+import { createFeeTier, createPool, createPositionList, createState, createTick, createToken as createTkn, initPosition } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { signAndSend } from '../sdk-staker/lib/utils'
 import { DENOMINATOR } from '@invariant-labs/sdk'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
+import { CreateFeeTier, CreatePool, CreateTick, InitPosition, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
+import { CreateIncentive, CreateStake } from '../sdk-staker/lib/staker'
 
 describe('Stake tests', () => {
   const provider = Provider.local()
@@ -28,7 +29,6 @@ describe('Stake tests', () => {
   const founderAccount = Keypair.generate()
   const positionOwner = Keypair.generate()
   const admin = Keypair.generate()
-  let nonce: number
   let staker: Staker
   let market: Market
   let pool: PublicKey
@@ -48,7 +48,6 @@ describe('Stake tests', () => {
       program.programId
     )
     stakerAuthority = _mintAuthority
-    nonce = _nonce
     staker = new Staker(connection, Network.LOCAL, provider.wallet, program.programId)
 
     await Promise.all([
@@ -91,18 +90,31 @@ describe('Stake tests', () => {
     }
 
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-    await market.createState(admin, protocolFee)
-    await market.createFeeTier(feeTier, admin)
-    await market.create({
+    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
+    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+
+    await createState(market, admin.publicKey, admin)
+
+    const createFeeTierVars: CreateFeeTier = {
+      feeTier,
+      admin: admin.publicKey
+    }
+    await createFeeTier(market, createFeeTierVars, admin)
+
+    const createPoolVars: CreatePool = {
       pair,
-      signer: admin
-    })
+      payer: admin,
+      protocolFee,
+      tokenX,
+      tokenY
+    }
+    await createPool(market, createPoolVars)
+
     pool = await pair.getAddress(anchor.workspace.Amm.programId)
     amm = anchor.workspace.Amm.programId
 
     //create tokens
-    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+    
   })
 
   it('Stake', async () => {
@@ -113,26 +125,37 @@ describe('Stake tests', () => {
     const startTime = currentTime.add(new BN(0))
     const endTime = currentTime.add(new BN(31_000_000))
 
-    const ix = await staker.createIncentiveInstruction({
+    const createIncentiveVars: CreateIncentive = {
       reward,
       startTime,
       endTime,
-      incentive: incentiveAccount,
+      incentive: incentiveAccount.publicKey,
       pool,
-      founder: founderAccount,
+      founder: founderAccount.publicKey,
       incentiveTokenAcc: incentiveTokenAcc,
       founderTokenAcc: founderTokenAcc,
       amm
-    })
-    await signAndSend(new Transaction().add(ix), [incentiveAccount, founderAccount], connection)
+    }
+    await createIncentive(staker, createIncentiveVars, [founderAccount, incentiveAccount])
 
     //create position
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
     const upperTick = 10
     const lowerTick = -20
 
-    await market.createTick(pair, upperTick, wallet)
-    await market.createTick(pair, lowerTick, wallet)
+    const createTickVars: CreateTick = {
+      pair,
+      index: upperTick,
+      payer: admin.publicKey
+    }
+    await createTick(market, createTickVars, admin)
+
+    const createTickVars2: CreateTick = {
+      pair,
+      index: lowerTick,
+      payer: admin.publicKey
+    }
+    await createTick(market, createTickVars2, admin)
 
     const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
     const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
@@ -143,19 +166,18 @@ describe('Stake tests', () => {
 
     const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) }
 
-    await market.createPositionList(positionOwner)
-    await market.initPosition(
-      {
-        pair,
-        owner: positionOwner.publicKey,
-        userTokenX: userTokenXAccount,
-        userTokenY: userTokenYAccount,
-        lowerTick,
-        upperTick,
-        liquidityDelta
-      },
-      positionOwner
-    )
+    await createPositionList(market, positionOwner.publicKey, positionOwner)
+
+    const initPositionVars: InitPosition = {
+      pair,
+      owner: positionOwner.publicKey,
+      userTokenX: userTokenXAccount,
+      userTokenY: userTokenYAccount,
+      lowerTick,
+      upperTick,
+      liquidityDelta
+    }
+    await initPosition(market, initPositionVars, positionOwner)
 
     let index = 0
 
@@ -168,24 +190,24 @@ describe('Stake tests', () => {
     const positionId = positionStructBefore.id
 
     //stake
-    const ixUpdate = await market.updateSecondsPerLiquidityInstruction({
-      pair: pair,
+    const updateSecondsPerLiquidityVars: UpdateSecondsPerLiquidity = {
+      pair,
       owner: positionOwner.publicKey,
       lowerTickIndex: lowerTick,
       upperTickIndex: upperTick,
       index
-    })
-
-    const ixStake = await staker.stakeInstruction({
+    }
+    const createStakeVars: CreateStake = {
       pool: poolAddress,
       id: positionId,
-      index: index,
-      position: position,
+      index,
+      position,
       incentive: incentiveAccount.publicKey,
       owner: positionOwner.publicKey,
-      amm: amm
-    })
-    await signAndSend(new Transaction().add(ixUpdate).add(ixStake), [positionOwner], connection)
+      amm
+    }
+
+    await updatePositionAndCreateStake(market, staker, updateSecondsPerLiquidityVars, createStakeVars, [positionOwner], connection)
 
     const stake = await staker.getStake(incentiveAccount.publicKey, poolAddress, positionId)
     let positionStructAfter = await market.getPosition(positionOwner.publicKey, index)

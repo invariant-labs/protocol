@@ -1,16 +1,14 @@
 import * as anchor from '@project-serum/anchor'
-import { Provider, Program, BN } from '@project-serum/anchor'
+import { Provider, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
+import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { assertThrowsAsync, createFeeTier, createPool, createPositionList, createState, createTick, createToken, initPosition, removePosition, swap } from './testUtils'
 import {
   Market,
   Pair,
-  SEED,
   tou64,
   DENOMINATOR,
-  signAndSend,
   TICK_LIMIT,
   Network
 } from '@invariant-labs/sdk'

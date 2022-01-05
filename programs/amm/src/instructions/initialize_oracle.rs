@@ -15,9 +15,9 @@ pub struct InitializeOracle<'info> {
     #[account(zero)]
     pub oracle: AccountLoader<'info, Oracle>,
     #[account(constraint = &token_x.key() == &pool.load()?.token_x,)]
-    pub token_x: Account<'info, Mint>,
+    pub token_x: Box<Account<'info, Mint>>,
     #[account(constraint = &token_y.key() == &pool.load()?.token_y,)]
-    pub token_y: Account<'info, Mint>,
+    pub token_y: Box<Account<'info, Mint>>,
     pub payer: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]

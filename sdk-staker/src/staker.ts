@@ -94,7 +94,7 @@ export class Staker {
 
   public async getUserStakeAddressAndBump(incentive: PublicKey, pool: PublicKey, id: BN) {
     const pubBuf = pool.toBuffer()
-    let idBuf = Buffer.alloc(8)
+    let idBuf = Buffer.alloc(16)
     idBuf.writeBigUInt64LE(BigInt(id.toString()))
     return PublicKey.findProgramAddress(
       [STAKER_SEED, incentive.toBuffer(), pubBuf, idBuf],
@@ -110,7 +110,6 @@ export class Staker {
       pool,
       id
     )
-
     return this.program.instruction.stake(index, userStakeBump, {
       accounts: {
         userStake: userStakeAddress,

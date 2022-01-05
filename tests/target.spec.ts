@@ -1,7 +1,7 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
+import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createFeeTier, createPool, createState, createTick, createToken, createUserWithTokens, initPosition, swap } from './testUtils'
 import {
@@ -9,7 +9,6 @@ import {
   Pair,
   tou64,
   DENOMINATOR,
-  signAndSend,
   TICK_LIMIT,
   Network
 } from '@invariant-labs/sdk'

@@ -4,9 +4,11 @@ import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
 import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
 import { MINTER } from './minter'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { fromInteger, Market, Pair, tou64 } from '@invariant-labs/sdk/src'
+import { Market, Pair, tou64 } from '@invariant-labs/sdk/src'
 import { getLiquidityByX } from '@invariant-labs/sdk/src/math'
 import { FEE_TIERS } from '@invariant-labs/sdk/src/utils'
+import { InitPosition } from '@invariant-labs/sdk/src/market'
+import { initPosition } from '../tests/testUtils'
 require('dotenv').config()
 
 const provider = Provider.local(clusterApiUrl('devnet'), {
@@ -53,18 +55,16 @@ const usdtUsdcCreatePosition = async (market: Market) => {
   const pool = await market.getPool(pair)
   const { liquidity } = getLiquidityByX(x, lowerTick, upperTick, pool.sqrtPrice, true)
 
-  await market.initPosition(
-    {
-      pair,
+  const initPositionVars: InitPosition = {
+    pair,
       owner: MINTER.publicKey,
       userTokenX: minterUsdt,
       userTokenY: minterUsdc,
       lowerTick,
       upperTick,
       liquidityDelta: liquidity
-    },
-    MINTER
-  )
+  }
+  await initPosition(market, initPositionVars, MINTER)
 }
 
 main()
