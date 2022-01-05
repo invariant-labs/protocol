@@ -15,11 +15,12 @@ pub fn decimal_to_x128(decimal: Decimal) -> U256 {
 pub fn decimal_to_x64(decimal: Decimal) -> u128 {
     let factor = 1u128 << 64;
 
-    decimal
-        .v
-        .checked_mul(factor)
+    U256::from(decimal.v)
+        .checked_mul(U256::from(factor))
         .unwrap()
-        .checked_div(Decimal::one().v)
+        .checked_div(U256::from(Decimal::one().v))
+        .unwrap()
+        .try_into()
         .unwrap()
 }
 
@@ -102,7 +103,6 @@ pub fn log2_x64(mut sqrt_price_x64: u128) -> (bool, u128) {
     let scale = 1u128 << 64;
     let scale_2x = scale << 1;
     let half_scale = scale >> 1;
-    println!("scale = {:?}", scale);
 
     if sqrt_price_x64 < scale {
         sign = false;
@@ -297,20 +297,45 @@ mod tests {
 
     #[test]
     fn test_log2_x64() {
+        // log2 of 1
+        {
+            let sqrt_price_decimal = Decimal::from_integer(1);
+            let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
+            let (sign, value) = log2_x64(sqrt_price_x64);
+            assert_eq!(sign, true);
+            assert_eq!(value, 1u128 << 64);
+        }
         // log2 > 0 when x > 1
         {
             let sqrt_price_decimal = Decimal::from_integer(879);
             let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
-            let log2 = log2_x64(sqrt_price_x64);
-            println!("log2 = {:?}", log2);
+            let (sign, value) = log2_x64(sqrt_price_x64);
+            assert_eq!(sign, true);
+            assert_eq!(value, 180403980057034186507);
         }
         // log2 < 0 when x < 1
         {
             let sqrt_price_decimal = Decimal::from_decimal(59, 4);
-            println!("sqrt_price_decimal = {:?}", sqrt_price_decimal);
             let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
-            let log2 = log2_x64(sqrt_price_x64);
-            println!("log2 = {:?}", log2);
+            let (sign, value) = log2_x64(sqrt_price_x64);
+            assert_eq!(sign, false);
+            assert_eq!(value, 136599418782046619338);
+        }
+        // log2 of max sqrt price
+        {
+            let max_sqrt_price = Decimal::new(4294967295999999999884);
+            let sqrt_price_x64 = decimal_to_x64(max_sqrt_price);
+            let (sign, value) = log2_x64(sqrt_price_x64);
+            assert_eq!(sign, true);
+            assert_eq!(value, 590295810358705651711);
+        }
+        // log2 of min sqrt price
+        {
+            let min_sqrt_price = Decimal::new(232);
+            let sqrt_price_x64 = decimal_to_x64(min_sqrt_price);
+            let (sign, value) = log2_x64(sqrt_price_x64);
+            assert_eq!(sign, false);
+            assert_eq!(value, 590390924419266405040);
         }
     }
 }
