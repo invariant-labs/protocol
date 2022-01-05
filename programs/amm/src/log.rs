@@ -1,4 +1,4 @@
-use std::ops::Div;
+use std::{convert::TryInto, ops::Div};
 
 use crate::{decimal::Decimal, uint::U256};
 
@@ -97,18 +97,22 @@ pub fn log2_msb_x128(sqrt_price_x128: U256) -> U256 {
     log2_msb
 }
 
-pub fn log2_x64(mut sqrt_price_x64: u128, sign: bool) -> (bool, u128) {
+pub fn log2_x64(mut sqrt_price_x64: u128) -> (bool, u128) {
+    let mut sign = true;
     let scale = 1u128 << 64;
     let scale_2x = scale << 1;
     let half_scale = scale >> 1;
     println!("scale = {:?}", scale);
 
-    if !sign {
+    if sqrt_price_x64 < scale {
+        sign = false;
         // scale * scale / sqrt_price_x128
-        sqrt_price_x64 = scale
-            .checked_mul(scale)
+        sqrt_price_x64 = U256::from(scale)
+            .checked_mul(U256::from(scale))
             .unwrap()
-            .checked_div(sqrt_price_x64)
+            .checked_div(U256::from(sqrt_price_x64))
+            .unwrap()
+            .try_into()
             .unwrap();
     }
 
@@ -293,10 +297,20 @@ mod tests {
 
     #[test]
     fn test_log2_x64() {
-        let sqrt_price_decimal = Decimal::from_integer(879);
-
-        let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
-        let log2 = log2_x64(sqrt_price_x64, true);
-        println!("log2: {:?}", log2);
+        // log2 > 0 when x > 1
+        {
+            let sqrt_price_decimal = Decimal::from_integer(879);
+            let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
+            let log2 = log2_x64(sqrt_price_x64);
+            println!("log2 = {:?}", log2);
+        }
+        // log2 < 0 when x < 1
+        {
+            let sqrt_price_decimal = Decimal::from_decimal(59, 4);
+            println!("sqrt_price_decimal = {:?}", sqrt_price_decimal);
+            let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
+            let log2 = log2_x64(sqrt_price_x64);
+            println!("log2 = {:?}", log2);
+        }
     }
 }
