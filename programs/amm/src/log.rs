@@ -1,6 +1,6 @@
 use std::{convert::TryInto, ops::Div};
 
-use crate::{decimal::Decimal, uint::U256};
+use crate::{decimal::Decimal, math::calculate_price_sqrt, uint::U256};
 
 pub fn decimal_to_x128(decimal: Decimal) -> U256 {
     let factor = U256::from(1) << 128;
@@ -121,7 +121,7 @@ pub fn log2_x64(mut sqrt_price_x64: u128) -> (bool, u128) {
     let mut y: U256 = U256::from(sqrt_price_x64) >> msb;
 
     if y == U256::from(scale) {
-        return (sign, sqrt_price_x64);
+        return (sign, result);
     };
     let mut delta = half_scale;
     while delta > 0 {
@@ -139,6 +139,36 @@ pub fn log2_x64(mut sqrt_price_x64: u128) -> (bool, u128) {
         delta >>= 1;
     }
     (sign, result)
+}
+
+pub fn get_tick_at_sqrt_price_x64(sqrt_price_x64: u128, sqrt_price_decimal: Decimal) -> i32 {
+    let log2_10001: u128 = 1330580000000000;
+    let (log_sign, log2_sqrt_price) = log2_x64(sqrt_price_x64);
+
+    // TODO: find accuracy
+    let abs_tick: i32 = log2_sqrt_price
+        .checked_div(log2_10001)
+        .unwrap()
+        .try_into()
+        .unwrap();
+
+    let nearer_tick = match log_sign {
+        true => abs_tick,
+        false => -abs_tick,
+    };
+    let farther_tick = match log_sign {
+        true => abs_tick + 1,
+        false => -abs_tick - 1,
+    };
+
+    let farther_tick_sqrt_price_decimal = calculate_price_sqrt(farther_tick);
+    if sqrt_price_decimal < farther_tick_sqrt_price_decimal {
+        println!("it's nearer tick");
+        return nearer_tick;
+    }
+    println!("it's farther tick");
+
+    farther_tick
 }
 
 pub fn log2_x128(mut sqrt_price_x128: U256, sign: bool) -> (bool, U256) {
@@ -188,6 +218,8 @@ pub fn log2_x128(mut sqrt_price_x128: U256, sign: bool) -> (bool, U256) {
     }
     (sign, result)
 }
+
+// pub fn get_sqrt_price_at_tick(tick: i32) -> u
 
 // PRICE to log
 // 4 * 10^9
@@ -303,7 +335,7 @@ mod tests {
             let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
             let (sign, value) = log2_x64(sqrt_price_x64);
             assert_eq!(sign, true);
-            assert_eq!(value, 1u128 << 64);
+            assert_eq!(value, 0u128);
         }
         // log2 > 0 when x > 1
         {
@@ -338,4 +370,31 @@ mod tests {
             assert_eq!(value, 590390924419266405040);
         }
     }
+
+    // #[test]
+    // fn test_get_tick_at_sqrt_price_x64() {
+    // sample test
+    // {
+    //     let decimal_sqrt_price = Decimal::from_integer(879);
+    //     let sqrt_price_x64 = decimal_to_x64(decimal_sqrt_price);
+    //     let tick = get_tick_at_sqrt_price_x64(sqrt_price_x64, decimal_sqrt_price);
+    //     println!("tick = {:?}", tick);
+    // }
+
+    // get tick at 1 price
+    // {
+    //     let sqrt_price_decimal = Decimal::from_integer(1);
+    //     let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
+    //     let tick = get_tick_at_sqrt_price_x64(sqrt_price_x64, sqrt_price_decimal);
+    //     println!("tick = {:?}", tick);
+    // }
+
+    // tick close 0
+    // tick close max
+    // tick close min
+
+    // price above tick
+    // price below tick
+    // price at tick
+    // }
 }
