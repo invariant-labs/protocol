@@ -194,13 +194,8 @@ describe('withdraw', () => {
 
     assert.ok(poolData.feeGrowthGlobalX.v.eq(new BN('5000000000000000000')))
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
-<<<<<<< HEAD
-    assert.ok(poolData.feeProtocolTokenX.v.eq(new BN(600000013280)))
-    assert.ok(poolData.feeProtocolTokenY.v.eq(new BN(12945000000)))
-=======
     assert.ok(poolData.feeProtocolTokenX.eqn(1))
     assert.ok(poolData.feeProtocolTokenY.eqn(0))
->>>>>>> 2e49fdb2a458862bb13d6565755690e9c9462b2e
 
     // Remove position
     const reservesBeforeRemove = await market.getReserveBalances(pair, tokenX, tokenY)
