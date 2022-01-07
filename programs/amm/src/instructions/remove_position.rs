@@ -12,7 +12,7 @@ use anchor_spl::token;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
 #[derive(Accounts)]
-#[instruction( index: i32, lower_tick_index: i32, upper_tick_index: i32)]
+#[instruction(index: i32, lower_tick_index: i32, upper_tick_index: i32)]
 pub struct RemovePosition<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
@@ -200,11 +200,9 @@ pub fn handler(
         };
     }
 
-    let seeds = &[SEED.as_bytes(), &[state.nonce]];
-    let signer = &[&seeds[..]];
-
-    token::transfer(ctx.accounts.send_x().with_signer(signer), amount_x)?;
-    token::transfer(ctx.accounts.send_y().with_signer(signer), amount_y)?;
+    let signer: &[&[&[u8]]] = get_signer!(state.nonce);
+    token::transfer(ctx.accounts.send_x().with_signer(signer), amount_x.0)?;
+    token::transfer(ctx.accounts.send_y().with_signer(signer), amount_y.0)?;
 
     Ok(())
 }

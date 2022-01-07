@@ -9,11 +9,12 @@ import {
   createPosition,
   createState,
   createToken,
-  performSwap
+  performSwap,
+  removePosition
 } from './testUtils'
 import { assert } from 'chai'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
+import { FeeTier, Decimal, RemovePosition } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { calculateFeeGrowthInside } from '@invariant-labs/sdk/src/math'
 import { CreateFeeTier, CreatePool } from '@invariant-labs/sdk/src/market'
@@ -91,8 +92,8 @@ describe('big-swap', () => {
     assert.ok(createdPool.currentTickIndex == 0)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenX.v.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenY.v.eqn(0))
+    assert.ok(createdPool.feeProtocolTokenX.eqn(0))
+    assert.ok(createdPool.feeProtocolTokenY.eqn(0))
 
     const tickmapData = await market.getTickmap(pair)
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
@@ -200,34 +201,41 @@ describe('big-swap', () => {
       }
     }
 
-    market.removePositionInstruction({
+    const removePositionVars: RemovePosition = {
       pair,
       owner: positionOwner.publicKey,
       index: 1,
       userTokenX,
       userTokenY
-    })
-    market.removePositionInstruction({
+    }
+    await removePosition(market, removePositionVars, positionOwner)
+
+    const removePositionVars2: RemovePosition = {
       pair,
       owner: positionOwner.publicKey,
       index: 3,
       userTokenX,
       userTokenY
-    })
-    market.removePositionInstruction({
+    }
+    await removePosition(market, removePositionVars2, positionOwner)
+
+    const removePositionVars3: RemovePosition = {
       pair,
       owner: positionOwner.publicKey,
       index: 4,
       userTokenX,
       userTokenY
-    })
-    market.removePositionInstruction({
+    }
+    await removePosition(market, removePositionVars3, positionOwner)
+
+    const removePositionVars4: RemovePosition = {
       pair,
       owner: positionOwner.publicKey,
       index: 8,
       userTokenX,
       userTokenY
-    })
+    }
+    await removePosition(market, removePositionVars4, positionOwner)
 
     const positionsInfo2: Array<[ticks: [lower: number, upper: number], liquidity: BN]> = [
       [[-30, 20], new BN(500000).mul(DENOMINATOR)],

@@ -40,6 +40,7 @@ describe('protocol-fee', () => {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
   }
+  const upperTick = 10
   const lowerTick = -20
   const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   let pair: Pair
@@ -100,8 +101,8 @@ describe('protocol-fee', () => {
     assert.ok(createdPool.currentTickIndex == 0)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenX.v.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenY.v.eqn(0))
+    assert.ok(createdPool.feeProtocolTokenX.eqn(0))
+    assert.ok(createdPool.feeProtocolTokenY.eqn(0))
 
     const tickmapData = await market.getTickmap(pair)
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
@@ -161,7 +162,6 @@ describe('protocol-fee', () => {
     await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
 
     const poolDataBefore = await market.getPool(pair)
-    const targetPrice = DENOMINATOR.muln(100).divn(110)
     const reservesBeforeSwap = await market.getReserveBalances(pair, tokenX, tokenY)
 
     const swapVars: Swap = {
@@ -192,10 +192,10 @@ describe('protocol-fee', () => {
     assert.ok(amountY.eq(amount.subn(7)))
     assert.ok(reserveXDelta.eq(amount))
     assert.ok(reserveYDelta.eq(amount.subn(7)))
-    assert.ok(poolDataAfter.feeGrowthGlobalX.v.eqn(5400000))
+    assert.equal(poolDataAfter.feeGrowthGlobalX.v.toString(), '5000000000000000000')
     assert.ok(poolDataAfter.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(poolDataAfter.feeProtocolTokenX.v.eq(new BN(600000013280)))
-    assert.ok(poolDataAfter.feeProtocolTokenY.v.eq(new BN(12945000000)))
+    assert.ok(poolDataAfter.feeProtocolTokenX.eqn(1))
+    assert.ok(poolDataAfter.feeProtocolTokenY.eqn(0))
   })
 
   it('Admin #withdrawProtocolFee()', async () => {
@@ -218,8 +218,11 @@ describe('protocol-fee', () => {
     const adminAccountXAfterClaim = await (await tokenX.getAccountInfo(adminAccountX)).amount
     const reservesAfterClaim = await market.getReserveBalances(pair, tokenX, tokenY)
 
-    assert.ok(reservesBeforeClaim.x.eq(reservesAfterClaim.x))
-    assert.ok(adminAccountXAfterClaim.eq(adminAccountXBeforeClaim))
+    const poolData = await market.getPool(pair)
+    assert.equal(reservesBeforeClaim.x.toNumber(), reservesAfterClaim.x.toNumber() + 1)
+    assert.equal(adminAccountXAfterClaim.toNumber(), adminAccountXBeforeClaim.toNumber() + 1)
+    assert.equal(poolData.feeProtocolTokenX.toNumber(), 0)
+    assert.equal(poolData.feeProtocolTokenY.toNumber(), 0)
   })
   it('Non-Admin #withdrawProtocolFee()', async () => {
     const user = await Keypair.generate()

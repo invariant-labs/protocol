@@ -1,5 +1,6 @@
 use crate::decimal::Decimal;
 use crate::interfaces::take_tokens::TakeTokens;
+use crate::structs::FeeGrowth;
 use crate::structs::pool::Pool;
 use crate::structs::position::Position;
 use crate::structs::position_list::PositionList;
@@ -145,8 +146,8 @@ pub fn handler(ctx: Context<CreatePosition>, bump: u8, liquidity_delta: Decimal)
         liquidity: Decimal::new(0),
         lower_tick_index: lower_tick.index,
         upper_tick_index: upper_tick.index,
-        fee_growth_inside_x: Decimal::new(0),
-        fee_growth_inside_y: Decimal::new(0),
+        fee_growth_inside_x: FeeGrowth::zero(),
+        fee_growth_inside_y: FeeGrowth::zero(),
         seconds_per_liquidity_inside: Decimal::new(0),
         last_slot: slot,
         tokens_owed_x: Decimal::new(0),
@@ -163,7 +164,7 @@ pub fn handler(ctx: Context<CreatePosition>, bump: u8, liquidity_delta: Decimal)
         current_timestamp,
     )?;
 
-    token::transfer(ctx.accounts.take_x(), amount_x)?;
-    token::transfer(ctx.accounts.take_y(), amount_y)?;
+    token::transfer(ctx.accounts.take_x(), amount_x.0)?;
+    token::transfer(ctx.accounts.take_y(), amount_y.0)?;
     Ok(())
 }

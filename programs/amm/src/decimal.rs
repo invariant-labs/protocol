@@ -1,16 +1,15 @@
+use crate::structs::token_amount::TokenAmount;
 use crate::uint::U256;
 use anchor_lang::prelude::*;
 use integer_sqrt::IntegerSquareRoot;
 use std::{
     convert::TryInto,
+    fmt::Display,
     ops::{Add, Div, Mul, Sub},
 };
 
-const SCALE: u8 = 12;
-const DENOMINATOR: u128 = 10u128.pow(SCALE as u32);
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct TokenAmount(pub u64);
+pub const SCALE: u8 = 12;
+pub const DENOMINATOR: u128 = 10u128.pow(SCALE as u32);
 
 #[derive(
     Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, AnchorDeserialize, AnchorSerialize,
@@ -19,6 +18,17 @@ pub struct Decimal {
     pub v: u128,
 }
 // pub struct Decimal::new(pub u128);
+
+impl Display for Decimal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}.{}",
+            self.v.checked_div(DENOMINATOR).unwrap(),
+            self.v % DENOMINATOR
+        )
+    }
+}
 
 impl Decimal {
     pub fn new(value: u128) -> Decimal {
@@ -42,6 +52,14 @@ impl Decimal {
         }
     }
 
+    pub fn is_zero(self) -> bool {
+        self.v == 0
+    }
+
+    pub fn from_token_amount(amount: TokenAmount) -> Decimal {
+        Decimal::from_integer(amount.0.into())
+    }
+
     pub fn div_up(self, other: Decimal) -> Decimal {
         Decimal::new(
             self.v
@@ -58,26 +76,29 @@ impl Decimal {
         Decimal::new(self.v.checked_mul(DENOMINATOR).unwrap().integer_sqrt())
     }
 
-    // This should return TokenAmount struct
-    pub fn to_token_floor(self) -> u64 {
-        self.v.checked_div(DENOMINATOR).unwrap().try_into().unwrap()
+    pub fn to_token_floor(self) -> TokenAmount {
+        TokenAmount(self.v.checked_div(DENOMINATOR).unwrap().try_into().unwrap())
     }
 
-    pub fn to_token_ceil(self) -> u64 {
-        self.v
-            .checked_add(DENOMINATOR.checked_sub(1).unwrap())
-            .unwrap()
-            .checked_div(DENOMINATOR)
-            .unwrap()
-            .try_into()
-            .unwrap()
+    pub fn to_token_ceil(self) -> TokenAmount {
+        TokenAmount(
+            self.v
+                .checked_add(DENOMINATOR.checked_sub(1).unwrap())
+                .unwrap()
+                .checked_div(DENOMINATOR)
+                .unwrap()
+                .try_into()
+                .unwrap(),
+        )
     }
 
     pub fn big_mul(self, other: Decimal) -> Decimal {
         Decimal::new(
             U256::from(self.v)
-                .mul(U256::from(other.v))
-                .div(U256::from(DENOMINATOR))
+                .checked_mul(U256::from(other.v))
+                .unwrap()
+                .checked_div(U256::from(DENOMINATOR))
+                .unwrap()
                 .as_u128(),
         )
     }
@@ -85,9 +106,12 @@ impl Decimal {
     pub fn big_mul_up(self, other: Decimal) -> Decimal {
         Decimal::new(
             U256::from(self.v)
-                .mul(U256::from(other.v))
-                .add(U256::from(DENOMINATOR.checked_sub(1).unwrap()))
-                .div(U256::from(DENOMINATOR))
+                .checked_mul(U256::from(other.v))
+                .unwrap()
+                .checked_add(U256::from(DENOMINATOR.checked_sub(1).unwrap()))
+                .unwrap()
+                .checked_div(U256::from(DENOMINATOR))
+                .unwrap()
                 .as_u128(),
         )
     }
@@ -95,8 +119,10 @@ impl Decimal {
     pub fn big_div(self, other: Decimal) -> Decimal {
         Decimal::new(
             U256::from(self.v)
-                .mul(U256::from(DENOMINATOR))
-                .div(U256::from(other.v))
+                .checked_mul(U256::from(DENOMINATOR))
+                .unwrap()
+                .checked_div(U256::from(other.v))
+                .unwrap()
                 .as_u128(),
         )
     }
@@ -104,9 +130,12 @@ impl Decimal {
     pub fn big_div_up(self, other: Decimal) -> Decimal {
         Decimal::new(
             U256::from(self.v)
-                .mul(U256::from(DENOMINATOR))
-                .add(U256::from(other.v.checked_sub(1).unwrap()))
-                .div(U256::from(other.v))
+                .checked_mul(U256::from(DENOMINATOR))
+                .unwrap()
+                .checked_add(U256::from(other.v.checked_sub(1).unwrap()))
+                .unwrap()
+                .checked_div(U256::from(other.v))
+                .unwrap()
                 .as_u128(),
         )
     }
@@ -444,22 +473,22 @@ mod tests {
         {
             let d = Decimal::from_integer(1);
 
-            assert_eq!(d.to_token_floor(), 1);
-            assert_eq!(d.to_token_ceil(), 1);
+            assert_eq!(d.to_token_floor(), TokenAmount(1));
+            assert_eq!(d.to_token_ceil(), TokenAmount(1));
         }
         // little over
         {
             let d = Decimal::from_integer(1) + Decimal::new(1);
 
-            assert_eq!(d.to_token_floor(), 1);
-            assert_eq!(d.to_token_ceil(), 2);
+            assert_eq!(d.to_token_floor(), TokenAmount(1));
+            assert_eq!(d.to_token_ceil(), TokenAmount(2));
         }
         // little below
         {
             let d = Decimal::from_integer(2) - Decimal::new(1);
 
-            assert_eq!(d.to_token_floor(), 1);
-            assert_eq!(d.to_token_ceil(), 2);
+            assert_eq!(d.to_token_floor(), TokenAmount(1));
+            assert_eq!(d.to_token_ceil(), TokenAmount(2));
         }
     }
 
@@ -502,18 +531,18 @@ mod tests {
         {
             let a = Decimal::new(1);
             let b = Decimal::new(1);
-            assert_eq!(a.mul_up(b), Decimal::new(1));
+            assert_eq!(a.big_mul_up(b), Decimal::new(1));
         }
         // mul calculable without precision loss
         {
             let a = Decimal::from_integer(1);
             let b = Decimal::from_integer(3) / Decimal::new(10);
-            assert_eq!(a.mul_up(b), b);
+            assert_eq!(a.big_mul_up(b), b);
         }
         {
             let a = Decimal::from_integer(3) / Decimal::from_integer(10);
             let b = Decimal::new(3);
-            assert_eq!(a.mul_up(b), Decimal::new(1));
+            assert_eq!(a.big_mul_up(b), Decimal::new(1));
         }
         {
             let a = Decimal::new(2u128.pow(127) - 1);
