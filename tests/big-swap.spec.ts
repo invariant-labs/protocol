@@ -201,42 +201,6 @@ describe('big-swap', () => {
       }
     }
 
-    const removePositionVars: RemovePosition = {
-      pair,
-      owner: positionOwner.publicKey,
-      index: 1,
-      userTokenX,
-      userTokenY
-    }
-    await removePosition(market, removePositionVars, positionOwner)
-
-    const removePositionVars2: RemovePosition = {
-      pair,
-      owner: positionOwner.publicKey,
-      index: 3,
-      userTokenX,
-      userTokenY
-    }
-    await removePosition(market, removePositionVars2, positionOwner)
-
-    const removePositionVars3: RemovePosition = {
-      pair,
-      owner: positionOwner.publicKey,
-      index: 4,
-      userTokenX,
-      userTokenY
-    }
-    await removePosition(market, removePositionVars3, positionOwner)
-
-    const removePositionVars4: RemovePosition = {
-      pair,
-      owner: positionOwner.publicKey,
-      index: 8,
-      userTokenX,
-      userTokenY
-    }
-    await removePosition(market, removePositionVars4, positionOwner)
-
     const positionsInfo2: Array<[ticks: [lower: number, upper: number], liquidity: BN]> = [
       [[-30, 20], new BN(500000).mul(DENOMINATOR)],
       [[-20, 10], new BN(900000).mul(DENOMINATOR)],
