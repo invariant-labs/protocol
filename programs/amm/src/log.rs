@@ -456,6 +456,54 @@ mod tests {
                 assert_eq!(tick, -1);
             }
         }
+        // around max - 1 tick
+        {
+            let sqrt_price_decimal = calculate_price_sqrt(MAX_TICK - 1);
+            // get tick at sqrt(1.0001^(MAX_TICK - 1))
+            {
+                let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price_x64(sqrt_price_x64, sqrt_price_decimal);
+                assert_eq!(tick, MAX_TICK - 1);
+            }
+            // get tick slightly below sqrt(1.0001^(MAX_TICK - 1))
+            {
+                let sqrt_price_decimal = sqrt_price_decimal - Decimal::new(1);
+                let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price_x64(sqrt_price_x64, sqrt_price_decimal);
+                assert_eq!(tick, MAX_TICK - 2);
+            }
+            // get tick slightly above sqrt(1.0001^(MAX_TICK - 1))
+            {
+                let sqrt_price_decimal = sqrt_price_decimal + Decimal::new(1);
+                let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price_x64(sqrt_price_x64, sqrt_price_decimal);
+                assert_eq!(tick, MAX_TICK - 1);
+            }
+        }
+        // around min + 1 tick
+        {
+            let sqrt_price_decimal = calculate_price_sqrt(-(MAX_TICK - 1));
+            // get tick at sqrt(1.0001^(-MAX_TICK + 1))
+            {
+                let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price_x64(sqrt_price_x64, sqrt_price_decimal);
+                assert_eq!(tick, -(MAX_TICK - 1));
+            }
+            // get tick slightly below sqrt(1.0001^(-MAX_TICK + 1))
+            {
+                let sqrt_price_decimal = sqrt_price_decimal - Decimal::new(1);
+                let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price_x64(sqrt_price_x64, sqrt_price_decimal);
+                assert_eq!(tick, -MAX_TICK);
+            }
+            // get tick slightly above sqrt(1.0001^(-MAX_TICK + 1))
+            {
+                let sqrt_price_decimal = sqrt_price_decimal + Decimal::new(1);
+                let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price_x64(sqrt_price_x64, sqrt_price_decimal);
+                assert_eq!(tick, -(MAX_TICK - 1));
+            }
+        }
         //get tick slightly below at max tick
         {
             let max_sqrt_price = Decimal::from_decimal(655354, 1);
