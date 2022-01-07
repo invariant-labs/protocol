@@ -5,7 +5,7 @@ use crate::structs::fee_tier::FeeTier;
 use crate::structs::pool::Pool;
 use crate::structs::tickmap::Tickmap;
 use crate::util::check_tick;
-use crate::{decimal::Decimal, structs::State};
+use crate::{decimal::Decimal, structs::FeeGrowth, structs::State};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{Mint, TokenAccount};
@@ -70,10 +70,10 @@ pub fn handler(ctx: Context<CreatePool>, bump: u8, init_tick: i32) -> ProgramRes
         sqrt_price: calculate_price_sqrt(init_tick),
         current_tick_index: init_tick,
         tickmap: *ctx.accounts.tickmap.to_account_info().key,
-        fee_growth_global_x: Decimal::new(0),
-        fee_growth_global_y: Decimal::new(0),
-        fee_protocol_token_x: Decimal::new(0),
-        fee_protocol_token_y: Decimal::new(0),
+        fee_growth_global_x: FeeGrowth::zero(),
+        fee_growth_global_y: FeeGrowth::zero(),
+        fee_protocol_token_x: 0,
+        fee_protocol_token_y: 0,
         position_iterator: 0,
         seconds_per_liquidity_global: Decimal::new(0),
         start_timestamp: current_timestamp,

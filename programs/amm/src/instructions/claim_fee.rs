@@ -120,19 +120,16 @@ pub fn handler(ctx: Context<ClaimFee>) -> ProgramResult {
 
     let fee_to_collect_x = position.tokens_owed_x.to_token_floor();
     let fee_to_collect_y = position.tokens_owed_y.to_token_floor();
-    position.tokens_owed_x =
-        position.tokens_owed_x - Decimal::from_integer(fee_to_collect_x.into());
-    position.tokens_owed_y =
-        position.tokens_owed_y - Decimal::from_integer(fee_to_collect_y.into());
+    position.tokens_owed_x = position.tokens_owed_x - Decimal::from_token_amount(fee_to_collect_x);
+    position.tokens_owed_y = position.tokens_owed_y - Decimal::from_token_amount(fee_to_collect_y);
 
-    let seeds = &[SEED.as_bytes(), &[state.nonce]];
-    let signer = &[&seeds[..]];
+    let signer: &[&[&[u8]]] = get_signer!(state.nonce);
 
     let cpi_ctx_x = ctx.accounts.send_x().with_signer(signer);
     let cpi_ctx_y = ctx.accounts.send_y().with_signer(signer);
 
-    token::transfer(cpi_ctx_x, fee_to_collect_x)?;
-    token::transfer(cpi_ctx_y, fee_to_collect_y)?;
+    token::transfer(cpi_ctx_x, fee_to_collect_x.0)?;
+    token::transfer(cpi_ctx_y, fee_to_collect_y.0)?;
 
     Ok(())
 }

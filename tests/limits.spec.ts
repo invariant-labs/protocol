@@ -60,7 +60,7 @@ describe('limits', () => {
   })
 
   it('big deposit both tokens', async () => {
-    const mintAmount = new BN(2).pow(new BN(64)).subn(1)
+    const mintAmount = new BN(2).pow(new BN(63)).subn(1)
     const { owner, userAccountX, userAccountY } = await createUserWithTokens(
       pair,
       connection,
@@ -117,7 +117,7 @@ describe('limits', () => {
   })
 
   it('big deposit X and swap Y', async () => {
-    const mintAmount = new BN(2).pow(new BN(64)).subn(1)
+    const mintAmount = new BN(2).pow(new BN(63)).subn(1)
     const { owner, userAccountX, userAccountY } = await createUserWithTokens(
       pair,
       connection,
@@ -171,7 +171,7 @@ describe('limits', () => {
   })
 
   it('big deposit Y and swap X', async () => {
-    const mintAmount = new BN(2).pow(new BN(64)).subn(1)
+    const mintAmount = new BN(2).pow(new BN(63)).subn(1)
     const { owner, userAccountX, userAccountY } = await createUserWithTokens(
       pair,
       connection,
@@ -225,7 +225,7 @@ describe('limits', () => {
   })
 
   it('big deposit and swaps', async () => {
-    const mintAmount = new BN(2).pow(new BN(64).subn(1))
+    const mintAmount = new BN(2).pow(new BN(63).subn(1))
     const { owner, userAccountX, userAccountY } = await createUserWithTokens(
       pair,
       connection,
@@ -343,7 +343,7 @@ describe('limits', () => {
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
-    const mintAmount = new BN(2).pow(new BN(64)).subn(1)
+    const mintAmount = new BN(2).pow(new BN(63)).subn(1)
 
     const positionAmount = mintAmount.subn(1)
 

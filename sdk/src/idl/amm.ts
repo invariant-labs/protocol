@@ -983,26 +983,22 @@ export type Amm = {
           {
             "name": "feeGrowthGlobalX",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
             "name": "feeGrowthGlobalY",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
             "name": "feeProtocolTokenX",
-            "type": {
-              "defined": "Decimal"
-            }
+            "type": "u64"
           },
           {
             "name": "feeProtocolTokenY",
-            "type": {
-              "defined": "Decimal"
-            }
+            "type": "u64"
           },
           {
             "name": "secondsPerLiquidityGlobal",
@@ -1071,13 +1067,13 @@ export type Amm = {
           {
             "name": "feeGrowthInsideX",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
             "name": "feeGrowthInsideY",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
@@ -1189,13 +1185,13 @@ export type Amm = {
           {
             "name": "feeGrowthOutsideX",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
             "name": "feeGrowthOutsideY",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
@@ -1236,6 +1232,18 @@ export type Amm = {
   "types": [
     {
       "name": "Decimal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeGrowth",
       "type": {
         "kind": "struct",
         "fields": [
@@ -2354,26 +2362,22 @@ export const IDL: Amm = {
           {
             "name": "feeGrowthGlobalX",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
             "name": "feeGrowthGlobalY",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
             "name": "feeProtocolTokenX",
-            "type": {
-              "defined": "Decimal"
-            }
+            "type": "u64"
           },
           {
             "name": "feeProtocolTokenY",
-            "type": {
-              "defined": "Decimal"
-            }
+            "type": "u64"
           },
           {
             "name": "secondsPerLiquidityGlobal",
@@ -2442,13 +2446,13 @@ export const IDL: Amm = {
           {
             "name": "feeGrowthInsideX",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
             "name": "feeGrowthInsideY",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
@@ -2560,13 +2564,13 @@ export const IDL: Amm = {
           {
             "name": "feeGrowthOutsideX",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
             "name": "feeGrowthOutsideY",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
@@ -2607,6 +2611,18 @@ export const IDL: Amm = {
   "types": [
     {
       "name": "Decimal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeGrowth",
       "type": {
         "kind": "struct",
         "fields": [
