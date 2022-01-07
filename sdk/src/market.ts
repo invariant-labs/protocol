@@ -629,7 +629,7 @@ export class Market {
         reserveY: pool.tokenYReserve,
         accountX,
         accountY,
-        admin,
+        authority: admin,
         programAuthority: this.programAuthority,
         tokenProgram: TOKEN_PROGRAM_ID
       }
@@ -835,6 +835,7 @@ export interface PoolStructure {
   secondsPerLiquidityGlobal: Decimal
   startTimestamp: BN
   lastTimestamp: BN
+  feeReceiver: PublicKey
   oracleAddress: PublicKey
   oracleInitialized: boolean
   bump: number

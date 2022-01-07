@@ -39,8 +39,8 @@ pub struct WithdrawProtocolFee<'info> {
         constraint = reserve_y.key() == pool.load()?.token_y_reserve
     )]
     pub reserve_y: Account<'info, TokenAccount>,
-    #[account(constraint = &state.load()?.admin == admin.key)]
-    pub admin: Signer<'info>,
+    #[account(constraint = &pool.load()?.fee_receiver == authority.key)]
+    pub authority: Signer<'info>,
     #[account(constraint = &state.load()?.authority == program_authority.key)]
     pub program_authority: AccountInfo<'info>,
     #[account(address = token::ID)]

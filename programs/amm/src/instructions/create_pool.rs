@@ -92,6 +92,7 @@ pub fn handler(
         seconds_per_liquidity_global: Decimal::new(0),
         start_timestamp: current_timestamp,
         last_timestamp: current_timestamp,
+        fee_receiver: ctx.accounts.state.load()?.admin,
         oracle_address: Pubkey::default(),
         oracle_initialized: false,
         bump,
