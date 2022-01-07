@@ -5,7 +5,7 @@ use crate::structs::fee_tier::FeeTier;
 use crate::structs::pool::Pool;
 use crate::structs::tickmap::Tickmap;
 use crate::util::check_tick;
-use crate::{decimal::Decimal, structs::FeeGrowth};
+use crate::{decimal::Decimal, structs::FeeGrowth, structs::State};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{Mint, TokenAccount};
@@ -18,6 +18,8 @@ pub struct CreatePool<'info> {
         bump = bump, payer = payer
     )]
     pub pool: AccountLoader<'info, Pool>,
+    #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
+    pub state: AccountLoader<'info, State>,
     #[account(
         seeds = [b"feetierv1", program_id.as_ref(), &fee_tier.load()?.fee.v.to_le_bytes(), &fee_tier.load()?.tick_spacing.to_le_bytes()],
         bump = fee_tier.load()?.bump
@@ -76,6 +78,7 @@ pub fn handler(ctx: Context<CreatePool>, bump: u8, init_tick: i32) -> ProgramRes
         seconds_per_liquidity_global: Decimal::new(0),
         start_timestamp: current_timestamp,
         last_timestamp: current_timestamp,
+        fee_receiver: ctx.accounts.state.load()?.admin,
         oracle_address: Pubkey::default(),
         oracle_initialized: false,
         bump,

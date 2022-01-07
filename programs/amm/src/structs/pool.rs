@@ -25,6 +25,7 @@ pub struct Pool {
     pub seconds_per_liquidity_global: Decimal,
     pub start_timestamp: u64,
     pub last_timestamp: u64,
+    pub fee_receiver: Pubkey,
     pub oracle_address: Pubkey,
     pub oracle_initialized: bool,
     pub bump: u8,

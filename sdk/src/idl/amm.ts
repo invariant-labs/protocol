@@ -101,6 +101,11 @@ export type Amm = {
           "isSigner": false
         },
         {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "feeTier",
           "isMut": false,
           "isSigner": false
@@ -848,7 +853,7 @@ export type Amm = {
           "isSigner": false
         },
         {
-          "name": "admin",
+          "name": "authority",
           "isMut": false,
           "isSigner": true
         },
@@ -1008,6 +1013,10 @@ export type Amm = {
           {
             "name": "lastTimestamp",
             "type": "u64"
+          },
+          {
+            "name": "feeReceiver",
+            "type": "publicKey"
           },
           {
             "name": "oracleAddress",
@@ -1471,6 +1480,11 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "feeTier",
           "isMut": false,
           "isSigner": false
@@ -2218,7 +2232,7 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
-          "name": "admin",
+          "name": "authority",
           "isMut": false,
           "isSigner": true
         },
@@ -2378,6 +2392,10 @@ export const IDL: Amm = {
           {
             "name": "lastTimestamp",
             "type": "u64"
+          },
+          {
+            "name": "feeReceiver",
+            "type": "publicKey"
           },
           {
             "name": "oracleAddress",
