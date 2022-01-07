@@ -84,12 +84,12 @@ describe('claim', () => {
     assert.ok(createdPool.currentTickIndex == 0)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenX.v.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenY.v.eqn(0))
+    assert.ok(createdPool.feeProtocolTokenX.eqn(0))
+    assert.ok(createdPool.feeProtocolTokenY.eqn(0))
 
     const tickmapData = await market.getTickmap(pair)
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
-    assert.ok(tickmapData.bitmap.every((v) => v == 0))
+    assert.ok(tickmapData.bitmap.every(v => v == 0))
   })
   it('#claim', async () => {
     const upperTick = 10
@@ -164,10 +164,10 @@ describe('claim', () => {
     assert.ok(amountY.eq(amount.subn(7)))
     assert.ok(reserveXDelta.eq(amount))
     assert.ok(reserveYDelta.eq(amount.subn(7)))
-    assert.ok(poolDataAfter.feeGrowthGlobalX.v.eqn(5400000))
+    assert.ok(poolDataAfter.feeGrowthGlobalX.v.eq(new BN('5000000000000000000')))
     assert.ok(poolDataAfter.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(poolDataAfter.feeProtocolTokenX.v.eq(new BN(600000013280)))
-    assert.ok(poolDataAfter.feeProtocolTokenY.v.eqn(0))
+    assert.ok(poolDataAfter.feeProtocolTokenX.eqn(1))
+    assert.ok(poolDataAfter.feeProtocolTokenY.eqn(0))
 
     const reservesBeforeClaim = await market.getReserveBalances(pair, wallet)
     const userTokenXAccountBeforeClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
@@ -186,13 +186,11 @@ describe('claim', () => {
     const userTokenXAccountAfterClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
     const positionAfterClaim = await market.getPosition(positionOwner.publicKey, 0)
     const reservesAfterClaim = await market.getReserveBalances(pair, wallet)
-    const expectedTokensOwedX = new BN(400000000000)
-    const expectedFeeGrowthInsideX = new BN(5400000)
     const expectedTokensClaimed = 5
 
     assert.ok(reservesBeforeClaim.x.subn(5).eq(reservesAfterClaim.x))
-    assert.ok(expectedTokensOwedX.eq(positionAfterClaim.tokensOwedX.v))
-    assert.ok(expectedFeeGrowthInsideX.eq(positionAfterClaim.feeGrowthInsideX.v))
+    assert.ok(positionAfterClaim.tokensOwedX.v.eqn(0))
+    assert.ok(positionAfterClaim.feeGrowthInsideX.v.eq(poolDataAfter.feeGrowthGlobalX.v))
     assert.ok(
       userTokenXAccountAfterClaim.sub(userTokenXAccountBeforeClaim).eqn(expectedTokensClaimed)
     )

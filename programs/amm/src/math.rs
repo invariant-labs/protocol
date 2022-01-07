@@ -1,17 +1,19 @@
+use crate::structs::FeeGrowth;
 use crate::uint::U256;
 
 use crate::decimal::{Decimal, MulUp};
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::structs::tickmap::MAX_TICK;
+use crate::structs::token_amount::TokenAmount;
 use crate::*;
 
 #[derive(PartialEq, Debug)]
 pub struct SwapResult {
     pub next_price_sqrt: Decimal,
-    pub amount_in: Decimal,
-    pub amount_out: Decimal,
-    pub fee_amount: Decimal,
+    pub amount_in: TokenAmount,
+    pub amount_out: TokenAmount,
+    pub fee_amount: TokenAmount,
 }
 
 pub fn calculate_price_sqrt(tick_index: i32) -> Decimal {
@@ -94,20 +96,18 @@ pub fn compute_swap_step(
     current_price_sqrt: Decimal,
     target_price_sqrt: Decimal,
     liquidity: Decimal,
-    amount: Decimal,
+    amount: TokenAmount,
     by_amount_in: bool,
     fee: Decimal,
 ) -> SwapResult {
     let x_to_y = current_price_sqrt >= target_price_sqrt;
-    let exact_in = by_amount_in;
 
     let next_price_sqrt;
-    let mut amount_in = Decimal::new(0);
-    let mut amount_out = Decimal::new(0);
-    let fee_amount;
+    let mut amount_in = TokenAmount(0);
+    let mut amount_out = TokenAmount(0);
 
-    if exact_in {
-        let amount_after_fee = amount.big_mul(Decimal::one() - fee);
+    if by_amount_in {
+        let amount_after_fee = amount.big_mul(Decimal::one() - fee).to_token_floor();
 
         amount_in = if x_to_y {
             get_delta_x(target_price_sqrt, current_price_sqrt, liquidity, true)
@@ -141,43 +141,34 @@ pub fn compute_swap_step(
         }
     }
 
-    let max = target_price_sqrt == next_price_sqrt;
+    let not_max = target_price_sqrt != next_price_sqrt;
 
     if x_to_y {
-        amount_in = if max && exact_in {
-            amount_in
-        } else {
-            get_delta_x(next_price_sqrt, current_price_sqrt, liquidity, true)
+        if not_max || !by_amount_in {
+            amount_in = get_delta_x(next_price_sqrt, current_price_sqrt, liquidity, true)
         };
-        amount_out = if max && !exact_in {
-            amount_out
-        } else {
-            get_delta_y(next_price_sqrt, current_price_sqrt, liquidity, false)
+        if not_max || by_amount_in {
+            amount_out = get_delta_y(next_price_sqrt, current_price_sqrt, liquidity, false)
         }
     } else {
-        amount_in = if max && exact_in {
-            amount_in
-        } else {
-            get_delta_y(current_price_sqrt, next_price_sqrt, liquidity, true)
+        if not_max || !by_amount_in {
+            amount_in = get_delta_y(current_price_sqrt, next_price_sqrt, liquidity, true)
         };
-        amount_out = if max && !exact_in {
-            amount_out
-        } else {
-            get_delta_x(current_price_sqrt, next_price_sqrt, liquidity, false)
+        if not_max || by_amount_in {
+            amount_out = get_delta_x(current_price_sqrt, next_price_sqrt, liquidity, false)
         }
     }
 
     // Amount out can not exceed amount
-    if !exact_in && amount_out > amount {
+    if !by_amount_in && amount_out > amount {
         amount_out = amount;
     }
 
-    if exact_in && next_price_sqrt != target_price_sqrt {
-        fee_amount = amount - amount_in
+    let fee_amount = if by_amount_in && next_price_sqrt != target_price_sqrt {
+        amount - amount_in
     } else {
-        fee_amount = amount_in.big_mul_up(fee)
-    }
-    // fee_amount = Decimal::new(0);
+        amount_in.big_mul(fee).to_token_ceil()
+    };
 
     SwapResult {
         next_price_sqrt,
@@ -193,7 +184,7 @@ pub fn get_delta_x(
     sqrt_price_b: Decimal,
     liquidity: Decimal,
     up: bool,
-) -> Decimal {
+) -> TokenAmount {
     let delta_price = if sqrt_price_a > sqrt_price_b {
         sqrt_price_a - sqrt_price_b
     } else {
@@ -203,8 +194,8 @@ pub fn get_delta_x(
     let nominator = liquidity.big_mul(delta_price);
 
     match up {
-        true => nominator.big_div_up(sqrt_price_a * sqrt_price_b),
-        false => nominator.big_div(sqrt_price_a.mul_up(sqrt_price_b)),
+        true => (nominator.big_div_up(sqrt_price_a * sqrt_price_b)).to_token_ceil(),
+        false => (nominator.big_div(sqrt_price_a.mul_up(sqrt_price_b))).to_token_floor(),
     }
 }
 
@@ -214,7 +205,7 @@ pub fn get_delta_y(
     sqrt_price_b: Decimal,
     liquidity: Decimal,
     up: bool,
-) -> Decimal {
+) -> TokenAmount {
     let delta_price = if sqrt_price_a > sqrt_price_b {
         sqrt_price_a - sqrt_price_b
     } else {
@@ -222,15 +213,15 @@ pub fn get_delta_y(
     };
 
     match up {
-        true => liquidity.big_mul_up(delta_price),
-        false => liquidity.big_mul(delta_price),
+        true => liquidity.big_mul_up(delta_price).to_token_ceil(),
+        false => liquidity.big_mul(delta_price).to_token_floor(),
     }
 }
 
 fn get_next_sqrt_price_from_input(
     price_sqrt: Decimal,
     liquidity: Decimal,
-    amount: Decimal,
+    amount: TokenAmount,
     x_to_y: bool,
 ) -> Decimal {
     assert!(price_sqrt > Decimal::new(0));
@@ -246,7 +237,7 @@ fn get_next_sqrt_price_from_input(
 fn get_next_sqrt_price_from_output(
     price_sqrt: Decimal,
     liquidity: Decimal,
-    amount: Decimal,
+    amount: TokenAmount,
     x_to_y: bool,
 ) -> Decimal {
     assert!(price_sqrt > Decimal::new(0));
@@ -259,15 +250,14 @@ fn get_next_sqrt_price_from_output(
     }
 }
 
-// tries to do L * price / (L +- amount * price)
-// if overflows it should do L / (L / price +- amount)
+// L * price / (L +- amount * price)
 fn get_next_sqrt_price_x_up(
     price_sqrt: Decimal,
     liquidity: Decimal,
-    amount: Decimal,
+    amount: TokenAmount,
     add: bool,
 ) -> Decimal {
-    if amount == Decimal::new(0) {
+    if amount.is_zero() {
         return price_sqrt;
     };
 
@@ -283,7 +273,7 @@ fn get_next_sqrt_price_x_up(
 fn get_next_sqrt_price_y_down(
     price_sqrt: Decimal,
     liquidity: Decimal,
-    amount: Decimal,
+    amount: TokenAmount,
     add: bool,
 ) -> Decimal {
     if add {
@@ -299,9 +289,9 @@ pub fn calculate_fee_growth_inside(
     tick_lower: Tick,
     tick_upper: Tick,
     tick_current: i32,
-    fee_growth_global_x: Decimal,
-    fee_growth_global_y: Decimal,
-) -> (Decimal, Decimal) {
+    fee_growth_global_x: FeeGrowth,
+    fee_growth_global_y: FeeGrowth,
+) -> (FeeGrowth, FeeGrowth) {
     // determine position relative to current tick
     let current_above_lower = tick_current >= tick_lower.index;
     let current_below_upper = tick_current < tick_upper.index;
@@ -310,41 +300,29 @@ pub fn calculate_fee_growth_inside(
     let fee_growth_below_x = if current_above_lower {
         tick_lower.fee_growth_outside_x
     } else {
-        Decimal {
-            v: fee_growth_global_x.v - tick_lower.fee_growth_outside_x.v,
-        }
+        fee_growth_global_x - tick_lower.fee_growth_outside_x
     };
     let fee_growth_below_y = if current_above_lower {
         tick_lower.fee_growth_outside_y
     } else {
-        Decimal {
-            v: fee_growth_global_y.v - tick_lower.fee_growth_outside_y.v,
-        }
+        fee_growth_global_y - tick_lower.fee_growth_outside_y
     };
 
     // calculate fee growth above
     let fee_growth_above_x = if current_below_upper {
         tick_upper.fee_growth_outside_x
     } else {
-        Decimal {
-            v: fee_growth_global_x.v - tick_upper.fee_growth_outside_x.v,
-        }
+        fee_growth_global_x - tick_upper.fee_growth_outside_x
     };
     let fee_growth_above_y = if current_below_upper {
         tick_upper.fee_growth_outside_y
     } else {
-        Decimal {
-            v: fee_growth_global_y.v - tick_upper.fee_growth_outside_y.v,
-        }
+        fee_growth_global_y - tick_upper.fee_growth_outside_y
     };
 
     // calculate fee growth inside
-    let fee_growth_inside_x = Decimal {
-        v: fee_growth_global_x.v - fee_growth_below_x.v - fee_growth_above_x.v,
-    };
-    let fee_growth_inside_y = Decimal {
-        v: fee_growth_global_y.v - fee_growth_below_y.v - fee_growth_above_y.v,
-    };
+    let fee_growth_inside_x = fee_growth_global_x - fee_growth_below_x - fee_growth_above_x;
+    let fee_growth_inside_y = fee_growth_global_y - fee_growth_below_y - fee_growth_above_y;
 
     (fee_growth_inside_x, fee_growth_inside_y)
 }
@@ -355,10 +333,10 @@ pub fn calculate_amount_delta(
     liquidity_sign: bool,
     upper_tick: i32,
     lower_tick: i32,
-) -> Result<(u64, u64)> {
+) -> Result<(TokenAmount, TokenAmount)> {
     // assume that upper_tick > lower_tick
-    let mut amount_x = Decimal::new(0);
-    let mut amount_y = Decimal::new(0);
+    let mut amount_x = TokenAmount(0);
+    let mut amount_y = TokenAmount(0);
 
     if pool.current_tick_index < lower_tick {
         amount_x = get_delta_x(
@@ -392,11 +370,7 @@ pub fn calculate_amount_delta(
         )
     }
 
-    // rounding up when depositing, down when withdrawing
-    Ok(match liquidity_sign {
-        true => (amount_x.to_token_ceil(), amount_y.to_token_ceil()),
-        false => (amount_x.to_token_floor(), amount_y.to_token_floor()),
-    })
+    Ok((amount_x, amount_y))
 }
 
 pub fn calculate_seconds_per_liquidity_inside(
@@ -439,20 +413,21 @@ mod tests {
 
     #[test]
     fn test_swap_step() {
-        // amount in capped at target price
+        // one token by amount in
         {
             let price = Decimal::one();
             let target = (Decimal::from_integer(101) / Decimal::from_integer(100)).sqrt();
-            let liquidity = Decimal::from_integer(2);
-            let amount = Decimal::one();
+            let liquidity = Decimal::from_integer(2000);
+            let amount = TokenAmount(1);
             let fee = Decimal::from_decimal(6, 4);
 
             let result = compute_swap_step(price, target, liquidity, amount, true, fee);
+
             let expected_result = SwapResult {
-                next_price_sqrt: target,
-                amount_in: Decimal::new(9975124224),
-                amount_out: Decimal::new(9925619579),
-                fee_amount: Decimal::new(5985075),
+                next_price_sqrt: price,
+                amount_in: TokenAmount(0),
+                amount_out: TokenAmount(0),
+                fee_amount: TokenAmount(1),
             };
             assert_eq!(result, expected_result)
         }
@@ -460,67 +435,53 @@ mod tests {
         {
             let price = Decimal::one();
             let target = (Decimal::from_integer(101) / Decimal::from_integer(100)).sqrt();
-            let liquidity = Decimal::from_integer(2);
-            let amount = Decimal::one();
+            let liquidity = Decimal::from_integer(2000);
+            let amount = TokenAmount(20);
             let fee = Decimal::from_decimal(6, 4);
 
-            let result = compute_swap_step(price, target, liquidity, amount, false, fee);
+            let result_in = compute_swap_step(price, target, liquidity, amount, true, fee);
+            let result_out = compute_swap_step(price, target, liquidity, amount, false, fee);
+
             let expected_result = SwapResult {
                 next_price_sqrt: target,
-                amount_in: Decimal::new(9975124224),
-                amount_out: Decimal::new(9925619579),
-                fee_amount: Decimal::new(5985075),
+                amount_in: TokenAmount(10),
+                amount_out: TokenAmount(9),
+                fee_amount: TokenAmount(1),
             };
-            assert_eq!(result, expected_result)
+            assert_eq!(result_in, expected_result);
+            assert_eq!(result_out, expected_result);
         }
         // amount in not capped
         {
-            let price = Decimal::one();
-            let target = Decimal::from_integer(10).sqrt();
-            let liquidity = Decimal::from_integer(2);
-            let amount = Decimal::one();
+            let price = Decimal::from_integer(101) / Decimal::from_integer(100);
+            let target = Decimal::from_integer(10);
+            let liquidity = Decimal::from_integer(300000000);
+            let amount = TokenAmount(1000000);
             let fee = Decimal::from_decimal(6, 4);
 
             let result = compute_swap_step(price, target, liquidity, amount, true, fee);
             let expected_result = SwapResult {
-                next_price_sqrt: Decimal::new(1499700000000),
-                amount_in: Decimal::new(999400000000),
-                amount_out: Decimal::new(666399946655),
-                fee_amount: Decimal::new(600000000),
+                next_price_sqrt: Decimal::new(1013331333333),
+                amount_in: TokenAmount(999400),
+                amount_out: TokenAmount(976487), // ((1.013331333333 - 1.01) * 300000000) / (1.013331333333 * 1.01)
+                fee_amount: TokenAmount(600),
             };
             assert_eq!(result, expected_result)
         }
         // amount out not capped
         {
-            let price = Decimal::one();
-            let target = Decimal::from_integer(10).sqrt();
-            let liquidity = Decimal::from_integer(2);
-            let amount = Decimal::one();
+            let price = Decimal::from_integer(101);
+            let target = Decimal::from_integer(100);
+            let liquidity = Decimal::from_integer(5000000000000);
+            let amount = TokenAmount(2000000);
             let fee = Decimal::from_decimal(6, 4);
 
             let result = compute_swap_step(price, target, liquidity, amount, false, fee);
             let expected_result = SwapResult {
-                next_price_sqrt: Decimal::new(2000000000000),
-                amount_in: Decimal::new(2000000000000),
-                amount_out: Decimal::one(),
-                fee_amount: Decimal::new(1200000000),
-            };
-            assert_eq!(result, expected_result)
-        }
-        // next tests
-        {
-            let price = Decimal::new(20282409603651);
-            let target = (Decimal::from_integer(101) / Decimal::from_integer(100)).sqrt();
-            let liquidity = Decimal::new(1024);
-            let amount = Decimal::from_integer(4);
-            let fee = Decimal::from_decimal(3, 3);
-
-            let result = compute_swap_step(price, target, liquidity, amount, false, fee);
-            let expected_result = SwapResult {
-                next_price_sqrt: Decimal::new(1004987562112),
-                amount_in: Decimal::new(969),
-                amount_out: Decimal::new(19740),
-                fee_amount: Decimal::new(3),
+                next_price_sqrt: Decimal::new(100999999600000),
+                amount_in: TokenAmount(197), // (5000000000000 * (101 - 100.9999996)) /  (101 * 100.9999996)
+                amount_out: amount,
+                fee_amount: TokenAmount(1),
             };
             assert_eq!(result, expected_result)
         }
@@ -536,7 +497,7 @@ mod tests {
                 Decimal::new(0),
                 false,
             );
-            assert_eq!(result, Decimal::new(0));
+            assert_eq!(result, TokenAmount(0));
         }
         // equal at equal liquidity
         {
@@ -546,17 +507,20 @@ mod tests {
                 Decimal::from_integer(2),
                 false,
             );
-            assert_eq!(result, Decimal::from_integer(1));
+            assert_eq!(result, TokenAmount(1));
         }
+        // complex
         {
-            let sqrt_price_a = Decimal::from_integer(1);
-            let sqrt_price_b = Decimal::from_integer(121) / Decimal::from_integer(100);
-            let liquidity = Decimal::one();
-            let round_up = false;
+            let sqrt_price_a = Decimal::new(234__878_324_943_782);
+            let sqrt_price_b = Decimal::new(87__854_456_421_658);
+            let liquidity = Decimal::new(983_983__249_092_300_399);
 
-            let result = get_delta_x(sqrt_price_a, sqrt_price_b, liquidity, round_up);
+            let result_down = get_delta_x(sqrt_price_a, sqrt_price_b, liquidity, false);
+            let result_up = get_delta_x(sqrt_price_a, sqrt_price_b, liquidity, true);
 
-            assert_eq!(result, Decimal::new(173553719008));
+            // 7010.8199533090222620342346078676429792113623790285962379282493052
+            assert_eq!(result_down, TokenAmount(7010));
+            assert_eq!(result_up, TokenAmount(7011));
         }
     }
 
@@ -570,7 +534,7 @@ mod tests {
                 Decimal::new(0),
                 false,
             );
-            assert_eq!(result, Decimal::new(0));
+            assert_eq!(result, TokenAmount(0));
         }
         // equal at equal liquidity
         {
@@ -580,19 +544,20 @@ mod tests {
                 Decimal::from_integer(2),
                 false,
             );
-            assert_eq!(result, Decimal::from_integer(2));
+            assert_eq!(result, TokenAmount(2));
         }
         // big numbers
         {
-            let result = get_delta_y(
-                Decimal::new(345_234_676_865),
-                Decimal::new(854_456_421_658),
-                Decimal::new(974_234_124_246),
-                false,
-            );
-            // expected 496101200585 (if up: true, then real is 496101200586)
-            // real     496101200585.428...
-            assert_eq!(result, Decimal::new(496101200585));
+            let sqrt_price_a = Decimal::new(234__878_324_943_782);
+            let sqrt_price_b = Decimal::new(87__854_456_421_658);
+            let liquidity = Decimal::new(983_983__249_092_300_399);
+
+            let result_down = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, false);
+            let result_up = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, true);
+
+            // 144669023.842518763627991585527476
+            assert_eq!(result_down, TokenAmount(144669023));
+            assert_eq!(result_up, TokenAmount(144669024));
         }
     }
 
@@ -641,11 +606,11 @@ mod tests {
 
     #[test]
     fn test_get_next_sqrt_price_x_up() {
-        // bool = true
+        // Add
         {
             let price_sqrt = Decimal::from_integer(1);
             let liquidity = Decimal::from_integer(1);
-            let amount = Decimal::from_integer(1);
+            let amount = TokenAmount(1);
 
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
 
@@ -657,7 +622,7 @@ mod tests {
         {
             let price_sqrt = Decimal::from_integer(1);
             let liquidity = Decimal::from_integer(2);
-            let amount = Decimal::from_integer(3);
+            let amount = TokenAmount(3);
 
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
 
@@ -669,7 +634,7 @@ mod tests {
         {
             let price_sqrt = Decimal::from_integer(2);
             let liquidity = Decimal::from_integer(3);
-            let amount = Decimal::from_integer(5);
+            let amount = TokenAmount(5);
 
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
 
@@ -681,7 +646,7 @@ mod tests {
         {
             let price_sqrt = Decimal::from_integer(24234);
             let liquidity = Decimal::from_integer(3000);
-            let amount = Decimal::from_integer(5000);
+            let amount = TokenAmount(5000);
 
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
 
@@ -690,11 +655,11 @@ mod tests {
                 Decimal::new(599985145206) // rounded up Decimal::from_integer(24234).div(Decimal::from_integer(40391))
             );
         }
-        // bool = false
+        // Subtract
         {
             let price_sqrt = Decimal::from_integer(1);
             let liquidity = Decimal::from_integer(2);
-            let amount = Decimal::from_integer(1);
+            let amount = TokenAmount(1);
 
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
 
@@ -703,19 +668,19 @@ mod tests {
         {
             let price_sqrt = Decimal::from_integer(100_000);
             let liquidity = Decimal::from_integer(500_000_000);
-            let amount = Decimal::from_integer(4_000);
+            let amount = TokenAmount(4_000);
 
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
 
             assert_eq!(result, Decimal::from_integer(500_000));
         }
         {
-            let price_sqrt = Decimal::from_integer(3);
-            let liquidity = Decimal::new(222);
-            let amount = Decimal::new(37);
+            let price_sqrt = Decimal::new(3_333333333333);
+            let liquidity = Decimal::new(222_222222222222);
+            let amount = TokenAmount(37);
 
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
-            assert_eq!(result, Decimal::from_integer(6));
+            assert_eq!(result, Decimal::new(7_490636704119));
         }
     }
 
@@ -724,7 +689,7 @@ mod tests {
         {
             let price_sqrt = Decimal::from_integer(1);
             let liquidity = Decimal::from_integer(1);
-            let amount = Decimal::from_integer(1);
+            let amount = TokenAmount(1);
 
             let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true);
 
@@ -733,7 +698,7 @@ mod tests {
         {
             let price_sqrt = Decimal::from_integer(1);
             let liquidity = Decimal::from_integer(2);
-            let amount = Decimal::from_integer(3);
+            let amount = TokenAmount(3);
 
             let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true);
 
@@ -745,7 +710,7 @@ mod tests {
         {
             let price_sqrt = Decimal::from_integer(2);
             let liquidity = Decimal::from_integer(3);
-            let amount = Decimal::from_integer(5);
+            let amount = TokenAmount(5);
 
             let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true);
 
@@ -757,7 +722,7 @@ mod tests {
         {
             let price_sqrt = Decimal::from_integer(24234);
             let liquidity = Decimal::from_integer(3000);
-            let amount = Decimal::from_integer(5000);
+            let amount = TokenAmount(5000);
 
             let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true);
 
@@ -770,7 +735,7 @@ mod tests {
         {
             let price_sqrt = Decimal::from_integer(1);
             let liquidity = Decimal::from_integer(2);
-            let amount = Decimal::from_integer(1);
+            let amount = TokenAmount(1);
 
             let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, false);
 
@@ -782,15 +747,15 @@ mod tests {
         {
             let price_sqrt = Decimal::from_integer(100_000);
             let liquidity = Decimal::from_integer(500_000_000);
-            let amount = Decimal::from_integer(4_000);
+            let amount = TokenAmount(4_000);
 
             let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, false);
             assert_eq!(result, Decimal::new(99999999992000000));
         }
         {
             let price_sqrt = Decimal::from_integer(3);
-            let liquidity = Decimal::new(222);
-            let amount = Decimal::new(37);
+            let liquidity = Decimal::from_integer(222);
+            let amount = TokenAmount(37);
 
             let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, false);
 
@@ -802,18 +767,18 @@ mod tests {
 
     #[test]
     fn test_calculate_fee_growth_inside() {
-        let fee_growth_global_x = Decimal::from_integer(15);
-        let fee_growth_global_y = Decimal::from_integer(15);
+        let fee_growth_global_x = FeeGrowth::from_integer(15);
+        let fee_growth_global_y = FeeGrowth::from_integer(15);
         let mut tick_lower = Tick {
             index: -2,
-            fee_growth_outside_x: Decimal::new(0),
-            fee_growth_outside_y: Decimal::new(0),
+            fee_growth_outside_x: FeeGrowth::new(0),
+            fee_growth_outside_y: FeeGrowth::new(0),
             ..Default::default()
         };
         let mut tick_upper = Tick {
             index: 2,
-            fee_growth_outside_x: Decimal::from_integer(0),
-            fee_growth_outside_y: Decimal::from_integer(0),
+            fee_growth_outside_x: FeeGrowth::from_integer(0),
+            fee_growth_outside_y: FeeGrowth::from_integer(0),
             ..Default::default()
         };
         // current tick inside range
@@ -831,8 +796,8 @@ mod tests {
                 fee_growth_global_y,
             );
 
-            assert_eq!(fee_growth_inside.0, Decimal::from_integer(15)); // x fee growth inside
-            assert_eq!(fee_growth_inside.1, Decimal::from_integer(15)); // y fee growth inside
+            assert_eq!(fee_growth_inside.0, FeeGrowth::from_integer(15)); // x fee growth inside
+            assert_eq!(fee_growth_inside.1, FeeGrowth::from_integer(15)); // y fee growth inside
         }
         // current tick below range
         // current  lower       upper
@@ -848,8 +813,8 @@ mod tests {
                 fee_growth_global_y,
             );
 
-            assert_eq!(fee_growth_inside.0, Decimal::new(0)); // x fee growth inside
-            assert_eq!(fee_growth_inside.1, Decimal::new(0)); // y fee growth inside
+            assert_eq!(fee_growth_inside.0, FeeGrowth::new(0)); // x fee growth inside
+            assert_eq!(fee_growth_inside.1, FeeGrowth::new(0)); // y fee growth inside
         }
 
         // current tick upper range
@@ -866,15 +831,15 @@ mod tests {
                 fee_growth_global_y,
             );
 
-            assert_eq!(fee_growth_inside.0, Decimal::new(0)); // x fee growth inside
-            assert_eq!(fee_growth_inside.1, Decimal::new(0)); // y fee growth inside
+            assert_eq!(fee_growth_inside.0, FeeGrowth::new(0)); // x fee growth inside
+            assert_eq!(fee_growth_inside.1, FeeGrowth::new(0)); // y fee growth inside
         }
 
         // subtracts upper tick if below
         tick_upper = Tick {
             index: 2,
-            fee_growth_outside_x: Decimal::from_integer(2),
-            fee_growth_outside_y: Decimal::from_integer(3),
+            fee_growth_outside_x: FeeGrowth::from_integer(2),
+            fee_growth_outside_y: FeeGrowth::from_integer(3),
             ..Default::default()
         };
         // current tick inside range
@@ -891,21 +856,21 @@ mod tests {
                 fee_growth_global_y,
             );
 
-            assert_eq!(fee_growth_inside.0, Decimal::from_integer(13)); // x fee growth inside
-            assert_eq!(fee_growth_inside.1, Decimal::from_integer(12)); // y fee growth inside
+            assert_eq!(fee_growth_inside.0, FeeGrowth::from_integer(13)); // x fee growth inside
+            assert_eq!(fee_growth_inside.1, FeeGrowth::from_integer(12)); // y fee growth inside
         }
 
         // subtracts lower tick if above
         tick_upper = Tick {
             index: 2,
-            fee_growth_outside_x: Decimal::new(0),
-            fee_growth_outside_y: Decimal::new(0),
+            fee_growth_outside_x: FeeGrowth::new(0),
+            fee_growth_outside_y: FeeGrowth::new(0),
             ..Default::default()
         };
         tick_lower = Tick {
             index: -2,
-            fee_growth_outside_x: Decimal::from_integer(2),
-            fee_growth_outside_y: Decimal::from_integer(3),
+            fee_growth_outside_x: FeeGrowth::from_integer(2),
+            fee_growth_outside_y: FeeGrowth::from_integer(3),
             ..Default::default()
         };
         // current tick inside range
@@ -922,24 +887,24 @@ mod tests {
                 fee_growth_global_y,
             );
 
-            assert_eq!(fee_growth_inside.0, Decimal::from_integer(13)); // x fee growth inside
-            assert_eq!(fee_growth_inside.1, Decimal::from_integer(12)); // y fee growth inside
+            assert_eq!(fee_growth_inside.0, FeeGrowth::from_integer(13)); // x fee growth inside
+            assert_eq!(fee_growth_inside.1, FeeGrowth::from_integer(12)); // y fee growth inside
         }
 
         {
             let tick_current = 0;
-            let fee_growth_global_x = Decimal::from_integer(20);
-            let fee_growth_global_y = Decimal::from_integer(20);
+            let fee_growth_global_x = FeeGrowth::from_integer(20);
+            let fee_growth_global_y = FeeGrowth::from_integer(20);
             tick_lower = Tick {
                 index: -20,
-                fee_growth_outside_x: Decimal::from_integer(20),
-                fee_growth_outside_y: Decimal::from_integer(20),
+                fee_growth_outside_x: FeeGrowth::from_integer(20),
+                fee_growth_outside_y: FeeGrowth::from_integer(20),
                 ..Default::default()
             };
             tick_upper = Tick {
                 index: -10,
-                fee_growth_outside_x: Decimal::from_integer(15),
-                fee_growth_outside_y: Decimal::from_integer(15),
+                fee_growth_outside_x: FeeGrowth::from_integer(15),
+                fee_growth_outside_y: FeeGrowth::from_integer(15),
                 ..Default::default()
             };
 
@@ -953,11 +918,11 @@ mod tests {
 
             assert_eq!(
                 fee_growth_inside.0,
-                Decimal::new(u128::MAX) - Decimal::from_integer(5) + Decimal::new(1)
+                FeeGrowth::new(u128::MAX) - FeeGrowth::from_integer(5) + FeeGrowth::new(1)
             );
             assert_eq!(
                 fee_growth_inside.1,
-                Decimal::new(u128::MAX) - Decimal::from_integer(5) + Decimal::new(1)
+                FeeGrowth::new(u128::MAX) - FeeGrowth::from_integer(5) + FeeGrowth::new(1)
             );
         }
     }
@@ -986,8 +951,8 @@ mod tests {
             )
             .unwrap();
 
-            assert_eq!(result.0, 1);
-            assert_eq!(result.1, 0);
+            assert_eq!(result.0, TokenAmount(1));
+            assert_eq!(result.1, TokenAmount(0));
         }
         // current tick greater than upper tick
         {
@@ -1011,8 +976,8 @@ mod tests {
             )
             .unwrap();
 
-            assert_eq!(result.0, 0);
-            assert_eq!(result.1, 1);
+            assert_eq!(result.0, TokenAmount(0));
+            assert_eq!(result.1, TokenAmount(1));
         }
     }
     #[test]

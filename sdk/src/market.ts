@@ -812,6 +812,10 @@ export interface Decimal {
   v: BN
 }
 
+export interface FeeGrowth {
+  v: BN
+}
+
 export interface State {
   protocolFee: Decimal
   admin: PublicKey
@@ -837,10 +841,10 @@ export interface PoolStructure {
   sqrtPrice: Decimal
   currentTickIndex: number
   tickmap: PublicKey
-  feeGrowthGlobalX: Decimal
-  feeGrowthGlobalY: Decimal
-  feeProtocolTokenX: Decimal
-  feeProtocolTokenY: Decimal
+  feeGrowthGlobalX: FeeGrowth
+  feeGrowthGlobalY: FeeGrowth
+  feeProtocolTokenX: BN
+  feeProtocolTokenY: BN
   secondsPerLiquidityGlobal: Decimal
   startTimestamp: BN
   lastTimestamp: BN
