@@ -1,2829 +1,2823 @@
 export type Amm = {
-  "version": "0.1.0",
-  "name": "amm",
-  "instructions": [
+  version: '0.1.0'
+  name: 'amm'
+  instructions: [
     {
-      "name": "createState",
-      "accounts": [
+      name: 'createState'
+      accounts: [
         {
-          "name": "state",
-          "isMut": true,
-          "isSigner": false
+          name: 'state'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "admin",
-          "isMut": true,
-          "isSigner": true
+          name: 'admin'
+          isMut: true
+          isSigner: true
         },
         {
-          "name": "programAuthority",
-          "isMut": false,
-          "isSigner": false
+          name: 'programAuthority'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
+          name: 'rent'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'systemProgram'
+          isMut: false
+          isSigner: false
         }
-      ],
-      "args": [
+      ]
+      args: [
         {
-          "name": "bump",
-          "type": "u8"
+          name: 'bump'
+          type: 'u8'
         },
         {
-          "name": "nonce",
-          "type": "u8"
+          name: 'nonce'
+          type: 'u8'
         }
       ]
     },
     {
-      "name": "createFeeTier",
-      "accounts": [
+      name: 'createFeeTier'
+      accounts: [
         {
-          "name": "feeTier",
-          "isMut": true,
-          "isSigner": false
+          name: 'feeTier'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
+          name: 'state'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "admin",
-          "isMut": true,
-          "isSigner": true
+          name: 'admin'
+          isMut: true
+          isSigner: true
         },
         {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
+          name: 'rent'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'systemProgram'
+          isMut: false
+          isSigner: false
         }
-      ],
-      "args": [
+      ]
+      args: [
         {
-          "name": "bump",
-          "type": "u8"
+          name: 'bump'
+          type: 'u8'
         },
         {
-          "name": "fee",
-          "type": "u128"
+          name: 'fee'
+          type: 'u128'
         },
         {
-          "name": "tickSpacing",
-          "type": "u16"
+          name: 'tickSpacing'
+          type: 'u16'
         }
       ]
     },
     {
-      "name": "createPool",
-      "accounts": [
+      name: 'createPool'
+      accounts: [
         {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
+          name: 'state'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
+          name: 'pool'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "feeTier",
-          "isMut": false,
-          "isSigner": false
+          name: 'feeTier'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "tickmap",
-          "isMut": true,
-          "isSigner": false
+          name: 'tickmap'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenX'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenY'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "tokenXReserve",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenXReserve'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "tokenYReserve",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenYReserve'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
+          name: 'payer'
+          isMut: true
+          isSigner: true
         },
         {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
+          name: 'rent'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'systemProgram'
+          isMut: false
+          isSigner: false
         }
-      ],
-      "args": [
+      ]
+      args: [
         {
-          "name": "bump",
-          "type": "u8"
+          name: 'bump'
+          type: 'u8'
         },
         {
-          "name": "initTick",
-          "type": "i32"
+          name: 'initTick'
+          type: 'i32'
         },
         {
-          "name": "protocolFee",
-          "type": {
-            "defined": "Decimal"
+          name: 'protocolFee'
+          type: {
+            defined: 'Decimal'
           }
         }
       ]
     },
     {
-      "name": "swap",
-      "accounts": [
+      name: 'swap'
+      accounts: [
         {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
+          name: 'state'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
+          name: 'pool'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "tickmap",
-          "isMut": true,
-          "isSigner": false
+          name: 'tickmap'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenX'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenY'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "accountX",
-          "isMut": true,
-          "isSigner": false
+          name: 'accountX'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "accountY",
-          "isMut": true,
-          "isSigner": false
+          name: 'accountY'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "reserveX",
-          "isMut": true,
-          "isSigner": false
+          name: 'reserveX'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "reserveY",
-          "isMut": true,
-          "isSigner": false
+          name: 'reserveY'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": true
+          name: 'owner'
+          isMut: false
+          isSigner: true
         },
         {
-          "name": "programAuthority",
-          "isMut": false,
-          "isSigner": false
+          name: 'programAuthority'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenProgram'
+          isMut: false
+          isSigner: false
         }
-      ],
-      "args": [
+      ]
+      args: [
         {
-          "name": "xToY",
-          "type": "bool"
+          name: 'xToY'
+          type: 'bool'
         },
         {
-          "name": "amount",
-          "type": "u64"
+          name: 'amount'
+          type: 'u64'
         },
         {
-          "name": "byAmountIn",
-          "type": "bool"
+          name: 'byAmountIn'
+          type: 'bool'
         },
         {
-          "name": "sqrtPriceLimit",
-          "type": "u128"
+          name: 'sqrtPriceLimit'
+          type: 'u128'
         }
       ]
     },
     {
-      "name": "initializeOracle",
-      "accounts": [
+      name: 'initializeOracle'
+      accounts: [
         {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
+          name: 'pool'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "oracle",
-          "isMut": true,
-          "isSigner": false
+          name: 'oracle'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenX'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenY'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "payer",
-          "isMut": false,
-          "isSigner": true
+          name: 'payer'
+          isMut: false
+          isSigner: true
         },
         {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
+          name: 'rent'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'systemProgram'
+          isMut: false
+          isSigner: false
         }
-      ],
-      "args": []
+      ]
+      args: []
     },
     {
-      "name": "createTick",
-      "accounts": [
+      name: 'createTick'
+      accounts: [
         {
-          "name": "tick",
-          "isMut": true,
-          "isSigner": false
+          name: 'tick'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "pool",
-          "isMut": false,
-          "isSigner": false
+          name: 'pool'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "tickmap",
-          "isMut": true,
-          "isSigner": false
+          name: 'tickmap'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
+          name: 'payer'
+          isMut: true
+          isSigner: true
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenX'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenY'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
+          name: 'rent'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'systemProgram'
+          isMut: false
+          isSigner: false
         }
-      ],
-      "args": [
+      ]
+      args: [
         {
-          "name": "bump",
-          "type": "u8"
+          name: 'bump'
+          type: 'u8'
         },
         {
-          "name": "index",
-          "type": "i32"
+          name: 'index'
+          type: 'i32'
         }
       ]
     },
     {
-      "name": "createPositionList",
-      "accounts": [
+      name: 'createPositionList'
+      accounts: [
         {
-          "name": "positionList",
-          "isMut": true,
-          "isSigner": false
+          name: 'positionList'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": false
+          name: 'owner'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "signer",
-          "isMut": true,
-          "isSigner": true
+          name: 'signer'
+          isMut: true
+          isSigner: true
         },
         {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
+          name: 'rent'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'systemProgram'
+          isMut: false
+          isSigner: false
         }
-      ],
-      "args": [
+      ]
+      args: [
         {
-          "name": "bump",
-          "type": "u8"
+          name: 'bump'
+          type: 'u8'
         }
       ]
     },
     {
-      "name": "createPosition",
-      "accounts": [
+      name: 'createPosition'
+      accounts: [
         {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
+          name: 'state'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "position",
-          "isMut": true,
-          "isSigner": false
+          name: 'position'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
+          name: 'pool'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "positionList",
-          "isMut": true,
-          "isSigner": false
+          name: 'positionList'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
+          name: 'payer'
+          isMut: true
+          isSigner: true
         },
         {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": true
+          name: 'owner'
+          isMut: false
+          isSigner: true
         },
         {
-          "name": "lowerTick",
-          "isMut": true,
-          "isSigner": false
+          name: 'lowerTick'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "upperTick",
-          "isMut": true,
-          "isSigner": false
+          name: 'upperTick'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "tickmap",
-          "isMut": true,
-          "isSigner": false
+          name: 'tickmap'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenX'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenY'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "accountX",
-          "isMut": true,
-          "isSigner": false
+          name: 'accountX'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "accountY",
-          "isMut": true,
-          "isSigner": false
+          name: 'accountY'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "reserveX",
-          "isMut": true,
-          "isSigner": false
+          name: 'reserveX'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "reserveY",
-          "isMut": true,
-          "isSigner": false
+          name: 'reserveY'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "programAuthority",
-          "isMut": false,
-          "isSigner": false
+          name: 'programAuthority'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenProgram'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
+          name: 'rent'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'systemProgram'
+          isMut: false
+          isSigner: false
         }
-      ],
-      "args": [
+      ]
+      args: [
         {
-          "name": "bump",
-          "type": "u8"
+          name: 'bump'
+          type: 'u8'
         },
         {
-          "name": "lowerTickIndex",
-          "type": "i32"
+          name: 'lowerTickIndex'
+          type: 'i32'
         },
         {
-          "name": "upperTickIndex",
-          "type": "i32"
+          name: 'upperTickIndex'
+          type: 'i32'
         },
         {
-          "name": "liquidityDelta",
-          "type": {
-            "defined": "Decimal"
+          name: 'liquidityDelta'
+          type: {
+            defined: 'Decimal'
           }
         }
       ]
     },
     {
-      "name": "removePosition",
-      "accounts": [
+      name: 'removePosition'
+      accounts: [
         {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
+          name: 'state'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "removedPosition",
-          "isMut": true,
-          "isSigner": false
+          name: 'removedPosition'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "positionList",
-          "isMut": true,
-          "isSigner": false
+          name: 'positionList'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "lastPosition",
-          "isMut": true,
-          "isSigner": false
+          name: 'lastPosition'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
+          name: 'pool'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "tickmap",
-          "isMut": true,
-          "isSigner": false
+          name: 'tickmap'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "lowerTick",
-          "isMut": true,
-          "isSigner": false
+          name: 'lowerTick'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "upperTick",
-          "isMut": true,
-          "isSigner": false
+          name: 'upperTick'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
+          name: 'owner'
+          isMut: true
+          isSigner: true
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenX'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenY'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "accountX",
-          "isMut": true,
-          "isSigner": false
+          name: 'accountX'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "accountY",
-          "isMut": true,
-          "isSigner": false
+          name: 'accountY'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "reserveX",
-          "isMut": true,
-          "isSigner": false
+          name: 'reserveX'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "reserveY",
-          "isMut": true,
-          "isSigner": false
+          name: 'reserveY'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "programAuthority",
-          "isMut": false,
-          "isSigner": false
+          name: 'programAuthority'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenProgram'
+          isMut: false
+          isSigner: false
         }
-      ],
-      "args": [
+      ]
+      args: [
         {
-          "name": "index",
-          "type": "u32"
+          name: 'index'
+          type: 'u32'
         },
         {
-          "name": "lowerTickIndex",
-          "type": "i32"
+          name: 'lowerTickIndex'
+          type: 'i32'
         },
         {
-          "name": "upperTickIndex",
-          "type": "i32"
+          name: 'upperTickIndex'
+          type: 'i32'
         }
       ]
     },
     {
-      "name": "transferPositionOwnership",
-      "accounts": [
+      name: 'transferPositionOwnership'
+      accounts: [
         {
-          "name": "ownerList",
-          "isMut": true,
-          "isSigner": false
+          name: 'ownerList'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "recipientList",
-          "isMut": true,
-          "isSigner": false
+          name: 'recipientList'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "newPosition",
-          "isMut": true,
-          "isSigner": false
+          name: 'newPosition'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "removedPosition",
-          "isMut": true,
-          "isSigner": false
+          name: 'removedPosition'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "lastPosition",
-          "isMut": true,
-          "isSigner": false
+          name: 'lastPosition'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
+          name: 'owner'
+          isMut: true
+          isSigner: true
         },
         {
-          "name": "recipient",
-          "isMut": false,
-          "isSigner": false
+          name: 'recipient'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
+          name: 'rent'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'systemProgram'
+          isMut: false
+          isSigner: false
         }
-      ],
-      "args": [
+      ]
+      args: [
         {
-          "name": "bump",
-          "type": "u8"
+          name: 'bump'
+          type: 'u8'
         },
         {
-          "name": "index",
-          "type": "u32"
+          name: 'index'
+          type: 'u32'
         }
       ]
     },
     {
-      "name": "claimFee",
-      "accounts": [
+      name: 'claimFee'
+      accounts: [
         {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
+          name: 'state'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
+          name: 'pool'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "position",
-          "isMut": true,
-          "isSigner": false
+          name: 'position'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "lowerTick",
-          "isMut": true,
-          "isSigner": false
+          name: 'lowerTick'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "upperTick",
-          "isMut": true,
-          "isSigner": false
+          name: 'upperTick'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": true
+          name: 'owner'
+          isMut: false
+          isSigner: true
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenX'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenY'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "accountX",
-          "isMut": true,
-          "isSigner": false
+          name: 'accountX'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "accountY",
-          "isMut": true,
-          "isSigner": false
+          name: 'accountY'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "reserveX",
-          "isMut": true,
-          "isSigner": false
+          name: 'reserveX'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "reserveY",
-          "isMut": true,
-          "isSigner": false
+          name: 'reserveY'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "programAuthority",
-          "isMut": false,
-          "isSigner": false
+          name: 'programAuthority'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenProgram'
+          isMut: false
+          isSigner: false
         }
-      ],
-      "args": [
+      ]
+      args: [
         {
-          "name": "index",
-          "type": "u32"
+          name: 'index'
+          type: 'u32'
         },
         {
-          "name": "lowerTickIndex",
-          "type": "i32"
+          name: 'lowerTickIndex'
+          type: 'i32'
         },
         {
-          "name": "upperTickIndex",
-          "type": "i32"
+          name: 'upperTickIndex'
+          type: 'i32'
         }
       ]
     },
     {
-      "name": "updateSecondsPerLiquidity",
-      "accounts": [
+      name: 'updateSecondsPerLiquidity'
+      accounts: [
         {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
+          name: 'pool'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "lowerTick",
-          "isMut": false,
-          "isSigner": false
+          name: 'lowerTick'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "upperTick",
-          "isMut": false,
-          "isSigner": false
+          name: 'upperTick'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "position",
-          "isMut": true,
-          "isSigner": false
+          name: 'position'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenX'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenY'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": true
+          name: 'owner'
+          isMut: false
+          isSigner: true
         },
         {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
+          name: 'rent'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'systemProgram'
+          isMut: false
+          isSigner: false
         }
-      ],
-      "args": [
+      ]
+      args: [
         {
-          "name": "lowerTickIndex",
-          "type": "i32"
+          name: 'lowerTickIndex'
+          type: 'i32'
         },
         {
-          "name": "upperTickIndex",
-          "type": "i32"
+          name: 'upperTickIndex'
+          type: 'i32'
         },
         {
-          "name": "index",
-          "type": "i32"
+          name: 'index'
+          type: 'i32'
         }
       ]
     },
     {
-      "name": "withdrawProtocolFee",
-      "accounts": [
+      name: 'withdrawProtocolFee'
+      accounts: [
         {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
+          name: 'state'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
+          name: 'pool'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenX'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenY'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "accountX",
-          "isMut": true,
-          "isSigner": false
+          name: 'accountX'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "accountY",
-          "isMut": true,
-          "isSigner": false
+          name: 'accountY'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "reserveX",
-          "isMut": true,
-          "isSigner": false
+          name: 'reserveX'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "reserveY",
-          "isMut": true,
-          "isSigner": false
+          name: 'reserveY'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "admin",
-          "isMut": false,
-          "isSigner": true
+          name: 'admin'
+          isMut: false
+          isSigner: true
         },
         {
-          "name": "programAuthority",
-          "isMut": false,
-          "isSigner": false
+          name: 'programAuthority'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenProgram'
+          isMut: false
+          isSigner: false
         }
-      ],
-      "args": []
+      ]
+      args: []
     },
     {
-      "name": "changeProtocolFee",
-      "accounts": [
+      name: 'changeProtocolFee'
+      accounts: [
         {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
+          name: 'state'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
+          name: 'pool'
+          isMut: true
+          isSigner: false
         },
         {
-          "name": "feeTier",
-          "isMut": false,
-          "isSigner": false
+          name: 'feeTier'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenX'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenY'
+          isMut: false
+          isSigner: false
         },
         {
-          "name": "admin",
-          "isMut": false,
-          "isSigner": true
+          name: 'admin'
+          isMut: false
+          isSigner: true
         }
-      ],
-      "args": [
+      ]
+      args: [
         {
-          "name": "protocolFee",
-          "type": {
-            "defined": "Decimal"
+          name: 'protocolFee'
+          type: {
+            defined: 'Decimal'
           }
         }
       ]
     }
-  ],
-  "accounts": [
+  ]
+  accounts: [
     {
-      "name": "feeTier",
-      "type": {
-        "kind": "struct",
-        "fields": [
+      name: 'feeTier'
+      type: {
+        kind: 'struct'
+        fields: [
           {
-            "name": "fee",
-            "type": {
-              "defined": "Decimal"
+            name: 'fee'
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "tickSpacing",
-            "type": "u16"
+            name: 'tickSpacing'
+            type: 'u16'
           },
           {
-            "name": "bump",
-            "type": "u8"
+            name: 'bump'
+            type: 'u8'
           }
         ]
       }
     },
     {
-      "name": "oracle",
-      "type": {
-        "kind": "struct",
-        "fields": [
+      name: 'oracle'
+      type: {
+        kind: 'struct'
+        fields: [
           {
-            "name": "data",
-            "type": {
-              "array": [
+            name: 'data'
+            type: {
+              array: [
                 {
-                  "defined": "Record"
+                  defined: 'Record'
                 },
                 256
               ]
             }
           },
           {
-            "name": "head",
-            "type": "u16"
+            name: 'head'
+            type: 'u16'
           },
           {
-            "name": "amount",
-            "type": "u16"
+            name: 'amount'
+            type: 'u16'
           },
           {
-            "name": "size",
-            "type": "u16"
+            name: 'size'
+            type: 'u16'
           }
         ]
       }
     },
     {
-      "name": "pool",
-      "type": {
-        "kind": "struct",
-        "fields": [
+      name: 'pool'
+      type: {
+        kind: 'struct'
+        fields: [
           {
-            "name": "tokenX",
-            "type": "publicKey"
+            name: 'tokenX'
+            type: 'publicKey'
           },
           {
-            "name": "tokenY",
-            "type": "publicKey"
+            name: 'tokenY'
+            type: 'publicKey'
           },
           {
-            "name": "tokenXReserve",
-            "type": "publicKey"
+            name: 'tokenXReserve'
+            type: 'publicKey'
           },
           {
-            "name": "tokenYReserve",
-            "type": "publicKey"
+            name: 'tokenYReserve'
+            type: 'publicKey'
           },
           {
-            "name": "positionIterator",
-            "type": "u128"
+            name: 'positionIterator'
+            type: 'u128'
           },
           {
-            "name": "tickSpacing",
-            "type": "u16"
+            name: 'tickSpacing'
+            type: 'u16'
           },
           {
-            "name": "fee",
-            "type": {
-              "defined": "Decimal"
+            name: 'fee'
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "protocolFee",
-            "type": {
-              "defined": "Decimal"
+            name: 'protocolFee'
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "liquidity",
-            "type": {
-              "defined": "Decimal"
+            name: 'liquidity'
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "sqrtPrice",
-            "type": {
-              "defined": "Decimal"
+            name: 'sqrtPrice'
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "currentTickIndex",
-            "type": "i32"
+            name: 'currentTickIndex'
+            type: 'i32'
           },
           {
-            "name": "tickmap",
-            "type": "publicKey"
+            name: 'tickmap'
+            type: 'publicKey'
           },
           {
-            "name": "feeGrowthGlobalX",
-            "type": {
-              "defined": "Decimal"
+            name: 'feeGrowthGlobalX'
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "feeGrowthGlobalY",
-            "type": {
-              "defined": "Decimal"
+            name: 'feeGrowthGlobalY'
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "feeProtocolTokenX",
-            "type": {
-              "defined": "Decimal"
+            name: 'feeProtocolTokenX'
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "feeProtocolTokenY",
-            "type": {
-              "defined": "Decimal"
+            name: 'feeProtocolTokenY'
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "secondsPerLiquidityGlobal",
-            "type": {
-              "defined": "Decimal"
+            name: 'secondsPerLiquidityGlobal'
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "startTimestamp",
-            "type": "u64"
+            name: 'startTimestamp'
+            type: 'u64'
           },
           {
-            "name": "lastTimestamp",
-            "type": "u64"
+            name: 'lastTimestamp'
+            type: 'u64'
           },
           {
-            "name": "oracleAddress",
-            "type": "publicKey"
+            name: 'oracleAddress'
+            type: 'publicKey'
           },
           {
-            "name": "oracleInitialized",
-            "type": "bool"
+            name: 'oracleInitialized'
+            type: 'bool'
           },
           {
-            "name": "bump",
-            "type": "u8"
+            name: 'bump'
+            type: 'u8'
           }
         ]
       }
     },
     {
-      "name": "position",
-      "type": {
-        "kind": "struct",
-        "fields": [
+      name: 'position'
+      type: {
+        kind: 'struct'
+        fields: [
           {
-            "name": "owner",
-            "type": "publicKey"
+            name: 'owner'
+            type: 'publicKey'
           },
           {
-            "name": "pool",
-            "type": "publicKey"
+            name: 'pool'
+            type: 'publicKey'
           },
           {
-            "name": "id",
-            "type": "u128"
+            name: 'id'
+            type: 'u128'
           },
           {
-            "name": "liquidity",
-            "type": {
-              "defined": "Decimal"
+            name: 'liquidity'
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "lowerTickIndex",
-            "type": "i32"
+            name: 'lowerTickIndex'
+            type: 'i32'
           },
           {
-            "name": "upperTickIndex",
-            "type": "i32"
+            name: 'upperTickIndex'
+            type: 'i32'
           },
           {
-            "name": "feeGrowthInsideX",
-            "type": {
-              "defined": "Decimal"
+            name: 'feeGrowthInsideX'
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "feeGrowthInsideY",
-            "type": {
-              "defined": "Decimal"
+            name: 'feeGrowthInsideY'
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "secondsPerLiquidityInside",
-            "type": {
-              "defined": "Decimal"
+            name: 'secondsPerLiquidityInside'
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "lastSlot",
-            "type": "u64"
+            name: 'lastSlot'
+            type: 'u64'
           },
           {
-            "name": "tokensOwedX",
-            "type": {
-              "defined": "Decimal"
+            name: 'tokensOwedX'
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "tokensOwedY",
-            "type": {
-              "defined": "Decimal"
+            name: 'tokensOwedY'
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "bump",
-            "type": "u8"
+            name: 'bump'
+            type: 'u8'
           }
         ]
       }
     },
     {
-      "name": "positionList",
-      "type": {
-        "kind": "struct",
-        "fields": [
+      name: 'positionList'
+      type: {
+        kind: 'struct'
+        fields: [
           {
-            "name": "head",
-            "type": "u32"
+            name: 'head'
+            type: 'u32'
           },
           {
-            "name": "bump",
-            "type": "u8"
+            name: 'bump'
+            type: 'u8'
           }
         ]
       }
     },
     {
-      "name": "state",
-      "type": {
-        "kind": "struct",
-        "fields": [
+      name: 'state'
+      type: {
+        kind: 'struct'
+        fields: [
           {
-            "name": "admin",
-            "type": "publicKey"
+            name: 'admin'
+            type: 'publicKey'
           },
           {
-            "name": "nonce",
-            "type": "u8"
+            name: 'nonce'
+            type: 'u8'
           },
           {
-            "name": "authority",
-            "type": "publicKey"
+            name: 'authority'
+            type: 'publicKey'
           },
           {
-            "name": "bump",
-            "type": "u8"
+            name: 'bump'
+            type: 'u8'
           }
         ]
       }
     },
     {
-      "name": "tick",
-      "type": {
-        "kind": "struct",
-        "fields": [
+      name: 'tick'
+      type: {
+        kind: 'struct'
+        fields: [
           {
-            "name": "index",
-            "type": "i32"
+            name: 'index'
+            type: 'i32'
           },
           {
-            "name": "sign",
-            "type": "bool"
+            name: 'sign'
+            type: 'bool'
           },
           {
-            "name": "liquidityChange",
-            "type": {
-              "defined": "Decimal"
+            name: 'liquidityChange'
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "liquidityGross",
-            "type": {
-              "defined": "Decimal"
+            name: 'liquidityGross'
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "sqrtPrice",
-            "type": {
-              "defined": "Decimal"
+            name: 'sqrtPrice'
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "feeGrowthOutsideX",
-            "type": {
-              "defined": "Decimal"
+            name: 'feeGrowthOutsideX'
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "feeGrowthOutsideY",
-            "type": {
-              "defined": "Decimal"
+            name: 'feeGrowthOutsideY'
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "secondsPerLiquidityOutside",
-            "type": {
-              "defined": "Decimal"
+            name: 'secondsPerLiquidityOutside'
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "secondsOutside",
-            "type": "u64"
+            name: 'secondsOutside'
+            type: 'u64'
           },
           {
-            "name": "bump",
-            "type": "u8"
+            name: 'bump'
+            type: 'u8'
           }
         ]
       }
     },
     {
-      "name": "tickmap",
-      "type": {
-        "kind": "struct",
-        "fields": [
+      name: 'tickmap'
+      type: {
+        kind: 'struct'
+        fields: [
           {
-            "name": "bitmap",
-            "type": {
-              "array": [
-                "u8",
-                25000
-              ]
+            name: 'bitmap'
+            type: {
+              array: ['u8', 25000]
             }
           }
         ]
       }
-    }
-  ],
-  "types": [
-    {
-      "name": "Decimal",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "v",
-            "type": "u128"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Record",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "timestamp",
-            "type": "u64"
-          },
-          {
-            "name": "price",
-            "type": {
-              "defined": "Decimal"
-            }
-          }
-        ]
-      }
-    }
-  ],
-  "errors": [
-    {
-      "code": 6000,
-      "name": "ZeroAmount",
-      "msg": "Amount is zero"
-    },
-    {
-      "code": 6001,
-      "name": "ZeroOutput",
-      "msg": "Output would be zero"
-    },
-    {
-      "code": 6002,
-      "name": "WrongTick",
-      "msg": "Not the expected tick"
-    },
-    {
-      "code": 6003,
-      "name": "WrongLimit",
-      "msg": "Price limit is on the wrong side of price"
-    },
-    {
-      "code": 6004,
-      "name": "InvalidTickIndex",
-      "msg": "Tick index not divisible by spacing or over limit"
-    },
-    {
-      "code": 6005,
-      "name": "InvalidTickInterval",
-      "msg": "Invalid tick_lower or tick_upper"
-    },
-    {
-      "code": 6006,
-      "name": "NoMoreTicks",
-      "msg": "There is no more tick in that direction"
-    },
-    {
-      "code": 6007,
-      "name": "TickNotFound",
-      "msg": "Correct tick not found in context"
-    },
-    {
-      "code": 6008,
-      "name": "PriceLimitReached",
-      "msg": "Price would cross swap limit"
-    },
-    {
-      "code": 6009,
-      "name": "InvalidTickLiquidity",
-      "msg": "Invalid tick liquidity"
-    },
-    {
-      "code": 6010,
-      "name": "EmptyPositionPokes",
-      "msg": "Disable empty position pokes"
-    },
-    {
-      "code": 6011,
-      "name": "InvalidPositionLiquidity",
-      "msg": "Invalid tick liquidity"
-    },
-    {
-      "code": 6012,
-      "name": "InvalidPoolLiquidity",
-      "msg": "Invalid pool liquidity"
-    },
-    {
-      "code": 6013,
-      "name": "InvalidPositionIndex",
-      "msg": "Invalid position index"
-    },
-    {
-      "code": 6014,
-      "name": "PositionWithoutLiquidity",
-      "msg": "Position liquidity would be zero"
-    },
-    {
-      "code": 6015,
-      "name": "Unauthorized",
-      "msg": "You are not admin"
-    },
-    {
-      "code": 6016,
-      "name": "InvalidPoolTokenAddresses",
-      "msg": "Invalid pool token addresses"
-    },
-    {
-      "code": 6017,
-      "name": "NegativeTime",
-      "msg": "Time cannot be negative"
-    },
-    {
-      "code": 6018,
-      "name": "OracleAlreadyInitialized",
-      "msg": "Oracle is already initialized"
-    },
-    {
-      "code": 6019,
-      "name": "LimitReached",
-      "msg": "Absolute price limit was reached"
     }
   ]
-};
+  types: [
+    {
+      name: 'Decimal'
+      type: {
+        kind: 'struct'
+        fields: [
+          {
+            name: 'v'
+            type: 'u128'
+          }
+        ]
+      }
+    },
+    {
+      name: 'Record'
+      type: {
+        kind: 'struct'
+        fields: [
+          {
+            name: 'timestamp'
+            type: 'u64'
+          },
+          {
+            name: 'price'
+            type: {
+              defined: 'Decimal'
+            }
+          }
+        ]
+      }
+    }
+  ]
+  errors: [
+    {
+      code: 6000
+      name: 'ZeroAmount'
+      msg: 'Amount is zero'
+    },
+    {
+      code: 6001
+      name: 'ZeroOutput'
+      msg: 'Output would be zero'
+    },
+    {
+      code: 6002
+      name: 'WrongTick'
+      msg: 'Not the expected tick'
+    },
+    {
+      code: 6003
+      name: 'WrongLimit'
+      msg: 'Price limit is on the wrong side of price'
+    },
+    {
+      code: 6004
+      name: 'InvalidTickIndex'
+      msg: 'Tick index not divisible by spacing or over limit'
+    },
+    {
+      code: 6005
+      name: 'InvalidTickInterval'
+      msg: 'Invalid tick_lower or tick_upper'
+    },
+    {
+      code: 6006
+      name: 'NoMoreTicks'
+      msg: 'There is no more tick in that direction'
+    },
+    {
+      code: 6007
+      name: 'TickNotFound'
+      msg: 'Correct tick not found in context'
+    },
+    {
+      code: 6008
+      name: 'PriceLimitReached'
+      msg: 'Price would cross swap limit'
+    },
+    {
+      code: 6009
+      name: 'InvalidTickLiquidity'
+      msg: 'Invalid tick liquidity'
+    },
+    {
+      code: 6010
+      name: 'EmptyPositionPokes'
+      msg: 'Disable empty position pokes'
+    },
+    {
+      code: 6011
+      name: 'InvalidPositionLiquidity'
+      msg: 'Invalid tick liquidity'
+    },
+    {
+      code: 6012
+      name: 'InvalidPoolLiquidity'
+      msg: 'Invalid pool liquidity'
+    },
+    {
+      code: 6013
+      name: 'InvalidPositionIndex'
+      msg: 'Invalid position index'
+    },
+    {
+      code: 6014
+      name: 'PositionWithoutLiquidity'
+      msg: 'Position liquidity would be zero'
+    },
+    {
+      code: 6015
+      name: 'Unauthorized'
+      msg: 'You are not admin'
+    },
+    {
+      code: 6016
+      name: 'InvalidPoolTokenAddresses'
+      msg: 'Invalid pool token addresses'
+    },
+    {
+      code: 6017
+      name: 'NegativeTime'
+      msg: 'Time cannot be negative'
+    },
+    {
+      code: 6018
+      name: 'OracleAlreadyInitialized'
+      msg: 'Oracle is already initialized'
+    },
+    {
+      code: 6019
+      name: 'LimitReached'
+      msg: 'Absolute price limit was reached'
+    }
+  ]
+}
 
 export const IDL: Amm = {
-  "version": "0.1.0",
-  "name": "amm",
-  "instructions": [
+  version: '0.1.0',
+  name: 'amm',
+  instructions: [
     {
-      "name": "createState",
-      "accounts": [
+      name: 'createState',
+      accounts: [
         {
-          "name": "state",
-          "isMut": true,
-          "isSigner": false
+          name: 'state',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "admin",
-          "isMut": true,
-          "isSigner": true
+          name: 'admin',
+          isMut: true,
+          isSigner: true
         },
         {
-          "name": "programAuthority",
-          "isMut": false,
-          "isSigner": false
+          name: 'programAuthority',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
+          name: 'rent',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'systemProgram',
+          isMut: false,
+          isSigner: false
         }
       ],
-      "args": [
+      args: [
         {
-          "name": "bump",
-          "type": "u8"
+          name: 'bump',
+          type: 'u8'
         },
         {
-          "name": "nonce",
-          "type": "u8"
+          name: 'nonce',
+          type: 'u8'
         }
       ]
     },
     {
-      "name": "createFeeTier",
-      "accounts": [
+      name: 'createFeeTier',
+      accounts: [
         {
-          "name": "feeTier",
-          "isMut": true,
-          "isSigner": false
+          name: 'feeTier',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
+          name: 'state',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "admin",
-          "isMut": true,
-          "isSigner": true
+          name: 'admin',
+          isMut: true,
+          isSigner: true
         },
         {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
+          name: 'rent',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'systemProgram',
+          isMut: false,
+          isSigner: false
         }
       ],
-      "args": [
+      args: [
         {
-          "name": "bump",
-          "type": "u8"
+          name: 'bump',
+          type: 'u8'
         },
         {
-          "name": "fee",
-          "type": "u128"
+          name: 'fee',
+          type: 'u128'
         },
         {
-          "name": "tickSpacing",
-          "type": "u16"
+          name: 'tickSpacing',
+          type: 'u16'
         }
       ]
     },
     {
-      "name": "createPool",
-      "accounts": [
+      name: 'createPool',
+      accounts: [
         {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
+          name: 'state',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
+          name: 'pool',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "feeTier",
-          "isMut": false,
-          "isSigner": false
+          name: 'feeTier',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "tickmap",
-          "isMut": true,
-          "isSigner": false
+          name: 'tickmap',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenX',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenY',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "tokenXReserve",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenXReserve',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "tokenYReserve",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenYReserve',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
+          name: 'payer',
+          isMut: true,
+          isSigner: true
         },
         {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
+          name: 'rent',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'systemProgram',
+          isMut: false,
+          isSigner: false
         }
       ],
-      "args": [
+      args: [
         {
-          "name": "bump",
-          "type": "u8"
+          name: 'bump',
+          type: 'u8'
         },
         {
-          "name": "initTick",
-          "type": "i32"
+          name: 'initTick',
+          type: 'i32'
         },
         {
-          "name": "protocolFee",
-          "type": {
-            "defined": "Decimal"
+          name: 'protocolFee',
+          type: {
+            defined: 'Decimal'
           }
         }
       ]
     },
     {
-      "name": "swap",
-      "accounts": [
+      name: 'swap',
+      accounts: [
         {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
+          name: 'state',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
+          name: 'pool',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "tickmap",
-          "isMut": true,
-          "isSigner": false
+          name: 'tickmap',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenX',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenY',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "accountX",
-          "isMut": true,
-          "isSigner": false
+          name: 'accountX',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "accountY",
-          "isMut": true,
-          "isSigner": false
+          name: 'accountY',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "reserveX",
-          "isMut": true,
-          "isSigner": false
+          name: 'reserveX',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "reserveY",
-          "isMut": true,
-          "isSigner": false
+          name: 'reserveY',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": true
+          name: 'owner',
+          isMut: false,
+          isSigner: true
         },
         {
-          "name": "programAuthority",
-          "isMut": false,
-          "isSigner": false
+          name: 'programAuthority',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenProgram',
+          isMut: false,
+          isSigner: false
         }
       ],
-      "args": [
+      args: [
         {
-          "name": "xToY",
-          "type": "bool"
+          name: 'xToY',
+          type: 'bool'
         },
         {
-          "name": "amount",
-          "type": "u64"
+          name: 'amount',
+          type: 'u64'
         },
         {
-          "name": "byAmountIn",
-          "type": "bool"
+          name: 'byAmountIn',
+          type: 'bool'
         },
         {
-          "name": "sqrtPriceLimit",
-          "type": "u128"
+          name: 'sqrtPriceLimit',
+          type: 'u128'
         }
       ]
     },
     {
-      "name": "initializeOracle",
-      "accounts": [
+      name: 'initializeOracle',
+      accounts: [
         {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
+          name: 'pool',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "oracle",
-          "isMut": true,
-          "isSigner": false
+          name: 'oracle',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenX',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenY',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "payer",
-          "isMut": false,
-          "isSigner": true
+          name: 'payer',
+          isMut: false,
+          isSigner: true
         },
         {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
+          name: 'rent',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'systemProgram',
+          isMut: false,
+          isSigner: false
         }
       ],
-      "args": []
+      args: []
     },
     {
-      "name": "createTick",
-      "accounts": [
+      name: 'createTick',
+      accounts: [
         {
-          "name": "tick",
-          "isMut": true,
-          "isSigner": false
+          name: 'tick',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "pool",
-          "isMut": false,
-          "isSigner": false
+          name: 'pool',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "tickmap",
-          "isMut": true,
-          "isSigner": false
+          name: 'tickmap',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
+          name: 'payer',
+          isMut: true,
+          isSigner: true
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenX',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenY',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
+          name: 'rent',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'systemProgram',
+          isMut: false,
+          isSigner: false
         }
       ],
-      "args": [
+      args: [
         {
-          "name": "bump",
-          "type": "u8"
+          name: 'bump',
+          type: 'u8'
         },
         {
-          "name": "index",
-          "type": "i32"
+          name: 'index',
+          type: 'i32'
         }
       ]
     },
     {
-      "name": "createPositionList",
-      "accounts": [
+      name: 'createPositionList',
+      accounts: [
         {
-          "name": "positionList",
-          "isMut": true,
-          "isSigner": false
+          name: 'positionList',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": false
+          name: 'owner',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "signer",
-          "isMut": true,
-          "isSigner": true
+          name: 'signer',
+          isMut: true,
+          isSigner: true
         },
         {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
+          name: 'rent',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'systemProgram',
+          isMut: false,
+          isSigner: false
         }
       ],
-      "args": [
+      args: [
         {
-          "name": "bump",
-          "type": "u8"
+          name: 'bump',
+          type: 'u8'
         }
       ]
     },
     {
-      "name": "createPosition",
-      "accounts": [
+      name: 'createPosition',
+      accounts: [
         {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
+          name: 'state',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "position",
-          "isMut": true,
-          "isSigner": false
+          name: 'position',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
+          name: 'pool',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "positionList",
-          "isMut": true,
-          "isSigner": false
+          name: 'positionList',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
+          name: 'payer',
+          isMut: true,
+          isSigner: true
         },
         {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": true
+          name: 'owner',
+          isMut: false,
+          isSigner: true
         },
         {
-          "name": "lowerTick",
-          "isMut": true,
-          "isSigner": false
+          name: 'lowerTick',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "upperTick",
-          "isMut": true,
-          "isSigner": false
+          name: 'upperTick',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "tickmap",
-          "isMut": true,
-          "isSigner": false
+          name: 'tickmap',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenX',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenY',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "accountX",
-          "isMut": true,
-          "isSigner": false
+          name: 'accountX',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "accountY",
-          "isMut": true,
-          "isSigner": false
+          name: 'accountY',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "reserveX",
-          "isMut": true,
-          "isSigner": false
+          name: 'reserveX',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "reserveY",
-          "isMut": true,
-          "isSigner": false
+          name: 'reserveY',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "programAuthority",
-          "isMut": false,
-          "isSigner": false
+          name: 'programAuthority',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenProgram',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
+          name: 'rent',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'systemProgram',
+          isMut: false,
+          isSigner: false
         }
       ],
-      "args": [
+      args: [
         {
-          "name": "bump",
-          "type": "u8"
+          name: 'bump',
+          type: 'u8'
         },
         {
-          "name": "lowerTickIndex",
-          "type": "i32"
+          name: 'lowerTickIndex',
+          type: 'i32'
         },
         {
-          "name": "upperTickIndex",
-          "type": "i32"
+          name: 'upperTickIndex',
+          type: 'i32'
         },
         {
-          "name": "liquidityDelta",
-          "type": {
-            "defined": "Decimal"
+          name: 'liquidityDelta',
+          type: {
+            defined: 'Decimal'
           }
         }
       ]
     },
     {
-      "name": "removePosition",
-      "accounts": [
+      name: 'removePosition',
+      accounts: [
         {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
+          name: 'state',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "removedPosition",
-          "isMut": true,
-          "isSigner": false
+          name: 'removedPosition',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "positionList",
-          "isMut": true,
-          "isSigner": false
+          name: 'positionList',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "lastPosition",
-          "isMut": true,
-          "isSigner": false
+          name: 'lastPosition',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
+          name: 'pool',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "tickmap",
-          "isMut": true,
-          "isSigner": false
+          name: 'tickmap',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "lowerTick",
-          "isMut": true,
-          "isSigner": false
+          name: 'lowerTick',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "upperTick",
-          "isMut": true,
-          "isSigner": false
+          name: 'upperTick',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
+          name: 'owner',
+          isMut: true,
+          isSigner: true
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenX',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenY',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "accountX",
-          "isMut": true,
-          "isSigner": false
+          name: 'accountX',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "accountY",
-          "isMut": true,
-          "isSigner": false
+          name: 'accountY',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "reserveX",
-          "isMut": true,
-          "isSigner": false
+          name: 'reserveX',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "reserveY",
-          "isMut": true,
-          "isSigner": false
+          name: 'reserveY',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "programAuthority",
-          "isMut": false,
-          "isSigner": false
+          name: 'programAuthority',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenProgram',
+          isMut: false,
+          isSigner: false
         }
       ],
-      "args": [
+      args: [
         {
-          "name": "index",
-          "type": "u32"
+          name: 'index',
+          type: 'u32'
         },
         {
-          "name": "lowerTickIndex",
-          "type": "i32"
+          name: 'lowerTickIndex',
+          type: 'i32'
         },
         {
-          "name": "upperTickIndex",
-          "type": "i32"
+          name: 'upperTickIndex',
+          type: 'i32'
         }
       ]
     },
     {
-      "name": "transferPositionOwnership",
-      "accounts": [
+      name: 'transferPositionOwnership',
+      accounts: [
         {
-          "name": "ownerList",
-          "isMut": true,
-          "isSigner": false
+          name: 'ownerList',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "recipientList",
-          "isMut": true,
-          "isSigner": false
+          name: 'recipientList',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "newPosition",
-          "isMut": true,
-          "isSigner": false
+          name: 'newPosition',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "removedPosition",
-          "isMut": true,
-          "isSigner": false
+          name: 'removedPosition',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "lastPosition",
-          "isMut": true,
-          "isSigner": false
+          name: 'lastPosition',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
+          name: 'owner',
+          isMut: true,
+          isSigner: true
         },
         {
-          "name": "recipient",
-          "isMut": false,
-          "isSigner": false
+          name: 'recipient',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
+          name: 'rent',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'systemProgram',
+          isMut: false,
+          isSigner: false
         }
       ],
-      "args": [
+      args: [
         {
-          "name": "bump",
-          "type": "u8"
+          name: 'bump',
+          type: 'u8'
         },
         {
-          "name": "index",
-          "type": "u32"
+          name: 'index',
+          type: 'u32'
         }
       ]
     },
     {
-      "name": "claimFee",
-      "accounts": [
+      name: 'claimFee',
+      accounts: [
         {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
+          name: 'state',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
+          name: 'pool',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "position",
-          "isMut": true,
-          "isSigner": false
+          name: 'position',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "lowerTick",
-          "isMut": true,
-          "isSigner": false
+          name: 'lowerTick',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "upperTick",
-          "isMut": true,
-          "isSigner": false
+          name: 'upperTick',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": true
+          name: 'owner',
+          isMut: false,
+          isSigner: true
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenX',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenY',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "accountX",
-          "isMut": true,
-          "isSigner": false
+          name: 'accountX',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "accountY",
-          "isMut": true,
-          "isSigner": false
+          name: 'accountY',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "reserveX",
-          "isMut": true,
-          "isSigner": false
+          name: 'reserveX',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "reserveY",
-          "isMut": true,
-          "isSigner": false
+          name: 'reserveY',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "programAuthority",
-          "isMut": false,
-          "isSigner": false
+          name: 'programAuthority',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenProgram',
+          isMut: false,
+          isSigner: false
         }
       ],
-      "args": [
+      args: [
         {
-          "name": "index",
-          "type": "u32"
+          name: 'index',
+          type: 'u32'
         },
         {
-          "name": "lowerTickIndex",
-          "type": "i32"
+          name: 'lowerTickIndex',
+          type: 'i32'
         },
         {
-          "name": "upperTickIndex",
-          "type": "i32"
+          name: 'upperTickIndex',
+          type: 'i32'
         }
       ]
     },
     {
-      "name": "updateSecondsPerLiquidity",
-      "accounts": [
+      name: 'updateSecondsPerLiquidity',
+      accounts: [
         {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
+          name: 'pool',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "lowerTick",
-          "isMut": false,
-          "isSigner": false
+          name: 'lowerTick',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "upperTick",
-          "isMut": false,
-          "isSigner": false
+          name: 'upperTick',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "position",
-          "isMut": true,
-          "isSigner": false
+          name: 'position',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenX',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenY',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": true
+          name: 'owner',
+          isMut: false,
+          isSigner: true
         },
         {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
+          name: 'rent',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'systemProgram',
+          isMut: false,
+          isSigner: false
         }
       ],
-      "args": [
+      args: [
         {
-          "name": "lowerTickIndex",
-          "type": "i32"
+          name: 'lowerTickIndex',
+          type: 'i32'
         },
         {
-          "name": "upperTickIndex",
-          "type": "i32"
+          name: 'upperTickIndex',
+          type: 'i32'
         },
         {
-          "name": "index",
-          "type": "i32"
+          name: 'index',
+          type: 'i32'
         }
       ]
     },
     {
-      "name": "withdrawProtocolFee",
-      "accounts": [
+      name: 'withdrawProtocolFee',
+      accounts: [
         {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
+          name: 'state',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
+          name: 'pool',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenX',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenY',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "accountX",
-          "isMut": true,
-          "isSigner": false
+          name: 'accountX',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "accountY",
-          "isMut": true,
-          "isSigner": false
+          name: 'accountY',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "reserveX",
-          "isMut": true,
-          "isSigner": false
+          name: 'reserveX',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "reserveY",
-          "isMut": true,
-          "isSigner": false
+          name: 'reserveY',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "admin",
-          "isMut": false,
-          "isSigner": true
+          name: 'admin',
+          isMut: false,
+          isSigner: true
         },
         {
-          "name": "programAuthority",
-          "isMut": false,
-          "isSigner": false
+          name: 'programAuthority',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenProgram',
+          isMut: false,
+          isSigner: false
         }
       ],
-      "args": []
+      args: []
     },
     {
-      "name": "changeProtocolFee",
-      "accounts": [
+      name: 'changeProtocolFee',
+      accounts: [
         {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
+          name: 'state',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
+          name: 'pool',
+          isMut: true,
+          isSigner: false
         },
         {
-          "name": "feeTier",
-          "isMut": false,
-          "isSigner": false
+          name: 'feeTier',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenX',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
+          name: 'tokenY',
+          isMut: false,
+          isSigner: false
         },
         {
-          "name": "admin",
-          "isMut": false,
-          "isSigner": true
+          name: 'admin',
+          isMut: false,
+          isSigner: true
         }
       ],
-      "args": [
+      args: [
         {
-          "name": "protocolFee",
-          "type": {
-            "defined": "Decimal"
+          name: 'protocolFee',
+          type: {
+            defined: 'Decimal'
           }
         }
       ]
     }
   ],
-  "accounts": [
+  accounts: [
     {
-      "name": "feeTier",
-      "type": {
-        "kind": "struct",
-        "fields": [
+      name: 'feeTier',
+      type: {
+        kind: 'struct',
+        fields: [
           {
-            "name": "fee",
-            "type": {
-              "defined": "Decimal"
+            name: 'fee',
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "tickSpacing",
-            "type": "u16"
+            name: 'tickSpacing',
+            type: 'u16'
           },
           {
-            "name": "bump",
-            "type": "u8"
+            name: 'bump',
+            type: 'u8'
           }
         ]
       }
     },
     {
-      "name": "oracle",
-      "type": {
-        "kind": "struct",
-        "fields": [
+      name: 'oracle',
+      type: {
+        kind: 'struct',
+        fields: [
           {
-            "name": "data",
-            "type": {
-              "array": [
+            name: 'data',
+            type: {
+              array: [
                 {
-                  "defined": "Record"
+                  defined: 'Record'
                 },
                 256
               ]
             }
           },
           {
-            "name": "head",
-            "type": "u16"
+            name: 'head',
+            type: 'u16'
           },
           {
-            "name": "amount",
-            "type": "u16"
+            name: 'amount',
+            type: 'u16'
           },
           {
-            "name": "size",
-            "type": "u16"
+            name: 'size',
+            type: 'u16'
           }
         ]
       }
     },
     {
-      "name": "pool",
-      "type": {
-        "kind": "struct",
-        "fields": [
+      name: 'pool',
+      type: {
+        kind: 'struct',
+        fields: [
           {
-            "name": "tokenX",
-            "type": "publicKey"
+            name: 'tokenX',
+            type: 'publicKey'
           },
           {
-            "name": "tokenY",
-            "type": "publicKey"
+            name: 'tokenY',
+            type: 'publicKey'
           },
           {
-            "name": "tokenXReserve",
-            "type": "publicKey"
+            name: 'tokenXReserve',
+            type: 'publicKey'
           },
           {
-            "name": "tokenYReserve",
-            "type": "publicKey"
+            name: 'tokenYReserve',
+            type: 'publicKey'
           },
           {
-            "name": "positionIterator",
-            "type": "u128"
+            name: 'positionIterator',
+            type: 'u128'
           },
           {
-            "name": "tickSpacing",
-            "type": "u16"
+            name: 'tickSpacing',
+            type: 'u16'
           },
           {
-            "name": "fee",
-            "type": {
-              "defined": "Decimal"
+            name: 'fee',
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "protocolFee",
-            "type": {
-              "defined": "Decimal"
+            name: 'protocolFee',
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "liquidity",
-            "type": {
-              "defined": "Decimal"
+            name: 'liquidity',
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "sqrtPrice",
-            "type": {
-              "defined": "Decimal"
+            name: 'sqrtPrice',
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "currentTickIndex",
-            "type": "i32"
+            name: 'currentTickIndex',
+            type: 'i32'
           },
           {
-            "name": "tickmap",
-            "type": "publicKey"
+            name: 'tickmap',
+            type: 'publicKey'
           },
           {
-            "name": "feeGrowthGlobalX",
-            "type": {
-              "defined": "Decimal"
+            name: 'feeGrowthGlobalX',
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "feeGrowthGlobalY",
-            "type": {
-              "defined": "Decimal"
+            name: 'feeGrowthGlobalY',
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "feeProtocolTokenX",
-            "type": {
-              "defined": "Decimal"
+            name: 'feeProtocolTokenX',
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "feeProtocolTokenY",
-            "type": {
-              "defined": "Decimal"
+            name: 'feeProtocolTokenY',
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "secondsPerLiquidityGlobal",
-            "type": {
-              "defined": "Decimal"
+            name: 'secondsPerLiquidityGlobal',
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "startTimestamp",
-            "type": "u64"
+            name: 'startTimestamp',
+            type: 'u64'
           },
           {
-            "name": "lastTimestamp",
-            "type": "u64"
+            name: 'lastTimestamp',
+            type: 'u64'
           },
           {
-            "name": "oracleAddress",
-            "type": "publicKey"
+            name: 'oracleAddress',
+            type: 'publicKey'
           },
           {
-            "name": "oracleInitialized",
-            "type": "bool"
+            name: 'oracleInitialized',
+            type: 'bool'
           },
           {
-            "name": "bump",
-            "type": "u8"
+            name: 'bump',
+            type: 'u8'
           }
         ]
       }
     },
     {
-      "name": "position",
-      "type": {
-        "kind": "struct",
-        "fields": [
+      name: 'position',
+      type: {
+        kind: 'struct',
+        fields: [
           {
-            "name": "owner",
-            "type": "publicKey"
+            name: 'owner',
+            type: 'publicKey'
           },
           {
-            "name": "pool",
-            "type": "publicKey"
+            name: 'pool',
+            type: 'publicKey'
           },
           {
-            "name": "id",
-            "type": "u128"
+            name: 'id',
+            type: 'u128'
           },
           {
-            "name": "liquidity",
-            "type": {
-              "defined": "Decimal"
+            name: 'liquidity',
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "lowerTickIndex",
-            "type": "i32"
+            name: 'lowerTickIndex',
+            type: 'i32'
           },
           {
-            "name": "upperTickIndex",
-            "type": "i32"
+            name: 'upperTickIndex',
+            type: 'i32'
           },
           {
-            "name": "feeGrowthInsideX",
-            "type": {
-              "defined": "Decimal"
+            name: 'feeGrowthInsideX',
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "feeGrowthInsideY",
-            "type": {
-              "defined": "Decimal"
+            name: 'feeGrowthInsideY',
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "secondsPerLiquidityInside",
-            "type": {
-              "defined": "Decimal"
+            name: 'secondsPerLiquidityInside',
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "lastSlot",
-            "type": "u64"
+            name: 'lastSlot',
+            type: 'u64'
           },
           {
-            "name": "tokensOwedX",
-            "type": {
-              "defined": "Decimal"
+            name: 'tokensOwedX',
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "tokensOwedY",
-            "type": {
-              "defined": "Decimal"
+            name: 'tokensOwedY',
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "bump",
-            "type": "u8"
+            name: 'bump',
+            type: 'u8'
           }
         ]
       }
     },
     {
-      "name": "positionList",
-      "type": {
-        "kind": "struct",
-        "fields": [
+      name: 'positionList',
+      type: {
+        kind: 'struct',
+        fields: [
           {
-            "name": "head",
-            "type": "u32"
+            name: 'head',
+            type: 'u32'
           },
           {
-            "name": "bump",
-            "type": "u8"
+            name: 'bump',
+            type: 'u8'
           }
         ]
       }
     },
     {
-      "name": "state",
-      "type": {
-        "kind": "struct",
-        "fields": [
+      name: 'state',
+      type: {
+        kind: 'struct',
+        fields: [
           {
-            "name": "admin",
-            "type": "publicKey"
+            name: 'admin',
+            type: 'publicKey'
           },
           {
-            "name": "nonce",
-            "type": "u8"
+            name: 'nonce',
+            type: 'u8'
           },
           {
-            "name": "authority",
-            "type": "publicKey"
+            name: 'authority',
+            type: 'publicKey'
           },
           {
-            "name": "bump",
-            "type": "u8"
+            name: 'bump',
+            type: 'u8'
           }
         ]
       }
     },
     {
-      "name": "tick",
-      "type": {
-        "kind": "struct",
-        "fields": [
+      name: 'tick',
+      type: {
+        kind: 'struct',
+        fields: [
           {
-            "name": "index",
-            "type": "i32"
+            name: 'index',
+            type: 'i32'
           },
           {
-            "name": "sign",
-            "type": "bool"
+            name: 'sign',
+            type: 'bool'
           },
           {
-            "name": "liquidityChange",
-            "type": {
-              "defined": "Decimal"
+            name: 'liquidityChange',
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "liquidityGross",
-            "type": {
-              "defined": "Decimal"
+            name: 'liquidityGross',
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "sqrtPrice",
-            "type": {
-              "defined": "Decimal"
+            name: 'sqrtPrice',
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "feeGrowthOutsideX",
-            "type": {
-              "defined": "Decimal"
+            name: 'feeGrowthOutsideX',
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "feeGrowthOutsideY",
-            "type": {
-              "defined": "Decimal"
+            name: 'feeGrowthOutsideY',
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "secondsPerLiquidityOutside",
-            "type": {
-              "defined": "Decimal"
+            name: 'secondsPerLiquidityOutside',
+            type: {
+              defined: 'Decimal'
             }
           },
           {
-            "name": "secondsOutside",
-            "type": "u64"
+            name: 'secondsOutside',
+            type: 'u64'
           },
           {
-            "name": "bump",
-            "type": "u8"
+            name: 'bump',
+            type: 'u8'
           }
         ]
       }
     },
     {
-      "name": "tickmap",
-      "type": {
-        "kind": "struct",
-        "fields": [
+      name: 'tickmap',
+      type: {
+        kind: 'struct',
+        fields: [
           {
-            "name": "bitmap",
-            "type": {
-              "array": [
-                "u8",
-                25000
-              ]
-            }
-          }
-        ]
-      }
-    }
-  ],
-  "types": [
-    {
-      "name": "Decimal",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "v",
-            "type": "u128"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Record",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "timestamp",
-            "type": "u64"
-          },
-          {
-            "name": "price",
-            "type": {
-              "defined": "Decimal"
+            name: 'bitmap',
+            type: {
+              array: ['u8', 25000]
             }
           }
         ]
       }
     }
   ],
-  "errors": [
+  types: [
     {
-      "code": 6000,
-      "name": "ZeroAmount",
-      "msg": "Amount is zero"
+      name: 'Decimal',
+      type: {
+        kind: 'struct',
+        fields: [
+          {
+            name: 'v',
+            type: 'u128'
+          }
+        ]
+      }
     },
     {
-      "code": 6001,
-      "name": "ZeroOutput",
-      "msg": "Output would be zero"
+      name: 'Record',
+      type: {
+        kind: 'struct',
+        fields: [
+          {
+            name: 'timestamp',
+            type: 'u64'
+          },
+          {
+            name: 'price',
+            type: {
+              defined: 'Decimal'
+            }
+          }
+        ]
+      }
+    }
+  ],
+  errors: [
+    {
+      code: 6000,
+      name: 'ZeroAmount',
+      msg: 'Amount is zero'
     },
     {
-      "code": 6002,
-      "name": "WrongTick",
-      "msg": "Not the expected tick"
+      code: 6001,
+      name: 'ZeroOutput',
+      msg: 'Output would be zero'
     },
     {
-      "code": 6003,
-      "name": "WrongLimit",
-      "msg": "Price limit is on the wrong side of price"
+      code: 6002,
+      name: 'WrongTick',
+      msg: 'Not the expected tick'
     },
     {
-      "code": 6004,
-      "name": "InvalidTickIndex",
-      "msg": "Tick index not divisible by spacing or over limit"
+      code: 6003,
+      name: 'WrongLimit',
+      msg: 'Price limit is on the wrong side of price'
     },
     {
-      "code": 6005,
-      "name": "InvalidTickInterval",
-      "msg": "Invalid tick_lower or tick_upper"
+      code: 6004,
+      name: 'InvalidTickIndex',
+      msg: 'Tick index not divisible by spacing or over limit'
     },
     {
-      "code": 6006,
-      "name": "NoMoreTicks",
-      "msg": "There is no more tick in that direction"
+      code: 6005,
+      name: 'InvalidTickInterval',
+      msg: 'Invalid tick_lower or tick_upper'
     },
     {
-      "code": 6007,
-      "name": "TickNotFound",
-      "msg": "Correct tick not found in context"
+      code: 6006,
+      name: 'NoMoreTicks',
+      msg: 'There is no more tick in that direction'
     },
     {
-      "code": 6008,
-      "name": "PriceLimitReached",
-      "msg": "Price would cross swap limit"
+      code: 6007,
+      name: 'TickNotFound',
+      msg: 'Correct tick not found in context'
     },
     {
-      "code": 6009,
-      "name": "InvalidTickLiquidity",
-      "msg": "Invalid tick liquidity"
+      code: 6008,
+      name: 'PriceLimitReached',
+      msg: 'Price would cross swap limit'
     },
     {
-      "code": 6010,
-      "name": "EmptyPositionPokes",
-      "msg": "Disable empty position pokes"
+      code: 6009,
+      name: 'InvalidTickLiquidity',
+      msg: 'Invalid tick liquidity'
     },
     {
-      "code": 6011,
-      "name": "InvalidPositionLiquidity",
-      "msg": "Invalid tick liquidity"
+      code: 6010,
+      name: 'EmptyPositionPokes',
+      msg: 'Disable empty position pokes'
     },
     {
-      "code": 6012,
-      "name": "InvalidPoolLiquidity",
-      "msg": "Invalid pool liquidity"
+      code: 6011,
+      name: 'InvalidPositionLiquidity',
+      msg: 'Invalid tick liquidity'
     },
     {
-      "code": 6013,
-      "name": "InvalidPositionIndex",
-      "msg": "Invalid position index"
+      code: 6012,
+      name: 'InvalidPoolLiquidity',
+      msg: 'Invalid pool liquidity'
     },
     {
-      "code": 6014,
-      "name": "PositionWithoutLiquidity",
-      "msg": "Position liquidity would be zero"
+      code: 6013,
+      name: 'InvalidPositionIndex',
+      msg: 'Invalid position index'
     },
     {
-      "code": 6015,
-      "name": "Unauthorized",
-      "msg": "You are not admin"
+      code: 6014,
+      name: 'PositionWithoutLiquidity',
+      msg: 'Position liquidity would be zero'
     },
     {
-      "code": 6016,
-      "name": "InvalidPoolTokenAddresses",
-      "msg": "Invalid pool token addresses"
+      code: 6015,
+      name: 'Unauthorized',
+      msg: 'You are not admin'
     },
     {
-      "code": 6017,
-      "name": "NegativeTime",
-      "msg": "Time cannot be negative"
+      code: 6016,
+      name: 'InvalidPoolTokenAddresses',
+      msg: 'Invalid pool token addresses'
     },
     {
-      "code": 6018,
-      "name": "OracleAlreadyInitialized",
-      "msg": "Oracle is already initialized"
+      code: 6017,
+      name: 'NegativeTime',
+      msg: 'Time cannot be negative'
     },
     {
-      "code": 6019,
-      "name": "LimitReached",
-      "msg": "Absolute price limit was reached"
+      code: 6018,
+      name: 'OracleAlreadyInitialized',
+      msg: 'Oracle is already initialized'
+    },
+    {
+      code: 6019,
+      name: 'LimitReached',
+      msg: 'Absolute price limit was reached'
     }
   ]
-};
+}

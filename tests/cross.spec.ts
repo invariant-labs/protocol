@@ -97,7 +97,7 @@ describe('cross', () => {
     assert.ok(createdPool.feeProtocolTokenY.v.eqn(0))
     const tickmapData = await market.getTickmap(pair)
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
-    assert.ok(tickmapData.bitmap.every((v) => v == 0))
+    assert.ok(tickmapData.bitmap.every(v => v == 0))
   })
 
   it('#swap() with crossing a tick', async () => {

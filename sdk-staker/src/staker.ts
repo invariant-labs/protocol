@@ -102,9 +102,17 @@ export class Staker {
     )
   }
 
-  public async createStakeInstruction({ pool, id, position, incentive, owner, index, amm }: CreateStake) {
+  public async createStakeInstruction({
+    pool,
+    id,
+    position,
+    incentive,
+    owner,
+    index,
+    amm
+  }: CreateStake) {
     owner = owner || this.wallet.publicKey
-    
+
     const [userStakeAddress, userStakeBump] = await this.getUserStakeAddressAndBump(
       incentive,
       pool,

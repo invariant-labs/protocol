@@ -7,13 +7,33 @@ import { Keypair, PublicKey } from '@solana/web3.js'
 import { assert } from 'chai'
 import { Decimal } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
-import { eqDecimal, createToken, tou64, createIncentive, updatePositionAndCreateStake } from './utils'
-import { createFeeTier, createPool, createPositionList, createState, createTick, createToken as createTkn, initPosition } from '../tests/testUtils'
+import {
+  eqDecimal,
+  createToken,
+  tou64,
+  createIncentive,
+  updatePositionAndCreateStake
+} from './utils'
+import {
+  createFeeTier,
+  createPool,
+  createPositionList,
+  createState,
+  createTick,
+  createToken as createTkn,
+  initPosition
+} from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { DENOMINATOR } from '@invariant-labs/sdk'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
-import { CreateFeeTier, CreatePool, CreateTick, InitPosition, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
+import {
+  CreateFeeTier,
+  CreatePool,
+  CreateTick,
+  InitPosition,
+  UpdateSecondsPerLiquidity
+} from '@invariant-labs/sdk/src/market'
 import { CreateIncentive, CreateStake } from '../sdk-staker/lib/staker'
 
 describe('Stake tests', () => {
@@ -114,7 +134,6 @@ describe('Stake tests', () => {
     amm = anchor.workspace.Amm.programId
 
     //create tokens
-    
   })
 
   it('Stake', async () => {
@@ -207,7 +226,14 @@ describe('Stake tests', () => {
       amm
     }
 
-    await updatePositionAndCreateStake(market, staker, updateSecondsPerLiquidityVars, createStakeVars, [positionOwner], connection)
+    await updatePositionAndCreateStake(
+      market,
+      staker,
+      updateSecondsPerLiquidityVars,
+      createStakeVars,
+      [positionOwner],
+      connection
+    )
 
     const stake = await staker.getStake(incentiveAccount.publicKey, poolAddress, positionId)
     let positionStructAfter = await market.getPosition(positionOwner.publicKey, index)

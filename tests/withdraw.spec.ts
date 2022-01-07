@@ -3,19 +3,30 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
-import { assertThrowsAsync, createFeeTier, createPool, createPositionList, createState, createTick, createToken, initPosition, removePosition, swap } from './testUtils'
 import {
-  Market,
-  Pair,
-  tou64,
-  DENOMINATOR,
-  TICK_LIMIT,
-  Network
-} from '@invariant-labs/sdk'
+  assertThrowsAsync,
+  createFeeTier,
+  createPool,
+  createPositionList,
+  createState,
+  createTick,
+  createToken,
+  initPosition,
+  removePosition,
+  swap
+} from './testUtils'
+import { Market, Pair, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@invariant-labs/sdk'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
-import { CreateFeeTier, CreatePool, CreateTick, InitPosition, RemovePosition, Swap } from '@invariant-labs/sdk/src/market'
+import {
+  CreateFeeTier,
+  CreatePool,
+  CreateTick,
+  InitPosition,
+  RemovePosition,
+  Swap
+} from '@invariant-labs/sdk/src/market'
 
 describe('withdraw', () => {
   const provider = Provider.local()
@@ -91,7 +102,7 @@ describe('withdraw', () => {
 
     const tickmapData = await market.getTickmap(pair)
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
-    assert.ok(tickmapData.bitmap.every((v) => v == 0))
+    assert.ok(tickmapData.bitmap.every(v => v == 0))
   })
   it('#withdraw', async () => {
     // Deposit
@@ -125,12 +136,12 @@ describe('withdraw', () => {
 
     const initPositionVars: InitPosition = {
       pair,
-        owner: positionOwner.publicKey,
-        userTokenX: userTokenXAccount,
-        userTokenY: userTokenYAccount,
-        lowerTick,
-        upperTick,
-        liquidityDelta
+      owner: positionOwner.publicKey,
+      userTokenX: userTokenXAccount,
+      userTokenY: userTokenYAccount,
+      lowerTick,
+      upperTick,
+      liquidityDelta
     }
     await initPosition(market, initPositionVars, positionOwner)
 
@@ -152,14 +163,14 @@ describe('withdraw', () => {
 
     const swapVars: Swap = {
       pair,
-        xToY: true,
-        owner: owner.publicKey,
-        amount,
-        knownPrice: poolDataBefore.sqrtPrice,
-        slippage: toDecimal(1, 2),
-        accountX,
-        accountY,
-        byAmountIn: true
+      xToY: true,
+      owner: owner.publicKey,
+      amount,
+      knownPrice: poolDataBefore.sqrtPrice,
+      slippage: toDecimal(1, 2),
+      accountX,
+      accountY,
+      byAmountIn: true
     }
     await swap(market, swapVars, owner)
 

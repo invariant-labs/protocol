@@ -36,30 +36,30 @@ pub struct ClaimFee<'info> {
     )]
     pub upper_tick: AccountLoader<'info, Tick>,
     pub owner: Signer<'info>,
-    #[account(constraint = &token_x.key() == &pool.load()?.token_x,)]
+    #[account(constraint = token_x.key() == pool.load()?.token_x,)]
     pub token_x: Account<'info, Mint>,
-    #[account(constraint = &token_y.key() == &pool.load()?.token_y,)]
+    #[account(constraint = token_y.key() == pool.load()?.token_y,)]
     pub token_y: Account<'info, Mint>,
     #[account(mut,
-        constraint = &account_x.mint == &token_x.key(),
+        constraint = account_x.mint == token_x.key(),
         constraint = &account_x.owner == owner.key,
     )]
     pub account_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = &account_y.mint == &token_y.key(),
-        constraint = &account_y.owner == owner.key	
+        constraint = account_y.mint == token_y.key(),
+        constraint = &account_y.owner == owner.key
     )]
     pub account_y: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = &reserve_x.mint == &token_x.key(),
+        constraint = reserve_x.mint == token_x.key(),
         constraint = &reserve_x.owner == program_authority.key,
-        constraint = &reserve_x.key() == &pool.load()?.token_x_reserve
+        constraint = reserve_x.key() == pool.load()?.token_x_reserve
     )]
     pub reserve_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = &reserve_y.mint == &token_y.key(),
+        constraint = reserve_y.mint == token_y.key(),
         constraint = &reserve_y.owner == program_authority.key,
-        constraint = &reserve_y.key() == &pool.load()?.token_y_reserve
+        constraint = reserve_y.key() == pool.load()?.token_y_reserve
     )]
     pub reserve_y: Box<Account<'info, TokenAccount>>,
     #[account(constraint = &state.load()?.authority == program_authority.key)]

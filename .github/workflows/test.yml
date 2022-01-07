@@ -8,8 +8,8 @@ on:
     branches:
       - master
 env:
-  solana_version: 1.7.11
-  anchor_version: 0.18.2
+  solana_version: 1.8.11
+  anchor_version: 0.19.0
 
 jobs:
   install:
@@ -123,6 +123,7 @@ jobs:
       - name: build amm sdk
         run: |
           npm install
+          npm install @solana/buffer-layout
           npm run build
         working-directory: ./sdk
       - name: build staker sdk

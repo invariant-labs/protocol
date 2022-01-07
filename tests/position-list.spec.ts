@@ -111,7 +111,7 @@ describe('Position list', () => {
 
       ticksIndexes = [-9780, -42, 0, 9, 276, 32343]
       Promise.all(
-        ticksIndexes.map(async (tickIndex) => {
+        ticksIndexes.map(async tickIndex => {
           const createTickVars: CreateTick = {
             index: tickIndex,
             pair,

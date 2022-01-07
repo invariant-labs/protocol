@@ -62,12 +62,12 @@ const usdtUsdcCreatePosition = async (market: Market) => {
   console.log('creating position...')
   const initPositionVars: InitPosition = {
     pair,
-      owner: MINTER.publicKey,
-      userTokenX: minterX,
-      userTokenY: minterY,
-      lowerTick,
-      upperTick,
-      liquidityDelta: liquidity,
+    owner: MINTER.publicKey,
+    userTokenX: minterX,
+    userTokenY: minterY,
+    lowerTick,
+    upperTick,
+    liquidityDelta: liquidity
   }
   await initPosition(market, initPositionVars, MINTER)
   console.log('done')

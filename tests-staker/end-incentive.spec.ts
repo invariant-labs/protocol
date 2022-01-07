@@ -8,7 +8,12 @@ import { assert } from 'chai'
 import { Decimal } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
 import { createToken, tou64 } from './utils'
-import { createFeeTier, createPool, createState, createToken as createTkn } from '../tests/testUtils'
+import {
+  createFeeTier,
+  createPool,
+  createState,
+  createToken as createTkn
+} from '../tests/testUtils'
 import { signAndSend } from '../sdk-staker/lib/utils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
@@ -25,7 +30,7 @@ describe('End incentive tests', () => {
   const founderAccount = Keypair.generate()
   const mintAuthority = Keypair.generate()
   const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
-  
+
   let stakerAuthority: PublicKey
   let staker: Staker
   let pool: PublicKey
@@ -67,7 +72,12 @@ describe('End incentive tests', () => {
     ///////////////////////
     //create amm and pool
     const admin = Keypair.generate()
-    const market = await Market.build(0, provider.wallet, connection, anchor.workspace.Amm.programId)
+    const market = await Market.build(
+      0,
+      provider.wallet,
+      connection,
+      anchor.workspace.Amm.programId
+    )
 
     const tokens = await Promise.all([
       createTkn(connection, wallet, mintAuthority),
@@ -111,7 +121,7 @@ describe('End incentive tests', () => {
     const incentiveAccount = Keypair.generate()
 
     await connection.requestAirdrop(incentiveAccount.publicKey, 10e9)
-    await new Promise((resolve) => {
+    await new Promise(resolve => {
       setTimeout(() => {
         resolve(null)
       }, 1000)

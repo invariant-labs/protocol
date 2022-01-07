@@ -3,19 +3,28 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
-import { createFeeTier, createPool, createState, createTick, createToken, createUserWithTokens, initPosition, swap } from './testUtils'
 import {
-  Market,
-  Pair,
-  tou64,
-  DENOMINATOR,
-  TICK_LIMIT,
-  Network
-} from '@invariant-labs/sdk'
+  createFeeTier,
+  createPool,
+  createState,
+  createTick,
+  createToken,
+  createUserWithTokens,
+  initPosition,
+  swap
+} from './testUtils'
+import { Market, Pair, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
-import { CreateFeeTier, CreatePool, CreateTick, Decimal, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
+import {
+  CreateFeeTier,
+  CreatePool,
+  CreateTick,
+  Decimal,
+  InitPosition,
+  Swap
+} from '@invariant-labs/sdk/src/market'
 
 describe('target', () => {
   const provider = Provider.local()
@@ -90,7 +99,7 @@ describe('target', () => {
 
     const tickmapData = await market.getTickmap(pair)
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
-    assert.ok(tickmapData.bitmap.every((v) => v == 0))
+    assert.ok(tickmapData.bitmap.every(v => v == 0))
   })
 
   it('#swap by target', async () => {
@@ -120,15 +129,15 @@ describe('target', () => {
       mintAmount
     )
     const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) }
-    
+
     const initPositionVars: InitPosition = {
       pair,
-        owner: owner.publicKey,
-        userTokenX: userAccountX,
-        userTokenY: userAccountY,
-        lowerTick,
-        upperTick,
-        liquidityDelta
+      owner: owner.publicKey,
+      userTokenX: userAccountX,
+      userTokenY: userAccountY,
+      lowerTick,
+      upperTick,
+      liquidityDelta
     }
     await initPosition(market, initPositionVars, owner)
 
@@ -150,14 +159,14 @@ describe('target', () => {
 
     const swapVars: Swap = {
       pair,
-        xToY: true,
-        owner: swapper.publicKey,
-        amount,
-        knownPrice: poolDataBefore.sqrtPrice,
-        slippage: toDecimal(1, 2),
-        accountX,
-        accountY,
-        byAmountIn: false
+      xToY: true,
+      owner: swapper.publicKey,
+      amount,
+      knownPrice: poolDataBefore.sqrtPrice,
+      slippage: toDecimal(1, 2),
+      accountX,
+      accountY,
+      byAmountIn: false
     }
     await swap(market, swapVars, swapper)
 

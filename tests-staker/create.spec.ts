@@ -126,7 +126,7 @@ describe('Create incentive tests', () => {
   it('Create incentive ', async () => {
     const incentiveAccount = Keypair.generate()
     await connection.requestAirdrop(incentiveAccount.publicKey, 10e9)
-    await new Promise((resolve) => {
+    await new Promise(resolve => {
       setTimeout(() => {
         resolve(null)
       }, 1000)
@@ -162,7 +162,7 @@ describe('Create incentive tests', () => {
   it('Fail on zero amount', async () => {
     const incentiveAccount = Keypair.generate()
     await connection.requestAirdrop(incentiveAccount.publicKey, 10e9)
-    await new Promise((resolve) => {
+    await new Promise(resolve => {
       setTimeout(() => {
         resolve(null)
       }, 1000)
@@ -195,7 +195,7 @@ describe('Create incentive tests', () => {
   it('Fail, incentive starts more than one hour in past ', async () => {
     const incentiveAccount = Keypair.generate()
     await connection.requestAirdrop(incentiveAccount.publicKey, 10e9)
-    await new Promise((resolve) => {
+    await new Promise(resolve => {
       setTimeout(() => {
         resolve(null)
       }, 1000)
@@ -228,7 +228,7 @@ describe('Create incentive tests', () => {
   it('Fail, too long incentive time', async () => {
     const incentiveAccount = Keypair.generate()
     await connection.requestAirdrop(incentiveAccount.publicKey, 10e9)
-    await new Promise((resolve) => {
+    await new Promise(resolve => {
       setTimeout(() => {
         resolve(null)
       }, 1000)
@@ -261,7 +261,7 @@ describe('Create incentive tests', () => {
     const incentiveAccount = Keypair.generate()
     await connection.requestAirdrop(incentiveAccount.publicKey, 10e9)
     const balanceBefore = (await incentiveToken.getAccountInfo(incentiveTokenAcc)).amount
-    await new Promise((resolve) => {
+    await new Promise(resolve => {
       setTimeout(() => {
         resolve(null)
       }, 1000)

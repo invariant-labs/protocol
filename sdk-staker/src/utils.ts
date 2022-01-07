@@ -39,7 +39,7 @@ export const signAndSend = async (
   connection: Connection,
   opts?: ConfirmOptions
 ) => {
-  tx.setSigners(...signers.map((s) => s.publicKey))
+  tx.setSigners(...signers.map(s => s.publicKey))
   const blockhash = await connection.getRecentBlockhash(
     opts?.commitment || Provider.defaultOptions().commitment
   )

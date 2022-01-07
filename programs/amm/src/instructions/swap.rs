@@ -17,40 +17,40 @@ use anchor_spl::token::{Mint, TokenAccount, Transfer};
 pub struct Swap<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
-    #[account(mut,         
+    #[account(mut,
         seeds = [b"poolv1", token_x.key().as_ref(), token_y.key().as_ref(), &pool.load()?.fee.v.to_le_bytes(), &pool.load()?.tick_spacing.to_le_bytes()],
         bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
-        constraint = &tickmap.key() == &pool.load()?.tickmap,
+        constraint = tickmap.key() == pool.load()?.tickmap,
         constraint = tickmap.to_account_info().owner == program_id,
     )]
     pub tickmap: AccountLoader<'info, Tickmap>,
-    #[account(constraint = &token_x.key() == &pool.load()?.token_x,)]
+    #[account(constraint = token_x.key() == pool.load()?.token_x,)]
     pub token_x: Account<'info, Mint>,
-    #[account(constraint = &token_y.key() == &pool.load()?.token_y,)]
+    #[account(constraint = token_y.key() == pool.load()?.token_y,)]
     pub token_y: Account<'info, Mint>,
     #[account(mut,
-        constraint = &account_x.mint == &token_x.key(),
-        constraint = &account_x.owner == &owner.key(),
+        constraint = account_x.mint == token_x.key(),
+        constraint = account_x.owner == owner.key(),
     )]
     pub account_x: Account<'info, TokenAccount>,
     #[account(mut,
-        constraint = &account_y.mint == &token_y.key(),
-        constraint = &account_y.owner == &owner.key()	
+        constraint = account_y.mint == token_y.key(),
+        constraint = account_y.owner == owner.key()
     )]
     pub account_y: Account<'info, TokenAccount>,
     #[account(mut,
-        constraint = &reserve_x.mint == &token_x.key(),
+        constraint = reserve_x.mint == token_x.key(),
         constraint = &reserve_x.owner == program_authority.key,
-        constraint = &reserve_x.key() == &pool.load()?.token_x_reserve
+        constraint = reserve_x.key() == pool.load()?.token_x_reserve
     )]
     pub reserve_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = &reserve_y.mint == &token_y.key(),
+        constraint = reserve_y.mint == token_y.key(),
         constraint = &reserve_y.owner == program_authority.key,
-        constraint = &reserve_y.key() == &pool.load()?.token_y_reserve
+        constraint = reserve_y.key() == pool.load()?.token_y_reserve
     )]
     pub reserve_y: Box<Account<'info, TokenAccount>>,
     pub owner: Signer<'info>,
@@ -177,10 +177,11 @@ pub fn handler(
         // Fail if price would go over swap limit
         // REVIEW shouldn't it be >= instead of == ?
         if x_to_y && { pool.sqrt_price } <= sqrt_price_limit && remaining_amount > Decimal::new(0) {
-            Err(ErrorCode::PriceLimitReached)?;
+            return Err(ErrorCode::PriceLimitReached.into());
         }
-        if !x_to_y && { pool.sqrt_price } >= sqrt_price_limit && remaining_amount > Decimal::new(0) {
-            Err(ErrorCode::PriceLimitReached)?;
+        if !x_to_y && { pool.sqrt_price } >= sqrt_price_limit && remaining_amount > Decimal::new(0)
+        {
+            return Err(ErrorCode::PriceLimitReached.into());
         }
 
         // crossing tick
@@ -234,7 +235,7 @@ pub fn handler(
     // REVIEW use match pattern instead of if-else
     let (take_ctx, send_ctx) = match x_to_y {
         true => (ctx.accounts.take_x(), ctx.accounts.send_y()),
-        false => (ctx.accounts.take_y(), ctx.accounts.send_x())
+        false => (ctx.accounts.take_y(), ctx.accounts.send_x()),
     };
 
     let seeds = &[SEED.as_bytes(), &[state.nonce]];
@@ -246,16 +247,19 @@ pub fn handler(
         total_amount_out.to_token_floor(),
     )?;
 
-    let amount_in_to_protocol = Decimal::from_integer(total_amount_in.to_token_ceil().try_into().unwrap()) - total_amount_in;
-    let amount_out_to_protocol = total_amount_out - Decimal::from_integer(total_amount_out.to_token_floor().try_into().unwrap());
+    let amount_in_to_protocol =
+        Decimal::from_integer(total_amount_in.to_token_ceil().try_into().unwrap())
+            - total_amount_in;
+    let amount_out_to_protocol = total_amount_out
+        - Decimal::from_integer(total_amount_out.to_token_floor().try_into().unwrap());
     match x_to_y {
         true => {
             pool.fee_protocol_token_x = pool.fee_protocol_token_x + amount_in_to_protocol;
-            pool.fee_protocol_token_y = pool.fee_protocol_token_y + amount_out_to_protocol 
-        },
+            pool.fee_protocol_token_y = pool.fee_protocol_token_y + amount_out_to_protocol
+        }
         false => {
             pool.fee_protocol_token_x = pool.fee_protocol_token_x + amount_out_to_protocol;
-            pool.fee_protocol_token_y = pool.fee_protocol_token_y + amount_in_to_protocol 
+            pool.fee_protocol_token_y = pool.fee_protocol_token_y + amount_in_to_protocol
         }
     }
 

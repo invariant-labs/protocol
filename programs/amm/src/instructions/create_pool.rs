@@ -31,13 +31,13 @@ pub struct CreatePool<'info> {
     pub token_x: Account<'info, Mint>,
     pub token_y: Account<'info, Mint>,
     #[account(
-        constraint = &token_x_reserve.mint == &token_x.key(),
+        constraint = token_x_reserve.mint == token_x.key(),
         constraint = token_x_reserve.owner == state.load()?.authority
     )]
     // we can also initialize those accounts in create_pool
     pub token_x_reserve: Account<'info, TokenAccount>,
     #[account(
-        constraint = &token_y_reserve.mint == &token_y.key(),
+        constraint = token_y_reserve.mint == token_y.key(),
         constraint = token_y_reserve.owner == state.load()?.authority
     )]
     pub token_y_reserve: Account<'info, TokenAccount>,

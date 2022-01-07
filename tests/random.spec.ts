@@ -1,7 +1,13 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Keypair, Transaction } from '@solana/web3.js'
-import { createState, createTokensAndPool, createUserWithTokens, initPosition, swap } from './testUtils'
+import {
+  createState,
+  createTokensAndPool,
+  createUserWithTokens,
+  initPosition,
+  swap
+} from './testUtils'
 import { Market, DENOMINATOR, Network } from '@invariant-labs/sdk'
 import { fromFee, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { Decimal, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
@@ -57,12 +63,12 @@ describe('limits', () => {
 
     const initPositionVars: InitPosition = {
       pair,
-        owner: owner.publicKey,
-        userTokenX: userAccountX,
-        userTokenY: userAccountY,
-        lowerTick,
-        upperTick,
-        liquidityDelta: { v: liquidityDelta }
+      owner: owner.publicKey,
+      userTokenX: userAccountX,
+      userTokenY: userAccountY,
+      lowerTick,
+      upperTick,
+      liquidityDelta: { v: liquidityDelta }
     }
     await initPosition(market, initPositionVars, owner)
 
@@ -104,7 +110,6 @@ describe('limits', () => {
         // commented out until 1.9 hits
         // const ixs = await Promise.all([oneWayTx, otherWayTx])
         // await signAndSend(new Transaction().add(ixs[0]).add(ixs[1]), [owner], connection)
-
       })
 
       await Promise.all(swaps)

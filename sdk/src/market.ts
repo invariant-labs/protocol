@@ -1,5 +1,5 @@
 import { BN, Program, utils, Provider } from '@project-serum/anchor'
-import { Token, TOKEN_PROGRAM_ID, } from '@solana/spl-token'
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import {
   Connection,
   Keypair,
@@ -7,7 +7,7 @@ import {
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
   Transaction,
-  TransactionInstruction,
+  TransactionInstruction
 } from '@solana/web3.js'
 import { calculatePriceAfterSlippage, findClosestTicks, isInitialized } from './math'
 import {
@@ -16,7 +16,7 @@ import {
   getMaxTick,
   getMinTick,
   parseLiquidityOnTicks,
-  SEED,
+  SEED
 } from './utils'
 import { Amm, IDL } from './idl/amm'
 import { ComputeUnitsInstruction, IWallet, Pair } from '.'
@@ -64,9 +64,7 @@ export class Market {
     return instance
   }
 
-  async createPool(
-    { pair, payer, initTick, protocolFee, tokenX, tokenY }: CreatePool
-  ) {
+  async createPool({ pair, payer, initTick, protocolFee, tokenX, tokenY }: CreatePool) {
     const bitmapKeypair = Keypair.generate()
     const tick = initTick || 0
 
@@ -196,7 +194,7 @@ export class Market {
     )
 
     return Promise.all(
-      indexes.map(async (index) => {
+      indexes.map(async index => {
         const { tickAddress } = await this.getTickAddress(pair, index)
         return (await this.program.account.tick.fetch(tickAddress)) as Tick
       })
@@ -221,7 +219,7 @@ export class Market {
   }
 
   async getPositionsFromIndexes(owner: PublicKey, indexes: Array<number>) {
-    const positionPromises = indexes.map(async (i) => {
+    const positionPromises = indexes.map(async i => {
       return await this.getPosition(owner, i)
     })
     return Promise.all(positionPromises)
@@ -409,7 +407,7 @@ export class Market {
     )
     const { positionListAddress } = await this.getPositionListAddress(owner)
     const poolAddress = await pair.getAddress(this.program.programId)
-    
+
     return this.program.instruction.createPosition(
       positionBump,
       lowerTickIndex,
@@ -452,7 +450,7 @@ export class Market {
     let positionInstruction: TransactionInstruction
     const tx = new Transaction()
 
-    let lowerExists = true;
+    let lowerExists = true
     try {
       await this.getTick(pair, lowerTick)
     } catch (e) {
@@ -479,17 +477,17 @@ export class Market {
     } else {
       positionInstruction = await this.initPositionInstruction(initPosition, false)
     }
-    
+
     if (!lowerExists && !upperExists && listExists) {
       tx.add(ComputeUnitsInstruction(400000, payer))
     }
-    if(!lowerExists) {
+    if (!lowerExists) {
       tx.add(lowerInstruction)
     }
-    if(!upperExists) {
+    if (!upperExists) {
       tx.add(upperInstruction)
     }
-    if(!listExists) {
+    if (!listExists) {
       tx.add(listInstruction)
     }
 
@@ -527,14 +525,14 @@ export class Market {
       xToY ? 'up' : 'down'
     )
     const remainingAccounts = await Promise.all(
-      indexesInDirection.concat(indexesInReverse).map(async (index) => {
+      indexesInDirection.concat(indexesInReverse).map(async index => {
         const { tickAddress } = await this.getTickAddress(pair, index)
         return tickAddress
       })
     )
 
     return this.program.instruction.swap(xToY, amount, byAmountIn, priceLimit, {
-      remainingAccounts: remainingAccounts.map((pubkey) => {
+      remainingAccounts: remainingAccounts.map(pubkey => {
         return { pubkey, isWritable: true, isSigner: false }
       }),
       accounts: {

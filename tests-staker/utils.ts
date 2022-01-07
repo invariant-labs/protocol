@@ -28,7 +28,7 @@ export const eqDecimal = (a: Decimal, b: Decimal) => {
   return a.v.eq(b.v)
 }
 
-export const tou64 = (amount) => {
+export const tou64 = amount => {
   // eslint-disable-next-line new-cap
   return new u64(amount.toString())
 }
@@ -95,7 +95,7 @@ export const updatePositionAndCreateStake = async (
 ) => {
   let tx = await market.updateSecondsPerLiquidityTransaction(updateSecondsPerLiquidity)
   tx.add(await staker.createStakeInstruction(createStake))
-  
+
   await signAndSend(tx, signers, connection)
 }
 
@@ -109,7 +109,7 @@ export const updatePositionAndWithdraw = async (
 ) => {
   let tx = await market.updateSecondsPerLiquidityTransaction(updateSecondsPerLiquidity)
   tx.add(await staker.withdrawInstruction(withdraw))
-  
+
   await signAndSend(tx, signers, connection)
 }
 

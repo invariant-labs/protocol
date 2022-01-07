@@ -49,14 +49,14 @@ const main = async () => {
 
     const swapVars: Swap = {
       xToY: side,
-        accountX: accountX,
-        accountY: accountY,
-        amount: tou64(amount),
-        byAmountIn: true,
-        knownPrice: pool.sqrtPrice,
-        slippage: toDecimal(2, 2),
-        pair,
-        owner: MINTER.publicKey
+      accountX: accountX,
+      accountY: accountY,
+      amount: tou64(amount),
+      byAmountIn: true,
+      knownPrice: pool.sqrtPrice,
+      slippage: toDecimal(2, 2),
+      pair,
+      owner: MINTER.publicKey
     }
     await swap(market, swapVars, MINTER)
   }

@@ -116,7 +116,7 @@ export const signAndSend = async (
   connection: Connection,
   opts?: ConfirmOptions
 ) => {
-  tx.setSigners(...signers.map((s) => s.publicKey))
+  tx.setSigners(...signers.map(s => s.publicKey))
   const blockhash = await connection.getRecentBlockhash(
     opts?.commitment || Provider.defaultOptions().commitment
   )
@@ -127,10 +127,10 @@ export const signAndSend = async (
 }
 
 export const sleep = async (ms: number) => {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-export const tou64 = (amount) => {
+export const tou64 = amount => {
   // eslint-disable-next-line new-cap
   return new u64(amount.toString())
 }
@@ -298,7 +298,7 @@ export const calculateAveragePrice = (swapParameters: SimulateSwapPrice): Decima
       const initialized = closerLimit.limitingTick.initialized
 
       if (initialized) {
-        market.getTick(pair, tickIndex.valueOf()).then((tick) => {
+        market.getTick(pair, tickIndex.valueOf()).then(tick => {
           if (currentTickIndex >= tick.index !== tick.sign) {
             liquidity = { v: liquidity.v.add(tick.liquidityChange.v) }
           } else {

@@ -18,9 +18,9 @@ pub struct ChangeProtocolFee<'info> {
         bump = fee_tier.load()?.bump
     )]
     pub fee_tier: AccountLoader<'info, FeeTier>,
-    #[account(constraint = &token_x.key() == &pool.load()?.token_x,)]
+    #[account(constraint = token_x.key() == pool.load()?.token_x,)]
     pub token_x: Account<'info, Mint>,
-    #[account(constraint = &token_y.key() == &pool.load()?.token_y,)]
+    #[account(constraint = token_y.key() == pool.load()?.token_y,)]
     pub token_y: Account<'info, Mint>,
     #[account(constraint = &state.load()?.admin == admin.key)]
     pub admin: Signer<'info>,

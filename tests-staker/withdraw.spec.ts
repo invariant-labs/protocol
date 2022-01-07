@@ -7,15 +7,39 @@ import { Keypair, PublicKey } from '@solana/web3.js'
 import { assert } from 'chai'
 import { Decimal } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
-import { createToken, tou64, getTime, almostEqual, createIncentive, updatePositionAndCreateStake, updatePositionAndWithdraw } from './utils'
-import { createFeeTier, createPool, createPositionList, createState, createTick, createToken as createTkn, initPosition, swap } from '../tests/testUtils'
+import {
+  createToken,
+  tou64,
+  getTime,
+  almostEqual,
+  createIncentive,
+  updatePositionAndCreateStake,
+  updatePositionAndWithdraw
+} from './utils'
+import {
+  createFeeTier,
+  createPool,
+  createPositionList,
+  createState,
+  createTick,
+  createToken as createTkn,
+  initPosition,
+  swap
+} from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { toDecimal } from '../sdk-staker/lib/utils'
 import { DENOMINATOR } from '@invariant-labs/sdk'
 import { fromFee, DECIMAL } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { sleep } from '@invariant-labs/sdk'
-import { CreateFeeTier, CreatePool, CreateTick, InitPosition, Swap, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
+import {
+  CreateFeeTier,
+  CreatePool,
+  CreateTick,
+  InitPosition,
+  Swap,
+  UpdateSecondsPerLiquidity
+} from '@invariant-labs/sdk/src/market'
 import { CreateIncentive, CreateStake, Withdraw } from '../sdk-staker/lib/staker'
 
 describe('Withdraw tests', () => {
@@ -121,7 +145,6 @@ describe('Withdraw tests', () => {
     amm = anchor.workspace.Amm.programId
 
     //create tokens
-
   })
 
   it('Withdraw', async () => {
@@ -217,7 +240,14 @@ describe('Withdraw tests', () => {
       amm
     }
 
-    await updatePositionAndCreateStake(market, staker, updateSecondsPerLiquidityVars, createStakeVars, [positionOwner], connection)
+    await updatePositionAndCreateStake(
+      market,
+      staker,
+      updateSecondsPerLiquidityVars,
+      createStakeVars,
+      [positionOwner],
+      connection
+    )
 
     // Create owner
     const trader = Keypair.generate()
@@ -261,7 +291,14 @@ describe('Withdraw tests', () => {
       index,
       nonce
     }
-    await updatePositionAndWithdraw(market, staker, updateSecondsPerLiquidityVars, withdrawVars, [positionOwner], connection)
+    await updatePositionAndWithdraw(
+      market,
+      staker,
+      updateSecondsPerLiquidityVars,
+      withdrawVars,
+      [positionOwner],
+      connection
+    )
 
     const balanceAfter = (await incentiveToken.getAccountInfo(ownerTokenAcc)).amount
     assert.ok(almostEqual(balanceAfter, new BN('12000000000000'), epsilon))

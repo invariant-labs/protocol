@@ -29,7 +29,7 @@ const createUsdcUsdt = async (market: Market) => {
   const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.USDT), feeTier)
   const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
   const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
-  const protocolFee: Decimal = { v: fromFee(new BN(10000))}
+  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
 
   const createPoolVars: CreatePool = {
     pair,
@@ -44,7 +44,7 @@ const createUsdcSol = async (market: Market) => {
   const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.SOL), feeTier)
   const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
   const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
-  const protocolFee: Decimal = { v: fromFee(new BN(10000))}
+  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
 
   const createPoolVars: CreatePool = {
     pair,
@@ -61,8 +61,7 @@ const createMsolSol = async (market: Market) => {
   const pair = new Pair(new PublicKey(MOCK_TOKENS.MSOL), new PublicKey(MOCK_TOKENS.SOL), feeTier)
   const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
   const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
-  const protocolFee: Decimal = { v: fromFee(new BN(10000))}
-
+  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
 
   const createPoolVars: CreatePool = {
     pair,

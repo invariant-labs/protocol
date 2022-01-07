@@ -1,10 +1,10 @@
 use crate::decimal::Decimal;
 use crate::interfaces::take_tokens::TakeTokens;
-use crate::structs::Tickmap;
 use crate::structs::pool::Pool;
 use crate::structs::position::Position;
 use crate::structs::position_list::PositionList;
 use crate::structs::tick::Tick;
+use crate::structs::Tickmap;
 use crate::util::check_ticks;
 use crate::*;
 use anchor_lang::prelude::*;
@@ -49,34 +49,34 @@ pub struct CreatePosition<'info> {
     )]
     pub upper_tick: AccountLoader<'info, Tick>,
     #[account(mut,
-        constraint = &tickmap.key() == &pool.load()?.tickmap,
+        constraint = tickmap.key() == pool.load()?.tickmap,
         constraint = tickmap.to_account_info().owner == program_id,
     )]
     pub tickmap: AccountLoader<'info, Tickmap>,
-    #[account(constraint = &token_x.key() == &pool.load()?.token_x,)]
+    #[account(constraint = token_x.key() == pool.load()?.token_x,)]
     pub token_x: Account<'info, Mint>,
-    #[account(constraint = &token_y.key() == &pool.load()?.token_y,)]
+    #[account(constraint = token_y.key() == pool.load()?.token_y,)]
     pub token_y: Account<'info, Mint>,
     #[account(mut,
-        constraint = &account_x.mint == &token_x.key(),
+        constraint = account_x.mint == token_x.key(),
         constraint = &account_x.owner == owner.key,
     )]
     pub account_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = &account_y.mint == &token_y.key(),
-        constraint = &account_y.owner == owner.key	
+        constraint = account_y.mint == token_y.key(),
+        constraint = &account_y.owner == owner.key
     )]
     pub account_y: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = &reserve_x.mint == &token_x.key(),
+        constraint = reserve_x.mint == token_x.key(),
         constraint = &reserve_x.owner == program_authority.key,
-        constraint = &reserve_x.key() == &pool.load()?.token_x_reserve
+        constraint = reserve_x.key() == pool.load()?.token_x_reserve
     )]
     pub reserve_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = &reserve_y.mint == &token_y.key(),
+        constraint = reserve_y.mint == token_y.key(),
         constraint = &reserve_y.owner == program_authority.key,
-        constraint = &reserve_y.key() == &pool.load()?.token_y_reserve
+        constraint = reserve_y.key() == pool.load()?.token_y_reserve
     )]
     pub reserve_y: Box<Account<'info, TokenAccount>>,
     #[account(constraint = &state.load()?.authority == program_authority.key)]

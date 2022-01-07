@@ -91,7 +91,7 @@ export const positionWithoutOwnerEquals = (a: Position, b: Position) => {
 
 export const createStandardFeeTiers = async (market: Market, payer: Keypair) => {
   Promise.all(
-    FEE_TIERS.map(async (feeTier) => {
+    FEE_TIERS.map(async feeTier => {
       const createFeeTierVars: CreateFeeTier = {
         feeTier,
         admin: payer.publicKey
@@ -327,7 +327,7 @@ export const createTicksFromRange = async (
   const step = pair.feeTier.tickSpacing ?? feeToTickSpacing(pair.feeTier.fee)
 
   Promise.all(
-    generateTicksArray(start, stop, step).map(async (index) => {
+    generateTicksArray(start, stop, step).map(async index => {
       const createTickVars: CreateTick = {
         pair,
         index,
@@ -408,9 +408,6 @@ export const updateSecondsPerLiquidity = async (
   await signAndSend(tx, [signer], market.connection)
 }
 
-export const initializeOracle = async (
-  market: Market,
-  initializeOracle: InitializeOracle
-) => {
+export const initializeOracle = async (market: Market, initializeOracle: InitializeOracle) => {
   await market.initializeOracle(initializeOracle)
 }

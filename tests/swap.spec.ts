@@ -3,19 +3,27 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
-import { createFeeTier, createPool, createPositionList, createState, createTick, createToken, initPosition, swap } from './testUtils'
 import {
-  Market,
-  Pair,
-  tou64,
-  DENOMINATOR,
-  TICK_LIMIT,
-  Network
-} from '@invariant-labs/sdk'
+  createFeeTier,
+  createPool,
+  createPositionList,
+  createState,
+  createTick,
+  createToken,
+  initPosition,
+  swap
+} from './testUtils'
+import { Market, Pair, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@invariant-labs/sdk'
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
-import { CreateFeeTier, CreatePool, CreateTick, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
+import {
+  CreateFeeTier,
+  CreatePool,
+  CreateTick,
+  InitPosition,
+  Swap
+} from '@invariant-labs/sdk/src/market'
 
 describe('swap', () => {
   const provider = Provider.local()
@@ -60,8 +68,8 @@ describe('swap', () => {
     await createState(market, admin.publicKey, admin)
 
     const createFeeTierVars: CreateFeeTier = {
-       feeTier,
-       admin: admin.publicKey
+      feeTier,
+      admin: admin.publicKey
     }
     await createFeeTier(market, createFeeTierVars, admin)
   })
@@ -90,7 +98,7 @@ describe('swap', () => {
 
     const tickmapData = await market.getTickmap(pair)
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
-    assert.ok(tickmapData.bitmap.every((v) => v == 0))
+    assert.ok(tickmapData.bitmap.every(v => v == 0))
   })
   it('#swap() within a tick', async () => {
     // Deposit
@@ -124,12 +132,12 @@ describe('swap', () => {
 
     const initPositionVars: InitPosition = {
       pair,
-        owner: positionOwner.publicKey,
-        userTokenX: userTokenXAccount,
-        userTokenY: userTokenYAccount,
-        lowerTick,
-        upperTick,
-        liquidityDelta
+      owner: positionOwner.publicKey,
+      userTokenX: userTokenXAccount,
+      userTokenY: userTokenYAccount,
+      lowerTick,
+      upperTick,
+      liquidityDelta
     }
     await initPosition(market, initPositionVars, positionOwner)
 
@@ -148,7 +156,7 @@ describe('swap', () => {
     const poolDataBefore = await market.getPool(pair)
     const reserveXBefore = (await tokenX.getAccountInfo(poolDataBefore.tokenXReserve)).amount
     const reserveYBefore = (await tokenY.getAccountInfo(poolDataBefore.tokenYReserve)).amount
-    
+
     const swapVars: Swap = {
       pair,
       xToY: true,

@@ -65,12 +65,12 @@ const main = async () => {
 
   const initPositionVars: InitPosition = {
     pair,
-      owner: MINTER.publicKey,
-      userTokenX: minterUsdc,
-      userTokenY: minterSol,
-      lowerTick,
-      upperTick,
-      liquidityDelta: liquidity
+    owner: MINTER.publicKey,
+    userTokenX: minterUsdc,
+    userTokenY: minterSol,
+    lowerTick,
+    upperTick,
+    liquidityDelta: liquidity
   }
   await initPosition(market, initPositionVars, MINTER)
 }

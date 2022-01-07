@@ -22,16 +22,16 @@ pub struct CreateTick<'info> {
     )]
     pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
-        constraint = &tickmap.key() == &pool.load()?.tickmap,
+        constraint = tickmap.key() == pool.load()?.tickmap,
         constraint = tickmap.to_account_info().owner == program_id,
     )]
     pub tickmap: AccountLoader<'info, Tickmap>,
     #[account(mut)]
     pub payer: Signer<'info>,
     #[account(
-        constraint = &token_x.key() == &pool.load()?.token_x)]
+        constraint = token_x.key() == pool.load()?.token_x)]
     pub token_x: Account<'info, Mint>,
-    #[account(constraint = &token_y.key() == &pool.load()?.token_y)]
+    #[account(constraint = token_y.key() == pool.load()?.token_y)]
     pub token_y: Account<'info, Mint>,
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]
