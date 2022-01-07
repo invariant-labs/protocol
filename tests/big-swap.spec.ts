@@ -1,7 +1,7 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
-import { Network, Market, Pair } from '@invariant-labs/sdk'
+import { Network, Market, Pair, DENOMINATOR, TICK_LIMIT } from '@invariant-labs/sdk'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import {
   createFeeTier,
@@ -12,8 +12,6 @@ import {
   performSwap
 } from './testUtils'
 import { assert } from 'chai'
-import { DENOMINATOR } from '@invariant-labs/sdk'
-import { TICK_LIMIT } from '@invariant-labs/sdk'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
@@ -155,7 +153,7 @@ describe('big-swap', () => {
     ]
 
     for (let i = 0; i < swaps.length; i++) {
-      let pool = await market.getPool(pair)
+      const pool = await market.getPool(pair)
       await performSwap(
         pair,
         swaps[i][0],
@@ -171,7 +169,7 @@ describe('big-swap', () => {
       )
     }
 
-    let poolAfterSwaps = await market.getPool(pair)
+    const poolAfterSwaps = await market.getPool(pair)
     for (let i = -40; i < 50; i += 10) {
       let lowerTick
       try {
@@ -190,7 +188,7 @@ describe('big-swap', () => {
             continue
           }
         }
-        let [feeGrowthInsideX, feeGrowthInsideY] = calculateFeeGrowthInside(
+        const [feeGrowthInsideX, feeGrowthInsideY] = calculateFeeGrowthInside(
           lowerTick,
           upperTick,
           poolAfterSwaps.currentTickIndex,
@@ -277,7 +275,7 @@ describe('big-swap', () => {
     ]
 
     for (let i = 0; i < swaps2.length; i++) {
-      let pool = await market.getPool(pair)
+      const pool = await market.getPool(pair)
       await performSwap(
         pair,
         swaps2[i][0],
@@ -293,7 +291,7 @@ describe('big-swap', () => {
       )
     }
 
-    let poolAfterSwaps2 = await market.getPool(pair)
+    const poolAfterSwaps2 = await market.getPool(pair)
     for (let i = -40; i < 50; i += 10) {
       let lowerTick
       try {
@@ -312,7 +310,7 @@ describe('big-swap', () => {
             continue
           }
         }
-        let [feeGrowthInsideX, feeGrowthInsideY] = calculateFeeGrowthInside(
+        const [feeGrowthInsideX, feeGrowthInsideY] = calculateFeeGrowthInside(
           lowerTick,
           upperTick,
           poolAfterSwaps2.currentTickIndex,

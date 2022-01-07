@@ -22,7 +22,6 @@
   "dependencies": {
     "@project-serum/anchor": "^0.18.2",
     "@solana/buffer-layout": "^4.0.0",
-    "chai": "^4.3.0",
-    "eslint": "^8.6.0"
+    "chai": "^4.3.0"
   }
 }

@@ -20,10 +20,7 @@ import {
 import { feeToTickSpacing, FEE_TIERS, generateTicksArray } from '@invariant-labs/sdk/src/utils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import BN from 'bn.js'
-import { Pair } from '@invariant-labs/sdk'
-import { tou64 } from '@invariant-labs/sdk'
-import { TICK_LIMIT } from '@invariant-labs/sdk'
-import { signAndSend } from '@invariant-labs/sdk'
+import { Pair, tou64, TICK_LIMIT, signAndSend } from '@invariant-labs/sdk'
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {
@@ -294,7 +291,7 @@ export const changeProtocolFee = async (
   await signAndSend(tx, [signer], market.connection)
 }
 
-//Admin function
+// Admin function
 export const createFeeTier = async (
   market: Market,
   createFeeTier: CreateFeeTier,
@@ -367,7 +364,7 @@ export const claimFee = async (market: Market, claimFee: ClaimFee, signer: Keypa
   await signAndSend(tx, [signer], market.connection)
 }
 
-//Admin function
+// Admin function
 export const withdrawProtocolFee = async (
   market: Market,
   withdrawProtocolFee: WithdrawProtocolFee,

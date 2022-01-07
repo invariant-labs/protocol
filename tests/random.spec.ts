@@ -8,15 +8,13 @@ import {
   initPosition,
   swap
 } from './testUtils'
-import { Market, DENOMINATOR, Network } from '@invariant-labs/sdk'
+import { Market, DENOMINATOR, Network, signAndSend, sleep } from '@invariant-labs/sdk'
 import { fromFee, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { Decimal, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 import { Pair } from '@invariant-labs/sdk/src'
 import { beforeEach } from 'mocha'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { signAndSend } from '@invariant-labs/sdk'
 import { FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
-import { sleep } from '@invariant-labs/sdk'
 
 describe('limits', () => {
   const provider = Provider.local()
@@ -27,7 +25,7 @@ describe('limits', () => {
   let market: Market
   let pair: Pair
   let mintAuthority: Keypair
-  let knownPrice: Decimal = { v: new BN(DENOMINATOR) }
+  const knownPrice: Decimal = { v: new BN(DENOMINATOR) }
   const feeTier = FEE_TIERS[0]
 
   before(async () => {

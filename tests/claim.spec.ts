@@ -1,7 +1,7 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
-import { Network, Market, Pair } from '@invariant-labs/sdk'
+import { Network, Market, Pair, DENOMINATOR, TICK_LIMIT, tou64 } from '@invariant-labs/sdk'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import {
   claimFee,
@@ -14,9 +14,6 @@ import {
   swap
 } from './testUtils'
 import { assert } from 'chai'
-import { DENOMINATOR } from '@invariant-labs/sdk'
-import { TICK_LIMIT } from '@invariant-labs/sdk'
-import { tou64 } from '@invariant-labs/sdk'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'

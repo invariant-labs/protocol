@@ -1,6 +1,6 @@
 import * as anchor from '@project-serum/anchor'
 import { Program, Provider, BN } from '@project-serum/anchor'
-import { Market, Pair } from '@invariant-labs/sdk'
+import { Market, Pair, DENOMINATOR, sleep } from '@invariant-labs/sdk'
 import { Staker as StakerIdl } from '../sdk-staker/src/idl/staker'
 import { Network, Staker } from '../sdk-staker/src'
 import { Keypair, PublicKey } from '@solana/web3.js'
@@ -28,10 +28,8 @@ import {
 } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { toDecimal } from '../sdk-staker/lib/utils'
-import { DENOMINATOR } from '@invariant-labs/sdk'
 import { fromFee, DECIMAL } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
-import { sleep } from '@invariant-labs/sdk'
 import {
   CreateFeeTier,
   CreatePool,
@@ -71,7 +69,7 @@ describe('Withdraw tests', () => {
   const epsilon = new BN(10).pow(new BN(DECIMAL)).mul(new BN(2))
 
   before(async () => {
-    //create staker
+    // create staker
     const [_mintAuthority, _nonce] = await anchor.web3.PublicKey.findProgramAddress(
       [STAKER_SEED],
       program.programId
@@ -86,25 +84,25 @@ describe('Withdraw tests', () => {
       await connection.requestAirdrop(incentiveAccount.publicKey, 10e9)
     ])
 
-    //create token
+    // create token
     incentiveToken = await createToken({
       connection: connection,
       payer: wallet,
       mintAuthority: wallet.publicKey
     })
-    //add SOL to founder acc
+    // add SOL to founder acc
     await connection.requestAirdrop(founderAccount.publicKey, 10e9)
 
-    //create taken acc for founder and staker
+    // create taken acc for founder and staker
     founderTokenAcc = await incentiveToken.createAccount(founderAccount.publicKey)
     incentiveTokenAcc = await incentiveToken.createAccount(stakerAuthority)
     ownerTokenAcc = await incentiveToken.createAccount(positionOwner.publicKey)
 
-    //mint to founder acc
+    // mint to founder acc
     amount = new anchor.BN(5000 * 1e12)
     await incentiveToken.mintTo(founderTokenAcc, wallet, [], tou64(amount))
 
-    //create amm and pool
+    // create amm and pool
     market = await Market.build(0, provider.wallet, connection, anchor.workspace.Amm.programId)
 
     const tokens = await Promise.all([
@@ -144,11 +142,11 @@ describe('Withdraw tests', () => {
     pool = await pair.getAddress(anchor.workspace.Amm.programId)
     amm = anchor.workspace.Amm.programId
 
-    //create tokens
+    // create tokens
   })
 
   it('Withdraw', async () => {
-    //create incentive
+    // create incentive
 
     const currentTime = getTime()
     const reward: Decimal = { v: new BN(1000).mul(DENOMINATOR) }
@@ -168,7 +166,7 @@ describe('Withdraw tests', () => {
     }
     await createIncentive(staker, createIncentiveVars, [founderAccount, incentiveAccount])
 
-    //create position
+    // create position
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
     const upperTick = 10
     const lowerTick = -30
@@ -209,20 +207,20 @@ describe('Withdraw tests', () => {
     }
     await initPosition(market, initPositionVars, positionOwner)
 
-    let index = 0
+    const index = 0
 
     const { positionAddress: position, positionBump: bump } = await market.getPositionAddress(
       positionOwner.publicKey,
       index
     )
-    //wait for some seconds per liquidity
+    // wait for some seconds per liquidity
     await sleep(10000)
 
-    let positionStructBefore = await market.getPosition(positionOwner.publicKey, index)
+    const positionStructBefore = await market.getPosition(positionOwner.publicKey, index)
     const poolAddress = positionStructBefore.pool
     const positionId = positionStructBefore.id
 
-    //stake
+    // stake
     const updateSecondsPerLiquidityVars: UpdateSecondsPerLiquidity = {
       pair,
       owner: positionOwner.publicKey,
@@ -278,7 +276,7 @@ describe('Withdraw tests', () => {
 
     await sleep(10000)
 
-    //withdraw
+    // withdraw
     const withdrawVars: Withdraw = {
       incentive: incentiveAccount.publicKey,
       pool: poolAddress,

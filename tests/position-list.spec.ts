@@ -1,7 +1,7 @@
 import * as anchor from '@project-serum/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { assert } from 'chai'
-import { Market, Pair, tou64, fromInteger, Network } from '@invariant-labs/sdk'
+import { Market, Pair, tou64, fromInteger, Network, sleep } from '@invariant-labs/sdk'
 import { Provider, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import {
@@ -20,7 +20,6 @@ import {
 } from './testUtils'
 import { assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
 import { ERRORS, fromFee } from '@invariant-labs/sdk/lib/utils'
-import { sleep } from '@invariant-labs/sdk'
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import {
   CreateFeeTier,
@@ -49,7 +48,7 @@ describe('Position list', () => {
   let tokenX: Token
   let tokenY: Token
   let initTick: number
-  let ticksIndexes: Array<number>
+  let ticksIndexes: number[]
   let xOwnerAmount: u64
   let yOwnerAmount: u64
   let userTokenXAccount: PublicKey

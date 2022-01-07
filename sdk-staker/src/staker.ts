@@ -80,7 +80,7 @@ export class Staker {
         amm,
         rent: SYSVAR_RENT_PUBKEY
       }
-    }) as TransactionInstruction
+    })
   }
 
   public async createIncentiveTransaction(createIncentive: CreateIncentive) {
@@ -94,9 +94,9 @@ export class Staker {
 
   public async getUserStakeAddressAndBump(incentive: PublicKey, pool: PublicKey, id: BN) {
     const pubBuf = pool.toBuffer()
-    let idBuf = Buffer.alloc(16)
+    const idBuf = Buffer.alloc(16)
     idBuf.writeBigUInt64LE(BigInt(id.toString()))
-    return PublicKey.findProgramAddress(
+    return await PublicKey.findProgramAddress(
       [STAKER_SEED, incentive.toBuffer(), pubBuf, idBuf],
       this.programId
     )
@@ -128,7 +128,7 @@ export class Staker {
         amm,
         rent: SYSVAR_RENT_PUBKEY
       }
-    }) as TransactionInstruction
+    })
   }
 
   public async createStakeTransaction(createStake: CreateStake) {
@@ -175,7 +175,7 @@ export class Staker {
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY
       }
-    }) as TransactionInstruction
+    })
   }
 
   public async withdrawTransaction(withdraw: Withdraw) {
@@ -196,7 +196,7 @@ export class Staker {
       this.programId
     )
 
-    return (await this.program.instruction.endIncentive(stakerAuthorityBump, {
+    return this.program.instruction.endIncentive(stakerAuthorityBump, {
       accounts: {
         incentive,
         incentiveTokenAccount: incentiveTokenAcc,
@@ -207,7 +207,7 @@ export class Staker {
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY
       }
-    })) as TransactionInstruction
+    })
   }
 
   public async endIncentiveTransaction(endIncentive: EndIncentive) {

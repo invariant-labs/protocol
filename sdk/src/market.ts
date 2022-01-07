@@ -20,9 +20,8 @@ import {
 } from './utils'
 import { Amm, IDL } from './idl/amm'
 import { ComputeUnitsInstruction, IWallet, Pair } from '.'
-import { getMarketAddress } from './network'
+import { getMarketAddress, Network } from './network'
 
-import { Network } from './network'
 const POSITION_SEED = 'positionv1'
 const TICK_SEED = 'tickv1'
 const POSITION_LIST_SEED = 'positionlistv1'
@@ -76,7 +75,7 @@ export class Market {
     const tokenXReserve = await tokenX.createAccount(this.programAuthority)
     const tokenYReserve = await tokenY.createAccount(this.programAuthority)
 
-    return this.program.rpc.createPool(bump, tick, protocolFee, {
+    return await this.program.rpc.createPool(bump, tick, protocolFee, {
       accounts: {
         state: stateAddress,
         pool: poolAddress,
@@ -193,7 +192,7 @@ export class Market {
       maxRange
     )
 
-    return Promise.all(
+    return await Promise.all(
       indexes.map(async index => {
         const { tickAddress } = await this.getTickAddress(pair, index)
         return (await this.program.account.tick.fetch(tickAddress)) as Tick
@@ -218,17 +217,17 @@ export class Market {
     return (await this.program.account.position.fetch(positionAddress)) as Position
   }
 
-  async getPositionsFromIndexes(owner: PublicKey, indexes: Array<number>) {
+  async getPositionsFromIndexes(owner: PublicKey, indexes: number[]) {
     const positionPromises = indexes.map(async i => {
       return await this.getPosition(owner, i)
     })
-    return Promise.all(positionPromises)
+    return await Promise.all(positionPromises)
   }
 
   async getPositionsFromRange(owner: PublicKey, lowerIndex: number, upperIndex: number) {
     try {
       await this.getPositionList(owner)
-      return this.getPositionsFromIndexes(
+      return await this.getPositionsFromIndexes(
         owner,
         Array.from({ length: upperIndex - lowerIndex + 1 }, (_, i) => i + lowerIndex)
       )
@@ -282,7 +281,7 @@ export class Market {
 
   async getNewPositionAddress(owner: PublicKey) {
     const positionList = await this.getPositionList(owner)
-    return this.getPositionAddress(owner, positionList.head)
+    return await this.getPositionAddress(owner, positionList.head)
   }
 
   async createFeeTierInstruction({ feeTier, admin }: CreateFeeTier) {
@@ -361,7 +360,7 @@ export class Market {
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId
       }
-    }) as TransactionInstruction
+    })
   }
 
   async createTickTransaction(createTick: CreateTick) {
@@ -381,7 +380,7 @@ export class Market {
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId
       }
-    }) as TransactionInstruction
+    })
   }
 
   async createPositionListTransaction(owner?) {
@@ -436,7 +435,7 @@ export class Market {
           systemProgram: SystemProgram.programId
         }
       }
-    ) as TransactionInstruction
+    )
   }
 
   async initPositionTx(initPosition: InitPosition) {
@@ -606,7 +605,7 @@ export class Market {
           tokenProgram: TOKEN_PROGRAM_ID
         }
       }
-    ) as TransactionInstruction
+    )
   }
 
   async claimFeeTransaction(claimFee: ClaimFee) {
@@ -634,7 +633,7 @@ export class Market {
         programAuthority: this.programAuthority,
         tokenProgram: TOKEN_PROGRAM_ID
       }
-    }) as TransactionInstruction
+    })
   }
 
   async withdrawProtocolFeeTransaction(withdrawProtocolFee: WithdrawProtocolFee) {
@@ -691,7 +690,7 @@ export class Market {
           tokenProgram: TOKEN_PROGRAM_ID
         }
       }
-    ) as TransactionInstruction
+    )
   }
 
   async removePositionTransaction(removePosition: RemovePosition) {
@@ -730,7 +729,7 @@ export class Market {
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId
       }
-    }) as TransactionInstruction
+    })
   }
 
   async transferPositionOwnershipTransaction(transferPositionOwnership: TransferPositionOwnership) {
@@ -745,7 +744,7 @@ export class Market {
     const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTickIndex)
     const { tickAddress: upperTickAddress } = await this.getTickAddress(pair, upperTickIndex)
     const poolAddress = await pair.getAddress(this.program.programId)
-    const { positionAddress: positionAddress } = await this.getPositionAddress(owner, index)
+    const { positionAddress } = await this.getPositionAddress(owner, index)
 
     return this.program.instruction.updateSecondsPerLiquidity(
       lowerTickIndex,
@@ -764,7 +763,7 @@ export class Market {
           systemProgram: SystemProgram.programId
         }
       }
-    ) as TransactionInstruction
+    )
   }
 
   async updateSecondsPerLiquidityTransaction(updateSecondsPerLiquidity: UpdateSecondsPerLiquidity) {
@@ -838,7 +837,7 @@ export interface PoolStructure {
 }
 
 export interface Tickmap {
-  bitmap: Array<number>
+  bitmap: number[]
 }
 export interface PositionList {
   head: number

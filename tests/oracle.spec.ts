@@ -8,9 +8,8 @@ import {
   createState,
   initializeOracle
 } from './testUtils'
-import { Market, Pair, TICK_LIMIT, Network } from '@invariant-labs/sdk'
+import { Market, Pair, TICK_LIMIT, Network, sleep } from '@invariant-labs/sdk'
 import { DEFAULT_PUBLIC_KEY, InitializeOracle } from '@invariant-labs/sdk/src/market'
-import { sleep } from '@invariant-labs/sdk'
 
 describe('oracle', () => {
   const provider = Provider.local()

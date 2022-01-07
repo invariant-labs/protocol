@@ -325,10 +325,10 @@ export const findClosestTicks = (
   let above = currentIndex + 1
   let below = currentIndex
 
-  let found: number[] = []
+  const found: number[] = []
 
-  let reachedTop = oneWay === 'down' ? true : false
-  let reachedBottom = oneWay === 'up' ? true : false
+  let reachedTop = oneWay === 'down'
+  let reachedBottom = oneWay === 'up'
 
   while (found.length < limit && above - below < maxRange * 2) {
     if (!reachedTop) {
@@ -352,7 +352,7 @@ export const findClosestTicks = (
   // two can be added in the last iteration
   if (found.length > limit) found.pop()
 
-  return found.map((i) => (i - TICK_LIMIT) * tickSpacing)
+  return found.map(i => (i - TICK_LIMIT) * tickSpacing)
 }
 
 const mulUp = (a: BN, b: BN) => {
@@ -415,8 +415,9 @@ export const getLiquidityByX = (
   roundingUp: boolean,
   tickSpacing?: number
 ) => {
-  if ((lowerTick == -Infinity || upperTick == Infinity) && tickSpacing == undefined)
+  if ((lowerTick == -Infinity || upperTick == Infinity) && tickSpacing == undefined) {
     throw new Error('tickSpacing is required for calculating full range liquidity')
+  }
 
   const lowerTickIndex = lowerTick != -Infinity ? lowerTick : getMinTick(tickSpacing)
   const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(tickSpacing)
@@ -472,8 +473,9 @@ export const getLiquidityByY = (
   roundingUp: boolean,
   tickSpacing?: number
 ) => {
-  if ((lowerTick == -Infinity || upperTick == Infinity) && tickSpacing == undefined)
+  if ((lowerTick == -Infinity || upperTick == Infinity) && tickSpacing == undefined) {
     throw new Error('tickSpacing is required for calculating full range liquidity')
+  }
 
   const lowerTickIndex = lowerTick != -Infinity ? lowerTick : getMinTick(tickSpacing)
   const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(tickSpacing)

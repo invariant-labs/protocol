@@ -2,7 +2,7 @@ import * as anchor from '@project-serum/anchor'
 import { Program, Provider, BN } from '@project-serum/anchor'
 import { Market, Pair } from '@invariant-labs/sdk'
 import { Staker as StakerIdl } from '../sdk-staker/src/idl/staker'
-import { Staker } from '../sdk-staker/lib/staker'
+import { Staker, CreateIncentive } from '../sdk-staker/lib/staker'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { assert } from 'chai'
 import { Decimal } from '../sdk-staker/src/staker'
@@ -25,7 +25,6 @@ import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { CreateFeeTier, CreatePool } from '@invariant-labs/sdk/src/market'
-import { CreateIncentive } from '../sdk-staker/lib/staker'
 import { Network } from '../sdk-staker/lib'
 
 describe('Create incentive tests', () => {
@@ -52,7 +51,7 @@ describe('Create incentive tests', () => {
   let pair: Pair
 
   before(async () => {
-    //create staker instance
+    // create staker instance
     const [_mintAuthority, _nonce] = await anchor.web3.PublicKey.findProgramAddress(
       [STAKER_SEED],
       program.programId
@@ -60,24 +59,24 @@ describe('Create incentive tests', () => {
     stakerAuthority = _mintAuthority
     staker = new Staker(connection, Network.LOCAL, provider.wallet, program.programId)
 
-    //create token
+    // create token
     incentiveToken = await createToken({
       connection: connection,
       payer: wallet,
       mintAuthority: wallet.publicKey
     })
-    //add SOL to founder acc
+    // add SOL to founder acc
     await connection.requestAirdrop(founderAccount.publicKey, 10e9)
 
-    //create taken acc for founder and staker
+    // create taken acc for founder and staker
     founderTokenAcc = await incentiveToken.createAccount(founderAccount.publicKey)
     incentiveTokenAcc = await incentiveToken.createAccount(stakerAuthority)
 
-    //mint to founder acc
+    // mint to founder acc
     amount = new anchor.BN(100 * 1e6)
     await incentiveToken.mintTo(founderTokenAcc, wallet, [], tou64(amount))
 
-    //create amm and pool
+    // create amm and pool
 
     const market = await Market.build(
       0,

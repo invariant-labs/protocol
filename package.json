@@ -35,7 +35,6 @@
     "@project-serum/serum": "^0.13.58",
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.25.0",
-    "eslint": "^7.0.0",
     "eslint-config-standard-with-typescript": "^21.0.1",
     "eslint-plugin-prettier": "^4.0.0",
     "ts-mocha": "^8.0.0"

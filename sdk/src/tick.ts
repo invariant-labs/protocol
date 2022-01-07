@@ -3,15 +3,21 @@ import { TICK_LIMIT } from '.'
 import { Decimal } from './market'
 import { calculate_price_sqrt, TICK_SEARCH_RANGE } from './math'
 
-export const getTickFromPrice = (currentTick: number, tickSpacing: number, price: Decimal, xToY: boolean): number => {
+export const getTickFromPrice = (
+  currentTick: number,
+  tickSpacing: number,
+  price: Decimal,
+  xToY: boolean
+): number => {
   assert.isTrue(currentTick % tickSpacing == 0)
 
   if (xToY) {
     return priceToTickInRange(
-      price, 
-      Math.max(-TICK_LIMIT, currentTick - TICK_SEARCH_RANGE), 
-      currentTick, 
-      tickSpacing)
+      price,
+      Math.max(-TICK_LIMIT, currentTick - TICK_SEARCH_RANGE),
+      currentTick,
+      tickSpacing
+    )
   } else {
     return priceToTickInRange(
       price,
@@ -27,11 +33,11 @@ const priceToTickInRange = (price: Decimal, low: number, high: number, step: num
 
   low = Math.floor(low / step)
   high = Math.floor(high / step)
-  let targetValue = price
+  const targetValue = price
 
   while (high - low > 1) {
-    let mid = Math.floor((high - low) / 2) + low
-    let val = calculate_price_sqrt(mid * step)
+    const mid = Math.floor((high - low) / 2) + low
+    const val = calculate_price_sqrt(mid * step)
 
     if (val.v.eq(targetValue.v)) {
       return mid * step

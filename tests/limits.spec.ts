@@ -8,7 +8,7 @@ import {
   initPosition,
   swap
 } from './testUtils'
-import { Market, DENOMINATOR, Network } from '@invariant-labs/sdk'
+import { Market, DENOMINATOR, Network, calculate_price_sqrt, sleep } from '@invariant-labs/sdk'
 import { assertThrowsAsync, fromFee, getMaxTick, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { Decimal, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 import { getLiquidityByX, getLiquidityByY } from '@invariant-labs/sdk/src/math'
@@ -16,8 +16,6 @@ import { beforeEach } from 'mocha'
 import { assert } from 'chai'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
-import { calculate_price_sqrt } from '@invariant-labs/sdk'
-import { sleep } from '@invariant-labs/sdk'
 import { Pair } from '@invariant-labs/sdk/lib/pair'
 
 describe('limits', () => {
@@ -31,7 +29,7 @@ describe('limits', () => {
   let tokenY: Token
   let pair: Pair
   let mintAuthority: Keypair
-  let knownPrice: Decimal = { v: new BN(DENOMINATOR) }
+  const knownPrice: Decimal = { v: new BN(DENOMINATOR) }
   const feeTier = FEE_TIERS[0]
 
   before(async () => {

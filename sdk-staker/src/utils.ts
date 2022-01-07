@@ -35,7 +35,7 @@ export const fromInteger = (integer: number): { v: BN } => {
 
 export const signAndSend = async (
   tx: Transaction,
-  signers: Array<Keypair>,
+  signers: Keypair[],
   connection: Connection,
   opts?: ConfirmOptions
 ) => {

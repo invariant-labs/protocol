@@ -3,8 +3,13 @@ import { Account, Connection, Keypair, PublicKey } from '@solana/web3.js'
 import { Token, u64 } from '@solana/spl-token'
 import { TokenInstructions } from '@project-serum/serum'
 import { BN } from '@project-serum/anchor'
-import { CreateIncentive, CreateStake, EndIncentive, Withdraw } from '../sdk-staker/lib/staker'
-import { Staker } from '../sdk-staker/lib/staker'
+import {
+  CreateIncentive,
+  CreateStake,
+  EndIncentive,
+  Withdraw,
+  Staker
+} from '../sdk-staker/lib/staker'
 import { signAndSend } from '../sdk-staker/lib/utils'
 import { UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
 import { Market } from '@invariant-labs/sdk'
@@ -19,9 +24,9 @@ export enum ERRORS {
 }
 
 export enum ERRORS_STAKER {
-  ZERO_AMOUNT = '0x12f', //0
-  START_IN_PAST = '0x131', //1
-  TO_LONG_DURATION = '0x130' //2
+  ZERO_AMOUNT = '0x12f', // 0
+  START_IN_PAST = '0x131', // 1
+  TO_LONG_DURATION = '0x130' // 2
 }
 
 export const eqDecimal = (a: Decimal, b: Decimal) => {
@@ -93,7 +98,7 @@ export const updatePositionAndCreateStake = async (
   signers: Keypair[],
   connection: Connection
 ) => {
-  let tx = await market.updateSecondsPerLiquidityTransaction(updateSecondsPerLiquidity)
+  const tx = await market.updateSecondsPerLiquidityTransaction(updateSecondsPerLiquidity)
   tx.add(await staker.createStakeInstruction(createStake))
 
   await signAndSend(tx, signers, connection)
@@ -107,7 +112,7 @@ export const updatePositionAndWithdraw = async (
   signers: Keypair[],
   connection: Connection
 ) => {
-  let tx = await market.updateSecondsPerLiquidityTransaction(updateSecondsPerLiquidity)
+  const tx = await market.updateSecondsPerLiquidityTransaction(updateSecondsPerLiquidity)
   tx.add(await staker.withdrawInstruction(withdraw))
 
   await signAndSend(tx, signers, connection)

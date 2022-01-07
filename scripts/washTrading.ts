@@ -35,7 +35,7 @@ const main = async () => {
   while (true) {
     const amount = Math.floor(Math.random() * 1000000) + 1000000 // amount should be between 1000 and 2000
 
-    const side = Math.random() > 0.5 ? true : false
+    const side = Math.random() > 0.5
 
     if (side) {
       await tokenX.mintTo(accountX, MINTER, [], tou64(amount))
