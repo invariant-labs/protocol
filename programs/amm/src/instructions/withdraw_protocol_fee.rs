@@ -1,8 +1,8 @@
-use crate::decimal::Decimal;
 use crate::interfaces::SendTokens;
 use crate::structs::pool::Pool;
 use crate::structs::state::State;
 use crate::SEED;
+use crate::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, TokenAccount, Transfer};
 
@@ -39,8 +39,8 @@ pub struct WithdrawProtocolFee<'info> {
         constraint = reserve_y.to_account_info().key == &pool.load()?.token_y_reserve
     )]
     pub reserve_y: Account<'info, TokenAccount>,
-    #[account(constraint = &state.load()?.admin == admin.key)]
-    pub admin: Signer<'info>,
+    #[account(constraint = &pool.load()?.fee_receiver == authority.key)]
+    pub authority: Signer<'info>,
     #[account(constraint = &state.load()?.authority == program_authority.key)]
     pub program_authority: AccountInfo<'info>,
     #[account(address = token::ID)]
@@ -77,21 +77,16 @@ pub fn handler(ctx: Context<WithdrawProtocolFee>) -> ProgramResult {
     let state = ctx.accounts.state.load()?;
     let mut pool = ctx.accounts.pool.load_mut()?;
 
-    let fee_to_collect_x = pool.fee_protocol_token_x.to_token_floor();
-    let fee_to_collect_y = pool.fee_protocol_token_y.to_token_floor();
-    pool.fee_protocol_token_x =
-        pool.fee_protocol_token_x - Decimal::from_integer(fee_to_collect_x.into());
-    pool.fee_protocol_token_y =
-        pool.fee_protocol_token_y - Decimal::from_integer(fee_to_collect_y.into());
-
-    let seeds = &[SEED.as_bytes(), &[state.nonce]];
-    let signer = &[&seeds[..]];
+    let signer: &[&[&[u8]]] = get_signer!(state.nonce);
 
     let cpi_ctx_x = ctx.accounts.send_x().with_signer(signer);
     let cpi_ctx_y = ctx.accounts.send_y().with_signer(signer);
 
-    token::transfer(cpi_ctx_x, fee_to_collect_x)?;
-    token::transfer(cpi_ctx_y, fee_to_collect_y)?;
+    token::transfer(cpi_ctx_x, pool.fee_protocol_token_x)?;
+    token::transfer(cpi_ctx_y, pool.fee_protocol_token_y)?;
+
+    pool.fee_protocol_token_x = 0;
+    pool.fee_protocol_token_y = 0;
 
     Ok(())
 }

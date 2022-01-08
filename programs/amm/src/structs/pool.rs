@@ -2,6 +2,8 @@ use crate::decimal::Decimal;
 use crate::*;
 use anchor_lang::prelude::*;
 
+use super::{FeeGrowth, TokenAmount};
+
 #[account(zero_copy)]
 #[derive(PartialEq, Default, Debug)]
 pub struct Pool {
@@ -16,28 +18,35 @@ pub struct Pool {
     pub sqrt_price: Decimal,
     pub current_tick_index: i32, // nearest tick below the current price
     pub tickmap: Pubkey,
-    pub fee_growth_global_x: Decimal,
-    pub fee_growth_global_y: Decimal,
-    pub fee_protocol_token_x: Decimal,
-    pub fee_protocol_token_y: Decimal,
+    pub fee_growth_global_x: FeeGrowth,
+    pub fee_growth_global_y: FeeGrowth,
+    pub fee_protocol_token_x: u64, // should be changed to TokenAmount when Armani implements tuple structs
+    pub fee_protocol_token_y: u64,
     pub seconds_per_liquidity_global: Decimal,
     pub start_timestamp: u64,
     pub last_timestamp: u64,
+    pub fee_receiver: Pubkey,
     pub oracle_address: Pubkey,
     pub oracle_initialized: bool,
     pub bump: u8,
 }
 
 impl Pool {
-    pub fn add_fee(&mut self, amount: Decimal, x: bool) {
-        if amount == Decimal::new(0) || { self.liquidity } == Decimal::new(0) {
+    pub fn add_fee(&mut self, amount: TokenAmount, in_x: bool, protocol_fee: Decimal) {
+        let protocol_fee = amount.big_mul(protocol_fee).to_token_ceil();
+        let pool_fee = amount - protocol_fee;
+
+        if pool_fee.is_zero() || self.liquidity.is_zero() {
             return;
         }
-        let fee_growth = amount.big_div(self.liquidity);
-        if x {
-            self.fee_growth_global_x.v += fee_growth.v;
+        let fee_growth = FeeGrowth::from_fee(self.liquidity, pool_fee);
+
+        if in_x {
+            self.fee_growth_global_x = self.fee_growth_global_x + fee_growth;
+            self.fee_protocol_token_x += protocol_fee.0;
         } else {
-            self.fee_growth_global_y.v += fee_growth.v;
+            self.fee_growth_global_y = self.fee_growth_global_y + fee_growth;
+            self.fee_protocol_token_y += protocol_fee.0;
         }
     }
 

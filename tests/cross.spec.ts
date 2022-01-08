@@ -68,8 +68,8 @@ describe('cross', () => {
     assert.ok(createdPool.currentTickIndex == 0)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenX.v.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenY.v.eqn(0))
+    assert.ok(createdPool.feeProtocolTokenX.eqn(0))
+    assert.ok(createdPool.feeProtocolTokenY.eqn(0))
     const tickmapData = await market.getTickmap(pair)
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
     assert.ok(tickmapData.bitmap.every((v) => v == 0))
@@ -167,14 +167,14 @@ describe('cross', () => {
     const reserveYDelta = reservesBefore.y.sub(reservesAfter.y)
 
     assert.ok(amountX.eqn(0))
-    assert.ok(amountY.eq(amount.subn(7)))
+    assert.ok(amountY.eq(amount.subn(10)))
     assert.ok(reserveXDelta.eq(amount))
-    assert.ok(reserveYDelta.eq(amount.subn(7)))
+    assert.ok(reserveYDelta.eq(amount.subn(10)))
 
-    assert.ok(poolData.feeGrowthGlobalX.v.eqn(4042168)) // 0.6 % of amount - protocol fee
+    assert.ok(poolData.feeGrowthGlobalX.v.eq(new BN('4000000000000000000'))) // 0.6 % of amount - protocol fee
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(poolData.feeProtocolTokenX.v.eq(new BN(598199692918)))
-    assert.ok(poolData.feeProtocolTokenY.v.eqn(0))
+    assert.ok(poolData.feeProtocolTokenX.eqn(2))
+    assert.ok(poolData.feeProtocolTokenY.eqn(0))
 
     // Check ticks
     const lowerTickData = await market.getTick(pair, lowerTick)
@@ -186,7 +186,7 @@ describe('cross', () => {
     assert.ok(lowerTickData.liquidityChange.v.eq(liquidityDelta.v))
 
     assert.ok(upperTickData.feeGrowthOutsideX.v.eqn(0))
-    assert.ok(middleTickData.feeGrowthOutsideX.v.eqn(2700540))
+    assert.ok(middleTickData.feeGrowthOutsideX.v.eq(new BN('3000000000000000000')))
     assert.ok(lowerTickData.feeGrowthOutsideX.v.eqn(0))
   })
 })
