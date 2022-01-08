@@ -1,17 +1,23 @@
 import { assert } from 'chai'
 import { TICK_LIMIT } from '.'
 import { Decimal } from './market'
-import { calculate_price_sqrt, TICK_SEARCH_RANGE } from './math'
+import { calculatePriceSqrt, TICK_SEARCH_RANGE } from './math'
 
-export const getTickFromPrice = (currentTick: number, tickSpacing: number, price: Decimal, xToY: boolean): number => {
+export const getTickFromPrice = (
+  currentTick: number,
+  tickSpacing: number,
+  price: Decimal,
+  xToY: boolean
+): number => {
   assert.isTrue(currentTick % tickSpacing == 0)
 
   if (xToY) {
     return priceToTickInRange(
-      price, 
-      Math.max(-TICK_LIMIT, currentTick - TICK_SEARCH_RANGE), 
-      currentTick, 
-      tickSpacing)
+      price,
+      Math.max(-TICK_LIMIT, currentTick - TICK_SEARCH_RANGE),
+      currentTick,
+      tickSpacing
+    )
   } else {
     return priceToTickInRange(
       price,
@@ -31,7 +37,7 @@ const priceToTickInRange = (price: Decimal, low: number, high: number, step: num
 
   while (high - low > 1) {
     let mid = Math.floor((high - low) / 2) + low
-    let val = calculate_price_sqrt(mid * step)
+    let val = calculatePriceSqrt(mid * step)
 
     if (val.v.eq(targetValue.v)) {
       return mid * step

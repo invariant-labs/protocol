@@ -10,7 +10,7 @@ import {
 } from './utils'
 import {
   TICK_LIMIT,
-  calculate_price_sqrt,
+  calculatePriceSqrt,
   fromInteger,
   MAX_TICK,
   MIN_TICK,
@@ -27,7 +27,7 @@ export {
   getMarketAddress,
   signAndSend,
   sleep,
-  calculate_price_sqrt,
+  calculatePriceSqrt,
   fromInteger,
   tou64,
   SEED,
