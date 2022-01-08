@@ -27,7 +27,7 @@ export {
   getMarketAddress,
   signAndSend,
   sleep,
-  calculatePriceSqrt as calculate_price_sqrt,
+  calculatePriceSqrt,
   fromInteger,
   tou64,
   SEED,

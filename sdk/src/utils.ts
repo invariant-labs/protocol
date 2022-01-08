@@ -9,7 +9,7 @@ import {
   Transaction,
   TransactionInstruction
 } from '@solana/web3.js'
-import { calculate_price_sqrt, fromInteger, MAX_TICK, Pair, TICK_LIMIT } from '.'
+import { calculatePriceSqrt, fromInteger, MAX_TICK, Pair, TICK_LIMIT } from '.'
 import { Market } from '.'
 import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap, Tick, Position } from './market'
 import { calculatePriceAfterSlippage, calculateSwapStep, SwapResult } from './math'
@@ -224,7 +224,7 @@ export const calculateAveragePrice = (swapParameters: SimulateSwapPrice): Decima
     let price: Decimal
     let closerLimit: { swapLimit: Decimal; limitingTick: { index: Number; initialized: Boolean } }
     if (closestTickIndex != null) {
-      price = calculate_price_sqrt(closestTickIndex)
+      price = calculatePriceSqrt(closestTickIndex)
 
       if (xToY && price.v.gt(priceLimit.v)) {
         closerLimit = {
@@ -244,7 +244,7 @@ export const calculateAveragePrice = (swapParameters: SimulateSwapPrice): Decima
       }
     } else {
       const index = getSearchLimit(currentTickIndex, tickSpacing, !xToY)
-      price = calculate_price_sqrt(index)
+      price = calculatePriceSqrt(index)
 
       if (xToY && price.v.gt(priceLimit.v)) {
         closerLimit = {
