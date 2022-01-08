@@ -1,4 +1,4 @@
-use std::{convert::TryInto, ops::Div};
+use std::convert::TryInto;
 
 use crate::{decimal::Decimal, math::calculate_price_sqrt, structs::MAX_TICK, uint::U256};
 
@@ -59,7 +59,7 @@ pub fn msb_x64(sqrt_price_x64: u128) -> u128 {
     msb
 }
 
-pub fn log2_msb_x128(sqrt_price_x128: U256) -> U256 {
+pub fn msb_x128(sqrt_price_x128: U256) -> U256 {
     let mut sqrt_price_x128 = sqrt_price_x128;
     let mut log2_msb = U256::from(0);
 
@@ -104,13 +104,14 @@ pub fn log2_x64(mut sqrt_price_x64: u128) -> (bool, u128) {
     let scale_2x = scale << 1;
     let half_scale = scale >> 1;
 
+    // log2(x) = -log2(1/x), when x < 1
     if sqrt_price_x64 < scale {
         sign = false;
-        // scale * scale / sqrt_price_x128
+        // scale^2 / sqrt_price_x128
         sqrt_price_x64 = U256::from(scale)
             .checked_mul(U256::from(scale))
             .unwrap()
-            .checked_div(U256::from(sqrt_price_x64))
+            .checked_div(U256::from(sqrt_price_x64 + 1)) // div down
             .unwrap()
             .try_into()
             .unwrap();
@@ -135,18 +136,16 @@ pub fn log2_x64(mut sqrt_price_x64: u128) -> (bool, u128) {
             result += delta;
             y >>= 1;
         }
-        // /= 2 can be to >>=
         delta >>= 1;
     }
     (sign, result)
 }
 
 pub fn get_tick_at_sqrt_price_x64(sqrt_price_x64: u128, sqrt_price_decimal: Decimal) -> i32 {
-    let log2_10001: u128 = 1330584781654115;
+    let log2_10001: u128 = 1330584781654115; // ceil(13305847816541147572934375639175128356511292535011910917895)
     let (log_sign, log2_sqrt_price) = log2_x64(sqrt_price_x64);
 
-    // TODO: find accuracy
-    // tick abs result is always floor
+    // accuracy = +825494534704448554 [0.04475 tick]
     let abs_floor_tick: i32 = log2_sqrt_price
         .checked_div(log2_10001)
         .unwrap()
@@ -185,99 +184,6 @@ pub fn get_tick_at_sqrt_price_x64(sqrt_price_x64: u128, sqrt_price_decimal: Deci
     };
 }
 
-pub fn log2_x128(mut sqrt_price_x128: U256, sign: bool) -> (bool, U256) {
-    let scale: U256 = U256::from(1) << 128;
-    let two = U256::from(2);
-    let scale_2x: U256 = scale.checked_mul(two).unwrap();
-    let half_scale: U256 = scale.checked_div(two).unwrap();
-
-    // log2(x) = -log2(1/x)
-    if !sign {
-        // scale * scale / sqrt_price_x128
-        sqrt_price_x128 = scale
-            .checked_mul(scale)
-            .unwrap()
-            .checked_div(sqrt_price_x128)
-            .unwrap();
-    }
-
-    // let msb = log2_msb_x128(sqrt_price_x128.checked_div(scale).unwrap());
-    let msb = log2_msb_x128(sqrt_price_x128.checked_div(scale).unwrap());
-    let mut result = msb.checked_mul(scale).unwrap();
-    // y = x * 2^(-msb).
-
-    let mut y = sqrt_price_x128 >> msb;
-    // let mut y = sqrt_price_x128;
-
-    // If y = 1, the fractional part is zero.
-    if y == scale {
-        return (sign, sqrt_price_x128);
-    };
-
-    // Calculate the fractional part via the iterative approximation.
-    // The "delta >>= 1" part is equivalent to "delta /= 2", but shifting bits is faster.
-    let mut delta = half_scale;
-    while delta > U256::from(0) {
-        y = y.checked_mul(y).unwrap().checked_div(scale).unwrap();
-        println!("y = {:?}", y);
-
-        if y >= scale_2x {
-            result += delta;
-            y >>= 1;
-        }
-        // /= 2 can be to >>=
-        delta >>= 1;
-    }
-    (sign, result)
-}
-
-// pub fn get_sqrt_price_at_tick(tick: i32) -> u
-
-// PRICE to log
-// 4 * 10^9
-// 2.3 * 10^-10
-// pub fn log10_floor(sqrt_price: Decimal) -> u32 {
-//     log10(sqrt_price.v)
-// }
-
-// pub const fn log10(mut val: u128) -> u32 {
-//     let mut log = 0;
-//     if val >= 100_000_000_000_000_000_000_000_000_000_000 {
-//         val /= 100_000_000_000_000_000_000_000_000_000_000;
-//         log += 32;
-//         return log + less_than_8(val as u32);
-//     }
-//     if val >= 10_000_000_000_000_000 {
-//         val /= 10_000_000_000_000_000;
-//         log += 16;
-//     }
-//     log + less_than_16(val as u64)
-// }
-// const fn less_than_16(mut val: u64) -> u32 {
-//     let mut log = 0;
-//     if val >= 100_000_000 {
-//         val /= 100_000_000;
-//         log += 8;
-//     }
-//     log + less_than_8(val as u32)
-// }
-// const fn less_than_8(mut val: u32) -> u32 {
-//     let mut log = 0;
-//     if val >= 10_000 {
-//         val /= 10_000;
-//         log += 4;
-//     }
-//     log + if val >= 1000 {
-//         3
-//     } else if val >= 100 {
-//         2
-//     } else if val >= 10 {
-//         1
-//     } else {
-//         0
-//     }
-// }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -291,18 +197,18 @@ mod tests {
         let min_sqrt_price = Decimal::new(232);
 
         // base: 2^128
-        {
-            let max_sqrt_price_x128 = decimal_to_x128(max_sqrt_price);
-            let min_sqrt_price_x128 = decimal_to_x128(min_sqrt_price);
+        // {
+        //     let max_sqrt_price_x128 = decimal_to_x128(max_sqrt_price);
+        //     let min_sqrt_price_x128 = decimal_to_x128(min_sqrt_price);
 
-            let expected_max_sqrt_price_x128 =
-                U256::from_dec_str("1461501637330902918164212078153454157894181088513").unwrap();
-            let expected_min_sqrt_price_x128 =
-                U256::from_dec_str("78945509125657723523502908924").unwrap();
+        //     let expected_max_sqrt_price_x128 =
+        //         U256::from_dec_str("1461501637330902918164212078153454157894181088513").unwrap();
+        //     let expected_min_sqrt_price_x128 =
+        //         U256::from_dec_str("78945509125657723523502908924").unwrap();
 
-            assert!(max_sqrt_price_x128.eq(&expected_max_sqrt_price_x128));
-            assert!(min_sqrt_price_x128.eq(&expected_min_sqrt_price_x128));
-        }
+        //     assert!(max_sqrt_price_x128.eq(&expected_max_sqrt_price_x128));
+        //     assert!(min_sqrt_price_x128.eq(&expected_min_sqrt_price_x128));
+        // }
         // base: 2^96
         {
             let max_sqrt_price_x96 = decimal_to_x128(max_sqrt_price) >> 32;
@@ -316,26 +222,6 @@ mod tests {
             assert!(max_sqrt_price_x96.eq(&expected_max_sqrt_price_x96));
             assert!(min_sqrt_price_x96.eq(&expected_min_sqrt_price_x96));
         }
-    }
-
-    #[test]
-    fn test_log10() {
-        // TEST CASE:
-        Decimal::from_integer(1);
-    }
-
-    #[test]
-    fn test_log2_floor_x128() {}
-
-    #[test]
-    fn test_log2_X128() {
-        let sqrt_price_decimal = Decimal::from_integer(3);
-        // 1020847100762815390390123822295304634368
-        let sqrt_price_x128 = decimal_to_x128(sqrt_price_decimal);
-        println!("x128: {:?}", sqrt_price_x128);
-
-        let log2 = log2_x128(sqrt_price_x128, true);
-        println!("log2: {:?}", log2);
     }
 
     #[test]
@@ -362,7 +248,7 @@ mod tests {
             let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
             let (sign, value) = log2_x64(sqrt_price_x64);
             assert_eq!(sign, false);
-            assert_eq!(value, 136599418782046619338);
+            assert_eq!(value, 136599418782046619094);
         }
         // log2 of max sqrt price
         {
@@ -374,11 +260,29 @@ mod tests {
         }
         // log2 of min sqrt price
         {
-            let min_sqrt_price = Decimal::new(232);
+            let min_sqrt_price = calculate_price_sqrt(-MAX_TICK);
             let sqrt_price_x64 = decimal_to_x64(min_sqrt_price);
             let (sign, value) = log2_x64(sqrt_price_x64);
             assert_eq!(sign, false);
-            assert_eq!(value, 590390924419266405040);
+            assert_eq!(value, 295147655881613622167);
+        }
+        // log2 of sqrt(1.0001^(-19_999)) - 1
+        {
+            let mut sqrt_price_decimal = calculate_price_sqrt(-19_999);
+            sqrt_price_decimal = sqrt_price_decimal - Decimal::new(1);
+            let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
+            let (sign, value) = log2_x64(sqrt_price_x64);
+            assert_eq!(sign, false);
+            assert_eq!(value, 26610365040054024053);
+        }
+        // log2 of sqrt(1.0001^(19_999)) + 1
+        {
+            let mut sqrt_price_decimal = calculate_price_sqrt(19_999);
+            sqrt_price_decimal = sqrt_price_decimal - Decimal::new(1);
+            let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
+            let (sign, value) = log2_x64(sqrt_price_x64);
+            assert_eq!(sign, true);
+            assert_eq!(value, 26610365039928226786);
         }
     }
 
@@ -513,6 +417,32 @@ mod tests {
             assert_eq!(tick, MAX_TICK);
         }
 
+        // around -19_999 tick
+        {
+            let expected_tick = -19_999;
+            let sqrt_price_decimal = calculate_price_sqrt(expected_tick);
+            // get tick at sqrt(1.0001^(-19_999))
+            {
+                let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price_x64(sqrt_price_x64, sqrt_price_decimal);
+                assert_eq!(tick, expected_tick);
+            }
+            // get tick slightly below sqrt(1.0001^(-19_999))
+            {
+                // let sqrt_price_decimal = sqrt_price_decimal - Decimal::new(150);
+                let sqrt_price_decimal = sqrt_price_decimal - Decimal::new(1);
+                let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price_x64(sqrt_price_x64, sqrt_price_decimal);
+                assert_eq!(tick, expected_tick - 1);
+            }
+            // get tick slightly above sqrt(1.0001^(-19_999))
+            {
+                let sqrt_price_decimal = sqrt_price_decimal + Decimal::new(1);
+                let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price_x64(sqrt_price_x64, sqrt_price_decimal);
+                assert_eq!(tick, expected_tick);
+            }
+        }
         //get tick slightly above at min tick
         {
             let min_sqrt_price = Decimal::new(15258932);
