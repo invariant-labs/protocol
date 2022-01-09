@@ -1,5 +1,3 @@
-use std::convert::TryInto;
-
 use crate::{
     decimal::{Decimal, DENOMINATOR},
     math::calculate_price_sqrt,
@@ -92,9 +90,7 @@ pub fn get_tick_at_sqrt_price(sqrt_price_decimal: Decimal) -> i32 {
     let abs_floor_tick: i32 = match log_sign {
         true => log2_sqrt_price / LOG2_SQRT_10001,
         false => (log2_sqrt_price + LOG2_NEGATIVE_MAX_LOSE) / LOG2_SQRT_10001,
-    }
-    .try_into()
-    .unwrap();
+    } as i32;
 
     let nearer_tick = match log_sign {
         true => abs_floor_tick,
