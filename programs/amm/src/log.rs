@@ -13,6 +13,7 @@ const LOG_ONE: u128 = 1 << LOG_SCALE;
 const LOG_HALF: u128 = LOG_ONE >> 1;
 const LOG_DOUBLE: u128 = LOG_ONE << 1;
 const LOG2_SQRT_10001: u128 = 1330584781654115; // ceil
+const MAX_ACCURACY_POSITIVE_LOG: i32 = 49;
 
 pub fn decimal_to_x64(decimal: Decimal) -> u128 {
     decimal
@@ -83,7 +84,7 @@ pub fn log2_iterative_approximation_x64(mut sqrt_price_x64: u128) -> (bool, u128
 
     let two = U256::from(LOG_DOUBLE);
     let mut delta = LOG_HALF;
-    while delta > 0 {
+    while delta > 1 << 48 {
         y = y.checked_mul(y).unwrap().checked_div(one).unwrap();
 
         if y >= two {
@@ -102,7 +103,7 @@ pub fn get_tick_at_sqrt_price(sqrt_price_decimal: Decimal) -> i32 {
     let abs_floor_tick: i32 = match log_sign {
         true => log2_sqrt_price.checked_div(LOG2_SQRT_10001).unwrap(),
         false => log2_sqrt_price
-            .checked_add(40000000000) // max accuracy due to inverse log in (-MAX_TICK, 0) domain
+            .checked_add(1000000000000000) // max accuracy due to inverse log in (-MAX_TICK, 0) domain
             .unwrap()
             .checked_div(LOG2_SQRT_10001)
             .unwrap(),
