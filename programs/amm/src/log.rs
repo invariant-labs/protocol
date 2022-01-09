@@ -12,21 +12,16 @@ const LOG_DOUBLE_SCALE: u128 = 128;
 const LOG_ONE: u128 = 1 << LOG_SCALE;
 const LOG_HALF: u128 = LOG_ONE >> 1;
 const LOG_DOUBLE: u128 = LOG_ONE << 1;
-const LOG2_SQRT_10001: u128 = 1330584781654115; // ceil
-const MAX_ACCURACY_POSITIVE_LOG: i32 = 49;
+const LOG2_SQRT_10001: u128 = 1330584781654115;
+const LOG2_NEGATIVE_MAX_LOSE: u128 = 1200000000000000; // max accuracy in <-MAX_TICK, 0> domain
+const LOG2_MIN_BINARY_POSITION: i32 = 14; // accuracy = 2^(-14)
+const LOG2_ACCURACY: u128 = 1u128 << (63 - LOG2_MIN_BINARY_POSITION);
 
-pub fn decimal_to_x64(decimal: Decimal) -> u128 {
-    decimal
-        .v
-        .checked_mul(LOG_ONE)
-        .unwrap()
-        .checked_div(DENOMINATOR)
-        .unwrap()
-        .try_into()
-        .unwrap()
+fn decimal_to_x64(decimal: Decimal) -> u128 {
+    decimal.v * LOG_ONE / DENOMINATOR
 }
 
-pub fn log2_floor_x64(mut sqrt_price_x64: u128) -> u128 {
+fn log2_floor_x64(mut sqrt_price_x64: u128) -> u128 {
     let mut msb = 0;
 
     if sqrt_price_x64 >= 1u128 << 64 {
@@ -60,20 +55,17 @@ pub fn log2_floor_x64(mut sqrt_price_x64: u128) -> u128 {
     msb
 }
 
-pub fn log2_iterative_approximation_x64(mut sqrt_price_x64: u128) -> (bool, u128) {
+fn log2_iterative_approximation_x64(mut sqrt_price_x64: u128) -> (bool, u128) {
     let one = U256::from(LOG_ONE);
+    let two = U256::from(LOG_DOUBLE);
     let mut sign = true;
 
     // log2(x) = -log2(1/x), when x < 1
     if sqrt_price_x64 < LOG_ONE {
         sign = false;
-        sqrt_price_x64 = (U256::from(1) << LOG_DOUBLE_SCALE)
-            .checked_div(U256::from(sqrt_price_x64 + 1)) // div down
-            .unwrap()
-            .try_into()
-            .unwrap();
+        sqrt_price_x64 =
+            ((U256::from(1) << LOG_DOUBLE_SCALE) / U256::from(sqrt_price_x64 + 1)).as_u128();
     }
-
     let log2_floor = log2_floor_x64(sqrt_price_x64 >> LOG_SCALE);
     let mut result = log2_floor << LOG_SCALE;
     let mut y: U256 = U256::from(sqrt_price_x64) >> log2_floor;
@@ -81,12 +73,9 @@ pub fn log2_iterative_approximation_x64(mut sqrt_price_x64: u128) -> (bool, u128
     if y == one {
         return (sign, result);
     };
-
-    let two = U256::from(LOG_DOUBLE);
     let mut delta = LOG_HALF;
-    while delta > 1 << 48 {
-        y = y.checked_mul(y).unwrap().checked_div(one).unwrap();
-
+    while delta > LOG2_ACCURACY {
+        y = y * y / one;
         if y >= two {
             result |= delta;
             y >>= 1;
@@ -101,12 +90,8 @@ pub fn get_tick_at_sqrt_price(sqrt_price_decimal: Decimal) -> i32 {
     let (log_sign, log2_sqrt_price) = log2_iterative_approximation_x64(sqrt_price_x64);
 
     let abs_floor_tick: i32 = match log_sign {
-        true => log2_sqrt_price.checked_div(LOG2_SQRT_10001).unwrap(),
-        false => log2_sqrt_price
-            .checked_add(1000000000000000) // max accuracy due to inverse log in (-MAX_TICK, 0) domain
-            .unwrap()
-            .checked_div(LOG2_SQRT_10001)
-            .unwrap(),
+        true => log2_sqrt_price / LOG2_SQRT_10001,
+        false => (log2_sqrt_price + LOG2_NEGATIVE_MAX_LOSE) / LOG2_SQRT_10001,
     }
     .try_into()
     .unwrap();
@@ -162,7 +147,7 @@ mod tests {
             let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
             let (sign, value) = log2_iterative_approximation_x64(sqrt_price_x64);
             assert_eq!(sign, true);
-            assert_eq!(value, 180403980057034186507);
+            assert_eq!(value, 180402942073393643520);
         }
         // log2 < 0 when x < 1
         {
@@ -170,7 +155,7 @@ mod tests {
             let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
             let (sign, value) = log2_iterative_approximation_x64(sqrt_price_x64);
             assert_eq!(sign, false);
-            assert_eq!(value, 136599418782046619094);
+            assert_eq!(value, 136598680297774514176);
         }
         // log2 of max sqrt price
         {
@@ -178,7 +163,7 @@ mod tests {
             let sqrt_price_x64 = decimal_to_x64(max_sqrt_price);
             let (sign, value) = log2_iterative_approximation_x64(sqrt_price_x64);
             assert_eq!(sign, true);
-            assert_eq!(value, 590295810358705651711);
+            assert_eq!(value, 440307928368758652928);
         }
         // log2 of min sqrt price
         {
@@ -186,7 +171,7 @@ mod tests {
             let sqrt_price_x64 = decimal_to_x64(min_sqrt_price);
             let (sign, value) = log2_iterative_approximation_x64(sqrt_price_x64);
             assert_eq!(sign, false);
-            assert_eq!(value, 295147655881613622167);
+            assert_eq!(value, 295146779279445983232);
         }
         // log2 of sqrt(1.0001^(-19_999)) - 1
         {
@@ -195,7 +180,7 @@ mod tests {
             let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
             let (sign, value) = log2_iterative_approximation_x64(sqrt_price_x64);
             assert_eq!(sign, false);
-            assert_eq!(value, 26610365040054024053);
+            assert_eq!(value, 26609518398318575616);
         }
         // log2 of sqrt(1.0001^(19_999)) + 1
         {
@@ -204,7 +189,7 @@ mod tests {
             let sqrt_price_x64 = decimal_to_x64(sqrt_price_decimal);
             let (sign, value) = log2_iterative_approximation_x64(sqrt_price_x64);
             assert_eq!(sign, true);
-            assert_eq!(value, 26610365039928226786);
+            assert_eq!(value, 26609518398318575616);
         }
     }
 
@@ -392,7 +377,6 @@ mod tests {
                 // get tick slightly below sqrt(1.0001^n)
                 {
                     let sqrt_price_decimal = sqrt_price_decimal - Decimal::new(1);
-
                     let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
                     assert_eq!(tick, expected_tick - 1);
                 }
