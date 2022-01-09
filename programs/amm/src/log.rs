@@ -1,6 +1,14 @@
 use std::convert::TryInto;
 
-use crate::{decimal::Decimal, math::calculate_price_sqrt, structs::MAX_TICK, uint::U256};
+use crate::{
+    decimal::{Decimal, DENOMINATOR},
+    math::calculate_price_sqrt,
+    structs::MAX_TICK,
+    uint::U256,
+};
+
+const LOG_SCALE: u128 = 64;
+const LOG_ONE: u128 = 1 << LOG_SCALE;
 
 pub fn decimal_to_x128(decimal: Decimal) -> U256 {
     let factor = U256::from(1) << 128;
@@ -13,12 +21,11 @@ pub fn decimal_to_x128(decimal: Decimal) -> U256 {
 }
 
 pub fn decimal_to_x64(decimal: Decimal) -> u128 {
-    let factor = 1u128 << 64;
-
-    U256::from(decimal.v)
-        .checked_mul(U256::from(factor))
+    decimal
+        .v
+        .checked_mul(LOG_ONE)
         .unwrap()
-        .checked_div(U256::from(Decimal::one().v))
+        .checked_div(DENOMINATOR)
         .unwrap()
         .try_into()
         .unwrap()
