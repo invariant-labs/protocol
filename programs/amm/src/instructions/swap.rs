@@ -1,4 +1,3 @@
-use crate::decimal::Decimal;
 use crate::interfaces::send_tokens::SendTokens;
 use crate::interfaces::take_tokens::TakeTokens;
 use crate::math::compute_swap_step;
@@ -7,6 +6,7 @@ use crate::structs::tick::Tick;
 use crate::structs::tickmap::Tickmap;
 use crate::util::get_closer_limit;
 use crate::*;
+use crate::{decimal::Decimal, structs::TokenAmount};
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
@@ -15,7 +15,7 @@ use anchor_spl::token::{Mint, TokenAccount, Transfer};
 pub struct Swap<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
-    #[account(mut,         
+    #[account(mut,
         seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref(), &pool.load()?.fee.v.to_le_bytes(), &pool.load()?.tick_spacing.to_le_bytes()],
         bump = pool.load()?.bump
     )]
@@ -36,7 +36,7 @@ pub struct Swap<'info> {
     pub account_x: Account<'info, TokenAccount>,
     #[account(mut,
         constraint = &account_y.mint == token_y.to_account_info().key,
-        constraint = &account_y.owner == owner.key	
+        constraint = &account_y.owner == owner.key
     )]
     pub account_y: Account<'info, TokenAccount>,
     #[account(mut,
@@ -127,19 +127,19 @@ pub fn handler(
         require!({ pool.sqrt_price } < sqrt_price_limit, WrongLimit);
     }
 
-    let mut remaining_amount = Decimal::from_integer(amount.into());
+    let mut remaining_amount = TokenAmount(amount);
 
-    let mut total_amount_in = Decimal::new(0);
-    let mut total_amount_out = Decimal::new(0);
+    let mut total_amount_in = TokenAmount(0);
+    let mut total_amount_out = TokenAmount(0);
 
-    while remaining_amount != Decimal::from_integer(0) {
+    while !remaining_amount.is_zero() {
         let (swap_limit, limiting_tick) = get_closer_limit(
             sqrt_price_limit,
             x_to_y,
             pool.current_tick_index,
             pool.tick_spacing,
             &tickmap,
-        );
+        )?;
 
         let result = compute_swap_step(
             pool.sqrt_price,
@@ -157,15 +157,7 @@ pub fn handler(
             remaining_amount = remaining_amount - result.amount_out;
         }
 
-        // fee has to be added before crossing any ticks
-        let protocol_fee = result.fee_amount * state.protocol_fee;
-
-        pool.add_fee(result.fee_amount - protocol_fee, x_to_y);
-        if x_to_y {
-            pool.fee_protocol_token_x = pool.fee_protocol_token_x + protocol_fee;
-        } else {
-            pool.fee_protocol_token_y = pool.fee_protocol_token_y + protocol_fee;
-        }
+        pool.add_fee(result.fee_amount, x_to_y, state.protocol_fee);
 
         pool.sqrt_price = result.next_price_sqrt;
 
@@ -173,8 +165,8 @@ pub fn handler(
         total_amount_out = total_amount_out + result.amount_out;
 
         // Fail if price would go over swap limit
-        if { pool.sqrt_price } == sqrt_price_limit && remaining_amount > Decimal::new(0) {
-            Err(ErrorCode::PriceLimitReached)?;
+        if { pool.sqrt_price } == sqrt_price_limit && !remaining_amount.is_zero() {
+            return Err(ErrorCode::PriceLimitReached.into());
         }
 
         // crossing tick
@@ -198,9 +190,7 @@ pub fn handler(
                     .iter()
                     .find(|account| *account.key == tick_address)
                 {
-                    Some(account) => {
-                        Loader::<'_, Tick>::try_from(ctx.program_id, &account).unwrap()
-                    }
+                    Some(account) => Loader::<'_, Tick>::try_from(ctx.program_id, account).unwrap(),
                     None => return Err(ErrorCode::TickNotFound.into()),
                 };
                 let mut tick = loader.load_mut().unwrap();
@@ -209,8 +199,8 @@ pub fn handler(
                 cross_tick(&mut tick, &mut pool)?;
             }
 
-            // set tick to limit (below if price is going down, because current tick is below price)
-            pool.current_tick_index = if x_to_y && remaining_amount != Decimal::new(0) {
+            // set tick to limit (below if price is going down, because current tick should always be below price)
+            pool.current_tick_index = if x_to_y && !remaining_amount.is_zero() {
                 tick_index - pool.tick_spacing as i32
             } else {
                 tick_index
@@ -233,15 +223,10 @@ pub fn handler(
         (ctx.accounts.take_y(), ctx.accounts.send_x())
     };
 
-    let seeds = &[SEED.as_bytes(), &[state.nonce]];
-    let signer = &[&seeds[..]];
+    let signer: &[&[&[u8]]] = get_signer!(state.nonce);
 
-    // Maybe rounding error should be counted?
-    token::transfer(take_ctx, total_amount_in.to_token_ceil())?;
-    token::transfer(
-        send_ctx.with_signer(signer),
-        total_amount_out.to_token_floor(),
-    )?;
+    token::transfer(take_ctx, total_amount_in.0)?;
+    token::transfer(send_ctx.with_signer(signer), total_amount_out.0)?;
 
     Ok(())
 }

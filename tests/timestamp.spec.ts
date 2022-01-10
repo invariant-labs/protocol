@@ -66,8 +66,8 @@ describe('timestamp', () => {
     assert.ok(createdPool.currentTickIndex == 0)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenX.v.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenY.v.eqn(0))
+    assert.ok(createdPool.feeProtocolTokenX.eqn(0))
+    assert.ok(createdPool.feeProtocolTokenY.eqn(0))
     assert.ok(createdPool.secondsPerLiquidityGlobal.v.eqn(0))
 
     const tickmapData = await market.getTickmap(pair)

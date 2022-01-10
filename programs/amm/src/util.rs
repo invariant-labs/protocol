@@ -16,22 +16,26 @@ pub fn check_ticks(tick_lower: i32, tick_upper: i32, tick_spacing: u16) -> Resul
     // Check order
     require!(tick_lower < tick_upper, InvalidTickIndex);
 
+    check_tick(tick_lower, tick_spacing)?;
+    check_tick(tick_upper, tick_spacing)?;
+
+    Ok(())
+}
+
+pub fn check_tick(tick_index: i32, tick_spacing: u16) -> Result<()> {
+    // Check order
     require!(
-        tick_lower.checked_rem(tick_spacing.into()) == Some(0),
-        InvalidTickIndex
-    );
-    require!(
-        tick_upper.checked_rem(tick_spacing.into()) == Some(0),
+        tick_index.checked_rem(tick_spacing.into()) == Some(0),
         InvalidTickIndex
     );
 
-    let scaled_lower = tick_lower.checked_div(tick_spacing.into()).unwrap();
-    let scaled_upper = tick_upper.checked_div(tick_spacing.into()).unwrap();
+    let tickmap_index = tick_index.checked_div(tick_spacing.into()).unwrap();
 
-    require!(scaled_upper > (-TICK_LIMIT), InvalidTickInterval);
-    require!(scaled_lower < TICK_LIMIT, InvalidTickInterval);
-    require!(tick_lower > (-MAX_TICK), InvalidTickInterval);
-    require!(tick_upper < MAX_TICK, InvalidTickInterval);
+    require!(tickmap_index > (-TICK_LIMIT), InvalidTickIndex);
+    require!(tickmap_index < TICK_LIMIT - 1, InvalidTickIndex);
+    require!(tick_index > (-MAX_TICK), InvalidTickIndex);
+    require!(tick_index < MAX_TICK, InvalidTickIndex);
+
     Ok(())
 }
 
@@ -43,7 +47,7 @@ pub fn get_closer_limit(
     current_tick: i32,
     tick_spacing: u16,
     tickmap: &Tickmap,
-) -> (Decimal, Option<(i32, bool)>) {
+) -> Result<(Decimal, Option<(i32, bool)>)> {
     let closes_tick_index = if x_to_y {
         tickmap.prev_initialized(current_tick, tick_spacing)
     } else {
@@ -53,39 +57,40 @@ pub fn get_closer_limit(
     match closes_tick_index {
         Some(index) => {
             let price = calculate_price_sqrt(index);
+            // trunk-ignore(clippy/if_same_then_else)
             if x_to_y && price > sqrt_price_limit {
-                (price, Some((index, true)))
+                Ok((price, Some((index, true))))
             } else if !x_to_y && price < sqrt_price_limit {
-                (price, Some((index, true)))
+                Ok((price, Some((index, true))))
             } else {
-                (sqrt_price_limit, None)
+                Ok((sqrt_price_limit, None))
             }
         }
         None => {
             let index = get_search_limit(current_tick, tick_spacing, !x_to_y);
             let price = calculate_price_sqrt(index);
 
+            require!(current_tick != index, LimitReached);
+
+            // trunk-ignore(clippy/if_same_then_else)
             if x_to_y && price > sqrt_price_limit {
-                (price, Some((index, false)))
+                Ok((price, Some((index, false))))
             } else if !x_to_y && price < sqrt_price_limit {
-                (price, Some((index, false)))
+                Ok((price, Some((index, false))))
             } else {
-                (sqrt_price_limit, None)
+                Ok((sqrt_price_limit, None))
             }
         }
     }
 }
 
 pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
-    tick.fee_growth_outside_x = Decimal {
-        v: pool.fee_growth_global_x.v - tick.fee_growth_outside_x.v,
-    };
-    tick.fee_growth_outside_y = Decimal {
-        v: pool.fee_growth_global_y.v - tick.fee_growth_outside_y.v,
-    };
+    tick.fee_growth_outside_x = pool.fee_growth_global_x - tick.fee_growth_outside_x;
+    tick.fee_growth_outside_y = pool.fee_growth_global_y - tick.fee_growth_outside_y;
 
     let current_timestamp: u64 = Clock::get()?.unix_timestamp.try_into().unwrap();
-    let seconds_passed: u64 = current_timestamp - pool.start_timestamp;
+    let seconds_passed: u64 = current_timestamp.checked_sub(pool.start_timestamp).unwrap();
+    // overflow is valid here
     tick.seconds_outside = seconds_passed - tick.seconds_outside;
 
     if { pool.liquidity } != Decimal::new(0) {
@@ -223,14 +228,14 @@ mod test {
     }
 
     #[test]
-    fn test_get_closer_limit() {
+    fn test_get_closer_limit() -> Result<()> {
         let tickmap = &mut Tickmap::default();
         tickmap.flip(true, 0, 1);
 
         // tick limit closer
         {
             let (result, from_tick) =
-                get_closer_limit(Decimal::from_integer(5), true, 100, 1, tickmap);
+                get_closer_limit(Decimal::from_integer(5), true, 100, 1, tickmap)?;
 
             let expected = Decimal::from_integer(5);
             assert_eq!(result, expected);
@@ -239,7 +244,7 @@ mod test {
         // trade limit closer
         {
             let (result, from_tick) =
-                get_closer_limit(Decimal::from_decimal(1, 1), true, 100, 1, tickmap);
+                get_closer_limit(Decimal::from_decimal(1, 1), true, 100, 1, tickmap)?;
             let expected = Decimal::from_integer(1);
             assert_eq!(result, expected);
             assert_eq!(from_tick, Some((0, true)));
@@ -247,7 +252,7 @@ mod test {
         // other direction
         {
             let (result, from_tick) =
-                get_closer_limit(Decimal::from_integer(2), false, -5, 1, tickmap);
+                get_closer_limit(Decimal::from_integer(2), false, -5, 1, tickmap)?;
             let expected = Decimal::from_integer(1);
             assert_eq!(result, expected);
             assert_eq!(from_tick, Some((0, true)));
@@ -255,10 +260,11 @@ mod test {
         // other direction
         {
             let (result, from_tick) =
-                get_closer_limit(Decimal::from_decimal(1, 1), false, -100, 10, tickmap);
+                get_closer_limit(Decimal::from_decimal(1, 1), false, -100, 10, tickmap)?;
             let expected = Decimal::from_decimal(1, 1);
             assert_eq!(result, expected);
             assert_eq!(from_tick, None);
         }
+        Ok(())
     }
 }

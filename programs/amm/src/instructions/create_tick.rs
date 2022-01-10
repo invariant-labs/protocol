@@ -5,6 +5,8 @@ use crate::math::calculate_price_sqrt;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::structs::tickmap::Tickmap;
+use crate::structs::FeeGrowth;
+use crate::util::check_tick;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 
@@ -45,6 +47,7 @@ pub fn handler(ctx: Context<CreateTick>, bump: u8, index: i32) -> ProgramResult 
     let pool = ctx.accounts.pool.load()?;
     let current_timestamp: u64 = Clock::get()?.unix_timestamp.try_into().unwrap();
 
+    check_tick(index, pool.tick_spacing)?;
     tickmap.flip(true, index, pool.tick_spacing);
 
     // init tick
@@ -57,14 +60,14 @@ pub fn handler(ctx: Context<CreateTick>, bump: u8, index: i32) -> ProgramResult 
         sqrt_price: calculate_price_sqrt(index),
         fee_growth_outside_x: match below_current_tick {
             true => pool.fee_growth_global_x,
-            false => Decimal::new(0),
+            false => FeeGrowth::zero(),
         },
         fee_growth_outside_y: match below_current_tick {
             true => pool.fee_growth_global_y,
-            false => Decimal::new(0),
+            false => FeeGrowth::zero(),
         },
         seconds_outside: match below_current_tick {
-            true => (current_timestamp - pool.start_timestamp),
+            true => (current_timestamp.checked_sub(pool.start_timestamp).unwrap()),
             false => 0,
         },
         seconds_per_liquidity_outside: Decimal::new(0),

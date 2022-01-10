@@ -101,6 +101,11 @@ export type Amm = {
           "isSigner": false
         },
         {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "feeTier",
           "isMut": false,
           "isSigner": false
@@ -396,8 +401,13 @@ export type Amm = {
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "payer",
           "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "owner",
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -843,7 +853,7 @@ export type Amm = {
           "isSigner": false
         },
         {
-          "name": "admin",
+          "name": "authority",
           "isMut": false,
           "isSigner": true
         },
@@ -973,26 +983,22 @@ export type Amm = {
           {
             "name": "feeGrowthGlobalX",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
             "name": "feeGrowthGlobalY",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
             "name": "feeProtocolTokenX",
-            "type": {
-              "defined": "Decimal"
-            }
+            "type": "u64"
           },
           {
             "name": "feeProtocolTokenY",
-            "type": {
-              "defined": "Decimal"
-            }
+            "type": "u64"
           },
           {
             "name": "secondsPerLiquidityGlobal",
@@ -1007,6 +1013,10 @@ export type Amm = {
           {
             "name": "lastTimestamp",
             "type": "u64"
+          },
+          {
+            "name": "feeReceiver",
+            "type": "publicKey"
           },
           {
             "name": "oracleAddress",
@@ -1057,13 +1067,13 @@ export type Amm = {
           {
             "name": "feeGrowthInsideX",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
             "name": "feeGrowthInsideY",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
@@ -1175,13 +1185,13 @@ export type Amm = {
           {
             "name": "feeGrowthOutsideX",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
             "name": "feeGrowthOutsideY",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
@@ -1222,6 +1232,18 @@ export type Amm = {
   "types": [
     {
       "name": "Decimal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeGrowth",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1275,7 +1297,7 @@ export type Amm = {
     {
       "code": 304,
       "name": "InvalidTickIndex",
-      "msg": "Tick index not divisible by spacing"
+      "msg": "Tick index not divisible by spacing or over limit"
     },
     {
       "code": 305,
@@ -1346,6 +1368,11 @@ export type Amm = {
       "code": 318,
       "name": "OracleAlreadyInitialized",
       "msg": "Oracle is already initialized"
+    },
+    {
+      "code": 319,
+      "name": "LimitReached",
+      "msg": "Absolute price limit was reached"
     }
   ]
 };
@@ -1453,6 +1480,11 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "feeTier",
           "isMut": false,
           "isSigner": false
@@ -1748,8 +1780,13 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
-          "name": "owner",
+          "name": "payer",
           "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "owner",
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -2195,7 +2232,7 @@ export const IDL: Amm = {
           "isSigner": false
         },
         {
-          "name": "admin",
+          "name": "authority",
           "isMut": false,
           "isSigner": true
         },
@@ -2325,26 +2362,22 @@ export const IDL: Amm = {
           {
             "name": "feeGrowthGlobalX",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
             "name": "feeGrowthGlobalY",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
             "name": "feeProtocolTokenX",
-            "type": {
-              "defined": "Decimal"
-            }
+            "type": "u64"
           },
           {
             "name": "feeProtocolTokenY",
-            "type": {
-              "defined": "Decimal"
-            }
+            "type": "u64"
           },
           {
             "name": "secondsPerLiquidityGlobal",
@@ -2359,6 +2392,10 @@ export const IDL: Amm = {
           {
             "name": "lastTimestamp",
             "type": "u64"
+          },
+          {
+            "name": "feeReceiver",
+            "type": "publicKey"
           },
           {
             "name": "oracleAddress",
@@ -2409,13 +2446,13 @@ export const IDL: Amm = {
           {
             "name": "feeGrowthInsideX",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
             "name": "feeGrowthInsideY",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
@@ -2527,13 +2564,13 @@ export const IDL: Amm = {
           {
             "name": "feeGrowthOutsideX",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
             "name": "feeGrowthOutsideY",
             "type": {
-              "defined": "Decimal"
+              "defined": "FeeGrowth"
             }
           },
           {
@@ -2574,6 +2611,18 @@ export const IDL: Amm = {
   "types": [
     {
       "name": "Decimal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeeGrowth",
       "type": {
         "kind": "struct",
         "fields": [
@@ -2627,7 +2676,7 @@ export const IDL: Amm = {
     {
       "code": 304,
       "name": "InvalidTickIndex",
-      "msg": "Tick index not divisible by spacing"
+      "msg": "Tick index not divisible by spacing or over limit"
     },
     {
       "code": 305,
@@ -2698,6 +2747,11 @@ export const IDL: Amm = {
       "code": 318,
       "name": "OracleAlreadyInitialized",
       "msg": "Oracle is already initialized"
+    },
+    {
+      "code": 319,
+      "name": "LimitReached",
+      "msg": "Absolute price limit was reached"
     }
   ]
 };

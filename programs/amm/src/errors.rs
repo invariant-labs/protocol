@@ -10,7 +10,7 @@ pub enum ErrorCode {
     WrongTick = 2, // 12e
     #[msg("Price limit is on the wrong side of price")]
     WrongLimit = 3, // 12f
-    #[msg("Tick index not divisible by spacing")]
+    #[msg("Tick index not divisible by spacing or over limit")]
     InvalidTickIndex = 4, // 130
     #[msg("Invalid tick_lower or tick_upper")]
     InvalidTickInterval = 5, // 131
@@ -40,4 +40,6 @@ pub enum ErrorCode {
     NegativeTime = 17, // 13d
     #[msg("Oracle is already initialized")]
     OracleAlreadyInitialized = 18, // 13e
+    #[msg("Absolute price limit was reached")]
+    LimitReached = 19, // 13f
 }

@@ -1,6 +1,21 @@
 import { FEE_TIER, Market } from './market'
-import { SEED, tou64, DENOMINATOR, signAndSend, sleep, INVARIANT_ERRORS } from './utils'
-import { TICK_LIMIT, calculate_price_sqrt, fromInteger, MAX_TICK, MIN_TICK, TICK_SEARCH_RANGE } from './math'
+import {
+  SEED,
+  tou64,
+  DENOMINATOR,
+  signAndSend,
+  sleep,
+  INVARIANT_ERRORS,
+  ComputeUnitsInstruction
+} from './utils'
+import {
+  TICK_LIMIT,
+  calculatePriceSqrt,
+  fromInteger,
+  MAX_TICK,
+  MIN_TICK,
+  TICK_SEARCH_RANGE
+} from './math'
 import { PublicKey, Transaction } from '@solana/web3.js'
 import { Pair } from './pair'
 import { getMarketAddress, Network, MOCK_TOKENS } from './network'
@@ -12,7 +27,7 @@ export {
   getMarketAddress,
   signAndSend,
   sleep,
-  calculate_price_sqrt,
+  calculatePriceSqrt,
   fromInteger,
   tou64,
   SEED,
@@ -23,7 +38,8 @@ export {
   MIN_TICK,
   MOCK_TOKENS,
   FEE_TIER,
-  TICK_SEARCH_RANGE
+  TICK_SEARCH_RANGE,
+  ComputeUnitsInstruction
 }
 export interface IWallet {
   signTransaction(tx: Transaction): Promise<Transaction>

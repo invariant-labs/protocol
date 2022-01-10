@@ -10,6 +10,8 @@ export class Pair {
   public tokenY: PublicKey
   public feeTier: FeeTier
   public feeTierAddress: PublicKey | null
+  public tickSpacing: number
+
   constructor(first: PublicKey, second: PublicKey, feeTier: FeeTier) {
     if (first.equals(second)) {
       throw new Error('Pair must contain two unique public keys')
@@ -22,7 +24,11 @@ export class Pair {
       this.tokenX = second
       this.tokenY = first
     }
-    this.feeTier = feeTier
+    this.tickSpacing = feeTier.tickSpacing ?? feeToTickSpacing(feeTier.fee)
+    this.feeTier = {
+      fee: feeTier.fee,
+      tickSpacing: this.tickSpacing
+    }
     this.feeTierAddress = null
 
     if (this.feeTier.tickSpacing == null) {

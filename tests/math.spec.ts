@@ -1,6 +1,6 @@
 import { assert } from 'chai'
 import { BN } from '@project-serum/anchor'
-import { calculate_price_sqrt, DENOMINATOR, TICK_LIMIT } from '@invariant-labs/sdk'
+import { calculatePriceSqrt, DENOMINATOR, TICK_LIMIT } from '@invariant-labs/sdk'
 import { getLiquidityByX, getLiquidityByY, getX, getY } from '@invariant-labs/sdk/src/math'
 import { assertThrowsAsync, bigNumberToBuffer, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { calculatePriceAfterSlippage, findClosestTicks } from '@invariant-labs/sdk/src/math'
@@ -10,31 +10,31 @@ describe('Math', () => {
   describe('Test sqrt price calculation', () => {
     it('Test 20000', () => {
       let price = 20000
-      let result = calculate_price_sqrt(price)
+      let result = calculatePriceSqrt(price)
       // expected 2.718145925979
       assert.ok(result.v.eq(new BN('2718145925979')))
     })
     it('Test 200000', () => {
       let price = 200000
-      let result = calculate_price_sqrt(price)
+      let result = calculatePriceSqrt(price)
       // expected 22015.455979766288
       assert.ok(result.v.eq(new BN('22015455979766288')))
     })
     it('Test -20000', () => {
       let price = -20000
-      let result = calculate_price_sqrt(price)
+      let result = calculatePriceSqrt(price)
       // expected 0.367897834491
       assert.ok(result.v.eq(new BN('367897834491')))
     })
     it('Test -200000', () => {
       let price = -200000
-      let result = calculate_price_sqrt(price)
+      let result = calculatePriceSqrt(price)
       // expected 0.000045422634
       assert.ok(result.v.eq(new BN('45422634')))
     })
     it('Test 0', () => {
       let price = 0
-      let result = calculate_price_sqrt(price)
+      let result = calculatePriceSqrt(price)
       // expected 2.718145925979
       assert.ok(result.v.eq(new BN('1000000000000')))
     })
@@ -43,7 +43,7 @@ describe('Math', () => {
     const tokenDecimal = 6
     const x = new BN(43 * 10 ** (tokenDecimal - 2)) // 0.43
     const currentTick = 100
-    const currentSqrtPrice = calculate_price_sqrt(100)
+    const currentSqrtPrice = calculatePriceSqrt(100)
 
     it('below current tick', async () => {
       const lowerTick = -50
@@ -116,7 +116,7 @@ describe('Math', () => {
     const tokenDecimal = 9
     const y = new BN(476 * 10 ** (tokenDecimal - 1)) // 47.6
     const currentTick = -20000
-    const currentSqrtPrice = calculate_price_sqrt(currentTick)
+    const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
     it('below current tick', async () => {
       // rust results:
@@ -378,8 +378,8 @@ describe('Math', () => {
       const upperTick = 110
       const currentTick = 80
 
-      const upperSqrtPrice = calculate_price_sqrt(upperTick)
-      const currentSqrtPrice = calculate_price_sqrt(currentTick)
+      const upperSqrtPrice = calculatePriceSqrt(upperTick)
+      const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
       const x = getX(liquidity, upperSqrtPrice.v, currentSqrtPrice.v)
 
@@ -390,8 +390,8 @@ describe('Math', () => {
       const upperTick = 80
       const currentTick = 80
 
-      const upperSqrtPrice = calculate_price_sqrt(upperTick)
-      const currentSqrtPrice = calculate_price_sqrt(currentTick)
+      const upperSqrtPrice = calculatePriceSqrt(upperTick)
+      const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
       const x = getX(liquidity, upperSqrtPrice.v, currentSqrtPrice.v)
 
@@ -402,8 +402,8 @@ describe('Math', () => {
       const currentTick = 110
       const upperTick = 80
 
-      const upperSqrtPrice = calculate_price_sqrt(upperTick)
-      const currentSqrtPrice = calculate_price_sqrt(currentTick)
+      const upperSqrtPrice = calculatePriceSqrt(upperTick)
+      const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
       try {
         getX(liquidity, upperSqrtPrice.v, currentSqrtPrice.v)
@@ -417,7 +417,7 @@ describe('Math', () => {
 
     it('upperSqrtPrice = 0', async () => {
       const upperSqrtPrice = new BN(0)
-      const currentSqrtPrice = calculate_price_sqrt(10)
+      const currentSqrtPrice = calculatePriceSqrt(10)
 
       try {
         getX(liquidity, upperSqrtPrice, currentSqrtPrice.v)
@@ -431,7 +431,7 @@ describe('Math', () => {
 
     it('currentSqrtPrice = 0', async () => {
       const currentSqrtPrice = new BN(0)
-      const upperSqrtPrice = calculate_price_sqrt(10)
+      const upperSqrtPrice = calculatePriceSqrt(10)
 
       try {
         getX(liquidity, upperSqrtPrice.v, currentSqrtPrice)
@@ -451,8 +451,8 @@ describe('Math', () => {
       const lowerTick = 50
       const currentTick = 80
 
-      const lowerSqrtPrice = calculate_price_sqrt(lowerTick)
-      const currentSqrtPrice = calculate_price_sqrt(currentTick)
+      const lowerSqrtPrice = calculatePriceSqrt(lowerTick)
+      const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
       const y = getY(liquidity, currentSqrtPrice.v, lowerSqrtPrice.v)
 
@@ -463,8 +463,8 @@ describe('Math', () => {
       const lowerTick = 80
       const currentTick = 80
 
-      const lowerSqrtPrice = calculate_price_sqrt(lowerTick)
-      const currentSqrtPrice = calculate_price_sqrt(currentTick)
+      const lowerSqrtPrice = calculatePriceSqrt(lowerTick)
+      const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
       const y = getY(liquidity, currentSqrtPrice.v, lowerSqrtPrice.v)
 
@@ -475,8 +475,8 @@ describe('Math', () => {
       const lowerTick = 80
       const currentTick = 50
 
-      const lowerSqrtPrice = calculate_price_sqrt(lowerTick)
-      const currentSqrtPrice = calculate_price_sqrt(currentTick)
+      const lowerSqrtPrice = calculatePriceSqrt(lowerTick)
+      const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
       try {
         getY(liquidity, currentSqrtPrice.v, lowerSqrtPrice.v)
@@ -490,7 +490,7 @@ describe('Math', () => {
 
     it('lowerSqrtPrice = 0', async () => {
       const lowerSqrtPrice = new BN(0)
-      const currentSqrtPrice = calculate_price_sqrt(0)
+      const currentSqrtPrice = calculatePriceSqrt(0)
 
       try {
         getY(liquidity, currentSqrtPrice.v, lowerSqrtPrice)
@@ -504,7 +504,7 @@ describe('Math', () => {
 
     it('currentSqrtPrice = 0', async () => {
       const currentSqrtPrice = new BN(0)
-      const lowerSqrtPrice = calculate_price_sqrt(0)
+      const lowerSqrtPrice = calculatePriceSqrt(0)
 
       try {
         getY(liquidity, currentSqrtPrice, lowerSqrtPrice.v)
