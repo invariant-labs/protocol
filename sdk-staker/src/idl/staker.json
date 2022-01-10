@@ -1,5 +1,5 @@
 {
-  "version": "0.0.0",
+  "version": "0.1.0",
   "name": "staker",
   "instructions": [
     {
@@ -162,7 +162,7 @@
         },
         {
           "name": "owner",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -202,7 +202,7 @@
       "accounts": [
         {
           "name": "incentive",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -222,7 +222,7 @@
         },
         {
           "name": "owner",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -351,72 +351,72 @@
   ],
   "errors": [
     {
-      "code": 300,
+      "code": 6000,
       "name": "NotStarted",
       "msg": "The incentive didn't start yet!"
     },
     {
-      "code": 301,
+      "code": 6001,
       "name": "EmptyPositionPokes",
       "msg": "Disable empty position pokes"
     },
     {
-      "code": 302,
+      "code": 6002,
       "name": "InvalidPositionLiquidity",
       "msg": "Invalid tick liquidity"
     },
     {
-      "code": 303,
+      "code": 6003,
       "name": "ZeroAmount",
       "msg": "Amount is zero"
     },
     {
-      "code": 304,
+      "code": 6004,
       "name": "TooLongDuration",
       "msg": "Incentive duration is too long"
     },
     {
-      "code": 305,
+      "code": 6005,
       "name": "StartInPast",
       "msg": "Start in past"
     },
     {
-      "code": 306,
+      "code": 6006,
       "name": "Ended",
       "msg": "Incentive is over"
     },
     {
-      "code": 307,
+      "code": 6007,
       "name": "ZeroLiquidity",
       "msg": "User have no liquidity"
     },
     {
-      "code": 308,
+      "code": 6008,
       "name": "SlotsAreNotEqual",
       "msg": "Slots are not equal"
     },
     {
-      "code": 309,
+      "code": 6009,
       "name": "ZeroSecondsStaked",
       "msg": "Zero seconds staked"
     },
     {
-      "code": 310,
+      "code": 6010,
       "name": "ZeroSecPerLiq",
       "msg": "Seconds per liquidity is zero"
     },
     {
-      "code": 311,
+      "code": 6011,
       "name": "NotEnded",
       "msg": "Incentive not ended"
     },
     {
-      "code": 312,
+      "code": 6012,
       "name": "StakeExist",
       "msg": "Can't end id stake exists"
     },
     {
-      "code": 313,
+      "code": 6013,
       "name": "ZeroReward",
       "msg": "Remaining reward is 0"
     }

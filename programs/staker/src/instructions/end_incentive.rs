@@ -2,6 +2,7 @@ use std::convert::TryInto;
 
 use crate::structs::*;
 use crate::util;
+use crate::util::close;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{self, TokenAccount, Transfer};
@@ -9,7 +10,7 @@ use util::STAKER_SEED;
 
 #[derive(Accounts)]
 pub struct ReturnFounds<'info> {
-    #[account(constraint = &incentive.load()?.founder == owner.to_account_info().key )]
+    #[account(mut, constraint = &incentive.load()?.founder == owner.to_account_info().key )]
     pub incentive: AccountLoader<'info, Incentive>,
     //TODO: Add token account and validate mints
     #[account(mut,
@@ -21,6 +22,7 @@ pub struct ReturnFounds<'info> {
     pub founder_token_account: Account<'info, TokenAccount>,
     //TODO: validate staker_authority
     pub staker_authority: AccountInfo<'info>,
+    #[account(mut)]
     pub owner: Signer<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
@@ -43,18 +45,25 @@ impl<'info> ReturnFounds<'info> {
 }
 
 pub fn handler(ctx: Context<ReturnFounds>, bump_authority: u8) -> ProgramResult {
-    let incentive = ctx.accounts.incentive.load()?;
-    let current_time: u64 = Clock::get()?.unix_timestamp.try_into().unwrap();
-    require!(current_time > incentive.end_time, NotEnded);
-    require!(incentive.num_of_stakes == 0, StakeExist);
-    require!(incentive.total_reward_unclaimed.v > 0, ZeroReward);
+    {
+        let incentive = ctx.accounts.incentive.load()?;
+        let current_time: u64 = Clock::get()?.unix_timestamp.try_into().unwrap();
+        require!(current_time > incentive.end_time, NotEnded);
+        require!(incentive.num_of_stakes == 0, StakeExist);
+        require!(incentive.total_reward_unclaimed.v > 0, ZeroReward);
 
-    // TODO: would be nice to have this bump saved somewhere
-    let seeds = &[STAKER_SEED.as_bytes(), &[bump_authority]];
-    let signer = &[&seeds[..]];
-    let cpi_ctx = ctx.accounts.return_to_founder().with_signer(signer);
+        // TODO: would be nice to have this bump saved somewhere
+        let seeds = &[STAKER_SEED.as_bytes(), &[bump_authority]];
+        let signer = &[&seeds[..]];
+        let cpi_ctx = ctx.accounts.return_to_founder().with_signer(signer);
 
-    token::transfer(cpi_ctx, incentive.total_reward_unclaimed.to_u64())?;
+        token::transfer(cpi_ctx, incentive.total_reward_unclaimed.to_u64())?;
+    }
 
+    close(
+        ctx.accounts.incentive.to_account_info(),
+        ctx.accounts.owner.to_account_info(),
+    )
+    .unwrap();
     Ok(())
 }

@@ -34,6 +34,7 @@ pub struct Withdraw<'info> {
     #[account(constraint = check_position_seeds(owner.to_account_info(), position.to_account_info().key, index))]
     pub position: AccountLoader<'info, Position>,
     pub staker_authority: AccountInfo<'info>, // validate with state
+    #[account(mut)]
     pub owner: Signer<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
@@ -57,52 +58,61 @@ impl<'info> Withdraw<'info> {
 }
 
 pub fn handler(ctx: Context<Withdraw>, nonce: u8) -> ProgramResult {
-    msg!("WITHDRAW");
-    let user_stake = &mut ctx.accounts.user_stake.load_mut()?;
-    let position = ctx.accounts.position.load()?;
     let mut incentive = ctx.accounts.incentive.load_mut()?;
-    let current_time: u64 = Clock::get().unwrap().unix_timestamp.try_into().unwrap();
-    let update_slot = position.last_slot;
-    let slot: u64 = Clock::get()?.slot.try_into().unwrap();
+    {
+        msg!("WITHDRAW");
+        let user_stake = &mut ctx.accounts.user_stake.load_mut()?;
+        let position = ctx.accounts.position.load()?;
 
-    require!(slot == update_slot, SlotsAreNotEqual);
-    require!(user_stake.liquidity.v != 0, ZeroSecondsStaked);
-    require!(
-        user_stake.seconds_per_liquidity_initial.v != 0,
-        ZeroSecPerLiq
-    );
-    let seconds_per_liquidity_inside: Decimal =
-        Decimal::new(position.seconds_per_liquidity_inside.v);
+        let current_time: u64 = Clock::get().unwrap().unix_timestamp.try_into().unwrap();
+        let update_slot = position.last_slot;
+        let slot: u64 = Clock::get()?.slot.try_into().unwrap();
 
-    let reward_unclaimed = incentive.total_reward_unclaimed;
+        require!(slot == update_slot, SlotsAreNotEqual);
+        require!(user_stake.liquidity.v != 0, ZeroSecondsStaked);
+        require!(
+            user_stake.seconds_per_liquidity_initial.v != 0,
+            ZeroSecPerLiq
+        );
+        let seconds_per_liquidity_inside: Decimal =
+            Decimal::new(position.seconds_per_liquidity_inside.v);
 
-    require!(reward_unclaimed != Decimal::from_integer(0), ZeroAmount);
+        let reward_unclaimed = incentive.total_reward_unclaimed;
 
-    let (seconds_inside, reward) = calculate_reward(
-        incentive.total_reward_unclaimed,
-        incentive.total_seconds_claimed,
-        incentive.start_time,
-        incentive.end_time,
-        user_stake.liquidity,
-        user_stake.seconds_per_liquidity_initial,
-        seconds_per_liquidity_inside,
-        current_time,
+        require!(reward_unclaimed != Decimal::from_integer(0), ZeroAmount);
+
+        let (seconds_inside, reward) = calculate_reward(
+            incentive.total_reward_unclaimed,
+            incentive.total_seconds_claimed,
+            incentive.start_time,
+            incentive.end_time,
+            user_stake.liquidity,
+            user_stake.seconds_per_liquidity_initial,
+            seconds_per_liquidity_inside,
+            current_time,
+        )
+        .unwrap();
+
+        incentive.total_seconds_claimed = incentive.total_seconds_claimed.add(seconds_inside);
+        incentive.total_reward_unclaimed = incentive
+            .total_reward_unclaimed
+            .sub(Decimal::new(reward as u128));
+        user_stake.seconds_per_liquidity_initial = Decimal::from_integer(0);
+        user_stake.liquidity = Decimal::from_integer(0);
+
+        let seeds = &[STAKER_SEED.as_bytes(), &[nonce]];
+        let signer = &[&seeds[..]];
+
+        let cpi_ctx = ctx.accounts.withdraw().with_signer(signer);
+
+        token::transfer(cpi_ctx, reward)?;
+    }
+
+    close(
+        ctx.accounts.user_stake.to_account_info(),
+        ctx.accounts.owner.to_account_info(),
     )
     .unwrap();
-
-    incentive.total_seconds_claimed = incentive.total_seconds_claimed.add(seconds_inside);
-    incentive.total_reward_unclaimed = incentive
-        .total_reward_unclaimed
-        .sub(Decimal::new(reward as u128));
-    user_stake.seconds_per_liquidity_initial = Decimal::from_integer(0);
-    user_stake.liquidity = Decimal::from_integer(0);
-
-    let seeds = &[STAKER_SEED.as_bytes(), &[nonce]];
-    let signer = &[&seeds[..]];
-
-    let cpi_ctx = ctx.accounts.withdraw().with_signer(signer);
-
-    token::transfer(cpi_ctx, reward)?;
 
     incentive.num_of_stakes -= 1;
 
