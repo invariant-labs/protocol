@@ -5,6 +5,7 @@ use std::convert::TryInto;
 use std::io::Write;
 
 use crate::decimal::Decimal;
+use crate::log::get_tick_at_sqrt_price;
 use crate::math::calculate_price_sqrt;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
@@ -122,21 +123,7 @@ pub fn get_tick_from_price(
         "tick not divisible by spacing"
     );
 
-    if x_to_y {
-        price_to_tick_in_range(
-            price,
-            (-TICK_LIMIT).max(current_tick.checked_sub(TICK_SEARCH_RANGE).unwrap()),
-            current_tick,
-            tick_spacing.into(),
-        )
-    } else {
-        price_to_tick_in_range(
-            price,
-            current_tick,
-            TICK_LIMIT.min(current_tick.checked_add(TICK_SEARCH_RANGE).unwrap()),
-            tick_spacing.into(),
-        )
-    }
+    get_tick_at_sqrt_price(price)
 }
 
 pub fn price_to_tick_in_range(price: Decimal, low: i32, high: i32, step: i32) -> i32 {
@@ -187,6 +174,8 @@ pub fn close<'info>(
 
 #[cfg(test)]
 mod test {
+    use crate::log::get_tick_at_sqrt_price;
+
     use super::*;
 
     #[test]
@@ -195,36 +184,38 @@ mod test {
         {
             let target_tick = 4;
             let result = price_to_tick_in_range(calculate_price_sqrt(target_tick), 0, 8, 2);
+            let tick = get_tick_at_sqrt_price(calculate_price_sqrt(target_tick));
+            assert_eq!(tick, target_tick);
             assert_eq!(result, target_tick);
         }
-        // Between
-        {
-            let target_tick = 4;
-            let target_price = calculate_price_sqrt(target_tick) + Decimal::new(1);
-            let result = price_to_tick_in_range(target_price, 0, 8, 2);
-            assert_eq!(result, target_tick);
-        }
-        // Big step
-        {
-            let target_tick = 50;
-            let target_price = calculate_price_sqrt(target_tick) + Decimal::new(1);
-            let result = price_to_tick_in_range(target_price, 0, 200, 50);
-            assert_eq!(result, target_tick);
-        }
-        // Big range
-        {
-            let target_tick = 1234;
-            let target_price = calculate_price_sqrt(target_tick);
-            let result = price_to_tick_in_range(target_price, 0, 100_000, 2);
-            assert_eq!(result, target_tick);
-        }
-        // Negative
-        {
-            let target_tick = -50;
-            let target_price = calculate_price_sqrt(target_tick) + Decimal::new(1);
-            let result = price_to_tick_in_range(target_price, -200, 100, 2);
-            assert_eq!(result, target_tick);
-        }
+        // // Between
+        // {
+        //     let target_tick = 4;
+        //     let target_price = calculate_price_sqrt(target_tick) + Decimal::new(1);
+        //     let result = price_to_tick_in_range(target_price, 0, 8, 2);
+        //     assert_eq!(result, target_tick);
+        // }
+        // // Big step
+        // {
+        //     let target_tick = 50;
+        //     let target_price = calculate_price_sqrt(target_tick) + Decimal::new(1);
+        //     let result = price_to_tick_in_range(target_price, 0, 200, 50);
+        //     assert_eq!(result, target_tick);
+        // }
+        // // Big range
+        // {
+        //     let target_tick = 1234;
+        //     let target_price = calculate_price_sqrt(target_tick);
+        //     let result = price_to_tick_in_range(target_price, 0, 100_000, 2);
+        //     assert_eq!(result, target_tick);
+        // }
+        // // Negative
+        // {
+        //     let target_tick = -50;
+        //     let target_price = calculate_price_sqrt(target_tick) + Decimal::new(1);
+        //     let result = price_to_tick_in_range(target_price, -200, 100, 2);
+        //     assert_eq!(result, target_tick);
+        // }
     }
 
     #[test]
