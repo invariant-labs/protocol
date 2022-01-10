@@ -167,7 +167,12 @@ export const calculateSwapStep = (
   }
 }
 
-const getDeltaX = (priceA: Decimal, priceB: Decimal, liquidity: Decimal, up: boolean): BN => {
+export const getDeltaX = (
+  priceA: Decimal,
+  priceB: Decimal,
+  liquidity: Decimal,
+  up: boolean
+): BN => {
   let deltaPrice: Decimal
   if (priceA.v.gt(priceB.v)) {
     deltaPrice = { v: priceA.v.sub(priceB.v) }
@@ -186,7 +191,12 @@ const getDeltaX = (priceA: Decimal, priceB: Decimal, liquidity: Decimal, up: boo
   }
 }
 
-const getDeltaY = (priceA: Decimal, priceB: Decimal, liquidity: Decimal, up: boolean): BN => {
+export const getDeltaY = (
+  priceA: Decimal,
+  priceB: Decimal,
+  liquidity: Decimal,
+  up: boolean
+): BN => {
   let deltaPrice: Decimal
   if (priceA.v.gt(priceB.v)) {
     deltaPrice = { v: priceA.v.sub(priceB.v) }
