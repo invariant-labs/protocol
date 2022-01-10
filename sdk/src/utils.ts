@@ -77,7 +77,7 @@ export interface SimulateClaim {
 export const ComputeUnitsInstruction = (units: number, wallet: PublicKey) => {
   const program = new PublicKey('ComputeBudget111111111111111111111111111111')
   let params = { instruction: 0, units: units }
-  let layout = struct([u8('instruction'), u32('units')])
+  let layout = struct([u8('instruction') as any, u32('units')])
   let data = Buffer.alloc(layout.span)
   layout.encode(params, data)
   let keys = [{ pubkey: wallet, isSigner: false, isWritable: false }]
