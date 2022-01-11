@@ -28,7 +28,7 @@ export const getPreviousTick = (
   tickmap: Tickmap,
   currentTickIndex: number,
   tickSpacing: number
-): Number => {
+): number | null => {
   if (currentTickIndex % tickSpacing !== 0) {
     throw new Error('Tick not divisible by spacing')
   }
@@ -55,23 +55,23 @@ export const getPreviousTick = (
         if (foundIndex <= -TICK_LIMIT) {
           throw new Error('Tick is at limit')
         }
-        return new Number(foundIndex * tickSpacing)
+        return foundIndex * tickSpacing
       } else {
-        return new Number(null)
+        return null
       }
     }
 
     byteIndex -= 1
     bitIndex = 7
   }
-  return new Number(null)
+  return null
 }
 
 export const getNextTick = (
   tickmap: Tickmap,
   currentTickIndex: number,
   tickSpacing: number
-): Number => {
+): number | null => {
   if (currentTickIndex % tickSpacing != 0) {
     throw new Error('Tick not divisible by spacing')
   }
@@ -80,7 +80,7 @@ export const getNextTick = (
   const bitmapIndex = indexWithoutSpacing + TICK_LIMIT + 1
   const limit = getSearchLimit(currentTickIndex, tickSpacing, true) + TICK_LIMIT
 
-  let byteIndex = bitmapIndex / 8
+  let byteIndex = Math.floor(bitmapIndex / 8)
   let bitIndex = Math.abs(bitmapIndex % 8)
 
   while (byteIndex * 8 + bitIndex <= limit) {
@@ -99,15 +99,14 @@ export const getNextTick = (
         if (foundIndex >= TICK_LIMIT) {
           throw new Error('Tick is at limit')
         }
-        return new Number(foundIndex * tickSpacing)
+        return foundIndex * tickSpacing
       } else {
-        return new Number(null)
+        return null
       }
     }
 
     byteIndex = byteIndex + 1
     bitIndex = 0
   }
-
-  return new Number(null)
+  return null
 }

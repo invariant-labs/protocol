@@ -7,7 +7,6 @@ import { createToken } from './testUtils'
 import {
   Market,
   Pair,
-  SEED,
   tou64,
   DENOMINATOR,
   signAndSend,
@@ -16,9 +15,9 @@ import {
 } from '@invariant-labs/sdk'
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { calculateAveragePrice, SimulateSwapPrice, toDecimal } from '@invariant-labs/sdk/src/utils'
-
-describe('simulate-swap', () => {
+import { toDecimal } from '@invariant-labs/sdk/src/utils'
+//TODO add to tests
+describe('swap', () => {
   const provider = Provider.local()
   const connection = provider.connection
   // @ts-expect-error
@@ -30,7 +29,7 @@ describe('simulate-swap', () => {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
   }
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
+  const protocolFee: Decimal = { v: fromFee(new BN(10000)) } // 10%
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -45,23 +44,16 @@ describe('simulate-swap', () => {
       anchor.workspace.Amm.programId
     )
 
+    // Request airdrops
     await Promise.all([
       await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
       await connection.requestAirdrop(admin.publicKey, 1e9)
     ])
-
+    // Create tokens
     const tokens = await Promise.all([
       createToken(connection, wallet, mintAuthority),
       createToken(connection, wallet, mintAuthority)
     ])
-
-    const swaplineProgram = anchor.workspace.Amm as Program
-    const [_programAuthority, _nonce] = await anchor.web3.PublicKey.findProgramAddress(
-      [Buffer.from(SEED)],
-      swaplineProgram.programId
-    )
-    nonce = _nonce
-    programAuthority = _programAuthority
 
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
@@ -71,7 +63,10 @@ describe('simulate-swap', () => {
     await market.createFeeTier(feeTier, admin)
   })
   it('#create()', async () => {
-    await market.create({ pair, signer: admin, initTick: 1000 })
+    await market.create({
+      pair,
+      signer: admin
+    })
 
     const createdPool = await market.get(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
@@ -79,8 +74,8 @@ describe('simulate-swap', () => {
     assert.ok(createdPool.fee.v.eq(feeTier.fee))
     assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
     assert.ok(createdPool.liquidity.v.eqn(0))
-    assert.ok(createdPool.sqrtPrice.v.eq(new BN(1051268468360)))
-    assert.ok(createdPool.currentTickIndex == 1000)
+    assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR))
+    assert.ok(createdPool.currentTickIndex == 0)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
     assert.ok(createdPool.feeProtocolTokenX.eqn(0))
@@ -90,8 +85,9 @@ describe('simulate-swap', () => {
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
     assert.ok(tickmapData.bitmap.every(v => v == 0))
   })
-  it('#swap()', async () => {
-    for (let i = 900; i <= 1010; i += 10) await market.createTick(pair, i, wallet)
+
+  it('#swap() within a tick', async () => {
+    // Deposit
 
     const positionOwner = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
@@ -102,72 +98,87 @@ describe('simulate-swap', () => {
     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
 
+    const liquidityDelta = { v: new BN(2000000).mul(DENOMINATOR) }
+
     await market.createPositionList(positionOwner)
-    await market.initPosition(
-      {
-        pair,
-        owner: positionOwner.publicKey,
-        userTokenX: userTokenXAccount,
-        userTokenY: userTokenYAccount,
-        lowerTick: 910,
-        upperTick: 960,
-        liquidityDelta: { v: new BN(1550000).mul(DENOMINATOR) }
-      },
-      positionOwner
-    )
-    await market.initPosition(
-      {
-        pair,
-        owner: positionOwner.publicKey,
-        userTokenX: userTokenXAccount,
-        userTokenY: userTokenYAccount,
-        lowerTick: 950,
-        upperTick: 990,
-        liquidityDelta: { v: new BN(1220000).mul(DENOMINATOR) }
-      },
-      positionOwner
-    )
-    await market.initPosition(
-      {
-        pair,
-        owner: positionOwner.publicKey,
-        userTokenX: userTokenXAccount,
-        userTokenY: userTokenYAccount,
-        lowerTick: 980,
-        upperTick: 1010,
-        liquidityDelta: { v: new BN(1970000).mul(DENOMINATOR) }
-      },
-      positionOwner
-    )
-
-    const swapper = Keypair.generate()
-    await connection.requestAirdrop(swapper.publicKey, 1e9)
-    const amount = new BN(2000)
-
-    const accountX = await tokenX.createAccount(swapper.publicKey)
-    const accountY = await tokenY.createAccount(swapper.publicKey)
-
-    const { tokenYReserve } = await market.get(pair)
-    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
-    await tokenY.mintTo(accountY, mintAuthority.publicKey, [mintAuthority], tou64(amount))
-
-    const poolDataBefore = await market.get(pair)
-    const reservesBefore = await market.getReserveBalances(pair, wallet)
-    const tick = await market.getTick(pair, 1000)
-    const tickmap = await market.getTickmap(pair)
-    const simulateSwapPriceParameters: SimulateSwapPrice = {
-      xToY: true,
-      byAmountIn: true,
-      swapAmount: amount,
-      currentPrice: poolDataBefore.sqrtPrice,
-      slippage: toDecimal(1, 2),
-      tickmap,
-      pool: poolDataBefore,
-      market: market,
-      pair: pair
+    for (let i = -200; i < 200; i += 10) {
+      await market.initPosition(
+        {
+          pair,
+          owner: positionOwner.publicKey,
+          userTokenX: userTokenXAccount,
+          userTokenY: userTokenYAccount,
+          lowerTick: i,
+          upperTick: i + 10,
+          liquidityDelta
+        },
+        positionOwner
+      )
     }
 
-    const estimatedMeanPrice = calculateAveragePrice(simulateSwapPriceParameters)
-    assert.ok(estimatedMeanPrice.v.eq(new BN(1103994154149)))
+    // Create owner
+    const owner = Keypair.generate()
+    await connection.requestAirdrop(owner.publicKey, 1e9)
+
+    const accountX = await tokenX.createAccount(owner.publicKey)
+    const accountY = await tokenY.createAccount(owner.publicKey)
+
+    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(new BN(10000)))
+    await tokenY.mintTo(accountY, mintAuthority.publicKey, [mintAuthority], tou64(new BN(10000)))
+
+    // Swap
+    const poolDataBefore = await market.get(pair)
+    const reserveXBefore = (await tokenX.getAccountInfo(poolDataBefore.tokenXReserve)).amount
+    const reserveYBefore = (await tokenY.getAccountInfo(poolDataBefore.tokenYReserve)).amount
+
+    //make swap into right to move price from tick 0
+    const txr = await market.swapTransaction({
+      pair,
+      XtoY: false,
+      amount: new BN(500),
+      knownPrice: poolDataBefore.sqrtPrice,
+      slippage: toDecimal(2, 2),
+      accountX,
+      accountY,
+      byAmountIn: true,
+      owner: owner.publicKey
+    })
+    await signAndSend(txr, [owner], connection)
+
+    //make swap bigger than cross tick
+    const tx = await market.swapTransaction({
+      pair,
+      XtoY: true,
+      amount: new BN(3000),
+      knownPrice: poolDataBefore.sqrtPrice,
+      slippage: toDecimal(2, 2),
+      accountX,
+      accountY,
+      byAmountIn: true,
+      owner: owner.publicKey
+    })
+    await signAndSend(tx, [owner], connection)
+
+    // Check pool
+    const poolData = await market.get(pair)
+
+    // Check amounts and fees
+    const amountX = (await tokenX.getAccountInfo(accountX)).amount
+    const amountY = (await tokenY.getAccountInfo(accountY)).amount
+    const reserveXAfter = (await tokenX.getAccountInfo(poolData.tokenXReserve)).amount
+    const reserveYAfter = (await tokenY.getAccountInfo(poolData.tokenYReserve)).amount
+    const reserveXDelta = reserveXAfter.sub(reserveXBefore)
+    const reserveYDelta = reserveYBefore.sub(reserveYAfter)
+
+    const amount = new BN(1000)
+    assert.ok(amountX.eqn(7496))
+    assert.ok(amountY.eqn(12477))
+    assert.ok(reserveXDelta.eqn(2504))
+    assert.ok(reserveYDelta.eqn(2477))
+
+    assert.ok(poolData.feeGrowthGlobalX.v.eqn(8099936)) // 0.6 % of amount - protocol fee
+    assert.ok(poolData.feeGrowthGlobalY.v.eqn(1350000))
+    assert.ok(poolData.feeProtocolTokenX.v.eq(new BN(1799986631284)))
+    assert.ok(poolData.feeProtocolTokenY.v.eq(new BN(300000000000)))
   })
 })
