@@ -83,25 +83,24 @@ fn log2_iterative_approximation_x64(mut sqrt_price_x64: u128) -> (bool, u128) {
     (sign, result)
 }
 
-pub fn get_tick_at_sqrt_price(sqrt_price_decimal: Decimal) -> i32 {
+pub fn get_tick_at_sqrt_price(sqrt_price_decimal: Decimal, tick_spacing: u16) -> i32 {
     let sqrt_price_x64: u128 = decimal_to_x64(sqrt_price_decimal);
-    let (log_sign, log2_sqrt_price) = log2_iterative_approximation_x64(sqrt_price_x64);
+    let (log2_sign, log2_sqrt_price) = log2_iterative_approximation_x64(sqrt_price_x64);
 
-    let abs_floor_tick: i32 = match log_sign {
+    let abs_floor_tick: i32 = match log2_sign {
         true => log2_sqrt_price / LOG2_SQRT_10001,
         false => (log2_sqrt_price + LOG2_NEGATIVE_MAX_LOSE) / LOG2_SQRT_10001,
     } as i32;
 
-    let nearer_tick = match log_sign {
+    let nearer_tick = match log2_sign {
         true => abs_floor_tick,
         false => -abs_floor_tick,
     };
-    let farther_tick = match log_sign {
+    let farther_tick = match log2_sign {
         true => abs_floor_tick + 1,
         false => -abs_floor_tick - 1,
     };
-
-    return match log_sign {
+    let accurate_tick = match log2_sign {
         true => {
             if farther_tick > MAX_TICK {
                 return nearer_tick;
@@ -120,6 +119,10 @@ pub fn get_tick_at_sqrt_price(sqrt_price_decimal: Decimal) -> i32 {
             }
         }
     };
+    match tick_spacing > 1 {
+        true => accurate_tick - (accurate_tick % tick_spacing as i32),
+        false => accurate_tick,
+    }
 }
 
 #[cfg(test)]
@@ -196,19 +199,19 @@ mod tests {
             // get tick at 1
             {
                 let sqrt_price_decimal = Decimal::from_integer(1);
-                let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, 0);
             }
             // get tick slightly below 1
             {
                 let sqrt_price_decimal = Decimal::new(999999999999);
-                let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, -1);
             }
             // get tick slightly above 1
             {
                 let sqrt_price_decimal = Decimal::new(1000000000001);
-                let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, 0);
             }
         }
@@ -217,19 +220,19 @@ mod tests {
             let sqrt_price_decimal = calculate_price_sqrt(1);
             // get tick at sqrt(1.0001)
             {
-                let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, 1);
             }
             // get tick slightly below sqrt(1.0001)
             {
                 let sqrt_price_decimal = sqrt_price_decimal - Decimal::new(1);
-                let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, 0);
             }
             // get tick slightly above sqrt(1.0001)
             {
                 let sqrt_price_decimal = sqrt_price_decimal + Decimal::new(1);
-                let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, 1);
             }
         }
@@ -238,20 +241,20 @@ mod tests {
             let sqrt_price_decimal = calculate_price_sqrt(-1);
             // get tick at sqrt(1.0001^(-1))
             {
-                let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, -1);
             }
             // get tick slightly below sqrt(1.0001^(-1))
             {
                 let sqrt_price_decimal = calculate_price_sqrt(-1) - Decimal::new(1);
 
-                let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, -2);
             }
             // get tick slightly above sqrt(1.0001^(-1))
             {
                 let sqrt_price_decimal = calculate_price_sqrt(-1) + Decimal::new(1);
-                let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, -1);
             }
         }
@@ -260,19 +263,19 @@ mod tests {
             let sqrt_price_decimal = calculate_price_sqrt(MAX_TICK - 1);
             // get tick at sqrt(1.0001^(MAX_TICK - 1))
             {
-                let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, MAX_TICK - 1);
             }
             // get tick slightly below sqrt(1.0001^(MAX_TICK - 1))
             {
                 let sqrt_price_decimal = sqrt_price_decimal - Decimal::new(1);
-                let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, MAX_TICK - 2);
             }
             // get tick slightly above sqrt(1.0001^(MAX_TICK - 1))
             {
                 let sqrt_price_decimal = sqrt_price_decimal + Decimal::new(1);
-                let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, MAX_TICK - 1);
             }
         }
@@ -281,19 +284,19 @@ mod tests {
             let sqrt_price_decimal = calculate_price_sqrt(-(MAX_TICK - 1));
             // get tick at sqrt(1.0001^(-MAX_TICK + 1))
             {
-                let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, -(MAX_TICK - 1));
             }
             // get tick slightly below sqrt(1.0001^(-MAX_TICK + 1))
             {
                 let sqrt_price_decimal = sqrt_price_decimal - Decimal::new(1);
-                let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, -MAX_TICK);
             }
             // get tick slightly above sqrt(1.0001^(-MAX_TICK + 1))
             {
                 let sqrt_price_decimal = sqrt_price_decimal + Decimal::new(1);
-                let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, -(MAX_TICK - 1));
             }
         }
@@ -301,7 +304,7 @@ mod tests {
         {
             let max_sqrt_price = Decimal::from_decimal(655354, 1);
             let sqrt_price_decimal = max_sqrt_price - Decimal::new(1);
-            let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+            let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
             assert_eq!(tick, MAX_TICK);
         }
         // around 19_999 tick
@@ -310,20 +313,20 @@ mod tests {
             let sqrt_price_decimal = calculate_price_sqrt(expected_tick);
             // get tick at sqrt(1.0001^19_999)
             {
-                let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, expected_tick);
             }
             // get tick slightly below sqrt(1.0001^19_999)
             {
                 let sqrt_price_decimal = sqrt_price_decimal - Decimal::new(1);
 
-                let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, expected_tick - 1);
             }
             // get tick slightly above sqrt(1.0001^19_999)
             {
                 let sqrt_price_decimal = sqrt_price_decimal + Decimal::new(1);
-                let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, expected_tick);
             }
         }
@@ -333,20 +336,20 @@ mod tests {
             let sqrt_price_decimal = calculate_price_sqrt(expected_tick);
             // get tick at sqrt(1.0001^(-19_999))
             {
-                let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, expected_tick);
             }
             // get tick slightly below sqrt(1.0001^(-19_999))
             {
                 // let sqrt_price_decimal = sqrt_price_decimal - Decimal::new(150);
                 let sqrt_price_decimal = sqrt_price_decimal - Decimal::new(1);
-                let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, expected_tick - 1);
             }
             // get tick slightly above sqrt(1.0001^(-19_999))
             {
                 let sqrt_price_decimal = sqrt_price_decimal + Decimal::new(1);
-                let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, expected_tick);
             }
         }
@@ -354,7 +357,7 @@ mod tests {
         {
             let min_sqrt_price = Decimal::new(15258932);
             let sqrt_price_decimal = min_sqrt_price + Decimal::new(1);
-            let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+            let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
             assert_eq!(tick, -MAX_TICK);
         }
     }
@@ -367,19 +370,19 @@ mod tests {
                 let sqrt_price_decimal = calculate_price_sqrt(expected_tick);
                 // get tick at sqrt(1.0001^(n))
                 {
-                    let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                    let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                     assert_eq!(tick, expected_tick);
                 }
                 // get tick slightly below sqrt(1.0001^n)
                 {
                     let sqrt_price_decimal = sqrt_price_decimal - Decimal::new(1);
-                    let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                    let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                     assert_eq!(tick, expected_tick - 1);
                 }
                 // get tick slightly above sqrt(1.0001^n)
                 {
                     let sqrt_price_decimal = sqrt_price_decimal + Decimal::new(1);
-                    let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                    let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                     assert_eq!(tick, expected_tick);
                 }
             }
@@ -394,19 +397,81 @@ mod tests {
                 let sqrt_price_decimal = calculate_price_sqrt(expected_tick);
                 // get tick at sqrt(1.0001^(n))
                 {
-                    let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                    let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                     assert_eq!(tick, expected_tick);
                 }
                 // get tick slightly below sqrt(1.0001^n)
                 {
                     let sqrt_price_decimal = sqrt_price_decimal - Decimal::new(1);
-                    let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                    let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                     assert_eq!(tick, expected_tick - 1);
                 }
                 // get tick slightly above sqrt(1.0001^n)
                 {
                     let sqrt_price_decimal = sqrt_price_decimal + Decimal::new(1);
-                    let tick = get_tick_at_sqrt_price(sqrt_price_decimal);
+                    let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
+                    assert_eq!(tick, expected_tick);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_all_positive_tick_spacing_greater_than_1() {
+        let tick_spacing: i32 = 3;
+        for n in 0..MAX_TICK {
+            {
+                let input_tick = n;
+                let sqrt_price_decimal = calculate_price_sqrt(input_tick);
+                // get tick at sqrt(1.0001^(n))
+                {
+                    let tick = get_tick_at_sqrt_price(sqrt_price_decimal, tick_spacing as u16);
+                    let expected_tick = input_tick - (input_tick % tick_spacing);
+                    assert_eq!(tick, expected_tick);
+                }
+                // get tick slightly below sqrt(1.0001^n)
+                {
+                    let sqrt_price_decimal = sqrt_price_decimal - Decimal::new(1);
+                    let tick = get_tick_at_sqrt_price(sqrt_price_decimal, tick_spacing as u16);
+                    let expected_tick = (input_tick - 1) - ((input_tick - 1) % tick_spacing);
+                    assert_eq!(tick, expected_tick);
+                }
+                // get tick slightly above sqrt(1.0001^n)
+                {
+                    let sqrt_price_decimal = sqrt_price_decimal + Decimal::new(1);
+                    let tick = get_tick_at_sqrt_price(sqrt_price_decimal, tick_spacing as u16);
+                    let expected_tick = input_tick - (input_tick % tick_spacing);
+                    assert_eq!(tick, expected_tick);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_all_negative_tick_spacing_greater_than_1() {
+        let tick_spacing: i32 = 4;
+        for n in 0..MAX_TICK {
+            {
+                let input_tick = -n;
+                let sqrt_price_decimal = calculate_price_sqrt(input_tick);
+                // get tick at sqrt(1.0001^(n))
+                {
+                    let tick = get_tick_at_sqrt_price(sqrt_price_decimal, tick_spacing as u16);
+                    let expected_tick = input_tick - (input_tick % tick_spacing);
+                    assert_eq!(tick, expected_tick);
+                }
+                // get tick slightly below sqrt(1.0001^n)
+                {
+                    let sqrt_price_decimal = sqrt_price_decimal - Decimal::new(1);
+                    let tick = get_tick_at_sqrt_price(sqrt_price_decimal, tick_spacing as u16);
+                    let expected_tick = (input_tick - 1) - ((input_tick - 1) % tick_spacing);
+                    assert_eq!(tick, expected_tick);
+                }
+                // get tick slightly above sqrt(1.0001^n)
+                {
+                    let sqrt_price_decimal = sqrt_price_decimal + Decimal::new(1);
+                    let tick = get_tick_at_sqrt_price(sqrt_price_decimal, tick_spacing as u16);
+                    let expected_tick = input_tick - (input_tick % tick_spacing);
                     assert_eq!(tick, expected_tick);
                 }
             }
