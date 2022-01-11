@@ -553,7 +553,7 @@ export class Market {
       ticks.set(tick.index, tick)
     }
 
-    //simulate swap to get exact amount of tokens swaped between tick croses
+    //simulate swap to get exact amount of tokens swapped between tick crosses
     const swapParameters: SimulateSwapInterface = {
       xToY: XtoY,
       byAmountIn: byAmountIn,
@@ -573,6 +573,10 @@ export class Market {
       sum = sum.add(value)
     }
 
+    for (var value of amountPerTick) {
+      console.log(value.toString())
+    }
+
     if (!sum.eq(amount)) {
       throw new Error('Input amount and simulation amount sum are different')
     }
@@ -582,7 +586,18 @@ export class Market {
     }
 
     const tx: Transaction = new Transaction()
+    //this means how many  ticks we would like to cross per instruction
+    let remaining: number = 0
 
+    // for (let i = 0; i < amountPerTick.length; i++) {
+    //   let amountIx: BN = amountPerTick[i]
+
+    //   if (
+    //     ((i + 1) % TICKS_PER_IX == 0 || i == amountPerTick.length - 1) &&
+    //     !amountPerTick[i].eqn(0)
+    //   ) {
+    // console.log('MARKET: amountPerTick', amountPerTick[0].toString())
+    // console.log('MARKET: amount', amount.toString())
     const swapIx = this.program.instruction.swap(XtoY, amount, byAmountIn, priceLimit, {
       remainingAccounts: ra,
       accounts: {
@@ -601,7 +616,9 @@ export class Market {
       }
     })
     tx.add(swapIx)
-
+    //     amountIx = new BN(0)
+    //   }
+    // }
     return tx
   }
 
