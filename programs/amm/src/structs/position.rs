@@ -5,6 +5,7 @@ use crate::*;
 use anchor_lang::prelude::*;
 
 #[account(zero_copy)]
+#[repr(packed)]
 #[derive(PartialEq, Default, Debug)]
 pub struct Position {
     pub owner: Pubkey,

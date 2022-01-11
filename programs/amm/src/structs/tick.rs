@@ -3,6 +3,7 @@ use crate::*;
 use anchor_lang::prelude::*;
 
 #[account(zero_copy)]
+#[repr(packed)]
 #[derive(PartialEq, Default, Debug)]
 pub struct Tick {
     pub index: i32,

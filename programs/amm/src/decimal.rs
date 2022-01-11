@@ -12,9 +12,8 @@ const DENOMINATOR: u128 = 10u128.pow(SCALE as u32);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TokenAmount(pub u64);
 
-#[derive(
-    Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, AnchorDeserialize, AnchorSerialize,
-)]
+#[zero_copy]
+#[derive(Debug, Default, PartialEq, Eq, PartialOrd, Ord, AnchorDeserialize, AnchorSerialize)]
 pub struct Decimal {
     pub v: u128,
 }

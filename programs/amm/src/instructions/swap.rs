@@ -198,7 +198,7 @@ pub fn handler(
                     .iter()
                     .find(|account| *account.key == tick_address)
                 {
-                    Some(account) => Loader::<'_, Tick>::try_from(ctx.program_id, account).unwrap(),
+                    Some(account) => AccountLoader::<'_, Tick>::try_from(account).unwrap(),
                     None => return Err(ErrorCode::TickNotFound.into()),
                 };
                 let mut tick = loader.load_mut().unwrap();
