@@ -8,6 +8,7 @@ use anchor_lang::prelude::*;
 use super::TokenAmount;
 
 #[account(zero_copy)]
+#[repr(packed)]
 #[derive(PartialEq, Default, Debug)]
 pub struct Position {
     pub owner: Pubkey,

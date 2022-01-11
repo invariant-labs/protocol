@@ -4,6 +4,7 @@ use anchor_lang::prelude::*;
 const SIZE: u16 = 256; // UPDATE IN ARRAYS AS WELL!
 
 #[account(zero_copy)]
+#[repr(packed)]
 pub struct Oracle {
     pub data: [Record; 256],
     pub head: u16,
@@ -41,6 +42,7 @@ mod tests {
 
     #[test]
     fn add_recording() {
+        print!("{}", std::mem::align_of::<Oracle>());
         let mut oracle = Oracle {
             data: [Record {
                 price: Decimal::from_integer(0),

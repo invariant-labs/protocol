@@ -2,6 +2,7 @@ use crate::decimal::Decimal;
 use anchor_lang::prelude::*;
 
 #[account(zero_copy)]
+#[repr(packed)]
 #[derive(PartialEq, Default, Debug)]
 pub struct State {
     pub protocol_fee: Decimal,
