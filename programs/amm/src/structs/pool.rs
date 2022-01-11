@@ -5,6 +5,7 @@ use anchor_lang::prelude::*;
 use super::{FeeGrowth, TokenAmount};
 
 #[account(zero_copy)]
+#[repr(packed)]
 #[derive(PartialEq, Default, Debug)]
 pub struct Pool {
     pub token_x: Pubkey,
