@@ -18,8 +18,8 @@ const main = async () => {
   const market = await Market.build(Network.DEV, provider.wallet, connection)
 
   await createUsdcUsdt(market)
-  await createUsdcSol(market)
-  await createMsolSol(market)
+  // await createUsdcSol(market)
+  // await createMsolSol(market)
 }
 const createUsdcUsdt = async (market: Market) => {
   const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.USDT), feeTier)

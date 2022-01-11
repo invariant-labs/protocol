@@ -21,7 +21,7 @@ use util::*;
 
 use instructions::claim_fee::ClaimFee;
 
-declare_id!("R9PatsTac3Y3UpC7ihYMMgzAQCe1tXnVvkSQ8DtLWUc");
+declare_id!("E66uBFUKZpY8QDSzrVJMojSaPGAKp9bTCL75JwkUNhep");
 const SEED: &str = "Invariant";
 
 #[program]
