@@ -2,13 +2,12 @@ import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Keypair, Transaction } from '@solana/web3.js'
 import { createTokensAndPool, createUserWithTokens } from './testUtils'
-import { Market, DENOMINATOR, Network } from '@invariant-labs/sdk'
+import { Market, DENOMINATOR, Network, signAndSend } from '@invariant-labs/sdk'
 import { fromFee, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { Decimal } from '@invariant-labs/sdk/src/market'
 import { Pair } from '@invariant-labs/sdk/src'
 import { beforeEach } from 'mocha'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { signAndSend } from '@invariant-labs/sdk'
 import { FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
 
 describe('limits', () => {
@@ -22,7 +21,7 @@ describe('limits', () => {
   let tokenY: Token
   let pair: Pair
   let mintAuthority: Keypair
-  let knownPrice: Decimal = { v: new BN(DENOMINATOR) }
+  const knownPrice: Decimal = { v: new BN(DENOMINATOR) }
   const feeTier = FEE_TIERS[0]
 
   before(async () => {
@@ -72,7 +71,7 @@ describe('limits', () => {
 
     const amount = new BN(1e9)
 
-    let priceBefore = (await market.get(pair)).sqrtPrice.v
+    const priceBefore = (await market.get(pair)).sqrtPrice.v
     let prevFee = (await market.get(pair)).feeGrowthGlobalX.v
 
     const chunk = 200

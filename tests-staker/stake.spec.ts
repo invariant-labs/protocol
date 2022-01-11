@@ -1,6 +1,6 @@
 import * as anchor from '@project-serum/anchor'
 import { Program, Provider, BN } from '@project-serum/anchor'
-import { Market, Pair } from '@invariant-labs/sdk'
+import { Market, Pair, DENOMINATOR } from '@invariant-labs/sdk'
 import { Staker as StakerIdl } from '../sdk-staker/src/idl/staker'
 import { Network, Staker } from '../sdk-staker/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
@@ -11,7 +11,6 @@ import { eqDecimal, createToken, tou64 } from './utils'
 import { createToken as createTkn } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { signAndSend } from '../sdk-staker/lib/utils'
-import { DENOMINATOR } from '@invariant-labs/sdk'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 
@@ -42,7 +41,7 @@ describe('Stake tests', () => {
   let tokenY: Token
 
   before(async () => {
-    //create staker
+    // create staker
     const [_mintAuthority, _nonce] = await anchor.web3.PublicKey.findProgramAddress(
       [STAKER_SEED],
       program.programId
@@ -57,24 +56,24 @@ describe('Stake tests', () => {
       await connection.requestAirdrop(incentiveAccount.publicKey, 10e9)
     ])
 
-    //create token
+    // create token
     incentiveToken = await createToken({
       connection: connection,
       payer: wallet,
       mintAuthority: wallet.publicKey
     })
-    //add SOL to founder acc
+    // add SOL to founder acc
     await connection.requestAirdrop(founderAccount.publicKey, 10e9)
 
-    //create taken acc for founder and staker
+    // create taken acc for founder and staker
     founderTokenAcc = await incentiveToken.createAccount(founderAccount.publicKey)
     incentiveTokenAcc = await incentiveToken.createAccount(stakerAuthority)
 
-    //mint to founder acc
+    // mint to founder acc
     amount = new anchor.BN(100 * 1e6)
     await incentiveToken.mintTo(founderTokenAcc, wallet, [], tou64(amount))
 
-    //create amm and pool
+    // create amm and pool
 
     market = await Market.build(0, provider.wallet, connection, anchor.workspace.Amm.programId)
 
@@ -100,13 +99,13 @@ describe('Stake tests', () => {
     pool = await pair.getAddress(anchor.workspace.Amm.programId)
     amm = anchor.workspace.Amm.programId
 
-    //create tokens
+    // create tokens
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
 
   it('Stake', async () => {
-    //create incentive
+    // create incentive
     const seconds = new Date().valueOf() / 1000
     const currentTime = new BN(Math.floor(seconds))
     const reward: Decimal = { v: new BN(10) }
@@ -126,7 +125,7 @@ describe('Stake tests', () => {
     })
     await signAndSend(new Transaction().add(ix), [incentiveAccount, founderAccount], connection)
 
-    //create position
+    // create position
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
     const upperTick = 10
     const lowerTick = -20
@@ -157,17 +156,17 @@ describe('Stake tests', () => {
       positionOwner
     )
 
-    let index = 0
+    const index = 0
 
     const { positionAddress: position } = await market.getPositionAddress(
       positionOwner.publicKey,
       index
     )
-    let positionStructBefore = await market.getPosition(positionOwner.publicKey, index)
+    const positionStructBefore = await market.getPosition(positionOwner.publicKey, index)
     const poolAddress = positionStructBefore.pool
     const positionId = positionStructBefore.id
 
-    //stake
+    // stake
     const ixUpdate = await market.updateSecondsPerLiquidityInstruction({
       pair: pair,
       owner: positionOwner.publicKey,
@@ -188,7 +187,7 @@ describe('Stake tests', () => {
     await signAndSend(new Transaction().add(ixUpdate).add(ixStake), [positionOwner], connection)
 
     const stake = await staker.getStake(incentiveAccount.publicKey, poolAddress, positionId)
-    let positionStructAfter = await market.getPosition(positionOwner.publicKey, index)
+    const positionStructAfter = await market.getPosition(positionOwner.publicKey, index)
     const liquidity: Decimal = { v: new BN(liquidityDelta.v) }
 
     assert.ok(stake.position.equals(position))

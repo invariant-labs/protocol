@@ -1,13 +1,21 @@
 import * as anchor from '@project-serum/anchor'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import { Market, Pair, SEED, tou64, signAndSend, fromInteger, Network } from '@invariant-labs/sdk'
+import {
+  Market,
+  Pair,
+  SEED,
+  tou64,
+  signAndSend,
+  fromInteger,
+  Network,
+  sleep
+} from '@invariant-labs/sdk'
 import { Provider, Program, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken, eqDecimal, positionEquals, positionWithoutOwnerEquals } from './testUtils'
 import { assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
 import { ERRORS, fromFee } from '@invariant-labs/sdk/lib/utils'
-import { sleep } from '@invariant-labs/sdk'
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 
 describe('Position list', () => {
@@ -28,7 +36,7 @@ describe('Position list', () => {
   let tokenX: Token
   let tokenY: Token
   let initTick: number
-  let ticksIndexes: Array<number>
+  let ticksIndexes: number[]
   let xOwnerAmount: u64
   let yOwnerAmount: u64
   let userTokenXAccount: PublicKey
@@ -81,7 +89,7 @@ describe('Position list', () => {
 
       ticksIndexes = [-9780, -42, 0, 9, 276, 32343]
       Promise.all(
-        ticksIndexes.map(async (tickIndex) => {
+        ticksIndexes.map(async tickIndex => {
           const ix = await market.createTickInstruction(pair, tickIndex, wallet.publicKey)
           await signAndSend(new Transaction().add(ix), [wallet], connection)
         })

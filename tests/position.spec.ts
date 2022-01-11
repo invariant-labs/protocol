@@ -15,12 +15,10 @@ import {
 import { Provider, Program, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createStandardFeeTiers, createToken, eqDecimal } from './testUtils'
-import { MAX_TICK } from '@invariant-labs/sdk/lib/math'
-import { MIN_TICK } from '@invariant-labs/sdk/lib/math'
+import { MAX_TICK, MIN_TICK } from '@invariant-labs/sdk/lib/math'
 import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
-import { fromFee } from '@invariant-labs/sdk/src/utils'
+import { fromFee, assertThrowsAsync, INVARIANT_ERRORS } from '@invariant-labs/sdk/src/utils'
 import { Decimal } from '@invariant-labs/sdk/src/market'
-import { assertThrowsAsync, INVARIANT_ERRORS } from '@invariant-labs/sdk/src/utils'
 
 describe('position', () => {
   const provider = Provider.local()
@@ -108,7 +106,7 @@ describe('position', () => {
 
     const tickmapData = await market.getTickmap(pair)
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
-    assert.ok(tickmapData.bitmap.every((v) => v == 0))
+    assert.ok(tickmapData.bitmap.every(v => v == 0))
   })
   it('#createPositionList()', async () => {
     await market.createPositionList(positionOwner)
@@ -202,12 +200,12 @@ describe('position', () => {
 
       // check ticks
       assert.ok(lowerTickState.index === lowerTick)
-      assert.ok(lowerTickState.sign === true)
+      assert.ok(lowerTickState.sign)
       assert.ok(eqDecimal(lowerTickState.liquidityGross, liquidityDelta))
       assert.ok(eqDecimal(lowerTickState.liquidityChange, liquidityDelta))
 
       assert.ok(upperTickState.index === upperTick)
-      assert.ok(upperTickState.sign === false)
+      assert.ok(!upperTickState.sign)
       assert.ok(eqDecimal(upperTickState.liquidityGross, liquidityDelta))
       assert.ok(eqDecimal(upperTickState.liquidityChange, liquidityDelta))
 
@@ -325,12 +323,12 @@ describe('position', () => {
 
       // check ticks
       assert.ok(lowerTickState.index === lowerTick)
-      assert.ok(lowerTickState.sign === true)
+      assert.ok(lowerTickState.sign)
       assert.ok(eqDecimal(lowerTickState.liquidityGross, liquidityDelta))
       assert.ok(eqDecimal(lowerTickState.liquidityChange, liquidityDelta))
 
       assert.ok(upperTickState.index === upperTick)
-      assert.ok(upperTickState.sign === false)
+      assert.ok(!upperTickState.sign)
       assert.ok(eqDecimal(upperTickState.liquidityGross, liquidityDelta))
       assert.ok(eqDecimal(upperTickState.liquidityChange, liquidityDelta))
 
@@ -449,12 +447,12 @@ describe('position', () => {
 
       // check ticks
       assert.ok(lowerTickState.index === lowerTick)
-      assert.ok(lowerTickState.sign === true)
+      assert.ok(lowerTickState.sign)
       assert.ok(eqDecimal(lowerTickState.liquidityGross, liquidityDelta))
       assert.ok(eqDecimal(lowerTickState.liquidityChange, liquidityDelta))
 
       assert.ok(upperTickState.index === upperTick)
-      assert.ok(upperTickState.sign === false)
+      assert.ok(!upperTickState.sign)
       assert.ok(eqDecimal(upperTickState.liquidityGross, liquidityDelta))
       assert.ok(eqDecimal(upperTickState.liquidityChange, liquidityDelta))
 

@@ -37,7 +37,7 @@ describe('Create incentive tests', () => {
   let pair: Pair
 
   before(async () => {
-    //create staker instance
+    // create staker instance
     const [_mintAuthority, _nonce] = await anchor.web3.PublicKey.findProgramAddress(
       [STAKER_SEED],
       program.programId
@@ -46,26 +46,31 @@ describe('Create incentive tests', () => {
     nonce = _nonce
     staker = new Staker(connection, Network.LOCAL, provider.wallet, program.programId)
 
-    //create token
+    // create token
     incentiveToken = await createToken({
       connection: connection,
       payer: wallet,
       mintAuthority: wallet.publicKey
     })
-    //add SOL to founder acc
+    // add SOL to founder acc
     await connection.requestAirdrop(founderAccount.publicKey, 10e9)
 
-    //create taken acc for founder and staker
+    // create taken acc for founder and staker
     founderTokenAcc = await incentiveToken.createAccount(founderAccount.publicKey)
     incentiveTokenAcc = await incentiveToken.createAccount(stakerAuthority)
 
-    //mint to founder acc
+    // mint to founder acc
     amount = new anchor.BN(100 * 1e6)
     await incentiveToken.mintTo(founderTokenAcc, wallet, [], tou64(amount))
 
-    //create amm and pool
+    // create amm and pool
 
-    const market = await Market.build(0, provider.wallet, connection, anchor.workspace.Amm.programId)
+    const market = await Market.build(
+      0,
+      provider.wallet,
+      connection,
+      anchor.workspace.Amm.programId
+    )
 
     const tokens = await Promise.all([
       createTkn(connection, wallet, mintAuthority),
@@ -96,7 +101,7 @@ describe('Create incentive tests', () => {
   it('Create incentive ', async () => {
     const incentiveAccount = Keypair.generate()
     await connection.requestAirdrop(incentiveAccount.publicKey, 10e9)
-    await new Promise((resolve) => {
+    await new Promise(resolve => {
       setTimeout(() => {
         resolve(null)
       }, 1000)
@@ -130,7 +135,7 @@ describe('Create incentive tests', () => {
   it('Fail on zero amount', async () => {
     const incentiveAccount = Keypair.generate()
     await connection.requestAirdrop(incentiveAccount.publicKey, 10e9)
-    await new Promise((resolve) => {
+    await new Promise(resolve => {
       setTimeout(() => {
         resolve(null)
       }, 1000)
@@ -163,7 +168,7 @@ describe('Create incentive tests', () => {
   it('Fail, incentive starts more than one hour in past ', async () => {
     const incentiveAccount = Keypair.generate()
     await connection.requestAirdrop(incentiveAccount.publicKey, 10e9)
-    await new Promise((resolve) => {
+    await new Promise(resolve => {
       setTimeout(() => {
         resolve(null)
       }, 1000)
@@ -196,7 +201,7 @@ describe('Create incentive tests', () => {
   it('Fail, too long incentive time', async () => {
     const incentiveAccount = Keypair.generate()
     await connection.requestAirdrop(incentiveAccount.publicKey, 10e9)
-    await new Promise((resolve) => {
+    await new Promise(resolve => {
       setTimeout(() => {
         resolve(null)
       }, 1000)
@@ -229,7 +234,7 @@ describe('Create incentive tests', () => {
     const incentiveAccount = Keypair.generate()
     await connection.requestAirdrop(incentiveAccount.publicKey, 10e9)
     const balanceBefore = (await incentiveToken.getAccountInfo(incentiveTokenAcc)).amount
-    await new Promise((resolve) => {
+    await new Promise(resolve => {
       setTimeout(() => {
         resolve(null)
       }, 1000)

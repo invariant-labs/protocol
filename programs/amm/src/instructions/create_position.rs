@@ -2,11 +2,11 @@ use std::convert::TryInto;
 
 use crate::decimal::Decimal;
 use crate::interfaces::take_tokens::TakeTokens;
-use crate::structs::FeeGrowth;
 use crate::structs::pool::Pool;
 use crate::structs::position::Position;
 use crate::structs::position_list::PositionList;
 use crate::structs::tick::Tick;
+use crate::structs::FeeGrowth;
 use crate::util::check_ticks;
 use crate::*;
 use anchor_lang::prelude::*;

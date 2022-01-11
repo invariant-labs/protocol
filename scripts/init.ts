@@ -9,14 +9,14 @@ import { MINTER } from './minter'
 require('dotenv').config()
 
 const provider = Provider.local(clusterApiUrl('devnet'), {
-    skipPreflight: true
+  skipPreflight: true
 })
 const createStandardFeeTiers = async (market: Market, payer: Keypair) => {
-    Promise.all(
-        FEE_TIERS.map(async (feeTier) => {
-            await market.createFeeTier(feeTier, payer)
-        })
-    )
+  Promise.all(
+    FEE_TIERS.map(async feeTier => {
+      await market.createFeeTier(feeTier, payer)
+    })
+  )
 }
 
 const connection = provider.connection
@@ -24,10 +24,10 @@ const connection = provider.connection
 const wallet = provider.wallet.payer as Keypair
 
 const main = async () => {
-    const market = await Market.build(Network.DEV, provider.wallet, connection)
-    const protocolFee: Decimal = { v: fromFee(new anchor.BN(10000)) }
+  const market = await Market.build(Network.DEV, provider.wallet, connection)
+  const protocolFee: Decimal = { v: fromFee(new anchor.BN(10000)) }
 
-    await market.createState(MINTER, protocolFee)
-    await createStandardFeeTiers(market, MINTER)
+  await market.createState(MINTER, protocolFee)
+  await createStandardFeeTiers(market, MINTER)
 }
 main()

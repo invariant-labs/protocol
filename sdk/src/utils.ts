@@ -77,7 +77,7 @@ export interface SimulateClaim {
 export const ComputeUnitsInstruction = (units: number, wallet: PublicKey) => {
   const program = new PublicKey('ComputeBudget111111111111111111111111111111')
   let params = { instruction: 0, units: units }
-  let layout = struct([u8('instruction'), u32('units')])
+  let layout = struct([u8('instruction') as any, u32('units')])
   let data = Buffer.alloc(layout.span)
   layout.encode(params, data)
   let keys = [{ pubkey: wallet, isSigner: false, isWritable: false }]
@@ -116,7 +116,7 @@ export const signAndSend = async (
   connection: Connection,
   opts?: ConfirmOptions
 ) => {
-  tx.setSigners(...signers.map((s) => s.publicKey))
+  tx.setSigners(...signers.map(s => s.publicKey))
   const blockhash = await connection.getRecentBlockhash(
     opts?.commitment || Provider.defaultOptions().commitment
   )
@@ -127,10 +127,10 @@ export const signAndSend = async (
 }
 
 export const sleep = async (ms: number) => {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-export const tou64 = (amount) => {
+export const tou64 = amount => {
   // eslint-disable-next-line new-cap
   return new u64(amount.toString())
 }
@@ -298,7 +298,7 @@ export const calculateAveragePrice = (swapParameters: SimulateSwapPrice): Decima
       const initialized = closerLimit.limitingTick.initialized
 
       if (initialized) {
-        market.getTick(pair, tickIndex.valueOf()).then((tick) => {
+        market.getTick(pair, tickIndex.valueOf()).then(tick => {
           if (currentTickIndex >= tick.index !== tick.sign) {
             liquidity = { v: liquidity.v.add(tick.liquidityChange.v) }
           } else {

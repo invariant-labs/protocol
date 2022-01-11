@@ -76,7 +76,7 @@ export class Staker {
         amm: amm,
         rent: SYSVAR_RENT_PUBKEY
       }
-    }) as TransactionInstruction
+    })
   }
 
   public async getIncentive(incentivePubKey: PublicKey) {
@@ -85,9 +85,9 @@ export class Staker {
 
   public async getUserStakeAddressAndBump(incentive: PublicKey, pool: PublicKey, id: BN) {
     const pubBuf = pool.toBuffer()
-    let idBuf = Buffer.alloc(8)
+    const idBuf = Buffer.alloc(8)
     idBuf.writeBigUInt64LE(BigInt(id.toString()))
-    return PublicKey.findProgramAddress(
+    return await PublicKey.findProgramAddress(
       [STAKER_SEED, incentive.toBuffer(), pubBuf, idBuf],
       this.programId
     )
@@ -100,7 +100,7 @@ export class Staker {
       id
     )
 
-    return (await this.program.instruction.stake(index, userStakeBump, {
+    return this.program.instruction.stake(index, userStakeBump, {
       accounts: {
         userStake: userStakeAddress,
         position,
@@ -110,7 +110,7 @@ export class Staker {
         amm: amm,
         rent: SYSVAR_RENT_PUBKEY
       }
-    })) as TransactionInstruction
+    })
   }
 
   public async getStake(incentive: PublicKey, pool: PublicKey, id: BN) {
@@ -136,7 +136,7 @@ export class Staker {
 
     const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
 
-    return (await this.program.instruction.withdraw(index, nonce, {
+    return this.program.instruction.withdraw(index, nonce, {
       accounts: {
         userStake: userStakeAddress,
         incentive: incentive,
@@ -150,7 +150,7 @@ export class Staker {
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY
       }
-    })) as TransactionInstruction
+    })
   }
 
   public async endIncentiveInstruction({
@@ -164,7 +164,7 @@ export class Staker {
       this.programId
     )
 
-    return (await this.program.instruction.endIncentive(stakerAuthorityBump, {
+    return this.program.instruction.endIncentive(stakerAuthorityBump, {
       accounts: {
         incentive: incentive,
         incentiveTokenAccount: incentiveTokenAcc,
@@ -175,7 +175,7 @@ export class Staker {
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY
       }
-    })) as TransactionInstruction
+    })
   }
 }
 export interface CreateIncentive {

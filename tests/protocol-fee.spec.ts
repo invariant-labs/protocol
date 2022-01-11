@@ -1,13 +1,12 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN, Program } from '@project-serum/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
-import { Market, Network, Pair, SEED, DENOMINATOR, TICK_LIMIT } from '@invariant-labs/sdk'
+import { Market, Network, Pair, SEED, DENOMINATOR, TICK_LIMIT, tou64 } from '@invariant-labs/sdk'
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken } from './testUtils'
 import { assert } from 'chai'
-import { tou64 } from '@invariant-labs/sdk'
 import { assertThrowsAsync, ERRORS, toDecimal } from '@invariant-labs/sdk/src/utils'
 
 describe('protocol-fee', () => {

@@ -1,12 +1,10 @@
 import * as anchor from '@project-serum/anchor'
 import { Program, Provider, BN } from '@project-serum/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
-import { Network, SEED, Market, Pair } from '@invariant-labs/sdk'
+import { Network, SEED, Market, Pair, DENOMINATOR, TICK_LIMIT } from '@invariant-labs/sdk'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createPosition, createToken, performSwap } from './testUtils'
 import { assert } from 'chai'
-import { DENOMINATOR } from '@invariant-labs/sdk'
-import { TICK_LIMIT } from '@invariant-labs/sdk'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
@@ -93,7 +91,7 @@ describe('big-swap', () => {
 
     const tickmapData = await market.getTickmap(pair)
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
-    assert.ok(tickmapData.bitmap.every((v) => v == 0))
+    assert.ok(tickmapData.bitmap.every(v => v == 0))
   })
 
   it('#swap()', async () => {
@@ -151,7 +149,7 @@ describe('big-swap', () => {
     ]
 
     for (let i = 0; i < swaps.length; i++) {
-      let pool = await market.get(pair)
+      const pool = await market.get(pair)
       console.log('swap ', i)
       console.log('liquidity: ', pool.liquidity.v.toString())
       await performSwap(
@@ -169,7 +167,7 @@ describe('big-swap', () => {
       )
     }
 
-    let poolAfterSwaps = await market.get(pair)
+    const poolAfterSwaps = await market.get(pair)
     for (let i = -40; i < 50; i += 10) {
       let lowerTick
       try {
@@ -188,7 +186,7 @@ describe('big-swap', () => {
             continue
           }
         }
-        let [feeGrowthInsideX, feeGrowthInsideY] = calculateFeeGrowthInside(
+        const [feeGrowthInsideX, feeGrowthInsideY] = calculateFeeGrowthInside(
           lowerTick,
           upperTick,
           poolAfterSwaps.currentTickIndex,
@@ -277,7 +275,7 @@ describe('big-swap', () => {
     ]
 
     for (let i = 0; i < swaps2.length; i++) {
-      let pool = await market.get(pair)
+      const pool = await market.get(pair)
       console.log('swap ', i)
       console.log('liquidity: ', pool.liquidity.v.toString())
       await performSwap(
@@ -295,7 +293,7 @@ describe('big-swap', () => {
       )
     }
 
-    let poolAfterSwaps2 = await market.get(pair)
+    const poolAfterSwaps2 = await market.get(pair)
     for (let i = -40; i < 50; i += 10) {
       let lowerTick
       try {
@@ -314,7 +312,7 @@ describe('big-swap', () => {
             continue
           }
         }
-        let [feeGrowthInsideX, feeGrowthInsideY] = calculateFeeGrowthInside(
+        const [feeGrowthInsideX, feeGrowthInsideY] = calculateFeeGrowthInside(
           lowerTick,
           upperTick,
           poolAfterSwaps2.currentTickIndex,

@@ -29,7 +29,7 @@ const main = async () => {
   console.log(pool.currentTickIndex)
 
   const array = await Promise.all([
-    market.getPool(pair),
+    market.getPool(pair)
     // market.getTick(pair, currentTick),
     // market.getTick(pair, lowerFailed),
     // market.getTick(pair, lowerSuccess),

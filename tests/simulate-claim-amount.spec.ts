@@ -1,6 +1,6 @@
 import * as anchor from '@project-serum/anchor'
 import { Program, Provider, BN } from '@project-serum/anchor'
-import { Market, Network, Pair } from '@invariant-labs/sdk'
+import { Market, Network, Pair, DENOMINATOR } from '@invariant-labs/sdk'
 import { Staker as StakerIdl } from '../sdk-staker/src/idl/staker'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { Decimal } from '../sdk-staker/src/staker'
@@ -8,7 +8,6 @@ import { STAKER_SEED } from '../sdk-staker/src/utils'
 import { createToken as createTkn, createToken } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { signAndSend, toDecimal } from '../sdk-staker/lib/utils'
-import { DENOMINATOR } from '@invariant-labs/sdk'
 import { assert } from 'chai'
 import { fromFee, calculateClaimAmount, tou64 } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/src/market'
@@ -74,7 +73,7 @@ describe('Withdraw tests', () => {
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
   it('Claim', async () => {
-    //create position
+    // create position
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
     const upperTick = 50
     const lowerTick = -50
@@ -148,7 +147,7 @@ describe('Withdraw tests', () => {
     const tickLower = await market.getTick(pair, -50)
     const createdPool = await market.get(pair)
 
-    //calculate claim amount
+    // calculate claim amount
     const [tokens_owed_x_total, tokens_owed_y_total] = calculateClaimAmount({
       position: positionStruct,
       tickLower: tickLower,

@@ -74,7 +74,7 @@ impl Tickmap {
         let (byte, bit) = tick_to_position(tick, tick_spacing);
         let value = (self.bitmap[byte] >> bit) % 2;
 
-        return if (value) == 1 { true } else { false };
+        (value) == 1
     }
 
     pub fn next_initialized(&self, tick: i32, tick_spacing: u16) -> Option<i32> {

@@ -21,16 +21,16 @@ export enum ERRORS {
 }
 
 export enum ERRORS_STAKER {
-  ZERO_AMOUNT = '0x12f', //0
-  START_IN_PAST = '0x131', //1
-  TO_LONG_DURATION = '0x130' //2
+  ZERO_AMOUNT = '0x12f', // 0
+  START_IN_PAST = '0x131', // 1
+  TO_LONG_DURATION = '0x130' // 2
 }
 
 export const eqDecimal = (a: Decimal, b: Decimal) => {
   return a.v.eq(b.v)
 }
 
-export const tou64 = (amount) => {
+export const tou64 = amount => {
   // eslint-disable-next-line new-cap
   return new u64(amount.toString())
 }

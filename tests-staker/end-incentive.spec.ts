@@ -1,6 +1,6 @@
 import * as anchor from '@project-serum/anchor'
 import { Program, Provider, BN } from '@project-serum/anchor'
-import { Market, Pair } from '@invariant-labs/sdk'
+import { Market, Pair, sleep } from '@invariant-labs/sdk'
 import { Staker as StakerIdl } from '../sdk-staker/src/idl/staker'
 import { Network, Staker } from '../sdk-staker/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
@@ -12,7 +12,6 @@ import { createToken as createTkn } from '../tests/testUtils'
 import { signAndSend } from '../sdk-staker/lib/utils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
-import { sleep } from '@invariant-labs/sdk'
 import { Token } from '@solana/spl-token'
 
 describe('End incentive tests', () => {
@@ -36,7 +35,7 @@ describe('End incentive tests', () => {
   let pair: Pair
 
   before(async () => {
-    //create staker instance
+    // create staker instance
     const [_mintAuthority, _nonce] = await anchor.web3.PublicKey.findProgramAddress(
       [STAKER_SEED],
       program.programId
@@ -45,27 +44,32 @@ describe('End incentive tests', () => {
     nonce = _nonce
     staker = new Staker(connection, Network.LOCAL, provider.wallet, program.programId)
 
-    //create token
+    // create token
     incentiveToken = await createToken({
       connection: connection,
       payer: wallet,
       mintAuthority: wallet.publicKey
     })
-    //add SOL to founder acc
+    // add SOL to founder acc
     await connection.requestAirdrop(founderAccount.publicKey, 10e9)
 
-    //create taken acc for founder and staker
+    // create taken acc for founder and staker
     founderTokenAcc = await incentiveToken.createAccount(founderAccount.publicKey)
     incentiveTokenAcc = await incentiveToken.createAccount(stakerAuthority)
 
-    //mint to founder acc
+    // mint to founder acc
     amount = new anchor.BN(100 * 1e6)
     await incentiveToken.mintTo(founderTokenAcc, wallet, [], tou64(amount))
 
-    ///////////////////////
-    //create amm and pool
+    /// ////////////////////
+    // create amm and pool
     const admin = Keypair.generate()
-    const market = await Market.build(0, provider.wallet, connection, anchor.workspace.Amm.programId)
+    const market = await Market.build(
+      0,
+      provider.wallet,
+      connection,
+      anchor.workspace.Amm.programId
+    )
 
     const tokens = await Promise.all([
       createTkn(connection, wallet, mintAuthority),
@@ -97,7 +101,7 @@ describe('End incentive tests', () => {
     const incentiveAccount = Keypair.generate()
 
     await connection.requestAirdrop(incentiveAccount.publicKey, 10e9)
-    await new Promise((resolve) => {
+    await new Promise(resolve => {
       setTimeout(() => {
         resolve(null)
       }, 1000)

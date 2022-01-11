@@ -36,8 +36,9 @@ const usdtUsdcCreatePosition = async (market: Market) => {
   console.log('creating accounts...')
   const pair = new Pair(new PublicKey(tokenA), new PublicKey(tokenB), FEE_TIERS[0])
   console.log(`is token A first?: ${pair.tokenX.equals(new PublicKey(tokenA))}`)
-  if (!pair.tokenX.equals(new PublicKey(tokenA)))
+  if (!pair.tokenX.equals(new PublicKey(tokenA))) {
     throw new Error('tokens are in reverse order, ticks should be opposite')
+  }
 
   const tokenX = new Token(connection, new PublicKey(pair.tokenX), TOKEN_PROGRAM_ID, wallet)
   const tokenY = new Token(connection, new PublicKey(pair.tokenY), TOKEN_PROGRAM_ID, wallet)
