@@ -17,7 +17,7 @@ import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 //TODO add to tests
-describe('comapre', () => {
+describe('compare', () => {
   const provider = Provider.local()
   const connection = provider.connection
   // @ts-expect-error
@@ -98,7 +98,7 @@ describe('comapre', () => {
     assert.ok(firstTickmapData.bitmap.length == TICK_LIMIT / 4)
     assert.ok(firstTickmapData.bitmap.every(v => v == 0))
 
-    // checkl second pool
+    // check second pool
     const secondPool = await market.get(secondPair)
     assert.ok(secondPool.tokenX.equals(tokenZ.publicKey))
     assert.ok(secondPool.tokenY.equals(tokenW.publicKey))
@@ -196,7 +196,7 @@ describe('comapre', () => {
     await signAndSend(firstTx, [owner], connection)
 
     //make swap on second pool without simulation TODO
-    const secnodTx = await market.swapTransaction({
+    const secondTx = await market.swapTransaction({
       pair: secondPair,
       XtoY: false,
       amount: new BN(500),
@@ -207,7 +207,7 @@ describe('comapre', () => {
       byAmountIn: true,
       owner: owner.publicKey
     })
-    await signAndSend(secnodTx, [owner], connection)
+    await signAndSend(secondTx, [owner], connection)
 
     // Check pool
     const firstPoolData = await market.get(fisrtPair)

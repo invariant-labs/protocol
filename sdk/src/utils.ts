@@ -81,6 +81,7 @@ export interface SimulateSwapInterface {
 
 export interface SimulationResult {
   amountPerTick: BN[]
+  accumulatedAmountIn: BN
   accumulatedAmountOut: BN
   accumulatedFee: BN
 }
@@ -271,6 +272,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
   const amountPerTick: BN[] = []
   let accumulatedAmount: BN = new BN(0)
   let accumulatedAmountOut: BN = new BN(0)
+  let accumulatedAmountIn: BN = new BN(0)
   let accumulatedFee: BN = new BN(0)
   const priceLimit = calculatePriceAfterSlippage(pool.sqrtPrice, slippage, !xToY)
   if (xToY) {
@@ -302,7 +304,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
       byAmountIn,
       fee
     )
-
+    accumulatedAmountIn = accumulatedAmountIn.add(result.amountIn)
     accumulatedAmountOut = accumulatedAmountOut.add(result.amountOut)
     accumulatedFee = accumulatedFee.add(result.feeAmount)
 
@@ -354,6 +356,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
 
   return {
     amountPerTick,
+    accumulatedAmountIn,
     accumulatedAmountOut,
     accumulatedFee
   }
