@@ -19,7 +19,7 @@ fn decimal_to_x64(decimal: Decimal) -> u128 {
     decimal.v * LOG_ONE / DENOMINATOR
 }
 
-fn align_tick_with_spacing(accurate_tick: i32, tick_spacing: i32) -> i32 {
+fn align_tick_to_spacing(accurate_tick: i32, tick_spacing: i32) -> i32 {
     match accurate_tick > 0 {
         true => accurate_tick - (accurate_tick % tick_spacing),
         false => accurate_tick - (accurate_tick.rem_euclid(tick_spacing))
@@ -107,8 +107,8 @@ pub fn get_tick_at_sqrt_price(sqrt_price_decimal: Decimal, tick_spacing: u16) ->
         true => abs_floor_tick + 1,
         false => -abs_floor_tick - 1,
     };
-    let farther_tick_with_spacing = align_tick_with_spacing(farther_tick, tick_spacing as i32);
-    let nearer_tick_with_spacing = align_tick_with_spacing(nearer_tick, tick_spacing as i32);
+    let farther_tick_with_spacing = align_tick_to_spacing(farther_tick, tick_spacing as i32);
+    let nearer_tick_with_spacing = align_tick_to_spacing(nearer_tick, tick_spacing as i32);
     if farther_tick_with_spacing == nearer_tick_with_spacing {
         return nearer_tick_with_spacing;
     };
@@ -133,7 +133,7 @@ pub fn get_tick_at_sqrt_price(sqrt_price_decimal: Decimal, tick_spacing: u16) ->
         }
     };
     match tick_spacing > 1 {
-        true => align_tick_with_spacing(accurate_tick, tick_spacing as i32),
+        true => align_tick_to_spacing(accurate_tick, tick_spacing as i32),
         false => accurate_tick,
     }
 }
@@ -382,7 +382,7 @@ mod tests {
             let accurate_tick = 0;
             let tick_spacing = 3;
 
-            let tick_with_spacing = align_tick_with_spacing(accurate_tick, tick_spacing);
+            let tick_with_spacing = align_tick_to_spacing(accurate_tick, tick_spacing);
             assert_eq!(tick_with_spacing, 0);
         }
         // positive
@@ -390,7 +390,7 @@ mod tests {
             let accurate_tick = 14;
             let tick_spacing = 10;
 
-            let tick_with_spacing = align_tick_with_spacing(accurate_tick, tick_spacing);
+            let tick_with_spacing = align_tick_to_spacing(accurate_tick, tick_spacing);
             assert_eq!(tick_with_spacing, 10);
         }
         // positive at tick
@@ -398,7 +398,7 @@ mod tests {
             let accurate_tick = 20;
             let tick_spacing = 10;
 
-            let tick_with_spacing = align_tick_with_spacing(accurate_tick, tick_spacing);
+            let tick_with_spacing = align_tick_to_spacing(accurate_tick, tick_spacing);
             assert_eq!(tick_with_spacing, 20); 
         }
         // negative
@@ -406,7 +406,7 @@ mod tests {
             let accurate_tick = -14;
             let tick_spacing = 10;
     
-            let tick_with_spacing = align_tick_with_spacing(accurate_tick, tick_spacing);
+            let tick_with_spacing = align_tick_to_spacing(accurate_tick, tick_spacing);
             assert_eq!(tick_with_spacing, -20);
         }
         // negative at tick
@@ -414,7 +414,7 @@ mod tests {
             let accurate_tick = -120;
             let tick_spacing = 3;
     
-            let tick_with_spacing = align_tick_with_spacing(accurate_tick, tick_spacing);
+            let tick_with_spacing = align_tick_to_spacing(accurate_tick, tick_spacing);
             assert_eq!(tick_with_spacing, -120);
         }
     }
@@ -483,21 +483,21 @@ mod tests {
                 // get tick at sqrt(1.0001^(n))
                 {
                     let tick = get_tick_at_sqrt_price(sqrt_price_decimal, tick_spacing as u16);
-                    let expected_tick = align_tick_with_spacing(input_tick, tick_spacing);
+                    let expected_tick = align_tick_to_spacing(input_tick, tick_spacing);
                     assert_eq!(tick, expected_tick);
                 }
                 // get tick slightly below sqrt(1.0001^n)
                 {
                     let sqrt_price_decimal = sqrt_price_decimal - Decimal::new(1);
                     let tick = get_tick_at_sqrt_price(sqrt_price_decimal, tick_spacing as u16);
-                    let expected_tick = align_tick_with_spacing(input_tick - 1, tick_spacing);
+                    let expected_tick = align_tick_to_spacing(input_tick - 1, tick_spacing);
                     assert_eq!(tick, expected_tick);
                 }
                 // get tick slightly above sqrt(1.0001^n)
                 {
                     let sqrt_price_decimal = sqrt_price_decimal + Decimal::new(1);
                     let tick = get_tick_at_sqrt_price(sqrt_price_decimal, tick_spacing as u16);
-                    let expected_tick = align_tick_with_spacing(input_tick, tick_spacing);
+                    let expected_tick = align_tick_to_spacing(input_tick, tick_spacing);
                     assert_eq!(tick, expected_tick);
                 }
             }
@@ -515,21 +515,21 @@ mod tests {
                 // get tick at sqrt(1.0001^(n))
                 {
                     let tick = get_tick_at_sqrt_price(sqrt_price_decimal, tick_spacing as u16);
-                    let expected_tick = align_tick_with_spacing(input_tick, tick_spacing);
+                    let expected_tick = align_tick_to_spacing(input_tick, tick_spacing);
                     assert_eq!(tick, expected_tick);
                 }
                 // get tick slightly below sqrt(1.0001^n)
                 {
                     let sqrt_price_decimal = sqrt_price_decimal - Decimal::new(1);
                     let tick = get_tick_at_sqrt_price(sqrt_price_decimal, tick_spacing as u16);
-                    let expected_tick = align_tick_with_spacing(input_tick - 1, tick_spacing);
+                    let expected_tick = align_tick_to_spacing(input_tick - 1, tick_spacing);
                      assert_eq!(tick, expected_tick);
                 }
                 // get tick slightly above sqrt(1.0001^n)
                 {
                     let sqrt_price_decimal = sqrt_price_decimal + Decimal::new(1);
                     let tick = get_tick_at_sqrt_price(sqrt_price_decimal, tick_spacing as u16);
-                    let expected_tick = align_tick_with_spacing(input_tick, tick_spacing);
+                    let expected_tick = align_tick_to_spacing(input_tick, tick_spacing);
                     assert_eq!(tick, expected_tick);
                 }
             }
