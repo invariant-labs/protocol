@@ -19,6 +19,13 @@ fn decimal_to_x64(decimal: Decimal) -> u128 {
     decimal.v * LOG_ONE / DENOMINATOR
 }
 
+fn align_tick_with_spacing(accurate_tick: i32, tick_spacing: i32) -> i32 {
+    match accurate_tick > 0 {
+        true => accurate_tick - (accurate_tick % tick_spacing),
+        false => accurate_tick + (accurate_tick % tick_spacing),
+    }    
+}
+
 fn log2_floor_x64(mut sqrt_price_x64: u128) -> u128 {
     let mut msb = 0;
 
@@ -100,6 +107,12 @@ pub fn get_tick_at_sqrt_price(sqrt_price_decimal: Decimal, tick_spacing: u16) ->
         true => abs_floor_tick + 1,
         false => -abs_floor_tick - 1,
     };
+    let farther_tick_with_spacing = align_tick_with_spacing(farther_tick, tick_spacing as i32);
+    let nearer_tick_with_spacing = align_tick_with_spacing(nearer_tick, tick_spacing as i32);
+    if farther_tick_with_spacing == nearer_tick_with_spacing {
+        return nearer_tick_with_spacing;
+    };
+    
     let accurate_tick = match log2_sign {
         true => {
             if farther_tick > MAX_TICK {
@@ -107,20 +120,20 @@ pub fn get_tick_at_sqrt_price(sqrt_price_decimal: Decimal, tick_spacing: u16) ->
             }
             let farther_tick_sqrt_price_decimal = calculate_price_sqrt(farther_tick);
             match sqrt_price_decimal >= farther_tick_sqrt_price_decimal {
-                true => farther_tick,
-                false => nearer_tick,
+                true => farther_tick_with_spacing,
+                false => nearer_tick_with_spacing,
             }
         }
         false => {
             let nearer_tick_sqrt_price_decimal = calculate_price_sqrt(nearer_tick);
             match nearer_tick_sqrt_price_decimal <= sqrt_price_decimal {
-                true => nearer_tick,
-                false => farther_tick,
+                true => nearer_tick_with_spacing,
+                false => farther_tick_with_spacing,
             }
         }
     };
     match tick_spacing > 1 {
-        true => accurate_tick - (accurate_tick % tick_spacing as i32),
+        true => align_tick_with_spacing(accurate_tick, tick_spacing as i32),
         false => accurate_tick,
     }
 }
@@ -362,6 +375,50 @@ mod tests {
         }
     }
 
+    #[test]
+    fn test_align_tick_with_spacing() {
+        // zero
+        {
+            let accurate_tick = 0;
+            let tick_spacing = 3;
+
+            let tick_with_spacing = align_tick_with_spacing(accurate_tick, tick_spacing);
+            assert_eq!(tick_with_spacing, 0);
+        }
+        // positive
+        {
+            let accurate_tick = 14;
+            let tick_spacing = 10;
+
+            let tick_with_spacing = align_tick_with_spacing(accurate_tick, tick_spacing);
+            assert_eq!(tick_with_spacing, 10);
+        }
+        // positive at tick
+        {
+            let accurate_tick = 20;
+            let tick_spacing = 10;
+
+            let tick_with_spacing = align_tick_with_spacing(accurate_tick, tick_spacing);
+            assert_eq!(tick_with_spacing, 20); 
+        }
+        // negative
+        {
+            let accurate_tick = -15;
+            let tick_spacing = 10;
+    
+            let tick_with_spacing = align_tick_with_spacing(accurate_tick, tick_spacing);
+            assert_eq!(tick_with_spacing, -20);
+        }
+        // negative at tick
+        {
+            let accurate_tick = -120;
+            let tick_spacing = 3;
+    
+            let tick_with_spacing = align_tick_with_spacing(accurate_tick, tick_spacing);
+            assert_eq!(tick_with_spacing, -120);
+        }
+    }
+    
     #[test]
     fn test_all_positive_ticks() {
         for n in 0..MAX_TICK {
