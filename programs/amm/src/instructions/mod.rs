@@ -1,4 +1,3 @@
-pub mod change_protocol_fee;
 pub mod claim_fee;
 pub mod create_fee_tier;
 pub mod create_pool;
@@ -13,7 +12,6 @@ pub mod transfer_position_ownership;
 pub mod update_seconds_per_liquidity;
 pub mod withdraw_protocol_fee;
 
-pub use change_protocol_fee::*;
 pub use claim_fee::*;
 pub use create_fee_tier::*;
 pub use create_pool::*;

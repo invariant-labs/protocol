@@ -1,7 +1,7 @@
 import { assert } from 'chai'
 import { TICK_LIMIT } from '.'
 import { Decimal } from './market'
-import { calculate_price_sqrt, TICK_SEARCH_RANGE } from './math'
+import { calculatePriceSqrt, TICK_SEARCH_RANGE } from './math'
 
 export const getTickFromPrice = (
   currentTick: number,
@@ -37,7 +37,7 @@ const priceToTickInRange = (price: Decimal, low: number, high: number, step: num
 
   while (high - low > 1) {
     const mid = Math.floor((high - low) / 2) + low
-    const val = calculate_price_sqrt(mid * step)
+    const val = calculatePriceSqrt(mid * step)
 
     if (val.v.eq(targetValue.v)) {
       return mid * step

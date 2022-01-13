@@ -874,49 +874,6 @@ export type Amm = {
         }
       ],
       "args": []
-    },
-    {
-      "name": "changeProtocolFee",
-      "accounts": [
-        {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "feeTier",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "admin",
-          "isMut": false,
-          "isSigner": true
-        }
-      ],
-      "args": [
-        {
-          "name": "protocolFee",
-          "type": {
-            "defined": "Decimal"
-          }
-        }
-      ]
     }
   ],
   "accounts": [
@@ -2301,49 +2258,6 @@ export const IDL: Amm = {
         }
       ],
       "args": []
-    },
-    {
-      "name": "changeProtocolFee",
-      "accounts": [
-        {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "feeTier",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "admin",
-          "isMut": false,
-          "isSigner": true
-        }
-      ],
-      "args": [
-        {
-          "name": "protocolFee",
-          "type": {
-            "defined": "Decimal"
-          }
-        }
-      ]
     }
   ],
   "accounts": [

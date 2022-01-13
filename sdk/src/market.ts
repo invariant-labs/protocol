@@ -111,35 +111,6 @@ export class Market {
     return (await this.program.account.feeTier.fetch(address)) as FeeTierStructure
   }
 
-  async changeProtocolFeeInstruction({
-    pair,
-    tokenX,
-    tokenY,
-    admin,
-    protocol_fee
-  }: ChangeProtocolFee) {
-    admin = admin || this.wallet.publicKey
-    const stateAddress = this.getStateAddress()
-    const poolAddress = pair.getAddress(this.program.programId)
-    const feeTierAddress = pair.getFeeTierAddress(this.program.programId)
-
-    return this.program.instruction.changeProtocolFee(protocol_fee, {
-      accounts: {
-        state: stateAddress,
-        pool: poolAddress,
-        feeTier: feeTierAddress,
-        tokenX: tokenX.publicKey,
-        tokenY: tokenY.publicKey,
-        admin
-      }
-    })
-  }
-
-  async changeProtocolFeeTransaction(changeProtocolFee: ChangeProtocolFee) {
-    const ix = await this.changeProtocolFeeInstruction(changeProtocolFee)
-    return new Transaction().add(ix)
-  }
-
   async getPool(pair: Pair) {
     const address = await pair.getAddress(this.program.programId)
     return (await this.program.account.pool.fetch(address)) as PoolStructure
@@ -383,7 +354,7 @@ export class Market {
     })
   }
 
-  async createPositionListTransaction(owner?) {
+  async createPositionListTransaction(owner?: PublicKey) {
     const ix = await this.createPositionListInstruction(owner)
     return new Transaction().add(ix)
   }
@@ -822,8 +793,10 @@ export interface PoolStructure {
   tokenY: PublicKey
   tokenXReserve: PublicKey
   tokenYReserve: PublicKey
+  positionIterator: BN
   tickSpacing: number
-  fee: Decimal
+  fee: Decimal,
+  protocolFee: Decimal,
   liquidity: Decimal
   sqrtPrice: Decimal
   currentTickIndex: number
@@ -974,12 +947,4 @@ export interface TransferPositionOwnership {
 export interface InitializeOracle {
   pair: Pair
   payer: Keypair
-}
-
-export interface ChangeProtocolFee {
-  pair: Pair
-  tokenX: Token
-  tokenY: Token
-  admin?: PublicKey
-  protocol_fee: Decimal
 }

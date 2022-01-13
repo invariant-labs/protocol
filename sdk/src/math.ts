@@ -32,7 +32,7 @@ export const fromInteger = (integer: number): { v: BN } => {
   return { v: new BN(integer).mul(DENOMINATOR) }
 }
 
-export const calculate_price_sqrt = (tick_index: number): Decimal => {
+export const calculatePriceSqrt = (tick_index: number): Decimal => {
   const tick = Math.abs(tick_index)
   if (tick > MAX_TICK) {
     throw Error('tick over bounds')
@@ -422,8 +422,8 @@ export const getLiquidityByX = (
   const lowerTickIndex = lowerTick != -Infinity ? lowerTick : getMinTick(tickSpacing)
   const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(tickSpacing)
 
-  const lowerSqrtPrice = calculate_price_sqrt(lowerTickIndex)
-  const upperSqrtPrice = calculate_price_sqrt(upperTickIndex)
+  const lowerSqrtPrice = calculatePriceSqrt(lowerTickIndex)
+  const upperSqrtPrice = calculatePriceSqrt(upperTickIndex)
 
   return getLiquidityByXPrice(x, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
 }
@@ -480,8 +480,8 @@ export const getLiquidityByY = (
   const lowerTickIndex = lowerTick != -Infinity ? lowerTick : getMinTick(tickSpacing)
   const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(tickSpacing)
 
-  const lowerSqrtPrice = calculate_price_sqrt(lowerTickIndex)
-  const upperSqrtPrice = calculate_price_sqrt(upperTickIndex)
+  const lowerSqrtPrice = calculatePriceSqrt(lowerTickIndex)
+  const upperSqrtPrice = calculatePriceSqrt(upperTickIndex)
 
   return getLiquidityByYPrice(y, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
 }

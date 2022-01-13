@@ -85,6 +85,9 @@ describe('big-swap', () => {
     const createdPool = await market.getPool(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
     assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
+    console.log(createdPool.fee.v.toString())
+    console.log(feeTier.fee.toString())
+    
     assert.ok(createdPool.fee.v.eq(feeTier.fee))
     assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
     assert.ok(createdPool.liquidity.v.eqn(0))
@@ -200,6 +203,41 @@ describe('big-swap', () => {
         assert.ok(feeGrowthInsideY.v.gte(new BN(0)))
       }
     }
+    const removePositionVars: RemovePosition = {
+      index: 1,
+      pair,
+      userTokenX,
+      userTokenY,
+      owner: positionOwner.publicKey
+    }
+    await removePosition(market, removePositionVars, positionOwner)
+
+    const removePositionVars2: RemovePosition = {
+      index: 3,
+      pair,
+      userTokenX,
+      userTokenY,
+      owner: positionOwner.publicKey
+    }
+    await removePosition(market, removePositionVars2, positionOwner)
+
+    const removePositionVars3: RemovePosition = {
+      index: 4,
+      pair,
+      userTokenX,
+      userTokenY,
+      owner: positionOwner.publicKey
+    }
+    await removePosition(market, removePositionVars3, positionOwner)
+
+    const removePositionVars4: RemovePosition = {
+      index: 8,
+      pair,
+      userTokenX,
+      userTokenY,
+      owner: positionOwner.publicKey
+    }
+    await removePosition(market, removePositionVars4, positionOwner)
 
     const positionsInfo2: Array<[ticks: [lower: number, upper: number], liquidity: BN]> = [
       [[-30, 20], new BN(500000).mul(DENOMINATOR)],

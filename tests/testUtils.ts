@@ -3,7 +3,6 @@ import { TokenInstructions } from '@project-serum/serum'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { FeeTier, Market, Position } from '@invariant-labs/sdk/lib/market'
 import {
-  ChangeProtocolFee,
   ClaimFee,
   CreateFeeTier,
   CreatePool,
@@ -278,17 +277,6 @@ export const performSwap = async (
 
 export const createPool = async (market: Market, createPool: CreatePool) => {
   await market.createPool(createPool)
-}
-
-// Admin function
-export const changeProtocolFee = async (
-  market: Market,
-  changeProtocolFee: ChangeProtocolFee,
-  signer: Keypair
-) => {
-  const tx = await market.changeProtocolFeeTransaction(changeProtocolFee)
-
-  await signAndSend(tx, [signer], market.connection)
 }
 
 // Admin function
