@@ -196,7 +196,7 @@ describe('compare', () => {
     await signAndSend(firstTx, [owner], connection)
 
     //make swap on second pool without simulation TODO
-    const secondTx = await market.swapTransaction({
+    const secondTx = await market.swapTransactionSplit({
       pair: secondPair,
       XtoY: false,
       amount: new BN(500),

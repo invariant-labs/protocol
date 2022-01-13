@@ -247,7 +247,12 @@ const getNextPriceFromOutput = (
 }
 
 // L * price / (L +- amount * price)
-const getNextPriceXUp = (price: Decimal, liquidity: Decimal, amount: BN, add: boolean): Decimal => {
+export const getNextPriceXUp = (
+  price: Decimal,
+  liquidity: Decimal,
+  amount: BN,
+  add: boolean
+): Decimal => {
   if (amount.eqn(0)) {
     return price
   }
@@ -264,7 +269,7 @@ const getNextPriceXUp = (price: Decimal, liquidity: Decimal, amount: BN, add: bo
 }
 
 // price +- (amount / L)
-const getNextPriceYDown = (
+export const getNextPriceYDown = (
   price: Decimal,
   liquidity: Decimal,
   amount: BN,

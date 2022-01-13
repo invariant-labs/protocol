@@ -16,8 +16,8 @@ import {
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
-//TODO add to tests
-describe('swap', () => {
+
+describe('simulate swap', () => {
   const provider = Provider.local()
   const connection = provider.connection
   // @ts-expect-error
@@ -33,8 +33,6 @@ describe('swap', () => {
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
-  let programAuthority: PublicKey
-  let nonce: number
 
   before(async () => {
     market = await Market.build(
@@ -86,7 +84,7 @@ describe('swap', () => {
     assert.ok(tickmapData.bitmap.every(v => v == 0))
   })
 
-  it('#swap() within a tick', async () => {
+  it.skip('#swap', async () => {
     // Deposit
 
     const positionOwner = Keypair.generate()
@@ -132,7 +130,7 @@ describe('swap', () => {
     const reserveYBefore = (await tokenY.getAccountInfo(poolDataBefore.tokenYReserve)).amount
 
     //make swap into right to move price from tick 0
-    const txr = await market.swapTransaction({
+    const txr = await market.swapTransactionSplit({
       pair,
       XtoY: false,
       amount: new BN(500),
@@ -146,7 +144,7 @@ describe('swap', () => {
     await signAndSend(txr, [owner], connection)
 
     //make swap bigger than cross tick
-    const tx = await market.swapTransaction({
+    const tx = await market.swapTransactionSplit({
       pair,
       XtoY: true,
       amount: new BN(3000),
@@ -170,15 +168,14 @@ describe('swap', () => {
     const reserveXDelta = reserveXAfter.sub(reserveXBefore)
     const reserveYDelta = reserveYBefore.sub(reserveYAfter)
 
-    const amount = new BN(1000)
     assert.ok(amountX.eqn(7496))
-    assert.ok(amountY.eqn(12477))
+    assert.ok(amountY.eqn(12474))
     assert.ok(reserveXDelta.eqn(2504))
-    assert.ok(reserveYDelta.eqn(2477))
+    assert.ok(reserveYDelta.eqn(2474))
 
-    assert.ok(poolData.feeGrowthGlobalX.v.eqn(8099936)) // 0.6 % of amount - protocol fee
-    assert.ok(poolData.feeGrowthGlobalY.v.eqn(1350000))
-    assert.ok(poolData.feeProtocolTokenX.v.eq(new BN(1799986631284)))
-    assert.ok(poolData.feeProtocolTokenY.v.eq(new BN(300000000000)))
+    assert.ok(poolData.feeGrowthGlobalX.v.eq(new BN('8000000000000000000'))) // 0.6 % of amount - protocol fee
+    assert.ok(poolData.feeGrowthGlobalY.v.eq(new BN('1000000000000000000')))
+    assert.ok(poolData.feeProtocolTokenX.eq(new BN(4)))
+    assert.ok(poolData.feeProtocolTokenY.eq(new BN(1)))
   })
 })

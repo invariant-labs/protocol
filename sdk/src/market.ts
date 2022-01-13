@@ -540,6 +540,81 @@ export class Market {
         return { pubkey, isWritable: true, isSigner: false }
       })
 
+    const tx: Transaction = new Transaction()
+
+    const swapIx = this.program.instruction.swap(XtoY, amount, byAmountIn, priceLimit, {
+      remainingAccounts: ra,
+      accounts: {
+        state: this.stateAddress,
+        pool: poolAddress,
+        tickmap: pool.tickmap,
+        tokenX: pool.tokenX,
+        tokenY: pool.tokenY,
+        reserveX: pool.tokenXReserve,
+        reserveY: pool.tokenYReserve,
+        owner,
+        accountX,
+        accountY,
+        programAuthority: this.programAuthority,
+        tokenProgram: TOKEN_PROGRAM_ID
+      }
+    })
+    tx.add(swapIx)
+    return tx
+  }
+
+  async swapTransactionSplit(
+    {
+      pair,
+      XtoY,
+      amount,
+      knownPrice,
+      slippage,
+      accountX,
+      accountY,
+      byAmountIn,
+      owner
+    }: SwapTransaction,
+    overridePriceLimit?: BN
+  ) {
+    const [pool, tickmap, poolAddress] = await Promise.all([
+      this.get(pair),
+      this.getTickmap(pair),
+      pair.getAddress(this.program.programId)
+    ])
+
+    const priceLimit =
+      overridePriceLimit ?? calculatePriceAfterSlippage(knownPrice, slippage, !XtoY).v
+
+    const indexesInDirection = findClosestTicks(
+      tickmap.bitmap,
+      pool.currentTickIndex,
+      pool.tickSpacing,
+      10,
+      Infinity,
+      XtoY ? 'down' : 'up'
+    )
+
+    const indexesInReverse = findClosestTicks(
+      tickmap.bitmap,
+      pool.currentTickIndex,
+      pool.tickSpacing,
+      3,
+      Infinity,
+      XtoY ? 'up' : 'down'
+    )
+    const remainingAccounts = await Promise.all(
+      indexesInDirection.concat(indexesInReverse).map(async index => {
+        const { tickAddress } = await this.getTickAddress(pair, index)
+        return tickAddress
+      })
+    )
+
+    const ra: Array<{ pubkey: PublicKey; isWritable: boolean; isSigner: boolean }> =
+      remainingAccounts.map(pubkey => {
+        return { pubkey, isWritable: true, isSigner: false }
+      })
+
     let ticksArray: Tick[] = await this.getClosestTicks(
       pair,
       Infinity,
@@ -573,10 +648,6 @@ export class Market {
       sum = sum.add(value)
     }
 
-    for (var value of amountPerTick) {
-      console.log(value.toString())
-    }
-
     if (!sum.eq(amount)) {
       throw new Error('Input amount and simulation amount sum are different')
     }
@@ -584,41 +655,40 @@ export class Market {
     if (amountPerTick.length > MAX_IX) {
       throw new Error('Instruction limit was exceeded')
     }
-
+    const unitsIx = ComputeUnitsInstruction(800000, owner)
     const tx: Transaction = new Transaction()
+    tx.add(unitsIx)
     //this means how many  ticks we would like to cross per instruction
-    let remaining: number = 0
 
-    // for (let i = 0; i < amountPerTick.length; i++) {
-    //   let amountIx: BN = amountPerTick[i]
+    let amountIx: BN = new BN(0)
+    for (let i = 0; i < amountPerTick.length; i++) {
+      amountIx = amountIx.add(amountPerTick[i])
 
-    //   if (
-    //     ((i + 1) % TICKS_PER_IX == 0 || i == amountPerTick.length - 1) &&
-    //     !amountPerTick[i].eqn(0)
-    //   ) {
-    // console.log('MARKET: amountPerTick', amountPerTick[0].toString())
-    // console.log('MARKET: amount', amount.toString())
-    const swapIx = this.program.instruction.swap(XtoY, amount, byAmountIn, priceLimit, {
-      remainingAccounts: ra,
-      accounts: {
-        state: this.stateAddress,
-        pool: poolAddress,
-        tickmap: pool.tickmap,
-        tokenX: pool.tokenX,
-        tokenY: pool.tokenY,
-        reserveX: pool.tokenXReserve,
-        reserveY: pool.tokenYReserve,
-        owner,
-        accountX,
-        accountY,
-        programAuthority: this.programAuthority,
-        tokenProgram: TOKEN_PROGRAM_ID
+      if (
+        ((i + 1) % TICKS_PER_IX == 0 || i == amountPerTick.length - 1) &&
+        !amountPerTick[i].eqn(0)
+      ) {
+        const swapIx = this.program.instruction.swap(XtoY, amountIx, byAmountIn, priceLimit, {
+          remainingAccounts: ra,
+          accounts: {
+            state: this.stateAddress,
+            pool: poolAddress,
+            tickmap: pool.tickmap,
+            tokenX: pool.tokenX,
+            tokenY: pool.tokenY,
+            reserveX: pool.tokenXReserve,
+            reserveY: pool.tokenYReserve,
+            owner,
+            accountX,
+            accountY,
+            programAuthority: this.programAuthority,
+            tokenProgram: TOKEN_PROGRAM_ID
+          }
+        })
+        tx.add(swapIx)
+        amountIx = new BN(0)
       }
-    })
-    tx.add(swapIx)
-    //     amountIx = new BN(0)
-    //   }
-    // }
+    }
     return tx
   }
 
