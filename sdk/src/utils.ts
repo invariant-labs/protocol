@@ -267,7 +267,7 @@ export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
 }
 
 export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationResult => {
-  const { xToY, byAmountIn, swapAmount, slippage, ticks, tickmap, pool } = swapParameters
+  let { xToY, byAmountIn, swapAmount, slippage, ticks, tickmap, pool } = swapParameters
   let { currentTickIndex, tickSpacing, liquidity, fee } = pool
   const amountPerTick: BN[] = []
   let accumulatedAmount: BN = new BN(0)
