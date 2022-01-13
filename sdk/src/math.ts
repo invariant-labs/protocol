@@ -353,29 +353,40 @@ const calculateX = (nominator: BN, denominator: BN, liquidity: BN, roundingUp: b
   return common.div(DENOMINATOR)
 }
 
-export const getX = (liquidity: BN, upperSqrtPrice: BN, currentSqrtPrice: BN): BN => {
-  if (upperSqrtPrice.lte(new BN(0)) || currentSqrtPrice.lte(new BN(0))) {
-    throw new Error('Price cannot be 0')
-  }
-  if (upperSqrtPrice.lt(currentSqrtPrice)) {
-    throw new Error('Upper tick price cannot be lower than current tick price')
+export const getX = (liquidity: BN, upperSqrtPrice: BN, currentSqrtPrice: BN, lowerSqrtPrice: BN): BN => {
+  if (upperSqrtPrice.lte(new BN(0)) || currentSqrtPrice.lte(new BN(0)) || lowerSqrtPrice.lte(new BN(0))) {
+    throw new Error('Price cannot be lower or equal 0')
   }
 
-  const denominator = currentSqrtPrice.mul(upperSqrtPrice).div(DENOMINATOR)
-  const nominator = upperSqrtPrice.sub(currentSqrtPrice)
+  let denominator: BN
+  let nominator: BN
 
+  if (currentSqrtPrice.gte(upperSqrtPrice)) {
+    return new BN(0)
+  } else if (currentSqrtPrice.lt(lowerSqrtPrice)) {
+    denominator = lowerSqrtPrice.mul(upperSqrtPrice).div(DENOMINATOR)
+    nominator = upperSqrtPrice.sub(lowerSqrtPrice)
+  } else {
+    denominator = upperSqrtPrice.mul(currentSqrtPrice).div(DENOMINATOR)
+    nominator = upperSqrtPrice.sub(currentSqrtPrice)
+  }
+  
   return liquidity.mul(nominator).div(denominator)
 }
 
-export const getY = (liquidity: BN, currentSqrtPrice: BN, lowerSqrtPrice: BN): BN => {
-  if (lowerSqrtPrice.lte(new BN(0)) || currentSqrtPrice.lte(new BN(0))) {
+export const getY = (liquidity: BN, upperSqrtPrice: BN,  currentSqrtPrice: BN, lowerSqrtPrice: BN): BN => {
+  if (lowerSqrtPrice.lte(new BN(0)) || currentSqrtPrice.lte(new BN(0)) || upperSqrtPrice.lte(new BN(0))) {
     throw new Error('Price cannot be 0')
   }
-  if (lowerSqrtPrice.gt(currentSqrtPrice)) {
-    throw new Error('Upper tick price cannot be lower than current tick price')
-  }
 
-  const difference = currentSqrtPrice.sub(lowerSqrtPrice)
+  let difference: BN
+  if (currentSqrtPrice.lt(lowerSqrtPrice)) {
+    return new BN(0)
+  } else if (currentSqrtPrice.gte(upperSqrtPrice)) {
+    difference = upperSqrtPrice.sub(lowerSqrtPrice)
+  } else {
+    difference = currentSqrtPrice.sub(lowerSqrtPrice)
+  }
 
   return liquidity.mul(difference).div(DENOMINATOR)
 }
