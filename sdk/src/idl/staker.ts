@@ -324,10 +324,6 @@ export type Staker = {
             }
           },
           {
-            "name": "index",
-            "type": "u32"
-          },
-          {
             "name": "bump",
             "type": "u8"
           }
@@ -747,10 +743,6 @@ export const IDL: Staker = {
             "type": {
               "defined": "Decimal"
             }
-          },
-          {
-            "name": "index",
-            "type": "u32"
           },
           {
             "name": "bump",

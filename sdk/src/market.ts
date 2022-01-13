@@ -1,6 +1,5 @@
-import * as anchor from '@project-serum/anchor'
-import { BN, Program, utils, Idl, Provider } from '@project-serum/anchor'
-import { Token, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token'
+import { BN, Program, utils, Provider } from '@project-serum/anchor'
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import {
   Connection,
   Keypair,
@@ -8,8 +7,7 @@ import {
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
   Transaction,
-  TransactionInstruction,
-  Signer
+  TransactionInstruction
 } from '@solana/web3.js'
 import { calculatePriceAfterSlippage, findClosestTicks, isInitialized } from './math'
 import {
@@ -20,16 +18,14 @@ import {
   getMinTick,
   parseLiquidityOnTicks,
   SEED,
-  signAndSend,
   simulateSwap,
   SimulateSwapInterface,
   SimulationResult
 } from './utils'
 import { Amm, IDL } from './idl/amm'
-import { ComputeUnitsInstruction, IWallet, MAX_TICK, Pair } from '.'
-import { getMarketAddress } from './network'
+import { ComputeUnitsInstruction, IWallet, Pair } from '.'
+import { getMarketAddress, Network } from './network'
 
-import { Network } from './network'
 const POSITION_SEED = 'positionv1'
 const TICK_SEED = 'tickv1'
 const POSITION_LIST_SEED = 'positionlistv1'
@@ -73,42 +69,35 @@ export class Market {
     return instance
   }
 
-  async create({ pair, signer, initTick }: CreatePool) {
+  async createPool({ pair, payer, initTick, protocolFee, tokenX, tokenY }: CreatePool) {
+    const bitmapKeypair = Keypair.generate()
     const tick = initTick || 0
+
+    const { address: stateAddress } = await this.getStateAddress()
 
     const [poolAddress, bump] = await pair.getAddressAndBump(this.program.programId)
     const { address: feeTierAddress } = await this.getFeeTierAddress(pair.feeTier)
 
-    const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, signer)
-    const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, signer)
-
     const tokenXReserve = await tokenX.createAccount(this.programAuthority)
     const tokenYReserve = await tokenY.createAccount(this.programAuthority)
 
-    const bitmapKeypair = Keypair.generate()
-
-    await this.program.rpc.createPool(bump, tick, {
+    return await this.program.rpc.createPool(bump, tick, protocolFee, {
       accounts: {
+        state: stateAddress,
         pool: poolAddress,
         feeTier: feeTierAddress,
-        state: this.stateAddress,
         tickmap: bitmapKeypair.publicKey,
         tokenX: tokenX.publicKey,
         tokenY: tokenY.publicKey,
         tokenXReserve,
         tokenYReserve,
-        payer: signer.publicKey,
+        payer: payer.publicKey,
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId
       },
-      signers: [signer, bitmapKeypair],
+      signers: [payer, bitmapKeypair],
       instructions: [await this.program.account.tickmap.createInstruction(bitmapKeypair)]
     })
-  }
-
-  async get(pair: Pair) {
-    const address = await pair.getAddress(this.program.programId)
-    return (await this.program.account.pool.fetch(address)) as PoolStructure
   }
 
   async getProgramAuthority() {
@@ -142,7 +131,7 @@ export class Market {
     const poolAddress = await new Pair(tokenX, tokenY, feeTier).getAddress(this.program.programId)
 
     this.program.account.pool
-      .subscribe(poolAddress, 'singleGossip')
+      .subscribe(poolAddress, 'singleGossip') // REVIEW use recent commitment + allow overwrite via props
       .on('change', (poolStructure: PoolStructure) => {
         fn(poolStructure)
       })
@@ -153,13 +142,13 @@ export class Market {
   }
 
   async getTickmap(pair: Pair) {
-    const state = await this.get(pair)
+    const state = await this.getPool(pair)
     const tickmap = (await this.program.account.tickmap.fetch(state.tickmap)) as Tickmap
     return tickmap
   }
 
   async isInitialized(pair: Pair, index: number) {
-    const state = await this.get(pair)
+    const state = await this.getPool(pair)
     const tickmap = await this.getTickmap(pair)
     return isInitialized(tickmap, index, state.tickSpacing)
   }
@@ -175,7 +164,7 @@ export class Market {
     maxRange?: number,
     oneWay: 'up' | 'down' | undefined = undefined
   ) {
-    const state = await this.get(pair)
+    const state = await this.getPool(pair)
     const tickmap = await this.getTickmap(pair)
     const indexes = findClosestTicks(
       tickmap.bitmap,
@@ -195,7 +184,7 @@ export class Market {
   }
 
   async getLiquidityOnTicks(pair: Pair) {
-    const pool = await this.get(pair)
+    const pool = await this.getPool(pair)
     const ticks = await this.getClosestTicks(pair, Infinity)
 
     return parseLiquidityOnTicks(ticks, pool)
@@ -215,13 +204,13 @@ export class Market {
     const positionPromises = indexes.map(async i => {
       return await this.getPosition(owner, i)
     })
-    return Promise.all(positionPromises)
+    return await Promise.all(positionPromises)
   }
 
   async getPositionsFromRange(owner: PublicKey, lowerIndex: number, upperIndex: number) {
     try {
       await this.getPositionList(owner)
-      return this.getPositionsFromIndexes(
+      return await this.getPositionsFromIndexes(
         owner,
         Array.from({ length: upperIndex - lowerIndex + 1 }, (_, i) => i + lowerIndex)
       )
@@ -230,7 +219,7 @@ export class Market {
     }
   }
 
-  async getTickAddress(pair, index: number) {
+  async getTickAddress(pair: Pair, index: number) {
     const poolAddress = await pair.getAddress(this.program.programId)
     const indexBuffer = Buffer.alloc(4)
     indexBuffer.writeInt32LE(index)
@@ -275,10 +264,11 @@ export class Market {
 
   async getNewPositionAddress(owner: PublicKey) {
     const positionList = await this.getPositionList(owner)
-    return this.getPositionAddress(owner, positionList.head)
+    return await this.getPositionAddress(owner, positionList.head)
   }
 
-  async createFeeTierInstruction(feeTier: FeeTier, payer: PublicKey) {
+  async createFeeTierInstruction({ feeTier, admin }: CreateFeeTier) {
+    admin = admin || this.wallet.publicKey
     const { fee, tickSpacing } = feeTier
     const { address, bump } = await this.getFeeTierAddress(feeTier)
     const ts = tickSpacing ?? feeToTickSpacing(fee)
@@ -287,23 +277,24 @@ export class Market {
       accounts: {
         state: this.stateAddress,
         feeTier: address,
-        admin: payer,
+        admin,
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId
       }
     })
   }
-  async createFeeTier(feeTier: FeeTier, payer: Keypair) {
-    const ix = await this.createFeeTierInstruction(feeTier, payer.publicKey)
 
-    await signAndSend(new Transaction().add(ix), [payer], this.connection)
+  async createFeeTierTransaction(createFeeTier: CreateFeeTier) {
+    const ix = await this.createFeeTierInstruction(createFeeTier)
+    return new Transaction().add(ix)
   }
 
-  async createStateInstruction(admin: PublicKey, protocolFee: Decimal) {
+  async createStateInstruction(admin?: PublicKey) {
+    admin = admin || this.wallet.publicKey
     const { programAuthority, nonce } = await this.getProgramAuthority()
     const { address, bump } = await this.getStateAddress()
 
-    return this.program.instruction.createState(bump, nonce, protocolFee, {
+    return this.program.instruction.createState(bump, nonce, {
       accounts: {
         state: address,
         admin,
@@ -314,9 +305,9 @@ export class Market {
     })
   }
 
-  async createState(admin: Keypair, protocolFee: Decimal) {
-    const ix = await this.createStateInstruction(admin.publicKey, protocolFee)
-    await signAndSend(new Transaction().add(ix), [admin], this.connection)
+  async createStateTransaction(admin?: PublicKey) {
+    const ix = await this.createStateInstruction(admin)
+    return new Transaction().add(ix)
   }
 
   async getStateAddress() {
@@ -336,10 +327,11 @@ export class Market {
     return (await this.program.account.state.fetch(address)) as State
   }
 
-  async createTickInstruction(pair: Pair, index: number, payer: PublicKey) {
-    const state = await this.get(pair)
-
+  async createTickInstruction({ pair, index, payer }: CreateTick) {
+    payer = payer || this.wallet.publicKey
+    const state = await this.getPool(pair)
     const { tickAddress, tickBump } = await this.getTickAddress(pair, index)
+
     return this.program.instruction.createTick(tickBump, index, {
       accounts: {
         tick: tickAddress,
@@ -351,49 +343,39 @@ export class Market {
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId
       }
-    }) as TransactionInstruction
+    })
   }
 
-  async createTick(pair: Pair, index: number, payer: Keypair) {
-    const lowerIx = await this.createTickInstruction(pair, index, payer.publicKey)
-    await signAndSend(new Transaction().add(lowerIx), [payer], this.connection)
+  async createTickTransaction(createTick: CreateTick) {
+    const ix = await this.createTickInstruction(createTick)
+    return new Transaction().add(ix)
   }
 
-  async createTicksFromRange(pair: Pair, payer: Keypair, start: number, stop: number) {
-    const step = pair.feeTier.tickSpacing ?? feeToTickSpacing(pair.feeTier.fee)
-
-    Promise.all(
-      generateTicksArray(start, stop, step).map(async tick => {
-        await this.createTick(pair, tick, payer)
-      })
-    )
-  }
-
-  async createPositionListInstruction(owner: PublicKey) {
+  async createPositionListInstruction(owner?: PublicKey) {
+    owner = owner || this.wallet.publicKey
     const { positionListAddress, positionListBump } = await this.getPositionListAddress(owner)
 
     return this.program.instruction.createPositionList(positionListBump, {
       accounts: {
         positionList: positionListAddress,
-        owner: owner,
+        owner,
         signer: owner,
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId
       }
-    }) as TransactionInstruction
+    })
   }
 
-  async createPositionList(owner: Keypair) {
-    const ix = await this.createPositionListInstruction(owner.publicKey)
-
-    await signAndSend(new Transaction().add(ix), [owner], this.connection)
+  async createPositionListTransaction(owner?: PublicKey) {
+    const ix = await this.createPositionListInstruction(owner)
+    return new Transaction().add(ix)
   }
 
   async initPositionInstruction(
     { pair, owner, userTokenX, userTokenY, lowerTick, upperTick, liquidityDelta }: InitPosition,
     assumeFirstPosition: boolean = false
   ) {
-    const state = await this.get(pair)
+    const state = await this.getPool(pair)
 
     const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(pair.tickSpacing)
     const lowerTickIndex = lowerTick != -Infinity ? lowerTick : getMinTick(pair.tickSpacing)
@@ -419,6 +401,7 @@ export class Market {
           pool: poolAddress,
           positionList: positionListAddress,
           position: positionAddress,
+          tickmap: state.tickmap,
           owner,
           payer: owner,
           lowerTick: lowerTickAddress,
@@ -435,81 +418,76 @@ export class Market {
           systemProgram: SystemProgram.programId
         }
       }
-    ) as TransactionInstruction
+    )
   }
 
   async initPositionTx(initPosition: InitPosition) {
-    const { owner, pair, lowerTick, upperTick } = initPosition
-    const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(pair.tickSpacing)
-    const lowerTickIndex = lowerTick != -Infinity ? lowerTick : getMinTick(pair.tickSpacing)
+    const { pair, lowerTick, upperTick } = initPosition
+    const payer = initPosition.owner || this.wallet.publicKey
+    const [tickmap, pool] = await Promise.all([this.getTickmap(pair), this.getPool(pair)])
 
-    const [tickmap, pool] = await Promise.all([this.getTickmap(pair), this.get(pair)])
-
-    const { positionListAddress } = await this.getPositionListAddress(owner)
-    const listExists = (await this.connection.getAccountInfo(positionListAddress)) === null
-    const lowerExists = isInitialized(tickmap, lowerTickIndex, pool.tickSpacing)
-    const upperExists = isInitialized(tickmap, upperTickIndex, pool.tickSpacing)
-
+    let lowerInstruction: TransactionInstruction
+    let upperInstruction: TransactionInstruction
+    let listInstruction: TransactionInstruction
+    let positionInstruction: TransactionInstruction
     const tx = new Transaction()
 
-    if (!lowerExists || !upperExists || !listExists) {
-      tx.add(await ComputeUnitsInstruction(400000, owner))
+    let lowerExists = true
+    try {
+      await this.getTick(pair, lowerTick)
+    } catch (e) {
+      lowerExists = false
+      lowerInstruction = await this.createTickInstruction({ pair, index: lowerTick, payer })
     }
 
+    let upperExists = true
+    try {
+      await this.getTick(pair, upperTick)
+    } catch (e) {
+      upperExists = false
+      upperInstruction = await this.createTickInstruction({ pair, index: upperTick, payer })
+    }
+
+    const { positionListAddress } = await this.getPositionListAddress(payer)
+    const account = await this.connection.getAccountInfo(positionListAddress)
+
+    let listExists = true
+    if (account === null) {
+      listExists = false
+      listInstruction = await this.createPositionListInstruction(payer)
+      positionInstruction = await this.initPositionInstruction(initPosition, true)
+    } else {
+      positionInstruction = await this.initPositionInstruction(initPosition, false)
+    }
+
+    if (!lowerExists && !upperExists && listExists) {
+      tx.add(ComputeUnitsInstruction(400000, payer))
+    }
     if (!lowerExists) {
-      tx.add(await this.createTickInstruction(pair, lowerTickIndex, owner))
+      tx.add(lowerInstruction)
     }
     if (!upperExists) {
-      tx.add(await this.createTickInstruction(pair, upperTickIndex, owner))
+      tx.add(upperInstruction)
+    }
+    if (!listExists) {
+      tx.add(listInstruction)
     }
 
-    if (listExists) {
-      tx.add(await this.createPositionListInstruction(owner))
-      return tx.add(await this.initPositionInstruction(initPosition, true))
-    }
-
-    return tx.add(await this.initPositionInstruction(initPosition, false))
+    return tx.add(positionInstruction)
   }
 
-  async initPosition(initPosition: InitPosition, signer: Keypair) {
-    const tx = await this.initPositionTx(initPosition)
-    await signAndSend(tx, [signer], this.connection)
-  }
+  async swapInstruction(swap: Swap, overridePriceLimit?: BN) {
+    const { pair, xToY, amount, knownPrice, slippage, accountX, accountY, byAmountIn } = swap
+    const owner = swap.owner || this.wallet.publicKey
 
-  async swap(swap: Swap, owner: Keypair, overridePriceLimit?: BN) {
-    const tx = await this.swapTransaction(
-      {
-        owner: owner.publicKey,
-        ...swap
-      },
-      overridePriceLimit
-    )
-
-    await signAndSend(tx, [owner], this.connection)
-  }
-
-  async swapTransaction(
-    {
-      pair,
-      XtoY,
-      amount,
-      knownPrice,
-      slippage,
-      accountX,
-      accountY,
-      byAmountIn,
-      owner
-    }: SwapTransaction,
-    overridePriceLimit?: BN
-  ) {
-    const [pool, tickmap, poolAddress] = await Promise.all([
-      this.get(pair),
+    const [pool, tickmap, feeTierAddress] = await Promise.all([
+      this.getPool(pair),
       this.getTickmap(pair),
       pair.getAddress(this.program.programId)
     ])
 
     const priceLimit =
-      overridePriceLimit ?? calculatePriceAfterSlippage(knownPrice, slippage, !XtoY).v
+      overridePriceLimit ?? calculatePriceAfterSlippage(knownPrice, slippage, !xToY).v
 
     const indexesInDirection = findClosestTicks(
       tickmap.bitmap,
@@ -517,7 +495,7 @@ export class Market {
       pool.tickSpacing,
       10,
       Infinity,
-      XtoY ? 'down' : 'up'
+      xToY ? 'down' : 'up'
     )
 
     const indexesInReverse = findClosestTicks(
@@ -526,7 +504,7 @@ export class Market {
       pool.tickSpacing,
       3,
       Infinity,
-      XtoY ? 'up' : 'down'
+      xToY ? 'up' : 'down'
     )
     const remainingAccounts = await Promise.all(
       indexesInDirection.concat(indexesInReverse).map(async index => {
@@ -544,7 +522,7 @@ export class Market {
       pair,
       Infinity,
       undefined,
-      XtoY ? 'down' : 'up'
+      xToY ? 'down' : 'up'
     )
 
     let ticks: Map<number, Tick> = new Map<number, Tick>()
@@ -555,7 +533,7 @@ export class Market {
 
     //simulate swap to get exact amount of tokens swaped between tick croses
     const swapParameters: SimulateSwapInterface = {
-      xToY: XtoY,
+      xToY: xToY,
       byAmountIn: byAmountIn,
       swapAmount: amount,
       currentPrice: pool.sqrtPrice,
@@ -581,9 +559,9 @@ export class Market {
       throw new Error('Instruction limit was exceeded')
     }
 
-    const tx: Transaction = new Transaction()
+    const poolAddress = await pair.getAddress(this.program.programId)
 
-    const swapIx = this.program.instruction.swap(XtoY, amount, byAmountIn, priceLimit, {
+    return this.program.instruction.swap(xToY, amount, byAmountIn, priceLimit, {
       remainingAccounts: ra,
       accounts: {
         state: this.stateAddress,
@@ -600,16 +578,15 @@ export class Market {
         tokenProgram: TOKEN_PROGRAM_ID
       }
     })
-    tx.add(swapIx)
-
-    return tx
   }
 
-  async getReserveBalances(pair: Pair, payer: Signer) {
-    const tokenX = new Token(this.connection, pair.tokenX, TOKEN_PROGRAM_ID, payer)
-    const tokenY = new Token(this.connection, pair.tokenY, TOKEN_PROGRAM_ID, payer)
+  async swapTransaction(swap: Swap, overridePriceLimit?: BN) {
+    const ix = await this.swapInstruction(swap, overridePriceLimit)
+    return new Transaction().add(ix)
+  }
 
-    const state = await this.get(pair)
+  async getReserveBalances(pair: Pair, tokenX: Token, tokenY: Token) {
+    const state = await this.getPool(pair)
 
     const accounts = await Promise.all([
       tokenX.getAccountInfo(state.tokenXReserve),
@@ -619,8 +596,11 @@ export class Market {
     return { x: accounts[0].amount, y: accounts[1].amount }
   }
 
-  async claimFeeInstruction({ pair, owner, userTokenX, userTokenY, index }: ClaimFee) {
-    const state = await this.get(pair)
+  async claimFeeInstruction(claimFee: ClaimFee) {
+    const { pair, userTokenX, userTokenY, index } = claimFee
+    const owner = claimFee.owner || this.wallet.publicKey
+
+    const state = await this.getPool(pair)
     const { positionAddress } = await this.getPositionAddress(owner, index)
     const position = await this.getPosition(owner, index)
     const { tickAddress: lowerTickAddress } = await this.getTickAddress(
@@ -631,7 +611,6 @@ export class Market {
       pair,
       position.upperTickIndex
     )
-    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
 
     return this.program.instruction.claimFee(
       index,
@@ -655,29 +634,19 @@ export class Market {
           tokenProgram: TOKEN_PROGRAM_ID
         }
       }
-    ) as TransactionInstruction
+    )
   }
 
-  async claimFee({ pair, owner, userTokenX, userTokenY, index }: ClaimFee, signer: Keypair) {
-    const claimFeeIx = await this.claimFeeInstruction({
-      pair,
-      owner,
-      userTokenX,
-      userTokenY,
-      index
-    })
-
-    await signAndSend(new Transaction().add(claimFeeIx), [signer], this.connection)
+  async claimFeeTransaction(claimFee: ClaimFee) {
+    const ix = await this.claimFeeInstruction(claimFee)
+    return new Transaction().add(ix)
   }
 
-  async withdrawProtocolFeeInstruction(
-    pair: Pair,
-    accountX: PublicKey,
-    accountY: PublicKey,
-    signer: PublicKey
-  ) {
-    const pool = await this.get(pair)
-    const feeTierAddress = await pair.getFeeTierAddress(this.program.programId)
+  async withdrawProtocolFeeInstruction(withdrawProtocolFee: WithdrawProtocolFee) {
+    const { pair, accountX, accountY } = withdrawProtocolFee
+    const admin = withdrawProtocolFee.admin || this.wallet.publicKey
+
+    const pool = await this.getPool(pair)
 
     return this.program.instruction.withdrawProtocolFee({
       accounts: {
@@ -689,34 +658,31 @@ export class Market {
         reserveY: pool.tokenYReserve,
         accountX,
         accountY,
-        authority: signer,
+        authority: admin,
         programAuthority: this.programAuthority,
         tokenProgram: TOKEN_PROGRAM_ID
       }
-    }) as TransactionInstruction
+    })
   }
 
-  async withdrawProtocolFee(pair: Pair, accountX: PublicKey, accountY: PublicKey, signer: Keypair) {
-    const ix = await this.withdrawProtocolFeeInstruction(pair, accountX, accountY, signer.publicKey)
-    await signAndSend(new Transaction().add(ix), [signer], this.connection)
+  async withdrawProtocolFeeTransaction(withdrawProtocolFee: WithdrawProtocolFee) {
+    const ix = await this.withdrawProtocolFeeInstruction(withdrawProtocolFee)
+    return new Transaction().add(ix)
   }
 
-  async removePositionWithIndexInstruction(
-    pair: Pair,
-    owner: PublicKey,
-    lastPositionIndex: number,
-    index: number,
-    userTokenX: PublicKey,
-    userTokenY: PublicKey
-  ): Promise<TransactionInstruction> {
+  async removePositionInstruction(removePosition: RemovePosition): Promise<TransactionInstruction> {
+    const { pair, index, userTokenX, userTokenY } = removePosition
+    const owner = removePosition.owner || this.wallet.publicKey
+
+    const positionList = await this.getPositionList(removePosition.owner)
     const { positionListAddress } = await this.getPositionListAddress(owner)
     const { positionAddress: removedPositionAddress } = await this.getPositionAddress(owner, index)
     const { positionAddress: lastPositionAddress } = await this.getPositionAddress(
       owner,
-      lastPositionIndex
+      positionList.head - 1
     )
 
-    const state = await this.get(pair)
+    const state = await this.getPool(pair)
     const position = await this.getPosition(owner, index)
 
     const { tickAddress: lowerTickAddress } = await this.getTickAddress(
@@ -753,32 +719,21 @@ export class Market {
           tokenProgram: TOKEN_PROGRAM_ID
         }
       }
-    ) as TransactionInstruction
-  }
-
-  async removePositionInstruction(
-    pair: Pair,
-    owner: PublicKey,
-    index: number,
-    userTokenX: PublicKey,
-    userTokenY: PublicKey
-  ): Promise<TransactionInstruction> {
-    const positionList = await this.getPositionList(owner)
-    return this.removePositionWithIndexInstruction(
-      pair,
-      owner,
-      positionList.head - 1,
-      index,
-      userTokenX,
-      userTokenY
     )
   }
 
+  async removePositionTransaction(removePosition: RemovePosition) {
+    const ix = await this.removePositionInstruction(removePosition)
+    return new Transaction().add(ix)
+  }
+
   async transferPositionOwnershipInstruction(
-    owner: PublicKey,
-    recipient: PublicKey,
-    index: number
+    transferPositionOwnership: TransferPositionOwnership
   ): Promise<TransactionInstruction> {
+    const { index } = transferPositionOwnership
+    const owner = transferPositionOwnership.owner || this.wallet.publicKey
+    const recipient = transferPositionOwnership.recipient || this.wallet.publicKey
+
     const { positionListAddress: ownerList } = await this.getPositionListAddress(owner)
     const { positionListAddress: recipientList } = await this.getPositionListAddress(recipient)
 
@@ -803,23 +758,22 @@ export class Market {
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId
       }
-    }) as TransactionInstruction
+    })
   }
 
-  async updateSecondsPerLiquidityInstruction({
-    pair,
-    owner,
-    lowerTickIndex,
-    upperTickIndex,
-    index
-  }: SecondsPerLiquidity) {
+  async transferPositionOwnershipTransaction(transferPositionOwnership: TransferPositionOwnership) {
+    const ix = await this.transferPositionOwnershipInstruction(transferPositionOwnership)
+    return new Transaction().add(ix)
+  }
+
+  async updateSecondsPerLiquidityInstruction(updateSecondsPerLiquidity: UpdateSecondsPerLiquidity) {
+    const { pair, lowerTickIndex, upperTickIndex, index } = updateSecondsPerLiquidity
+    const owner = updateSecondsPerLiquidity.owner || this.wallet.publicKey
+
     const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTickIndex)
     const { tickAddress: upperTickAddress } = await this.getTickAddress(pair, upperTickIndex)
     const poolAddress = await pair.getAddress(this.program.programId)
-    const { positionAddress: positionAddress, positionBump: bump } = await this.getPositionAddress(
-      owner,
-      index
-    )
+    const { positionAddress } = await this.getPositionAddress(owner, index)
 
     return this.program.instruction.updateSecondsPerLiquidity(
       lowerTickIndex,
@@ -838,10 +792,15 @@ export class Market {
           systemProgram: SystemProgram.programId
         }
       }
-    ) as TransactionInstruction
+    )
   }
 
-  async initializeOracle(pair: Pair, payer: Keypair) {
+  async updateSecondsPerLiquidityTransaction(updateSecondsPerLiquidity: UpdateSecondsPerLiquidity) {
+    const ix = await this.updateSecondsPerLiquidityInstruction(updateSecondsPerLiquidity)
+    return new Transaction().add(ix)
+  }
+
+  async initializeOracle({ pair, payer }: InitializeOracle) {
     const oracleKeypair = Keypair.generate()
     const poolAddress = await pair.getAddress(this.program.programId)
 
@@ -861,7 +820,7 @@ export class Market {
   }
 
   async getOracle(pair: Pair) {
-    const pool = await this.get(pair)
+    const pool = await this.getPool(pair)
     return await this.program.account.oracle.fetch(pool.oracleAddress)
   }
 }
@@ -875,7 +834,6 @@ export interface FeeGrowth {
 }
 
 export interface State {
-  protocolFee: Decimal
   admin: PublicKey
   nonce: number
   authority: PublicKey
@@ -893,8 +851,10 @@ export interface PoolStructure {
   tokenY: PublicKey
   tokenXReserve: PublicKey
   tokenYReserve: PublicKey
+  positionIterator: BN
   tickSpacing: number
-  fee: Decimal
+  fee: Decimal,
+  protocolFee: Decimal,
   liquidity: Decimal
   sqrtPrice: Decimal
   currentTickIndex: number
@@ -913,7 +873,7 @@ export interface PoolStructure {
 }
 
 export interface Tickmap {
-  bitmap: Array<number>
+  bitmap: number[]
 }
 export interface PositionList {
   head: number
@@ -945,6 +905,10 @@ export interface Position {
   tokensOwedY: Decimal
   bump: number
 }
+export interface FeeTier {
+  fee: BN
+  tickSpacing?: number
+}
 
 export enum Errors {
   ZeroAmount = '0x12c', // 0
@@ -960,7 +924,7 @@ export enum Errors {
 
 export interface InitPosition {
   pair: Pair
-  owner: PublicKey
+  owner?: PublicKey
   userTokenX: PublicKey
   userTokenY: PublicKey
   lowerTick: number
@@ -970,7 +934,7 @@ export interface InitPosition {
 
 export interface ModifyPosition {
   pair: Pair
-  owner: PublicKey
+  owner?: PublicKey
   userTokenX: PublicKey
   userTokenY: PublicKey
   index: number
@@ -979,25 +943,23 @@ export interface ModifyPosition {
 
 export interface CreatePool {
   pair: Pair
-  signer: Keypair
+  payer: Keypair
   initTick?: number
-}
-
-export interface FeeTier {
-  fee: BN
-  tickSpacing?: number
+  protocolFee: Decimal
+  tokenX: Token
+  tokenY: Token
 }
 export interface ClaimFee {
   pair: Pair
-  owner: PublicKey
+  owner?: PublicKey
   userTokenX: PublicKey
   userTokenY: PublicKey
   index: number
 }
-
 export interface Swap {
   pair: Pair
-  XtoY: boolean
+  owner?: PublicKey
+  xToY: boolean
   amount: BN
   knownPrice: Decimal
   slippage: Decimal
@@ -1005,15 +967,42 @@ export interface Swap {
   accountY: PublicKey
   byAmountIn: boolean
 }
-
-export interface SwapTransaction extends Swap {
-  owner: PublicKey
-}
-
-export interface SecondsPerLiquidity {
+export interface UpdateSecondsPerLiquidity {
   pair: Pair
-  owner: PublicKey
+  owner?: PublicKey
   lowerTickIndex: number
   upperTickIndex: number
   index: number
+}
+export interface CreateFeeTier {
+  feeTier: FeeTier
+  admin?: PublicKey
+}
+export interface CreateTick {
+  pair: Pair
+  index: number
+  payer?: PublicKey
+}
+export interface WithdrawProtocolFee {
+  pair: Pair
+  accountX: PublicKey
+  accountY: PublicKey
+  admin?: PublicKey
+}
+export interface RemovePosition {
+  pair: Pair
+  owner?: PublicKey
+  index: number
+  userTokenX: PublicKey
+  userTokenY: PublicKey
+}
+export interface TransferPositionOwnership {
+  owner?: PublicKey
+  recipient?: PublicKey
+  index: number
+}
+
+export interface InitializeOracle {
+  pair: Pair
+  payer: Keypair
 }

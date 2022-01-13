@@ -33,25 +33,25 @@ export const getPreviousTick = (
     throw new Error('Tick not divisible by spacing')
   }
 
-  let indexWithoutSpacing = currentTickIndex / tickSpacing
-  let bitmapIndex = indexWithoutSpacing + TICK_LIMIT
-  let limit = getSearchLimit(currentTickIndex, tickSpacing, false) + TICK_LIMIT
+  const indexWithoutSpacing = currentTickIndex / tickSpacing
+  const bitmapIndex = indexWithoutSpacing + TICK_LIMIT
+  const limit = getSearchLimit(currentTickIndex, tickSpacing, false) + TICK_LIMIT
 
   let byteIndex = Math.floor(bitmapIndex / 8)
   let bitIndex = Math.abs(bitmapIndex % 8)
 
   while (byteIndex * 8 + bitIndex >= limit) {
     let mask = 1 << bitIndex
-    let byte = tickmap.bitmap[byteIndex]
+    const byte = tickmap.bitmap[byteIndex]
     if (byte % (mask << 1) > 0) {
       while ((byte & mask) === 0) {
         mask = mask >> 1
         bitIndex = bitIndex - 1
       }
 
-      let index = byteIndex * 8 + bitIndex
+      const index = byteIndex * 8 + bitIndex
       if (index >= limit) {
-        let foundIndex = index - TICK_LIMIT
+        const foundIndex = index - TICK_LIMIT
         if (foundIndex <= -TICK_LIMIT) {
           throw new Error('Tick is at limit')
         }
@@ -76,9 +76,9 @@ export const getNextTick = (
     throw new Error('Tick not divisible by spacing')
   }
 
-  let indexWithoutSpacing = currentTickIndex / tickSpacing
-  let bitmapIndex = indexWithoutSpacing + TICK_LIMIT + 1
-  let limit = getSearchLimit(currentTickIndex, tickSpacing, true) + TICK_LIMIT
+  const indexWithoutSpacing = currentTickIndex / tickSpacing
+  const bitmapIndex = indexWithoutSpacing + TICK_LIMIT + 1
+  const limit = getSearchLimit(currentTickIndex, tickSpacing, true) + TICK_LIMIT
 
   let byteIndex = Math.floor(bitmapIndex / 8)
   let bitIndex = Math.abs(bitmapIndex % 8)
@@ -92,10 +92,10 @@ export const getNextTick = (
         bitIndex += 1
       }
 
-      let index = byteIndex * 8 + bitIndex
+      const index = byteIndex * 8 + bitIndex
 
       if (index <= limit) {
-        let foundIndex = index - TICK_LIMIT
+        const foundIndex = index - TICK_LIMIT
         if (foundIndex >= TICK_LIMIT) {
           throw new Error('Tick is at limit')
         }

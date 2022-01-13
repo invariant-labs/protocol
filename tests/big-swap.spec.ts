@@ -1,16 +1,24 @@
 import * as anchor from '@project-serum/anchor'
-import { Program, Provider, BN } from '@project-serum/anchor'
-import { Keypair, PublicKey } from '@solana/web3.js'
-import { Network, SEED, Market, Pair } from '@invariant-labs/sdk'
+import { Provider, BN } from '@project-serum/anchor'
+import { Keypair } from '@solana/web3.js'
+import { Network, Market, Pair, DENOMINATOR, TICK_LIMIT } from '@invariant-labs/sdk'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { createPosition, createToken, performSwap } from './testUtils'
+import {
+  createFeeTier,
+  createPool,
+  createPosition,
+  createState,
+  createTick,
+  createToken,
+  performSwap,
+  removePosition
+} from './testUtils'
 import { assert } from 'chai'
-import { DENOMINATOR } from '@invariant-labs/sdk'
-import { TICK_LIMIT } from '@invariant-labs/sdk'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
+import { FeeTier, Decimal, RemovePosition, CreateTick } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { calculateFeeGrowthInside } from '@invariant-labs/sdk/src/math'
+import { CreateFeeTier, CreatePool } from '@invariant-labs/sdk/src/market'
 
 describe('big-swap', () => {
   const provider = Provider.local()
@@ -29,8 +37,6 @@ describe('big-swap', () => {
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
-  let programAuthority: PublicKey
-  let nonce: number
 
   before(async () => {
     market = await Market.build(
@@ -51,34 +57,33 @@ describe('big-swap', () => {
       createToken(connection, wallet, mintAuthority)
     ])
 
-    const swaplineProgram = anchor.workspace.Amm as Program
-    const [_programAuthority, _nonce] = await anchor.web3.PublicKey.findProgramAddress(
-      [Buffer.from(SEED)],
-      swaplineProgram.programId
-    )
-    nonce = _nonce
-    programAuthority = _programAuthority
-
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
 
   it('#createState()', async () => {
-    await market.createState(admin, protocolFee)
+    await createState(market, admin.publicKey, admin)
   })
 
   it('#createFeeTier()', async () => {
-    await market.createFeeTier(feeTier, admin)
+    const createFeeTierVars: CreateFeeTier = {
+      feeTier,
+      admin: admin.publicKey
+    }
+    await createFeeTier(market, createFeeTierVars, admin)
   })
 
   it('#create()', async () => {
-    // 0.6% / 10
-    await market.create({
+    const createPoolVars: CreatePool = {
       pair,
-      signer: admin
-    })
-    const createdPool = await market.get(pair)
+      payer: admin,
+      protocolFee,
+      tokenX,
+      tokenY
+    }
+    await createPool(market, createPoolVars)
+    const createdPool = await market.getPool(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
     assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
     assert.ok(createdPool.fee.v.eq(feeTier.fee))
@@ -93,12 +98,12 @@ describe('big-swap', () => {
 
     const tickmapData = await market.getTickmap(pair)
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
-    assert.ok(tickmapData.bitmap.every((v) => v == 0))
+    assert.ok(tickmapData.bitmap.every(v => v == 0))
   })
 
   it('#swap()', async () => {
-    const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
-    const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
+    const userTokenX = await tokenX.createAccount(positionOwner.publicKey)
+    const userTokenY = await tokenY.createAccount(positionOwner.publicKey)
 
     const positionsInfo: Array<[ticks: [lower: number, upper: number], liquidity: BN]> = [
       [[0, 20], new BN(1000000).mul(DENOMINATOR)],
@@ -119,8 +124,8 @@ describe('big-swap', () => {
         positionsInfo[i][0][1],
         positionsInfo[i][1],
         positionOwner,
-        userTokenXAccount,
-        userTokenYAccount,
+        userTokenX,
+        userTokenY,
         tokenX,
         tokenY,
         pair,
@@ -128,7 +133,6 @@ describe('big-swap', () => {
         wallet,
         mintAuthority
       )
-      console.log(i)
     }
 
     const swaps: Array<[xToY: boolean, amount: BN]> = [
@@ -151,9 +155,7 @@ describe('big-swap', () => {
     ]
 
     for (let i = 0; i < swaps.length; i++) {
-      let pool = await market.get(pair)
-      console.log('swap ', i)
-      console.log('liquidity: ', pool.liquidity.v.toString())
+      const pool = await market.getPool(pair)
       await performSwap(
         pair,
         swaps[i][0],
@@ -169,7 +171,7 @@ describe('big-swap', () => {
       )
     }
 
-    let poolAfterSwaps = await market.get(pair)
+    const poolAfterSwaps = await market.getPool(pair)
     for (let i = -40; i < 50; i += 10) {
       let lowerTick
       try {
@@ -188,7 +190,7 @@ describe('big-swap', () => {
             continue
           }
         }
-        let [feeGrowthInsideX, feeGrowthInsideY] = calculateFeeGrowthInside(
+        const [feeGrowthInsideX, feeGrowthInsideY] = calculateFeeGrowthInside(
           lowerTick,
           upperTick,
           poolAfterSwaps.currentTickIndex,
@@ -200,34 +202,41 @@ describe('big-swap', () => {
       }
     }
 
-    market.removePositionInstruction(
+    const removePositionVars: RemovePosition = {
+      index: 0,
       pair,
-      positionOwner.publicKey,
-      1,
-      userTokenXAccount,
-      userTokenYAccount
-    )
-    market.removePositionInstruction(
+      userTokenX,
+      userTokenY,
+      owner: positionOwner.publicKey
+    }
+    await removePosition(market, removePositionVars, positionOwner)
+
+    const removePositionVars2: RemovePosition = {
+      index: 3,
       pair,
-      positionOwner.publicKey,
-      3,
-      userTokenXAccount,
-      userTokenYAccount
-    )
-    market.removePositionInstruction(
+      userTokenX,
+      userTokenY,
+      owner: positionOwner.publicKey
+    }
+    await removePosition(market, removePositionVars2, positionOwner)
+
+    const removePositionVars3: RemovePosition = {
+      index: 2,
       pair,
-      positionOwner.publicKey,
-      4,
-      userTokenXAccount,
-      userTokenYAccount
-    )
-    market.removePositionInstruction(
+      userTokenX,
+      userTokenY,
+      owner: positionOwner.publicKey
+    }
+    await removePosition(market, removePositionVars3, positionOwner)
+
+    const removePositionVars4: RemovePosition = {
+      index: 3,
       pair,
-      positionOwner.publicKey,
-      8,
-      userTokenXAccount,
-      userTokenYAccount
-    )
+      userTokenX,
+      userTokenY,
+      owner: positionOwner.publicKey
+    }
+    await removePosition(market, removePositionVars4, positionOwner)
 
     const positionsInfo2: Array<[ticks: [lower: number, upper: number], liquidity: BN]> = [
       [[-30, 20], new BN(500000).mul(DENOMINATOR)],
@@ -235,18 +244,26 @@ describe('big-swap', () => {
       [[-20, 0], new BN(400000).mul(DENOMINATOR)],
       [[-40, 30], new BN(1000000).mul(DENOMINATOR)],
       [[10, 40], new BN(800000).mul(DENOMINATOR)],
+      [[-40, 10], new BN(200000).mul(DENOMINATOR)],
+      [[20, 50], new BN(1600000).mul(DENOMINATOR)],
+      [[0, 30], new BN(450000).mul(DENOMINATOR)],
+      [[-30, 30], new BN(1350000).mul(DENOMINATOR)],
+      [[-20, 20], new BN(1750000).mul(DENOMINATOR)],
       [[0, 50], new BN(950000).mul(DENOMINATOR)],
-      [[-10, 30], new BN(350000).mul(DENOMINATOR)]
+      [[-10, 30], new BN(350000).mul(DENOMINATOR)],
+      [[0, 20], new BN(1530000).mul(DENOMINATOR)],
+      [[-10, 30], new BN(1630000).mul(DENOMINATOR)],
+      [[-30, 0], new BN(1110000).mul(DENOMINATOR)],
     ]
 
-    for (let i = 0; i < positionsInfo.length; i++) {
+    for (let i = 0; i < positionsInfo2.length; i++) {
       await createPosition(
-        positionsInfo[i][0][0],
-        positionsInfo[i][0][1],
-        positionsInfo[i][1],
+        positionsInfo2[i][0][0],
+        positionsInfo2[i][0][1],
+        positionsInfo2[i][1],
         positionOwner,
-        userTokenXAccount,
-        userTokenYAccount,
+        userTokenX,
+        userTokenY,
         tokenX,
         tokenY,
         pair,
@@ -254,7 +271,6 @@ describe('big-swap', () => {
         wallet,
         mintAuthority
       )
-      console.log(i)
     }
 
     const swaps2: Array<[xToY: boolean, amount: BN]> = [
@@ -264,7 +280,6 @@ describe('big-swap', () => {
       [true, new BN(3660)],
       [true, new BN(3160)],
       [true, new BN(4030)],
-      [true, new BN(3900)],
       [false, new BN(2940)],
       [false, new BN(3800)],
       [false, new BN(3700)],
@@ -277,9 +292,7 @@ describe('big-swap', () => {
     ]
 
     for (let i = 0; i < swaps2.length; i++) {
-      let pool = await market.get(pair)
-      console.log('swap ', i)
-      console.log('liquidity: ', pool.liquidity.v.toString())
+      const pool = await market.getPool(pair)
       await performSwap(
         pair,
         swaps2[i][0],
@@ -295,7 +308,7 @@ describe('big-swap', () => {
       )
     }
 
-    let poolAfterSwaps2 = await market.get(pair)
+    const poolAfterSwaps2 = await market.getPool(pair)
     for (let i = -40; i < 50; i += 10) {
       let lowerTick
       try {
@@ -314,7 +327,7 @@ describe('big-swap', () => {
             continue
           }
         }
-        let [feeGrowthInsideX, feeGrowthInsideY] = calculateFeeGrowthInside(
+        const [feeGrowthInsideX, feeGrowthInsideY] = calculateFeeGrowthInside(
           lowerTick,
           upperTick,
           poolAfterSwaps2.currentTickIndex,

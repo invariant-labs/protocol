@@ -1,5 +1,5 @@
 import { BN, Provider } from '@project-serum/anchor'
-import { clusterApiUrl, Keypair, PublicKey, sendAndConfirmRawTransaction } from '@solana/web3.js'
+import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
 import { MOCK_TOKENS } from '@invariant-labs/sdk/src/network'
 import { MINTER } from './minter'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'

@@ -1,26 +1,25 @@
 import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { Provider } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
-import { assertThrowsAsync, createPoolWithLiquidity } from './testUtils'
-import { Market, Pair, TICK_LIMIT, Network } from '@invariant-labs/sdk'
-import { DEFAULT_PUBLIC_KEY } from '@invariant-labs/sdk/src/market'
-import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { Decimal } from '@invariant-labs/sdk/lib/market'
+import {
+  assertThrowsAsync,
+  createPoolWithLiquidity,
+  createState,
+  initializeOracle
+} from './testUtils'
+import { Market, Pair, TICK_LIMIT, Network, sleep } from '@invariant-labs/sdk'
+import { DEFAULT_PUBLIC_KEY, InitializeOracle } from '@invariant-labs/sdk/src/market'
 
 describe('oracle', () => {
   const provider = Provider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
+  const admin = Keypair.generate()
 
   let market: Market
   let pair: Pair
-  let tokenX: Token
-  let tokenY: Token
-  let mintAuthority: Keypair
 
   before(async () => {
     market = await Market.build(
@@ -29,28 +28,32 @@ describe('oracle', () => {
       connection,
       anchor.workspace.Amm.programId
     )
-    await market.createState(wallet, protocolFee)
+    await connection.requestAirdrop(admin.publicKey, 1e12)
+    await sleep(500)
 
-    const createdPool = await createPoolWithLiquidity(market, connection, wallet)
+    await createState(market, admin.publicKey, admin)
+
+    const createdPool = await createPoolWithLiquidity(market, connection, admin)
     pair = createdPool.pair
-    mintAuthority = createdPool.mintAuthority
-    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
 
   it('#create()', async () => {
-    const createdPool = await market.get(pair)
-    assert.ok(createdPool.oracleAddress.equals(DEFAULT_PUBLIC_KEY))
-    assert.isFalse(createdPool.oracleInitialized)
+    const pool = await market.getPool(pair)
+    assert.ok(pool.oracleAddress.equals(DEFAULT_PUBLIC_KEY))
+    assert.isFalse(pool.oracleInitialized)
 
     const tickmapData = await market.getTickmap(pair)
     assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
   })
 
   it('#initializeOracle()', async () => {
-    await market.initializeOracle(pair, wallet)
+    const initializeOracleVars: InitializeOracle = {
+      pair,
+      payer: wallet
+    }
+    await initializeOracle(market, initializeOracleVars)
 
-    const createdPool = await market.get(pair)
+    const createdPool = await market.getPool(pair)
     assert.isFalse(createdPool.oracleAddress.equals(DEFAULT_PUBLIC_KEY))
     assert.ok(createdPool.oracleInitialized)
 
@@ -62,6 +65,10 @@ describe('oracle', () => {
   })
 
   it('#initializeOracle() again', async () => {
-    await assertThrowsAsync(market.initializeOracle(pair, wallet))
+    const initializeOracleVars: InitializeOracle = {
+      pair,
+      payer: wallet
+    }
+    await assertThrowsAsync(initializeOracle(market, initializeOracleVars))
   })
 })
