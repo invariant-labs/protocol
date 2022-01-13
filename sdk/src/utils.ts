@@ -12,7 +12,7 @@ import {
 import { calculatePriceSqrt, fromInteger, MAX_TICK, Pair, TICK_LIMIT } from '.'
 import { Market } from '.'
 import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap, Tick, Position } from './market'
-import { calculatePriceAfterSlippage, calculateSwapStep, SwapResult } from './math'
+import { calculatePriceAfterSlippage, calculateSwapStep } from './math'
 import { getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
 import { struct, u32, u8 } from '@solana/buffer-layout'

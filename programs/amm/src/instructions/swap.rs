@@ -158,7 +158,7 @@ pub fn handler(
             remaining_amount = remaining_amount - result.amount_out;
         }
 
-        pool.add_fee(result.fee_amount, x_to_y, state.protocol_fee);
+        pool.add_fee(result.fee_amount, x_to_y);
 
         pool.sqrt_price = result.next_price_sqrt;
 
@@ -216,10 +216,9 @@ pub fn handler(
     }
 
     // Execute swap
-    let (take_ctx, send_ctx) = if x_to_y {
-        (ctx.accounts.take_x(), ctx.accounts.send_y())
-    } else {
-        (ctx.accounts.take_y(), ctx.accounts.send_x())
+    let (take_ctx, send_ctx) = match x_to_y {
+        true => (ctx.accounts.take_x(), ctx.accounts.send_y()),
+        false => (ctx.accounts.take_y(), ctx.accounts.send_x()),
     };
 
     let signer: &[&[&[u8]]] = get_signer!(state.nonce);

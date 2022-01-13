@@ -29,13 +29,8 @@ const SEED: &str = "Invariant";
 pub mod amm {
     use super::*;
 
-    pub fn create_state(
-        ctx: Context<CreateState>,
-        bump: u8,
-        nonce: u8,
-        protocol_fee: Decimal,
-    ) -> ProgramResult {
-        instructions::create_state::handler(ctx, bump, nonce, protocol_fee)
+    pub fn create_state(ctx: Context<CreateState>, bump: u8, nonce: u8) -> ProgramResult {
+        instructions::create_state::handler(ctx, bump, nonce)
     }
     #[access_control(admin(&ctx.accounts.state, &ctx.accounts.admin))]
     pub fn create_fee_tier(
@@ -47,8 +42,13 @@ pub mod amm {
         instructions::create_fee_tier::handler(ctx, bump, fee, tick_spacing)
     }
 
-    pub fn create_pool(ctx: Context<CreatePool>, bump: u8, init_tick: i32) -> ProgramResult {
-        instructions::create_pool::handler(ctx, bump, init_tick)
+    pub fn create_pool(
+        ctx: Context<CreatePool>,
+        bump: u8,
+        init_tick: i32,
+        protocol_fee: Decimal,
+    ) -> ProgramResult {
+        instructions::create_pool::handler(ctx, bump, init_tick, protocol_fee)
     }
 
     pub fn swap(

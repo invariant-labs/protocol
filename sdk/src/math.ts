@@ -298,10 +298,10 @@ export const findClosestTicks = (
   let above = currentIndex + 1
   let below = currentIndex
 
-  let found: number[] = []
+  const found: number[] = []
 
-  let reachedTop = oneWay === 'down' ? true : false
-  let reachedBottom = oneWay === 'up' ? true : false
+  let reachedTop = oneWay === 'down'
+  let reachedBottom = oneWay === 'up'
 
   while (found.length < limit && above - below < maxRange * 2) {
     if (!reachedTop) {

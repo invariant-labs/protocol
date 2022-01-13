@@ -6,6 +6,8 @@ import { MINTER } from './minter'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Market, Pair, tou64 } from '@invariant-labs/sdk/src'
 import { FEE_TIERS, fromFee } from '@invariant-labs/sdk/src/utils'
+import { Swap } from '@invariant-labs/sdk/src/market'
+import { swap } from '../tests/testUtils'
 require('dotenv').config()
 
 const provider = Provider.local(clusterApiUrl('devnet'), {
@@ -36,18 +38,17 @@ const main = async () => {
 
   const pool = await market.getPool(pair)
 
-  market.swap(
-    {
-      XtoY: false,
-      accountX: minterUsdt,
-      accountY: minterUsdc,
-      amount: tou64(amount),
-      byAmountIn: true,
-      knownPrice: pool.sqrtPrice,
-      slippage: { v: fromFee(new anchor.BN(1000)) },
-      pair: pair
-    },
-    MINTER
-  )
+  const swapVars: Swap = {
+    xToY: false,
+    accountX: minterUsdt,
+    accountY: minterUsdc,
+    amount: tou64(amount),
+    byAmountIn: true,
+    knownPrice: pool.sqrtPrice,
+    slippage: { v: fromFee(new anchor.BN(1000)) },
+    pair,
+    owner: MINTER.publicKey
+  }
+  await swap(market, swapVars, MINTER)
 }
 main()
