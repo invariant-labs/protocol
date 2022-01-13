@@ -1,7 +1,6 @@
 import { Market, Network, Pair } from '@invariant-labs/sdk/src'
 import { MOCK_TOKENS } from '@invariant-labs/sdk/src/network'
 import { FEE_TIERS } from '@invariant-labs/sdk/src/utils'
-import * as anchor from '@project-serum/anchor'
 import { Provider } from '@project-serum/anchor'
 import { clusterApiUrl, PublicKey } from '@solana/web3.js'
 require('dotenv').config()
@@ -29,7 +28,7 @@ const main = async () => {
   console.log(pool.currentTickIndex)
 
   const array = await Promise.all([
-    market.getPool(pair),
+    market.getPool(pair)
     // market.getTick(pair, currentTick),
     // market.getTick(pair, lowerFailed),
     // market.getTick(pair, lowerSuccess),
