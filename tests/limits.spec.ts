@@ -8,8 +8,8 @@ import {
   initPosition,
   swap
 } from './testUtils'
-import { Market, DENOMINATOR, Network, calculate_price_sqrt, sleep } from '@invariant-labs/sdk'
-import { assertThrowsAsync, fromFee, getMaxTick, toDecimal } from '@invariant-labs/sdk/src/utils'
+import { Market, DENOMINATOR, Network, sleep } from '@invariant-labs/sdk'
+import { assertThrowsAsync, getMaxTick, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { Decimal, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 import { getLiquidityByX, getLiquidityByY } from '@invariant-labs/sdk/src/math'
 import { beforeEach } from 'mocha'
@@ -17,6 +17,7 @@ import { assert } from 'chai'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
 import { Pair } from '@invariant-labs/sdk/lib/pair'
+import { calculatePriceSqrt } from '@invariant-labs/sdk'
 
 describe('limits', () => {
   const provider = Provider.local()
@@ -317,7 +318,7 @@ describe('limits', () => {
       const poolData = await market.getPool(pair)
       const knownPrice = poolData.sqrtPrice
       assert.equal(poolData.currentTickIndex, initTick)
-      assert.equal(knownPrice.v.toString(), calculate_price_sqrt(initTick).v.toString())
+      assert.equal(knownPrice.v.toString(), calculatePriceSqrt(initTick).v.toString())
 
       tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
       tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)

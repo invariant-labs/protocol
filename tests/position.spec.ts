@@ -6,7 +6,7 @@ import {
   Pair,
   tou64,
   TICK_LIMIT,
-  calculate_price_sqrt,
+  calculatePriceSqrt,
   fromInteger,
   Network
 } from '@invariant-labs/sdk'
@@ -109,7 +109,7 @@ describe('position', () => {
     assert.ok(createdPool.fee.v.eq(feeTier.fee))
     assert.equal(createdPool.tickSpacing, feeToTickSpacing(feeTier.fee))
     assert.ok(createdPool.liquidity.v.eqn(0))
-    assert.ok(createdPool.sqrtPrice.v.eq(calculate_price_sqrt(initTick).v))
+    assert.ok(createdPool.sqrtPrice.v.eq(calculatePriceSqrt(initTick).v))
     assert.ok(createdPool.currentTickIndex == initTick)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
@@ -151,7 +151,7 @@ describe('position', () => {
       assert.ok(tick.index == lowerTick)
       assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
       assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
-      assert.ok(tick.sqrtPrice.v.eq(calculate_price_sqrt(lowerTick).v))
+      assert.ok(tick.sqrtPrice.v.eq(calculatePriceSqrt(lowerTick).v))
       assert.ok(tick.feeGrowthOutsideX.v.eq(expectedZeroDecimal))
       assert.ok(tick.feeGrowthOutsideY.v.eq(expectedZeroDecimal))
       assert.ok(tick.bump == tickBump)
@@ -170,7 +170,7 @@ describe('position', () => {
       assert.ok(tick.index == upperTick)
       assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
       assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
-      assert.ok(tick.sqrtPrice.v.eq(calculate_price_sqrt(upperTick).v))
+      assert.ok(tick.sqrtPrice.v.eq(calculatePriceSqrt(upperTick).v))
       assert.ok(tick.feeGrowthOutsideX.v.eq(expectedZeroDecimal))
       assert.ok(tick.feeGrowthOutsideY.v.eq(expectedZeroDecimal))
       assert.ok(tick.bump == tickBump)
@@ -280,7 +280,7 @@ describe('position', () => {
       assert.ok(tick.index == lowerTick)
       assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
       assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
-      assert.ok(tick.sqrtPrice.v.eq(calculate_price_sqrt(lowerTick).v))
+      assert.ok(tick.sqrtPrice.v.eq(calculatePriceSqrt(lowerTick).v))
       assert.ok(tick.feeGrowthOutsideX.v.eq(expectedZeroDecimal))
       assert.ok(tick.feeGrowthOutsideY.v.eq(expectedZeroDecimal))
       assert.ok(tick.bump == tickBump)
@@ -299,7 +299,7 @@ describe('position', () => {
       assert.ok(tick.index == upperTick)
       assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
       assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
-      assert.ok(tick.sqrtPrice.v.eq(calculate_price_sqrt(upperTick).v))
+      assert.ok(tick.sqrtPrice.v.eq(calculatePriceSqrt(upperTick).v))
       assert.ok(tick.feeGrowthOutsideX.v.eq(expectedZeroDecimal))
       assert.ok(tick.feeGrowthOutsideY.v.eq(expectedZeroDecimal))
       assert.ok(tick.bump == tickBump)
@@ -409,7 +409,7 @@ describe('position', () => {
       assert.ok(tick.index == lowerTick)
       assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
       assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
-      assert.ok(tick.sqrtPrice.v.eq(calculate_price_sqrt(lowerTick).v))
+      assert.ok(tick.sqrtPrice.v.eq(calculatePriceSqrt(lowerTick).v))
       assert.ok(tick.feeGrowthOutsideX.v.eq(expectedZeroDecimal))
       assert.ok(tick.feeGrowthOutsideY.v.eq(expectedZeroDecimal))
       assert.ok(tick.bump == tickBump)
@@ -428,7 +428,7 @@ describe('position', () => {
       assert.ok(tick.index == upperTick)
       assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
       assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
-      assert.ok(tick.sqrtPrice.v.eq(calculate_price_sqrt(upperTick).v))
+      assert.ok(tick.sqrtPrice.v.eq(calculatePriceSqrt(upperTick).v))
       assert.ok(tick.feeGrowthOutsideX.v.eq(expectedZeroDecimal))
       assert.ok(tick.feeGrowthOutsideY.v.eq(expectedZeroDecimal))
       assert.ok(tick.bump == tickBump)

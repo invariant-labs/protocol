@@ -8,13 +8,14 @@ import {
   createPool,
   createPosition,
   createState,
+  createTick,
   createToken,
   performSwap,
   removePosition
 } from './testUtils'
 import { assert } from 'chai'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { FeeTier, Decimal, RemovePosition } from '@invariant-labs/sdk/lib/market'
+import { FeeTier, Decimal, RemovePosition, CreateTick } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { calculateFeeGrowthInside } from '@invariant-labs/sdk/src/math'
 import { CreateFeeTier, CreatePool } from '@invariant-labs/sdk/src/market'
@@ -85,9 +86,6 @@ describe('big-swap', () => {
     const createdPool = await market.getPool(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
     assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
-    console.log(createdPool.fee.v.toString())
-    console.log(feeTier.fee.toString())
-    
     assert.ok(createdPool.fee.v.eq(feeTier.fee))
     assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
     assert.ok(createdPool.liquidity.v.eqn(0))
@@ -203,8 +201,9 @@ describe('big-swap', () => {
         assert.ok(feeGrowthInsideY.v.gte(new BN(0)))
       }
     }
+
     const removePositionVars: RemovePosition = {
-      index: 1,
+      index: 0,
       pair,
       userTokenX,
       userTokenY,
@@ -222,7 +221,7 @@ describe('big-swap', () => {
     await removePosition(market, removePositionVars2, positionOwner)
 
     const removePositionVars3: RemovePosition = {
-      index: 4,
+      index: 2,
       pair,
       userTokenX,
       userTokenY,
@@ -231,7 +230,7 @@ describe('big-swap', () => {
     await removePosition(market, removePositionVars3, positionOwner)
 
     const removePositionVars4: RemovePosition = {
-      index: 8,
+      index: 3,
       pair,
       userTokenX,
       userTokenY,
@@ -245,8 +244,16 @@ describe('big-swap', () => {
       [[-20, 0], new BN(400000).mul(DENOMINATOR)],
       [[-40, 30], new BN(1000000).mul(DENOMINATOR)],
       [[10, 40], new BN(800000).mul(DENOMINATOR)],
+      [[-40, 10], new BN(200000).mul(DENOMINATOR)],
+      [[20, 50], new BN(1600000).mul(DENOMINATOR)],
+      [[0, 30], new BN(450000).mul(DENOMINATOR)],
+      [[-30, 30], new BN(1350000).mul(DENOMINATOR)],
+      [[-20, 20], new BN(1750000).mul(DENOMINATOR)],
       [[0, 50], new BN(950000).mul(DENOMINATOR)],
-      [[-10, 30], new BN(350000).mul(DENOMINATOR)]
+      [[-10, 30], new BN(350000).mul(DENOMINATOR)],
+      [[0, 20], new BN(1530000).mul(DENOMINATOR)],
+      [[-10, 30], new BN(1630000).mul(DENOMINATOR)],
+      [[-30, 0], new BN(1110000).mul(DENOMINATOR)],
     ]
 
     for (let i = 0; i < positionsInfo2.length; i++) {

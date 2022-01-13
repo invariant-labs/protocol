@@ -2,6 +2,7 @@ mod decimal;
 mod errors;
 mod instructions;
 mod interfaces;
+mod log;
 mod macros;
 mod math;
 pub mod structs;

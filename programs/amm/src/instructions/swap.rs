@@ -1,5 +1,6 @@
 use crate::interfaces::send_tokens::SendTokens;
 use crate::interfaces::take_tokens::TakeTokens;
+use crate::log::get_tick_at_sqrt_price;
 use crate::math::compute_swap_step;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
@@ -206,13 +207,11 @@ pub fn handler(
                 tick_index
             };
         } else {
-            // Binary search for tick (can happen only on the last step)
-            pool.current_tick_index = get_tick_from_price(
-                pool.current_tick_index,
-                pool.tick_spacing,
-                result.next_price_sqrt,
-                x_to_y,
+            assert!(
+                pool.current_tick_index.checked_rem(pool.tick_spacing.into()).unwrap() == 0,
+                "tick not divisible by spacing"
             );
+            pool.current_tick_index = get_tick_at_sqrt_price(result.next_price_sqrt, pool.tick_spacing);
         }
     }
 

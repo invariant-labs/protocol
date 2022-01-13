@@ -12,11 +12,15 @@ import {
 import { calculatePriceAfterSlippage, findClosestTicks, isInitialized } from './math'
 import {
   feeToTickSpacing,
+  generateTicksArray,
   getFeeTierAddress,
   getMaxTick,
   getMinTick,
   parseLiquidityOnTicks,
-  SEED
+  SEED,
+  simulateSwap,
+  SimulateSwapInterface,
+  SimulationResult
 } from './utils'
 import { Amm, IDL } from './idl/amm'
 import { ComputeUnitsInstruction, IWallet, Pair } from '.'
@@ -26,6 +30,8 @@ const POSITION_SEED = 'positionv1'
 const TICK_SEED = 'tickv1'
 const POSITION_LIST_SEED = 'positionlistv1'
 const STATE_SEED = 'statev1'
+const MAX_IX = 4
+const TICKS_PER_IX = 1
 export const FEE_TIER = 'feetierv1'
 export const DEFAULT_PUBLIC_KEY = new PublicKey(0)
 
@@ -152,7 +158,12 @@ export class Market {
     return (await this.program.account.tick.fetch(tickAddress)) as Tick
   }
 
-  async getClosestTicks(pair: Pair, limit: number, maxRange?: number) {
+  async getClosestTicks(
+    pair: Pair,
+    limit: number,
+    maxRange?: number,
+    oneWay: 'up' | 'down' | undefined = undefined
+  ) {
     const state = await this.getPool(pair)
     const tickmap = await this.getTickmap(pair)
     const indexes = findClosestTicks(
@@ -160,10 +171,11 @@ export class Market {
       state.currentTickIndex,
       state.tickSpacing,
       limit,
-      maxRange
+      maxRange,
+      oneWay
     )
 
-    return await Promise.all(
+    return Promise.all(
       indexes.map(async index => {
         const { tickAddress } = await this.getTickAddress(pair, index)
         return (await this.program.account.tick.fetch(tickAddress)) as Tick
@@ -188,7 +200,7 @@ export class Market {
     return (await this.program.account.position.fetch(positionAddress)) as Position
   }
 
-  async getPositionsFromIndexes(owner: PublicKey, indexes: number[]) {
+  async getPositionsFromIndexes(owner: PublicKey, indexes: Array<number>) {
     const positionPromises = indexes.map(async i => {
       return await this.getPosition(owner, i)
     })
@@ -468,10 +480,9 @@ export class Market {
     const { pair, xToY, amount, knownPrice, slippage, accountX, accountY, byAmountIn } = swap
     const owner = swap.owner || this.wallet.publicKey
 
-    const [pool, tickmap, feeTierAddress, poolAddress] = await Promise.all([
+    const [pool, tickmap, feeTierAddress] = await Promise.all([
       this.getPool(pair),
       this.getTickmap(pair),
-      pair.getFeeTierAddress(this.program.programId),
       pair.getAddress(this.program.programId)
     ])
 
@@ -482,10 +493,11 @@ export class Market {
       tickmap.bitmap,
       pool.currentTickIndex,
       pool.tickSpacing,
-      15,
+      10,
       Infinity,
       xToY ? 'down' : 'up'
     )
+
     const indexesInReverse = findClosestTicks(
       tickmap.bitmap,
       pool.currentTickIndex,
@@ -501,10 +513,56 @@ export class Market {
       })
     )
 
-    return this.program.instruction.swap(xToY, amount, byAmountIn, priceLimit, {
-      remainingAccounts: remainingAccounts.map(pubkey => {
+    const ra: Array<{ pubkey: PublicKey; isWritable: boolean; isSigner: boolean }> =
+      remainingAccounts.map(pubkey => {
         return { pubkey, isWritable: true, isSigner: false }
-      }),
+      })
+
+    let ticksArray: Tick[] = await this.getClosestTicks(
+      pair,
+      Infinity,
+      undefined,
+      xToY ? 'down' : 'up'
+    )
+
+    let ticks: Map<number, Tick> = new Map<number, Tick>()
+
+    for (var tick of ticksArray) {
+      ticks.set(tick.index, tick)
+    }
+
+    //simulate swap to get exact amount of tokens swaped between tick croses
+    const swapParameters: SimulateSwapInterface = {
+      xToY: xToY,
+      byAmountIn: byAmountIn,
+      swapAmount: amount,
+      currentPrice: pool.sqrtPrice,
+      slippage: slippage,
+      ticks: ticks,
+      tickmap,
+      pool: pool,
+      market: this,
+      pair: pair
+    }
+    let simulationResult: SimulationResult = simulateSwap(swapParameters)
+    let amountPerTick: BN[] = simulationResult.amountPerTick
+    let sum: BN = new BN(0)
+    for (var value of amountPerTick) {
+      sum = sum.add(value)
+    }
+
+    if (!sum.eq(amount)) {
+      throw new Error('Input amount and simulation amount sum are different')
+    }
+
+    if (amountPerTick.length > MAX_IX) {
+      throw new Error('Instruction limit was exceeded')
+    }
+
+    const poolAddress = await pair.getAddress(this.program.programId)
+
+    return this.program.instruction.swap(xToY, amount, byAmountIn, priceLimit, {
+      remainingAccounts: ra,
       accounts: {
         state: this.stateAddress,
         pool: poolAddress,

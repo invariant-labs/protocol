@@ -24,9 +24,9 @@ export enum ERRORS {
 }
 
 export enum ERRORS_STAKER {
-  ZERO_AMOUNT = '0x12f', // 0
-  START_IN_PAST = '0x131', // 1
-  TO_LONG_DURATION = '0x130' // 2
+  ZERO_AMOUNT = '0x1773', // 0
+  START_IN_PAST = '0x1775', // 1
+  TO_LONG_DURATION = '0x1774' // 2
 }
 
 export const eqDecimal = (a: Decimal, b: Decimal) => {

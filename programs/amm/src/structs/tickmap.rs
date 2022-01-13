@@ -7,6 +7,7 @@ pub const TICK_SEARCH_RANGE: i32 = 256;
 pub const MAX_TICK: i32 = 221_818; // log(1.0001, sqrt(2^64-1))
 
 #[account(zero_copy)]
+#[repr(packed)]
 pub struct Tickmap {
     pub bitmap: [u8; 25000], // Tick limit / 4
 }

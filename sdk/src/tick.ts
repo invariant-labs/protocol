@@ -36,8 +36,8 @@ const priceToTickInRange = (price: Decimal, low: number, high: number, step: num
   const targetValue = price
 
   while (high - low > 1) {
-    const mid = Math.floor((high - low) / 2) + low
-    const val = calculatePriceSqrt(mid * step)
+    let mid = Math.floor((high - low) / 2) + low
+    let val = calculatePriceSqrt(mid * step)
 
     if (val.v.eq(targetValue.v)) {
       return mid * step
