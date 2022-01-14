@@ -108,7 +108,7 @@ export class Market {
     })
       .add(
         SystemProgram.createAccount({
-          fromPubkey: payer.publicKey,
+          fromPubkey: payerPubkey,
           newAccountPubkey: bitmapKeypair.publicKey,
           space: this.program.account.tickmap.size,
           lamports: await this.connection.getMinimumBalanceForRentExemption(
