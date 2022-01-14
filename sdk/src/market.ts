@@ -106,7 +106,17 @@ export class Market {
     const transaction = new Transaction({
       feePayer: payerPubkey
     })
-      .add(await this.program.account.tickmap.createInstruction(bitmapKeypair))
+      .add(
+        SystemProgram.createAccount({
+          fromPubkey: payer.publicKey,
+          newAccountPubkey: bitmapKeypair.publicKey,
+          space: this.program.account.tickmap.size,
+          lamports: await this.connection.getMinimumBalanceForRentExemption(
+            this.program.account.tickmap.size
+          ),
+          programId: this.program.programId
+        })
+      )
       .add(createIx)
 
     return {
