@@ -1,14 +1,14 @@
-import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
 import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
 import { MINTER } from './minter'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { fromInteger, Market, Pair, tou64 } from '@invariant-labs/sdk/src'
-import { getLiquidityByX } from '@invariant-labs/sdk/src/math'
+import { Market, Pair, tou64 } from '@invariant-labs/sdk/src'
 import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/src/utils'
 import { MAX_TICK } from '@invariant-labs/sdk'
 import { getLiquidityByY } from '@invariant-labs/sdk/lib/math'
+import { InitPosition } from '@invariant-labs/sdk/src/market'
+import { initPosition } from '../tests/testUtils'
 require('dotenv').config()
 
 const provider = Provider.local(clusterApiUrl('devnet'), {
@@ -36,8 +36,9 @@ const usdtUsdcCreatePosition = async (market: Market) => {
   console.log('creating accounts...')
   const pair = new Pair(new PublicKey(tokenA), new PublicKey(tokenB), FEE_TIERS[0])
   console.log(`is token A first?: ${pair.tokenX.equals(new PublicKey(tokenA))}`)
-  if (!pair.tokenX.equals(new PublicKey(tokenA)))
+  if (!pair.tokenX.equals(new PublicKey(tokenA))) {
     throw new Error('tokens are in reverse order, ticks should be opposite')
+  }
 
   const tokenX = new Token(connection, new PublicKey(pair.tokenX), TOKEN_PROGRAM_ID, wallet)
   const tokenY = new Token(connection, new PublicKey(pair.tokenY), TOKEN_PROGRAM_ID, wallet)
@@ -60,18 +61,16 @@ const usdtUsdcCreatePosition = async (market: Market) => {
   const { liquidity } = getLiquidityByY(y, lowerTick, upperTick, pool.sqrtPrice, true)
 
   console.log('creating position...')
-  await market.initPosition(
-    {
-      pair,
-      owner: MINTER.publicKey,
-      userTokenX: minterX,
-      userTokenY: minterY,
-      lowerTick,
-      upperTick,
-      liquidityDelta: liquidity
-    },
-    MINTER
-  )
+  const initPositionVars: InitPosition = {
+    pair,
+    owner: MINTER.publicKey,
+    userTokenX: minterX,
+    userTokenY: minterY,
+    lowerTick,
+    upperTick,
+    liquidityDelta: liquidity
+  }
+  await initPosition(market, initPositionVars, MINTER)
   console.log('done')
 }
 

@@ -1,5 +1,6 @@
 use crate::interfaces::send_tokens::SendTokens;
 use crate::interfaces::take_tokens::TakeTokens;
+use crate::log::get_tick_at_sqrt_price;
 use crate::math::compute_swap_step;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
@@ -157,7 +158,7 @@ pub fn handler(
             remaining_amount = remaining_amount - result.amount_out;
         }
 
-        pool.add_fee(result.fee_amount, x_to_y, state.protocol_fee);
+        pool.add_fee(result.fee_amount, x_to_y);
 
         pool.sqrt_price = result.next_price_sqrt;
 
@@ -190,7 +191,7 @@ pub fn handler(
                     .iter()
                     .find(|account| *account.key == tick_address)
                 {
-                    Some(account) => Loader::<'_, Tick>::try_from(ctx.program_id, account).unwrap(),
+                    Some(account) => AccountLoader::<'_, Tick>::try_from(account).unwrap(),
                     None => return Err(ErrorCode::TickNotFound.into()),
                 };
                 let mut tick = loader.load_mut().unwrap();
@@ -206,21 +207,18 @@ pub fn handler(
                 tick_index
             };
         } else {
-            // Binary search for tick (can happen only on the last step)
-            pool.current_tick_index = get_tick_from_price(
-                pool.current_tick_index,
-                pool.tick_spacing,
-                result.next_price_sqrt,
-                x_to_y,
+            assert!(
+                pool.current_tick_index.checked_rem(pool.tick_spacing.into()).unwrap() == 0,
+                "tick not divisible by spacing"
             );
+            pool.current_tick_index = get_tick_at_sqrt_price(result.next_price_sqrt, pool.tick_spacing);
         }
     }
 
     // Execute swap
-    let (take_ctx, send_ctx) = if x_to_y {
-        (ctx.accounts.take_x(), ctx.accounts.send_y())
-    } else {
-        (ctx.accounts.take_y(), ctx.accounts.send_x())
+    let (take_ctx, send_ctx) = match x_to_y {
+        true => (ctx.accounts.take_x(), ctx.accounts.send_y()),
+        false => (ctx.accounts.take_y(), ctx.accounts.send_x()),
     };
 
     let signer: &[&[&[u8]]] = get_signer!(state.nonce);

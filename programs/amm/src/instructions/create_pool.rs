@@ -1,10 +1,11 @@
-use std::{cmp::Ordering, convert::TryInto};
+use std::cmp::Ordering;
 
 use crate::math::calculate_price_sqrt;
 use crate::structs::fee_tier::FeeTier;
 use crate::structs::pool::Pool;
 use crate::structs::tickmap::Tickmap;
 use crate::util::check_tick;
+use crate::util::get_current_timestamp;
 use crate::{decimal::Decimal, structs::FeeGrowth, structs::State};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
@@ -13,13 +14,13 @@ use anchor_spl::token::{Mint, TokenAccount};
 #[derive(Accounts)]
 #[instruction(bump: u8)]
 pub struct CreatePool<'info> {
+    #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
+    pub state: AccountLoader<'info, State>,
     #[account(init,
         seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref(), &fee_tier.load()?.fee.v.to_le_bytes(), &fee_tier.load()?.tick_spacing.to_le_bytes()],
         bump = bump, payer = payer
     )]
     pub pool: AccountLoader<'info, Pool>,
-    #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
-    pub state: AccountLoader<'info, State>,
     #[account(
         seeds = [b"feetierv1", program_id.as_ref(), &fee_tier.load()?.fee.v.to_le_bytes(), &fee_tier.load()?.tick_spacing.to_le_bytes()],
         bump = fee_tier.load()?.bump
@@ -29,9 +30,16 @@ pub struct CreatePool<'info> {
     pub tickmap: AccountLoader<'info, Tickmap>,
     pub token_x: Account<'info, Mint>,
     pub token_y: Account<'info, Mint>,
-    #[account(constraint = &token_x_reserve.mint == token_x.to_account_info().key,)]
+    #[account(
+        constraint = token_x_reserve.mint == token_x.key(),
+        constraint = token_x_reserve.owner == state.load()?.authority
+    )]
+    // we can also initialize those accounts in create_pool
     pub token_x_reserve: Account<'info, TokenAccount>,
-    #[account(constraint = &token_y_reserve.mint == token_y.to_account_info().key,)]
+    #[account(
+        constraint = token_y_reserve.mint == token_y.key(),
+        constraint = token_y_reserve.owner == state.load()?.authority
+    )]
     pub token_y_reserve: Account<'info, TokenAccount>,
     #[account(mut)]
     pub payer: Signer<'info>,
@@ -40,11 +48,16 @@ pub struct CreatePool<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
-pub fn handler(ctx: Context<CreatePool>, bump: u8, init_tick: i32) -> ProgramResult {
+pub fn handler(
+    ctx: Context<CreatePool>,
+    bump: u8,
+    init_tick: i32,
+    protocol_fee: Decimal,
+) -> ProgramResult {
     msg!("INVARIANT: CREATE POOL");
 
-    let token_x_address = ctx.accounts.token_x.to_account_info().key;
-    let token_y_address = ctx.accounts.token_y.to_account_info().key;
+    let token_x_address = &ctx.accounts.token_x.key();
+    let token_y_address = &ctx.accounts.token_y.key();
     require!(
         token_x_address
             .to_string()
@@ -55,7 +68,7 @@ pub fn handler(ctx: Context<CreatePool>, bump: u8, init_tick: i32) -> ProgramRes
 
     let pool = &mut ctx.accounts.pool.load_init()?;
     let fee_tier = ctx.accounts.fee_tier.load()?;
-    let current_timestamp: u64 = Clock::get()?.unix_timestamp.try_into().unwrap();
+    let current_timestamp = get_current_timestamp();
 
     check_tick(init_tick, fee_tier.tick_spacing)?;
 
@@ -66,6 +79,7 @@ pub fn handler(ctx: Context<CreatePool>, bump: u8, init_tick: i32) -> ProgramRes
         token_y_reserve: *ctx.accounts.token_y_reserve.to_account_info().key,
         tick_spacing: fee_tier.tick_spacing,
         fee: fee_tier.fee,
+        protocol_fee,
         liquidity: Decimal::new(0),
         sqrt_price: calculate_price_sqrt(init_tick),
         current_tick_index: init_tick,

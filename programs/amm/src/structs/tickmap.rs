@@ -7,6 +7,7 @@ pub const TICK_SEARCH_RANGE: i32 = 256;
 pub const MAX_TICK: i32 = 221_818; // log(1.0001, sqrt(2^64-1))
 
 #[account(zero_copy)]
+#[repr(packed)]
 pub struct Tickmap {
     pub bitmap: [u8; 25000], // Tick limit / 4
 }
@@ -74,7 +75,7 @@ impl Tickmap {
         let (byte, bit) = tick_to_position(tick, tick_spacing);
         let value = (self.bitmap[byte] >> bit) % 2;
 
-        return if (value) == 1 { true } else { false };
+        (value) == 1
     }
 
     pub fn next_initialized(&self, tick: i32, tick_spacing: u16) -> Option<i32> {

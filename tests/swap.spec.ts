@@ -1,21 +1,29 @@
 import * as anchor from '@project-serum/anchor'
-import { Provider, Program, BN } from '@project-serum/anchor'
+import { Provider, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
+import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
-import { createToken } from './testUtils'
 import {
-  Market,
-  Pair,
-  tou64,
-  DENOMINATOR,
-  signAndSend,
-  TICK_LIMIT,
-  Network
-} from '@invariant-labs/sdk'
+  createFeeTier,
+  createPool,
+  createPositionList,
+  createState,
+  createTick,
+  createToken,
+  initPosition,
+  swap
+} from './testUtils'
+import { Market, Pair, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@invariant-labs/sdk'
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
+import {
+  CreateFeeTier,
+  CreatePool,
+  CreateTick,
+  InitPosition,
+  Swap
+} from '@invariant-labs/sdk/src/market'
 
 describe('swap', () => {
   const provider = Provider.local()
@@ -33,8 +41,6 @@ describe('swap', () => {
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
-  let programAuthority: PublicKey
-  let nonce: number
 
   before(async () => {
     market = await Market.build(
@@ -59,16 +65,25 @@ describe('swap', () => {
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
-    await market.createState(admin, protocolFee)
-    await market.createFeeTier(feeTier, admin)
+    await createState(market, admin.publicKey, admin)
+
+    const createFeeTierVars: CreateFeeTier = {
+      feeTier,
+      admin: admin.publicKey
+    }
+    await createFeeTier(market, createFeeTierVars, admin)
   })
   it('#create()', async () => {
-    await market.create({
+    const createPoolVars: CreatePool = {
       pair,
-      signer: admin
-    })
+      payer: admin,
+      protocolFee,
+      tokenX,
+      tokenY
+    }
+    await createPool(market, createPoolVars)
 
-    const createdPool = await market.get(pair)
+    const createdPool = await market.getPool(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
     assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
     assert.ok(createdPool.fee.v.eq(feeTier.fee))
@@ -88,12 +103,20 @@ describe('swap', () => {
   it('#swap() within a tick', async () => {
     // Deposit
     const upperTick = 10
-    const upperIx = await market.createTickInstruction(pair, upperTick, wallet.publicKey)
-    await signAndSend(new Transaction().add(upperIx), [wallet], connection)
+    const createTickVars: CreateTick = {
+      pair,
+      index: upperTick,
+      payer: admin.publicKey
+    }
+    await createTick(market, createTickVars, admin)
 
     const lowerTick = -20
-    const lowerIx = await market.createTickInstruction(pair, lowerTick, wallet.publicKey)
-    await signAndSend(new Transaction().add(lowerIx), [wallet], connection)
+    const createTickVars2: CreateTick = {
+      pair,
+      index: lowerTick,
+      payer: admin.publicKey
+    }
+    await createTick(market, createTickVars2, admin)
 
     const positionOwner = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
@@ -105,21 +128,20 @@ describe('swap', () => {
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
     const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) }
 
-    await market.createPositionList(positionOwner)
-    await market.initPosition(
-      {
-        pair,
-        owner: positionOwner.publicKey,
-        userTokenX: userTokenXAccount,
-        userTokenY: userTokenYAccount,
-        lowerTick,
-        upperTick,
-        liquidityDelta
-      },
-      positionOwner
-    )
+    await createPositionList(market, positionOwner.publicKey, positionOwner)
 
-    assert.ok((await market.get(pair)).liquidity.v.eq(liquidityDelta.v))
+    const initPositionVars: InitPosition = {
+      pair,
+      owner: positionOwner.publicKey,
+      userTokenX: userTokenXAccount,
+      userTokenY: userTokenYAccount,
+      lowerTick,
+      upperTick,
+      liquidityDelta
+    }
+    await initPosition(market, initPositionVars, positionOwner)
+
+    assert.ok((await market.getPool(pair)).liquidity.v.eq(liquidityDelta.v))
 
     // Create owner
     const owner = Keypair.generate()
@@ -131,13 +153,13 @@ describe('swap', () => {
     await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
 
     // Swap
-    const poolDataBefore = await market.get(pair)
+    const poolDataBefore = await market.getPool(pair)
     const reserveXBefore = (await tokenX.getAccountInfo(poolDataBefore.tokenXReserve)).amount
     const reserveYBefore = (await tokenY.getAccountInfo(poolDataBefore.tokenYReserve)).amount
 
-    const tx = await market.swapTransaction({
+    const swapVars: Swap = {
       pair,
-      XtoY: true,
+      xToY: true,
       amount,
       knownPrice: poolDataBefore.sqrtPrice,
       slippage: toDecimal(1, 2),
@@ -145,11 +167,11 @@ describe('swap', () => {
       accountY,
       byAmountIn: true,
       owner: owner.publicKey
-    })
-    await signAndSend(tx, [owner], connection)
+    }
+    await swap(market, swapVars, owner)
 
     // Check pool
-    const poolData = await market.get(pair)
+    const poolData = await market.getPool(pair)
     assert.ok(poolData.liquidity.v.eq(poolDataBefore.liquidity.v))
     assert.equal(poolData.currentTickIndex, lowerTick)
     assert.ok(poolData.sqrtPrice.v.lt(poolDataBefore.sqrtPrice.v))

@@ -8,11 +8,12 @@ use anchor_lang::prelude::*;
 use super::TokenAmount;
 
 #[account(zero_copy)]
+#[repr(packed)]
 #[derive(PartialEq, Default, Debug)]
 pub struct Position {
     pub owner: Pubkey,
     pub pool: Pubkey,
-    pub id: u64, // unique inside pool
+    pub id: u128, // unique inside pool
     pub liquidity: Decimal,
     pub lower_tick_index: i32,
     pub upper_tick_index: i32,
@@ -101,7 +102,7 @@ impl Position {
 
     pub fn initialized_id(&mut self, pool: &mut Pool) {
         self.id = pool.position_iterator;
-        pool.position_iterator += 1;
+        pool.position_iterator += 1; // REVIEW maybe u128 just to make sure we don't overflow 😆
     }
 
     // for future use

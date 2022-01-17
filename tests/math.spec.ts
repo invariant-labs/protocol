@@ -386,54 +386,51 @@ describe('Math', () => {
   })
   describe('calculate x having price and liquidity', () => {
     const liquidity = new BN(2000).mul(DENOMINATOR)
+    const lowerTick = 60
+    const upperTick = 120
 
-    it('upperSqrtPrice > currentSqrtPrice', async () => {
-      const upperTick = 110
+    it('current < lower', async () => {
+      const currentTick = 50
+
+      const upperSqrtPrice = calculatePriceSqrt(upperTick)
+      const lowerSqrtPrice = calculatePriceSqrt(lowerTick)
+      const currentSqrtPrice = calculatePriceSqrt(currentTick)
+
+      const x = getX(liquidity, upperSqrtPrice.v, currentSqrtPrice.v, lowerSqrtPrice.v)
+
+      assert.ok(x.eq(new BN(5972765607082)))
+    })
+
+    it('lower < current < upper', async () => {
       const currentTick = 80
 
       const upperSqrtPrice = calculatePriceSqrt(upperTick)
+      const lowerSqrtPrice = calculatePriceSqrt(lowerTick)
       const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
-      const x = getX(liquidity, upperSqrtPrice.v, currentSqrtPrice.v)
+      const x = getX(liquidity, upperSqrtPrice.v, currentSqrtPrice.v, lowerSqrtPrice.v)
 
-      assert.ok(x.eq(new BN(2985635497947)))
+      assert.ok(x.eq(new BN(3979852584363)))
     })
 
-    it('upperSqrtPrice = currentSqrtPrice', async () => {
-      const upperTick = 80
-      const currentTick = 80
+    it('current > upper', async () => {
+      const currentTick = 130
 
       const upperSqrtPrice = calculatePriceSqrt(upperTick)
+      const lowerSqrtPrice = calculatePriceSqrt(lowerTick)
       const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
-      const x = getX(liquidity, upperSqrtPrice.v, currentSqrtPrice.v)
-
-      assert.ok(x.eq(new BN(0)))
-    })
-
-    it('upperSqrtPrice < currentSqrtPrice', async () => {
-      const currentTick = 110
-      const upperTick = 80
-
-      const upperSqrtPrice = calculatePriceSqrt(upperTick)
-      const currentSqrtPrice = calculatePriceSqrt(currentTick)
-
-      try {
-        getX(liquidity, upperSqrtPrice.v, currentSqrtPrice.v)
-      } catch (e: any) {
-        assert.isTrue(true)
-        return
-      }
-
-      assert.isTrue(false)
+      const x = getX(liquidity, upperSqrtPrice.v, currentSqrtPrice.v, lowerSqrtPrice.v)
+      assert.ok(x.eqn(0))
     })
 
     it('upperSqrtPrice = 0', async () => {
       const upperSqrtPrice = new BN(0)
+      const lowerSqrtPrice = calculatePriceSqrt(lowerTick)
       const currentSqrtPrice = calculatePriceSqrt(10)
 
       try {
-        getX(liquidity, upperSqrtPrice, currentSqrtPrice.v)
+        getX(liquidity, upperSqrtPrice, currentSqrtPrice.v, lowerSqrtPrice.v)
       } catch (e: any) {
         assert.isTrue(true)
         return
@@ -444,10 +441,26 @@ describe('Math', () => {
 
     it('currentSqrtPrice = 0', async () => {
       const currentSqrtPrice = new BN(0)
+      const lowerSqrtPrice = calculatePriceSqrt(lowerTick)
+      const upperSqrtPrice = calculatePriceSqrt(upperTick)
+
+      try {
+        getX(liquidity, upperSqrtPrice.v, currentSqrtPrice, lowerSqrtPrice.v)
+      } catch (e: any) {
+        assert.isTrue(true)
+        return
+      }
+
+      assert.isTrue(false)
+    })
+
+    it('lowerSqrtPrice = 0', async () => {
+      const currentSqrtPrice = calculatePriceSqrt(20)
+      const lowerSqrtPrice = new BN(0)
       const upperSqrtPrice = calculatePriceSqrt(10)
 
       try {
-        getX(liquidity, upperSqrtPrice.v, currentSqrtPrice)
+        getX(liquidity, upperSqrtPrice.v, currentSqrtPrice.v, lowerSqrtPrice)
       } catch (e: any) {
         assert.isTrue(true)
         return
@@ -459,54 +472,49 @@ describe('Math', () => {
 
   describe('calculate y having liquidity and price', () => {
     const liquidity = new BN(2000).mul(DENOMINATOR)
+    const lowerTick = 60
+    const upperTick = 120
 
-    it('lowerSqrtPrice < currentSqrtPrice', async () => {
-      const lowerTick = 50
-      const currentTick = 80
+    it('current < lower', async () => {
+      const currentTick = 50
 
+      const upperSqrtPrice = calculatePriceSqrt(upperTick)
       const lowerSqrtPrice = calculatePriceSqrt(lowerTick)
       const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
-      const y = getY(liquidity, currentSqrtPrice.v, lowerSqrtPrice.v)
-
-      assert.ok(y.eq(new BN(3009615174000)))
-    })
-
-    it('lowerSqrtPrice = currentSqrtPrice', async () => {
-      const lowerTick = 80
-      const currentTick = 80
-
-      const lowerSqrtPrice = calculatePriceSqrt(lowerTick)
-      const currentSqrtPrice = calculatePriceSqrt(currentTick)
-
-      const y = getY(liquidity, currentSqrtPrice.v, lowerSqrtPrice.v)
-
+      const y = getY(liquidity, upperSqrtPrice.v, currentSqrtPrice.v, lowerSqrtPrice.v)
       assert.ok(y.eq(new BN(0)))
     })
 
-    it('lowerSqrtPrice > currentSqrtPrice', async () => {
-      const lowerTick = 80
-      const currentTick = 50
+    it('lower < current < upper', async () => {
+      const currentTick = 80
 
+      const upperSqrtPrice = calculatePriceSqrt(upperTick)
       const lowerSqrtPrice = calculatePriceSqrt(lowerTick)
       const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
-      try {
-        getY(liquidity, currentSqrtPrice.v, lowerSqrtPrice.v)
-      } catch (e: any) {
-        assert.isTrue(true)
-        return
-      }
+      const y = getY(liquidity, upperSqrtPrice.v, currentSqrtPrice.v, lowerSqrtPrice.v)
+      assert.ok(y.eq(new BN(2006911652000)))
+    })
 
-      assert.isTrue(false)
+    it('lowerSqrtPrice > currentSqrtPrice', async () => {
+      const currentTick = 130
+
+      const upperSqrtPrice = calculatePriceSqrt(upperTick)
+      const lowerSqrtPrice = calculatePriceSqrt(lowerTick)
+      const currentSqrtPrice = calculatePriceSqrt(currentTick)
+
+      const y = getY(liquidity, upperSqrtPrice.v, currentSqrtPrice.v, lowerSqrtPrice.v)
+      assert.ok(y.eq(new BN(6026760410000)))
     })
 
     it('lowerSqrtPrice = 0', async () => {
       const lowerSqrtPrice = new BN(0)
+      const upperSqrtPrice = calculatePriceSqrt(upperTick)
       const currentSqrtPrice = calculatePriceSqrt(0)
 
       try {
-        getY(liquidity, currentSqrtPrice.v, lowerSqrtPrice)
+        getY(liquidity, upperSqrtPrice.v, currentSqrtPrice.v, lowerSqrtPrice)
       } catch (e: any) {
         assert.isTrue(true)
         return
@@ -516,11 +524,27 @@ describe('Math', () => {
     })
 
     it('currentSqrtPrice = 0', async () => {
+      const upperSqrtPrice = calculatePriceSqrt(upperTick)
       const currentSqrtPrice = new BN(0)
       const lowerSqrtPrice = calculatePriceSqrt(0)
 
       try {
-        getY(liquidity, currentSqrtPrice, lowerSqrtPrice.v)
+        getY(liquidity, upperSqrtPrice.v, currentSqrtPrice, lowerSqrtPrice.v)
+      } catch (e: any) {
+        assert.isTrue(true)
+        return
+      }
+
+      assert.isTrue(false)
+    })
+
+    it('upperSqrtPrice = 0', async () => {
+      const upperSqrtPrice = new BN(0)
+      const currentSqrtPrice = calculatePriceSqrt(-10)
+      const lowerSqrtPrice = calculatePriceSqrt(0)
+
+      try {
+        getY(liquidity, upperSqrtPrice, currentSqrtPrice.v, lowerSqrtPrice.v)
       } catch (e: any) {
         assert.isTrue(true)
         return

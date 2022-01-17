@@ -11,7 +11,7 @@ import {
 } from '@solana/web3.js'
 import { calculatePriceSqrt, fromInteger, MAX_TICK, Pair, TICK_LIMIT, Market } from '.'
 import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap, Tick, Position } from './market'
-import { calculatePriceAfterSlippage, calculateSwapStep, SwapResult } from './math'
+import { calculatePriceAfterSlippage, calculateSwapStep } from './math'
 import { getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
 import { struct, u32, u8 } from '@solana/buffer-layout'
@@ -247,7 +247,7 @@ export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
     sqrtPrice = calculatePriceSqrt(index)
     init = true
   } else {
-    const index: number = getSearchLimit(currentTick, tickSpacing, !xToY)
+    index = getSearchLimit(currentTick, tickSpacing, !xToY)
     sqrtPrice = calculatePriceSqrt(index)
     init = false
   }
@@ -256,9 +256,9 @@ export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
     throw new Error('Index is undefined')
   }
 
-  if (xToY && sqrtPrice.v.gt(sqrtPriceLimit.v)) {
+  if (xToY && sqrtPrice.v.gt(sqrtPriceLimit.v) && index != null) {
     return { swapLimit: sqrtPrice, limitingTick: { index, initialized: init } }
-  } else if (!xToY && sqrtPrice.v.lt(sqrtPriceLimit.v)) {
+  } else if (!xToY && sqrtPrice.v.lt(sqrtPriceLimit.v) && index != null) {
     return { swapLimit: sqrtPrice, limitingTick: { index, initialized: init } }
   } else {
     return { swapLimit: sqrtPriceLimit, limitingTick: null }
@@ -266,7 +266,7 @@ export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
 }
 
 export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationResult => {
-  const { xToY, byAmountIn, swapAmount, slippage, ticks, tickmap, pool } = swapParameters
+  let { xToY, byAmountIn, swapAmount, slippage, ticks, tickmap, pool } = swapParameters
   let { currentTickIndex, tickSpacing, liquidity, fee } = pool
   const amountPerTick: BN[] = []
   let accumulatedAmount: BN = new BN(0)

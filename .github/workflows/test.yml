@@ -8,8 +8,8 @@ on:
     branches:
       - master
 env:
-  solana_version: 1.7.11
-  anchor_version: 0.18.2
+  solana_version: 1.8.12
+  anchor_version: 0.20.1
 
 jobs:
   install:
@@ -31,7 +31,6 @@ jobs:
             'npm run test:slippage',
             'npm run test:fee-tier',
             'npm run test:big-swap',
-            'npm run test:timestamp',
             'npm run test:claim-amount',
             'npm run test:create',
             'npm run test:stake',
@@ -40,6 +39,7 @@ jobs:
             'npm run test:multicall',
             'npm run test:oracle',
             'npm run test:limits',
+            'npm run test:compare',
             'cargo test'
           ]
     steps:
@@ -122,6 +122,7 @@ jobs:
       - name: build amm sdk
         run: |
           npm install
+          npm install @solana/buffer-layout
           npm run build
         working-directory: ./sdk
       - name: build staker sdk

@@ -3,7 +3,15 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
-import { createToken } from './testUtils'
+import {
+  createFeeTier,
+  createPool,
+  createPositionList,
+  createState,
+  createToken,
+  initPosition,
+  swap
+} from './testUtils'
 import {
   Market,
   Pair,
@@ -13,10 +21,16 @@ import {
   TICK_LIMIT,
   Network
 } from '@invariant-labs/sdk'
-import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
+import {
+  FeeTier,
+  Decimal,
+  CreateFeeTier,
+  CreatePool,
+  InitPosition
+} from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
-//TODO add to tests
+// TODO add to tests
 describe('compare', () => {
   const provider = Provider.local()
   const connection = provider.connection
@@ -30,7 +44,7 @@ describe('compare', () => {
     tickSpacing: 10
   }
   const protocolFee: Decimal = { v: fromFee(new BN(10000)) } // 10%
-  let fisrtPair: Pair
+  let firstPair: Pair
   let secondPair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -58,48 +72,61 @@ describe('compare', () => {
       createToken(connection, wallet, mintAuthority)
     ])
 
-    fisrtPair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-    tokenX = new Token(connection, fisrtPair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, fisrtPair.tokenY, TOKEN_PROGRAM_ID, wallet)
+    firstPair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
+    tokenX = new Token(connection, firstPair.tokenX, TOKEN_PROGRAM_ID, wallet)
+    tokenY = new Token(connection, firstPair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
     secondPair = new Pair(tokens[2].publicKey, tokens[3].publicKey, feeTier)
     tokenZ = new Token(connection, secondPair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenW = new Token(connection, secondPair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
-    await market.createState(admin, protocolFee)
-    await market.createFeeTier(feeTier, admin)
+    await createState(market, admin.publicKey, admin)
+
+    const createFeeTierVars: CreateFeeTier = {
+      feeTier,
+      admin: admin.publicKey
+    }
+    await createFeeTier(market, createFeeTierVars, admin)
   })
   it('#create()', async () => {
-    await market.create({
-      pair: fisrtPair,
-      signer: admin
-    })
+    const createPoolVarsFirst: CreatePool = {
+      pair: firstPair,
+      payer: admin,
+      protocolFee,
+      tokenX,
+      tokenY
+    }
+    await createPool(market, createPoolVarsFirst)
 
-    await market.create({
+    const createPoolVarsSecond: CreatePool = {
       pair: secondPair,
-      signer: admin
-    })
+      payer: admin,
+      protocolFee,
+      tokenX: tokenZ,
+      tokenY: tokenW
+    }
+    await createPool(market, createPoolVarsSecond)
 
     //check first pool
-    const fisrtPool = await market.get(fisrtPair)
-    assert.ok(fisrtPool.tokenX.equals(tokenX.publicKey))
-    assert.ok(fisrtPool.tokenY.equals(tokenY.publicKey))
-    assert.ok(fisrtPool.fee.v.eq(feeTier.fee))
-    assert.equal(fisrtPool.tickSpacing, feeTier.tickSpacing)
-    assert.ok(fisrtPool.liquidity.v.eqn(0))
-    assert.ok(fisrtPool.sqrtPrice.v.eq(DENOMINATOR))
-    assert.ok(fisrtPool.currentTickIndex == 0)
-    assert.ok(fisrtPool.feeGrowthGlobalX.v.eqn(0))
-    assert.ok(fisrtPool.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(fisrtPool.feeProtocolTokenX.eqn(0))
-    assert.ok(fisrtPool.feeProtocolTokenY.eqn(0))
+    const firstPool = await market.getPool(firstPair)
+    assert.ok(firstPool.tokenX.equals(tokenX.publicKey))
+    assert.ok(firstPool.tokenY.equals(tokenY.publicKey))
+    assert.ok(firstPool.fee.v.eq(feeTier.fee))
+    assert.equal(firstPool.tickSpacing, feeTier.tickSpacing)
+    assert.ok(firstPool.liquidity.v.eqn(0))
+    assert.ok(firstPool.sqrtPrice.v.eq(DENOMINATOR))
+    assert.ok(firstPool.currentTickIndex == 0)
+    assert.ok(firstPool.feeGrowthGlobalX.v.eqn(0))
+    assert.ok(firstPool.feeGrowthGlobalY.v.eqn(0))
+    assert.ok(firstPool.feeProtocolTokenX.eqn(0))
+    assert.ok(firstPool.feeProtocolTokenY.eqn(0))
 
-    const firstTickmapData = await market.getTickmap(fisrtPair)
+    const firstTickmapData = await market.getTickmap(firstPair)
     assert.ok(firstTickmapData.bitmap.length == TICK_LIMIT / 4)
     assert.ok(firstTickmapData.bitmap.every(v => v == 0))
 
     // check second pool
-    const secondPool = await market.get(secondPair)
+    const secondPool = await market.getPool(secondPair)
     assert.ok(secondPool.tokenX.equals(tokenZ.publicKey))
     assert.ok(secondPool.tokenY.equals(tokenW.publicKey))
     assert.ok(secondPool.fee.v.eq(feeTier.fee))
@@ -112,7 +139,7 @@ describe('compare', () => {
     assert.ok(secondPool.feeProtocolTokenX.eqn(0))
     assert.ok(secondPool.feeProtocolTokenY.eqn(0))
 
-    const secondTickmapData = await market.getTickmap(fisrtPair)
+    const secondTickmapData = await market.getTickmap(firstPair)
     assert.ok(secondTickmapData.bitmap.length == TICK_LIMIT / 4)
     assert.ok(secondTickmapData.bitmap.every(v => v == 0))
   })
@@ -132,35 +159,32 @@ describe('compare', () => {
     const liquidityDelta = { v: new BN(2000000).mul(DENOMINATOR) }
     const lowerTick: number = -50
     const upperTick: number = 50
-    await market.createPositionList(positionOwner)
+    await createPositionList(market, positionOwner.publicKey, positionOwner)
 
     //init position in first pool
-    await market.initPosition(
-      {
-        pair: fisrtPair,
-        owner: positionOwner.publicKey,
-        userTokenX: userTokenXAccount,
-        userTokenY: userTokenYAccount,
-        lowerTick,
-        upperTick,
-        liquidityDelta
-      },
-      positionOwner
-    )
+    const initPositionVarsFirst: InitPosition = {
+      pair: firstPair,
+      owner: positionOwner.publicKey,
+      userTokenX: userTokenXAccount,
+      userTokenY: userTokenYAccount,
+      lowerTick: lowerTick,
+      upperTick: upperTick,
+      liquidityDelta: liquidityDelta
+    }
+    await initPosition(market, initPositionVarsFirst, positionOwner)
 
     //init position in second pool
-    await market.initPosition(
-      {
-        pair: secondPair,
-        owner: positionOwner.publicKey,
-        userTokenX: userTokenZAccount,
-        userTokenY: userTokenWAccount,
-        lowerTick,
-        upperTick,
-        liquidityDelta
-      },
-      positionOwner
-    )
+    const initPositionVarsSecond: InitPosition = {
+      pair: secondPair,
+      owner: positionOwner.publicKey,
+      userTokenX: userTokenZAccount,
+      userTokenY: userTokenWAccount,
+      lowerTick: lowerTick,
+      upperTick: upperTick,
+      liquidityDelta: liquidityDelta
+    }
+    await initPosition(market, initPositionVarsSecond, positionOwner)
+
     // Create owner
     const owner = Keypair.generate()
     await connection.requestAirdrop(owner.publicKey, 1e9)
@@ -174,8 +198,8 @@ describe('compare', () => {
     await tokenW.mintTo(accountW, mintAuthority.publicKey, [mintAuthority], tou64(new BN(10000)))
 
     // Swap
-    const firstPoolDataBefore = await market.get(fisrtPair)
-    const secondPoolDataBefore = await market.get(secondPair)
+    const firstPoolDataBefore = await market.getPool(firstPair)
+    const secondPoolDataBefore = await market.getPool(secondPair)
     const reserveXBefore = (await tokenX.getAccountInfo(firstPoolDataBefore.tokenXReserve)).amount
     const reserveYBefore = (await tokenY.getAccountInfo(firstPoolDataBefore.tokenYReserve)).amount
     const reserveZBefore = (await tokenZ.getAccountInfo(secondPoolDataBefore.tokenXReserve)).amount
@@ -183,8 +207,8 @@ describe('compare', () => {
 
     //make swap on first pool
     const firstTx = await market.swapTransaction({
-      pair: fisrtPair,
-      XtoY: false,
+      pair: firstPair,
+      xToY: false,
       amount: new BN(500),
       knownPrice: firstPoolDataBefore.sqrtPrice,
       slippage: toDecimal(2, 2),
@@ -198,7 +222,7 @@ describe('compare', () => {
     //make swap on second pool without simulation TODO
     const secondTx = await market.swapTransactionSplit({
       pair: secondPair,
-      XtoY: false,
+      xToY: false,
       amount: new BN(500),
       knownPrice: secondPoolDataBefore.sqrtPrice,
       slippage: toDecimal(2, 2),
@@ -210,8 +234,8 @@ describe('compare', () => {
     await signAndSend(secondTx, [owner], connection)
 
     // Check pool
-    const firstPoolData = await market.get(fisrtPair)
-    const secondPoolData = await market.get(secondPair)
+    const firstPoolData = await market.getPool(firstPair)
+    const secondPoolData = await market.getPool(secondPair)
 
     // Check amounts and fees
     const amountX = (await tokenX.getAccountInfo(accountX)).amount
