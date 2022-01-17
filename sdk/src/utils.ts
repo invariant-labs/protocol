@@ -9,8 +9,7 @@ import {
   Transaction,
   TransactionInstruction
 } from '@solana/web3.js'
-import { calculatePriceSqrt, fromInteger, MAX_TICK, Pair, TICK_LIMIT } from '.'
-import { Market } from '.'
+import { calculatePriceSqrt, fromInteger, MAX_TICK, Pair, TICK_LIMIT, Market } from '.'
 import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap, Tick, Position } from './market'
 import { calculatePriceAfterSlippage, calculateSwapStep, SwapResult } from './math'
 import { getTickFromPrice } from './tick'
@@ -114,11 +113,11 @@ export interface CloserLimitResult {
 
 export const ComputeUnitsInstruction = (units: number, wallet: PublicKey) => {
   const program = new PublicKey('ComputeBudget111111111111111111111111111111')
-  let params = { instruction: 0, units: units }
-  let layout = struct([u8('instruction') as any, u32('units')])
-  let data = Buffer.alloc(layout.span)
+  const params = { instruction: 0, units: units }
+  const layout = struct([u8('instruction') as any, u32('units')])
+  const data = Buffer.alloc(layout.span)
   layout.encode(params, data)
-  let keys = [{ pubkey: wallet, isSigner: false, isWritable: false }]
+  const keys = [{ pubkey: wallet, isSigner: false, isWritable: false }]
   const unitsIx = new TransactionInstruction({
     keys,
     programId: program,
@@ -150,7 +149,7 @@ export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
 
 export const signAndSend = async (
   tx: Transaction,
-  signers: Array<Keypair>,
+  signers: Keypair[],
   connection: Connection,
   opts?: ConfirmOptions
 ) => {
@@ -165,7 +164,7 @@ export const signAndSend = async (
 }
 
 export const sleep = async (ms: number) => {
-  return new Promise(resolve => setTimeout(resolve, ms))
+  return await new Promise(resolve => setTimeout(resolve, ms))
 }
 
 export const tou64 = amount => {
@@ -185,7 +184,7 @@ export const feeToTickSpacing = (fee: BN): number => {
   return fee.muln(2).div(FEE_TO_SPACING_OFFSET).toNumber()
 }
 
-export const FEE_TIERS: Array<FeeTier> = [
+export const FEE_TIERS: FeeTier[] = [
   { fee: fromFee(new BN(20)) },
   { fee: fromFee(new BN(40)) },
   { fee: fromFee(new BN(100)) },
@@ -201,7 +200,7 @@ export const generateTicksArray = (start: number, stop: number, step: number) =>
     throw new Error('Invalid parameters')
   }
 
-  const ticks: Array<number> = []
+  const ticks: number[] = []
   for (let i = start; i <= stop; i += step) {
     ticks.push(i)
   }
@@ -232,7 +231,7 @@ export const toDecimal = (x: number, decimals: number = 0): Decimal => {
 }
 
 export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
-  let { sqrtPriceLimit, xToY, currentTick, tickSpacing, tickmap } = closerLimit
+  const { sqrtPriceLimit, xToY, currentTick, tickSpacing, tickmap } = closerLimit
   let index
 
   if (xToY) {
@@ -286,7 +285,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
   }
   let remainingAmount: BN = swapAmount
   while (!remainingAmount.lte(new BN(0))) {
-    //find closest initielized tick
+    // find closest initielized tick
     const closerLimit: CloserLimit = {
       sqrtPriceLimit: priceLimit,
       xToY: xToY,
@@ -323,13 +322,13 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
       throw new Error('Price would cross swap limit')
     }
 
-    //crossing tick
+    // crossing tick
     if (result.nextPrice.v.eq(swapLimit.v) && limitingTick != null) {
       const tickIndex: number = limitingTick.index
       const initialized: boolean = limitingTick.initialized
 
       if (initialized) {
-        let tick = ticks.get(tickIndex) as Tick
+        const tick = ticks.get(tickIndex) as Tick
 
         if (currentTickIndex >= tick.index !== tick.sign) {
           liquidity = { v: liquidity.v.add(tick.liquidityChange.v) }
@@ -377,7 +376,7 @@ export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
   parsed[indexOfTickBelow].liquidity = pool.liquidity.v
 
   for (let i = indexOfTickBelow + 1; i < parsed.length; i++) {
-    if (ticks[i].sign === true) {
+    if (ticks[i].sign) {
       parsed[i].liquidity = parsed[i - 1].liquidity.add(ticks[i].liquidityChange.v)
     } else {
       parsed[i].liquidity = parsed[i - 1].liquidity.sub(ticks[i].liquidityChange.v)
@@ -385,7 +384,7 @@ export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
   }
 
   for (let i = indexOfTickBelow - 1; i >= 0; i--) {
-    if (ticks[i].sign === false) {
+    if (!ticks[i].sign) {
       parsed[i].liquidity = parsed[i + 1].liquidity.add(ticks[i].liquidityChange.v)
     } else {
       parsed[i].liquidity = parsed[i + 1].liquidity.sub(ticks[i].liquidityChange.v)
@@ -404,8 +403,8 @@ export const calculateClaimAmount = ({
   feeGrowthGlobalY
 }: SimulateClaim) => {
   // determine position relative to current tick
-  let current_above_lower = tickCurrent >= tickLower.index
-  let current_below_upper = tickCurrent < tickUpper.index
+  const current_above_lower = tickCurrent >= tickLower.index
+  const current_below_upper = tickCurrent < tickUpper.index
   let feeGrowthBelowX: BN
   let feeGrowthBelowY: BN
   let feeGrowthAboveX: BN
@@ -436,17 +435,17 @@ export const calculateClaimAmount = ({
   }
 
   // calculate fee growth inside
-  let feeGrowthInsideX = feeGrowthGlobalX.v.sub(feeGrowthBelowX.sub(feeGrowthAboveX))
-  let feeGrowthInsideY = feeGrowthGlobalY.v.sub(feeGrowthBelowY.sub(feeGrowthAboveY))
+  const feeGrowthInsideX = feeGrowthGlobalX.v.sub(feeGrowthBelowX.sub(feeGrowthAboveX))
+  const feeGrowthInsideY = feeGrowthGlobalY.v.sub(feeGrowthBelowY.sub(feeGrowthAboveY))
 
-  let tokensOwedX = position.liquidity.v
+  const tokensOwedX = position.liquidity.v
     .mul(feeGrowthInsideX.sub(position.feeGrowthInsideX.v))
     .div(DENOMINATOR)
-  let tokensOwedY = position.liquidity.v
+  const tokensOwedY = position.liquidity.v
     .mul(feeGrowthInsideY.sub(position.feeGrowthInsideY.v))
     .div(DENOMINATOR)
-  let tokensOwedXTotal = position.tokensOwedX.v.add(tokensOwedX)
-  let tokensOwedYTotal = position.tokensOwedY.v.add(tokensOwedY)
+  const tokensOwedXTotal = position.tokensOwedX.v.add(tokensOwedX)
+  const tokensOwedYTotal = position.tokensOwedY.v.add(tokensOwedY)
   return [tokensOwedXTotal, tokensOwedYTotal]
 }
 

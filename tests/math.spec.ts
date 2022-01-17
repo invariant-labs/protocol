@@ -12,42 +12,43 @@ import {
   getX,
   getY,
   sqrt,
-  SwapResult
+  SwapResult,
+  calculatePriceAfterSlippage,
+  findClosestTicks
 } from '@invariant-labs/sdk/src/math'
-import { assertThrowsAsync, bigNumberToBuffer, toDecimal } from '@invariant-labs/sdk/src/utils'
-import { calculatePriceAfterSlippage, findClosestTicks } from '@invariant-labs/sdk/src/math'
+import { bigNumberToBuffer, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { setInitialized } from './testUtils'
 import { Decimal } from '@invariant-labs/sdk/src/market'
 
 describe('Math', () => {
   describe('Test sqrt price calculation', () => {
     it('Test 20000', () => {
-      let price = 20000
-      let result = calculatePriceSqrt(price)
+      const price = 20000
+      const result = calculatePriceSqrt(price)
       // expected 2.718145925979
       assert.ok(result.v.eq(new BN('2718145925979')))
     })
     it('Test 200000', () => {
-      let price = 200000
-      let result = calculatePriceSqrt(price)
+      const price = 200000
+      const result = calculatePriceSqrt(price)
       // expected 22015.455979766288
       assert.ok(result.v.eq(new BN('22015455979766288')))
     })
     it('Test -20000', () => {
-      let price = -20000
-      let result = calculatePriceSqrt(price)
+      const price = -20000
+      const result = calculatePriceSqrt(price)
       // expected 0.367897834491
       assert.ok(result.v.eq(new BN('367897834491')))
     })
     it('Test -200000', () => {
-      let price = -200000
-      let result = calculatePriceSqrt(price)
+      const price = -200000
+      const result = calculatePriceSqrt(price)
       // expected 0.000045422634
       assert.ok(result.v.eq(new BN('45422634')))
     })
     it('Test 0', () => {
-      let price = 0
-      let result = calculatePriceSqrt(price)
+      const price = 0
+      const result = calculatePriceSqrt(price)
       // expected 2.718145925979
       assert.ok(result.v.eq(new BN('1000000000000')))
     })
@@ -55,7 +56,6 @@ describe('Math', () => {
   describe('calculate y, liquidity', () => {
     const tokenDecimal = 6
     const x = new BN(43 * 10 ** (tokenDecimal - 2)) // 0.43
-    const currentTick = 100
     const currentSqrtPrice = calculatePriceSqrt(100)
 
     it('below current tick', async () => {
@@ -320,7 +320,7 @@ describe('Math', () => {
     })
   })
   describe('find closest ticks', () => {
-    let bitmap = new Array(TICK_LIMIT * 2).fill(0)
+    const bitmap = new Array(TICK_LIMIT * 2).fill(0)
 
     it('simple', async () => {
       const initialized = [-20, -14, -3, -2, -1, 5, 99]
@@ -337,7 +337,7 @@ describe('Math', () => {
       initialized.forEach(i => setInitialized(bitmap, i))
 
       const result = findClosestTicks(bitmap, 0, 1, 200)
-      assert.ok(result[0] == initialized[0])
+      assert.ok(result[0] === initialized[0])
     })
 
     it('near top limit', async () => {
@@ -345,7 +345,7 @@ describe('Math', () => {
       initialized.forEach(i => setInitialized(bitmap, i))
 
       const result = findClosestTicks(bitmap, 0, 1, 200)
-      assert.ok(result.pop() == initialized[0])
+      assert.ok(result.pop() === initialized[0])
     })
 
     it('with limit', async () => {
@@ -552,13 +552,13 @@ describe('Math', () => {
   })
   describe('test calculateSwapStep', () => {
     it('one token by amount in', async () => {
-      let price: Decimal = { v: DENOMINATOR }
-      let target: Decimal = {
+      const price: Decimal = { v: DENOMINATOR }
+      const target: Decimal = {
         v: sqrt(DENOMINATOR.mul(new BN('101')).div(new BN('100')).mul(DENOMINATOR))
       }
-      let liquidity: Decimal = { v: DENOMINATOR.mul(new BN('2000')) }
-      let amount: BN = new BN('1')
-      let fee = toDecimal(6, 4)
+      const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('2000')) }
+      const amount: BN = new BN('1')
+      const fee = toDecimal(6, 4)
 
       const result: SwapResult = calculateSwapStep(price, target, liquidity, amount, true, fee)
 
@@ -576,16 +576,16 @@ describe('Math', () => {
     })
 
     it('amount out capped at target price', async () => {
-      let price: Decimal = { v: DENOMINATOR }
-      let target: Decimal = {
+      const price: Decimal = { v: DENOMINATOR }
+      const target: Decimal = {
         v: sqrt(DENOMINATOR.mul(new BN('101')).div(new BN('100')).mul(DENOMINATOR))
       }
-      let liquidity: Decimal = { v: DENOMINATOR.mul(new BN('2000')) }
-      let amount: BN = new BN('20')
-      let fee = toDecimal(6, 4)
+      const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('2000')) }
+      const amount: BN = new BN('20')
+      const fee = toDecimal(6, 4)
 
-      const result_in: SwapResult = calculateSwapStep(price, target, liquidity, amount, true, fee)
-      const result_out: SwapResult = calculateSwapStep(price, target, liquidity, amount, false, fee)
+      const resultIn: SwapResult = calculateSwapStep(price, target, liquidity, amount, true, fee)
+      const resultOut: SwapResult = calculateSwapStep(price, target, liquidity, amount, false, fee)
 
       const expectedResult: SwapResult = {
         nextPrice: target,
@@ -594,23 +594,23 @@ describe('Math', () => {
         feeAmount: new BN('1')
       }
 
-      assert.ok(result_in.nextPrice.v.eq(expectedResult.nextPrice.v))
-      assert.ok(result_in.amountIn.eq(expectedResult.amountIn))
-      assert.ok(result_in.amountOut.eq(expectedResult.amountOut))
-      assert.ok(result_in.feeAmount.eq(expectedResult.feeAmount))
+      assert.ok(resultIn.nextPrice.v.eq(expectedResult.nextPrice.v))
+      assert.ok(resultIn.amountIn.eq(expectedResult.amountIn))
+      assert.ok(resultIn.amountOut.eq(expectedResult.amountOut))
+      assert.ok(resultIn.feeAmount.eq(expectedResult.feeAmount))
 
-      assert.ok(result_out.nextPrice.v.eq(expectedResult.nextPrice.v))
-      assert.ok(result_out.amountIn.eq(expectedResult.amountIn))
-      assert.ok(result_out.amountOut.eq(expectedResult.amountOut))
-      assert.ok(result_out.feeAmount.eq(expectedResult.feeAmount))
+      assert.ok(resultOut.nextPrice.v.eq(expectedResult.nextPrice.v))
+      assert.ok(resultOut.amountIn.eq(expectedResult.amountIn))
+      assert.ok(resultOut.amountOut.eq(expectedResult.amountOut))
+      assert.ok(resultOut.feeAmount.eq(expectedResult.feeAmount))
     })
 
     it('amount in not capped', async () => {
-      let price: Decimal = { v: DENOMINATOR.mul(new BN('101')).div(new BN('100')) }
-      let target: Decimal = { v: DENOMINATOR.mul(new BN('10')) }
-      let liquidity: Decimal = { v: DENOMINATOR.mul(new BN('300000000')) }
-      let amount: BN = new BN('1000000')
-      let fee = toDecimal(6, 4)
+      const price: Decimal = { v: DENOMINATOR.mul(new BN('101')).div(new BN('100')) }
+      const target: Decimal = { v: DENOMINATOR.mul(new BN('10')) }
+      const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('300000000')) }
+      const amount: BN = new BN('1000000')
+      const fee = toDecimal(6, 4)
 
       const result: SwapResult = calculateSwapStep(price, target, liquidity, amount, true, fee)
 
@@ -627,11 +627,11 @@ describe('Math', () => {
       assert.ok(result.feeAmount.eq(expectedResult.feeAmount))
     })
     it('amount out not capped', async () => {
-      let price: Decimal = { v: DENOMINATOR.mul(new BN('101')) }
-      let target: Decimal = { v: DENOMINATOR.mul(new BN('100')) }
-      let liquidity: Decimal = { v: DENOMINATOR.mul(new BN('5000000000000')) }
-      let amount: BN = new BN('2000000')
-      let fee = toDecimal(6, 4)
+      const price: Decimal = { v: DENOMINATOR.mul(new BN('101')) }
+      const target: Decimal = { v: DENOMINATOR.mul(new BN('100')) }
+      const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('5000000000000')) }
+      const amount: BN = new BN('2000000')
+      const fee = toDecimal(6, 4)
 
       const result: SwapResult = calculateSwapStep(price, target, liquidity, amount, false, fee)
 
@@ -650,73 +650,73 @@ describe('Math', () => {
   })
   describe('test getDeltaX', () => {
     it('zero at zero liquidity', async () => {
-      let priceA: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
-      let priceB: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
-      let liquidity: Decimal = { v: DENOMINATOR.mul(new BN('0')) }
+      const priceA: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
+      const priceB: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
+      const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('0')) }
 
-      let result = getDeltaX(priceA, priceB, liquidity, false)
+      const result = getDeltaX(priceA, priceB, liquidity, false)
 
-      let expectedResult = new BN('0')
+      const expectedResult = new BN('0')
       assert.ok(result.eq(expectedResult))
     })
     it('equal at equal liquidity', async () => {
-      let priceA: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
-      let priceB: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
-      let liquidity: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
+      const priceA: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
+      const priceB: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
+      const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
 
-      let result = getDeltaX(priceA, priceB, liquidity, false)
+      const result = getDeltaX(priceA, priceB, liquidity, false)
 
-      let expectedResult = new BN('1')
+      const expectedResult = new BN('1')
       assert.ok(result.eq(expectedResult))
     })
 
     it('big numbers', async () => {
-      let priceA: Decimal = { v: new BN('234878324943782') }
-      let priceB: Decimal = { v: new BN('87854456421658') }
-      let liquidity: Decimal = { v: new BN('983983249092300399') }
+      const priceA: Decimal = { v: new BN('234878324943782') }
+      const priceB: Decimal = { v: new BN('87854456421658') }
+      const liquidity: Decimal = { v: new BN('983983249092300399') }
 
-      let result_down = getDeltaX(priceA, priceB, liquidity, false)
-      let result_up = getDeltaX(priceA, priceB, liquidity, true)
+      const resultDown = getDeltaX(priceA, priceB, liquidity, false)
+      const resultUp = getDeltaX(priceA, priceB, liquidity, true)
 
-      let expectedResultDown = new BN(7010)
-      let expectedResultUp = new BN(7011)
-      //7010.8199533090222620342346078676429792113623790285962379282493052
-      assert.ok(result_down.eq(expectedResultDown))
-      assert.ok(result_up.eq(expectedResultUp))
+      const expectedResultDown = new BN(7010)
+      const expectedResultUp = new BN(7011)
+      // 7010.8199533090222620342346078676429792113623790285962379282493052
+      assert.ok(resultDown.eq(expectedResultDown))
+      assert.ok(resultUp.eq(expectedResultUp))
     })
   })
   describe('test getDeltaY', () => {
     it('zero at zero liquidity', async () => {
-      let priceA: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
-      let priceB: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
-      let liquidity: Decimal = { v: DENOMINATOR.mul(new BN('0')) }
+      const priceA: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
+      const priceB: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
+      const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('0')) }
 
-      let result = getDeltaY(priceA, priceB, liquidity, false)
+      const result = getDeltaY(priceA, priceB, liquidity, false)
 
-      let expectedResult = new BN('0')
+      const expectedResult = new BN('0')
       assert.ok(result.eq(expectedResult))
     })
     it('equal at equal liquidity', async () => {
-      let priceA: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
-      let priceB: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
-      let liquidity: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
+      const priceA: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
+      const priceB: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
+      const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
 
-      let result = getDeltaY(priceA, priceB, liquidity, false)
+      const result = getDeltaY(priceA, priceB, liquidity, false)
 
-      let expectedResult = new BN('2')
+      const expectedResult = new BN('2')
       assert.ok(result.eq(expectedResult))
     })
 
     it('big numbers', async () => {
-      let priceA: Decimal = { v: new BN('234878324943782') }
-      let priceB: Decimal = { v: new BN('87854456421658') }
-      let liquidity: Decimal = { v: new BN('983983249092300399') }
+      const priceA: Decimal = { v: new BN('234878324943782') }
+      const priceB: Decimal = { v: new BN('87854456421658') }
+      const liquidity: Decimal = { v: new BN('983983249092300399') }
 
-      let result_down = getDeltaY(priceA, priceB, liquidity, false)
-      let result_up = getDeltaY(priceA, priceB, liquidity, true)
+      const result_down = getDeltaY(priceA, priceB, liquidity, false)
+      const result_up = getDeltaY(priceA, priceB, liquidity, true)
 
-      let expectedResultDown = new BN(144669023)
-      let expectedResultUp = new BN(144669024)
+      const expectedResultDown = new BN(144669023)
+      const expectedResultUp = new BN(144669024)
 
       assert.ok(result_down.eq(expectedResultDown))
       assert.ok(result_up.eq(expectedResultUp))
@@ -725,73 +725,73 @@ describe('Math', () => {
   describe('test getNextPriceXUp', () => {
     describe('add', () => {
       it('1', async () => {
-        let price: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
-        let liquidity: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
-        let amount: BN = new BN('1')
+        const price: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
+        const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
+        const amount: BN = new BN('1')
 
-        let result = getNextPriceXUp(price, liquidity, amount, true)
-        let expectedResult: Decimal = { v: new BN('500000000000') }
+        const result = getNextPriceXUp(price, liquidity, amount, true)
+        const expectedResult: Decimal = { v: new BN('500000000000') }
 
         assert.ok(result.v.eq(expectedResult.v))
       })
       it('2', async () => {})
-      let price: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
-      let liquidity: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
-      let amount: BN = new BN('3')
+      const price: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
+      const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
+      const amount: BN = new BN('3')
 
-      let result = getNextPriceXUp(price, liquidity, amount, true)
-      let expectedResult: Decimal = { v: new BN('400000000000') }
+      const result = getNextPriceXUp(price, liquidity, amount, true)
+      const expectedResult: Decimal = { v: new BN('400000000000') }
 
       assert.ok(result.v.eq(expectedResult.v))
       it('3', async () => {
-        let price: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
-        let liquidity: Decimal = { v: DENOMINATOR.mul(new BN('3')) }
-        let amount: BN = new BN('5')
+        const price: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
+        const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('3')) }
+        const amount: BN = new BN('5')
 
-        let result = getNextPriceXUp(price, liquidity, amount, true)
-        let expectedResult: Decimal = { v: new BN('461538461539') }
+        const result = getNextPriceXUp(price, liquidity, amount, true)
+        const expectedResult: Decimal = { v: new BN('461538461539') }
 
         assert.ok(result.v.eq(expectedResult.v))
       })
       it('4', async () => {
-        let price: Decimal = { v: DENOMINATOR.mul(new BN('24234')) }
-        let liquidity: Decimal = { v: DENOMINATOR.mul(new BN('3000')) }
-        let amount: BN = new BN('5000')
+        const price: Decimal = { v: DENOMINATOR.mul(new BN('24234')) }
+        const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('3000')) }
+        const amount: BN = new BN('5000')
 
-        let result = getNextPriceXUp(price, liquidity, amount, true)
-        let expectedResult: Decimal = { v: new BN('599985145206') }
+        const result = getNextPriceXUp(price, liquidity, amount, true)
+        const expectedResult: Decimal = { v: new BN('599985145206') }
 
         assert.ok(result.v.eq(expectedResult.v))
       })
     })
     describe('subtract', () => {
       it('1', async () => {
-        let price: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
-        let liquidity: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
-        let amount: BN = new BN('1')
+        const price: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
+        const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
+        const amount: BN = new BN('1')
 
-        let result = getNextPriceXUp(price, liquidity, amount, false)
-        let expectedResult: Decimal = { v: new BN('2000000000000') }
+        const result = getNextPriceXUp(price, liquidity, amount, false)
+        const expectedResult: Decimal = { v: new BN('2000000000000') }
 
         assert.ok(result.v.eq(expectedResult.v))
       })
       it('2', async () => {
-        let price: Decimal = { v: DENOMINATOR.mul(new BN('100000')) }
-        let liquidity: Decimal = { v: DENOMINATOR.mul(new BN('500000000')) }
-        let amount: BN = new BN('4000')
+        const price: Decimal = { v: DENOMINATOR.mul(new BN('100000')) }
+        const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('500000000')) }
+        const amount: BN = new BN('4000')
 
-        let result = getNextPriceXUp(price, liquidity, amount, false)
-        let expectedResult: Decimal = { v: new BN('500000000000000000') }
+        const result = getNextPriceXUp(price, liquidity, amount, false)
+        const expectedResult: Decimal = { v: new BN('500000000000000000') }
 
         assert.ok(result.v.eq(expectedResult.v))
       })
       it('3', async () => {
-        let price: Decimal = { v: new BN('3333333333333') }
-        let liquidity: Decimal = { v: new BN('222222222222222') }
-        let amount: BN = new BN('37')
+        const price: Decimal = { v: new BN('3333333333333') }
+        const liquidity: Decimal = { v: new BN('222222222222222') }
+        const amount: BN = new BN('37')
 
-        let result = getNextPriceXUp(price, liquidity, amount, false)
-        let expectedResult: Decimal = { v: new BN('7490636704119') }
+        const result = getNextPriceXUp(price, liquidity, amount, false)
+        const expectedResult: Decimal = { v: new BN('7490636704119') }
 
         assert.ok(result.v.eq(expectedResult.v))
       })
@@ -800,73 +800,73 @@ describe('Math', () => {
   describe('test getNextPriceYDown', () => {
     describe('add', () => {
       it('1', async () => {
-        let price: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
-        let liquidity: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
-        let amount: BN = new BN('1')
+        const price: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
+        const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
+        const amount: BN = new BN('1')
 
-        let result = getNextPriceYDown(price, liquidity, amount, true)
-        let expectedResult: Decimal = { v: new BN('2000000000000') }
+        const result = getNextPriceYDown(price, liquidity, amount, true)
+        const expectedResult: Decimal = { v: new BN('2000000000000') }
 
         assert.ok(result.v.eq(expectedResult.v))
       })
       it('2', async () => {})
-      let price: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
-      let liquidity: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
-      let amount: BN = new BN('3')
+      const price: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
+      const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
+      const amount: BN = new BN('3')
 
-      let result = getNextPriceYDown(price, liquidity, amount, true)
-      let expectedResult: Decimal = { v: new BN('2500000000000') }
+      const result = getNextPriceYDown(price, liquidity, amount, true)
+      const expectedResult: Decimal = { v: new BN('2500000000000') }
 
       assert.ok(result.v.eq(expectedResult.v))
       it('3', async () => {
-        let price: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
-        let liquidity: Decimal = { v: DENOMINATOR.mul(new BN('3')) }
-        let amount: BN = new BN('5')
+        const price: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
+        const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('3')) }
+        const amount: BN = new BN('5')
 
-        let result = getNextPriceYDown(price, liquidity, amount, true)
-        let expectedResult: Decimal = { v: new BN('3666666666666') }
+        const result = getNextPriceYDown(price, liquidity, amount, true)
+        const expectedResult: Decimal = { v: new BN('3666666666666') }
 
         assert.ok(result.v.eq(expectedResult.v))
       })
       it('4', async () => {
-        let price: Decimal = { v: DENOMINATOR.mul(new BN('24234')) }
-        let liquidity: Decimal = { v: DENOMINATOR.mul(new BN('3000')) }
-        let amount: BN = new BN('5000')
+        const price: Decimal = { v: DENOMINATOR.mul(new BN('24234')) }
+        const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('3000')) }
+        const amount: BN = new BN('5000')
 
-        let result = getNextPriceYDown(price, liquidity, amount, true)
-        let expectedResult: Decimal = { v: new BN('24235666666666666') }
+        const result = getNextPriceYDown(price, liquidity, amount, true)
+        const expectedResult: Decimal = { v: new BN('24235666666666666') }
 
         assert.ok(result.v.eq(expectedResult.v))
       })
     })
     describe('subtract', () => {
       it('1', async () => {
-        let price: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
-        let liquidity: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
-        let amount: BN = new BN('1')
+        const price: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
+        const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
+        const amount: BN = new BN('1')
 
-        let result = getNextPriceYDown(price, liquidity, amount, false)
-        let expectedResult: Decimal = { v: new BN('500000000000') }
+        const result = getNextPriceYDown(price, liquidity, amount, false)
+        const expectedResult: Decimal = { v: new BN('500000000000') }
 
         assert.ok(result.v.eq(expectedResult.v))
       })
       it('2', async () => {
-        let price: Decimal = { v: DENOMINATOR.mul(new BN('100000')) }
-        let liquidity: Decimal = { v: DENOMINATOR.mul(new BN('500000000')) }
-        let amount: BN = new BN('4000')
+        const price: Decimal = { v: DENOMINATOR.mul(new BN('100000')) }
+        const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('500000000')) }
+        const amount: BN = new BN('4000')
 
-        let result = getNextPriceYDown(price, liquidity, amount, false)
-        let expectedResult: Decimal = { v: new BN('99999999992000000') }
+        const result = getNextPriceYDown(price, liquidity, amount, false)
+        const expectedResult: Decimal = { v: new BN('99999999992000000') }
 
         assert.ok(result.v.eq(expectedResult.v))
       })
       it('3', async () => {
-        let price: Decimal = { v: DENOMINATOR.mul(new BN('3')) }
-        let liquidity: Decimal = { v: DENOMINATOR.mul(new BN('222')) }
-        let amount: BN = new BN('37')
+        const price: Decimal = { v: DENOMINATOR.mul(new BN('3')) }
+        const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('222')) }
+        const amount: BN = new BN('37')
 
-        let result = getNextPriceYDown(price, liquidity, amount, false)
-        let expectedResult: Decimal = { v: new BN('2833333333333') }
+        const result = getNextPriceYDown(price, liquidity, amount, false)
+        const expectedResult: Decimal = { v: new BN('2833333333333') }
 
         assert.ok(result.v.eq(expectedResult.v))
       })
