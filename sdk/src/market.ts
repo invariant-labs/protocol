@@ -75,7 +75,7 @@ export class Market {
   }
 
   async createPoolTx({ pair, payer, initTick, protocolFee, tokenX, tokenY }: CreatePoolTx) {
-    const payerPubkey = payer.publicKey ?? this.wallet.publicKey
+    const payerPubkey = payer?.publicKey ?? this.wallet.publicKey
     const bitmapKeypair = Keypair.generate()
     const tick = initTick ?? 0
 
