@@ -34,6 +34,7 @@ const POSITION_LIST_SEED = 'positionlistv1'
 const STATE_SEED = 'statev1'
 const MAX_IX = 4
 const TICKS_PER_IX = 1
+const COMPUTE_UNITS = 800000
 export const FEE_TIER = 'feetierv1'
 export const DEFAULT_PUBLIC_KEY = new PublicKey(0)
 
@@ -309,7 +310,6 @@ export class Market {
         programAuthority: programAuthority,
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId
-        
       }
     })
   }
@@ -398,7 +398,7 @@ export class Market {
     const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(pair.tickSpacing)
     const lowerTickIndex = lowerTick != -Infinity ? lowerTick : getMinTick(pair.tickSpacing)
 
-    // m aybe in the future index cloud be store at market
+    // maybe in the future index cloud be store at market
     const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTickIndex)
     const { tickAddress: upperTickAddress } = await this.getTickAddress(pair, upperTickIndex)
     const { positionAddress, positionBump } = await this.getPositionAddress(
@@ -628,7 +628,7 @@ export class Market {
       ticks.set(tick.index, tick)
     }
 
-    // si mulate swap to get exact amount of tokens swapped between tick crosses
+    // simulate swap to get exact amount of tokens swapped between tick crosses
     const swapParameters: SimulateSwapInterface = {
       xToY: XtoY,
       byAmountIn: byAmountIn,
@@ -655,10 +655,10 @@ export class Market {
     if (amountPerTick.length > MAX_IX) {
       throw new Error('Instruction limit was exceeded')
     }
-    const unitsIx = ComputeUnitsInstruction(800000, owner)
+    const unitsIx = ComputeUnitsInstruction(COMPUTE_UNITS, owner)
     const tx: Transaction = new Transaction()
     tx.add(unitsIx)
-    // th is means how many  ticks we would like to cross per instruction
+    // this means how many  ticks we would like to cross per instruction
 
     let amountIx: BN = new BN(0)
     for (let i = 0; i < amountPerTick.length; i++) {
@@ -1037,10 +1037,10 @@ export enum Errors {
   InvalidTickInterval = '0x131', // 5
   NoMoreTicks = '0x132 ', // 6
   TickNotFound = '0x13 3', // 7
-  PriceLimitReached =  '0x134' // 8
+  PriceLimitReached = '0x134' // 8
 }
 
-export interface In itPosition {
+export interface InitPosition {
   pair: Pair
   owner: PublicKey
   userTokenX: PublicKey
