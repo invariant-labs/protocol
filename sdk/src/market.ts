@@ -74,7 +74,7 @@ export class Market {
     await signAndSend(transaction, [createPool.payer, signer], this.connection)
   }
 
-  async createPoolTx({ pair, payer, initTick, protocolFee, tokenX, tokenY }: CreatePool) {
+  async createPoolTx({ pair, payer, initTick, protocolFee, tokenX, tokenY }: CreatePoolTx) {
     const payerPubkey = payer.publicKey ?? this.wallet.publicKey
     const bitmapKeypair = Keypair.generate()
     const tick = initTick ?? 0
@@ -968,13 +968,16 @@ export interface ModifyPosition {
   liquidityDelta: Decimal
 }
 
-export interface CreatePool {
+export interface CreatePoolTx {
   pair: Pair
   payer?: Keypair
   initTick?: number
   protocolFee: Decimal
   tokenX: Token
   tokenY: Token
+}
+export interface CreatePool extends CreatePoolTx {
+  payer: Keypair
 }
 export interface ClaimFee {
   pair: Pair
