@@ -252,13 +252,9 @@ export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
     init = false
   }
 
-  if (index == null) {
-    throw new Error('Index is undefined')
-  }
-
-  if (xToY && sqrtPrice.v.gt(sqrtPriceLimit.v) && index != null) {
+  if (xToY && sqrtPrice.v.gt(sqrtPriceLimit.v) && index !== null) {
     return { swapLimit: sqrtPrice, limitingTick: { index, initialized: init } }
-  } else if (!xToY && sqrtPrice.v.lt(sqrtPriceLimit.v) && index != null) {
+  } else if (!xToY && sqrtPrice.v.lt(sqrtPriceLimit.v) && index !== null) {
     return { swapLimit: sqrtPrice, limitingTick: { index, initialized: init } }
   } else {
     return { swapLimit: sqrtPriceLimit, limitingTick: null }
@@ -285,7 +281,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
   }
   let remainingAmount: BN = swapAmount
   while (!remainingAmount.lte(new BN(0))) {
-    // find closest initielized tick
+    // find closest initialized tick
     const closerLimit: CloserLimit = {
       sqrtPriceLimit: priceLimit,
       xToY: xToY,
