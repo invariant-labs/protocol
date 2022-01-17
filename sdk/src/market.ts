@@ -32,6 +32,7 @@ const POSITION_LIST_SEED = 'positionlistv1'
 const STATE_SEED = 'statev1'
 const MAX_IX = 4
 const TICKS_PER_IX = 1
+const COMPUTE_UNITS = 800000
 export const FEE_TIER = 'feetierv1'
 export const DEFAULT_PUBLIC_KEY = new PublicKey(0)
 
@@ -200,7 +201,7 @@ export class Market {
       oneWay
     )
 
-    return Promise.all(
+    return await Promise.all(
       indexes.map(async index => {
         const { tickAddress } = await this.getTickAddress(pair, index)
         return (await this.program.account.tick.fetch(tickAddress)) as Tick
@@ -225,7 +226,7 @@ export class Market {
     return (await this.program.account.position.fetch(positionAddress)) as Position
   }
 
-  async getPositionsFromIndexes(owner: PublicKey, indexes: Array<number>) {
+  async getPositionsFromIndexes(owner: PublicKey, indexes: number[]) {
     const positionPromises = indexes.map(async i => {
       return await this.getPosition(owner, i)
     })
@@ -507,7 +508,7 @@ export class Market {
     const { pair, xToY, amount, knownPrice, slippage, accountX, accountY, byAmountIn } = swap
     const owner = swap.owner ?? this.wallet.publicKey
 
-    const [pool, tickmap, feeTierAddress] = await Promise.all([
+    const [pool, tickmap, poolAddress] = await Promise.all([
       this.getPool(pair),
       this.getTickmap(pair),
       pair.getAddress(this.program.programId)
@@ -545,50 +546,9 @@ export class Market {
         return { pubkey, isWritable: true, isSigner: false }
       })
 
-    let ticksArray: Tick[] = await this.getClosestTicks(
-      pair,
-      Infinity,
-      undefined,
-      xToY ? 'down' : 'up'
-    )
+    const tx: Transaction = new Transaction()
 
-    let ticks: Map<number, Tick> = new Map<number, Tick>()
-
-    for (var tick of ticksArray) {
-      ticks.set(tick.index, tick)
-    }
-
-    //simulate swap to get exact amount of tokens swaped between tick croses
-    const swapParameters: SimulateSwapInterface = {
-      xToY: xToY,
-      byAmountIn: byAmountIn,
-      swapAmount: amount,
-      currentPrice: pool.sqrtPrice,
-      slippage: slippage,
-      ticks: ticks,
-      tickmap,
-      pool: pool,
-      market: this,
-      pair: pair
-    }
-    let simulationResult: SimulationResult = simulateSwap(swapParameters)
-    let amountPerTick: BN[] = simulationResult.amountPerTick
-    let sum: BN = new BN(0)
-    for (var value of amountPerTick) {
-      sum = sum.add(value)
-    }
-
-    if (!sum.eq(amount)) {
-      throw new Error('Input amount and simulation amount sum are different')
-    }
-
-    if (amountPerTick.length > MAX_IX) {
-      throw new Error('Instruction limit was exceeded')
-    }
-
-    const poolAddress = await pair.getAddress(this.program.programId)
-
-    return this.program.instruction.swap(xToY, amount, byAmountIn, priceLimit, {
+    const swapIx = this.program.instruction.swap(xToY, amount, byAmountIn, priceLimit, {
       remainingAccounts: ra,
       accounts: {
         state: this.stateAddress,
@@ -605,6 +565,129 @@ export class Market {
         tokenProgram: TOKEN_PROGRAM_ID
       }
     })
+    tx.add(swapIx)
+    return tx
+  }
+
+  async swapTransactionSplit(swap: Swap, overridePriceLimit?: BN) {
+    const { pair, xToY, amount, knownPrice, slippage, accountX, accountY, byAmountIn } = swap
+    const owner = swap.owner ?? this.wallet.publicKey
+
+    const [pool, tickmap, poolAddress] = await Promise.all([
+      this.getPool(pair),
+      this.getTickmap(pair),
+      pair.getAddress(this.program.programId)
+    ])
+
+    const priceLimit =
+      overridePriceLimit ?? calculatePriceAfterSlippage(knownPrice, slippage, !xToY).v
+
+    const indexesInDirection = findClosestTicks(
+      tickmap.bitmap,
+      pool.currentTickIndex,
+      pool.tickSpacing,
+      10,
+      Infinity,
+      xToY ? 'down' : 'up'
+    )
+
+    const indexesInReverse = findClosestTicks(
+      tickmap.bitmap,
+      pool.currentTickIndex,
+      pool.tickSpacing,
+      3,
+      Infinity,
+      xToY ? 'up' : 'down'
+    )
+    const remainingAccounts = await Promise.all(
+      indexesInDirection.concat(indexesInReverse).map(async index => {
+        const { tickAddress } = await this.getTickAddress(pair, index)
+        return tickAddress
+      })
+    )
+
+    const ra: Array<{ pubkey: PublicKey; isWritable: boolean; isSigner: boolean }> =
+      remainingAccounts.map(pubkey => {
+        return { pubkey, isWritable: true, isSigner: false }
+      })
+
+    const ticksArray: Tick[] = await this.getClosestTicks(
+      pair,
+      Infinity,
+      undefined,
+      xToY ? 'down' : 'up'
+    )
+
+    const ticks: Map<number, Tick> = new Map<number, Tick>()
+
+    for (const tick of ticksArray) {
+      ticks.set(tick.index, tick)
+    }
+
+    // simulate swap to get exact amount of tokens swapped between tick crosses
+    const swapParameters: SimulateSwapInterface = {
+      xToY: xToY,
+      byAmountIn: byAmountIn,
+      swapAmount: amount,
+      currentPrice: pool.sqrtPrice,
+      slippage: slippage,
+      ticks: ticks,
+      tickmap,
+      pool: pool,
+      market: this,
+      pair: pair
+    }
+    const simulationResult: SimulationResult = simulateSwap(swapParameters)
+    const amountPerTick: BN[] = simulationResult.amountPerTick
+    let sum: BN = new BN(0)
+    for (const value of amountPerTick) {
+      sum = sum.add(value)
+    }
+
+    if (!sum.eq(amount)) {
+      throw new Error('Input amount and simulation amount sum are different')
+    }
+
+    if (amountPerTick.length > MAX_IX) {
+      throw new Error('Instruction limit was exceeded')
+    }
+
+    const tx: Transaction = new Transaction()
+
+    // this is for solana 1.9
+    // const unitsIx = ComputeUnitsInstruction(COMPUTE_UNITS, owner)
+    // tx.add(unitsIx)
+
+    let amountIx: BN = new BN(0)
+    for (let i = 0; i < amountPerTick.length; i++) {
+      amountIx = amountIx.add(amountPerTick[i])
+
+      if (
+        ((i + 1) % TICKS_PER_IX === 0 || i === amountPerTick.length - 1) &&
+        !amountPerTick[i].eqn(0)
+      ) {
+        const swapIx = this.program.instruction.swap(xToY, amountIx, byAmountIn, priceLimit, {
+          remainingAccounts: ra,
+          accounts: {
+            state: this.stateAddress,
+            pool: poolAddress,
+            tickmap: pool.tickmap,
+            tokenX: pool.tokenX,
+            tokenY: pool.tokenY,
+            reserveX: pool.tokenXReserve,
+            reserveY: pool.tokenYReserve,
+            owner,
+            accountX,
+            accountY,
+            programAuthority: this.programAuthority,
+            tokenProgram: TOKEN_PROGRAM_ID
+          }
+        })
+        tx.add(swapIx)
+        amountIx = new BN(0)
+      }
+    }
+    return tx
   }
 
   async swapTransaction(swap: Swap, overridePriceLimit?: BN) {
@@ -944,8 +1027,8 @@ export enum Errors {
   WrongLimit = '0x12f', // 3
   InvalidTickSpacing = '0x130', // 4
   InvalidTickInterval = '0x131', // 5
-  NoMoreTicks = '0x132', // 6
-  TickNotFound = '0x133', // 7
+  NoMoreTicks = '0x132 ', // 6
+  TickNotFound = '0x13 3', // 7
   PriceLimitReached = '0x134' // 8
 }
 
