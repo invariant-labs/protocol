@@ -23,7 +23,7 @@ import {
   SimulationResult
 } from './utils'
 import { Amm, IDL } from './idl/amm'
-import { ComputeUnitsInstruction, IWallet, Pair } from '.'
+import { ComputeUnitsInstruction, IWallet, Pair, signAndSend } from '.'
 import { getMarketAddress, Network } from './network'
 
 const POSITION_SEED = 'positionv1'
@@ -70,7 +70,13 @@ export class Market {
     return instance
   }
 
-  async createPool({ pair, payer, initTick, protocolFee, tokenX, tokenY }: CreatePool) {
+  async createPool(createPool: CreatePool) {
+    const { transaction, signer } = await this.createPoolTx(createPool)
+    await signAndSend(transaction, [createPool.payer, signer], this.connection)
+  }
+
+  async createPoolTx({ pair, payer, initTick, protocolFee, tokenX, tokenY }: CreatePoolTx) {
+    const payerPubkey = payer.publicKey ?? this.wallet.publicKey
     const bitmapKeypair = Keypair.generate()
     const tick = initTick ?? 0
 
@@ -82,7 +88,7 @@ export class Market {
     const tokenXReserve = await tokenX.createAccount(this.programAuthority)
     const tokenYReserve = await tokenY.createAccount(this.programAuthority)
 
-    return await this.program.rpc.createPool(bump, tick, protocolFee, {
+    const createIx = await this.program.instruction.createPool(bump, tick, protocolFee, {
       accounts: {
         state: stateAddress,
         pool: poolAddress,
@@ -92,13 +98,32 @@ export class Market {
         tokenY: tokenY.publicKey,
         tokenXReserve,
         tokenYReserve,
-        payer: payer.publicKey,
+        payer: payerPubkey,
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId
-      },
-      signers: [payer, bitmapKeypair],
-      instructions: [await this.program.account.tickmap.createInstruction(bitmapKeypair)]
+      }
     })
+
+    const transaction = new Transaction({
+      feePayer: payerPubkey
+    })
+      .add(
+        SystemProgram.createAccount({
+          fromPubkey: payerPubkey,
+          newAccountPubkey: bitmapKeypair.publicKey,
+          space: this.program.account.tickmap.size,
+          lamports: await this.connection.getMinimumBalanceForRentExemption(
+            this.program.account.tickmap.size
+          ),
+          programId: this.program.programId
+        })
+      )
+      .add(createIx)
+
+    return {
+      transaction,
+      signer: bitmapKeypair
+    }
   }
 
   async getProgramAuthority() {
@@ -1026,13 +1051,16 @@ export interface ModifyPosition {
   liquidityDelta: Decimal
 }
 
-export interface CreatePool {
+export interface CreatePoolTx {
   pair: Pair
-  payer: Keypair
+  payer?: Keypair
   initTick?: number
   protocolFee: Decimal
   tokenX: Token
   tokenY: Token
+}
+export interface CreatePool extends CreatePoolTx {
+  payer: Keypair
 }
 export interface ClaimFee {
   pair: Pair
