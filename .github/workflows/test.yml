@@ -39,6 +39,7 @@ jobs:
             'npm run test:multicall',
             'npm run test:oracle',
             'npm run test:limits',
+            'npm run test:compare',
             'cargo test'
           ]
     steps:

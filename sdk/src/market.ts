@@ -30,6 +30,7 @@ const TICK_SEED = 'tickv1'
 const POSITION_LIST_SEED = 'positionlistv1'
 const STATE_SEED = 'statev1'
 const MAX_IX = 4
+const TICKS_PER_IX = 1
 export const FEE_TIER = 'feetierv1'
 export const DEFAULT_PUBLIC_KEY = new PublicKey(0)
 
@@ -67,7 +68,13 @@ export class Market {
     return instance
   }
 
-  async createPool({ pair, payer, initTick, protocolFee, tokenX, tokenY }: CreatePool) {
+  async createPool(createPool: CreatePool) {
+    const { transaction, signer } = await this.createPoolTx(createPool)
+    await signAndSend(transaction, [createPool.payer, signer], this.connection)
+  }
+
+  async createPoolTx({ pair, payer, initTick, protocolFee, tokenX, tokenY }: CreatePoolTx) {
+    const payerPubkey = payer?.publicKey ?? this.wallet.publicKey
     const bitmapKeypair = Keypair.generate()
     const tick = initTick ?? 0
 
@@ -79,7 +86,7 @@ export class Market {
     const tokenXReserve = await tokenX.createAccount(this.programAuthority)
     const tokenYReserve = await tokenY.createAccount(this.programAuthority)
 
-    return await this.program.rpc.createPool(bump, tick, protocolFee, {
+    const createIx = await this.program.instruction.createPool(bump, tick, protocolFee, {
       accounts: {
         state: stateAddress,
         pool: poolAddress,
@@ -89,13 +96,32 @@ export class Market {
         tokenY: tokenY.publicKey,
         tokenXReserve,
         tokenYReserve,
-        payer: payer.publicKey,
+        payer: payerPubkey,
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId
-      },
-      signers: [payer, bitmapKeypair],
-      instructions: [await this.program.account.tickmap.createInstruction(bitmapKeypair)]
+      }
     })
+
+    const transaction = new Transaction({
+      feePayer: payerPubkey
+    })
+      .add(
+        SystemProgram.createAccount({
+          fromPubkey: payerPubkey,
+          newAccountPubkey: bitmapKeypair.publicKey,
+          space: this.program.account.tickmap.size,
+          lamports: await this.connection.getMinimumBalanceForRentExemption(
+            this.program.account.tickmap.size
+          ),
+          programId: this.program.programId
+        })
+      )
+      .add(createIx)
+
+    return {
+      transaction,
+      signer: bitmapKeypair
+    }
   }
 
   async getProgramAuthority() {
@@ -510,7 +536,7 @@ export class Market {
     const { pair, xToY, amount, knownPrice, slippage, accountX, accountY, byAmountIn } = swap
     const owner = swap.owner ?? this.wallet.publicKey
 
-    const [pool, tickmap] = await Promise.all([
+    const [pool, tickmap, poolAddress] = await Promise.all([
       this.getPool(pair),
       this.getTickmap(pair),
       pair.getAddress(this.program.programId)
@@ -544,6 +570,72 @@ export class Market {
     )
 
     // trunk-ignore(eslint)
+    const ra: Array<{ pubkey: PublicKey; isWritable: boolean; isSigner: boolean }> =
+      remainingAccounts.map(pubkey => {
+        return { pubkey, isWritable: true, isSigner: false }
+      })
+
+    const tx: Transaction = new Transaction()
+
+    const swapIx = this.program.instruction.swap(xToY, amount, byAmountIn, priceLimit, {
+      remainingAccounts: ra,
+      accounts: {
+        state: this.stateAddress,
+        pool: poolAddress,
+        tickmap: pool.tickmap,
+        tokenX: pool.tokenX,
+        tokenY: pool.tokenY,
+        reserveX: pool.tokenXReserve,
+        reserveY: pool.tokenYReserve,
+        owner,
+        accountX,
+        accountY,
+        programAuthority: this.programAuthority,
+        tokenProgram: TOKEN_PROGRAM_ID
+      }
+    })
+    tx.add(swapIx)
+    return tx
+  }
+
+  async swapTransactionSplit(swap: Swap, overridePriceLimit?: BN) {
+    const { pair, xToY, amount, knownPrice, slippage, accountX, accountY, byAmountIn } = swap
+    const owner = swap.owner ?? this.wallet.publicKey
+
+    const [pool, tickmap, poolAddress] = await Promise.all([
+      this.getPool(pair),
+      this.getTickmap(pair),
+      pair.getAddress(this.program.programId)
+    ])
+
+    const priceLimit =
+      overridePriceLimit ?? calculatePriceAfterSlippage(knownPrice, slippage, !xToY).v
+
+    const indexesInDirection = findClosestTicks(
+      tickmap.bitmap,
+      pool.currentTickIndex,
+      pool.tickSpacing,
+      10,
+      Infinity,
+      xToY ? 'down' : 'up'
+    )
+
+    const indexesInReverse = findClosestTicks(
+      tickmap.bitmap,
+      pool.currentTickIndex,
+      pool.tickSpacing,
+      3,
+      Infinity,
+      xToY ? 'up' : 'down'
+    )
+    const remainingAccounts = await Promise.all(
+      indexesInDirection.concat(indexesInReverse).map(async index => {
+        const { tickAddress } = await this.getTickAddress(pair, index)
+        return tickAddress
+      })
+    )
+
+    // trunk-ignore(eslint/@typescript-eslint/member-delimiter-style)
     const ra: Array<{ pubkey: PublicKey; isWritable: boolean; isSigner: boolean }> =
       remainingAccounts.map(pubkey => {
         return { pubkey, isWritable: true, isSigner: false }
@@ -590,25 +682,42 @@ export class Market {
       throw new Error('Instruction limit was exceeded')
     }
 
-    const poolAddress = await pair.getAddress(this.program.programId)
+    const tx: Transaction = new Transaction()
 
-    return this.program.instruction.swap(xToY, amount, byAmountIn, priceLimit, {
-      remainingAccounts: ra,
-      accounts: {
-        state: this.stateAddress,
-        pool: poolAddress,
-        tickmap: pool.tickmap,
-        tokenX: pool.tokenX,
-        tokenY: pool.tokenY,
-        reserveX: pool.tokenXReserve,
-        reserveY: pool.tokenYReserve,
-        owner,
-        accountX,
-        accountY,
-        programAuthority: this.programAuthority,
-        tokenProgram: TOKEN_PROGRAM_ID
+    // this is for solana 1.9
+    // const unitsIx = ComputeUnitsInstruction(COMPUTE_UNITS, owner)
+    // tx.add(unitsIx)
+
+    let amountIx: BN = new BN(0)
+    for (let i = 0; i < amountPerTick.length; i++) {
+      amountIx = amountIx.add(amountPerTick[i])
+
+      if (
+        ((i + 1) % TICKS_PER_IX === 0 || i === amountPerTick.length - 1) &&
+        !amountPerTick[i].eqn(0)
+      ) {
+        const swapIx = this.program.instruction.swap(xToY, amountIx, byAmountIn, priceLimit, {
+          remainingAccounts: ra,
+          accounts: {
+            state: this.stateAddress,
+            pool: poolAddress,
+            tickmap: pool.tickmap,
+            tokenX: pool.tokenX,
+            tokenY: pool.tokenY,
+            reserveX: pool.tokenXReserve,
+            reserveY: pool.tokenYReserve,
+            owner,
+            accountX,
+            accountY,
+            programAuthority: this.programAuthority,
+            tokenProgram: TOKEN_PROGRAM_ID
+          }
+        })
+        tx.add(swapIx)
+        amountIx = new BN(0)
       }
-    })
+    }
+    return tx
   }
 
   async swapTransaction(swap: Swap, overridePriceLimit?: BN) {
@@ -991,8 +1100,8 @@ export enum Errors {
   WrongLimit = '0x12f', // 3
   InvalidTickSpacing = '0x130', // 4
   InvalidTickInterval = '0x131', // 5
-  NoMoreTicks = '0x132', // 6
-  TickNotFound = '0x133', // 7
+  NoMoreTicks = '0x132 ', // 6
+  TickNotFound = '0x13 3', // 7
   PriceLimitReached = '0x134' // 8
 }
 
@@ -1015,13 +1124,16 @@ export interface ModifyPosition {
   liquidityDelta: Decimal
 }
 
-export interface CreatePool {
+export interface CreatePoolTx {
   pair: Pair
-  payer: Keypair
+  payer?: Keypair
   initTick?: number
   protocolFee: Decimal
   tokenX: Token
   tokenY: Token
+}
+export interface CreatePool extends CreatePoolTx {
+  payer: Keypair
 }
 export interface ClaimFee {
   pair: Pair
