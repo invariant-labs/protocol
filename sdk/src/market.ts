@@ -73,7 +73,7 @@ export class Market {
     await signAndSend(transaction, [createPool.payer, signer], this.connection)
   }
 
-  async createPoolTx({ pair, payer, initTick, protocolFee, tokenX, tokenY }: CreatePoolTx) {
+  async createPoolTx({ pair, payer, initTick, tokenX, tokenY }: CreatePoolTx) {
     const payerPubkey = payer?.publicKey ?? this.wallet.publicKey
     const bitmapKeypair = Keypair.generate()
     const tick = initTick ?? 0
@@ -85,7 +85,7 @@ export class Market {
 
     const tokenXReserve = await tokenX.createAccount(this.programAuthority)
     const tokenYReserve = await tokenY.createAccount(this.programAuthority)
-    const createIx = this.program.instruction.createPool(bump, tick, protocolFee, {
+    const createIx = this.program.instruction.createPool(bump, tick, {
       accounts: {
         state: stateAddress,
         pool: poolAddress,
@@ -1167,7 +1167,6 @@ export interface CreatePoolTx {
   pair: Pair
   payer?: Keypair
   initTick?: number
-  protocolFee: Decimal
   tokenX: Token
   tokenY: Token
 }

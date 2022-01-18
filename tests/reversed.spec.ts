@@ -11,7 +11,6 @@ import {
   CreateFeeTier,
   CreatePool,
   CreateTick,
-  Decimal,
   InitPosition,
   Swap
 } from '@invariant-labs/sdk/src/market'
@@ -29,7 +28,6 @@ describe('reversed', () => {
     fee: fromFee(new BN(600)), // 0.6%
     tickSpacing: 10
   }
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -69,7 +67,6 @@ describe('reversed', () => {
     const createPoolVars: CreatePool = {
       pair,
       payer: admin,
-      protocolFee,
       tokenX,
       tokenY
     }

@@ -6,7 +6,7 @@ import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken } from './testUtils'
 import { assert } from 'chai'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
+import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import {
   ClaimFee,
@@ -29,7 +29,6 @@ describe('claim', () => {
     fee: fromFee(new BN(600)), // 0.6%
     tickSpacing: 10
   }
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -79,7 +78,6 @@ describe('claim', () => {
     const createPoolVars: CreatePool = {
       pair,
       payer: admin,
-      protocolFee,
       tokenX,
       tokenY
     }

@@ -7,7 +7,6 @@ import { createToken } from './testUtils'
 import { Market, Pair, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@invariant-labs/sdk'
 import {
   FeeTier,
-  Decimal,
   CreateFeeTier,
   CreatePool,
   InitPosition,
@@ -28,7 +27,6 @@ describe('compare', () => {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
   }
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) } // 10%
   let firstPair: Pair
   let secondPair: Pair
   let tokenX: Token
@@ -77,7 +75,6 @@ describe('compare', () => {
     const createPoolVars: CreatePool = {
       pair: firstPair,
       payer: admin,
-      protocolFee,
       tokenX,
       tokenY
     }
@@ -86,7 +83,6 @@ describe('compare', () => {
     const createPoolVars2: CreatePool = {
       pair: secondPair,
       payer: admin,
-      protocolFee,
       tokenX: tokenZ,
       tokenY: tokenW
     }

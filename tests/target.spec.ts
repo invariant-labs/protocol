@@ -12,7 +12,6 @@ import {
   CreateFeeTier,
   CreatePool,
   CreateTick,
-  Decimal,
   InitPosition,
   Swap
 } from '@invariant-labs/sdk/src/market'
@@ -25,7 +24,6 @@ describe('target', () => {
   const mintAuthority = Keypair.generate()
   const admin = Keypair.generate()
   let market: Market
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -69,7 +67,6 @@ describe('target', () => {
     const createPoolVars: CreatePool = {
       pair,
       payer: admin,
-      protocolFee,
       tokenX,
       tokenY
     }
