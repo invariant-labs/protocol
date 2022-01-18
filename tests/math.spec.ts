@@ -1,6 +1,12 @@
 import { assert } from 'chai'
 import { BN } from '@project-serum/anchor'
-import { calculatePriceSqrt, DENOMINATOR, TICK_LIMIT } from '@invariant-labs/sdk'
+import {
+  calculatePriceSqrt,
+  DENOMINATOR,
+  TICK_LIMIT,
+  TICK_SEARCH_RANGE,
+  MAX_TICK
+} from '@invariant-labs/sdk'
 import {
   calculateSwapStep,
   getDeltaX,
@@ -19,6 +25,7 @@ import {
 import { bigNumberToBuffer, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { setInitialized } from './testUtils'
 import { Decimal } from '@invariant-labs/sdk/src/market'
+import { getSearchLimit } from '@invariant-labs/sdk/src/tickmap'
 
 describe('Math', () => {
   describe('Test sqrt price calculation', () => {
@@ -896,4 +903,75 @@ describe('Math', () => {
       })
     })
   })
+  describe('test getSearchLimit', () => {
+    it('Simple up', async () => {
+      const limit = getSearchLimit(new BN(0), new BN(1), true)
+      assert.ok(limit.eq(new BN(TICK_SEARCH_RANGE)))
+    })
+    it('Simple down', async () => {
+      const limit = getSearchLimit(new BN(0), new BN(1), false)
+      assert.ok(limit.eq(new BN(-TICK_SEARCH_RANGE)))
+    })
+    it('Less simple up', async () => {
+      const start = new BN(60)
+      const step = new BN(12)
+      const limit = getSearchLimit(start, step, true)
+      const expected = new BN(TICK_SEARCH_RANGE).mul(step).add(start)
+      assert.ok(limit.eq(expected))
+    })
+    it('Less simple down', async () => {
+      const start = new BN(60)
+      const step = new BN(12)
+      const limit = getSearchLimit(start, step, false)
+      const expected = new BN(-TICK_SEARCH_RANGE).mul(step).add(start)
+      assert.ok(limit.eq(expected))
+    })
+    it('Up to array limit', async () => {
+      const step = new BN(2)
+      const limit = getSearchLimit(step.mul(new BN(TICK_LIMIT)).subn(10), step, true)
+      const expected = step.mul(new BN(TICK_LIMIT - 1))
+      assert.ok(limit.eq(expected))
+    })
+    it('Down to array limit', async () => {
+      const step = new BN(2)
+      const limit = getSearchLimit(step.mul(new BN(-TICK_LIMIT + 1)), step, false)
+      const expected = step.mul(new BN(-(TICK_LIMIT - 1)))
+      assert.ok(limit.eq(expected))
+    })
+    it('Up to price limit', async () => {
+      const step = new BN(4)
+      const limit = getSearchLimit(new BN(MAX_TICK - 22), step, true)
+      const expected = new BN(MAX_TICK - 2)
+      assert.ok(limit.eq(expected))
+    })
+    it('At the price limit', async () => {
+      // TODO
+      // const step = new BN(4)
+      // const limit = getSearchLimit(new BN(MAX_TICK - 22), step, true)
+      // const expected = new BN(MAX_TICK - 2)
+      // assert.ok(limit.eq(expected))
+    })
+  })
+  // TODO write unit tests for getCloserLimit
+  // describe('test getCloserLimit', () => {
+  //   it('tick limit closer', async () => {
+  //
+  //     // const closerLimit: CloserLimit = {
+  //     //   sqrtPriceLimit: priceLimit,
+  //     //   xToY: xToY,
+  //     //   currentTick: currentTickIndex,
+  //     //   tickSpacing: tickSpacing,
+  //     //   tickmap: tickmap
+  //     // }
+  //     //const { swapLimit, limitingTick } = getCloserLimit(closerLimit)
+  //   })
+  //   it('trade limit closer', async () => {
+  //   })
+  //   it('other direction', async () => {
+  //
+  //   })
+  //   it('other direction', async () => {
+  //
+  //   })
+  // })
 })
