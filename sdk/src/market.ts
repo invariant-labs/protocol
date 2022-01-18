@@ -163,6 +163,16 @@ export class Market {
       })
   }
 
+  public async onTickChange(pair: Pair, index: number, fn: (tick: Tick) => void) {
+    const { tickAddress } = await this.getTickAddress(pair, index)
+
+    this.program.account.tick
+      .subscribe(tickAddress, 'singleGossip') // REVIEW use recent commitment + allow overwrite via props
+      .on('change', (poolStructure: Tick) => {
+        fn(poolStructure)
+      })
+  }
+
   async getFeeTierAddress(feeTier: FeeTier) {
     return await getFeeTierAddress(feeTier, this.program.programId)
   }
