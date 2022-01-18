@@ -1,11 +1,13 @@
-import * as anchor from '@project-serum/anchor'
 import { Provider } from '@project-serum/anchor'
 import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
 import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
 import { MINTER } from './minter'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Market, Pair, tou64 } from '@invariant-labs/sdk/src'
-import { FEE_TIERS, fromFee, toDecimal } from '@invariant-labs/sdk/src/utils'
+import { FEE_TIERS, toDecimal } from '@invariant-labs/sdk/src/utils'
+import { Swap } from '@invariant-labs/sdk/src/market'
+
+// trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
 const provider = Provider.local(clusterApiUrl('devnet'), {
@@ -46,19 +48,19 @@ const main = async () => {
 
     console.log(`swap ${side ? 'x -> y' : 'y -> x'}: ${amount}`)
 
-    market.swap(
-      {
-        XtoY: side,
-        accountX: accountX,
-        accountY: accountY,
-        amount: tou64(amount),
-        byAmountIn: true,
-        knownPrice: pool.sqrtPrice,
-        slippage: toDecimal(2, 2),
-        pair: pair
-      },
-      MINTER
-    )
+    const swapVars: Swap = {
+      xToY: side,
+      accountX: accountX,
+      accountY: accountY,
+      amount: tou64(amount),
+      byAmountIn: true,
+      knownPrice: pool.sqrtPrice,
+      slippage: toDecimal(2, 2),
+      pair,
+      owner: MINTER.publicKey
+    }
+    await market.swap(swapVars, MINTER)
   }
 }
+// trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
 main()

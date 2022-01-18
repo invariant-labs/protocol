@@ -1,13 +1,19 @@
 import { TICK_LIMIT, DENOMINATOR, Network } from '@invariant-labs/sdk'
 import { Market, Pair } from '@invariant-labs/sdk/src'
-import { ChangeProtocolFee, Decimal, FeeTier } from '@invariant-labs/sdk/src/market'
+import {
+  ChangeProtocolFee,
+  CreateFeeTier,
+  CreatePool,
+  Decimal,
+  FeeTier
+} from '@invariant-labs/sdk/src/market'
 import { fromFee } from '@invariant-labs/sdk/src/utils'
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
-import { changeProtocolFee, createToken } from './testUtils'
+import { createToken } from './testUtils'
 
 describe('change-protocol-fee', () => {
   const provider = Provider.local()
@@ -52,35 +58,43 @@ describe('change-protocol-fee', () => {
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
   it('#createState()', async () => {
-    await market.createState(admin, protocolFee)
+    await market.createState(admin.publicKey, admin)
   })
 
   it('#createFeeTier()', async () => {
-    await market.createFeeTier(feeTier, admin)
+    const createFeeTierVars: CreateFeeTier = {
+      feeTier,
+      admin: admin.publicKey
+    }
+    await market.createFeeTier(createFeeTierVars, admin)
   })
 
   it('#create()', async () => {
     // 0.6% / 10
-    await market.create({
+    const createPoolVars: CreatePool = {
       pair,
-      signer: admin
-    })
-    const createdPool = await market.get(pair)
+      payer: admin,
+      protocolFee,
+      tokenX,
+      tokenY
+    }
+    await market.createPool(createPoolVars)
+    const createdPool = await market.getPool(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
     assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
     assert.ok(createdPool.fee.v.eq(feeTier.fee))
     assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
     assert.ok(createdPool.liquidity.v.eqn(0))
     assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR))
-    assert.ok(createdPool.currentTickIndex == 0)
+    assert.ok(createdPool.currentTickIndex === 0)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
     assert.ok(createdPool.feeProtocolTokenX.eqn(0))
     assert.ok(createdPool.feeProtocolTokenY.eqn(0))
 
     const tickmapData = await market.getTickmap(pair)
-    assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
-    assert.ok(tickmapData.bitmap.every(v => v == 0))
+    assert.ok(tickmapData.bitmap.length === TICK_LIMIT / 4)
+    assert.ok(tickmapData.bitmap.every(v => v === 0))
   })
 
   it('#change-protocol-fee()', async () => {
@@ -91,6 +105,6 @@ describe('change-protocol-fee', () => {
       protocolFee,
       admin: admin.publicKey
     }
-    await changeProtocolFee(market, changeProtocolFeeVars, admin)
+    await market.changeProtocolFee(changeProtocolFeeVars, admin)
   })
 })

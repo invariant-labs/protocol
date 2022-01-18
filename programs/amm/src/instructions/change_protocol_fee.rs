@@ -1,4 +1,4 @@
-use anchor_lang::{prelude::*, solana_program::entrypoint_deprecated::ProgramResult};
+use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
 
 use crate::{
@@ -8,9 +8,9 @@ use crate::{
 
 #[derive(Accounts)]
 pub struct ChangeProtocolFee<'info> {
-    #[account(mut, seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
+    #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
-    #[account(
+    #[account(mut,
         seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref(), &pool.load()?.fee.v.to_le_bytes(), &pool.load()?.tick_spacing.to_le_bytes()],
         bump = pool.load()?.bump
     )]
@@ -26,8 +26,8 @@ pub struct ChangeProtocolFee<'info> {
 }
 
 pub fn handler(ctx: Context<ChangeProtocolFee>, protocol_fee: Decimal) -> ProgramResult {
-    let state = &mut ctx.accounts.state.load_mut()?;
-    state.protocol_fee = protocol_fee;
+    let pool = &mut ctx.accounts.pool.load_mut()?;
+    pool.protocol_fee = protocol_fee;
 
     Ok(())
 }

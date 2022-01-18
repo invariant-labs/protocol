@@ -4,6 +4,7 @@ import { MOCK_TOKENS } from '@invariant-labs/sdk/lib/network'
 import { MINTER } from './minter'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { tou64 } from '@invariant-labs/sdk/lib/utils'
+// trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
 const ADDRESS = new PublicKey('7cGcxMCWHqqJLQ6pK13ygt8TnPEpddcnvDFvW4onNgT5')
@@ -31,4 +32,5 @@ const main = async () => {
   await usdt.mintTo(minterUsdt, MINTER, [], tou64(AMOUNT.mul(new BN(10).pow(new BN(6)))))
   await sol.mintTo(minterSol, MINTER, [], tou64(AMOUNT.mul(new BN(10).pow(new BN(9)))))
 }
+// trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
 main()

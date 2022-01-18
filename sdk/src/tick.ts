@@ -9,7 +9,7 @@ export const getTickFromPrice = (
   price: Decimal,
   xToY: boolean
 ): number => {
-  assert.isTrue(currentTick % tickSpacing == 0)
+  assert.isTrue(currentTick % tickSpacing === 0)
 
   if (xToY) {
     return priceToTickInRange(
@@ -29,7 +29,7 @@ export const getTickFromPrice = (
 }
 
 const priceToTickInRange = (price: Decimal, low: number, high: number, step: number): number => {
-  assert.ok(step != 0)
+  assert.ok(step !== 0)
 
   low = Math.floor(low / step)
   high = Math.floor(high / step)
