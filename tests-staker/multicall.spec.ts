@@ -151,8 +151,6 @@ describe('Multicall test', () => {
 
     pool = await pair.getAddress(anchor.workspace.Amm.programId)
     amm = anchor.workspace.Amm.programId
-
-    // create tokens
   })
   it('Multicall', async () => {
     const currentTime = getTime()

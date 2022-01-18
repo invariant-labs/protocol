@@ -874,6 +874,49 @@ export type Amm = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "changeProtocolFee",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenX",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenY",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "programAuthority",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "protocolFee",
+          "type": {
+            "defined": "Decimal"
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1378,6 +1421,11 @@ export type Amm = {
       "code": 6019,
       "name": "LimitReached",
       "msg": "Absolute price limit was reached"
+    },
+    {
+      "code": 6020,
+      "name": "InvalidProtocolFee",
+      "msg": "Invalid protocol fee"
     }
   ]
 };
@@ -2258,6 +2306,49 @@ export const IDL: Amm = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "changeProtocolFee",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenX",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenY",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "programAuthority",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "protocolFee",
+          "type": {
+            "defined": "Decimal"
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -2762,6 +2853,11 @@ export const IDL: Amm = {
       "code": 6019,
       "name": "LimitReached",
       "msg": "Absolute price limit was reached"
+    },
+    {
+      "code": 6020,
+      "name": "InvalidProtocolFee",
+      "msg": "Invalid protocol fee"
     }
   ]
 };

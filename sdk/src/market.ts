@@ -1015,6 +1015,36 @@ export class Market {
     const pool = await this.getPool(pair)
     return await this.program.account.oracle.fetch(pool.oracleAddress)
   }
+
+  async changeProtocolFeeInstruction(changeProtocolFee: ChangeProtocolFee) {
+    let { pair, admin, protocolFee } = changeProtocolFee
+    admin = admin ?? this.wallet.publicKey
+
+    const { address: stateAddress } = await this.getStateAddress()
+    const poolAddress = await pair.getAddress(this.program.programId)
+
+    return this.program.instruction.changeProtocolFee(protocolFee, {
+      accounts: {
+        state: stateAddress,
+        pool: poolAddress,
+        tokenX: pair.tokenX,
+        tokenY: pair.tokenY,
+        admin,
+        programAuthority: this.programAuthority
+      }
+    })
+  }
+
+  async changeProtocolFeeTransaction(changeProtocolFee: ChangeProtocolFee) {
+    const ix = await this.changeProtocolFeeInstruction(changeProtocolFee)
+    return new Transaction().add(ix)
+  }
+
+  async changeProtocolFee(changeProtocolFee: ChangeProtocolFee, signer: Keypair) {
+    const tx = await this.changeProtocolFeeTransaction(changeProtocolFee)
+
+    await signAndSend(tx, [signer], this.connection)
+  }
 }
 
 export interface Decimal {
@@ -1168,6 +1198,12 @@ export interface UpdateSecondsPerLiquidity {
   lowerTickIndex: number
   upperTickIndex: number
   index: number
+}
+
+export interface ChangeProtocolFee {
+  pair: Pair
+  admin?: PublicKey
+  protocolFee: Decimal
 }
 export interface CreateFeeTier {
   feeTier: FeeTier

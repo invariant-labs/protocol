@@ -122,6 +122,14 @@ pub mod amm {
     pub fn withdraw_protocol_fee(ctx: Context<WithdrawProtocolFee>) -> ProgramResult {
         instructions::withdraw_protocol_fee::handler(ctx)
     }
+
+    #[access_control(receiver(&ctx.accounts.pool, &ctx.accounts.admin))]
+    pub fn change_protocol_fee(
+        ctx: Context<ChangeProtocolFee>,
+        protocol_fee: Decimal,
+    ) -> ProgramResult {
+        instructions::change_protocol_fee::handler(ctx, protocol_fee)
+    }
 }
 
 fn admin(state_loader: &AccountLoader<State>, signer: &AccountInfo) -> Result<()> {
