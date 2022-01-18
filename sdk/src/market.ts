@@ -85,8 +85,7 @@ export class Market {
 
     const tokenXReserve = await tokenX.createAccount(this.programAuthority)
     const tokenYReserve = await tokenY.createAccount(this.programAuthority)
-
-    const createIx = await this.program.instruction.createPool(bump, tick, protocolFee, {
+    const createIx = this.program.instruction.createPool(bump, tick, protocolFee, {
       accounts: {
         state: stateAddress,
         pool: poolAddress,

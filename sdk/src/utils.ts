@@ -27,11 +27,11 @@ export enum ERRORS {
   SIGNATURE = 'Error: Signature verification failed',
   SIGNER = 'Error: unknown signer',
   PANICKED = 'Program failed to complete',
-  SERIALIZATION = '0xa4',
+  SERIALIZATION = '0xbbc',
   ALLOWANCE = 'custom program error: 0x1',
   NO_SIGNERS = 'Error: No signers',
-  CONSTRAINT_RAW = '0x8f',
-  CONSTRAINT_SEEDS = '0x92'
+  CONSTRAINT_RAW = '0x7d3',
+  CONSTRAINT_SEEDS = '0x7d6'
 }
 
 export enum INVARIANT_ERRORS {
@@ -50,7 +50,7 @@ export enum INVARIANT_ERRORS {
   INVALID_POOL_LIQUIDITY = '0x177c',
   INVALID_POSITION_INDEX = '0x177d',
   POSITION_WITHOUT_LIQUIDITY = '0x177e',
-  INVALID_POOL_TOKEN_ADDRESSES = '0x177f'
+  INVALID_POOL_TOKEN_ADDRESSES = '0x1780'
 }
 
 export interface SimulateSwapPrice {

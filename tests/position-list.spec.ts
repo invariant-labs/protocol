@@ -103,7 +103,7 @@ describe('Position list', () => {
             pair,
             payer: admin.publicKey
           }
-          await market.createTick(createTickVars, wallet)
+          await market.createTick(createTickVars, admin)
         })
       )
     })

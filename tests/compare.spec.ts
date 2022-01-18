@@ -87,8 +87,8 @@ describe('compare', () => {
       pair: secondPair,
       payer: admin,
       protocolFee,
-      tokenX,
-      tokenY
+      tokenX: tokenZ,
+      tokenY: tokenW
     }
     await market.createPool(createPoolVars2)
 
@@ -162,8 +162,8 @@ describe('compare', () => {
     const initPositionVars2: InitPosition = {
       pair: secondPair,
       owner: positionOwner.publicKey,
-      userTokenX: userTokenXAccount,
-      userTokenY: userTokenYAccount,
+      userTokenX: userTokenZAccount,
+      userTokenY: userTokenWAccount,
       lowerTick,
       upperTick,
       liquidityDelta
@@ -194,10 +194,10 @@ describe('compare', () => {
     const swapVars: Swap = {
       pair: firstPair,
       owner: owner.publicKey,
-      xToY: true,
+      xToY: false,
       amount: new BN(500),
       knownPrice: firstPoolDataBefore.sqrtPrice,
-      slippage: toDecimal(1, 2),
+      slippage: toDecimal(2, 2),
       accountX,
       accountY,
       byAmountIn: true

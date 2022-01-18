@@ -15,7 +15,7 @@ import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createStandardFeeTiers, createToken, eqDecimal } from './testUtils'
 import { MAX_TICK, MIN_TICK } from '@invariant-labs/sdk/lib/math'
 import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
-import { fromFee, assertThrowsAsync, INVARIANT_ERRORS } from '@invariant-labs/sdk/src/utils'
+import { fromFee, assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
 import { CreatePool, CreateTick, Decimal, InitPosition } from '@invariant-labs/sdk/src/market'
 
 describe('position', () => {
@@ -66,8 +66,6 @@ describe('position', () => {
   it('#create() should fail because of token addresses', async () => {
     const spoofPair = new Pair(pair.tokenX, pair.tokenY, feeTier)
     spoofPair.tokenX = pair.tokenY
-    const tmp = spoofPair.tokenX
-    spoofPair.tokenY = tmp
 
     const createPoolVars: CreatePool = {
       pair: spoofPair,
@@ -77,10 +75,7 @@ describe('position', () => {
       tokenY,
       initTick
     }
-    await assertThrowsAsync(
-      market.createPool(createPoolVars),
-      INVARIANT_ERRORS.INVALID_POOL_TOKEN_ADDRESSES
-    )
+    await assertThrowsAsync(market.createPool(createPoolVars))
   })
   it('#create()', async () => {
     // fee tier 0.02% / 4
