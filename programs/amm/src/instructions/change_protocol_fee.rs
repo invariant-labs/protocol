@@ -19,13 +19,17 @@ pub struct ChangeProtocolFee<'info> {
     pub token_x: Account<'info, Mint>,
     #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y,)]
     pub token_y: Account<'info, Mint>,
-    #[account(constraint = &pool.load()?.fee_receiver == admin.key)]
+    #[account(constraint = &state.load()?.admin == admin.key)]
     pub admin: Signer<'info>,
     #[account(constraint = &state.load()?.authority == program_authority.key)]
     pub program_authority: AccountInfo<'info>,
 }
 
 pub fn handler(ctx: Context<ChangeProtocolFee>, protocol_fee: Decimal) -> ProgramResult {
+    require!(
+        protocol_fee.ge(&Decimal::new(0)) && protocol_fee.le(&Decimal::from_integer(1)),
+        InvalidProtocolFee
+    );
     let pool = &mut ctx.accounts.pool.load_mut()?;
     pool.protocol_fee = protocol_fee;
 
