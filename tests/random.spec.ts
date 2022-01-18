@@ -1,19 +1,12 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
-import { Keypair, Transaction } from '@solana/web3.js'
-import {
-  createState,
-  createTokensAndPool,
-  createUserWithTokens,
-  initPosition,
-  swap
-} from './testUtils'
-import { Market, DENOMINATOR, Network, signAndSend, sleep } from '@invariant-labs/sdk'
-import { fromFee, toDecimal } from '@invariant-labs/sdk/src/utils'
+import { Keypair } from '@solana/web3.js'
+import { createTokensAndPool, createUserWithTokens } from './testUtils'
+import { Market, DENOMINATOR, Network, sleep } from '@invariant-labs/sdk'
+import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { Decimal, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 import { Pair } from '@invariant-labs/sdk/src'
 import { beforeEach } from 'mocha'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
 
 describe('limits', () => {
@@ -37,7 +30,7 @@ describe('limits', () => {
     )
     await connection.requestAirdrop(admin.publicKey, 1e10)
     await sleep(500)
-    await createState(market, admin.publicKey, admin)
+    await market.createState(admin.publicKey, admin)
   })
 
   beforeEach(async () => {
@@ -68,7 +61,7 @@ describe('limits', () => {
       upperTick,
       liquidityDelta: { v: liquidityDelta }
     }
-    await initPosition(market, initPositionVars, owner)
+    await market.initPosition(initPositionVars, owner)
 
     const amount = new BN(1e9)
 
@@ -90,7 +83,7 @@ describe('limits', () => {
           byAmountIn: true,
           owner: owner.publicKey
         }
-        await swap(market, swapVars, owner)
+        await market.swap(swapVars, owner)
 
         const swapVars2: Swap = {
           pair,
@@ -103,7 +96,7 @@ describe('limits', () => {
           byAmountIn: false,
           owner: owner.publicKey
         }
-        await swap(market, swapVars2, owner)
+        await market.swap(swapVars2, owner)
 
         // commented out until 1.9 hits
         // const ixs = await Promise.all([oneWayTx, otherWayTx])
@@ -118,7 +111,7 @@ describe('limits', () => {
       if (i % 100 === 0) {
         console.log(`${i} swaps done`)
         console.log(`price: ${priceAfter.toString()}`)
-        console.log(`fee: ${prevFee.mul(DENOMINATOR)}`)
+        console.log(`fee: ${prevFee.mul(DENOMINATOR).toString()}`)
         console.log(`fee delta: ${prevFee.sub(poolAfter.feeGrowthGlobalX.v).toString()}`)
       }
 

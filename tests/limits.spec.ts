@@ -1,14 +1,8 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
-import {
-  createState,
-  createTokensAndPool,
-  createUserWithTokens,
-  initPosition,
-  swap
-} from './testUtils'
-import { Market, DENOMINATOR, Network, sleep } from '@invariant-labs/sdk'
+import { createTokensAndPool, createUserWithTokens } from './testUtils'
+import { Market, DENOMINATOR, Network, sleep, calculatePriceSqrt } from '@invariant-labs/sdk'
 import { assertThrowsAsync, getMaxTick, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { Decimal, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 import { getLiquidityByX, getLiquidityByY } from '@invariant-labs/sdk/src/math'
@@ -17,7 +11,6 @@ import { assert } from 'chai'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
 import { Pair } from '@invariant-labs/sdk/lib/pair'
-import { calculatePriceSqrt } from '@invariant-labs/sdk'
 
 describe('limits', () => {
   const provider = Provider.local()
@@ -43,7 +36,7 @@ describe('limits', () => {
     await connection.requestAirdrop(admin.publicKey, 1e10)
     await sleep(500)
 
-    await createState(market, admin.publicKey, admin)
+    await market.createState(admin.publicKey, admin)
   })
 
   beforeEach(async () => {
@@ -93,7 +86,7 @@ describe('limits', () => {
       upperTick,
       liquidityDelta
     }
-    await initPosition(market, initPositionVars, owner)
+    await market.initPosition(initPositionVars, owner)
 
     const swapVars: Swap = {
       pair,
@@ -106,7 +99,7 @@ describe('limits', () => {
       accountY: userAccountY,
       byAmountIn: true
     }
-    await swap(market, swapVars, owner)
+    await market.swap(swapVars, owner)
 
     it('big deposit X and swap Y', async () => {
       const mintAmount = new BN(2).pow(new BN(64)).subn(1)
@@ -137,7 +130,7 @@ describe('limits', () => {
         upperTick,
         liquidityDelta
       }
-      await initPosition(market, initPositionVars, owner)
+      await market.initPosition(initPositionVars, owner)
 
       assert.ok((await tokenX.getAccountInfo(userAccountX)).amount.eqn(0))
       assert.ok((await tokenY.getAccountInfo(userAccountY)).amount.eq(mintAmount))
@@ -153,20 +146,20 @@ describe('limits', () => {
         accountY: userAccountY,
         byAmountIn: true
       }
-      await swap(market, swapVars, owner)
+      await market.swap(swapVars, owner)
 
       assert.isFalse((await tokenX.getAccountInfo(userAccountX)).amount.eqn(0))
       assert.ok((await tokenY.getAccountInfo(userAccountY)).amount.eqn(0))
     })
 
-  it('big deposit Y and swap X', async () => {
-    const mintAmount = new BN(2).pow(new BN(63)).subn(1)
-    const { owner, userAccountX, userAccountY } = await createUserWithTokens(
-      pair,
-      connection,
-      mintAuthority,
-      mintAmount
-    )
+    it('big deposit Y and swap X', async () => {
+      const mintAmount = new BN(2).pow(new BN(63)).subn(1)
+      const { owner, userAccountX, userAccountY } = await createUserWithTokens(
+        pair,
+        connection,
+        mintAuthority,
+        mintAmount
+      )
 
       const upperTick = 0
       const lowerTick = upperTick - (pair.feeTier.tickSpacing ?? 0)
@@ -188,7 +181,7 @@ describe('limits', () => {
         upperTick,
         liquidityDelta
       }
-      await initPosition(market, initPositionVars, owner)
+      await market.initPosition(initPositionVars, owner)
 
       assert.ok((await tokenX.getAccountInfo(userAccountX)).amount.eq(mintAmount))
       assert.ok((await tokenY.getAccountInfo(userAccountY)).amount.eqn(0))
@@ -204,7 +197,7 @@ describe('limits', () => {
         byAmountIn: true,
         owner: owner.publicKey
       }
-      await swap(market, swapVars, owner)
+      await market.swap(swapVars, owner)
 
       assert.ok((await tokenX.getAccountInfo(userAccountX)).amount.eqn(0))
       assert.isFalse((await tokenY.getAccountInfo(userAccountY)).amount.eqn(0))
@@ -249,7 +242,7 @@ describe('limits', () => {
         upperTick,
         liquidityDelta
       }
-      await initPosition(market, initPositionVars, owner)
+      await market.initPosition(initPositionVars, owner)
 
       // swap tokens
       const amount = mintAmount.divn(8)
@@ -265,7 +258,7 @@ describe('limits', () => {
         byAmountIn: true,
         owner: owner.publicKey
       }
-      await swap(market, swapVars, owner)
+      await market.swap(swapVars, owner)
 
       const swapVars2: Swap = {
         pair,
@@ -278,7 +271,7 @@ describe('limits', () => {
         byAmountIn: true,
         owner: owner.publicKey
       }
-      await swap(market, swapVars2, owner)
+      await market.swap(swapVars2, owner)
 
       const swapVars3: Swap = {
         pair,
@@ -291,7 +284,7 @@ describe('limits', () => {
         byAmountIn: false,
         owner: owner.publicKey
       }
-      await swap(market, swapVars3, owner)
+      await market.swap(swapVars3, owner)
 
       const swapVars4: Swap = {
         pair,
@@ -304,7 +297,7 @@ describe('limits', () => {
         byAmountIn: false,
         owner: owner.publicKey
       }
-      await swap(market, swapVars4, owner)
+      await market.swap(swapVars4, owner)
     })
 
     it('swap at upper limit', async () => {
@@ -323,7 +316,7 @@ describe('limits', () => {
       tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
       tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
-    const mintAmount = new BN(2).pow(new BN(63)).subn(1)
+      const mintAmount = new BN(2).pow(new BN(63)).subn(1)
 
       const positionAmount = mintAmount.subn(1)
 
@@ -352,9 +345,7 @@ describe('limits', () => {
         upperTick: Infinity,
         liquidityDelta
       }
-      await initPosition(market, initPositionVars, owner)
-
-      const position = await market.getPosition(owner.publicKey, 0)
+      await market.initPosition(initPositionVars, owner)
 
       const swapVars: Swap = {
         pair,
@@ -367,7 +358,7 @@ describe('limits', () => {
         byAmountIn: true,
         owner: owner.publicKey
       }
-      await assertThrowsAsync(swap(market, swapVars, owner))
+      await assertThrowsAsync(market.swap(swapVars, owner))
     })
   })
 })

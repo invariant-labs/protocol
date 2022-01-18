@@ -6,7 +6,8 @@ import { FEE_TIERS, fromFee } from '@invariant-labs/sdk/src/utils'
 import { CreatePool, Decimal } from '@invariant-labs/sdk/src/market'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { BN } from '../sdk-staker/lib'
-import { createPool } from '../tests/testUtils'
+
+// trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
 const provider = Provider.local(clusterApiUrl('devnet'), {
@@ -38,40 +39,42 @@ const createUsdcUsdt = async (market: Market) => {
     tokenX,
     tokenY
   }
-  await createPool(market, createPoolVars)
-}
-const createUsdcSol = async (market: Market) => {
-  const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.SOL), feeTier)
-  const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-  const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
-
-  const createPoolVars: CreatePool = {
-    pair,
-    payer: wallet,
-    protocolFee,
-    tokenX,
-    tokenY,
-    initTick: 18000
-  }
-  await createPool(market, createPoolVars)
+  await market.createPool(createPoolVars)
 }
 
-const createMsolSol = async (market: Market) => {
-  const pair = new Pair(new PublicKey(MOCK_TOKENS.MSOL), new PublicKey(MOCK_TOKENS.SOL), feeTier)
-  const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-  const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
+// const createUsdcSol = async (market: Market) => {
+//   const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.SOL), feeTier)
+//   const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
+//   const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+//   const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
 
-  const createPoolVars: CreatePool = {
-    pair,
-    payer: wallet,
-    protocolFee,
-    tokenX,
-    tokenY,
-    initTick: 200
-  }
-  await createPool(market, createPoolVars)
-}
+//   const createPoolVars: CreatePool = {
+//     pair,
+//     payer: wallet,
+//     protocolFee,
+//     tokenX,
+//     tokenY,
+//     initTick: 18000
+//   }
+//   await createPool(market, createPoolVars)
+// }
 
+// const createMsolSol = async (market: Market) => {
+//   const pair = new Pair(new PublicKey(MOCK_TOKENS.MSOL), new PublicKey(MOCK_TOKENS.SOL), feeTier)
+//   const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
+//   const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+//   const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
+
+//   const createPoolVars: CreatePool = {
+//     pair,
+//     payer: wallet,
+//     protocolFee,
+//     tokenX,
+//     tokenY,
+//     initTick: 200
+//   }
+//   await createPool(market, createPoolVars)
+// }
+
+// trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
 main()

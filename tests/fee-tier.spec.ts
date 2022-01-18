@@ -5,7 +5,6 @@ import { ERRORS, fromFee } from '@invariant-labs/sdk/src/utils'
 import * as anchor from '@project-serum/anchor'
 import { BN, Provider } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
-import { createFeeTier, createState } from './testUtils'
 
 describe('fee-tier', () => {
   const provider = Provider.local()
@@ -38,7 +37,7 @@ describe('fee-tier', () => {
 
   it('#createState()', async () => {
     await sleep(1000)
-    createState(market, admin.publicKey, admin)
+    await market.createState(admin.publicKey, admin)
   })
 
   it('#createFeeTier()', async () => {
@@ -47,7 +46,7 @@ describe('fee-tier', () => {
       feeTier: feeTierAdmin,
       admin: admin.publicKey
     }
-    await createFeeTier(market, createFeeTierVars, admin)
+    await market.createFeeTier(createFeeTierVars, admin)
   })
 
   it('Non-Admin #createFeeTier()', async () => {
@@ -56,6 +55,6 @@ describe('fee-tier', () => {
       feeTier: feeTierUser,
       admin: user.publicKey
     }
-    assertThrowsAsync(createFeeTier(market, createFeeTierVars, user), ERRORS.CONSTRAINT_RAW)
+    await assertThrowsAsync(market.createFeeTier(createFeeTierVars, user), ERRORS.CONSTRAINT_RAW)
   })
 })

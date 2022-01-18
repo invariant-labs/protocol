@@ -12,16 +12,7 @@ import {
 } from '@invariant-labs/sdk'
 import { Provider, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import {
-  createPool,
-  createPositionList,
-  createStandardFeeTiers,
-  createState,
-  createTick,
-  createToken,
-  eqDecimal,
-  initPosition
-} from './testUtils'
+import { createStandardFeeTiers, createToken, eqDecimal } from './testUtils'
 import { MAX_TICK, MIN_TICK } from '@invariant-labs/sdk/lib/math'
 import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
 import { fromFee, assertThrowsAsync, INVARIANT_ERRORS } from '@invariant-labs/sdk/src/utils'
@@ -69,7 +60,7 @@ describe('position', () => {
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
-    await createState(market, admin.publicKey, admin)
+    await market.createState(admin.publicKey, admin)
     await createStandardFeeTiers(market, admin)
   })
   it('#create() should fail because of token addresses', async () => {
@@ -86,8 +77,10 @@ describe('position', () => {
       tokenY,
       initTick
     }
-    assertThrowsAsync(createPool(market, createPoolVars)),
+    await assertThrowsAsync(
+      market.createPool(createPoolVars),
       INVARIANT_ERRORS.INVALID_POOL_TOKEN_ADDRESSES
+    )
   })
   it('#create()', async () => {
     // fee tier 0.02% / 4
@@ -101,7 +94,7 @@ describe('position', () => {
       tokenY,
       initTick
     }
-    await createPool(market, createPoolVars)
+    await market.createPool(createPoolVars)
 
     const createdPool = await market.getPool(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
@@ -110,25 +103,25 @@ describe('position', () => {
     assert.equal(createdPool.tickSpacing, feeToTickSpacing(feeTier.fee))
     assert.ok(createdPool.liquidity.v.eqn(0))
     assert.ok(createdPool.sqrtPrice.v.eq(calculatePriceSqrt(initTick).v))
-    assert.ok(createdPool.currentTickIndex == initTick)
+    assert.ok(createdPool.currentTickIndex === initTick)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
     assert.ok(createdPool.feeProtocolTokenX.eqn(0))
     assert.ok(createdPool.feeProtocolTokenY.eqn(0))
 
     const tickmapData = await market.getTickmap(pair)
-    assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
-    assert.ok(tickmapData.bitmap.every(v => v == 0))
+    assert.ok(tickmapData.bitmap.length === TICK_LIMIT / 4)
+    assert.ok(tickmapData.bitmap.every(v => v === 0))
   })
   it('#createPositionList()', async () => {
-    await createPositionList(market, positionOwner.publicKey, positionOwner)
+    await market.createPositionList(positionOwner.publicKey, positionOwner)
 
     // checks position list
     const positionList = await market.getPositionList(positionOwner.publicKey)
     assert.equal(positionList.head, 0)
   })
   // TODO: checkout sqrt price everywhere
-  describe('#initPosition above current tick', async () => {
+  describe('#initPosition above current tick', () => {
     // -22980
     // 0
     // x = 21549
@@ -143,18 +136,18 @@ describe('position', () => {
         index: lowerTick,
         payer: admin.publicKey
       }
-      await createTick(market, createTickVars, admin)
+      await market.createTick(createTickVars, admin)
 
       const expectedZeroDecimal = new BN(0)
       const tick = await market.getTick(pair, lowerTick)
       const { tickBump } = await market.getTickAddress(pair, lowerTick)
-      assert.ok(tick.index == lowerTick)
+      assert.ok(tick.index === lowerTick)
       assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
       assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
       assert.ok(tick.sqrtPrice.v.eq(calculatePriceSqrt(lowerTick).v))
       assert.ok(tick.feeGrowthOutsideX.v.eq(expectedZeroDecimal))
       assert.ok(tick.feeGrowthOutsideY.v.eq(expectedZeroDecimal))
-      assert.ok(tick.bump == tickBump)
+      assert.ok(tick.bump === tickBump)
     })
     it('#createTick(upperTick)', async () => {
       const createTickVars: CreateTick = {
@@ -162,18 +155,18 @@ describe('position', () => {
         index: upperTick,
         payer: admin.publicKey
       }
-      await createTick(market, createTickVars, admin)
+      await market.createTick(createTickVars, admin)
 
       const expectedZeroDecimal = new BN(0)
       const tick = await market.getTick(pair, upperTick)
       const { tickBump } = await market.getTickAddress(pair, upperTick)
-      assert.ok(tick.index == upperTick)
+      assert.ok(tick.index === upperTick)
       assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
       assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
       assert.ok(tick.sqrtPrice.v.eq(calculatePriceSqrt(upperTick).v))
       assert.ok(tick.feeGrowthOutsideX.v.eq(expectedZeroDecimal))
       assert.ok(tick.feeGrowthOutsideY.v.eq(expectedZeroDecimal))
-      assert.ok(tick.bump == tickBump)
+      assert.ok(tick.bump === tickBump)
     })
     it('init position', async () => {
       const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
@@ -197,7 +190,7 @@ describe('position', () => {
         upperTick,
         liquidityDelta
       }
-      await initPosition(market, initPositionVars, positionOwner)
+      await market.initPosition(initPositionVars, positionOwner)
 
       // load state
       const positionState = await market.getPosition(positionOwner.publicKey, positionIndex)
@@ -237,11 +230,11 @@ describe('position', () => {
       assert.ok(positionState.pool.equals(poolAddress))
       assert.ok(positionState.id.eqn(0))
       assert.ok(positionState.liquidity.v.eq(liquidityDelta.v))
-      assert.ok(positionState.lowerTickIndex == lowerTick)
-      assert.ok(positionState.upperTickIndex == upperTick)
+      assert.ok(positionState.lowerTickIndex === lowerTick)
+      assert.ok(positionState.upperTickIndex === upperTick)
       assert.ok(positionState.feeGrowthInsideX.v.eq(expectedZeroDecimal))
       assert.ok(positionState.feeGrowthInsideY.v.eq(expectedZeroDecimal))
-      assert.ok(positionState.bump == positionBump)
+      assert.ok(positionState.bump === positionBump)
 
       // checks position list
       const positionList = await market.getPositionList(positionOwner.publicKey)
@@ -257,7 +250,7 @@ describe('position', () => {
       yOwnerAmount = userTokenYBalance
     })
   })
-  describe('#initPosition within current tick', async () => {
+  describe('#initPosition within current tick', () => {
     // min + 10
     // max - 10
     // x = 317
@@ -272,18 +265,18 @@ describe('position', () => {
         pair,
         payer: admin.publicKey
       }
-      await createTick(market, createTickVars, admin)
+      await market.createTick(createTickVars, admin)
 
       const expectedZeroDecimal = new BN(0)
       const tick = await market.getTick(pair, lowerTick)
       const { tickBump } = await market.getTickAddress(pair, lowerTick)
-      assert.ok(tick.index == lowerTick)
+      assert.ok(tick.index === lowerTick)
       assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
       assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
       assert.ok(tick.sqrtPrice.v.eq(calculatePriceSqrt(lowerTick).v))
       assert.ok(tick.feeGrowthOutsideX.v.eq(expectedZeroDecimal))
       assert.ok(tick.feeGrowthOutsideY.v.eq(expectedZeroDecimal))
-      assert.ok(tick.bump == tickBump)
+      assert.ok(tick.bump === tickBump)
     })
     it('#createTick(upperTick)', async () => {
       const createTickVars: CreateTick = {
@@ -291,18 +284,18 @@ describe('position', () => {
         pair,
         payer: admin.publicKey
       }
-      await createTick(market, createTickVars, admin)
+      await market.createTick(createTickVars, admin)
 
       const expectedZeroDecimal = new BN(0)
       const tick = await market.getTick(pair, upperTick)
       const { tickBump } = await market.getTickAddress(pair, upperTick)
-      assert.ok(tick.index == upperTick)
+      assert.ok(tick.index === upperTick)
       assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
       assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
       assert.ok(tick.sqrtPrice.v.eq(calculatePriceSqrt(upperTick).v))
       assert.ok(tick.feeGrowthOutsideX.v.eq(expectedZeroDecimal))
       assert.ok(tick.feeGrowthOutsideY.v.eq(expectedZeroDecimal))
-      assert.ok(tick.bump == tickBump)
+      assert.ok(tick.bump === tickBump)
     })
     it('init position', async () => {
       const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
@@ -326,7 +319,7 @@ describe('position', () => {
         upperTick,
         liquidityDelta
       }
-      await initPosition(market, initPositionVars, positionOwner)
+      await market.initPosition(initPositionVars, positionOwner)
 
       // load state
       const positionState = await market.getPosition(positionOwner.publicKey, positionIndex)
@@ -366,11 +359,11 @@ describe('position', () => {
       assert.ok(positionState.pool.equals(poolAddress))
       assert.ok(positionState.id.eqn(1))
       assert.ok(positionState.liquidity.v.eq(liquidityDelta.v))
-      assert.ok(positionState.lowerTickIndex == lowerTick)
-      assert.ok(positionState.upperTickIndex == upperTick)
+      assert.ok(positionState.lowerTickIndex === lowerTick)
+      assert.ok(positionState.upperTickIndex === upperTick)
       assert.ok(positionState.feeGrowthInsideX.v.eq(expectedZeroDecimal))
       assert.ok(positionState.feeGrowthInsideY.v.eq(expectedZeroDecimal))
-      assert.ok(positionState.bump == positionBump)
+      assert.ok(positionState.bump === positionBump)
 
       // checks position list
       const positionList = await market.getPositionList(positionOwner.publicKey)
@@ -386,7 +379,7 @@ describe('position', () => {
       yOwnerAmount = userTokenYBalance
     })
   })
-  describe('#initPosition below current tick', async () => {
+  describe('#initPosition below current tick', () => {
     // 23040
     // -4608
     // x = 0
@@ -401,18 +394,18 @@ describe('position', () => {
         index: lowerTick,
         payer: admin.publicKey
       }
-      await createTick(market, createTickVars, admin)
+      await market.createTick(createTickVars, admin)
 
       const expectedZeroDecimal = new BN(0)
       const tick = await market.getTick(pair, lowerTick)
       const { tickBump } = await market.getTickAddress(pair, lowerTick)
-      assert.ok(tick.index == lowerTick)
+      assert.ok(tick.index === lowerTick)
       assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
       assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
       assert.ok(tick.sqrtPrice.v.eq(calculatePriceSqrt(lowerTick).v))
       assert.ok(tick.feeGrowthOutsideX.v.eq(expectedZeroDecimal))
       assert.ok(tick.feeGrowthOutsideY.v.eq(expectedZeroDecimal))
-      assert.ok(tick.bump == tickBump)
+      assert.ok(tick.bump === tickBump)
     })
     it('#createTick(upperTick)', async () => {
       const createTickVars: CreateTick = {
@@ -420,18 +413,18 @@ describe('position', () => {
         index: upperTick,
         payer: admin.publicKey
       }
-      await createTick(market, createTickVars, admin)
+      await market.createTick(createTickVars, admin)
 
       const expectedZeroDecimal = new BN(0)
       const tick = await market.getTick(pair, upperTick)
       const { tickBump } = await market.getTickAddress(pair, upperTick)
-      assert.ok(tick.index == upperTick)
+      assert.ok(tick.index === upperTick)
       assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
       assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
       assert.ok(tick.sqrtPrice.v.eq(calculatePriceSqrt(upperTick).v))
       assert.ok(tick.feeGrowthOutsideX.v.eq(expectedZeroDecimal))
       assert.ok(tick.feeGrowthOutsideY.v.eq(expectedZeroDecimal))
-      assert.ok(tick.bump == tickBump)
+      assert.ok(tick.bump === tickBump)
     })
     it('init position', async () => {
       const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
@@ -456,7 +449,7 @@ describe('position', () => {
         upperTick,
         liquidityDelta
       }
-      await initPosition(market, initPositionVars, positionOwner)
+      await market.initPosition(initPositionVars, positionOwner)
 
       // load state
       const positionState = await market.getPosition(positionOwner.publicKey, positionIndex)
@@ -496,11 +489,11 @@ describe('position', () => {
       assert.ok(positionState.pool.equals(poolAddress))
       assert.ok(positionState.id.eqn(2))
       assert.ok(positionState.liquidity.v.eq(liquidityDelta.v))
-      assert.ok(positionState.lowerTickIndex == lowerTick)
-      assert.ok(positionState.upperTickIndex == upperTick)
+      assert.ok(positionState.lowerTickIndex === lowerTick)
+      assert.ok(positionState.upperTickIndex === upperTick)
       assert.ok(positionState.feeGrowthInsideX.v.eq(expectedZeroDecimal))
       assert.ok(positionState.feeGrowthInsideY.v.eq(expectedZeroDecimal))
-      assert.ok(positionState.bump == positionBump)
+      assert.ok(positionState.bump === positionBump)
 
       // checks position list
       const positionList = await market.getPositionList(positionOwner.publicKey)

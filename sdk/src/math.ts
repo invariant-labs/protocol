@@ -353,8 +353,17 @@ const calculateX = (nominator: BN, denominator: BN, liquidity: BN, roundingUp: b
   return common.div(DENOMINATOR)
 }
 
-export const getX = (liquidity: BN, upperSqrtPrice: BN, currentSqrtPrice: BN, lowerSqrtPrice: BN): BN => {
-  if (upperSqrtPrice.lte(new BN(0)) || currentSqrtPrice.lte(new BN(0)) || lowerSqrtPrice.lte(new BN(0))) {
+export const getX = (
+  liquidity: BN,
+  upperSqrtPrice: BN,
+  currentSqrtPrice: BN,
+  lowerSqrtPrice: BN
+): BN => {
+  if (
+    upperSqrtPrice.lte(new BN(0)) ||
+    currentSqrtPrice.lte(new BN(0)) ||
+    lowerSqrtPrice.lte(new BN(0))
+  ) {
     throw new Error('Price cannot be lower or equal 0')
   }
 
@@ -370,12 +379,21 @@ export const getX = (liquidity: BN, upperSqrtPrice: BN, currentSqrtPrice: BN, lo
     denominator = upperSqrtPrice.mul(currentSqrtPrice).div(DENOMINATOR)
     nominator = upperSqrtPrice.sub(currentSqrtPrice)
   }
-  
+
   return liquidity.mul(nominator).div(denominator)
 }
 
-export const getY = (liquidity: BN, upperSqrtPrice: BN,  currentSqrtPrice: BN, lowerSqrtPrice: BN): BN => {
-  if (lowerSqrtPrice.lte(new BN(0)) || currentSqrtPrice.lte(new BN(0)) || upperSqrtPrice.lte(new BN(0))) {
+export const getY = (
+  liquidity: BN,
+  upperSqrtPrice: BN,
+  currentSqrtPrice: BN,
+  lowerSqrtPrice: BN
+): BN => {
+  if (
+    lowerSqrtPrice.lte(new BN(0)) ||
+    currentSqrtPrice.lte(new BN(0)) ||
+    upperSqrtPrice.lte(new BN(0))
+  ) {
     throw new Error('Price cannot be 0')
   }
 

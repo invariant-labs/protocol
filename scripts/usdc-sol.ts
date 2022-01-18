@@ -7,7 +7,8 @@ import { Market, Pair } from '@invariant-labs/sdk/src'
 import { getLiquidityByX } from '@invariant-labs/sdk/src/math'
 import { FEE_TIERS, fromFee, tou64 } from '@invariant-labs/sdk/src/utils'
 import { CreatePool, Decimal, InitPosition } from '@invariant-labs/sdk/src/market'
-import { createPool, initPosition } from '../tests/testUtils'
+
+// trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
 const provider = Provider.local(clusterApiUrl('devnet'), {
@@ -37,7 +38,7 @@ const main = async () => {
     tokenY,
     initTick
   }
-  await createPool(market, createPoolVars)
+  await market.createPool(createPoolVars)
 
   // ADD LIQUIDITY
   const usdc = new Token(connection, new PublicKey(MOCK_TOKENS.USDC), TOKEN_PROGRAM_ID, wallet)
@@ -72,6 +73,8 @@ const main = async () => {
     upperTick,
     liquidityDelta: liquidity
   }
-  await initPosition(market, initPositionVars, MINTER)
+  await market.initPosition(initPositionVars, MINTER)
 }
+
+// trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
 main()

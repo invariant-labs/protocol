@@ -44,10 +44,12 @@ impl Pool {
         let fee_growth = FeeGrowth::from_fee(self.liquidity, pool_fee);
 
         if in_x {
-            self.fee_growth_global_x = self.fee_growth_global_x + fee_growth;
+            // trunk-ignore(clippy/unaligned_references)
+            self.fee_growth_global_x += fee_growth;
             self.fee_protocol_token_x += protocol_fee.0;
         } else {
-            self.fee_growth_global_y = self.fee_growth_global_y + fee_growth;
+            // trunk-ignore(clippy/unaligned_references)
+            self.fee_growth_global_y += fee_growth;
             self.fee_protocol_token_y += protocol_fee.0;
         }
     }
