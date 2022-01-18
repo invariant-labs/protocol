@@ -903,29 +903,6 @@ describe('Math', () => {
       })
     })
   })
-  // describe('test getCloserLimit', () => {
-  //   it('tick limit closer', async () => {
-  //     //TODO
-  //     // const closerLimit: CloserLimit = {
-  //     //   sqrtPriceLimit: priceLimit,
-  //     //   xToY: xToY,
-  //     //   currentTick: currentTickIndex,
-  //     //   tickSpacing: tickSpacing,
-  //     //   tickmap: tickmap
-  //     // }
-  //     //const { swapLimit, limitingTick } = getCloserLimit(closerLimit)
-  //   })
-  //   it('trade limit closer', async () => {
-  //     //TODO
-  //   })
-
-  //   it('other direction', async () => {
-  //     //TODO
-  //   })
-  //   it('other direction', async () => {
-  //     //TODO
-  //   })
-  // })
   describe('test getSearchLimit', () => {
     it('Simple up', async () => {
       const limit = getSearchLimit(new BN(0), new BN(1), true)
@@ -975,4 +952,26 @@ describe('Math', () => {
       // assert.ok(limit.eq(expected))
     })
   })
+  // TODO write unit tests for getCloserLimit
+  // describe('test getCloserLimit', () => {
+  //   it('tick limit closer', async () => {
+  //
+  //     // const closerLimit: CloserLimit = {
+  //     //   sqrtPriceLimit: priceLimit,
+  //     //   xToY: xToY,
+  //     //   currentTick: currentTickIndex,
+  //     //   tickSpacing: tickSpacing,
+  //     //   tickmap: tickmap
+  //     // }
+  //     //const { swapLimit, limitingTick } = getCloserLimit(closerLimit)
+  //   })
+  //   it('trade limit closer', async () => {
+  //   })
+  //   it('other direction', async () => {
+  //
+  //   })
+  //   it('other direction', async () => {
+  //
+  //   })
+  // })
 })
