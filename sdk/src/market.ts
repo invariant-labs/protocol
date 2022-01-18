@@ -30,7 +30,7 @@ const POSITION_SEED = 'positionv1'
 const TICK_SEED = 'tickv1'
 const POSITION_LIST_SEED = 'positionlistv1'
 const STATE_SEED = 'statev1'
-const MAX_IX = 4
+const MAX_IX = 8
 const TICKS_PER_IX = 1
 const COMPUTE_UNITS = 800000
 export const FEE_TIER = 'feetierv1'
@@ -586,7 +586,7 @@ export class Market {
       tickmap.bitmap,
       pool.currentTickIndex,
       pool.tickSpacing,
-      10,
+      8,
       Infinity,
       xToY ? 'down' : 'up'
     )
@@ -595,7 +595,7 @@ export class Market {
       tickmap.bitmap,
       pool.currentTickIndex,
       pool.tickSpacing,
-      3,
+      1,
       Infinity,
       xToY ? 'up' : 'down'
     )
