@@ -37,7 +37,7 @@ export class Pair {
   }
 
   async getAddressAndBump(programId: PublicKey): Promise<[PublicKey, number]> {
-    return PublicKey.findProgramAddress(
+    return await PublicKey.findProgramAddress(
       [
         Buffer.from(utils.bytes.utf8.encode(POOL_SEED)),
         this.tokenX.toBuffer(),
@@ -50,7 +50,7 @@ export class Pair {
   }
 
   async getAddress(programId: PublicKey): Promise<PublicKey> {
-    return this.getAddressAndBump(programId).then(([address, _]) => address)
+    return await this.getAddressAndBump(programId).then(([address, _]) => address)
   }
 
   async getFeeTierAddress(programId: PublicKey) {

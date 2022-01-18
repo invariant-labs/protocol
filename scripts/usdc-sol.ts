@@ -5,7 +5,10 @@ import { MINTER } from './minter'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Market, Pair } from '@invariant-labs/sdk/src'
 import { getLiquidityByX } from '@invariant-labs/sdk/src/math'
-import { FEE_TIERS, tou64 } from '@invariant-labs/sdk/src/utils'
+import { FEE_TIERS, fromFee, tou64 } from '@invariant-labs/sdk/src/utils'
+import { CreatePool, Decimal, InitPosition } from '@invariant-labs/sdk/src/market'
+
+// trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
 const provider = Provider.local(clusterApiUrl('devnet'), {
@@ -21,15 +24,21 @@ const main = async () => {
 
   const feeTier = FEE_TIERS[0]
   const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.SOL), feeTier)
-
+  const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
+  const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   // CREATE POOL
   const initTick = 16000
+  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
 
-  await market.create({
+  const createPoolVars: CreatePool = {
     pair,
-    signer: wallet,
+    payer: wallet,
+    protocolFee,
+    tokenX,
+    tokenY,
     initTick
-  })
+  }
+  await market.createPool(createPoolVars)
 
   // ADD LIQUIDITY
   const usdc = new Token(connection, new PublicKey(MOCK_TOKENS.USDC), TOKEN_PROGRAM_ID, wallet)
@@ -55,17 +64,17 @@ const main = async () => {
   await usdc.mintTo(minterUsdc, MINTER, [], tou64(usdcAmount))
   await sol.mintTo(minterSol, MINTER, [], tou64(solAmount))
 
-  await market.initPosition(
-    {
-      pair,
-      owner: MINTER.publicKey,
-      userTokenX: minterUsdc,
-      userTokenY: minterSol,
-      lowerTick,
-      upperTick,
-      liquidityDelta: liquidity
-    },
-    MINTER
-  )
+  const initPositionVars: InitPosition = {
+    pair,
+    owner: MINTER.publicKey,
+    userTokenX: minterUsdc,
+    userTokenY: minterSol,
+    lowerTick,
+    upperTick,
+    liquidityDelta: liquidity
+  }
+  await market.initPosition(initPositionVars, MINTER)
 }
+
+// trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
 main()

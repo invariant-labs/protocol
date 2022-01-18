@@ -9,10 +9,9 @@ import {
   Transaction,
   TransactionInstruction
 } from '@solana/web3.js'
-import { calculatePriceSqrt, fromInteger, MAX_TICK, Pair, TICK_LIMIT } from '.'
-import { Market } from '.'
+import { calculatePriceSqrt, MAX_TICK, Pair, TICK_LIMIT, Market } from '.'
 import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap, Tick, Position } from './market'
-import { calculatePriceAfterSlippage, calculateSwapStep, SwapResult } from './math'
+import { calculatePriceAfterSlippage, calculateSwapStep } from './math'
 import { getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
 import { struct, u32, u8 } from '@solana/buffer-layout'
@@ -28,30 +27,30 @@ export enum ERRORS {
   SIGNATURE = 'Error: Signature verification failed',
   SIGNER = 'Error: unknown signer',
   PANICKED = 'Program failed to complete',
-  SERIALIZATION = '0xa4',
+  SERIALIZATION = '0xbbc',
   ALLOWANCE = 'custom program error: 0x1',
   NO_SIGNERS = 'Error: No signers',
-  CONSTRAINT_RAW = '0x8f',
-  CONSTRAINT_SEEDS = '0x92'
+  CONSTRAINT_RAW = '0x7d3',
+  CONSTRAINT_SEEDS = '0x7d6'
 }
 
 export enum INVARIANT_ERRORS {
-  ZERO_AMOUNT = '0x12c',
-  ZERO_OUTPUT = '0x12d',
-  WRONG_TICK = '0x12e',
-  WRONG_LIMIT = '0x12f',
-  INVALID_TICK_INDEX = '0x130',
-  INVALID_TICK_INTERVAL = '0x131',
-  NO_MORE_TICKS = '0x132',
-  TICK_NOT_FOUND = '0x133',
-  PRICE_LIMIT_REACHED = '0x134',
-  INVALID_TICK_LIQUIDITY = '0x135',
-  EMPTY_POSITION_POKES = '0x136',
-  INVALID_POSITION_LIQUIDITY = '0x137',
-  INVALID_POOL_LIQUIDITY = '0x138',
-  INVALID_POSITION_INDEX = '0x139',
-  POSITION_WITHOUT_LIQUIDITY = '0x13a',
-  INVALID_POOL_TOKEN_ADDRESSES = '0x13b'
+  ZERO_AMOUNT = '0x1770',
+  ZERO_OUTPUT = '0x1771',
+  WRONG_TICK = '0x1772',
+  WRONG_LIMIT = '0x1773',
+  INVALID_TICK_INDEX = '0x1774',
+  INVALID_TICK_INTERVAL = '0x1775',
+  NO_MORE_TICKS = '0x1776',
+  TICK_NOT_FOUND = '0x1777',
+  PRICE_LIMIT_REACHED = '0x1778',
+  INVALID_TICK_LIQUIDITY = '0x1779',
+  EMPTY_POSITION_POKES = '0x177a',
+  INVALID_POSITION_LIQUIDITY = '0x177b',
+  INVALID_POOL_LIQUIDITY = '0x177c',
+  INVALID_POSITION_INDEX = '0x177d',
+  POSITION_WITHOUT_LIQUIDITY = '0x177e',
+  INVALID_POOL_TOKEN_ADDRESSES = '0x1780'
 }
 
 export interface SimulateSwapPrice {
@@ -66,6 +65,26 @@ export interface SimulateSwapPrice {
   pair: Pair
 }
 
+export interface SimulateSwapInterface {
+  xToY: boolean
+  byAmountIn: boolean
+  swapAmount: BN
+  currentPrice: Decimal
+  slippage: Decimal
+  ticks: Map<number, Tick>
+  tickmap: Tickmap
+  pool: PoolStructure
+  market: Market
+  pair: Pair
+}
+
+export interface SimulationResult {
+  amountPerTick: BN[]
+  accumulatedAmountIn: BN
+  accumulatedAmountOut: BN
+  accumulatedFee: BN
+}
+
 export interface SimulateClaim {
   position: Position
   tickLower: Tick
@@ -74,13 +93,31 @@ export interface SimulateClaim {
   feeGrowthGlobalX: Decimal
   feeGrowthGlobalY: Decimal
 }
+
+export interface CloserLimit {
+  sqrtPriceLimit: Decimal
+  xToY: boolean
+  currentTick: number
+  tickSpacing: number
+  tickmap: Tickmap
+}
+
+export interface TickState {
+  index: number
+  initialized: boolean
+}
+export interface CloserLimitResult {
+  swapLimit: Decimal
+  limitingTick: TickState | null
+}
+
 export const ComputeUnitsInstruction = (units: number, wallet: PublicKey) => {
   const program = new PublicKey('ComputeBudget111111111111111111111111111111')
-  let params = { instruction: 0, units: units }
-  let layout = struct([u8('instruction'), u32('units')])
-  let data = Buffer.alloc(layout.span)
+  const params = { instruction: 0, units: units }
+  const layout = struct([u8('instruction') as any, u32('units')])
+  const data = Buffer.alloc(layout.span)
   layout.encode(params, data)
-  let keys = [{ pubkey: wallet, isSigner: false, isWritable: false }]
+  const keys = [{ pubkey: wallet, isSigner: false, isWritable: false }]
   const unitsIx = new TransactionInstruction({
     keys,
     programId: program,
@@ -112,25 +149,25 @@ export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
 
 export const signAndSend = async (
   tx: Transaction,
-  signers: Array<Keypair>,
+  signers: Keypair[],
   connection: Connection,
   opts?: ConfirmOptions
 ) => {
-  tx.setSigners(...signers.map((s) => s.publicKey))
+  tx.setSigners(...signers.map(s => s.publicKey))
   const blockhash = await connection.getRecentBlockhash(
-    opts?.commitment || Provider.defaultOptions().commitment
+    opts?.commitment ?? Provider.defaultOptions().commitment
   )
   tx.recentBlockhash = blockhash.blockhash
   tx.partialSign(...signers)
   const rawTx = tx.serialize()
-  return await sendAndConfirmRawTransaction(connection, rawTx, opts || Provider.defaultOptions())
+  return await sendAndConfirmRawTransaction(connection, rawTx, opts ?? Provider.defaultOptions())
 }
 
 export const sleep = async (ms: number) => {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+  return await new Promise(resolve => setTimeout(resolve, ms))
 }
 
-export const tou64 = (amount) => {
+export const tou64 = amount => {
   // eslint-disable-next-line new-cap
   return new u64(amount.toString())
 }
@@ -147,7 +184,7 @@ export const feeToTickSpacing = (fee: BN): number => {
   return fee.muln(2).div(FEE_TO_SPACING_OFFSET).toNumber()
 }
 
-export const FEE_TIERS: Array<FeeTier> = [
+export const FEE_TIERS: FeeTier[] = [
   { fee: fromFee(new BN(20)) },
   { fee: fromFee(new BN(40)) },
   { fee: fromFee(new BN(100)) },
@@ -163,7 +200,7 @@ export const generateTicksArray = (start: number, stop: number, step: number) =>
     throw new Error('Invalid parameters')
   }
 
-  const ticks: Array<number> = []
+  const ticks: number[] = []
   for (let i = start; i <= stop; i += step) {
     ticks.push(i)
   }
@@ -193,130 +230,142 @@ export const toDecimal = (x: number, decimals: number = 0): Decimal => {
   return { v: DENOMINATOR.muln(x).div(new BN(10).pow(new BN(decimals))) }
 }
 
-export const calculateAveragePrice = (swapParameters: SimulateSwapPrice): Decimal => {
-  const { xToY, byAmountIn, swapAmount, slippage, tickmap, pool, market, pair } = swapParameters
-  let { currentTickIndex, tickSpacing, liquidity, fee } = pool
-  let currentSqrtPrice = pool.sqrtPrice
+export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
+  const { sqrtPriceLimit, xToY, currentTick, tickSpacing, tickmap } = closerLimit
+  let index
 
-  const priceLimit = calculatePriceAfterSlippage(currentSqrtPrice, slippage, !xToY)
   if (xToY) {
-    if (pool.sqrtPrice.v.lt(priceLimit.v)) {
+    index = getPreviousTick(tickmap, currentTick, tickSpacing)
+  } else {
+    index = getNextTick(tickmap, currentTick, tickSpacing)
+  }
+
+  let sqrtPrice: Decimal
+  let init: boolean
+
+  if (index != null) {
+    sqrtPrice = calculatePriceSqrt(index)
+    init = true
+  } else {
+    index = getSearchLimit(currentTick, tickSpacing, !xToY)
+    sqrtPrice = calculatePriceSqrt(index)
+    init = false
+  }
+
+  if (xToY && sqrtPrice.v.gt(sqrtPriceLimit.v) && index !== null) {
+    return { swapLimit: sqrtPrice, limitingTick: { index, initialized: init } }
+  } else if (!xToY && sqrtPrice.v.lt(sqrtPriceLimit.v) && index !== null) {
+    return { swapLimit: sqrtPrice, limitingTick: { index, initialized: init } }
+  } else {
+    return { swapLimit: sqrtPriceLimit, limitingTick: null }
+  }
+}
+
+export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationResult => {
+  const { xToY, byAmountIn, swapAmount, slippage, ticks, tickmap, pool } = swapParameters
+  let { currentTickIndex, tickSpacing, liquidity, fee, sqrtPrice } = pool
+  const amountPerTick: BN[] = []
+  let accumulatedAmount: BN = new BN(0)
+  let accumulatedAmountOut: BN = new BN(0)
+  let accumulatedAmountIn: BN = new BN(0)
+  let accumulatedFee: BN = new BN(0)
+  const priceLimit = calculatePriceAfterSlippage(sqrtPrice, slippage, !xToY)
+  if (xToY) {
+    if (sqrtPrice.v.lt(priceLimit.v)) {
       throw new Error('Price limit is on the wrong side of price')
     }
   } else {
-    if (pool.sqrtPrice.v.gt(priceLimit.v)) {
+    if (sqrtPrice.v.gt(priceLimit.v)) {
       throw new Error('Price limit is on the wrong side of price')
     }
   }
-  let remainingAmount: Decimal = { v: swapAmount.mul(DENOMINATOR) }
-  let totalAmountIn: Decimal = { v: new BN(0) }
-  let totalAmountOut: Decimal = { v: new BN(0) }
-  let totalFee: Decimal = { v: new BN(0) }
-
-  while (!remainingAmount.v.lte(new BN(0))) {
-    let closestTickIndex: number
-    if (xToY) {
-      closestTickIndex = getPreviousTick(tickmap, currentTickIndex, tickSpacing).valueOf()
-    } else {
-      closestTickIndex = getNextTick(tickmap, currentTickIndex, tickSpacing).valueOf()
+  let remainingAmount: BN = swapAmount
+  while (!remainingAmount.lte(new BN(0))) {
+    // find closest initialized tick
+    const closerLimit: CloserLimit = {
+      sqrtPriceLimit: priceLimit,
+      xToY: xToY,
+      currentTick: currentTickIndex,
+      tickSpacing: tickSpacing,
+      tickmap: tickmap
     }
 
-    let price: Decimal
-    let closerLimit: { swapLimit: Decimal; limitingTick: { index: Number; initialized: Boolean } }
-    if (closestTickIndex != null) {
-      price = calculatePriceSqrt(closestTickIndex)
-
-      if (xToY && price.v.gt(priceLimit.v)) {
-        closerLimit = {
-          swapLimit: price,
-          limitingTick: { index: new Number(closestTickIndex), initialized: new Boolean(true) }
-        }
-      } else if (!xToY && price.v.lt(priceLimit.v)) {
-        closerLimit = {
-          swapLimit: price,
-          limitingTick: { index: new Number(closestTickIndex), initialized: new Boolean(true) }
-        }
-      } else {
-        closerLimit = {
-          swapLimit: priceLimit,
-          limitingTick: { index: new Number(null), initialized: new Boolean(null) }
-        }
-      }
-    } else {
-      const index = getSearchLimit(currentTickIndex, tickSpacing, !xToY)
-      price = calculatePriceSqrt(index)
-
-      if (xToY && price.v.gt(priceLimit.v)) {
-        closerLimit = {
-          swapLimit: price,
-          limitingTick: { index: new Number(closestTickIndex), initialized: new Boolean(false) }
-        }
-      } else if (!xToY && price.v.lt(priceLimit.v)) {
-        closerLimit = {
-          swapLimit: price,
-          limitingTick: { index: new Number(closestTickIndex), initialized: new Boolean(false) }
-        }
-      } else {
-        closerLimit = {
-          swapLimit: priceLimit,
-          limitingTick: { index: new Number(null), initialized: new Boolean(null) }
-        }
-      }
-    }
+    const { swapLimit, limitingTick } = getCloserLimit(closerLimit)
     const result = calculateSwapStep(
-      currentSqrtPrice,
-      closerLimit.swapLimit,
+      sqrtPrice,
+      swapLimit,
       liquidity,
       remainingAmount,
       byAmountIn,
       fee
     )
-    totalAmountIn = { v: totalAmountIn.v.add(result.amountIn.v) }
-    totalAmountOut = { v: totalAmountOut.v.add(result.amountOut.v) }
-    totalFee = { v: totalFee.v.add(result.feeAmount.v) }
+    accumulatedAmountIn = accumulatedAmountIn.add(result.amountIn)
+    accumulatedAmountOut = accumulatedAmountOut.add(result.amountOut)
+    accumulatedFee = accumulatedFee.add(result.feeAmount)
 
-    let amountDiff: Decimal
+    let amountDiff: BN
+
     if (byAmountIn) {
-      amountDiff = { v: result.amountIn.v.add(result.feeAmount.v) }
+      amountDiff = result.amountIn.add(result.feeAmount)
     } else {
-      amountDiff = { v: result.amountOut.v }
+      amountDiff = result.amountOut
     }
 
-    remainingAmount = { v: remainingAmount.v.sub(amountDiff.v) }
+    remainingAmount = remainingAmount.sub(amountDiff)
+    sqrtPrice = result.nextPrice
 
-    currentSqrtPrice = result.nextPrice
-
-    if (currentSqrtPrice.v.eq(priceLimit.v) && remainingAmount.v.gt(new BN(0))) {
+    if (sqrtPrice.v.eq(priceLimit.v) && remainingAmount.gt(new BN(0))) {
       throw new Error('Price would cross swap limit')
     }
 
-    if (
-      result.nextPrice.v.eq(closerLimit.swapLimit.v) &&
-      closerLimit.limitingTick.index != undefined
-    ) {
-      const tickIndex = closerLimit.limitingTick.index
-      const initialized = closerLimit.limitingTick.initialized
+    // crossing tick
+    if (result.nextPrice.v.eq(swapLimit.v) && limitingTick != null) {
+      const tickIndex: number = limitingTick.index
+      const initialized: boolean = limitingTick.initialized
 
       if (initialized) {
-        market.getTick(pair, tickIndex.valueOf()).then((tick) => {
-          if (currentTickIndex >= tick.index !== tick.sign) {
+        const tick = ticks.get(tickIndex) as Tick
+
+        if (currentTickIndex >= tick.index) {
+          if (!tick.sign) {
             liquidity = { v: liquidity.v.add(tick.liquidityChange.v) }
           } else {
             liquidity = { v: liquidity.v.sub(tick.liquidityChange.v) }
           }
-        })
+        } else {
+          if (tick.sign) {
+            liquidity = { v: liquidity.v.add(tick.liquidityChange.v) }
+          } else {
+            liquidity = { v: liquidity.v.sub(tick.liquidityChange.v) }
+          }
+        }
       }
-      if (xToY && !remainingAmount.v.eq(new BN(0))) {
-        currentTickIndex = tickIndex.valueOf() - tickSpacing
+      if (xToY && !remainingAmount.eq(new BN(0))) {
+        currentTickIndex = tickIndex - tickSpacing
       } else {
-        currentTickIndex = tickIndex.valueOf()
+        currentTickIndex = tickIndex
       }
     } else {
       currentTickIndex = getTickFromPrice(currentTickIndex, tickSpacing, result.nextPrice, xToY)
     }
+
+    // add amount to array if tick was initialized otherwise accumulate amount for next iteration
+    accumulatedAmount = accumulatedAmount.add(amountDiff)
+    // trunk-ignore(eslint/@typescript-eslint/prefer-optional-chain)
+    if ((limitingTick !== null && limitingTick.initialized) ?? remainingAmount.eqn(0)) {
+      amountPerTick.push(accumulatedAmount)
+      accumulatedAmount = new BN(0)
+    }
   }
-  return { v: totalAmountOut.v.mul(DENOMINATOR).div(totalAmountIn.v) }
+
+  return {
+    amountPerTick,
+    accumulatedAmountIn,
+    accumulatedAmountOut,
+    accumulatedFee
+  }
 }
+
 export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
   let indexOfTickBelow = -1
   // find first tick
@@ -332,7 +381,7 @@ export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
   parsed[indexOfTickBelow].liquidity = pool.liquidity.v
 
   for (let i = indexOfTickBelow + 1; i < parsed.length; i++) {
-    if (ticks[i].sign === true) {
+    if (ticks[i].sign) {
       parsed[i].liquidity = parsed[i - 1].liquidity.add(ticks[i].liquidityChange.v)
     } else {
       parsed[i].liquidity = parsed[i - 1].liquidity.sub(ticks[i].liquidityChange.v)
@@ -340,7 +389,7 @@ export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
   }
 
   for (let i = indexOfTickBelow - 1; i >= 0; i--) {
-    if (ticks[i].sign === false) {
+    if (!ticks[i].sign) {
       parsed[i].liquidity = parsed[i + 1].liquidity.add(ticks[i].liquidityChange.v)
     } else {
       parsed[i].liquidity = parsed[i + 1].liquidity.sub(ticks[i].liquidityChange.v)
@@ -359,49 +408,49 @@ export const calculateClaimAmount = ({
   feeGrowthGlobalY
 }: SimulateClaim) => {
   // determine position relative to current tick
-  let current_above_lower = tickCurrent >= tickLower.index
-  let current_below_upper = tickCurrent < tickUpper.index
+  const currentAboveLower = tickCurrent >= tickLower.index
+  const currentBelowUpper = tickCurrent < tickUpper.index
   let feeGrowthBelowX: BN
   let feeGrowthBelowY: BN
   let feeGrowthAboveX: BN
   let feeGrowthAboveY: BN
 
   // calculate fee growth below
-  if (current_above_lower) {
+  if (currentAboveLower) {
     feeGrowthBelowX = tickLower.feeGrowthOutsideX.v
   } else {
     feeGrowthBelowX = feeGrowthGlobalX.v.sub(tickLower.feeGrowthOutsideX.v)
   }
-  if (current_above_lower) {
+  if (currentAboveLower) {
     feeGrowthBelowY = tickLower.feeGrowthOutsideY.v
   } else {
     feeGrowthBelowY = feeGrowthGlobalY.v.sub(tickLower.feeGrowthOutsideY.v)
   }
 
   // calculate fee growth above
-  if (current_below_upper) {
+  if (currentBelowUpper) {
     feeGrowthAboveX = tickUpper.feeGrowthOutsideX.v
   } else {
     feeGrowthAboveX = feeGrowthGlobalX.v.sub(tickUpper.feeGrowthOutsideX.v)
   }
-  if (current_below_upper) {
+  if (currentBelowUpper) {
     feeGrowthAboveY = tickUpper.feeGrowthOutsideY.v
   } else {
     feeGrowthAboveY = feeGrowthGlobalY.v.sub(tickUpper.feeGrowthOutsideY.v)
   }
 
   // calculate fee growth inside
-  let feeGrowthInsideX = feeGrowthGlobalX.v.sub(feeGrowthBelowX.sub(feeGrowthAboveX))
-  let feeGrowthInsideY = feeGrowthGlobalY.v.sub(feeGrowthBelowY.sub(feeGrowthAboveY))
+  const feeGrowthInsideX = feeGrowthGlobalX.v.sub(feeGrowthBelowX.sub(feeGrowthAboveX))
+  const feeGrowthInsideY = feeGrowthGlobalY.v.sub(feeGrowthBelowY.sub(feeGrowthAboveY))
 
-  let tokensOwedX = position.liquidity.v
+  const tokensOwedX = position.liquidity.v
     .mul(feeGrowthInsideX.sub(position.feeGrowthInsideX.v))
     .div(DENOMINATOR)
-  let tokensOwedY = position.liquidity.v
+  const tokensOwedY = position.liquidity.v
     .mul(feeGrowthInsideY.sub(position.feeGrowthInsideY.v))
     .div(DENOMINATOR)
-  let tokensOwedXTotal = position.tokensOwedX.v.add(tokensOwedX)
-  let tokensOwedYTotal = position.tokensOwedY.v.add(tokensOwedY)
+  const tokensOwedXTotal = position.tokensOwedX.v.add(tokensOwedX)
+  const tokensOwedYTotal = position.tokensOwedY.v.add(tokensOwedY)
   return [tokensOwedXTotal, tokensOwedYTotal]
 }
 

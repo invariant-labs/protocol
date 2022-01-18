@@ -324,10 +324,6 @@
             }
           },
           {
-            "name": "index",
-            "type": "u32"
-          },
-          {
             "name": "bump",
             "type": "u8"
           }

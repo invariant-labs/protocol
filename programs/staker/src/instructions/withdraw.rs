@@ -1,5 +1,3 @@
-use std::convert::TryInto;
-
 use crate::decimal::*;
 use crate::math::*;
 use crate::structs::*;
@@ -64,9 +62,9 @@ pub fn handler(ctx: Context<Withdraw>, nonce: u8) -> ProgramResult {
         let user_stake = &mut ctx.accounts.user_stake.load_mut()?;
         let position = ctx.accounts.position.load()?;
 
-        let current_time: u64 = Clock::get().unwrap().unix_timestamp.try_into().unwrap();
+        let current_time = get_current_timestamp();
         let update_slot = position.last_slot;
-        let slot: u64 = Clock::get()?.slot.try_into().unwrap();
+        let slot = get_current_slot();
 
         require!(slot == update_slot, SlotsAreNotEqual);
         require!(user_stake.liquidity.v != 0, ZeroSecondsStaked);

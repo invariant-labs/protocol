@@ -7,8 +7,8 @@ on:
     paths:
       - 'sdk/**'
 env:
-  solana_verion: 1.9.1
-  anchor_version: 0.18.2
+  solana_version: 1.8.12
+  anchor_version: 0.20.1
 
 jobs:
   install:
@@ -32,7 +32,7 @@ jobs:
           path: |
             ~/.cache/solana/
             ~/.local/share/solana/
-          key: solana-${{ runner.os }}-v0000-${{ env.solana_verion }}
+          key: solana-${{ runner.os }}-v0000-${{ env.solana_version }}
       - uses: actions/cache@v2
         name: Cache target folder
         id: cache-programs
@@ -70,7 +70,7 @@ jobs:
       - name: install solana
         if: steps.cache-solana.outputs.cache-hit != 'true'
         run: |
-          sh -c "$(curl -sSfL https://release.solana.com/v${{ env.solana_verion }}/install)"
+          sh -c "$(curl -sSfL https://release.solana.com/v${{ env.solana_version }}/install)"
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           solana --version
       - name: setup solana

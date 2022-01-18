@@ -39,12 +39,6 @@ export type Amm = {
         {
           "name": "nonce",
           "type": "u8"
-        },
-        {
-          "name": "protocolFee",
-          "type": {
-            "defined": "Decimal"
-          }
         }
       ]
     },
@@ -96,13 +90,13 @@ export type Amm = {
       "name": "createPool",
       "accounts": [
         {
-          "name": "pool",
-          "isMut": true,
+          "name": "state",
+          "isMut": false,
           "isSigner": false
         },
         {
-          "name": "state",
-          "isMut": false,
+          "name": "pool",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -159,6 +153,12 @@ export type Amm = {
         {
           "name": "initTick",
           "type": "i32"
+        },
+        {
+          "name": "protocolFee",
+          "type": {
+            "defined": "Decimal"
+          }
         }
       ]
     },
@@ -417,6 +417,11 @@ export type Amm = {
         },
         {
           "name": "upperTick",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickmap",
           "isMut": true,
           "isSigner": false
         },
@@ -869,6 +874,49 @@ export type Amm = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "changeProtocolFee",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenX",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenY",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "programAuthority",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "protocolFee",
+          "type": {
+            "defined": "Decimal"
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -948,7 +996,7 @@ export type Amm = {
           },
           {
             "name": "positionIterator",
-            "type": "u64"
+            "type": "u128"
           },
           {
             "name": "tickSpacing",
@@ -956,6 +1004,12 @@ export type Amm = {
           },
           {
             "name": "fee",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "protocolFee",
             "type": {
               "defined": "Decimal"
             }
@@ -1048,7 +1102,7 @@ export type Amm = {
           },
           {
             "name": "id",
-            "type": "u64"
+            "type": "u128"
           },
           {
             "name": "liquidity",
@@ -1126,12 +1180,6 @@ export type Amm = {
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "protocolFee",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
           {
             "name": "admin",
             "type": "publicKey"
@@ -1373,6 +1421,11 @@ export type Amm = {
       "code": 6019,
       "name": "LimitReached",
       "msg": "Absolute price limit was reached"
+    },
+    {
+      "code": 6020,
+      "name": "InvalidProtocolFee",
+      "msg": "Invalid protocol fee"
     }
   ]
 };
@@ -1418,12 +1471,6 @@ export const IDL: Amm = {
         {
           "name": "nonce",
           "type": "u8"
-        },
-        {
-          "name": "protocolFee",
-          "type": {
-            "defined": "Decimal"
-          }
         }
       ]
     },
@@ -1475,13 +1522,13 @@ export const IDL: Amm = {
       "name": "createPool",
       "accounts": [
         {
-          "name": "pool",
-          "isMut": true,
+          "name": "state",
+          "isMut": false,
           "isSigner": false
         },
         {
-          "name": "state",
-          "isMut": false,
+          "name": "pool",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1538,6 +1585,12 @@ export const IDL: Amm = {
         {
           "name": "initTick",
           "type": "i32"
+        },
+        {
+          "name": "protocolFee",
+          "type": {
+            "defined": "Decimal"
+          }
         }
       ]
     },
@@ -1796,6 +1849,11 @@ export const IDL: Amm = {
         },
         {
           "name": "upperTick",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tickmap",
           "isMut": true,
           "isSigner": false
         },
@@ -2248,6 +2306,49 @@ export const IDL: Amm = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "changeProtocolFee",
+      "accounts": [
+        {
+          "name": "state",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenX",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenY",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "admin",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "programAuthority",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "protocolFee",
+          "type": {
+            "defined": "Decimal"
+          }
+        }
+      ]
     }
   ],
   "accounts": [
@@ -2327,7 +2428,7 @@ export const IDL: Amm = {
           },
           {
             "name": "positionIterator",
-            "type": "u64"
+            "type": "u128"
           },
           {
             "name": "tickSpacing",
@@ -2335,6 +2436,12 @@ export const IDL: Amm = {
           },
           {
             "name": "fee",
+            "type": {
+              "defined": "Decimal"
+            }
+          },
+          {
+            "name": "protocolFee",
             "type": {
               "defined": "Decimal"
             }
@@ -2427,7 +2534,7 @@ export const IDL: Amm = {
           },
           {
             "name": "id",
-            "type": "u64"
+            "type": "u128"
           },
           {
             "name": "liquidity",
@@ -2505,12 +2612,6 @@ export const IDL: Amm = {
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "protocolFee",
-            "type": {
-              "defined": "Decimal"
-            }
-          },
           {
             "name": "admin",
             "type": "publicKey"
@@ -2752,6 +2853,11 @@ export const IDL: Amm = {
       "code": 6019,
       "name": "LimitReached",
       "msg": "Absolute price limit was reached"
+    },
+    {
+      "code": 6020,
+      "name": "InvalidProtocolFee",
+      "msg": "Invalid protocol fee"
     }
   ]
 };

@@ -1,17 +1,15 @@
 import { Network } from './network'
 import idl from './idl/staker.json'
-import * as anchor from '@project-serum/anchor'
-import { BN, Idl, Program, Provider, utils } from '@project-serum/anchor'
+import { BN, Idl, Program, Provider } from '@project-serum/anchor'
 import { IWallet } from '.'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import {
   Connection,
   PublicKey,
   ConfirmOptions,
-  Transaction,
-  TransactionInstruction,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
+  Transaction,
   Keypair
 } from '@solana/web3.js'
 import { STAKER_SEED } from './utils'
@@ -37,7 +35,7 @@ export class Staker {
     this.network = network
     this.wallet = wallet
     this.opts = opts
-    const provider = new Provider(connection, wallet, opts || Provider.defaultOptions())
+    const provider = new Provider(connection, wallet, opts ?? Provider.defaultOptions())
     switch (network) {
       case Network.LOCAL:
         this.programId = programId
@@ -59,24 +57,34 @@ export class Staker {
     founderTokenAcc,
     amm
   }: CreateIncentive) {
-    const [stakerAuthority, bump] = await PublicKey.findProgramAddress(
+    founder = founder ?? this.wallet.publicKey
+
+    incentive = incentive ?? Keypair.generate().publicKey
+
+    const [stakerAuthority, nonce] = await PublicKey.findProgramAddress(
       [STAKER_SEED],
       this.programId
     )
-    return this.program.instruction.createIncentive(bump, reward, startTime, endTime, {
+
+    return this.program.instruction.createIncentive(nonce, reward, startTime, endTime, {
       accounts: {
-        incentive: incentive.publicKey,
-        pool: pool,
+        incentive: incentive,
+        pool,
         incentiveTokenAccount: incentiveTokenAcc,
         founderTokenAccount: founderTokenAcc,
-        founder: founder.publicKey,
+        founder: founder,
         stakerAuthority,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
-        amm: amm,
+        amm,
         rent: SYSVAR_RENT_PUBKEY
       }
-    }) as TransactionInstruction
+    })
+  }
+
+  public async createIncentiveTransaction(createIncentive: CreateIncentive) {
+    const ix = await this.createIncentiveInstruction(createIncentive)
+    return new Transaction().add(ix)
   }
 
   public async getIncentive(incentivePubKey: PublicKey) {
@@ -85,32 +93,46 @@ export class Staker {
 
   public async getUserStakeAddressAndBump(incentive: PublicKey, pool: PublicKey, id: BN) {
     const pubBuf = pool.toBuffer()
-    let idBuf = Buffer.alloc(8)
+    const idBuf = Buffer.alloc(16)
     idBuf.writeBigUInt64LE(BigInt(id.toString()))
-    return PublicKey.findProgramAddress(
+    return await PublicKey.findProgramAddress(
       [STAKER_SEED, incentive.toBuffer(), pubBuf, idBuf],
       this.programId
     )
   }
 
-  public async stakeInstruction({ pool, id, position, incentive, owner, index, amm }: CreateStake) {
+  public async createStakeInstruction({
+    pool,
+    id,
+    position,
+    incentive,
+    owner,
+    index,
+    amm
+  }: CreateStake) {
+    owner = owner ?? this.wallet.publicKey
+
     const [userStakeAddress, userStakeBump] = await this.getUserStakeAddressAndBump(
       incentive,
       pool,
       id
     )
-
-    return (await this.program.instruction.stake(index, userStakeBump, {
+    return this.program.instruction.stake(index, userStakeBump, {
       accounts: {
         userStake: userStakeAddress,
         position,
-        incentive: incentive,
+        incentive,
         owner,
         systemProgram: SystemProgram.programId,
-        amm: amm,
+        amm,
         rent: SYSVAR_RENT_PUBKEY
       }
-    })) as TransactionInstruction
+    })
+  }
+
+  public async createStakeTransaction(createStake: CreateStake) {
+    const ix = await this.createStakeInstruction(createStake)
+    return new Transaction().add(ix)
   }
 
   public async getStake(incentive: PublicKey, pool: PublicKey, id: BN) {
@@ -129,6 +151,8 @@ export class Staker {
     amm,
     index
   }: Withdraw) {
+    owner = owner ?? this.wallet.publicKey
+
     const [stakerAuthority, nonce] = await PublicKey.findProgramAddress(
       [STAKER_SEED],
       this.programId
@@ -136,21 +160,26 @@ export class Staker {
 
     const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
 
-    return (await this.program.instruction.withdraw(index, nonce, {
+    return this.program.instruction.withdraw(index, nonce, {
       accounts: {
         userStake: userStakeAddress,
-        incentive: incentive,
+        incentive,
         incentiveTokenAccount: incentiveTokenAcc,
         ownerTokenAccount: ownerTokenAcc,
         position,
         stakerAuthority,
-        owner: owner,
+        owner,
         tokenProgram: TOKEN_PROGRAM_ID,
-        amm: amm,
+        amm,
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY
       }
-    })) as TransactionInstruction
+    })
+  }
+
+  public async withdrawTransaction(withdraw: Withdraw) {
+    const ix = await this.withdrawInstruction(withdraw)
+    return new Transaction().add(ix)
   }
 
   public async endIncentiveInstruction({
@@ -159,32 +188,39 @@ export class Staker {
     ownerTokenAcc,
     owner
   }: EndIncentive) {
+    owner = owner ?? this.wallet.publicKey
+
     const [stakerAuthority, stakerAuthorityBump] = await PublicKey.findProgramAddress(
       [STAKER_SEED],
       this.programId
     )
 
-    return (await this.program.instruction.endIncentive(stakerAuthorityBump, {
+    return this.program.instruction.endIncentive(stakerAuthorityBump, {
       accounts: {
-        incentive: incentive,
+        incentive,
         incentiveTokenAccount: incentiveTokenAcc,
         founderTokenAccount: ownerTokenAcc,
         stakerAuthority,
-        owner: owner,
+        owner,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY
       }
-    })) as TransactionInstruction
+    })
+  }
+
+  public async endIncentiveTransaction(endIncentive: EndIncentive) {
+    const ix = await this.endIncentiveInstruction(endIncentive)
+    return new Transaction().add(ix)
   }
 }
 export interface CreateIncentive {
   reward: Decimal
   startTime: BN
   endTime: BN
-  incentive: Keypair
   pool: PublicKey
-  founder: Keypair
+  founder?: PublicKey
+  incentive?: PublicKey
   incentiveTokenAcc: PublicKey
   founderTokenAcc: PublicKey
   amm: PublicKey
@@ -194,7 +230,7 @@ export interface CreateStake {
   id: BN
   position: PublicKey
   incentive: PublicKey
-  owner: PublicKey
+  owner?: PublicKey
   amm: PublicKey
   index: number
 }
@@ -213,7 +249,7 @@ export interface Withdraw {
   incentiveTokenAcc: PublicKey
   ownerTokenAcc: PublicKey
   position: PublicKey
-  owner: PublicKey
+  owner?: PublicKey
   amm: PublicKey
   index: number
   nonce: number
@@ -223,7 +259,7 @@ export interface EndIncentive {
   incentive: PublicKey
   incentiveTokenAcc: PublicKey
   ownerTokenAcc: PublicKey
-  owner: PublicKey
+  owner?: PublicKey
 }
 
 export interface IncentiveStructure {

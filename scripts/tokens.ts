@@ -2,6 +2,8 @@ import { Provider } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 import { createToken } from '../tests/testUtils'
 import { MINTER } from './minter'
+
+// trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
 const provider = Provider.local('https://api.devnet.solana.com', {
@@ -24,10 +26,11 @@ const main = async () => {
   const anaToken = await createToken(connection, wallet, MINTER, USDT_DECIMAL)
   const msolToken = await createToken(connection, wallet, MINTER, SOL_DECIMAL)
 
-  console.log(`SOL: ${solToken.publicKey}`)
-  console.log(`USDC: ${usdcToken.publicKey}`)
-  console.log(`USDT: ${usdtToken.publicKey}`)
-  console.log(`ANA: ${anaToken.publicKey}`)
-  console.log(`MSOL: ${msolToken.publicKey}`)
+  console.log(`SOL: ${solToken.publicKey.toString()}`)
+  console.log(`USDC: ${usdcToken.publicKey.toString()}`)
+  console.log(`USDT: ${usdtToken.publicKey.toString()}`)
+  console.log(`ANA: ${anaToken.publicKey.toString()}`)
+  console.log(`MSOL: ${msolToken.publicKey.toString()}`)
 }
+// trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
 main()

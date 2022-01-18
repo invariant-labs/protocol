@@ -5,15 +5,17 @@ use anchor_lang::prelude::*;
 use super::{FeeGrowth, TokenAmount};
 
 #[account(zero_copy)]
+#[repr(packed)]
 #[derive(PartialEq, Default, Debug)]
 pub struct Pool {
     pub token_x: Pubkey,
     pub token_y: Pubkey,
     pub token_x_reserve: Pubkey,
     pub token_y_reserve: Pubkey,
-    pub position_iterator: u64,
+    pub position_iterator: u128,
     pub tick_spacing: u16,
     pub fee: Decimal,
+    pub protocol_fee: Decimal,
     pub liquidity: Decimal,
     pub sqrt_price: Decimal,
     pub current_tick_index: i32, // nearest tick below the current price
@@ -32,8 +34,8 @@ pub struct Pool {
 }
 
 impl Pool {
-    pub fn add_fee(&mut self, amount: TokenAmount, in_x: bool, protocol_fee: Decimal) {
-        let protocol_fee = amount.big_mul(protocol_fee).to_token_ceil();
+    pub fn add_fee(&mut self, amount: TokenAmount, in_x: bool) {
+        let protocol_fee = amount.big_mul(self.protocol_fee).to_token_ceil();
         let pool_fee = amount - protocol_fee;
 
         if pool_fee.is_zero() || self.liquidity.is_zero() {
@@ -42,10 +44,12 @@ impl Pool {
         let fee_growth = FeeGrowth::from_fee(self.liquidity, pool_fee);
 
         if in_x {
-            self.fee_growth_global_x = self.fee_growth_global_x + fee_growth;
+            // trunk-ignore(clippy/unaligned_references)
+            self.fee_growth_global_x += fee_growth;
             self.fee_protocol_token_x += protocol_fee.0;
         } else {
-            self.fee_growth_global_y = self.fee_growth_global_y + fee_growth;
+            // trunk-ignore(clippy/unaligned_references)
+            self.fee_growth_global_y += fee_growth;
             self.fee_protocol_token_y += protocol_fee.0;
         }
     }

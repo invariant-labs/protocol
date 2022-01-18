@@ -4,6 +4,9 @@ use anchor_lang::{
     __private::{ErrorCode, CLOSED_ACCOUNT_DISCRIMINATOR},
     prelude::*,
 };
+use std::convert::TryInto;
+
+use anchor_lang::prelude::*;
 
 pub const STAKER_SEED: &str = "staker";
 
@@ -36,4 +39,12 @@ pub fn close<'info>(
     //     .map_err(|_| ErrorCode::AccountDidNotSerialize)?;
 
     Ok(())
+}
+
+pub fn get_current_timestamp() -> u64 {
+    Clock::get().unwrap().unix_timestamp.try_into().unwrap()
+}
+
+pub fn get_current_slot() -> u64 {
+    Clock::get().unwrap().slot
 }
