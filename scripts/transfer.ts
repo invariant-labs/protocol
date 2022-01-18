@@ -4,6 +4,8 @@ import { MOCK_TOKENS } from '@invariant-labs/sdk/src/network'
 import { MINTER } from './minter'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { tou64 } from '@invariant-labs/sdk/src'
+
+// trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
 const provider = Provider.local(clusterApiUrl('devnet'), {
@@ -17,8 +19,8 @@ const wallet = provider.wallet.payer as Keypair
 const main = async () => {
   const recipient = new PublicKey('9ceXFTqXzJMFDzf9s3fQn2UZDV9ihD8TYRMygGNmSL6G')
 
-  transferUsdcUsdt(recipient)
-  transferUsdcSol(recipient)
+  await transferUsdcUsdt(recipient)
+  await transferUsdcSol(recipient)
 }
 
 const transferUsdcUsdt = async (recipient: PublicKey) => {
@@ -48,4 +50,5 @@ const transferUsdcSol = async (recipient: PublicKey) => {
   await sol.mintTo(recipientSol, MINTER, [], tou64(solAmount))
 }
 
+// trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
 main()

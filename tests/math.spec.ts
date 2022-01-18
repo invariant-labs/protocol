@@ -736,14 +736,14 @@ describe('Math', () => {
       const priceB: Decimal = { v: new BN('87854456421658') }
       const liquidity: Decimal = { v: new BN('983983249092300399') }
 
-      const result_down = getDeltaY(priceA, priceB, liquidity, false)
-      const result_up = getDeltaY(priceA, priceB, liquidity, true)
+      const resultDown = getDeltaY(priceA, priceB, liquidity, false)
+      const resultUp = getDeltaY(priceA, priceB, liquidity, true)
 
       const expectedResultDown = new BN(144669023)
       const expectedResultUp = new BN(144669024)
 
-      assert.ok(result_down.eq(expectedResultDown))
-      assert.ok(result_up.eq(expectedResultUp))
+      assert.ok(resultDown.eq(expectedResultDown))
+      assert.ok(resultUp.eq(expectedResultUp))
     })
   })
   describe('test getNextPriceXUp', () => {
