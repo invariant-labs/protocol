@@ -23,8 +23,8 @@ const main = async () => {
   const market = await Market.build(Network.DEV, provider.wallet, connection)
 
   await createUsdcUsdt(market)
-  // await createUsdcSol(market)
-  // await createMsolSol(market)
+  await createUsdcSol(market)
+  await createMsolSol(market)
 }
 const createUsdcUsdt = async (market: Market) => {
   const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.USDT), feeTier)
@@ -42,39 +42,39 @@ const createUsdcUsdt = async (market: Market) => {
   await market.createPool(createPoolVars)
 }
 
-// const createUsdcSol = async (market: Market) => {
-//   const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.SOL), feeTier)
-//   const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-//   const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
-//   const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
+const createUsdcSol = async (market: Market) => {
+  const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.SOL), feeTier)
+  const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
+  const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
 
-//   const createPoolVars: CreatePool = {
-//     pair,
-//     payer: wallet,
-//     protocolFee,
-//     tokenX,
-//     tokenY,
-//     initTick: 18000
-//   }
-//   await createPool(market, createPoolVars)
-// }
+  const createPoolVars: CreatePool = {
+    pair,
+    payer: wallet,
+    protocolFee,
+    tokenX,
+    tokenY,
+    initTick: 18000
+  }
+  await market.createPool(createPoolVars)
+}
 
-// const createMsolSol = async (market: Market) => {
-//   const pair = new Pair(new PublicKey(MOCK_TOKENS.MSOL), new PublicKey(MOCK_TOKENS.SOL), feeTier)
-//   const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-//   const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
-//   const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
+const createMsolSol = async (market: Market) => {
+  const pair = new Pair(new PublicKey(MOCK_TOKENS.MSOL), new PublicKey(MOCK_TOKENS.SOL), feeTier)
+  const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
+  const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
 
-//   const createPoolVars: CreatePool = {
-//     pair,
-//     payer: wallet,
-//     protocolFee,
-//     tokenX,
-//     tokenY,
-//     initTick: 200
-//   }
-//   await createPool(market, createPoolVars)
-// }
+  const createPoolVars: CreatePool = {
+    pair,
+    payer: wallet,
+    protocolFee,
+    tokenX,
+    tokenY,
+    initTick: 200
+  }
+  await market.createPool(createPoolVars)
+}
 
 // trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
 main()

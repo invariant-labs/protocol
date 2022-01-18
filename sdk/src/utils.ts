@@ -351,7 +351,8 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
 
     // add amount to array if tick was initialized otherwise accumulate amount for next iteration
     accumulatedAmount = accumulatedAmount.add(amountDiff)
-    if (limitingTick.initialized ?? remainingAmount.eqn(0)) {
+    // trunk-ignore(eslint/@typescript-eslint/prefer-optional-chain)
+    if ((limitingTick !== null && limitingTick.initialized) ?? remainingAmount.eqn(0)) {
       amountPerTick.push(accumulatedAmount)
       accumulatedAmount = new BN(0)
     }
