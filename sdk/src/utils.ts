@@ -181,12 +181,12 @@ export const feeToTickSpacing = (fee: BN): number => {
   // linear relationship between fee and tickSpacing
   // tickSpacing = fee * 10^4
   const FEE_TO_SPACING_OFFSET = new BN(10).pow(new BN(DECIMAL - 4))
-  return fee.muln(2).div(FEE_TO_SPACING_OFFSET).toNumber()
+  return fee.div(FEE_TO_SPACING_OFFSET).toNumber()
 }
 
 export const FEE_TIERS: FeeTier[] = [
-  { fee: fromFee(new BN(20)) },
-  { fee: fromFee(new BN(40)) },
+  { fee: fromFee(new BN(10)) },
+  { fee: fromFee(new BN(50)) },
   { fee: fromFee(new BN(100)) },
   { fee: fromFee(new BN(300)) },
   { fee: fromFee(new BN(1000)) }
