@@ -247,7 +247,7 @@ export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
     sqrtPrice = calculatePriceSqrt(index)
     init = true
   } else {
-    index = getSearchLimit(currentTick, tickSpacing, !xToY)
+    index = getSearchLimit(new BN(currentTick), new BN(tickSpacing), !xToY)
     sqrtPrice = calculatePriceSqrt(index)
     init = false
   }
