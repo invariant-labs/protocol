@@ -1421,6 +1421,11 @@ export type Amm = {
       "code": 6019,
       "name": "LimitReached",
       "msg": "Absolute price limit was reached"
+    },
+    {
+      "code": 6020,
+      "name": "InvalidProtocolFee",
+      "msg": "Invalid protocol fee"
     }
   ]
 };
@@ -2848,6 +2853,11 @@ export const IDL: Amm = {
       "code": 6019,
       "name": "LimitReached",
       "msg": "Absolute price limit was reached"
+    },
+    {
+      "code": 6020,
+      "name": "InvalidProtocolFee",
+      "msg": "Invalid protocol fee"
     }
   ]
 };

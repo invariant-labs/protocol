@@ -108,6 +108,9 @@ describe('change-protocol-fee', () => {
       admin: admin.publicKey
     }
     await market.changeProtocolFee(changeProtocolFeeVars, admin)
+
+    const pool = await market.getPool(pair)
+    assert.ok(pool.protocolFee.v.eq(new BN(110000000000)))
   })
 
   it('#change-protocol-fee() fee receiver', async () => {
