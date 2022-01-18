@@ -11,7 +11,6 @@ import {
   Swap
 } from '@invariant-labs/sdk/src/market'
 import { feeToTickSpacing, FEE_TIERS, generateTicksArray } from '@invariant-labs/sdk/src/utils'
-import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import BN from 'bn.js'
 import { Pair, tou64, TICK_LIMIT } from '@invariant-labs/sdk'
 
@@ -122,12 +121,10 @@ export const createTokensAndPool = async (
     await market.createFeeTier(createFeeTierVars, payer)
   }
 
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   const createPoolVars: CreatePool = {
     pair,
     payer: payer,
     initTick,
-    protocolFee,
     tokenX,
     tokenY
   }

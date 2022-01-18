@@ -42,7 +42,6 @@ describe('Withdraw tests', () => {
   const positionOwner = Keypair.generate()
   const founderAccount = Keypair.generate()
   const admin = Keypair.generate()
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   let nonce: number
   let staker: Staker
   let market: Market
@@ -76,11 +75,7 @@ describe('Withdraw tests', () => {
     ])
 
     // create token
-    incentiveToken = await createToken({
-      connection: connection,
-      payer: wallet,
-      mintAuthority: wallet.publicKey
-    })
+    incentiveToken = await createToken(connection, wallet, wallet)
     // add SOL to founder acc
     await connection.requestAirdrop(founderAccount.publicKey, 10e9)
 
@@ -124,7 +119,6 @@ describe('Withdraw tests', () => {
     const createPoolVars: CreatePool = {
       pair,
       payer: admin,
-      protocolFee,
       tokenX,
       tokenY
     }

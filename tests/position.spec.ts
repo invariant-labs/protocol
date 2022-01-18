@@ -28,13 +28,13 @@ describe('position', () => {
   const admin = Keypair.generate()
   let market: Market
   const feeTier: FeeTier = { fee: fromFee(new BN(20)), tickSpacing: 4 }
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
   let initTick: number
   let xOwnerAmount: u64
   let yOwnerAmount: u64
+
 
   before(async () => {
     market = await Market.build(
@@ -70,7 +70,6 @@ describe('position', () => {
     const createPoolVars: CreatePool = {
       pair: spoofPair,
       payer: admin,
-      protocolFee,
       tokenX,
       tokenY,
       initTick
@@ -84,7 +83,6 @@ describe('position', () => {
     const createPoolVars: CreatePool = {
       pair,
       payer: admin,
-      protocolFee,
       tokenX,
       tokenY,
       initTick

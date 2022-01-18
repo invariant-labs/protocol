@@ -2,7 +2,7 @@ import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { Market, Network, Pair, DENOMINATOR, TICK_LIMIT, tou64 } from '@invariant-labs/sdk'
-import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
+import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken } from './testUtils'
@@ -31,7 +31,6 @@ describe('protocol-fee', () => {
     tickSpacing: 10
   }
   const lowerTick = -20
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -74,7 +73,6 @@ describe('protocol-fee', () => {
     const createPoolVars: CreatePool = {
       pair,
       payer: admin,
-      protocolFee,
       tokenX,
       tokenY
     }

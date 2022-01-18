@@ -42,4 +42,6 @@ pub enum ErrorCode {
     OracleAlreadyInitialized = 18, // 13e
     #[msg("Absolute price limit was reached")]
     LimitReached = 19, // 13f
+    #[msg("Invalid protocol fee")]
+    InvalidProtocolFee = 20,
 }

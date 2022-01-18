@@ -45,7 +45,6 @@ describe('Multicall test', () => {
   const firstFounderAccount = Keypair.generate()
   const secondFounderAccount = Keypair.generate()
   const admin = Keypair.generate()
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
 
   let staker: Staker
   let market: Market
@@ -91,11 +90,7 @@ describe('Multicall test', () => {
     ])
 
     // create token
-    firstIncentiveToken = await createToken({
-      connection: connection,
-      payer: wallet,
-      mintAuthority: wallet.publicKey
-    })
+    firstIncentiveToken = await createToken(connection, wallet, wallet)
 
     // create taken acc for founder and staker
     firstFounderTokenAcc = await firstIncentiveToken.createAccount(firstFounderAccount.publicKey)
@@ -143,7 +138,6 @@ describe('Multicall test', () => {
     const createPoolVars: CreatePool = {
       pair,
       payer: admin,
-      protocolFee,
       tokenX,
       tokenY
     }
@@ -151,8 +145,6 @@ describe('Multicall test', () => {
 
     pool = await pair.getAddress(anchor.workspace.Amm.programId)
     amm = anchor.workspace.Amm.programId
-
-    // create tokens
   })
   it('Multicall', async () => {
     const currentTime = getTime()

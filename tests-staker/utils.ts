@@ -1,5 +1,5 @@
 import { Decimal } from '../sdk-staker/src/staker'
-import { Account, Connection, Keypair, PublicKey } from '@solana/web3.js'
+import { Connection, Keypair } from '@solana/web3.js'
 import { Token, u64 } from '@solana/spl-token'
 import { TokenInstructions } from '@project-serum/serum'
 import { BN } from '@project-serum/anchor'
@@ -66,23 +66,16 @@ export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   throw new Error('Function did not throw error')
 }
 
-interface ICreateToken {
-  connection: Connection
-  payer: Account
-  mintAuthority: PublicKey
-  decimals?: number
-}
-
-export const createToken = async ({
-  connection,
-  payer,
-  mintAuthority,
+export const createToken = async (
+  connection: Connection,
+  payer: Keypair,
+  mintAuthority: Keypair,
   decimals = 6
-}: ICreateToken) => {
+) => {
   const token = await Token.createMint(
     connection,
     payer,
-    mintAuthority,
+    mintAuthority.publicKey,
     null,
     decimals,
     TokenInstructions.TOKEN_PROGRAM_ID

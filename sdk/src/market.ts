@@ -73,7 +73,7 @@ export class Market {
     await signAndSend(transaction, [createPool.payer, signer], this.connection)
   }
 
-  async createPoolTx({ pair, payer, initTick, protocolFee, tokenX, tokenY }: CreatePoolTx) {
+  async createPoolTx({ pair, payer, initTick, tokenX, tokenY }: CreatePoolTx) {
     const payerPubkey = payer?.publicKey ?? this.wallet.publicKey
     const bitmapKeypair = Keypair.generate()
     const tick = initTick ?? 0
@@ -85,7 +85,7 @@ export class Market {
 
     const tokenXReserve = await tokenX.createAccount(this.programAuthority)
     const tokenYReserve = await tokenY.createAccount(this.programAuthority)
-    const createIx = this.program.instruction.createPool(bump, tick, protocolFee, {
+    const createIx = this.program.instruction.createPool(bump, tick, {
       accounts: {
         state: stateAddress,
         pool: poolAddress,
@@ -156,6 +156,16 @@ export class Market {
     this.program.account.pool
       .subscribe(poolAddress, 'singleGossip') // REVIEW use recent commitment + allow overwrite via props
       .on('change', (poolStructure: PoolStructure) => {
+        fn(poolStructure)
+      })
+  }
+
+  public async onTickChange(pair: Pair, index: number, fn: (tick: Tick) => void) {
+    const { tickAddress } = await this.getTickAddress(pair, index)
+
+    this.program.account.tick
+      .subscribe(tickAddress, 'singleGossip') // REVIEW use recent commitment + allow overwrite via props
+      .on('change', (poolStructure: Tick) => {
         fn(poolStructure)
       })
   }
@@ -1005,6 +1015,36 @@ export class Market {
     const pool = await this.getPool(pair)
     return await this.program.account.oracle.fetch(pool.oracleAddress)
   }
+
+  async changeProtocolFeeInstruction(changeProtocolFee: ChangeProtocolFee) {
+    let { pair, admin, protocolFee } = changeProtocolFee
+    admin = admin ?? this.wallet.publicKey
+
+    const { address: stateAddress } = await this.getStateAddress()
+    const poolAddress = await pair.getAddress(this.program.programId)
+
+    return this.program.instruction.changeProtocolFee(protocolFee, {
+      accounts: {
+        state: stateAddress,
+        pool: poolAddress,
+        tokenX: pair.tokenX,
+        tokenY: pair.tokenY,
+        admin,
+        programAuthority: this.programAuthority
+      }
+    })
+  }
+
+  async changeProtocolFeeTransaction(changeProtocolFee: ChangeProtocolFee) {
+    const ix = await this.changeProtocolFeeInstruction(changeProtocolFee)
+    return new Transaction().add(ix)
+  }
+
+  async changeProtocolFee(changeProtocolFee: ChangeProtocolFee, signer: Keypair) {
+    const tx = await this.changeProtocolFeeTransaction(changeProtocolFee)
+
+    await signAndSend(tx, [signer], this.connection)
+  }
 }
 
 export interface Decimal {
@@ -1127,7 +1167,6 @@ export interface CreatePoolTx {
   pair: Pair
   payer?: Keypair
   initTick?: number
-  protocolFee: Decimal
   tokenX: Token
   tokenY: Token
 }
@@ -1158,6 +1197,12 @@ export interface UpdateSecondsPerLiquidity {
   lowerTickIndex: number
   upperTickIndex: number
   index: number
+}
+
+export interface ChangeProtocolFee {
+  pair: Pair
+  admin?: PublicKey
+  protocolFee: Decimal
 }
 export interface CreateFeeTier {
   feeTier: FeeTier

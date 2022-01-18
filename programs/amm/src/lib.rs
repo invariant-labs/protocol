@@ -42,13 +42,8 @@ pub mod amm {
         instructions::create_fee_tier::handler(ctx, bump, fee, tick_spacing)
     }
 
-    pub fn create_pool(
-        ctx: Context<CreatePool>,
-        bump: u8,
-        init_tick: i32,
-        protocol_fee: Decimal,
-    ) -> ProgramResult {
-        instructions::create_pool::handler(ctx, bump, init_tick, protocol_fee)
+    pub fn create_pool(ctx: Context<CreatePool>, bump: u8, init_tick: i32) -> ProgramResult {
+        instructions::create_pool::handler(ctx, bump, init_tick)
     }
 
     pub fn swap(
@@ -121,6 +116,14 @@ pub mod amm {
     #[access_control(receiver(&ctx.accounts.pool, &ctx.accounts.authority))]
     pub fn withdraw_protocol_fee(ctx: Context<WithdrawProtocolFee>) -> ProgramResult {
         instructions::withdraw_protocol_fee::handler(ctx)
+    }
+
+    #[access_control(receiver(&ctx.accounts.pool, &ctx.accounts.admin))]
+    pub fn change_protocol_fee(
+        ctx: Context<ChangeProtocolFee>,
+        protocol_fee: Decimal,
+    ) -> ProgramResult {
+        instructions::change_protocol_fee::handler(ctx, protocol_fee)
     }
 }
 

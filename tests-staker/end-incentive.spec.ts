@@ -23,7 +23,6 @@ describe('End incentive tests', () => {
   const wallet = provider.wallet.payer as Account
   const founderAccount = Keypair.generate()
   const mintAuthority = Keypair.generate()
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
 
   let stakerAuthority: PublicKey
   let staker: Staker
@@ -47,11 +46,7 @@ describe('End incentive tests', () => {
     staker = new Staker(connection, Network.LOCAL, provider.wallet, program.programId)
 
     // create token
-    incentiveToken = await createToken({
-      connection: connection,
-      payer: wallet,
-      mintAuthority: wallet.publicKey
-    })
+    incentiveToken = await createToken(connection, wallet, wallet)
     // add SOL to founder acc
     await connection.requestAirdrop(founderAccount.publicKey, 10e9)
 
@@ -101,7 +96,6 @@ describe('End incentive tests', () => {
     const createPoolVars: CreatePool = {
       pair,
       payer: admin,
-      protocolFee,
       tokenX,
       tokenY
     }
