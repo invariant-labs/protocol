@@ -6,7 +6,7 @@ export const getSearchLimit = (
   tickSpacing: number,
   up: boolean
 ): number => {
-  if (currentTickIndex % tickSpacing != 0) {
+  if (currentTickIndex % tickSpacing !== 0) {
     throw new Error('Tick not divisible by spacing')
   }
 
@@ -72,7 +72,7 @@ export const getNextTick = (
   currentTickIndex: number,
   tickSpacing: number
 ): number | null => {
-  if (currentTickIndex % tickSpacing != 0) {
+  if (currentTickIndex % tickSpacing !== 0) {
     throw new Error('Tick not divisible by spacing')
   }
 
@@ -86,8 +86,8 @@ export const getNextTick = (
   while (byteIndex * 8 + bitIndex <= limit) {
     let shifted = tickmap.bitmap[byteIndex] >> bitIndex
 
-    if (shifted != 0) {
-      while (shifted % 2 == 0) {
+    if (shifted !== 0) {
+      while (shifted % 2 === 0) {
         shifted >>= 1
         bitIndex += 1
       }

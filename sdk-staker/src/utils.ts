@@ -41,7 +41,7 @@ export const signAndSend = async (
 ) => {
   tx.setSigners(...signers.map(s => s.publicKey))
   const blockhash = await connection.getRecentBlockhash(
-    opts?.commitment || Provider.defaultOptions().commitment
+    opts?.commitment ?? Provider.defaultOptions().commitment
   )
   tx.recentBlockhash = blockhash.blockhash
   tx.partialSign(...signers)

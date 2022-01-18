@@ -12,7 +12,6 @@ import {
 import { calculatePriceAfterSlippage, findClosestTicks, isInitialized } from './math'
 import {
   feeToTickSpacing,
-  generateTicksArray,
   getFeeTierAddress,
   getMaxTick,
   getMinTick,
@@ -32,7 +31,6 @@ const POSITION_LIST_SEED = 'positionlistv1'
 const STATE_SEED = 'statev1'
 const MAX_IX = 8
 const TICKS_PER_IX = 1
-const COMPUTE_UNITS = 800000
 export const FEE_TIER = 'feetierv1'
 export const DEFAULT_PUBLIC_KEY = new PublicKey(0)
 
@@ -87,8 +85,7 @@ export class Market {
 
     const tokenXReserve = await tokenX.createAccount(this.programAuthority)
     const tokenYReserve = await tokenY.createAccount(this.programAuthority)
-
-    const createIx = await this.program.instruction.createPool(bump, tick, protocolFee, {
+    const createIx = this.program.instruction.createPool(bump, tick, protocolFee, {
       accounts: {
         state: stateAddress,
         pool: poolAddress,
@@ -294,7 +291,7 @@ export class Market {
   }
 
   async createFeeTierInstruction({ feeTier, admin }: CreateFeeTier) {
-    admin = admin || this.wallet.publicKey
+    admin = admin ?? this.wallet.publicKey
     const { fee, tickSpacing } = feeTier
     const { address, bump } = await this.getFeeTierAddress(feeTier)
     const ts = tickSpacing ?? feeToTickSpacing(fee)
@@ -315,8 +312,15 @@ export class Market {
     return new Transaction().add(ix)
   }
 
+  // Admin function
+  async createFeeTier(createFeeTier: CreateFeeTier, signer: Keypair) {
+    const tx = await this.createFeeTierTransaction(createFeeTier)
+
+    await signAndSend(tx, [signer], this.connection)
+  }
+
   async createStateInstruction(admin?: PublicKey) {
-    admin = admin || this.wallet.publicKey
+    admin = admin ?? this.wallet.publicKey
     const { programAuthority, nonce } = await this.getProgramAuthority()
     const { address, bump } = await this.getStateAddress()
 
@@ -334,6 +338,12 @@ export class Market {
   async createStateTransaction(admin?: PublicKey) {
     const ix = await this.createStateInstruction(admin)
     return new Transaction().add(ix)
+  }
+
+  async createState(admin: PublicKey, signer: Keypair) {
+    const tx = await this.createStateTransaction(admin)
+
+    await signAndSend(tx, [signer], this.connection)
   }
 
   async getStateAddress() {
@@ -354,7 +364,7 @@ export class Market {
   }
 
   async createTickInstruction({ pair, index, payer }: CreateTick) {
-    payer = payer || this.wallet.publicKey
+    payer = payer ?? this.wallet.publicKey
     const state = await this.getPool(pair)
     const { tickAddress, tickBump } = await this.getTickAddress(pair, index)
 
@@ -377,6 +387,12 @@ export class Market {
     return new Transaction().add(ix)
   }
 
+  async createTick(createTick: CreateTick, signer: Keypair) {
+    const tx = await this.createTickTransaction(createTick)
+
+    await signAndSend(tx, [signer], this.connection)
+  }
+
   async createPositionListInstruction(owner?: PublicKey) {
     owner = owner ?? this.wallet.publicKey
     const { positionListAddress, positionListBump } = await this.getPositionListAddress(owner)
@@ -397,6 +413,12 @@ export class Market {
     return new Transaction().add(ix)
   }
 
+  async createPositionList(owner: PublicKey, signer: Keypair) {
+    const tx = await this.createPositionListTransaction(owner)
+
+    await signAndSend(tx, [signer], this.connection)
+  }
+
   async initPositionInstruction(
     { pair, owner, userTokenX, userTokenY, lowerTick, upperTick, liquidityDelta }: InitPosition,
     assumeFirstPosition: boolean = false
@@ -404,8 +426,8 @@ export class Market {
     const state = await this.getPool(pair)
     owner = owner ?? this.wallet.publicKey
 
-    const upperTickIndex = upperTick != Infinity ? upperTick : getMaxTick(pair.tickSpacing)
-    const lowerTickIndex = lowerTick != -Infinity ? lowerTick : getMinTick(pair.tickSpacing)
+    const upperTickIndex = upperTick !== Infinity ? upperTick : getMaxTick(pair.tickSpacing)
+    const lowerTickIndex = lowerTick !== -Infinity ? lowerTick : getMinTick(pair.tickSpacing)
 
     // maybe in the future index cloud be store at market
     const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTickIndex)
@@ -451,7 +473,6 @@ export class Market {
   async initPositionTx(initPosition: InitPosition) {
     const { pair, lowerTick, upperTick } = initPosition
     const payer = initPosition.owner ?? this.wallet.publicKey
-    const [tickmap, pool] = await Promise.all([this.getTickmap(pair), this.getPool(pair)])
 
     // undefined - tmp solution
     let lowerInstruction: TransactionInstruction | undefined
@@ -492,16 +513,22 @@ export class Market {
       tx.add(ComputeUnitsInstruction(400000, payer))
     }
     if (!lowerExists && lowerInstruction) {
-      tx.add(lowerInstruction as TransactionInstruction)
+      tx.add(lowerInstruction)
     }
     if (!upperExists && upperInstruction) {
-      tx.add(upperInstruction as TransactionInstruction)
+      tx.add(upperInstruction)
     }
     if (!listExists && listInstruction) {
-      tx.add(listInstruction as TransactionInstruction)
+      tx.add(listInstruction)
     }
 
     return tx.add(positionInstruction)
+  }
+
+  async initPosition(initPosition: InitPosition, signer: Keypair) {
+    const tx = await this.initPositionTx(initPosition)
+
+    await signAndSend(tx, [signer], this.connection)
   }
 
   async swapInstruction(swap: Swap, overridePriceLimit?: BN) {
@@ -541,6 +568,7 @@ export class Market {
       })
     )
 
+    // trunk-ignore(eslint)
     const ra: Array<{ pubkey: PublicKey; isWritable: boolean; isSigner: boolean }> =
       remainingAccounts.map(pubkey => {
         return { pubkey, isWritable: true, isSigner: false }
@@ -606,6 +634,7 @@ export class Market {
       })
     )
 
+    // trunk-ignore(eslint/@typescript-eslint/member-delimiter-style)
     const ra: Array<{ pubkey: PublicKey; isWritable: boolean; isSigner: boolean }> =
       remainingAccounts.map(pubkey => {
         return { pubkey, isWritable: true, isSigner: false }
@@ -695,6 +724,12 @@ export class Market {
     return new Transaction().add(ix)
   }
 
+  async swap(swap: Swap, signer: Keypair, overridePriceLimit?: BN) {
+    const tx = await this.swapTransaction(swap, overridePriceLimit)
+
+    await signAndSend(tx, [signer], this.connection)
+  }
+
   async getReserveBalances(pair: Pair, tokenX: Token, tokenY: Token) {
     const state = await this.getPool(pair)
 
@@ -708,7 +743,7 @@ export class Market {
 
   async claimFeeInstruction(claimFee: ClaimFee) {
     const { pair, userTokenX, userTokenY, index } = claimFee
-    const owner = claimFee.owner || this.wallet.publicKey
+    const owner = claimFee.owner ?? this.wallet.publicKey
 
     const state = await this.getPool(pair)
     const { positionAddress } = await this.getPositionAddress(owner, index)
@@ -752,9 +787,15 @@ export class Market {
     return new Transaction().add(ix)
   }
 
+  async claimFee(claimFee: ClaimFee, signer: Keypair) {
+    const tx = await this.claimFeeTransaction(claimFee)
+
+    await signAndSend(tx, [signer], this.connection)
+  }
+
   async withdrawProtocolFeeInstruction(withdrawProtocolFee: WithdrawProtocolFee) {
     const { pair, accountX, accountY } = withdrawProtocolFee
-    const admin = withdrawProtocolFee.admin || this.wallet.publicKey
+    const admin = withdrawProtocolFee.admin ?? this.wallet.publicKey
 
     const pool = await this.getPool(pair)
 
@@ -778,6 +819,13 @@ export class Market {
   async withdrawProtocolFeeTransaction(withdrawProtocolFee: WithdrawProtocolFee) {
     const ix = await this.withdrawProtocolFeeInstruction(withdrawProtocolFee)
     return new Transaction().add(ix)
+  }
+
+  // Admin function
+  async withdrawProtocolFee(withdrawProtocolFee: WithdrawProtocolFee, signer: Keypair) {
+    const tx = await this.withdrawProtocolFeeTransaction(withdrawProtocolFee)
+
+    await signAndSend(tx, [signer], this.connection)
   }
 
   async removePositionInstruction(removePosition: RemovePosition): Promise<TransactionInstruction> {
@@ -837,12 +885,18 @@ export class Market {
     return new Transaction().add(ix)
   }
 
+  async removePosition(removePosition: RemovePosition, signer: Keypair) {
+    const tx = await this.removePositionTransaction(removePosition)
+
+    await signAndSend(tx, [signer], this.connection)
+  }
+
   async transferPositionOwnershipInstruction(
     transferPositionOwnership: TransferPositionOwnership
   ): Promise<TransactionInstruction> {
     const { index } = transferPositionOwnership
-    const owner = transferPositionOwnership.owner || this.wallet.publicKey
-    const recipient = transferPositionOwnership.recipient || this.wallet.publicKey
+    const owner = transferPositionOwnership.owner ?? this.wallet.publicKey
+    const recipient = transferPositionOwnership.recipient ?? this.wallet.publicKey
 
     const { positionListAddress: ownerList } = await this.getPositionListAddress(owner)
     const { positionListAddress: recipientList } = await this.getPositionListAddress(recipient)
@@ -876,9 +930,18 @@ export class Market {
     return new Transaction().add(ix)
   }
 
+  async transferPositionOwnership(
+    transferPositionOwnership: TransferPositionOwnership,
+    signer: Keypair
+  ) {
+    const tx = await this.transferPositionOwnershipTransaction(transferPositionOwnership)
+
+    await signAndSend(tx, [signer], this.connection)
+  }
+
   async updateSecondsPerLiquidityInstruction(updateSecondsPerLiquidity: UpdateSecondsPerLiquidity) {
     const { pair, lowerTickIndex, upperTickIndex, index } = updateSecondsPerLiquidity
-    const owner = updateSecondsPerLiquidity.owner || this.wallet.publicKey
+    const owner = updateSecondsPerLiquidity.owner ?? this.wallet.publicKey
 
     const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTickIndex)
     const { tickAddress: upperTickAddress } = await this.getTickAddress(pair, upperTickIndex)
@@ -908,6 +971,15 @@ export class Market {
   async updateSecondsPerLiquidityTransaction(updateSecondsPerLiquidity: UpdateSecondsPerLiquidity) {
     const ix = await this.updateSecondsPerLiquidityInstruction(updateSecondsPerLiquidity)
     return new Transaction().add(ix)
+  }
+
+  async updateSecondsPerLiquidity(
+    updateSecondsPerLiquidity: UpdateSecondsPerLiquidity,
+    signer: Keypair
+  ) {
+    const tx = await this.updateSecondsPerLiquidityTransaction(updateSecondsPerLiquidity)
+
+    await signAndSend(tx, [signer], this.connection)
   }
 
   async initializeOracle({ pair, payer }: InitializeOracle) {

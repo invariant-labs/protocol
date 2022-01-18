@@ -8,7 +8,8 @@ import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/src/utils'
 import { MAX_TICK } from '@invariant-labs/sdk'
 import { getLiquidityByY } from '@invariant-labs/sdk/lib/math'
 import { InitPosition } from '@invariant-labs/sdk/src/market'
-import { initPosition } from '../tests/testUtils'
+
+// trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
 const provider = Provider.local(clusterApiUrl('devnet'), {
@@ -35,7 +36,7 @@ const main = async () => {
 const usdtUsdcCreatePosition = async (market: Market) => {
   console.log('creating accounts...')
   const pair = new Pair(new PublicKey(tokenA), new PublicKey(tokenB), FEE_TIERS[0])
-  console.log(`is token A first?: ${pair.tokenX.equals(new PublicKey(tokenA))}`)
+  console.log(`is token A first?: ${pair.tokenX.equals(new PublicKey(tokenA)).toString()}`)
   if (!pair.tokenX.equals(new PublicKey(tokenA))) {
     throw new Error('tokens are in reverse order, ticks should be opposite')
   }
@@ -70,8 +71,9 @@ const usdtUsdcCreatePosition = async (market: Market) => {
     upperTick,
     liquidityDelta: liquidity
   }
-  await initPosition(market, initPositionVars, MINTER)
+  await market.initPosition(initPositionVars, MINTER)
   console.log('done')
 }
 
+// trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
 main()

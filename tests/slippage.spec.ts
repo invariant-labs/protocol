@@ -1,13 +1,7 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
-import {
-  assertThrowsAsync,
-  createPoolWithLiquidity,
-  createState,
-  createUserWithTokens,
-  swap
-} from './testUtils'
+import { assertThrowsAsync, createPoolWithLiquidity, createUserWithTokens } from './testUtils'
 import { Market, Network, sleep } from '@invariant-labs/sdk'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { Decimal, Swap } from '@invariant-labs/sdk/src/market'
@@ -34,7 +28,7 @@ describe('slippage', () => {
     await connection.requestAirdrop(admin.publicKey, 1e12)
     await sleep(500)
 
-    await createState(market, admin.publicKey, admin)
+    await market.createState(admin.publicKey, admin)
 
     const { pair, mintAuthority } = await createPoolWithLiquidity(market, connection, admin)
     const { owner, userAccountX, userAccountY } = await createUserWithTokens(
@@ -56,7 +50,7 @@ describe('slippage', () => {
       accountY: userAccountY,
       byAmountIn: true
     }
-    await swap(market, swapVars, owner)
+    await market.swap(swapVars, owner)
 
     expectedPrice = (await market.getPool(pair)).sqrtPrice.v
   })
@@ -83,7 +77,7 @@ describe('slippage', () => {
       accountY: userAccountY,
       byAmountIn: true
     }
-    await swap(market, swapVars, owner, priceLimit)
+    await market.swap(swapVars, owner, priceLimit)
   })
 
   it('#swap with target at limit', async () => {
@@ -108,7 +102,7 @@ describe('slippage', () => {
       accountY: userAccountY,
       byAmountIn: true
     }
-    await assertThrowsAsync(swap(market, swapVars, owner, priceLimit))
+    await assertThrowsAsync(market.swap(swapVars, owner, priceLimit))
   })
 
   it('#swap with target just below the limit', async () => {
@@ -132,7 +126,7 @@ describe('slippage', () => {
       accountY: userAccountY,
       byAmountIn: true
     }
-    await assertThrowsAsync(swap(market, swapVars, owner, priceLimit))
+    await assertThrowsAsync(market.swap(swapVars, owner, priceLimit))
   })
 
   it('#swap with target on the other side of price', async () => {
@@ -156,6 +150,6 @@ describe('slippage', () => {
       accountY: userAccountY,
       byAmountIn: true
     }
-    await assertThrowsAsync(swap(market, swapVars, owner, priceLimit))
+    await assertThrowsAsync(market.swap(swapVars, owner, priceLimit))
   })
 })

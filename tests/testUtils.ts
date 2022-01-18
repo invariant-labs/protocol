@@ -3,23 +3,17 @@ import { TokenInstructions } from '@project-serum/serum'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { FeeTier, Market, Position } from '@invariant-labs/sdk/lib/market'
 import {
-  ClaimFee,
   CreateFeeTier,
   CreatePool,
   CreateTick,
   Decimal,
-  InitializeOracle,
   InitPosition,
-  RemovePosition,
-  Swap,
-  TransferPositionOwnership,
-  UpdateSecondsPerLiquidity,
-  WithdrawProtocolFee
+  Swap
 } from '@invariant-labs/sdk/src/market'
 import { feeToTickSpacing, FEE_TIERS, generateTicksArray } from '@invariant-labs/sdk/src/utils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import BN from 'bn.js'
-import { Pair, tou64, TICK_LIMIT, signAndSend } from '@invariant-labs/sdk'
+import { Pair, tou64, TICK_LIMIT } from '@invariant-labs/sdk'
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {
@@ -66,7 +60,7 @@ export const createToken = async (
 
 // do not compare bump
 export const positionEquals = (a: Position, b: Position) => {
-  return positionWithoutOwnerEquals(a, b) && a.owner == b.owner
+  return positionWithoutOwnerEquals(a, b) && a.owner === b.owner
 }
 
 export const positionWithoutOwnerEquals = (a: Position, b: Position) => {
@@ -74,8 +68,8 @@ export const positionWithoutOwnerEquals = (a: Position, b: Position) => {
     eqDecimal(a.feeGrowthInsideX, b.feeGrowthInsideX) &&
     eqDecimal(a.feeGrowthInsideY, b.feeGrowthInsideY) &&
     eqDecimal(a.liquidity, b.liquidity) &&
-    a.lowerTickIndex == b.lowerTickIndex &&
-    a.upperTickIndex == b.upperTickIndex &&
+    a.lowerTickIndex === b.lowerTickIndex &&
+    a.upperTickIndex === b.upperTickIndex &&
     a.pool.equals(b.pool) &&
     a.id.eq(b.id) &&
     a.lastSlot.eq(b.lastSlot) &&
@@ -86,13 +80,13 @@ export const positionWithoutOwnerEquals = (a: Position, b: Position) => {
 }
 
 export const createStandardFeeTiers = async (market: Market, payer: Keypair) => {
-  Promise.all(
+  await Promise.all(
     FEE_TIERS.map(async feeTier => {
       const createFeeTierVars: CreateFeeTier = {
         feeTier,
         admin: payer.publicKey
       }
-      await createFeeTier(market, createFeeTierVars, payer)
+      await market.createFeeTier(createFeeTierVars, payer)
     })
   )
 }
@@ -125,7 +119,7 @@ export const createTokensAndPool = async (
       feeTier,
       admin: payer.publicKey
     }
-    await createFeeTier(market, createFeeTierVars, payer)
+    await market.createFeeTier(createFeeTierVars, payer)
   }
 
   const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
@@ -137,7 +131,7 @@ export const createTokensAndPool = async (
     tokenX,
     tokenY
   }
-  await createPool(market, createPoolVars)
+  await market.createPool(createPoolVars)
 
   return { tokenX, tokenY, pair, mintAuthority }
 }
@@ -193,7 +187,7 @@ export const createPoolWithLiquidity = async (
     upperTick,
     liquidityDelta: liquidity
   }
-  await initPosition(market, initPositionVars, owner)
+  await market.initPosition(initPositionVars, owner)
 
   return { pair, mintAuthority }
 }
@@ -233,7 +227,7 @@ export const createPosition = async (
     upperTick,
     liquidityDelta: { v: liquidity }
   }
-  await initPosition(market, initPositionVars, owner)
+  await market.initPosition(initPositionVars, owner)
 }
 
 export const performSwap = async (
@@ -272,34 +266,7 @@ export const performSwap = async (
     accountY,
     byAmountIn
   }
-  await swap(market, swapVars, swapper)
-}
-
-export const createPool = async (market: Market, createPool: CreatePool) => {
-  await market.createPool(createPool)
-}
-
-// Admin function
-export const createFeeTier = async (
-  market: Market,
-  createFeeTier: CreateFeeTier,
-  signer: Keypair
-) => {
-  const tx = await market.createFeeTierTransaction(createFeeTier)
-
-  await signAndSend(tx, [signer], market.connection)
-}
-
-export const createState = async (market: Market, admin: PublicKey, signer: Keypair) => {
-  const tx = await market.createStateTransaction(admin)
-
-  await signAndSend(tx, [signer], market.connection)
-}
-
-export const createTick = async (market: Market, createTick: CreateTick, signer: Keypair) => {
-  const tx = await market.createTickTransaction(createTick)
-
-  await signAndSend(tx, [signer], market.connection)
+  await market.swap(swapVars, swapper)
 }
 
 export const createTicksFromRange = async (
@@ -311,88 +278,14 @@ export const createTicksFromRange = async (
 ) => {
   const step = pair.feeTier.tickSpacing ?? feeToTickSpacing(pair.feeTier.fee)
 
-  Promise.all(
+  await Promise.all(
     generateTicksArray(start, stop, step).map(async index => {
       const createTickVars: CreateTick = {
         pair,
         index,
         payer
       }
-      await createTick(market, createTickVars, signer)
+      await market.createTick(createTickVars, signer)
     })
   )
-}
-
-export const createPositionList = async (market: Market, owner: PublicKey, signer: Keypair) => {
-  const tx = await market.createPositionListTransaction(owner)
-
-  await signAndSend(tx, [signer], market.connection)
-}
-
-export const initPosition = async (market: Market, initPosition: InitPosition, signer: Keypair) => {
-  const tx = await market.initPositionTx(initPosition)
-
-  await signAndSend(tx, [signer], market.connection)
-}
-
-export const swap = async (
-  market: Market,
-  swap: Swap,
-  signer: Keypair,
-  overridePriceLimit?: BN
-) => {
-  const tx = await market.swapTransaction(swap, overridePriceLimit)
-
-  await signAndSend(tx, [signer], market.connection)
-}
-
-export const claimFee = async (market: Market, claimFee: ClaimFee, signer: Keypair) => {
-  const tx = await market.claimFeeTransaction(claimFee)
-
-  await signAndSend(tx, [signer], market.connection)
-}
-
-// Admin function
-export const withdrawProtocolFee = async (
-  market: Market,
-  withdrawProtocolFee: WithdrawProtocolFee,
-  signer: Keypair
-) => {
-  const tx = await market.withdrawProtocolFeeTransaction(withdrawProtocolFee)
-
-  await signAndSend(tx, [signer], market.connection)
-}
-
-export const removePosition = async (
-  market: Market,
-  removePosition: RemovePosition,
-  signer: Keypair
-) => {
-  const tx = await market.removePositionTransaction(removePosition)
-
-  await signAndSend(tx, [signer], market.connection)
-}
-
-export const transferPositionOwnership = async (
-  market: Market,
-  transferPositionOwnership: TransferPositionOwnership,
-  signer: Keypair
-) => {
-  const tx = await market.transferPositionOwnershipTransaction(transferPositionOwnership)
-
-  await signAndSend(tx, [signer], market.connection)
-}
-
-export const updateSecondsPerLiquidity = async (
-  market: Market,
-  updateSecondsPerLiquidity: UpdateSecondsPerLiquidity,
-  signer: Keypair
-) => {
-  const tx = await market.updateSecondsPerLiquidityTransaction(updateSecondsPerLiquidity)
-
-  await signAndSend(tx, [signer], market.connection)
-}
-
-export const initializeOracle = async (market: Market, initializeOracle: InitializeOracle) => {
-  await market.initializeOracle(initializeOracle)
 }

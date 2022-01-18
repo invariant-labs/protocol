@@ -16,17 +16,7 @@ import {
   createIncentive,
   updatePositionAndWithdraw
 } from './utils'
-import {
-  createFeeTier,
-  createPool,
-  createPositionList,
-  createState,
-  createTick,
-  createToken as createTkn,
-  initPosition,
-  swap,
-  updateSecondsPerLiquidity
-} from '../tests/testUtils'
+import { createToken as createTkn } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { fromInteger, toDecimal } from '../sdk-staker/lib/utils'
 import { DECIMAL, fromFee } from '@invariant-labs/sdk/lib/utils'
@@ -139,13 +129,13 @@ describe('Multicall test', () => {
 
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
 
-    await createState(market, admin.publicKey, admin)
+    await market.createState(admin.publicKey, admin)
 
     const createFeeTierVars: CreateFeeTier = {
       feeTier,
       admin: admin.publicKey
     }
-    await createFeeTier(market, createFeeTierVars, admin)
+    await market.createFeeTier(createFeeTierVars, admin)
 
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
@@ -157,7 +147,7 @@ describe('Multicall test', () => {
       tokenX,
       tokenY
     }
-    await createPool(market, createPoolVars)
+    await market.createPool(createPoolVars)
 
     pool = await pair.getAddress(anchor.workspace.Amm.programId)
     amm = anchor.workspace.Amm.programId
@@ -207,14 +197,14 @@ describe('Multicall test', () => {
       index: firstUpperTick,
       payer: admin.publicKey
     }
-    await createTick(market, createTickVars, admin)
+    await market.createTick(createTickVars, admin)
 
     const createTickVars2: CreateTick = {
       pair,
       index: firstLowerTick,
       payer: admin.publicKey
     }
-    await createTick(market, createTickVars2, admin)
+    await market.createTick(createTickVars2, admin)
 
     const firstUserTokenXAccount = await tokenX.createAccount(firstPositionOwner.publicKey)
     const firstUserTokenYAccount = await tokenY.createAccount(firstPositionOwner.publicKey)
@@ -233,7 +223,7 @@ describe('Multicall test', () => {
       mintAmount
     )
 
-    await createPositionList(market, firstPositionOwner.publicKey, firstPositionOwner)
+    await market.createPositionList(firstPositionOwner.publicKey, firstPositionOwner)
 
     const initPositionVars: InitPosition = {
       pair,
@@ -244,7 +234,7 @@ describe('Multicall test', () => {
       upperTick: firstUpperTick,
       liquidityDelta: fromInteger(1_000_000)
     }
-    await initPosition(market, initPositionVars, firstPositionOwner)
+    await market.initPosition(initPositionVars, firstPositionOwner)
 
     // create second position
 
@@ -253,14 +243,14 @@ describe('Multicall test', () => {
       index: secondUpperTick,
       payer: admin.publicKey
     }
-    await createTick(market, createTickVars3, admin)
+    await market.createTick(createTickVars3, admin)
 
     const createTickVars4: CreateTick = {
       pair,
       index: secondLowerTick,
       payer: admin.publicKey
     }
-    await createTick(market, createTickVars4, admin)
+    await market.createTick(createTickVars4, admin)
 
     const secondUserTokenXAccount = await tokenX.createAccount(secondPositionOwner.publicKey)
     const secondUserTokenYAccount = await tokenY.createAccount(secondPositionOwner.publicKey)
@@ -279,7 +269,7 @@ describe('Multicall test', () => {
       mintAmount
     )
 
-    await createPositionList(market, secondPositionOwner.publicKey, secondPositionOwner)
+    await market.createPositionList(secondPositionOwner.publicKey, secondPositionOwner)
 
     const initPositionVars2: InitPosition = {
       pair,
@@ -290,7 +280,7 @@ describe('Multicall test', () => {
       upperTick: secondUpperTick,
       liquidityDelta: fromInteger(2_000_000)
     }
-    await initPosition(market, initPositionVars2, secondPositionOwner)
+    await market.initPosition(initPositionVars2, secondPositionOwner)
 
     const index = 0
 
@@ -312,7 +302,7 @@ describe('Multicall test', () => {
       upperTickIndex: firstUpperTick,
       index
     }
-    await updateSecondsPerLiquidity(market, updateSecondsPerLiquidityVars, firstPositionOwner)
+    await market.updateSecondsPerLiquidity(updateSecondsPerLiquidityVars, firstPositionOwner)
 
     const updateSecondsPerLiquidityVars2: UpdateSecondsPerLiquidity = {
       pair,
@@ -321,7 +311,7 @@ describe('Multicall test', () => {
       upperTickIndex: secondUpperTick,
       index
     }
-    await updateSecondsPerLiquidity(market, updateSecondsPerLiquidityVars2, secondPositionOwner)
+    await market.updateSecondsPerLiquidity(updateSecondsPerLiquidityVars2, secondPositionOwner)
 
     const firstPositionStructBefore = await market.getPosition(firstPositionOwner.publicKey, index)
     const firstPositionId = firstPositionStructBefore.id
@@ -433,7 +423,7 @@ describe('Multicall test', () => {
       byAmountIn: true,
       owner: trader.publicKey
     }
-    await swap(market, swapVars, trader)
+    await market.swap(swapVars, trader)
 
     await sleep(10000)
 

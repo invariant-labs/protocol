@@ -3,16 +3,7 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 import { Network, Market, Pair, DENOMINATOR, TICK_LIMIT, tou64 } from '@invariant-labs/sdk'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import {
-  claimFee,
-  createFeeTier,
-  createPool,
-  createPositionList,
-  createState,
-  createToken,
-  initPosition,
-  swap
-} from './testUtils'
+import { createToken } from './testUtils'
 import { assert } from 'chai'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
@@ -67,7 +58,7 @@ describe('claim', () => {
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
   it('#createState()', async () => {
-    await createState(market, admin.publicKey, admin)
+    await market.createState(admin.publicKey, admin)
     const state = await market.getState()
     const { bump } = await market.getStateAddress()
     const { programAuthority, nonce } = await market.getProgramAuthority()
@@ -82,7 +73,7 @@ describe('claim', () => {
       feeTier,
       admin: admin.publicKey
     }
-    await createFeeTier(market, createFeeTierVars, admin)
+    await market.createFeeTier(createFeeTierVars, admin)
   })
   it('#create()', async () => {
     const createPoolVars: CreatePool = {
@@ -92,7 +83,7 @@ describe('claim', () => {
       tokenX,
       tokenY
     }
-    await createPool(market, createPoolVars)
+    await market.createPool(createPoolVars)
     const createdPool = await market.getPool(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
     assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
@@ -100,15 +91,15 @@ describe('claim', () => {
     assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
     assert.ok(createdPool.liquidity.v.eqn(0))
     assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR))
-    assert.ok(createdPool.currentTickIndex == 0)
+    assert.ok(createdPool.currentTickIndex === 0)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
     assert.ok(createdPool.feeProtocolTokenX.eqn(0))
     assert.ok(createdPool.feeProtocolTokenY.eqn(0))
 
     const tickmapData = await market.getTickmap(pair)
-    assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
-    assert.ok(tickmapData.bitmap.every(v => v == 0))
+    assert.ok(tickmapData.bitmap.length === TICK_LIMIT / 4)
+    assert.ok(tickmapData.bitmap.every(v => v === 0))
   })
   it('#claim', async () => {
     const upperTick = 10
@@ -123,7 +114,7 @@ describe('claim', () => {
 
     const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) }
 
-    await createPositionList(market, positionOwner.publicKey, positionOwner)
+    await market.createPositionList(positionOwner.publicKey, positionOwner)
 
     const initPositionVars: InitPosition = {
       pair,
@@ -134,7 +125,7 @@ describe('claim', () => {
       upperTick,
       liquidityDelta
     }
-    await initPosition(market, initPositionVars, positionOwner)
+    await market.initPosition(initPositionVars, positionOwner)
 
     assert.ok((await market.getPool(pair)).liquidity.v.eq(liquidityDelta.v))
 
@@ -161,11 +152,11 @@ describe('claim', () => {
       accountY,
       byAmountIn: true
     }
-    await swap(market, swapVars, swapper)
+    await market.swap(swapVars, swapper)
 
     const poolDataAfter = await market.getPool(pair)
     assert.ok(poolDataAfter.liquidity.v.eq(poolDataBefore.liquidity.v))
-    assert.ok(poolDataAfter.currentTickIndex == lowerTick)
+    assert.ok(poolDataAfter.currentTickIndex === lowerTick)
     assert.ok(poolDataAfter.sqrtPrice.v.lt(poolDataBefore.sqrtPrice.v))
 
     const amountX = (await tokenX.getAccountInfo(accountX)).amount
@@ -192,7 +183,7 @@ describe('claim', () => {
       userTokenY: userTokenYAccount,
       index: 0
     }
-    await claimFee(market, claimFeeVars, positionOwner)
+    await market.claimFee(claimFeeVars, positionOwner)
 
     const userTokenXAccountAfterClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
     const positionAfterClaim = await market.getPosition(positionOwner.publicKey, 0)

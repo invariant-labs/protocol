@@ -6,7 +6,8 @@ import { FEE_TIERS, fromFee } from '@invariant-labs/sdk/src/utils'
 import { CreatePool, Decimal } from '@invariant-labs/sdk/src/market'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { BN } from '../sdk-staker/lib'
-import { createPool } from '../tests/testUtils'
+
+// trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
 const provider = Provider.local(clusterApiUrl('devnet'), {
@@ -22,8 +23,8 @@ const main = async () => {
   const market = await Market.build(Network.DEV, provider.wallet, connection)
 
   await createUsdcUsdt(market)
-  // await createUsdcSol(market)
-  // await createMsolSol(market)
+  await createUsdcSol(market)
+  await createMsolSol(market)
 }
 const createUsdcUsdt = async (market: Market) => {
   const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.USDT), feeTier)
@@ -38,8 +39,9 @@ const createUsdcUsdt = async (market: Market) => {
     tokenX,
     tokenY
   }
-  await createPool(market, createPoolVars)
+  await market.createPool(createPoolVars)
 }
+
 const createUsdcSol = async (market: Market) => {
   const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.SOL), feeTier)
   const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
@@ -54,7 +56,7 @@ const createUsdcSol = async (market: Market) => {
     tokenY,
     initTick: 18000
   }
-  await createPool(market, createPoolVars)
+  await market.createPool(createPoolVars)
 }
 
 const createMsolSol = async (market: Market) => {
@@ -71,7 +73,8 @@ const createMsolSol = async (market: Market) => {
     tokenY,
     initTick: 200
   }
-  await createPool(market, createPoolVars)
+  await market.createPool(createPoolVars)
 }
 
+// trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
 main()

@@ -7,7 +7,6 @@ import {
   Connection,
   PublicKey,
   ConfirmOptions,
-  TransactionInstruction,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
   Transaction,
@@ -36,7 +35,7 @@ export class Staker {
     this.network = network
     this.wallet = wallet
     this.opts = opts
-    const provider = new Provider(connection, wallet, opts || Provider.defaultOptions())
+    const provider = new Provider(connection, wallet, opts ?? Provider.defaultOptions())
     switch (network) {
       case Network.LOCAL:
         this.programId = programId
@@ -58,9 +57,9 @@ export class Staker {
     founderTokenAcc,
     amm
   }: CreateIncentive) {
-    founder = founder || this.wallet.publicKey
+    founder = founder ?? this.wallet.publicKey
 
-    incentive = incentive || Keypair.generate().publicKey
+    incentive = incentive ?? Keypair.generate().publicKey
 
     const [stakerAuthority, nonce] = await PublicKey.findProgramAddress(
       [STAKER_SEED],
@@ -111,7 +110,7 @@ export class Staker {
     index,
     amm
   }: CreateStake) {
-    owner = owner || this.wallet.publicKey
+    owner = owner ?? this.wallet.publicKey
 
     const [userStakeAddress, userStakeBump] = await this.getUserStakeAddressAndBump(
       incentive,
@@ -152,7 +151,7 @@ export class Staker {
     amm,
     index
   }: Withdraw) {
-    owner = owner || this.wallet.publicKey
+    owner = owner ?? this.wallet.publicKey
 
     const [stakerAuthority, nonce] = await PublicKey.findProgramAddress(
       [STAKER_SEED],
@@ -189,7 +188,7 @@ export class Staker {
     ownerTokenAcc,
     owner
   }: EndIncentive) {
-    owner = owner || this.wallet.publicKey
+    owner = owner ?? this.wallet.publicKey
 
     const [stakerAuthority, stakerAuthorityBump] = await PublicKey.findProgramAddress(
       [STAKER_SEED],

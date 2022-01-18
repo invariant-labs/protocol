@@ -22,8 +22,8 @@ fn decimal_to_x64(decimal: Decimal) -> u128 {
 fn align_tick_to_spacing(accurate_tick: i32, tick_spacing: i32) -> i32 {
     match accurate_tick > 0 {
         true => accurate_tick - (accurate_tick % tick_spacing),
-        false => accurate_tick - (accurate_tick.rem_euclid(tick_spacing))
-    }    
+        false => accurate_tick - (accurate_tick.rem_euclid(tick_spacing)),
+    }
 }
 
 fn log2_floor_x64(mut sqrt_price_x64: u128) -> u128 {
@@ -112,7 +112,7 @@ pub fn get_tick_at_sqrt_price(sqrt_price_decimal: Decimal, tick_spacing: u16) ->
     if farther_tick_with_spacing == nearer_tick_with_spacing {
         return nearer_tick_with_spacing;
     };
-    
+
     let accurate_tick = match log2_sign {
         true => {
             if farther_tick > MAX_TICK {
@@ -399,13 +399,13 @@ mod tests {
             let tick_spacing = 10;
 
             let tick_with_spacing = align_tick_to_spacing(accurate_tick, tick_spacing);
-            assert_eq!(tick_with_spacing, 20); 
+            assert_eq!(tick_with_spacing, 20);
         }
         // negative
         {
             let accurate_tick = -14;
             let tick_spacing = 10;
-    
+
             let tick_with_spacing = align_tick_to_spacing(accurate_tick, tick_spacing);
             assert_eq!(tick_with_spacing, -20);
         }
@@ -413,12 +413,12 @@ mod tests {
         {
             let accurate_tick = -120;
             let tick_spacing = 3;
-    
+
             let tick_with_spacing = align_tick_to_spacing(accurate_tick, tick_spacing);
             assert_eq!(tick_with_spacing, -120);
         }
     }
-    
+
     #[test]
     fn test_all_positive_ticks() {
         for n in 0..MAX_TICK {
@@ -523,7 +523,7 @@ mod tests {
                     let sqrt_price_decimal = sqrt_price_decimal - Decimal::new(1);
                     let tick = get_tick_at_sqrt_price(sqrt_price_decimal, tick_spacing as u16);
                     let expected_tick = align_tick_to_spacing(input_tick - 1, tick_spacing);
-                     assert_eq!(tick, expected_tick);
+                    assert_eq!(tick, expected_tick);
                 }
                 // get tick slightly above sqrt(1.0001^n)
                 {
