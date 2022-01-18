@@ -9,7 +9,7 @@ import {
   Transaction,
   TransactionInstruction
 } from '@solana/web3.js'
-import { calculatePriceSqrt, fromInteger, MAX_TICK, Pair, TICK_LIMIT, Market } from '.'
+import { calculatePriceSqrt, MAX_TICK, Pair, TICK_LIMIT, Market } from '.'
 import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap, Tick, Position } from './market'
 import { calculatePriceAfterSlippage, calculateSwapStep } from './math'
 import { getTickFromPrice } from './tick'
@@ -27,30 +27,30 @@ export enum ERRORS {
   SIGNATURE = 'Error: Signature verification failed',
   SIGNER = 'Error: unknown signer',
   PANICKED = 'Program failed to complete',
-  SERIALIZATION = '0xa4',
+  SERIALIZATION = '0xbbc',
   ALLOWANCE = 'custom program error: 0x1',
   NO_SIGNERS = 'Error: No signers',
-  CONSTRAINT_RAW = '0x8f',
-  CONSTRAINT_SEEDS = '0x92'
+  CONSTRAINT_RAW = '0x7d3',
+  CONSTRAINT_SEEDS = '0x7d6'
 }
 
 export enum INVARIANT_ERRORS {
-  ZERO_AMOUNT = '0x12c',
-  ZERO_OUTPUT = '0x12d',
-  WRONG_TICK = '0x12e',
-  WRONG_LIMIT = '0x12f',
-  INVALID_TICK_INDEX = '0x130',
-  INVALID_TICK_INTERVAL = '0x131',
-  NO_MORE_TICKS = '0x132',
-  TICK_NOT_FOUND = '0x133',
-  PRICE_LIMIT_REACHED = '0x134',
-  INVALID_TICK_LIQUIDITY = '0x135',
-  EMPTY_POSITION_POKES = '0x136',
-  INVALID_POSITION_LIQUIDITY = '0x137',
-  INVALID_POOL_LIQUIDITY = '0x138',
-  INVALID_POSITION_INDEX = '0x139',
-  POSITION_WITHOUT_LIQUIDITY = '0x13a',
-  INVALID_POOL_TOKEN_ADDRESSES = '0x13b'
+  ZERO_AMOUNT = '0x1770',
+  ZERO_OUTPUT = '0x1771',
+  WRONG_TICK = '0x1772',
+  WRONG_LIMIT = '0x1773',
+  INVALID_TICK_INDEX = '0x1774',
+  INVALID_TICK_INTERVAL = '0x1775',
+  NO_MORE_TICKS = '0x1776',
+  TICK_NOT_FOUND = '0x1777',
+  PRICE_LIMIT_REACHED = '0x1778',
+  INVALID_TICK_LIQUIDITY = '0x1779',
+  EMPTY_POSITION_POKES = '0x177a',
+  INVALID_POSITION_LIQUIDITY = '0x177b',
+  INVALID_POOL_LIQUIDITY = '0x177c',
+  INVALID_POSITION_INDEX = '0x177d',
+  POSITION_WITHOUT_LIQUIDITY = '0x177e',
+  INVALID_POOL_TOKEN_ADDRESSES = '0x1780'
 }
 
 export interface SimulateSwapPrice {
@@ -155,12 +155,12 @@ export const signAndSend = async (
 ) => {
   tx.setSigners(...signers.map(s => s.publicKey))
   const blockhash = await connection.getRecentBlockhash(
-    opts?.commitment || Provider.defaultOptions().commitment
+    opts?.commitment ?? Provider.defaultOptions().commitment
   )
   tx.recentBlockhash = blockhash.blockhash
   tx.partialSign(...signers)
   const rawTx = tx.serialize()
-  return await sendAndConfirmRawTransaction(connection, rawTx, opts || Provider.defaultOptions())
+  return await sendAndConfirmRawTransaction(connection, rawTx, opts ?? Provider.defaultOptions())
 }
 
 export const sleep = async (ms: number) => {
@@ -262,7 +262,7 @@ export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
 }
 
 export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationResult => {
-  let { xToY, byAmountIn, swapAmount, slippage, ticks, tickmap, pool } = swapParameters
+  const { xToY, byAmountIn, swapAmount, slippage, ticks, tickmap, pool } = swapParameters
   let { currentTickIndex, tickSpacing, liquidity, fee, sqrtPrice } = pool
   const amountPerTick: BN[] = []
   let accumulatedAmount: BN = new BN(0)
@@ -281,7 +281,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
   }
   let remainingAmount: BN = swapAmount
   while (!remainingAmount.lte(new BN(0))) {
-    //find closest initialized tick
+    // find closest initialized tick
     const closerLimit: CloserLimit = {
       sqrtPriceLimit: priceLimit,
       xToY: xToY,
@@ -326,10 +326,18 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
       if (initialized) {
         const tick = ticks.get(tickIndex) as Tick
 
-        if (currentTickIndex >= tick.index !== tick.sign) {
-          liquidity = { v: liquidity.v.add(tick.liquidityChange.v) }
+        if (currentTickIndex >= tick.index) {
+          if (!tick.sign) {
+            liquidity = { v: liquidity.v.add(tick.liquidityChange.v) }
+          } else {
+            liquidity = { v: liquidity.v.sub(tick.liquidityChange.v) }
+          }
         } else {
-          liquidity = { v: liquidity.v.sub(tick.liquidityChange.v) }
+          if (tick.sign) {
+            liquidity = { v: liquidity.v.add(tick.liquidityChange.v) }
+          } else {
+            liquidity = { v: liquidity.v.sub(tick.liquidityChange.v) }
+          }
         }
       }
       if (xToY && !remainingAmount.eq(new BN(0))) {
@@ -343,7 +351,8 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
 
     // add amount to array if tick was initialized otherwise accumulate amount for next iteration
     accumulatedAmount = accumulatedAmount.add(amountDiff)
-    if ((limitingTick != null && limitingTick.initialized) || remainingAmount.eqn(0)) {
+    // trunk-ignore(eslint/@typescript-eslint/prefer-optional-chain)
+    if ((limitingTick !== null && limitingTick.initialized) ?? remainingAmount.eqn(0)) {
       amountPerTick.push(accumulatedAmount)
       accumulatedAmount = new BN(0)
     }
@@ -399,32 +408,32 @@ export const calculateClaimAmount = ({
   feeGrowthGlobalY
 }: SimulateClaim) => {
   // determine position relative to current tick
-  const current_above_lower = tickCurrent >= tickLower.index
-  const current_below_upper = tickCurrent < tickUpper.index
+  const currentAboveLower = tickCurrent >= tickLower.index
+  const currentBelowUpper = tickCurrent < tickUpper.index
   let feeGrowthBelowX: BN
   let feeGrowthBelowY: BN
   let feeGrowthAboveX: BN
   let feeGrowthAboveY: BN
 
   // calculate fee growth below
-  if (current_above_lower) {
+  if (currentAboveLower) {
     feeGrowthBelowX = tickLower.feeGrowthOutsideX.v
   } else {
     feeGrowthBelowX = feeGrowthGlobalX.v.sub(tickLower.feeGrowthOutsideX.v)
   }
-  if (current_above_lower) {
+  if (currentAboveLower) {
     feeGrowthBelowY = tickLower.feeGrowthOutsideY.v
   } else {
     feeGrowthBelowY = feeGrowthGlobalY.v.sub(tickLower.feeGrowthOutsideY.v)
   }
 
   // calculate fee growth above
-  if (current_below_upper) {
+  if (currentBelowUpper) {
     feeGrowthAboveX = tickUpper.feeGrowthOutsideX.v
   } else {
     feeGrowthAboveX = feeGrowthGlobalX.v.sub(tickUpper.feeGrowthOutsideX.v)
   }
-  if (current_below_upper) {
+  if (currentBelowUpper) {
     feeGrowthAboveY = tickUpper.feeGrowthOutsideY.v
   } else {
     feeGrowthAboveY = feeGrowthGlobalY.v.sub(tickUpper.feeGrowthOutsideY.v)

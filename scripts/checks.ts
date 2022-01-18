@@ -3,6 +3,7 @@ import { MOCK_TOKENS } from '@invariant-labs/sdk/src/network'
 import { FEE_TIERS } from '@invariant-labs/sdk/src/utils'
 import { Provider } from '@project-serum/anchor'
 import { clusterApiUrl, PublicKey } from '@solana/web3.js'
+// trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
 const provider = Provider.local(clusterApiUrl('devnet'), {
@@ -10,8 +11,6 @@ const provider = Provider.local(clusterApiUrl('devnet'), {
 })
 
 const connection = provider.connection
-// @ts-expect-error
-const wallet = provider.wallet.payer as Keypair
 
 const main = async () => {
   const market = await Market.build(Network.DEV, provider.wallet, connection)
@@ -37,4 +36,5 @@ const main = async () => {
 
   console.log(array)
 }
+// trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
 main()

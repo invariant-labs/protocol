@@ -15,12 +15,7 @@ import {
   assertThrowsAsync,
   ERRORS_STAKER
 } from './utils'
-import {
-  createFeeTier,
-  createPool,
-  createState,
-  createToken as createTkn
-} from '../tests/testUtils'
+import { createToken as createTkn } from '../tests/testUtils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
@@ -52,7 +47,7 @@ describe('Create incentive tests', () => {
 
   before(async () => {
     // create staker instance
-    const [_mintAuthority, _nonce] = await anchor.web3.PublicKey.findProgramAddress(
+    const [_mintAuthority] = await anchor.web3.PublicKey.findProgramAddress(
       [STAKER_SEED],
       program.programId
     )
@@ -102,13 +97,13 @@ describe('Create incentive tests', () => {
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
-    await createState(market, admin.publicKey, admin)
+    await market.createState(admin.publicKey, admin)
 
     const createFeeTierVars: CreateFeeTier = {
       feeTier,
       admin: admin.publicKey
     }
-    await createFeeTier(market, createFeeTierVars, admin)
+    await market.createFeeTier(createFeeTierVars, admin)
 
     const createPoolVars: CreatePool = {
       pair,
@@ -117,7 +112,7 @@ describe('Create incentive tests', () => {
       tokenX,
       tokenY
     }
-    await createPool(market, createPoolVars)
+    await market.createPool(createPoolVars)
     pool = await pair.getAddress(anchor.workspace.Amm.programId)
     amm = anchor.workspace.Amm.programId
   })

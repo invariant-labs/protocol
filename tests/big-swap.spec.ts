@@ -3,19 +3,10 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 import { Network, Market, Pair, DENOMINATOR, TICK_LIMIT } from '@invariant-labs/sdk'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import {
-  createFeeTier,
-  createPool,
-  createPosition,
-  createState,
-  createTick,
-  createToken,
-  performSwap,
-  removePosition
-} from './testUtils'
+import { createPosition, createToken, performSwap } from './testUtils'
 import { assert } from 'chai'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { FeeTier, Decimal, RemovePosition, CreateTick } from '@invariant-labs/sdk/lib/market'
+import { FeeTier, Decimal, RemovePosition } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { calculateFeeGrowthInside } from '@invariant-labs/sdk/src/math'
 import { CreateFeeTier, CreatePool } from '@invariant-labs/sdk/src/market'
@@ -63,7 +54,7 @@ describe('big-swap', () => {
   })
 
   it('#createState()', async () => {
-    await createState(market, admin.publicKey, admin)
+    await market.createState(admin.publicKey, admin)
   })
 
   it('#createFeeTier()', async () => {
@@ -71,7 +62,7 @@ describe('big-swap', () => {
       feeTier,
       admin: admin.publicKey
     }
-    await createFeeTier(market, createFeeTierVars, admin)
+    await market.createFeeTier(createFeeTierVars, admin)
   })
 
   it('#create()', async () => {
@@ -82,7 +73,7 @@ describe('big-swap', () => {
       tokenX,
       tokenY
     }
-    await createPool(market, createPoolVars)
+    await market.createPool(createPoolVars)
     const createdPool = await market.getPool(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
     assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
@@ -90,15 +81,15 @@ describe('big-swap', () => {
     assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
     assert.ok(createdPool.liquidity.v.eqn(0))
     assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR))
-    assert.ok(createdPool.currentTickIndex == 0)
+    assert.ok(createdPool.currentTickIndex === 0)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
     assert.ok(createdPool.feeProtocolTokenX.eqn(0))
     assert.ok(createdPool.feeProtocolTokenY.eqn(0))
 
     const tickmapData = await market.getTickmap(pair)
-    assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
-    assert.ok(tickmapData.bitmap.every(v => v == 0))
+    assert.ok(tickmapData.bitmap.length === TICK_LIMIT / 4)
+    assert.ok(tickmapData.bitmap.every(v => v === 0))
   })
 
   it('#swap()', async () => {
@@ -209,7 +200,7 @@ describe('big-swap', () => {
       userTokenY,
       owner: positionOwner.publicKey
     }
-    await removePosition(market, removePositionVars, positionOwner)
+    await market.removePosition(removePositionVars, positionOwner)
 
     const removePositionVars2: RemovePosition = {
       index: 3,
@@ -218,7 +209,7 @@ describe('big-swap', () => {
       userTokenY,
       owner: positionOwner.publicKey
     }
-    await removePosition(market, removePositionVars2, positionOwner)
+    await market.removePosition(removePositionVars2, positionOwner)
 
     const removePositionVars3: RemovePosition = {
       index: 2,
@@ -227,7 +218,7 @@ describe('big-swap', () => {
       userTokenY,
       owner: positionOwner.publicKey
     }
-    await removePosition(market, removePositionVars3, positionOwner)
+    await market.removePosition(removePositionVars3, positionOwner)
 
     const removePositionVars4: RemovePosition = {
       index: 3,
@@ -236,7 +227,7 @@ describe('big-swap', () => {
       userTokenY,
       owner: positionOwner.publicKey
     }
-    await removePosition(market, removePositionVars4, positionOwner)
+    await market.removePosition(removePositionVars4, positionOwner)
 
     const positionsInfo2: Array<[ticks: [lower: number, upper: number], liquidity: BN]> = [
       [[-30, 20], new BN(500000).mul(DENOMINATOR)],
@@ -253,7 +244,7 @@ describe('big-swap', () => {
       [[-10, 30], new BN(350000).mul(DENOMINATOR)],
       [[0, 20], new BN(1530000).mul(DENOMINATOR)],
       [[-10, 30], new BN(1630000).mul(DENOMINATOR)],
-      [[-30, 0], new BN(1110000).mul(DENOMINATOR)],
+      [[-30, 0], new BN(1110000).mul(DENOMINATOR)]
     ]
 
     for (let i = 0; i < positionsInfo2.length; i++) {

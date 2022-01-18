@@ -1,6 +1,6 @@
 version: 0.1
 cli:
-  version: 0.5.0-beta
+  version: 0.4.3-beta
 lint:
   enabled:
     - actionlint@1.6.4
@@ -13,3 +13,6 @@ lint:
     - linters: [ALL]
       paths:
         - programs/staker/**
+        - sdk/src/idl/**
+        - sdk-staker/src/idl/**
+        - .eslintrc.js

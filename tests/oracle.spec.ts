@@ -2,12 +2,7 @@ import * as anchor from '@project-serum/anchor'
 import { Provider } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
-import {
-  assertThrowsAsync,
-  createPoolWithLiquidity,
-  createState,
-  initializeOracle
-} from './testUtils'
+import { assertThrowsAsync, createPoolWithLiquidity } from './testUtils'
 import { Market, Pair, TICK_LIMIT, Network, sleep } from '@invariant-labs/sdk'
 import { DEFAULT_PUBLIC_KEY, InitializeOracle } from '@invariant-labs/sdk/src/market'
 
@@ -31,7 +26,7 @@ describe('oracle', () => {
     await connection.requestAirdrop(admin.publicKey, 1e12)
     await sleep(500)
 
-    await createState(market, admin.publicKey, admin)
+    await market.createState(admin.publicKey, admin)
 
     const createdPool = await createPoolWithLiquidity(market, connection, admin)
     pair = createdPool.pair
@@ -43,7 +38,7 @@ describe('oracle', () => {
     assert.isFalse(pool.oracleInitialized)
 
     const tickmapData = await market.getTickmap(pair)
-    assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
+    assert.ok(tickmapData.bitmap.length === TICK_LIMIT / 4)
   })
 
   it('#initializeOracle()', async () => {
@@ -51,7 +46,7 @@ describe('oracle', () => {
       pair,
       payer: wallet
     }
-    await initializeOracle(market, initializeOracleVars)
+    await market.initializeOracle(initializeOracleVars)
 
     const createdPool = await market.getPool(pair)
     assert.isFalse(createdPool.oracleAddress.equals(DEFAULT_PUBLIC_KEY))
@@ -69,6 +64,6 @@ describe('oracle', () => {
       pair,
       payer: wallet
     }
-    await assertThrowsAsync(initializeOracle(market, initializeOracleVars))
+    await assertThrowsAsync(market.initializeOracle(initializeOracleVars))
   })
 })

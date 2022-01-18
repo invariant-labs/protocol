@@ -171,6 +171,7 @@ pub fn handler(
         }
 
         // crossing tick
+        // trunk-ignore(clippy/unnecessary_unwrap)
         if result.next_price_sqrt == swap_limit && limiting_tick.is_some() {
             let (tick_index, initialized) = limiting_tick.unwrap();
 
@@ -208,10 +209,14 @@ pub fn handler(
             };
         } else {
             assert!(
-                pool.current_tick_index.checked_rem(pool.tick_spacing.into()).unwrap() == 0,
+                pool.current_tick_index
+                    .checked_rem(pool.tick_spacing.into())
+                    .unwrap()
+                    == 0,
                 "tick not divisible by spacing"
             );
-            pool.current_tick_index = get_tick_at_sqrt_price(result.next_price_sqrt, pool.tick_spacing);
+            pool.current_tick_index =
+                get_tick_at_sqrt_price(result.next_price_sqrt, pool.tick_spacing);
         }
     }
 

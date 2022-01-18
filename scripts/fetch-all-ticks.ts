@@ -4,6 +4,8 @@ import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
 import { Market, Pair } from '@invariant-labs/sdk/src'
 import { FEE_TIERS } from '@invariant-labs/sdk/src/utils'
 import { parseLiquidityOnTicks } from '@invariant-labs/sdk/lib/utils'
+
+// trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
 const provider = Provider.local(clusterApiUrl('devnet'), {
@@ -22,4 +24,5 @@ const main = async () => {
   const pool = await market.getPool(pair)
   console.log(parseLiquidityOnTicks(ticks, pool))
 }
+// trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
 main()

@@ -16,16 +16,7 @@ import {
   updatePositionAndCreateStake,
   updatePositionAndWithdraw
 } from './utils'
-import {
-  createFeeTier,
-  createPool,
-  createPositionList,
-  createState,
-  createTick,
-  createToken as createTkn,
-  initPosition,
-  swap
-} from '../tests/testUtils'
+import { createToken as createTkn } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { toDecimal } from '../sdk-staker/lib/utils'
 import { fromFee, DECIMAL } from '@invariant-labs/sdk/lib/utils'
@@ -122,13 +113,13 @@ describe('Withdraw tests', () => {
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
-    await createState(market, admin.publicKey, admin)
+    await market.createState(admin.publicKey, admin)
 
     const createFeeTierVars: CreateFeeTier = {
       feeTier,
       admin: admin.publicKey
     }
-    await createFeeTier(market, createFeeTierVars, admin)
+    await market.createFeeTier(createFeeTierVars, admin)
 
     const createPoolVars: CreatePool = {
       pair,
@@ -137,7 +128,7 @@ describe('Withdraw tests', () => {
       tokenX,
       tokenY
     }
-    await createPool(market, createPoolVars)
+    await market.createPool(createPoolVars)
 
     pool = await pair.getAddress(anchor.workspace.Amm.programId)
     amm = anchor.workspace.Amm.programId
@@ -176,14 +167,14 @@ describe('Withdraw tests', () => {
       index: upperTick,
       payer: admin.publicKey
     }
-    await createTick(market, createTickVars, admin)
+    await market.createTick(createTickVars, admin)
 
     const createTickVars2: CreateTick = {
       pair,
       index: lowerTick,
       payer: admin.publicKey
     }
-    await createTick(market, createTickVars2, admin)
+    await market.createTick(createTickVars2, admin)
 
     const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
     const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
@@ -194,7 +185,7 @@ describe('Withdraw tests', () => {
 
     const liquidityDelta = { v: new BN(2000000).mul(DENOMINATOR) }
 
-    await createPositionList(market, positionOwner.publicKey, positionOwner)
+    await market.createPositionList(positionOwner.publicKey, positionOwner)
 
     const initPositionVars: InitPosition = {
       pair,
@@ -205,11 +196,11 @@ describe('Withdraw tests', () => {
       upperTick,
       liquidityDelta
     }
-    await initPosition(market, initPositionVars, positionOwner)
+    await market.initPosition(initPositionVars, positionOwner)
 
     const index = 0
 
-    const { positionAddress: position, positionBump: bump } = await market.getPositionAddress(
+    const { positionAddress: position } = await market.getPositionAddress(
       positionOwner.publicKey,
       index
     )
@@ -272,7 +263,7 @@ describe('Withdraw tests', () => {
       owner: trader.publicKey
     }
 
-    await swap(market, swapVars, trader)
+    await market.swap(swapVars, trader)
 
     await sleep(10000)
 

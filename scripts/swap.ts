@@ -7,7 +7,8 @@ import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Market, Pair, tou64 } from '@invariant-labs/sdk/src'
 import { FEE_TIERS, fromFee } from '@invariant-labs/sdk/src/utils'
 import { Swap } from '@invariant-labs/sdk/src/market'
-import { swap } from '../tests/testUtils'
+
+// trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
 const provider = Provider.local(clusterApiUrl('devnet'), {
@@ -49,6 +50,7 @@ const main = async () => {
     pair,
     owner: MINTER.publicKey
   }
-  await swap(market, swapVars, MINTER)
+  await market.swap(swapVars, MINTER)
 }
+// trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
 main()

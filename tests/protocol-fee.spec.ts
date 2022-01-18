@@ -5,17 +5,7 @@ import { Market, Network, Pair, DENOMINATOR, TICK_LIMIT, tou64 } from '@invarian
 import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import {
-  createFeeTier,
-  createPool,
-  createPositionList,
-  createState,
-  createTick,
-  createToken,
-  initPosition,
-  swap,
-  withdrawProtocolFee
-} from './testUtils'
+import { createToken } from './testUtils'
 import { assert } from 'chai'
 import { assertThrowsAsync, ERRORS, toDecimal } from '@invariant-labs/sdk/src/utils'
 import {
@@ -40,7 +30,6 @@ describe('protocol-fee', () => {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
   }
-  const upperTick = 10
   const lowerTick = -20
   const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   let pair: Pair
@@ -72,13 +61,13 @@ describe('protocol-fee', () => {
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
-    await createState(market, admin.publicKey, admin)
+    await market.createState(admin.publicKey, admin)
 
     const createFeeTierVars: CreateFeeTier = {
       feeTier,
       admin: admin.publicKey
     }
-    await createFeeTier(market, createFeeTierVars, admin)
+    await market.createFeeTier(createFeeTierVars, admin)
   })
 
   it('#create()', async () => {
@@ -89,7 +78,7 @@ describe('protocol-fee', () => {
       tokenX,
       tokenY
     }
-    await createPool(market, createPoolVars)
+    await market.createPool(createPoolVars)
 
     const createdPool = await market.getPool(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
@@ -98,15 +87,15 @@ describe('protocol-fee', () => {
     assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
     assert.ok(createdPool.liquidity.v.eqn(0))
     assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR))
-    assert.ok(createdPool.currentTickIndex == 0)
+    assert.ok(createdPool.currentTickIndex === 0)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
     assert.ok(createdPool.feeProtocolTokenX.eqn(0))
     assert.ok(createdPool.feeProtocolTokenY.eqn(0))
 
     const tickmapData = await market.getTickmap(pair)
-    assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
-    assert.ok(tickmapData.bitmap.every(v => v == 0))
+    assert.ok(tickmapData.bitmap.length === TICK_LIMIT / 4)
+    assert.ok(tickmapData.bitmap.every(v => v === 0))
   })
 
   it('#initPosition()', async () => {
@@ -118,14 +107,14 @@ describe('protocol-fee', () => {
       index: upperTick,
       payer: admin.publicKey
     }
-    await createTick(market, createTickVars, admin)
+    await market.createTick(createTickVars, admin)
 
     const createTickVars2: CreateTick = {
       pair,
       index: lowerTick,
       payer: admin.publicKey
     }
-    await createTick(market, createTickVars2, admin)
+    await market.createTick(createTickVars2, admin)
 
     userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
     userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
@@ -136,7 +125,7 @@ describe('protocol-fee', () => {
 
     const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) }
 
-    await createPositionList(market, positionOwner.publicKey, positionOwner)
+    await market.createPositionList(positionOwner.publicKey, positionOwner)
 
     const initPositionVars: InitPosition = {
       pair,
@@ -147,7 +136,7 @@ describe('protocol-fee', () => {
       upperTick,
       liquidityDelta
     }
-    await initPosition(market, initPositionVars, positionOwner)
+    await market.initPosition(initPositionVars, positionOwner)
 
     assert.ok((await market.getPool(pair)).liquidity.v.eq(liquidityDelta.v))
   })
@@ -175,11 +164,11 @@ describe('protocol-fee', () => {
       accountY,
       byAmountIn: true
     }
-    await swap(market, swapVars, swapper)
+    await market.swap(swapVars, swapper)
 
     const poolDataAfter = await market.getPool(pair)
     assert.ok(poolDataAfter.liquidity.v.eq(poolDataBefore.liquidity.v))
-    assert.ok(poolDataAfter.currentTickIndex == lowerTick)
+    assert.ok(poolDataAfter.currentTickIndex === lowerTick)
     assert.ok(poolDataAfter.sqrtPrice.v.lt(poolDataBefore.sqrtPrice.v))
 
     const amountX = (await tokenX.getAccountInfo(accountX)).amount
@@ -205,7 +194,7 @@ describe('protocol-fee', () => {
     await tokenY.mintTo(adminAccountY, mintAuthority.publicKey, [mintAuthority], 1e9)
 
     const reservesBeforeClaim = await market.getReserveBalances(pair, tokenX, tokenY)
-    const adminAccountXBeforeClaim = await (await tokenX.getAccountInfo(adminAccountX)).amount
+    const adminAccountXBeforeClaim = (await tokenX.getAccountInfo(adminAccountX)).amount
 
     const withdrawProtocolFeeVars: WithdrawProtocolFee = {
       pair,
@@ -213,9 +202,9 @@ describe('protocol-fee', () => {
       accountY: adminAccountY,
       admin: admin.publicKey
     }
-    await withdrawProtocolFee(market, withdrawProtocolFeeVars, admin)
+    await market.withdrawProtocolFee(withdrawProtocolFeeVars, admin)
 
-    const adminAccountXAfterClaim = await (await tokenX.getAccountInfo(adminAccountX)).amount
+    const adminAccountXAfterClaim = (await tokenX.getAccountInfo(adminAccountX)).amount
     const reservesAfterClaim = await market.getReserveBalances(pair, tokenX, tokenY)
 
     const poolData = await market.getPool(pair)
@@ -225,7 +214,7 @@ describe('protocol-fee', () => {
     assert.equal(poolData.feeProtocolTokenY.toNumber(), 0)
   })
   it('Non-Admin #withdrawProtocolFee()', async () => {
-    const user = await Keypair.generate()
+    const user = Keypair.generate()
     await Promise.all([await connection.requestAirdrop(user.publicKey, 1e9)])
     const userAccountX = await tokenX.createAccount(user.publicKey)
     const userAccountY = await tokenY.createAccount(user.publicKey)
@@ -238,8 +227,8 @@ describe('protocol-fee', () => {
       accountY: userAccountY,
       admin: user.publicKey
     }
-    assertThrowsAsync(
-      withdrawProtocolFee(market, withdrawProtocolFeeVars, user),
+    await assertThrowsAsync(
+      market.withdrawProtocolFee(withdrawProtocolFeeVars, user),
       ERRORS.CONSTRAINT_RAW
     )
   })

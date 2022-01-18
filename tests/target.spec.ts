@@ -3,16 +3,7 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
-import {
-  createFeeTier,
-  createPool,
-  createState,
-  createTick,
-  createToken,
-  createUserWithTokens,
-  initPosition,
-  swap
-} from './testUtils'
+import { createToken, createUserWithTokens } from './testUtils'
 import { Market, Pair, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
@@ -66,13 +57,13 @@ describe('target', () => {
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
-    await createState(market, admin.publicKey, admin)
+    await market.createState(admin.publicKey, admin)
 
     const createFeeTierVars: CreateFeeTier = {
       feeTier,
       admin: admin.publicKey
     }
-    await createFeeTier(market, createFeeTierVars, admin)
+    await market.createFeeTier(createFeeTierVars, admin)
   })
   it('#create()', async () => {
     const createPoolVars: CreatePool = {
@@ -82,7 +73,7 @@ describe('target', () => {
       tokenX,
       tokenY
     }
-    await createPool(market, createPoolVars)
+    await market.createPool(createPoolVars)
 
     const createdPool = await market.getPool(pair)
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
@@ -91,15 +82,15 @@ describe('target', () => {
     assert.equal(createdPool.tickSpacing, pair.feeTier.tickSpacing)
     assert.ok(createdPool.liquidity.v.eqn(0))
     assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR))
-    assert.ok(createdPool.currentTickIndex == 0)
+    assert.ok(createdPool.currentTickIndex === 0)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
     assert.ok(createdPool.feeProtocolTokenX.eqn(0))
     assert.ok(createdPool.feeProtocolTokenY.eqn(0))
 
     const tickmapData = await market.getTickmap(pair)
-    assert.ok(tickmapData.bitmap.length == TICK_LIMIT / 4)
-    assert.ok(tickmapData.bitmap.every(v => v == 0))
+    assert.ok(tickmapData.bitmap.length === TICK_LIMIT / 4)
+    assert.ok(tickmapData.bitmap.every(v => v === 0))
   })
 
   it('#swap by target', async () => {
@@ -110,7 +101,7 @@ describe('target', () => {
       index: upperTick,
       payer: admin.publicKey
     }
-    await createTick(market, createTickVars, admin)
+    await market.createTick(createTickVars, admin)
 
     const lowerTick = -30
     const createTickVars2: CreateTick = {
@@ -118,7 +109,7 @@ describe('target', () => {
       index: lowerTick,
       payer: admin.publicKey
     }
-    await createTick(market, createTickVars2, admin)
+    await market.createTick(createTickVars2, admin)
 
     const mintAmount = new BN(10).pow(new BN(10))
 
@@ -139,7 +130,7 @@ describe('target', () => {
       upperTick,
       liquidityDelta
     }
-    await initPosition(market, initPositionVars, owner)
+    await market.initPosition(initPositionVars, owner)
 
     assert.ok((await market.getPool(pair)).liquidity.v.eq(liquidityDelta.v))
 
@@ -168,7 +159,7 @@ describe('target', () => {
       accountY,
       byAmountIn: false
     }
-    await swap(market, swapVars, swapper)
+    await market.swap(swapVars, swapper)
 
     // Check pool
     const poolData = await market.getPool(pair)

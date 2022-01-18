@@ -110,6 +110,7 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
     Ok(())
 }
 
+// trunk-ignore(clippy/dead_code)
 pub fn get_tick_from_price(
     current_tick: i32,
     tick_spacing: u16,
@@ -138,6 +139,7 @@ pub fn get_tick_from_price(
     }
 }
 
+// trunk-ignore(clippy/dead_code)
 pub fn price_to_tick_in_range(price: Decimal, low: i32, high: i32, step: i32) -> i32 {
     let mut low = low.checked_div(step).unwrap();
     let mut high = high.checked_div(step).unwrap().checked_add(1).unwrap();
