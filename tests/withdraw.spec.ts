@@ -6,7 +6,7 @@ import { assert } from 'chai'
 import { assertThrowsAsync, createToken } from './testUtils'
 import { Market, Pair, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@invariant-labs/sdk'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
+import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import {
   CreateFeeTier,
@@ -29,7 +29,6 @@ describe('withdraw', () => {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
   }
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -70,7 +69,6 @@ describe('withdraw', () => {
     const createPoolVars: CreatePool = {
       pair,
       payer: admin,
-      protocolFee,
       tokenX,
       tokenY
     }

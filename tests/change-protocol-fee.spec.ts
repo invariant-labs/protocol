@@ -30,7 +30,6 @@ describe('change-protocol-fee', () => {
     tickSpacing: 10
   }
 
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -76,7 +75,6 @@ describe('change-protocol-fee', () => {
     const createPoolVars: CreatePool = {
       pair,
       payer: feeReceiver,
-      protocolFee,
       tokenX,
       tokenY
     }

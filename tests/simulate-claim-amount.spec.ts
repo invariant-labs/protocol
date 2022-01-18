@@ -2,7 +2,6 @@ import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Market, Network, Pair, DENOMINATOR } from '@invariant-labs/sdk'
 import { Keypair } from '@solana/web3.js'
-import { Decimal } from '../sdk-staker/src/staker'
 import { createToken } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { toDecimal } from '../sdk-staker/lib/utils'
@@ -24,7 +23,6 @@ describe('Withdraw tests', () => {
   const mintAuthority = Keypair.generate()
   const positionOwner = Keypair.generate()
   const admin = Keypair.generate()
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   const feeTier: FeeTier = {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
@@ -68,7 +66,6 @@ describe('Withdraw tests', () => {
     const createPoolVars: CreatePool = {
       pair,
       payer: admin,
-      protocolFee,
       tokenX,
       tokenY
     }

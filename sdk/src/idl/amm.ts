@@ -153,12 +153,6 @@ export type Amm = {
         {
           "name": "initTick",
           "type": "i32"
-        },
-        {
-          "name": "protocolFee",
-          "type": {
-            "defined": "Decimal"
-          }
         }
       ]
     },
@@ -1585,12 +1579,6 @@ export const IDL: Amm = {
         {
           "name": "initTick",
           "type": "i32"
-        },
-        {
-          "name": "protocolFee",
-          "type": {
-            "defined": "Decimal"
-          }
         }
       ]
     },
