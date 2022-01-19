@@ -31,7 +31,7 @@ describe('limits', () => {
       Network.LOCAL,
       provider.wallet,
       connection,
-      anchor.workspace.Amm.programId
+      anchor.workspace.Invariant.programId
     )
     await connection.requestAirdrop(admin.publicKey, 1e10)
     await sleep(500)

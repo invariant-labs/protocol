@@ -55,7 +55,7 @@ export class Staker {
     pool,
     incentiveTokenAcc,
     founderTokenAcc,
-    amm
+    invariant
   }: CreateIncentive) {
     founder = founder ?? this.wallet.publicKey
 
@@ -76,7 +76,7 @@ export class Staker {
         stakerAuthority,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
-        amm,
+        invariant,
         rent: SYSVAR_RENT_PUBKEY
       }
     })
@@ -108,7 +108,7 @@ export class Staker {
     incentive,
     owner,
     index,
-    amm
+    invariant
   }: CreateStake) {
     owner = owner ?? this.wallet.publicKey
 
@@ -124,7 +124,7 @@ export class Staker {
         incentive,
         owner,
         systemProgram: SystemProgram.programId,
-        amm,
+        invariant,
         rent: SYSVAR_RENT_PUBKEY
       }
     })
@@ -148,7 +148,7 @@ export class Staker {
     ownerTokenAcc,
     position,
     owner,
-    amm,
+    invariant,
     index
   }: Withdraw) {
     owner = owner ?? this.wallet.publicKey
@@ -170,7 +170,7 @@ export class Staker {
         stakerAuthority,
         owner,
         tokenProgram: TOKEN_PROGRAM_ID,
-        amm,
+        invariant,
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY
       }
@@ -223,7 +223,7 @@ export interface CreateIncentive {
   incentive?: PublicKey
   incentiveTokenAcc: PublicKey
   founderTokenAcc: PublicKey
-  amm: PublicKey
+  invariant: PublicKey
 }
 export interface CreateStake {
   pool: PublicKey
@@ -231,7 +231,7 @@ export interface CreateStake {
   position: PublicKey
   incentive: PublicKey
   owner?: PublicKey
-  amm: PublicKey
+  invariant: PublicKey
   index: number
 }
 export interface Stake {
@@ -239,7 +239,7 @@ export interface Stake {
   incentive: PublicKey
   liquidity: Decimal
   secondsPerLiquidityInitial: Decimal
-  amm: PublicKey
+  invariant: PublicKey
   index: number
 }
 export interface Withdraw {
@@ -250,7 +250,7 @@ export interface Withdraw {
   ownerTokenAcc: PublicKey
   position: PublicKey
   owner?: PublicKey
-  amm: PublicKey
+  invariant: PublicKey
   index: number
   nonce: number
 }

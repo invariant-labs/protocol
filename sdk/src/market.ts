@@ -21,7 +21,7 @@ import {
   SimulateSwapInterface,
   SimulationResult
 } from './utils'
-import { Amm, IDL } from './idl/amm'
+import { Invariant, IDL } from './idl/invariant'
 import { ComputeUnitsInstruction, IWallet, Pair, signAndSend } from '.'
 import { getMarketAddress, Network } from './network'
 
@@ -37,7 +37,7 @@ export const DEFAULT_PUBLIC_KEY = new PublicKey(0)
 export class Market {
   public connection: Connection
   public wallet: IWallet
-  public program: Program<Amm>
+  public program: Program<Invariant>
   public stateAddress: PublicKey = PublicKey.default
   public programAuthority: PublicKey = PublicKey.default
 
