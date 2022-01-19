@@ -12,11 +12,11 @@ import {
 } from '@invariant-labs/sdk'
 import { Provider, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { createStandardFeeTiers, createToken, eqDecimal } from './testUtils'
+import { createToken, eqDecimal } from './testUtils'
 import { MAX_TICK, MIN_TICK } from '@invariant-labs/sdk/lib/math'
-import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
-import { assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
-import { CreatePool, CreateTick, InitPosition } from '@invariant-labs/sdk/src/market'
+import { fromFee, assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
+import { CreatePool, CreateTick, Decimal, InitPosition } from '@invariant-labs/sdk/src/market'
+import { FeeTier } from '@invariant-labs/sdk/lib/market'
 
 describe('position', () => {
   const provider = Provider.local()
@@ -27,13 +27,14 @@ describe('position', () => {
   const positionOwner = Keypair.generate()
   const admin = Keypair.generate()
   let market: Market
-  const feeTier = FEE_TIERS[0]
+  const feeTier: FeeTier = { fee: fromFee(new BN(20)), tickSpacing: 4 }
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
   let initTick: number
   let xOwnerAmount: u64
   let yOwnerAmount: u64
+
 
   before(async () => {
     market = await Market.build(
@@ -60,7 +61,7 @@ describe('position', () => {
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
     await market.createState(admin.publicKey, admin)
-    await createStandardFeeTiers(market, admin)
+    await market.createFeeTier({ feeTier: feeTier, admin: admin.publicKey }, admin)
   })
   it('#create() should fail because of token addresses', async () => {
     const spoofPair = new Pair(pair.tokenX, pair.tokenY, feeTier)
@@ -92,7 +93,7 @@ describe('position', () => {
     assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
     assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
     assert.ok(createdPool.fee.v.eq(feeTier.fee))
-    assert.equal(createdPool.tickSpacing, feeToTickSpacing(feeTier.fee))
+    assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
     assert.ok(createdPool.liquidity.v.eqn(0))
     assert.ok(createdPool.sqrtPrice.v.eq(calculatePriceSqrt(initTick).v))
     assert.ok(createdPool.currentTickIndex === initTick)
