@@ -1,5 +1,5 @@
 [package]
-name = "amm"
+name = "invariant"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2018"
@@ -7,7 +7,7 @@ license = "Apache-2.0"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "amm"
+name = "invariant"
 doctest = false
 
 [features]

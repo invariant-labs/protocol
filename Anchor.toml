@@ -6,10 +6,10 @@ cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [workspace]
-members = ["programs/amm", "programs/staker"]
+members = ["programs/invariant", "programs/staker"]
 
 [programs.localnet]
-amm = "5W8cgQkGhjniKuVikNyVq6Nh5mWVzHawRnXkWhL7risj"
+invariant = "5W8cgQkGhjniKuVikNyVq6Nh5mWVzHawRnXkWhL7risj"
 staker = "G5iMvLKhBKKscSMUazjiWKZXzacjL7oikJAm9FWRTvk"
 
 [scripts]

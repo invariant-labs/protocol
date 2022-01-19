@@ -21,7 +21,7 @@ import {
   SimulateSwapInterface,
   SimulationResult
 } from './utils'
-import { Amm, IDL } from './idl/amm'
+import { Invariant, IDL } from './idl/invariant'
 import { ComputeUnitsInstruction, IWallet, Pair, signAndSend } from '.'
 import { getMarketAddress, Network } from './network'
 
@@ -37,7 +37,7 @@ export const DEFAULT_PUBLIC_KEY = new PublicKey(0)
 export class Market {
   public connection: Connection
   public wallet: IWallet
-  public program: Program<Amm>
+  public program: Program<Invariant>
   public stateAddress: PublicKey = PublicKey.default
   public programAuthority: PublicKey = PublicKey.default
 
@@ -223,12 +223,10 @@ export class Market {
       oneWay
     )
 
-    return await Promise.all(
-      indexes.map(async index => {
-        const { tickAddress } = await this.getTickAddress(pair, index)
-        return (await this.program.account.tick.fetch(tickAddress)) as Tick
-      })
-    )
+    const ticksArray = (
+      await Promise.all(indexes.map(async index => await this.getTickAddress(pair, index)))
+    ).map(a => a.tickAddress)
+    return (await this.program.account.tick.fetchMultiple(ticksArray)) as Tick[]
   }
 
   async getLiquidityOnTicks(pair: Pair) {

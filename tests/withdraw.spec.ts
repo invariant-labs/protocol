@@ -38,7 +38,7 @@ describe('withdraw', () => {
       Network.LOCAL,
       provider.wallet,
       connection,
-      anchor.workspace.Amm.programId
+      anchor.workspace.Invariant.programId
     )
 
     // Request airdrops
