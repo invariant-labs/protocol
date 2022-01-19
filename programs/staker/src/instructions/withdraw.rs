@@ -14,7 +14,9 @@ use anchor_spl::token::{self, TokenAccount, Transfer};
 pub struct Withdraw<'info> {
     #[account(mut,
         seeds = [b"staker", incentive.to_account_info().key.as_ref(), &position.load()?.pool.as_ref(), &position.load()?.id.to_le_bytes()],
-        bump = user_stake.load()?.bump)]
+        bump = user_stake.load()?.bump,
+        close = owner_token_account
+    )]
     pub user_stake: AccountLoader<'info, UserStake>,
     #[account(mut,
         constraint = &user_stake.load()?.incentive == incentive.to_account_info().key
@@ -105,12 +107,6 @@ pub fn handler(ctx: Context<Withdraw>, nonce: u8) -> ProgramResult {
 
         token::transfer(cpi_ctx, reward)?;
     }
-
-    close(
-        ctx.accounts.user_stake.to_account_info(),
-        ctx.accounts.owner.to_account_info(),
-    )
-    .unwrap();
 
     incentive.num_of_stakes -= 1;
 

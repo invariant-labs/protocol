@@ -1,6 +1,5 @@
 use crate::structs::*;
 use crate::util;
-use crate::util::close;
 use crate::util::get_current_timestamp;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
@@ -9,7 +8,10 @@ use util::STAKER_SEED;
 
 #[derive(Accounts)]
 pub struct ReturnFounds<'info> {
-    #[account(mut, constraint = &incentive.load()?.founder == owner.to_account_info().key )]
+    #[account(mut,
+        close = founder_token_account,
+        constraint = &incentive.load()?.founder == owner.to_account_info().key
+    )]
     pub incentive: AccountLoader<'info, Incentive>,
     //TODO: Add token account and validate mints
     #[account(mut,
@@ -58,11 +60,5 @@ pub fn handler(ctx: Context<ReturnFounds>, bump_authority: u8) -> ProgramResult 
 
         token::transfer(cpi_ctx, incentive.total_reward_unclaimed.to_u64())?;
     }
-
-    close(
-        ctx.accounts.incentive.to_account_info(),
-        ctx.accounts.owner.to_account_info(),
-    )
-    .unwrap();
     Ok(())
 }
