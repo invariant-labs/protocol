@@ -326,18 +326,11 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
       if (initialized) {
         const tick = ticks.get(tickIndex) as Tick
 
-        if (currentTickIndex >= tick.index) {
-          if (!tick.sign) {
-            liquidity = { v: liquidity.v.add(tick.liquidityChange.v) }
-          } else {
-            liquidity = { v: liquidity.v.sub(tick.liquidityChange.v) }
-          }
+        // trunk-ignore(eslint/no-mixed-operators)
+        if (currentTickIndex >= tick.index !== tick.sign) {
+          liquidity = { v: liquidity.v.add(tick.liquidityChange.v) }
         } else {
-          if (tick.sign) {
-            liquidity = { v: liquidity.v.add(tick.liquidityChange.v) }
-          } else {
-            liquidity = { v: liquidity.v.sub(tick.liquidityChange.v) }
-          }
+          liquidity = { v: liquidity.v.sub(tick.liquidityChange.v) }
         }
       }
       if (xToY && !remainingAmount.eq(new BN(0))) {
