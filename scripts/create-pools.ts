@@ -27,9 +27,13 @@ const main = async () => {
   await createMsolSol(market)
 }
 const createUsdcUsdt = async (market: Market) => {
-  for(const i of [0, 1, 2]){
-    const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.USDT), FEE_TIERS[i])
-    
+  for (const i of [0, 1, 2]) {
+    const pair = new Pair(
+      new PublicKey(MOCK_TOKENS.USDC),
+      new PublicKey(MOCK_TOKENS.USDT),
+      FEE_TIERS[i]
+    )
+
     const createPoolVars: CreatePool = {
       pair,
       payer: wallet
