@@ -224,7 +224,7 @@ export class Market {
     )
 
     const ticksArray = (
-      await Promise.all(indexes.map(async index => await this.getTickAddress(pair, index)))
+      await Promise.all(indexes.map(index => this.getTickAddress(pair, index)))
     ).map(a => a.tickAddress)
     return (await this.program.account.tick.fetchMultiple(ticksArray)) as Tick[]
   }

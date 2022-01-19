@@ -9,6 +9,7 @@ use crate::util::get_current_timestamp;
 use crate::{decimal::Decimal, structs::FeeGrowth, structs::State};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
+use anchor_spl::token::Token;
 use anchor_spl::token::{Mint, TokenAccount};
 
 #[derive(Accounts)]
@@ -46,7 +47,7 @@ pub struct CreatePool<'info> {
     pub payer: Signer<'info>,
     #[account(constraint = &state.load()?.authority == authority.key)]
     pub authority: AccountInfo<'info>,
-    pub token_program: AccountInfo<'info>,
+    pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
