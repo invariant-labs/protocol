@@ -1100,6 +1100,7 @@ export interface PositionList {
   bump: number
 }
 export interface Tick {
+  pool: PublicKey
   index: number
   sign: boolean
   liquidityChange: Decimal

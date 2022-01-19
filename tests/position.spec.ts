@@ -35,7 +35,6 @@ describe('position', () => {
   let xOwnerAmount: u64
   let yOwnerAmount: u64
 
-
   before(async () => {
     market = await Market.build(
       Network.LOCAL,
@@ -263,6 +262,7 @@ describe('position', () => {
       const expectedZeroDecimal = new BN(0)
       const tick = await market.getTick(pair, lowerTick)
       const { tickBump } = await market.getTickAddress(pair, lowerTick)
+      assert.ok(tick.pool.equals(await pair.getAddress(market.program.programId)))
       assert.ok(tick.index === lowerTick)
       assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
       assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))
@@ -282,6 +282,7 @@ describe('position', () => {
       const expectedZeroDecimal = new BN(0)
       const tick = await market.getTick(pair, upperTick)
       const { tickBump } = await market.getTickAddress(pair, upperTick)
+      assert.ok(tick.pool.equals(await pair.getAddress(market.program.programId)))
       assert.ok(tick.index === upperTick)
       assert.ok(tick.liquidityChange.v.eq(expectedZeroDecimal))
       assert.ok(tick.liquidityGross.v.eq(expectedZeroDecimal))

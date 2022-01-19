@@ -8,6 +8,7 @@ use super::FeeGrowth;
 #[repr(packed)]
 #[derive(PartialEq, Default, Debug)]
 pub struct Tick {
+    pub pool: Pubkey,
     pub index: i32,
     pub sign: bool, // true means positive
     pub liquidity_change: Decimal,

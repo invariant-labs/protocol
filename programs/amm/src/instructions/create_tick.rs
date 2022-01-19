@@ -51,6 +51,7 @@ pub fn handler(ctx: Context<CreateTick>, bump: u8, index: i32) -> ProgramResult 
     // init tick
     let below_current_tick = index <= pool.current_tick_index;
     *tick = Tick {
+        pool: ctx.accounts.pool.key(),
         index,
         sign: true,
         liquidity_change: Decimal::new(0),
