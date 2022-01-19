@@ -69,11 +69,26 @@ export class Market {
   }
 
   async createPool(createPool: CreatePool) {
-    const { transaction, signer } = await this.createPoolTx(createPool)
-    await signAndSend(transaction, [createPool.payer, signer], this.connection)
+    const tokenXReserve = Keypair.generate()
+    const tokenYReserve = Keypair.generate()
+    const { transaction, signer } = await this.createPoolTx(
+      createPool,
+      tokenXReserve,
+      tokenYReserve
+    )
+
+    await signAndSend(
+      transaction,
+      [createPool.payer, tokenXReserve, tokenYReserve, signer],
+      this.connection
+    )
   }
 
-  async createPoolTx({ pair, payer, initTick, tokenX, tokenY }: CreatePoolTx) {
+  async createPoolTx(
+    { pair, payer, initTick, tokenX, tokenY }: CreatePoolTx,
+    tokenXReserve: Keypair,
+    tokenYReserve: Keypair
+  ) {
     const payerPubkey = payer?.publicKey ?? this.wallet.publicKey
     const bitmapKeypair = Keypair.generate()
     const tick = initTick ?? 0
@@ -83,8 +98,6 @@ export class Market {
     const [poolAddress, bump] = await pair.getAddressAndBump(this.program.programId)
     const { address: feeTierAddress } = await this.getFeeTierAddress(pair.feeTier)
 
-    const tokenXReserve = await tokenX.createAccount(this.programAuthority)
-    const tokenYReserve = await tokenY.createAccount(this.programAuthority)
     const createIx = this.program.instruction.createPool(bump, tick, {
       accounts: {
         state: stateAddress,
@@ -93,8 +106,10 @@ export class Market {
         tickmap: bitmapKeypair.publicKey,
         tokenX: tokenX.publicKey,
         tokenY: tokenY.publicKey,
-        tokenXReserve,
-        tokenYReserve,
+        tokenXReserve: tokenXReserve.publicKey,
+        tokenYReserve: tokenYReserve.publicKey,
+        authority: this.programAuthority,
+        tokenProgram: TOKEN_PROGRAM_ID,
         payer: payerPubkey,
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: SystemProgram.programId

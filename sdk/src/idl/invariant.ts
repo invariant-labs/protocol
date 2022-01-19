@@ -1,6 +1,6 @@
-export type Amm = {
+export type Invariant = {
   "version": "0.1.0",
-  "name": "amm",
+  "name": "invariant",
   "instructions": [
     {
       "name": "createState",
@@ -121,28 +121,18 @@ export type Amm = {
         },
         {
           "name": "tokenXReserve",
-          "isMut": true,
-          "isSigner": true
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "tokenYReserve",
-          "isMut": true,
-          "isSigner": true
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "payer",
           "isMut": true,
           "isSigner": true
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
         },
         {
           "name": "rent",
@@ -1434,9 +1424,9 @@ export type Amm = {
   ]
 };
 
-export const IDL: Amm = {
+export const IDL: Invariant = {
   "version": "0.1.0",
-  "name": "amm",
+  "name": "invariant",
   "instructions": [
     {
       "name": "createState",
@@ -1557,28 +1547,18 @@ export const IDL: Amm = {
         },
         {
           "name": "tokenXReserve",
-          "isMut": true,
-          "isSigner": true
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "tokenYReserve",
-          "isMut": true,
-          "isSigner": true
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "payer",
           "isMut": true,
           "isSigner": true
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
         },
         {
           "name": "rent",

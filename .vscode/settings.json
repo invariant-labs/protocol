@@ -9,10 +9,12 @@
     "feetierv",
     "initializable",
     "lamports",
+    "ledgerhq",
     "localnet",
     "Msol",
     "muln",
     "multicall",
+    "nacl",
     "poolv",
     "positionlistv",
     "positionv",
@@ -27,7 +29,8 @@
     "Swapline",
     "Sysvar",
     "tickmap",
-    "tickv"
+    "tickv",
+    "tweetnacl"
   ],
   "editor.formatOnSave": true
 }

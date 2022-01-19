@@ -30,19 +30,23 @@ pub struct CreatePool<'info> {
     pub tickmap: AccountLoader<'info, Tickmap>,
     pub token_x: Account<'info, Mint>,
     pub token_y: Account<'info, Mint>,
-    #[account(
-        constraint = token_x_reserve.mint == token_x.key(),
-        constraint = token_x_reserve.owner == state.load()?.authority
+    #[account(init,
+        token::mint = token_x,
+        token::authority = authority,
+        payer = payer,
     )]
-    // we can also initialize those accounts in create_pool
     pub token_x_reserve: Account<'info, TokenAccount>,
-    #[account(
-        constraint = token_y_reserve.mint == token_y.key(),
-        constraint = token_y_reserve.owner == state.load()?.authority
+    #[account(init,
+        token::mint = token_y,
+        token::authority = authority,
+        payer = payer,
     )]
     pub token_y_reserve: Account<'info, TokenAccount>,
     #[account(mut)]
     pub payer: Signer<'info>,
+    #[account(constraint = &state.load()?.authority == authority.key)]
+    pub authority: AccountInfo<'info>,
+    pub token_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
