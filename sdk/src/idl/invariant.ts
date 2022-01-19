@@ -1209,6 +1209,10 @@ export type Invariant = {
         "kind": "struct",
         "fields": [
           {
+            "name": "pool",
+            "type": "publicKey"
+          },
+          {
             "name": "index",
             "type": "i32"
           },
@@ -2644,6 +2648,10 @@ export const IDL: Invariant = {
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "pool",
+            "type": "publicKey"
+          },
           {
             "name": "index",
             "type": "i32"
