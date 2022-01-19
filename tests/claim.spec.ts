@@ -167,9 +167,9 @@ describe('claim', () => {
     assert.ok(amountY.eq(amount.subn(7)))
     assert.ok(reserveXDelta.eq(amount))
     assert.ok(reserveYDelta.eq(amount.subn(7)))
-    assert.ok(poolDataAfter.feeGrowthGlobalX.v.eq(new BN('5000000000000000000')))
+    assert.ok(poolDataAfter.feeGrowthGlobalX.v.eq(new BN('4000000000000000000')))
     assert.ok(poolDataAfter.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(poolDataAfter.feeProtocolTokenX.eqn(1))
+    assert.ok(poolDataAfter.feeProtocolTokenX.eqn(2))
     assert.ok(poolDataAfter.feeProtocolTokenY.eqn(0))
 
     const reservesBeforeClaim = await market.getReserveBalances(pair, tokenX, tokenY)
@@ -186,9 +186,9 @@ describe('claim', () => {
     const userTokenXAccountAfterClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
     const positionAfterClaim = await market.getPosition(positionOwner.publicKey, 0)
     const reservesAfterClaim = await market.getReserveBalances(pair, tokenX, tokenY)
-    const expectedTokensClaimed = 5
+    const expectedTokensClaimed = 4
 
-    assert.ok(reservesBeforeClaim.x.subn(5).eq(reservesAfterClaim.x))
+    assert.ok(reservesBeforeClaim.x.subn(4).eq(reservesAfterClaim.x))
     assert.ok(positionAfterClaim.tokensOwedX.v.eqn(0))
     assert.ok(positionAfterClaim.feeGrowthInsideX.v.eq(poolDataAfter.feeGrowthGlobalX.v))
     assert.ok(

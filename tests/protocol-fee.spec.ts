@@ -179,9 +179,9 @@ describe('protocol-fee', () => {
     assert.ok(amountY.eq(amount.subn(7)))
     assert.ok(reserveXDelta.eq(amount))
     assert.ok(reserveYDelta.eq(amount.subn(7)))
-    assert.equal(poolDataAfter.feeGrowthGlobalX.v.toString(), '5000000000000000000')
+    assert.equal(poolDataAfter.feeGrowthGlobalX.v.toString(), '4000000000000000000')
     assert.ok(poolDataAfter.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(poolDataAfter.feeProtocolTokenX.eqn(1))
+    assert.ok(poolDataAfter.feeProtocolTokenX.eqn(2))
     assert.ok(poolDataAfter.feeProtocolTokenY.eqn(0))
   })
 
@@ -206,8 +206,8 @@ describe('protocol-fee', () => {
     const reservesAfterClaim = await market.getReserveBalances(pair, tokenX, tokenY)
 
     const poolData = await market.getPool(pair)
-    assert.equal(reservesBeforeClaim.x.toNumber(), reservesAfterClaim.x.toNumber() + 1)
-    assert.equal(adminAccountXAfterClaim.toNumber(), adminAccountXBeforeClaim.toNumber() + 1)
+    assert.equal(reservesBeforeClaim.x.toNumber(), reservesAfterClaim.x.toNumber() + 2)
+    assert.equal(adminAccountXAfterClaim.toNumber(), adminAccountXBeforeClaim.toNumber() + 2)
     assert.equal(poolData.feeProtocolTokenX.toNumber(), 0)
     assert.equal(poolData.feeProtocolTokenY.toNumber(), 0)
   })
