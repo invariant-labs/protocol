@@ -34,7 +34,6 @@ describe('position', () => {
   let initTick: number
   let xOwnerAmount: u64
   let yOwnerAmount: u64
-
   before(async () => {
     market = await Market.build(
       Network.LOCAL,

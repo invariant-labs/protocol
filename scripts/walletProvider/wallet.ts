@@ -16,7 +16,7 @@ export const getLedgerWallet = async (): Promise<LedgerWalletProvider> => {
     },
     derivationPath: DERIVATION_PATH.bip44Root
   }
-  const wallet = WalletProviderFactory.getProvider(args) as LedgerWalletProvider
+  const wallet = WalletProviderFactory.getProvider(args)
 
   await wallet.init()
   return wallet
@@ -29,12 +29,12 @@ export const signAndSendLedger = async (
   opts?: ConfirmOptions
 ) => {
   const blockhash = await connection.getRecentBlockhash(
-    opts?.commitment || Provider.defaultOptions().commitment
+    opts?.commitment ?? Provider.defaultOptions().commitment
   )
   tx.recentBlockhash = blockhash.blockhash
   tx.feePayer = wallet.pubKey
 
   const signedTx = (await wallet.signTransaction(tx)) as Transaction
   const rawTx = signedTx.serialize()
-  return await sendAndConfirmRawTransaction(connection, rawTx, opts || Provider.defaultOptions())
+  return await sendAndConfirmRawTransaction(connection, rawTx, opts ?? Provider.defaultOptions())
 }
