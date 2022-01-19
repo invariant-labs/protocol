@@ -46,7 +46,7 @@ describe('Withdraw tests', () => {
   let staker: Staker
   let market: Market
   let pool: PublicKey
-  let amm: PublicKey
+  let invariant: PublicKey
   let incentiveToken: Token
   let founderTokenAcc: PublicKey
   let incentiveTokenAcc: PublicKey
@@ -88,8 +88,13 @@ describe('Withdraw tests', () => {
     amount = new anchor.BN(5000 * 1e12)
     await incentiveToken.mintTo(founderTokenAcc, wallet, [], tou64(amount))
 
-    // create amm and pool
-    market = await Market.build(0, provider.wallet, connection, anchor.workspace.Amm.programId)
+    // create invariant and pool
+    market = await Market.build(
+      0,
+      provider.wallet,
+      connection,
+      anchor.workspace.Invariant.programId
+    )
 
     const tokens = await Promise.all([
       createTkn(connection, wallet, mintAuthority),
@@ -124,8 +129,8 @@ describe('Withdraw tests', () => {
     }
     await market.createPool(createPoolVars)
 
-    pool = await pair.getAddress(anchor.workspace.Amm.programId)
-    amm = anchor.workspace.Amm.programId
+    pool = await pair.getAddress(anchor.workspace.Invariant.programId)
+    invariant = anchor.workspace.Invariant.programId
 
     // create tokens
   })
@@ -147,7 +152,7 @@ describe('Withdraw tests', () => {
       founder: founderAccount.publicKey,
       incentiveTokenAcc: incentiveTokenAcc,
       founderTokenAcc: founderTokenAcc,
-      amm
+      invariant
     }
     await createIncentive(staker, createIncentiveVars, [founderAccount, incentiveAccount])
 
@@ -220,7 +225,7 @@ describe('Withdraw tests', () => {
       position,
       incentive: incentiveAccount.publicKey,
       owner: positionOwner.publicKey,
-      amm
+      invariant
     }
 
     await updatePositionAndCreateStake(
@@ -270,7 +275,7 @@ describe('Withdraw tests', () => {
       owner: positionOwner.publicKey,
       incentiveTokenAcc: incentiveTokenAcc,
       ownerTokenAcc: ownerTokenAcc,
-      amm,
+      invariant,
       index,
       nonce
     }

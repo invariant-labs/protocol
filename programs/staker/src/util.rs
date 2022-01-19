@@ -11,7 +11,7 @@ pub fn check_position_seeds<'info>(
 ) -> bool {
     &Pubkey::find_program_address(
         &[b"positionv1", owner.key.as_ref(), &index.to_le_bytes()],
-        &amm::program::Amm::id(),
+        &invariant::program::Invariant::id(),
     )
     .0 == position
 }

@@ -57,7 +57,7 @@ describe('Multicall test', () => {
   let firstOwnerTokenAcc: PublicKey
   let secondOwnerTokenAcc: PublicKey
   let pool: PublicKey
-  let amm: PublicKey
+  let invariant: PublicKey
   let nonce: number
   let tokenX: Token
   let tokenY: Token
@@ -105,9 +105,14 @@ describe('Multicall test', () => {
     await firstIncentiveToken.mintTo(firstFounderTokenAcc, wallet, [], tou64(amount))
     await firstIncentiveToken.mintTo(secondFounderTokenAcc, wallet, [], tou64(amount))
 
-    // create amm and pool
+    // create invariant and pool
 
-    market = await Market.build(0, provider.wallet, connection, anchor.workspace.Amm.programId)
+    market = await Market.build(
+      0,
+      provider.wallet,
+      connection,
+      anchor.workspace.Invariant.programId
+    )
 
     const tokens = await Promise.all([
       createTkn(connection, wallet, mintAuthority),
@@ -143,8 +148,8 @@ describe('Multicall test', () => {
     }
     await market.createPool(createPoolVars)
 
-    pool = await pair.getAddress(anchor.workspace.Amm.programId)
-    amm = anchor.workspace.Amm.programId
+    pool = await pair.getAddress(anchor.workspace.Invariant.programId)
+    invariant = anchor.workspace.Invariant.programId
   })
   it('Multicall', async () => {
     const currentTime = getTime()
@@ -163,7 +168,7 @@ describe('Multicall test', () => {
       founder: firstFounderAccount.publicKey,
       incentiveTokenAcc: firstIncentiveTokenAcc,
       founderTokenAcc: firstFounderTokenAcc,
-      amm
+      invariant
     }
     await createIncentive(staker, createIncentiveVars, [firstFounderAccount, firstIncentiveAccount])
 
@@ -176,7 +181,7 @@ describe('Multicall test', () => {
       founder: secondFounderAccount.publicKey,
       incentiveTokenAcc: secondIncentiveTokenAcc,
       founderTokenAcc: secondFounderTokenAcc,
-      amm
+      invariant
     }
     await createIncentive(staker, createIncentiveVars2, [
       secondFounderAccount,
@@ -322,7 +327,7 @@ describe('Multicall test', () => {
       position: firstPosition,
       incentive: firstIncentiveAccount.publicKey,
       owner: firstPositionOwner.publicKey,
-      amm
+      invariant
     }
     await updatePositionAndCreateStake(
       market,
@@ -341,7 +346,7 @@ describe('Multicall test', () => {
       position: secondPosition,
       incentive: firstIncentiveAccount.publicKey,
       owner: secondPositionOwner.publicKey,
-      amm
+      invariant
     }
     await updatePositionAndCreateStake(
       market,
@@ -360,7 +365,7 @@ describe('Multicall test', () => {
       position: firstPosition,
       incentive: secondIncentiveAccount.publicKey,
       owner: firstPositionOwner.publicKey,
-      amm
+      invariant
     }
     await updatePositionAndCreateStake(
       market,
@@ -380,7 +385,7 @@ describe('Multicall test', () => {
       position: secondPosition,
       incentive: secondIncentiveAccount.publicKey,
       owner: secondPositionOwner.publicKey,
-      amm
+      invariant
     }
     await updatePositionAndCreateStake(
       market,
@@ -428,7 +433,7 @@ describe('Multicall test', () => {
       owner: firstPositionOwner.publicKey,
       incentiveTokenAcc: firstIncentiveTokenAcc,
       ownerTokenAcc: firstOwnerTokenAcc,
-      amm,
+      invariant,
       index,
       nonce
     }
@@ -454,7 +459,7 @@ describe('Multicall test', () => {
       owner: secondPositionOwner.publicKey,
       incentiveTokenAcc: firstIncentiveTokenAcc,
       ownerTokenAcc: secondOwnerTokenAcc,
-      amm,
+      invariant,
       index,
       nonce
     }
@@ -480,7 +485,7 @@ describe('Multicall test', () => {
       owner: firstPositionOwner.publicKey,
       incentiveTokenAcc: secondIncentiveTokenAcc,
       ownerTokenAcc: firstOwnerTokenAcc,
-      amm,
+      invariant,
       index,
       nonce
     }
@@ -505,7 +510,7 @@ describe('Multicall test', () => {
       owner: secondPositionOwner.publicKey,
       incentiveTokenAcc: secondIncentiveTokenAcc,
       ownerTokenAcc: secondOwnerTokenAcc,
-      amm,
+      invariant,
       index,
       nonce
     }

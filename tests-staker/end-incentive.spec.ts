@@ -27,7 +27,7 @@ describe('End incentive tests', () => {
   let stakerAuthority: PublicKey
   let staker: Staker
   let pool: PublicKey
-  let amm: PublicKey
+  let invariant: PublicKey
   let incentiveToken: Token
   let tokenX: Token
   let tokenY: Token
@@ -59,13 +59,13 @@ describe('End incentive tests', () => {
     await incentiveToken.mintTo(founderTokenAcc, wallet, [], tou64(amount))
 
     /// ////////////////////
-    // create amm and pool
+    // create invariant and pool
     const admin = Keypair.generate()
     const market = await Market.build(
       0,
       provider.wallet,
       connection,
-      anchor.workspace.Amm.programId
+      anchor.workspace.Invariant.programId
     )
 
     const tokens = await Promise.all([
@@ -101,8 +101,8 @@ describe('End incentive tests', () => {
     }
     await market.createPool(createPoolVars)
 
-    pool = await pair.getAddress(anchor.workspace.Amm.programId)
-    amm = anchor.workspace.Amm.programId
+    pool = await pair.getAddress(anchor.workspace.Invariant.programId)
+    invariant = anchor.workspace.Invariant.programId
   })
 
   it('End incentive ', async () => {
@@ -132,7 +132,7 @@ describe('End incentive tests', () => {
       founder: founderAccount.publicKey,
       incentiveTokenAcc: incentiveTokenAcc,
       founderTokenAcc: founderTokenAcc,
-      amm: amm
+      invariant
     })
     await signAndSend(
       new Transaction().add(ixCreate),

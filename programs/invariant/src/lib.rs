@@ -26,7 +26,7 @@ declare_id!("5W8cgQkGhjniKuVikNyVq6Nh5mWVzHawRnXkWhL7risj");
 const SEED: &str = "Invariant";
 
 #[program]
-pub mod amm {
+pub mod invariant {
     use super::*;
 
     pub fn create_state(ctx: Context<CreateState>, bump: u8, nonce: u8) -> ProgramResult {
