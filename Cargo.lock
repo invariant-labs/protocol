@@ -18,16 +18,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "amm"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "anchor-spl",
- "integer-sqrt",
- "uint",
-]
-
-[[package]]
 name = "anchor-attribute-access-control"
 version = "0.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -634,6 +624,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "invariant"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "integer-sqrt",
+ "uint",
+]
+
+[[package]]
 name = "itertools"
 version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1015,9 +1015,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.74"
+version = "1.0.75"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee2bb9cd061c5865d345bb02ca49fcef1391741b672b54a0bf7b679badec3142"
+checksum = "c059c05b48c5c0067d4b4b2b4f0732dd65feb52daf7e0ea09cd87e7dadc1af79"
 dependencies = [
  "itoa",
  "ryu",
@@ -1051,9 +1051,9 @@ dependencies = [
 
 [[package]]
 name = "smallvec"
-version = "1.7.0"
+version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1ecab6c735a6bb4139c0caafd0cc3635748bbb3acf4550e8138122099251f309"
+checksum = "f2dd574626839106c320a323308629dcb1acfc96e32a8cba364ddc61ac23ee83"
 
 [[package]]
 name = "solana-frozen-abi"
@@ -1182,10 +1182,10 @@ dependencies = [
 name = "staker"
 version = "0.1.0"
 dependencies = [
- "amm",
  "anchor-lang",
  "anchor-spl",
  "integer-sqrt",
+ "invariant",
  "uint",
 ]
 
@@ -1395,6 +1395,6 @@ checksum = "9fc79f4a1e39857fc00c3f662cbf2651c771f00e9c15fe2abc341806bd46bd71"
 
 [[package]]
 name = "zeroize"
-version = "1.4.3"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d68d9dcec5f9b43a30d38c49f91dfedfaac384cb8f085faca366c26207dd1619"
+checksum = "cc222aec311c323c717f56060324f32b82da1ce1dd81d9a09aa6a9030bfe08db"

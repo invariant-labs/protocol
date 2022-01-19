@@ -1,8 +1,8 @@
 use crate::decimal::*;
 use crate::structs::*;
 use crate::util::get_current_timestamp;
-use amm::program::Amm;
-use amm::structs::Pool;
+use invariant::program::Invariant;
+use invariant::structs::Pool;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{self, TokenAccount, Transfer};
@@ -32,7 +32,7 @@ pub struct CreateIncentive<'info> {
     pub staker_authority: AccountInfo<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
-    pub amm: Program<'info, Amm>, //TODO: Add program validation
+    pub invariant: Program<'info, Invariant>, //TODO: Add program validation
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,

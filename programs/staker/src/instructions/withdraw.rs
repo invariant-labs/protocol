@@ -3,8 +3,8 @@ use crate::math::*;
 use crate::structs::*;
 use crate::util::*;
 
-use amm::program::Amm;
-use amm::structs::Position;
+use invariant::program::Invariant;
+use invariant::structs::Position;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{self, TokenAccount, Transfer};
@@ -35,7 +35,7 @@ pub struct Withdraw<'info> {
     pub owner: Signer<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
-    pub amm: Program<'info, Amm>, //TODO: program address
+    pub invariant: Program<'info, Invariant>, //TODO: program address
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,

@@ -15,7 +15,7 @@ import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken, eqDecimal } from './testUtils'
 import { MAX_TICK, MIN_TICK } from '@invariant-labs/sdk/lib/math'
 import { fromFee, assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
-import { CreatePool, CreateTick, Decimal, InitPosition } from '@invariant-labs/sdk/src/market'
+import { CreatePool, CreateTick, InitPosition } from '@invariant-labs/sdk/src/market'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 
 describe('position', () => {
@@ -35,13 +35,12 @@ describe('position', () => {
   let xOwnerAmount: u64
   let yOwnerAmount: u64
 
-
   before(async () => {
     market = await Market.build(
       Network.LOCAL,
       provider.wallet,
       connection,
-      anchor.workspace.Amm.programId
+      anchor.workspace.Invariant.programId
     )
 
     // Request airdrops
