@@ -208,12 +208,10 @@ export class Market {
       oneWay
     )
 
-    return await Promise.all(
-      indexes.map(async index => {
-        const { tickAddress } = await this.getTickAddress(pair, index)
-        return (await this.program.account.tick.fetch(tickAddress)) as Tick
-      })
-    )
+    const ticksArray = await (
+      await Promise.all(indexes.map(index => this.getTickAddress(pair, index)))
+    ).map(a => a.tickAddress)
+    return (await this.program.account.tick.fetchMultiple(ticksArray)) as Array<Tick>
   }
 
   async getLiquidityOnTicks(pair: Pair) {
