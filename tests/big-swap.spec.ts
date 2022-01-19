@@ -6,7 +6,7 @@ import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createPosition, createToken, performSwap } from './testUtils'
 import { assert } from 'chai'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { FeeTier, Decimal, RemovePosition } from '@invariant-labs/sdk/lib/market'
+import { FeeTier, RemovePosition } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { calculateFeeGrowthInside } from '@invariant-labs/sdk/src/math'
 import { CreateFeeTier, CreatePool } from '@invariant-labs/sdk/src/market'
@@ -24,7 +24,6 @@ describe('big-swap', () => {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
   }
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -69,7 +68,6 @@ describe('big-swap', () => {
     const createPoolVars: CreatePool = {
       pair,
       payer: admin,
-      protocolFee,
       tokenX,
       tokenY
     }

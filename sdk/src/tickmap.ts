@@ -1,27 +1,24 @@
+import { BN } from '@project-serum/anchor'
 import { MAX_TICK, TICK_LIMIT, TICK_SEARCH_RANGE } from '.'
 import { Tickmap } from './market'
 
-export const getSearchLimit = (
-  currentTickIndex: number,
-  tickSpacing: number,
-  up: boolean
-): number => {
-  if (currentTickIndex % tickSpacing !== 0) {
-    throw new Error('Tick not divisible by spacing')
-  }
-
-  const index = currentTickIndex / tickSpacing
+export const getSearchLimit = (currentTickIndex: BN, tickSpacing: BN, up: boolean): BN => {
+  const index = currentTickIndex.div(tickSpacing)
+  let limit: BN = new BN(0)
   if (up) {
-    return (
-      Math.min(Math.min(TICK_LIMIT - 1, index + TICK_SEARCH_RANGE), MAX_TICK / tickSpacing) *
-      tickSpacing
-    )
+    const arrayLimit = new BN(TICK_LIMIT).subn(1)
+    const rangeLimit = index.add(new BN(TICK_SEARCH_RANGE))
+    const priceLimit = new BN(MAX_TICK).div(tickSpacing)
+
+    limit = BN.min(BN.min(arrayLimit, rangeLimit), priceLimit)
   } else {
-    return (
-      Math.max(Math.max(-TICK_LIMIT + 1, index - TICK_SEARCH_RANGE), -MAX_TICK / tickSpacing) *
-      tickSpacing
-    )
+    const arrayLimit = new BN(-TICK_LIMIT).addn(1)
+    const rangeLimit = index.sub(new BN(TICK_SEARCH_RANGE))
+    const priceLimit = new BN(-MAX_TICK).div(tickSpacing)
+
+    limit = BN.max(BN.max(arrayLimit, rangeLimit), priceLimit)
   }
+  return limit.mul(tickSpacing)
 }
 
 export const getPreviousTick = (
@@ -35,7 +32,7 @@ export const getPreviousTick = (
 
   const indexWithoutSpacing = currentTickIndex / tickSpacing
   const bitmapIndex = indexWithoutSpacing + TICK_LIMIT
-  const limit = getSearchLimit(currentTickIndex, tickSpacing, false) + TICK_LIMIT
+  const limit = getSearchLimit(new BN(currentTickIndex), new BN(tickSpacing), false).toNumber()
 
   let byteIndex = Math.floor(bitmapIndex / 8)
   let bitIndex = Math.abs(bitmapIndex % 8)
@@ -78,7 +75,7 @@ export const getNextTick = (
 
   const indexWithoutSpacing = currentTickIndex / tickSpacing
   const bitmapIndex = indexWithoutSpacing + TICK_LIMIT + 1
-  const limit = getSearchLimit(currentTickIndex, tickSpacing, true) + TICK_LIMIT
+  const limit = getSearchLimit(new BN(currentTickIndex), new BN(tickSpacing), true).toNumber()
 
   let byteIndex = Math.floor(bitmapIndex / 8)
   let bitIndex = Math.abs(bitmapIndex % 8)

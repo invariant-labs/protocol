@@ -2,7 +2,7 @@ import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { Market, Network, Pair, DENOMINATOR, TICK_LIMIT, tou64 } from '@invariant-labs/sdk'
-import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
+import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken } from './testUtils'
@@ -31,7 +31,6 @@ describe('protocol-fee', () => {
     tickSpacing: 10
   }
   const lowerTick = -20
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -74,7 +73,6 @@ describe('protocol-fee', () => {
     const createPoolVars: CreatePool = {
       pair,
       payer: admin,
-      protocolFee,
       tokenX,
       tokenY
     }
@@ -181,9 +179,9 @@ describe('protocol-fee', () => {
     assert.ok(amountY.eq(amount.subn(7)))
     assert.ok(reserveXDelta.eq(amount))
     assert.ok(reserveYDelta.eq(amount.subn(7)))
-    assert.equal(poolDataAfter.feeGrowthGlobalX.v.toString(), '5000000000000000000')
+    assert.equal(poolDataAfter.feeGrowthGlobalX.v.toString(), '4000000000000000000')
     assert.ok(poolDataAfter.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(poolDataAfter.feeProtocolTokenX.eqn(1))
+    assert.ok(poolDataAfter.feeProtocolTokenX.eqn(2))
     assert.ok(poolDataAfter.feeProtocolTokenY.eqn(0))
   })
 
@@ -208,8 +206,8 @@ describe('protocol-fee', () => {
     const reservesAfterClaim = await market.getReserveBalances(pair, tokenX, tokenY)
 
     const poolData = await market.getPool(pair)
-    assert.equal(reservesBeforeClaim.x.toNumber(), reservesAfterClaim.x.toNumber() + 1)
-    assert.equal(adminAccountXAfterClaim.toNumber(), adminAccountXBeforeClaim.toNumber() + 1)
+    assert.equal(reservesBeforeClaim.x.toNumber(), reservesAfterClaim.x.toNumber() + 2)
+    assert.equal(adminAccountXAfterClaim.toNumber(), adminAccountXBeforeClaim.toNumber() + 2)
     assert.equal(poolData.feeProtocolTokenX.toNumber(), 0)
     assert.equal(poolData.feeProtocolTokenY.toNumber(), 0)
   })

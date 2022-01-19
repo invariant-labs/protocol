@@ -15,8 +15,8 @@ import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createStandardFeeTiers, createToken, eqDecimal } from './testUtils'
 import { MAX_TICK, MIN_TICK } from '@invariant-labs/sdk/lib/math'
 import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
-import { fromFee, assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
-import { CreatePool, CreateTick, Decimal, InitPosition } from '@invariant-labs/sdk/src/market'
+import { assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
+import { CreatePool, CreateTick, InitPosition } from '@invariant-labs/sdk/src/market'
 
 describe('position', () => {
   const provider = Provider.local()
@@ -28,7 +28,6 @@ describe('position', () => {
   const admin = Keypair.generate()
   let market: Market
   const feeTier = FEE_TIERS[0]
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -70,7 +69,6 @@ describe('position', () => {
     const createPoolVars: CreatePool = {
       pair: spoofPair,
       payer: admin,
-      protocolFee,
       tokenX,
       tokenY,
       initTick
@@ -84,7 +82,6 @@ describe('position', () => {
     const createPoolVars: CreatePool = {
       pair,
       payer: admin,
-      protocolFee,
       tokenX,
       tokenY,
       initTick

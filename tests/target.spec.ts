@@ -12,7 +12,6 @@ import {
   CreateFeeTier,
   CreatePool,
   CreateTick,
-  Decimal,
   InitPosition,
   Swap
 } from '@invariant-labs/sdk/src/market'
@@ -25,7 +24,6 @@ describe('target', () => {
   const mintAuthority = Keypair.generate()
   const admin = Keypair.generate()
   let market: Market
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -69,7 +67,6 @@ describe('target', () => {
     const createPoolVars: CreatePool = {
       pair,
       payer: admin,
-      protocolFee,
       tokenX,
       tokenY
     }
@@ -179,9 +176,9 @@ describe('target', () => {
     assert.ok(reserveXDelta.eq(amount.addn(9)))
     assert.ok(reserveYDelta.eq(amount))
 
-    assert.equal(poolData.feeGrowthGlobalX.v.toString(), '6000000000000000000') // 0.6 % of amount - protocol fee
+    assert.equal(poolData.feeGrowthGlobalX.v.toString(), '5000000000000000000') // 0.6 % of amount - protocol fee
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(poolData.feeProtocolTokenX.eqn(1))
+    assert.ok(poolData.feeProtocolTokenX.eqn(2))
     assert.ok(poolData.feeProtocolTokenY.eqn(0))
   })
 })

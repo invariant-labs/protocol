@@ -6,7 +6,7 @@ import { assert } from 'chai'
 import { assertThrowsAsync, createToken } from './testUtils'
 import { Market, Pair, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@invariant-labs/sdk'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
+import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import {
   CreateFeeTier,
@@ -29,7 +29,6 @@ describe('withdraw', () => {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
   }
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -70,7 +69,6 @@ describe('withdraw', () => {
     const createPoolVars: CreatePool = {
       pair,
       payer: admin,
-      protocolFee,
       tokenX,
       tokenY
     }
@@ -181,9 +179,9 @@ describe('withdraw', () => {
     assert.ok(reserveXDelta.eq(amount))
     assert.ok(reserveYDelta.eq(amount.subn(7)))
 
-    assert.ok(poolData.feeGrowthGlobalX.v.eq(new BN('5000000000000000000')))
+    assert.ok(poolData.feeGrowthGlobalX.v.eq(new BN('4000000000000000000')))
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(poolData.feeProtocolTokenX.eqn(1))
+    assert.ok(poolData.feeProtocolTokenX.eqn(2))
     assert.ok(poolData.feeProtocolTokenY.eqn(0))
 
     // Remove position
@@ -206,7 +204,7 @@ describe('withdraw', () => {
     const reservesAfterRemove = await market.getReserveBalances(pair, tokenX, tokenY)
     const expectedWithdrawnX = new BN(1493)
     const expectedWithdrawnY = new BN(6)
-    const expectedFeeX = new BN(5)
+    const expectedFeeX = new BN(4)
 
     assert.ok(
       reservesBeforeRemove.x.sub(reservesAfterRemove.x).eq(expectedWithdrawnX.add(expectedFeeX))

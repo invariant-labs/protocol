@@ -7,7 +7,7 @@ import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken, eqDecimal, positionEquals, positionWithoutOwnerEquals } from './testUtils'
 import { assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
 import { ERRORS, fromFee } from '@invariant-labs/sdk/lib/utils'
-import { FeeTier, Decimal } from '@invariant-labs/sdk/lib/market'
+import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import {
   CreateFeeTier,
   CreatePool,
@@ -30,7 +30,6 @@ describe('Position list', () => {
     fee: fromFee(new BN(600)),
     tickSpacing: 3
   }
-  const protocolFee: Decimal = { v: fromFee(new BN(10000)) }
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -87,7 +86,6 @@ describe('Position list', () => {
       const createPoolVars: CreatePool = {
         pair,
         payer: admin,
-        protocolFee,
         tokenX,
         tokenY,
         initTick

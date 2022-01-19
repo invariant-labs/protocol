@@ -48,12 +48,7 @@ pub struct CreatePool<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
-pub fn handler(
-    ctx: Context<CreatePool>,
-    bump: u8,
-    init_tick: i32,
-    protocol_fee: Decimal,
-) -> ProgramResult {
+pub fn handler(ctx: Context<CreatePool>, bump: u8, init_tick: i32) -> ProgramResult {
     msg!("INVARIANT: CREATE POOL");
 
     let token_x_address = &ctx.accounts.token_x.key();
@@ -79,7 +74,7 @@ pub fn handler(
         token_y_reserve: *ctx.accounts.token_y_reserve.to_account_info().key,
         tick_spacing: fee_tier.tick_spacing,
         fee: fee_tier.fee,
-        protocol_fee,
+        protocol_fee: Decimal::new(200_000_000_000),
         liquidity: Decimal::new(0),
         sqrt_price: calculate_price_sqrt(init_tick),
         current_tick_index: init_tick,

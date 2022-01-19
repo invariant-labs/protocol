@@ -42,13 +42,8 @@ pub mod amm {
         instructions::create_fee_tier::handler(ctx, bump, fee, tick_spacing)
     }
 
-    pub fn create_pool(
-        ctx: Context<CreatePool>,
-        bump: u8,
-        init_tick: i32,
-        protocol_fee: Decimal,
-    ) -> ProgramResult {
-        instructions::create_pool::handler(ctx, bump, init_tick, protocol_fee)
+    pub fn create_pool(ctx: Context<CreatePool>, bump: u8, init_tick: i32) -> ProgramResult {
+        instructions::create_pool::handler(ctx, bump, init_tick)
     }
 
     pub fn swap(
