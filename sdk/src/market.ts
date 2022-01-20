@@ -1116,6 +1116,10 @@ export interface PoolStructure {
 export interface Tickmap {
   bitmap: number[]
 }
+export interface TickPosition {
+  byte: number
+  bit: number
+}
 export interface PositionList {
   head: number
   bump: number

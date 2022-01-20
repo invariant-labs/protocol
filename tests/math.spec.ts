@@ -22,10 +22,15 @@ import {
   calculatePriceAfterSlippage,
   findClosestTicks
 } from '@invariant-labs/sdk/src/math'
-import { bigNumberToBuffer, toDecimal } from '@invariant-labs/sdk/src/utils'
+import {
+  bigNumberToBuffer,
+  CloserLimit,
+  getCloserLimit,
+  toDecimal
+} from '@invariant-labs/sdk/src/utils'
 import { setInitialized } from './testUtils'
-import { Decimal } from '@invariant-labs/sdk/src/market'
-import { getSearchLimit } from '@invariant-labs/sdk/src/tickmap'
+import { Decimal, Tickmap } from '@invariant-labs/sdk/src/market'
+import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
 
 describe('Math', () => {
   describe('Test sqrt price calculation', () => {
@@ -945,33 +950,101 @@ describe('Math', () => {
       assert.ok(limit.eq(expected))
     })
     it('At the price limit', async () => {
-      // TODO
-      // const step = new BN(4)
-      // const limit = getSearchLimit(new BN(MAX_TICK - 22), step, true)
-      // const expected = new BN(MAX_TICK - 2)
-      // assert.ok(limit.eq(expected))
+      const step = new BN(4)
+      const limit = getSearchLimit(new BN(MAX_TICK - 2), step, true)
+      const expected = new BN(MAX_TICK - 2)
+      assert.ok(limit.eq(expected))
     })
   })
-  // TODO write unit tests for getCloserLimit
-  // describe('test getCloserLimit', () => {
-  //   it('tick limit closer', async () => {
-  //
-  //     // const closerLimit: CloserLimit = {
-  //     //   sqrtPriceLimit: priceLimit,
-  //     //   xToY: xToY,
-  //     //   currentTick: currentTickIndex,
-  //     //   tickSpacing: tickSpacing,
-  //     //   tickmap: tickmap
-  //     // }
-  //     //const { swapLimit, limitingTick } = getCloserLimit(closerLimit)
-  //   })
-  //   it('trade limit closer', async () => {
-  //   })
-  //   it('other direction', async () => {
-  //
-  //   })
-  //   it('other direction', async () => {
-  //
-  //   })
-  // })
+  describe('test getCloserLimit', () => {
+    it('tick limit closer', async () => {
+      // let tickmap: Tickmap2 = new Tickmap2(25000)
+      // await tickmap.flip(true, new BN(0), new BN(1))
+      const tickmap: Tickmap = { bitmap: new Array(25000).map(i => (i = 0)) }
+      const { byte, bit } = tickToPosition(new BN(0), new BN(1))
+      tickmap.bitmap[byte] ^= 1 << bit
+
+      const closerLimit: CloserLimit = {
+        sqrtPriceLimit: { v: new BN(5).mul(DENOMINATOR) },
+        xToY: true,
+        currentTick: 100,
+        tickSpacing: 1,
+        tickmap: tickmap
+      }
+      const expected = { v: new BN(5).mul(DENOMINATOR) }
+      const { swapLimit, limitingTick } = getCloserLimit(closerLimit)
+      assert.ok(swapLimit.v.eq(expected.v))
+      assert.equal(limitingTick, null)
+    })
+    it('trade limit closer', async () => {
+      // let tickmap: Tickmap2 = new Tickmap2(25000)
+      // await tickmap.flip(true, new BN(0), new BN(1))
+
+      const tickmap: Tickmap = { bitmap: new Array(25000).map(i => (i = 0)) }
+      const { byte, bit } = tickToPosition(new BN(0), new BN(1))
+      tickmap.bitmap[byte] ^= 1 << bit
+
+      const closerLimit: CloserLimit = {
+        sqrtPriceLimit: { v: new BN(5).mul(new BN(10).pow(new BN(11))) },
+        xToY: true,
+        currentTick: 100,
+        tickSpacing: 1,
+        tickmap: tickmap
+      }
+
+      const { swapLimit, limitingTick } = getCloserLimit(closerLimit)
+
+      const expected = { v: new BN(1).mul(DENOMINATOR) }
+
+      assert.ok(swapLimit.v.eq(expected.v))
+      assert.equal(limitingTick?.index, 0)
+      assert.equal(limitingTick?.initialized, true)
+    })
+    it('other direction', async () => {
+      const tickmap: Tickmap = { bitmap: new Array(25000).map(i => (i = 0)) }
+      const { byte, bit } = tickToPosition(new BN(0), new BN(1))
+      tickmap.bitmap[byte] ^= 1 << bit
+
+      // let tickmap: Tickmap2 = new Tickmap2(25000)
+      // await tickmap.flip(true, new BN(0), new BN(1))
+      const closerLimit: CloserLimit = {
+        sqrtPriceLimit: { v: new BN(2).mul(DENOMINATOR) },
+        xToY: false,
+        currentTick: -5,
+        tickSpacing: 1,
+        tickmap: tickmap
+      }
+
+      const { swapLimit, limitingTick } = getCloserLimit(closerLimit)
+
+      const expected = { v: new BN(1).mul(DENOMINATOR) }
+
+      assert.ok(swapLimit.v.eq(expected.v))
+      assert.equal(limitingTick?.index, 0)
+      assert.equal(limitingTick?.initialized, true)
+    })
+    it('other direction', async () => {
+      // let tickmap: Tickmap2 = new Tickmap2(25000)
+      // await tickmap.flip(true, new BN(0), new BN(1))
+
+      const tickmap: Tickmap = { bitmap: new Array(25000).map(i => (i = 0)) }
+      const { byte, bit } = tickToPosition(new BN(0), new BN(1))
+      tickmap.bitmap[byte] ^= 1 << bit
+
+      const closerLimit: CloserLimit = {
+        sqrtPriceLimit: { v: new BN(1).mul(new BN(10).pow(new BN(11))) },
+        xToY: false,
+        currentTick: -100,
+        tickSpacing: 10,
+        tickmap: tickmap
+      }
+
+      const { swapLimit, limitingTick } = getCloserLimit(closerLimit)
+
+      const expected = { v: new BN(1).mul(new BN(10).pow(new BN(11))) }
+
+      assert.ok(swapLimit.v.eq(expected.v))
+      assert.equal(limitingTick, null)
+    })
+  })
 })

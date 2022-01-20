@@ -65,9 +65,7 @@ describe('swap', () => {
   it('#create()', async () => {
     const createPoolVars: CreatePool = {
       pair,
-      payer: admin,
-      tokenX,
-      tokenY
+      payer: admin
     }
     await market.createPool(createPoolVars)
 
@@ -171,7 +169,6 @@ describe('swap', () => {
     const reserveYDelta = reserveYAfter.sub(reserveYBefore)
 
     assert.ok(amountX.eqn(7496))
-    console.log(amountY.toString())
     assert.ok(amountY.eqn(12477))
     assert.ok(reserveXDelta.eqn(2504))
     assert.ok(reserveYDelta.eqn(2477))

@@ -53,7 +53,6 @@ pub fn get_closer_limit(
     } else {
         tickmap.next_initialized(current_tick, tick_spacing)
     };
-
     match closes_tick_index {
         Some(index) => {
             let price = calculate_price_sqrt(index);
@@ -240,7 +239,6 @@ mod test {
     fn test_get_closer_limit() -> Result<()> {
         let tickmap = &mut Tickmap::default();
         tickmap.flip(true, 0, 1);
-
         // tick limit closer
         {
             let (result, from_tick) =

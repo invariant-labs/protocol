@@ -75,17 +75,13 @@ describe('compare', () => {
   it('#create()', async () => {
     const createPoolVars: CreatePool = {
       pair: firstPair,
-      payer: admin,
-      tokenX,
-      tokenY
+      payer: admin
     }
     await market.createPool(createPoolVars)
 
     const createPoolVars2: CreatePool = {
       pair: secondPair,
-      payer: admin,
-      tokenX: tokenZ,
-      tokenY: tokenW
+      payer: admin
     }
     await market.createPool(createPoolVars2)
 

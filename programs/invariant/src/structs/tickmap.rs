@@ -268,7 +268,7 @@ mod tests {
             map.flip(true, 0, 1);
             assert_eq!(map.next_initialized(-TICK_SEARCH_RANGE - 1, 1), None);
         }
-        // Farther than limit
+        // Further than limit
         {
             let mut map = Tickmap::default();
 

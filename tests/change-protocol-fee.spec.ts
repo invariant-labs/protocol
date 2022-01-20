@@ -74,9 +74,7 @@ describe('change-protocol-fee', () => {
     // 0.6% / 10
     const createPoolVars: CreatePool = {
       pair,
-      payer: feeReceiver,
-      tokenX,
-      tokenY
+      payer: feeReceiver
     }
     await market.createPool(createPoolVars)
     const createdPool = await market.getPool(pair)

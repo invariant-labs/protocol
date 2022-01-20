@@ -86,8 +86,6 @@ describe('Position list', () => {
       const createPoolVars: CreatePool = {
         pair,
         payer: admin,
-        tokenX,
-        tokenY,
         initTick
       }
       await market.createPool(createPoolVars)
