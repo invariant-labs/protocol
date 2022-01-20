@@ -124,9 +124,7 @@ export const createTokensAndPool = async (
   const createPoolVars: CreatePool = {
     pair,
     payer: payer,
-    initTick,
-    tokenX,
-    tokenY
+    initTick
   }
   await market.createPool(createPoolVars)
 

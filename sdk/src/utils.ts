@@ -239,11 +239,10 @@ export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
   } else {
     index = getNextTick(tickmap, currentTick, tickSpacing)
   }
-
   let sqrtPrice: Decimal
   let init: boolean
 
-  if (index != null) {
+  if (index !== null) {
     sqrtPrice = calculatePriceSqrt(index)
     init = true
   } else {
@@ -251,7 +250,6 @@ export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
     sqrtPrice = calculatePriceSqrt(index)
     init = false
   }
-
   if (xToY && sqrtPrice.v.gt(sqrtPriceLimit.v) && index !== null) {
     return { swapLimit: sqrtPrice, limitingTick: { index, initialized: init } }
   } else if (!xToY && sqrtPrice.v.lt(sqrtPriceLimit.v) && index !== null) {

@@ -961,7 +961,7 @@ describe('Math', () => {
     it('tick limit closer', async () => {
       // let tickmap: Tickmap2 = new Tickmap2(25000)
       // await tickmap.flip(true, new BN(0), new BN(1))
-      let tickmap: Tickmap = { bitmap: new Array(25000).map(i => (i = 0)) }
+      const tickmap: Tickmap = { bitmap: new Array(25000).map(i => (i = 0)) }
       const { byte, bit } = tickToPosition(new BN(0), new BN(1))
       tickmap.bitmap[byte] ^= 1 << bit
 
@@ -981,7 +981,7 @@ describe('Math', () => {
       // let tickmap: Tickmap2 = new Tickmap2(25000)
       // await tickmap.flip(true, new BN(0), new BN(1))
 
-      let tickmap: Tickmap = { bitmap: new Array(25000).map(i => (i = 0)) }
+      const tickmap: Tickmap = { bitmap: new Array(25000).map(i => (i = 0)) }
       const { byte, bit } = tickToPosition(new BN(0), new BN(1))
       tickmap.bitmap[byte] ^= 1 << bit
 
@@ -1002,7 +1002,7 @@ describe('Math', () => {
       assert.equal(limitingTick?.initialized, true)
     })
     it('other direction', async () => {
-      let tickmap: Tickmap = { bitmap: new Array(25000).map(i => (i = 0)) }
+      const tickmap: Tickmap = { bitmap: new Array(25000).map(i => (i = 0)) }
       const { byte, bit } = tickToPosition(new BN(0), new BN(1))
       tickmap.bitmap[byte] ^= 1 << bit
 
@@ -1019,18 +1019,16 @@ describe('Math', () => {
       const { swapLimit, limitingTick } = getCloserLimit(closerLimit)
 
       const expected = { v: new BN(1).mul(DENOMINATOR) }
-      console.log(expected.v.toString())
-      console.log(swapLimit.v.toString())
 
-      // assert.ok(swapLimit.v.eq(expected.v))
-      // assert.equal(limitingTick?.index, 0)
-      // assert.equal(limitingTick?.initialized, true)
+      assert.ok(swapLimit.v.eq(expected.v))
+      assert.equal(limitingTick?.index, 0)
+      assert.equal(limitingTick?.initialized, true)
     })
     it('other direction', async () => {
       // let tickmap: Tickmap2 = new Tickmap2(25000)
       // await tickmap.flip(true, new BN(0), new BN(1))
 
-      let tickmap: Tickmap = { bitmap: new Array(25000).map(i => (i = 0)) }
+      const tickmap: Tickmap = { bitmap: new Array(25000).map(i => (i = 0)) }
       const { byte, bit } = tickToPosition(new BN(0), new BN(1))
       tickmap.bitmap[byte] ^= 1 << bit
 
@@ -1045,8 +1043,6 @@ describe('Math', () => {
       const { swapLimit, limitingTick } = getCloserLimit(closerLimit)
 
       const expected = { v: new BN(1).mul(new BN(10).pow(new BN(11))) }
-      console.log(expected.v.toString())
-      console.log(swapLimit.v.toString())
 
       assert.ok(swapLimit.v.eq(expected.v))
       assert.equal(limitingTick, null)

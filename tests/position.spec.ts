@@ -68,8 +68,6 @@ describe('position', () => {
     const createPoolVars: CreatePool = {
       pair: spoofPair,
       payer: admin,
-      tokenX,
-      tokenY,
       initTick
     }
     await assertThrowsAsync(market.createPool(createPoolVars))
@@ -81,8 +79,6 @@ describe('position', () => {
     const createPoolVars: CreatePool = {
       pair,
       payer: admin,
-      tokenX,
-      tokenY,
       initTick
     }
     await market.createPool(createPoolVars)

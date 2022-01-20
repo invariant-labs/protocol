@@ -65,8 +65,6 @@ describe('limits', () => {
 
     const amount = new BN(1e9)
 
-    let prevFee = (await market.getPool(pair)).feeGrowthGlobalX.v
-
     const chunk = 200
     const repeats = Infinity
 
@@ -104,18 +102,6 @@ describe('limits', () => {
       })
 
       await Promise.all(swaps)
-
-      const poolAfter = await market.getPool(pair)
-      const priceAfter = poolAfter.sqrtPrice.v
-
-      if (i % 100 === 0) {
-        console.log(`${i} swaps done`)
-        console.log(`price: ${priceAfter.toString()}`)
-        console.log(`fee: ${prevFee.mul(DENOMINATOR).toString()}`)
-        console.log(`fee delta: ${prevFee.sub(poolAfter.feeGrowthGlobalX.v).toString()}`)
-      }
-
-      prevFee = poolAfter.feeGrowthGlobalX.v
     }
   })
 })
