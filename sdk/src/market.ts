@@ -24,6 +24,7 @@ import {
 import { Invariant, IDL } from './idl/invariant'
 import { ComputeUnitsInstruction, IWallet, Pair, signAndSend } from '.'
 import { getMarketAddress, Network } from './network'
+import { bs58 } from '@project-serum/anchor/dist/cjs/utils/bytes'
 
 const POSITION_SEED = 'positionv1'
 const TICK_SEED = 'tickv1'
@@ -215,6 +216,17 @@ export class Market {
       await Promise.all(indexes.map(index => this.getTickAddress(pair, index)))
     ).map(a => a.tickAddress)
     return (await this.program.account.tick.fetchMultiple(ticksArray)) as Tick[]
+  }
+
+  async getAllTicks(pair: Pair) {
+    const poolPublicKey = await pair.getAddress(this.program.programId)
+    return (
+      await this.program.account.tick.all([
+        {
+          memcmp: { bytes: bs58.encode(poolPublicKey.toBuffer()), offset: 8 }
+        }
+      ])
+    ).map(a => a.account) as Tick[]
   }
 
   async getLiquidityOnTicks(pair: Pair) {
@@ -737,6 +749,12 @@ export class Market {
 
   async swap(swap: Swap, signer: Keypair, overridePriceLimit?: BN) {
     const tx = await this.swapTransaction(swap, overridePriceLimit)
+
+    await signAndSend(tx, [signer], this.connection)
+  }
+
+  async swapSplit(swap: Swap, signer: Keypair, overridePriceLimit?: BN) {
+    const tx = await this.swapTransactionSplit(swap, overridePriceLimit)
 
     await signAndSend(tx, [signer], this.connection)
   }

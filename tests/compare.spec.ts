@@ -10,7 +10,8 @@ import {
   CreateFeeTier,
   CreatePool,
   InitPosition,
-  Swap
+  Swap,
+  swapLimit
 } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
@@ -194,7 +195,7 @@ describe('compare', () => {
       accountY,
       byAmountIn: true
     }
-    await market.swap(swapVars, owner)
+    await market.swapSplit(swapVars, owner)
 
     // make swap on second pool without simulation TODO
     const swapVars2: Swap = {

@@ -53,7 +53,6 @@ pub fn get_closer_limit(
     } else {
         tickmap.next_initialized(current_tick, tick_spacing)
     };
-    msg!("closes_tick_index: {:?}", closes_tick_index);
     match closes_tick_index {
         Some(index) => {
             let price = calculate_price_sqrt(index);
