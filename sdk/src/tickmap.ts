@@ -107,3 +107,15 @@ export const getNextTick = (
   }
   return null
 }
+
+export const tickToPosition = (tick: BN, tickSpacing: BN): TickPosition => {
+  if (!tick.mod(tickSpacing).eqn(0)) {
+    throw new Error('Tick not divisible by spacing')
+  }
+
+  const bitmapIndex = tick.div(tickSpacing).addn(TICK_LIMIT)
+  const byte = bitmapIndex.divn(8).toNumber()
+  const bit = bitmapIndex.modn(8)
+
+  return { byte, bit }
+}
