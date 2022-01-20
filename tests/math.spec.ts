@@ -956,7 +956,6 @@ describe('Math', () => {
       assert.ok(limit.eq(expected))
     })
   })
-  // TODO write unit tests for getCloserLimit
   describe('test getCloserLimit', () => {
     it('tick limit closer', async () => {
       // let tickmap: Tickmap2 = new Tickmap2(25000)
