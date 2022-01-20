@@ -121,28 +121,18 @@ export type Amm = {
         },
         {
           "name": "tokenXReserve",
-          "isMut": true,
-          "isSigner": true
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "tokenYReserve",
-          "isMut": true,
-          "isSigner": true
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "payer",
           "isMut": true,
           "isSigner": true
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
         },
         {
           "name": "rent",
@@ -1557,28 +1547,18 @@ export const IDL: Amm = {
         },
         {
           "name": "tokenXReserve",
-          "isMut": true,
-          "isSigner": true
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "tokenYReserve",
-          "isMut": true,
-          "isSigner": true
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "payer",
           "isMut": true,
           "isSigner": true
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
         },
         {
           "name": "rent",
