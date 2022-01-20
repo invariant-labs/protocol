@@ -22,6 +22,7 @@ export const FEE_DECIMAL = 5
 export const DENOMINATOR = new BN(10).pow(new BN(DECIMAL))
 export const FEE_OFFSET = new BN(10).pow(new BN(DECIMAL - FEE_DECIMAL))
 export const FEE_DENOMINATOR = 10 ** FEE_DECIMAL
+export const U128MAX = new BN('340282366920938463463374607431768211455')
 
 export enum ERRORS {
   SIGNATURE = 'Error: Signature verification failed',
@@ -406,28 +407,43 @@ export const calculateClaimAmount = ({
   let feeGrowthAboveX: BN
   let feeGrowthAboveY: BN
 
+  const lowerDiffX: BN = feeGrowthGlobalX.v.sub(tickLower.feeGrowthOutsideX.v)
+  const lowerDiffY: BN = feeGrowthGlobalY.v.sub(tickLower.feeGrowthOutsideY.v)
+  const upperDiffX: BN = feeGrowthGlobalX.v.sub(tickUpper.feeGrowthOutsideX.v)
+  const upperDiffY: BN = feeGrowthGlobalY.v.sub(tickUpper.feeGrowthOutsideY.v)
+
   // calculate fee growth below
   if (currentAboveLower) {
     feeGrowthBelowX = tickLower.feeGrowthOutsideX.v
-  } else {
-    feeGrowthBelowX = feeGrowthGlobalX.v.sub(tickLower.feeGrowthOutsideX.v)
-  }
-  if (currentAboveLower) {
     feeGrowthBelowY = tickLower.feeGrowthOutsideY.v
   } else {
-    feeGrowthBelowY = feeGrowthGlobalY.v.sub(tickLower.feeGrowthOutsideY.v)
+    if (feeGrowthGlobalX.v.gte(tickLower.feeGrowthOutsideX.v)) {
+      feeGrowthBelowX = lowerDiffX
+    } else {
+      feeGrowthBelowX = U128MAX.sub(lowerDiffX.abs())
+    }
+    if (feeGrowthGlobalY.v.gte(tickLower.feeGrowthOutsideY.v)) {
+      feeGrowthBelowY = lowerDiffY
+    } else {
+      feeGrowthBelowY = U128MAX.sub(lowerDiffY.abs())
+    }
   }
 
   // calculate fee growth above
   if (currentBelowUpper) {
     feeGrowthAboveX = tickUpper.feeGrowthOutsideX.v
-  } else {
-    feeGrowthAboveX = feeGrowthGlobalX.v.sub(tickUpper.feeGrowthOutsideX.v)
-  }
-  if (currentBelowUpper) {
     feeGrowthAboveY = tickUpper.feeGrowthOutsideY.v
   } else {
-    feeGrowthAboveY = feeGrowthGlobalY.v.sub(tickUpper.feeGrowthOutsideY.v)
+    if (feeGrowthGlobalX.v.gte(tickUpper.feeGrowthOutsideX.v)) {
+      feeGrowthAboveX = upperDiffX
+    } else {
+      U128MAX.sub(upperDiffX.abs())
+    }
+    if (feeGrowthGlobalY.v.gte(tickUpper.feeGrowthOutsideY.v)) {
+      feeGrowthAboveY = upperDiffY
+    } else {
+      U128MAX.sub(upperDiffY.abs())
+    }
   }
 
   // calculate fee growth inside
