@@ -753,6 +753,12 @@ export class Market {
     await signAndSend(tx, [signer], this.connection)
   }
 
+  async swapSplit(swap: Swap, signer: Keypair, overridePriceLimit?: BN) {
+    const tx = await this.swapTransactionSplit(swap, overridePriceLimit)
+
+    await signAndSend(tx, [signer], this.connection)
+  }
+
   async getReserveBalances(pair: Pair, tokenX: Token, tokenY: Token) {
     const state = await this.getPool(pair)
 
