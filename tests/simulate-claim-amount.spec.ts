@@ -1,21 +1,22 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
-import { Market, Network, Pair, DENOMINATOR } from '@invariant-labs/sdk'
 import { Keypair } from '@solana/web3.js'
-import { createToken } from '../tests/testUtils'
+import { Network, Market, Pair, DENOMINATOR, TICK_LIMIT, tou64 } from '@invariant-labs/sdk'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { toDecimal } from '../sdk-staker/lib/utils'
-import { fromFee, tou64 } from '@invariant-labs/sdk/lib/utils'
+import { createToken } from './testUtils'
+import { assert } from 'chai'
+import { fromFee } from '@invariant-labs/sdk/lib/utils'
+import { FeeTier } from '@invariant-labs/sdk/lib/market'
+import { calculateClaimAmount, toDecimal } from '@invariant-labs/sdk/src/utils'
 import {
+  ClaimFee,
   CreateFeeTier,
   CreatePool,
-  CreateTick,
-  FeeTier,
   InitPosition,
   Swap
 } from '@invariant-labs/sdk/src/market'
 
-describe('Withdraw tests', () => {
+describe('claim', () => {
   const provider = Provider.local()
   const connection = provider.connection
   // @ts-expect-error
@@ -23,11 +24,11 @@ describe('Withdraw tests', () => {
   const mintAuthority = Keypair.generate()
   const positionOwner = Keypair.generate()
   const admin = Keypair.generate()
+  let market: Market
   const feeTier: FeeTier = {
-    fee: fromFee(new BN(600)),
+    fee: fromFee(new BN(600)), // 0.6%
     tickSpacing: 10
   }
-  let market: Market
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -54,46 +55,51 @@ describe('Withdraw tests', () => {
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
-
+  })
+  it('#createState()', async () => {
     await market.createState(admin.publicKey, admin)
+    const state = await market.getState()
+    const { bump } = await market.getStateAddress()
+    const { programAuthority, nonce } = await market.getProgramAuthority()
 
+    assert.ok(state.admin.equals(admin.publicKey))
+    assert.ok(state.authority.equals(programAuthority))
+    assert.ok(state.nonce === nonce)
+    assert.ok(state.bump === bump)
+  })
+  it('#createFeeTier()', async () => {
     const createFeeTierVars: CreateFeeTier = {
       feeTier,
       admin: admin.publicKey
     }
     await market.createFeeTier(createFeeTierVars, admin)
-
+  })
+  it('#create()', async () => {
     const createPoolVars: CreatePool = {
       pair,
-      payer: admin,
-      tokenX,
-      tokenY
+      payer: admin
     }
     await market.createPool(createPoolVars)
+    const createdPool = await market.getPool(pair)
+    assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
+    assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
+    assert.ok(createdPool.fee.v.eq(feeTier.fee))
+    assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
+    assert.ok(createdPool.liquidity.v.eqn(0))
+    assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR))
+    assert.ok(createdPool.currentTickIndex === 0)
+    assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
+    assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
+    assert.ok(createdPool.feeProtocolTokenX.eqn(0))
+    assert.ok(createdPool.feeProtocolTokenY.eqn(0))
 
-    // create tokens
-    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+    const tickmapData = await market.getTickmap(pair)
+    assert.ok(tickmapData.bitmap.length === TICK_LIMIT / 4)
+    assert.ok(tickmapData.bitmap.every(v => v === 0))
   })
-  it('Claim', async () => {
-    // create position
-    await connection.requestAirdrop(positionOwner.publicKey, 1e9)
-    const upperTick = 50
-    const lowerTick = -50
-
-    const createTickVars: CreateTick = {
-      pair,
-      index: upperTick,
-      payer: admin.publicKey
-    }
-    await market.createTick(createTickVars, admin)
-
-    const createTickVars2: CreateTick = {
-      pair,
-      index: lowerTick,
-      payer: admin.publicKey
-    }
-    await market.createTick(createTickVars2, admin)
+  it('#claim', async () => {
+    const upperTick = 10
+    const lowerTick = -20
 
     const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
     const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
@@ -117,43 +123,97 @@ describe('Withdraw tests', () => {
     }
     await market.initPosition(initPositionVars, positionOwner)
 
-    // Create owner
-    const trader = Keypair.generate()
-    await connection.requestAirdrop(trader.publicKey, 1e9)
-    const amount = new BN(10000)
+    assert.ok((await market.getPool(pair)).liquidity.v.eq(liquidityDelta.v))
 
-    const accountX = await tokenX.createAccount(trader.publicKey)
-    const accountY = await tokenY.createAccount(trader.publicKey)
+    const swapper = Keypair.generate()
+    await connection.requestAirdrop(swapper.publicKey, 1e9)
+
+    const amount = new BN(1000)
+    const accountX = await tokenX.createAccount(swapper.publicKey)
+    const accountY = await tokenY.createAccount(swapper.publicKey)
 
     await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
-    await tokenY.mintTo(accountY, mintAuthority.publicKey, [mintAuthority], tou64(amount))
-    // Swap
+
     const poolDataBefore = await market.getPool(pair)
+    const reservesBeforeSwap = await market.getReserveBalances(pair, tokenX, tokenY)
 
     const swapVars: Swap = {
       pair,
+      owner: swapper.publicKey,
       xToY: true,
-      amount: new BN(1000),
+      amount,
       knownPrice: poolDataBefore.sqrtPrice,
       slippage: toDecimal(1, 2),
       accountX,
       accountY,
-      byAmountIn: true,
-      owner: trader.publicKey
+      byAmountIn: true
     }
-    await market.swap(swapVars, trader)
+    await market.swap(swapVars, swapper)
 
-    const swapVars2: Swap = {
+    const poolDataAfter = await market.getPool(pair)
+    assert.ok(poolDataAfter.liquidity.v.eq(poolDataBefore.liquidity.v))
+    assert.ok(poolDataAfter.currentTickIndex === lowerTick)
+    assert.ok(poolDataAfter.sqrtPrice.v.lt(poolDataBefore.sqrtPrice.v))
+
+    const amountX = (await tokenX.getAccountInfo(accountX)).amount
+    const amountY = (await tokenY.getAccountInfo(accountY)).amount
+    const reservesAfterSwap = await market.getReserveBalances(pair, tokenX, tokenY)
+    const reserveXDelta = reservesAfterSwap.x.sub(reservesBeforeSwap.x)
+    const reserveYDelta = reservesBeforeSwap.y.sub(reservesAfterSwap.y)
+
+    assert.ok(amountX.eqn(0))
+    assert.ok(amountY.eq(amount.subn(7)))
+    assert.ok(reserveXDelta.eq(amount))
+    assert.ok(reserveYDelta.eq(amount.subn(7)))
+    assert.ok(poolDataAfter.feeGrowthGlobalX.v.eq(new BN('4000000000000000000')))
+    assert.ok(poolDataAfter.feeGrowthGlobalY.v.eqn(0))
+    assert.ok(poolDataAfter.feeProtocolTokenX.eqn(2))
+    assert.ok(poolDataAfter.feeProtocolTokenY.eqn(0))
+
+    const positionBeforeClaim = await market.getPosition(positionOwner.publicKey, 0)
+    const tickUpperStruct = await market.getTick(pair, upperTick)
+    const tickLowerStruct = await market.getTick(pair, lowerTick)
+
+    const [tokens_owed_x_total, tokens_owed_y_total] = calculateClaimAmount({
+      position: positionBeforeClaim,
+      tickLower: tickLowerStruct,
+      tickUpper: tickUpperStruct,
+      tickCurrent: poolDataAfter.currentTickIndex,
+      feeGrowthGlobalX: poolDataAfter.feeGrowthGlobalX,
+      feeGrowthGlobalY: poolDataAfter.feeGrowthGlobalY
+    })
+    // console.log('##############', tokens_owed_x_total.div(DENOMINATOR.mul(DENOMINATOR)).toString())
+    // console.log('##############', tokens_owed_y_total.toString())
+
+    const reservesBeforeClaim = await market.getReserveBalances(pair, tokenX, tokenY)
+    const userTokenXAccountBeforeClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
+    const claimFeeVars: ClaimFee = {
       pair,
-      xToY: false,
-      amount: new BN(2000),
-      knownPrice: poolDataBefore.sqrtPrice,
-      slippage: toDecimal(1, 2),
-      accountX,
-      accountY,
-      byAmountIn: true,
-      owner: trader.publicKey
+      owner: positionOwner.publicKey,
+      userTokenX: userTokenXAccount,
+      userTokenY: userTokenYAccount,
+      index: 0
     }
-    await market.swap(swapVars2, trader)
+    await market.claimFee(claimFeeVars, positionOwner)
+
+    const userTokenXAccountAfterClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
+    const positionAfterClaim = await market.getPosition(positionOwner.publicKey, 0)
+    const reservesAfterClaim = await market.getReserveBalances(pair, tokenX, tokenY)
+    const expectedTokensClaimed = 4
+
+    assert.ok(reservesBeforeClaim.x.subn(4).eq(reservesAfterClaim.x))
+    assert.ok(positionAfterClaim.tokensOwedX.v.eqn(0))
+    assert.ok(positionAfterClaim.feeGrowthInsideX.v.eq(poolDataAfter.feeGrowthGlobalX.v))
+    assert.ok(
+      userTokenXAccountAfterClaim.sub(userTokenXAccountBeforeClaim).eqn(expectedTokensClaimed)
+    )
+    // console.log(positionAfterClaim.tokensOwedX.v.toString())
+    // console.log(userTokenXAccountAfterClaim.sub(userTokenXAccountBeforeClaim).toString())
+
+    assert.ok(
+      userTokenXAccountAfterClaim
+        .sub(userTokenXAccountBeforeClaim)
+        .eq(tokens_owed_x_total.div(DENOMINATOR.mul(DENOMINATOR)))
+    )
   })
 })

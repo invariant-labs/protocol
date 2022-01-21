@@ -1,6 +1,6 @@
 import { BN } from '@project-serum/anchor'
 import { MAX_TICK, TICK_LIMIT, TICK_SEARCH_RANGE } from '.'
-import { Tickmap } from './market'
+import { Tickmap, TickPosition } from './market'
 
 export const getSearchLimit = (currentTickIndex: BN, tickSpacing: BN, up: boolean): BN => {
   const index = currentTickIndex.div(tickSpacing)
@@ -26,41 +26,32 @@ export const getPreviousTick = (
   currentTickIndex: number,
   tickSpacing: number
 ): number | null => {
-  if (currentTickIndex % tickSpacing !== 0) {
-    throw new Error('Tick not divisible by spacing')
-  }
+  const limit = getSearchLimit(new BN(currentTickIndex), new BN(tickSpacing), false)
+  let { byte, bit } = tickToPosition(new BN(currentTickIndex), new BN(tickSpacing))
+  const { byte: limitingByte, bit: limitingBit } = tickToPosition(limit, new BN(tickSpacing))
 
-  const indexWithoutSpacing = currentTickIndex / tickSpacing
-  const bitmapIndex = indexWithoutSpacing + TICK_LIMIT
-  const limit = getSearchLimit(new BN(currentTickIndex), new BN(tickSpacing), false).toNumber()
+  while (byte > limitingByte || (byte === limitingByte && bit >= limitingBit)) {
+    let mask = 1 << bit
+    const value = tickmap.bitmap[byte]
 
-  let byteIndex = Math.floor(bitmapIndex / 8)
-  let bitIndex = Math.abs(bitmapIndex % 8)
-
-  while (byteIndex * 8 + bitIndex >= limit) {
-    let mask = 1 << bitIndex
-    const byte = tickmap.bitmap[byteIndex]
-    if (byte % (mask << 1) > 0) {
-      while ((byte & mask) === 0) {
-        mask = mask >> 1
-        bitIndex = bitIndex - 1
+    if (value % (mask << 1) > 0) {
+      while ((value & mask) === 0) {
+        mask >>= 1
+        bit -= 1
       }
 
-      const index = byteIndex * 8 + bitIndex
-      if (index >= limit) {
-        const foundIndex = index - TICK_LIMIT
-        if (foundIndex <= -TICK_LIMIT) {
-          throw new Error('Tick is at limit')
-        }
-        return foundIndex * tickSpacing
+      if (byte > limitingByte || (byte === limitingByte && bit >= limitingBit)) {
+        const index = byte * 8 + bit
+        return (index - TICK_LIMIT) * tickSpacing
       } else {
         return null
       }
     }
 
-    byteIndex -= 1
-    bitIndex = 7
+    byte -= 1
+    bit = 7
   }
+
   return null
 }
 
@@ -69,41 +60,45 @@ export const getNextTick = (
   currentTickIndex: number,
   tickSpacing: number
 ): number | null => {
-  if (currentTickIndex % tickSpacing !== 0) {
-    throw new Error('Tick not divisible by spacing')
-  }
+  const limit: BN = getSearchLimit(new BN(currentTickIndex), new BN(tickSpacing), true)
 
-  const indexWithoutSpacing = currentTickIndex / tickSpacing
-  const bitmapIndex = indexWithoutSpacing + TICK_LIMIT + 1
-  const limit = getSearchLimit(new BN(currentTickIndex), new BN(tickSpacing), true).toNumber()
+  let { byte, bit } = tickToPosition(new BN(currentTickIndex + tickSpacing), new BN(tickSpacing))
+  const { byte: limitingByte, bit: limitingBit } = tickToPosition(
+    new BN(limit),
+    new BN(tickSpacing)
+  )
 
-  let byteIndex = Math.floor(bitmapIndex / 8)
-  let bitIndex = Math.abs(bitmapIndex % 8)
-
-  while (byteIndex * 8 + bitIndex <= limit) {
-    let shifted = tickmap.bitmap[byteIndex] >> bitIndex
-
+  while (byte < limitingByte || (byte === limitingByte && bit <= limitingBit)) {
+    let shifted: number = tickmap.bitmap[byte] >> bit
     if (shifted !== 0) {
       while (shifted % 2 === 0) {
         shifted >>= 1
-        bitIndex += 1
+        bit += 1
       }
 
-      const index = byteIndex * 8 + bitIndex
-
-      if (index <= limit) {
-        const foundIndex = index - TICK_LIMIT
-        if (foundIndex >= TICK_LIMIT) {
-          throw new Error('Tick is at limit')
-        }
-        return foundIndex * tickSpacing
+      if (byte < limitingByte || (byte === limitingByte && bit <= limitingBit)) {
+        const index: number = byte * 8 + bit
+        return (index - TICK_LIMIT) * tickSpacing
       } else {
         return null
       }
     }
 
-    byteIndex = byteIndex + 1
-    bitIndex = 0
+    byte += 1
+    bit = 0
   }
+
   return null
+}
+
+export const tickToPosition = (tick: BN, tickSpacing: BN): TickPosition => {
+  if (!tick.mod(tickSpacing).eqn(0)) {
+    throw new Error('Tick not divisible by spacing')
+  }
+
+  const bitmapIndex = tick.div(tickSpacing).addn(TICK_LIMIT)
+  const byte = bitmapIndex.divn(8).toNumber()
+  const bit = Math.abs(bitmapIndex.modn(8))
+
+  return { byte, bit }
 }

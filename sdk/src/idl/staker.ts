@@ -41,7 +41,7 @@ export type Staker = {
           "isSigner": false
         },
         {
-          "name": "invariant",
+          "name": "amm",
           "isMut": false,
           "isSigner": false
         },
@@ -101,7 +101,7 @@ export type Staker = {
           "isSigner": true
         },
         {
-          "name": "invariant",
+          "name": "amm",
           "isMut": false,
           "isSigner": false
         },
@@ -171,7 +171,7 @@ export type Staker = {
           "isSigner": false
         },
         {
-          "name": "invariant",
+          "name": "amm",
           "isMut": false,
           "isSigner": false
         },
@@ -462,7 +462,7 @@ export const IDL: Staker = {
           "isSigner": false
         },
         {
-          "name": "invariant",
+          "name": "amm",
           "isMut": false,
           "isSigner": false
         },
@@ -522,7 +522,7 @@ export const IDL: Staker = {
           "isSigner": true
         },
         {
-          "name": "invariant",
+          "name": "amm",
           "isMut": false,
           "isSigner": false
         },
@@ -592,7 +592,7 @@ export const IDL: Staker = {
           "isSigner": false
         },
         {
-          "name": "invariant",
+          "name": "amm",
           "isMut": false,
           "isSigner": false
         },
