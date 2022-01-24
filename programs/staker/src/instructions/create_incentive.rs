@@ -1,6 +1,7 @@
 use crate::decimal::*;
 use crate::structs::*;
 use crate::util::get_current_timestamp;
+use anchor_spl::token::Mint;
 use invariant::program::Invariant;
 use invariant::structs::Pool;
 use anchor_lang::prelude::*;
@@ -11,24 +12,27 @@ const MAX_TIME_BEFORE_START: u64 = 3_600; //hour in sec
 const MAX_DURATION: u64 = 31_556_926; //year in sec
 
 #[derive(Accounts)]
-#[instruction(bump: u8)]
+#[instruction(nonce: u8)]
 pub struct CreateIncentive<'info> {
     #[account(init, payer = founder)]
     pub incentive: AccountLoader<'info, Incentive>,
-    #[account(mut,
-        constraint = &incentive_token_account.owner == staker_authority.to_account_info().key
+    #[account(init,
+        token::mint = incentive_token,
+        token::authority = staker_authority,
+        payer = founder,
     )]
     pub incentive_token_account: Account<'info, TokenAccount>,
     #[account(mut,
         constraint = founder_token_account.to_account_info().key != incentive_token_account.to_account_info().key,
+        constraint = founder_token_account.mint == incentive_token.key(),
         constraint = &founder_token_account.owner == founder.to_account_info().key
     )]
     pub founder_token_account: Account<'info, TokenAccount>,
-    //TODO: Add token account and validate mints
     pub pool: AccountLoader<'info, Pool>,
     #[account(mut)]
     pub founder: Signer<'info>,
-    //TODO: save staker_authority in state
+    pub incentive_token: Account<'info, Mint>,
+    #[account(seeds = [b"staker_invt".as_ref()], bump = nonce)]
     pub staker_authority: AccountInfo<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
