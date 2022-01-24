@@ -125,6 +125,11 @@ pub mod invariant {
     ) -> ProgramResult {
         instructions::change_protocol_fee::handler(ctx, protocol_fee)
     }
+
+    #[access_control(admin(&ctx.accounts.state, &ctx.accounts.admin))]
+    pub fn change_fee_receiver(ctx: Context<ChangeFeeReceiver>) -> ProgramResult {
+        instructions::change_fee_receiver::handler(ctx)
+    }
 }
 
 fn admin(state_loader: &AccountLoader<State>, signer: &AccountInfo) -> Result<()> {

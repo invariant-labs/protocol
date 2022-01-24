@@ -1064,6 +1064,37 @@ export class Market {
 
     await signAndSend(tx, [signer], this.connection)
   }
+
+  async changeFeeReceiverInstruction(changeFeeReceiver: ChangeFeeReceiver) {
+    const { pair, feeReceiver } = changeFeeReceiver
+    const adminPubkey = changeFeeReceiver.admin ?? this.wallet.publicKey
+    const { address: stateAddress } = await this.getStateAddress()
+    const poolAddress = await pair.getAddress(this.program.programId)
+
+    return this.program.instruction.changeFeeReceiver({
+      accounts: {
+        state: stateAddress,
+        pool: poolAddress,
+        tokenX: pair.tokenX,
+        tokenY: pair.tokenY,
+        admin: adminPubkey,
+        feeReceiver: feeReceiver,
+        programAuthority: this.programAuthority
+      }
+    })
+  }
+
+  async changeFeeReceiverTransaction(changeFeeReceiver: ChangeFeeReceiver) {
+    const ix = await this.changeFeeReceiverInstruction(changeFeeReceiver)
+
+    return new Transaction().add(ix)
+  }
+
+  async changeFeeReceiver(changeFeeReceiver: ChangeFeeReceiver, signer: Keypair) {
+    const tx = await this.changeFeeReceiverTransaction(changeFeeReceiver)
+
+    await signAndSend(tx, [signer], this.connection)
+  }
 }
 
 export interface Decimal {
@@ -1257,4 +1288,10 @@ export interface TransferPositionOwnership {
 export interface InitializeOracle {
   pair: Pair
   payer: Keypair
+}
+
+export interface ChangeFeeReceiver {
+  pair: Pair
+  admin?: PublicKey
+  feeReceiver: PublicKey
 }
