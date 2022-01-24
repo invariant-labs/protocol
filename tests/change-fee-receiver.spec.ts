@@ -116,9 +116,8 @@ describe('change-fee-receiver', () => {
     const changeFeeReceiverVars: ChangeFeeReceiver = {
       pair,
       feeReceiver: newFeeReceiver.publicKey,
-      admin: admin.publicKey
+      admin: wallet.publicKey
     }
-
     await assertThrowsAsync(market.changeFeeReceiver(changeFeeReceiverVars, wallet))
   })
 })
