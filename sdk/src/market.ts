@@ -685,9 +685,7 @@ export class Market {
       slippage: slippage,
       ticks: ticks,
       tickmap,
-      pool: pool,
-      market: this,
-      pair: pair
+      pool: pool
     }
     const simulationResult: SimulationResult = simulateSwap(swapParameters)
     const amountPerTick: BN[] = simulationResult.amountPerTick
@@ -1113,6 +1111,13 @@ export interface PoolStructure {
   bump: number
 }
 
+export interface PoolData {
+  currentTickIndex: number
+  tickSpacing: number
+  liquidity: Decimal
+  fee: Decimal
+  sqrtPrice: Decimal
+}
 export interface Tickmap {
   bitmap: number[]
 }

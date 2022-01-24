@@ -24,13 +24,26 @@ import {
 } from '@invariant-labs/sdk/src/math'
 import {
   bigNumberToBuffer,
+  calculateClaimAmount,
+  calculateFeeGrowthInside,
+  calculateTokensOwed,
   CloserLimit,
+  FeeGrowthInside,
   getCloserLimit,
-  toDecimal
+  GROWTH_DENOMINATOR,
+  PositionClaimData,
+  SimulateClaim,
+  simulateSwap,
+  SimulateSwapInterface,
+  SimulationResult,
+  toDecimal,
+  TokensOwed,
+  U128MAX
 } from '@invariant-labs/sdk/src/utils'
 import { setInitialized } from './testUtils'
-import { Decimal, Tickmap } from '@invariant-labs/sdk/src/market'
+import { Decimal, PoolData, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
 import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
+import { Keypair } from '@solana/web3.js'
 
 describe('Math', () => {
   describe('Test sqrt price calculation', () => {
@@ -1046,5 +1059,228 @@ describe('Math', () => {
       assert.ok(swapLimit.v.eq(expected.v))
       assert.equal(limitingTick, null)
     })
+  })
+  describe('test calculateFeeGrowthInside', () => {
+    const decimalZero = { v: new BN(0) }
+    const feeGrowthGlobalX = { v: new BN(15).mul(GROWTH_DENOMINATOR) }
+    const feeGrowthGlobalY = { v: new BN(15).mul(GROWTH_DENOMINATOR) }
+
+    let lowerTick: Tick = {
+      pool: Keypair.generate().publicKey,
+      index: -2,
+      sign: true,
+      liquidityChange: decimalZero,
+      liquidityGross: decimalZero,
+      sqrtPrice: decimalZero,
+      feeGrowthOutsideX: decimalZero,
+      feeGrowthOutsideY: decimalZero,
+      bump: 0
+    }
+    let upperTick: Tick = {
+      pool: Keypair.generate().publicKey,
+      index: 2,
+      sign: true,
+      liquidityChange: decimalZero,
+      liquidityGross: decimalZero,
+      sqrtPrice: decimalZero,
+      feeGrowthOutsideX: decimalZero,
+      feeGrowthOutsideY: decimalZero,
+      bump: 0
+    }
+
+    it('Current tick inside range', async () => {
+      const feeGrowthParams: FeeGrowthInside = {
+        tickLower: lowerTick,
+        tickUpper: upperTick,
+        tickCurrent: 0,
+        feeGrowthGlobalX: feeGrowthGlobalX,
+        feeGrowthGlobalY: feeGrowthGlobalY
+      }
+      const [tokensOwedXTotal, tokensOwedYTotal] = calculateFeeGrowthInside(feeGrowthParams)
+
+      const expectedX = new BN(15).mul(GROWTH_DENOMINATOR)
+      const expectedY = new BN(15).mul(GROWTH_DENOMINATOR)
+      assert.ok(tokensOwedXTotal.eq(expectedX))
+      assert.ok(tokensOwedYTotal.eq(expectedY))
+    })
+    it('Current tick below range', async () => {
+      const feeGrowthParams: FeeGrowthInside = {
+        tickLower: lowerTick,
+        tickUpper: upperTick,
+        tickCurrent: -4,
+        feeGrowthGlobalX: feeGrowthGlobalX,
+        feeGrowthGlobalY: feeGrowthGlobalY
+      }
+      const [tokensOwedXTotal, tokensOwedYTotal] = calculateFeeGrowthInside(feeGrowthParams)
+
+      assert.ok(tokensOwedXTotal.eq(new BN(0)))
+      assert.ok(tokensOwedYTotal.eq(new BN(0)))
+    })
+    it('Current tick upper range', async () => {
+      const feeGrowthParams: FeeGrowthInside = {
+        tickLower: lowerTick,
+        tickUpper: upperTick,
+        tickCurrent: 4,
+        feeGrowthGlobalX: feeGrowthGlobalX,
+        feeGrowthGlobalY: feeGrowthGlobalY
+      }
+      const [tokensOwedXTotal, tokensOwedYTotal] = calculateFeeGrowthInside(feeGrowthParams)
+
+      assert.ok(tokensOwedXTotal.eq(new BN(0)))
+      assert.ok(tokensOwedYTotal.eq(new BN(0)))
+    })
+    it('Subtracts upper tick if below', async () => {
+      upperTick.index = 2
+      upperTick.feeGrowthOutsideX = { v: new BN(2).mul(GROWTH_DENOMINATOR) }
+      upperTick.feeGrowthOutsideY = { v: new BN(3).mul(GROWTH_DENOMINATOR) }
+
+      const feeGrowthParams: FeeGrowthInside = {
+        tickLower: lowerTick,
+        tickUpper: upperTick,
+        tickCurrent: 0,
+        feeGrowthGlobalX: feeGrowthGlobalX,
+        feeGrowthGlobalY: feeGrowthGlobalY
+      }
+      const [feeGrowthInsideX, feeGrowthInsideY] = calculateFeeGrowthInside(feeGrowthParams)
+
+      const expectedX = new BN(13).mul(GROWTH_DENOMINATOR)
+      const expectedY = new BN(12).mul(GROWTH_DENOMINATOR)
+      assert.ok(feeGrowthInsideX.eq(expectedX))
+      assert.ok(feeGrowthInsideY.eq(expectedY))
+    })
+    it('Subtracts lower tick if above', async () => {
+      upperTick.index = 2
+      upperTick.feeGrowthOutsideX = { v: new BN(0) }
+      upperTick.feeGrowthOutsideY = { v: new BN(0) }
+
+      lowerTick.index = -2
+      lowerTick.feeGrowthOutsideX = { v: new BN(2).mul(GROWTH_DENOMINATOR) }
+      lowerTick.feeGrowthOutsideY = { v: new BN(3).mul(GROWTH_DENOMINATOR) }
+
+      const feeGrowthParams: FeeGrowthInside = {
+        tickLower: lowerTick,
+        tickUpper: upperTick,
+        tickCurrent: 0,
+        feeGrowthGlobalX: feeGrowthGlobalX,
+        feeGrowthGlobalY: feeGrowthGlobalY
+      }
+      const [feeGrowthInsideX, feeGrowthInsideY] = calculateFeeGrowthInside(feeGrowthParams)
+
+      const expectedX = new BN(13).mul(GROWTH_DENOMINATOR)
+      const expectedY = new BN(12).mul(GROWTH_DENOMINATOR)
+      assert.ok(feeGrowthInsideX.eq(expectedX))
+      assert.ok(feeGrowthInsideY.eq(expectedY))
+    })
+    it('Test overflow', async () => {
+      const feeGrowthGlobalX = { v: new BN(20).mul(GROWTH_DENOMINATOR) }
+      const feeGrowthGlobalY = { v: new BN(20).mul(GROWTH_DENOMINATOR) }
+
+      upperTick.index = -20
+      upperTick.feeGrowthOutsideX = { v: new BN(15).mul(GROWTH_DENOMINATOR) }
+      upperTick.feeGrowthOutsideY = { v: new BN(15).mul(GROWTH_DENOMINATOR) }
+
+      lowerTick.index = -10
+      lowerTick.feeGrowthOutsideX = { v: new BN(20).mul(GROWTH_DENOMINATOR) }
+      lowerTick.feeGrowthOutsideY = { v: new BN(20).mul(GROWTH_DENOMINATOR) }
+
+      const feeGrowthParams: FeeGrowthInside = {
+        tickLower: lowerTick,
+        tickUpper: upperTick,
+        tickCurrent: 0,
+        feeGrowthGlobalX: feeGrowthGlobalX,
+        feeGrowthGlobalY: feeGrowthGlobalY
+      }
+      const [feeGrowthInsideX, feeGrowthInsideY] = calculateFeeGrowthInside(feeGrowthParams)
+
+      const expectedX = U128MAX.sub(new BN(5).mul(GROWTH_DENOMINATOR)).add(new BN(1))
+      const expectedY = U128MAX.sub(new BN(5).mul(GROWTH_DENOMINATOR)).add(new BN(1))
+
+      assert.ok(feeGrowthInsideX.eq(expectedX))
+      assert.ok(feeGrowthInsideY.eq(expectedY))
+    })
+  })
+  describe('test calculateClaimAmount', () => {
+    let decimalZero = { v: new BN(0) }
+
+    it('Zero liquidity zero tokens owed', async () => {
+      const positionData: PositionClaimData = {
+        liquidity: decimalZero,
+        feeGrowthInsideX: decimalZero,
+        feeGrowthInsideY: decimalZero,
+        tokensOwedX: decimalZero,
+        tokensOwedY: decimalZero
+      }
+
+      const tokensOwedParams: TokensOwed = {
+        position: positionData,
+        feeGrowthInsideX: new BN(5).mul(GROWTH_DENOMINATOR),
+        feeGrowthInsideY: new BN(5).mul(GROWTH_DENOMINATOR)
+      }
+      const [tokensOwedXTotal, tokensOwedYTotal] = calculateTokensOwed(tokensOwedParams)
+      assert.ok(tokensOwedXTotal.eq(new BN(0)))
+      assert.ok(tokensOwedYTotal.eq(new BN(0)))
+    })
+    it('zero liquidity fee should not change', async () => {
+      const positionData: PositionClaimData = {
+        liquidity: decimalZero,
+        feeGrowthInsideX: { v: new BN(4).mul(GROWTH_DENOMINATOR) },
+        feeGrowthInsideY: { v: new BN(4).mul(GROWTH_DENOMINATOR) },
+        tokensOwedX: { v: new BN(100).mul(DENOMINATOR) },
+        tokensOwedY: { v: new BN(100).mul(DENOMINATOR) }
+      }
+
+      const tokensOwedParams: TokensOwed = {
+        position: positionData,
+        feeGrowthInsideX: new BN(5).mul(GROWTH_DENOMINATOR),
+        feeGrowthInsideY: new BN(5).mul(GROWTH_DENOMINATOR)
+      }
+      const [tokensOwedXTotal, tokensOwedYTotal] = calculateTokensOwed(tokensOwedParams)
+      assert.ok(tokensOwedXTotal.eq(new BN(100).mul(DENOMINATOR)))
+      assert.ok(tokensOwedYTotal.eq(new BN(100).mul(DENOMINATOR)))
+    })
+    it('fee should change', async () => {
+      const positionData: PositionClaimData = {
+        liquidity: { v: new BN(1).mul(DENOMINATOR) },
+        feeGrowthInsideX: { v: new BN(4).mul(GROWTH_DENOMINATOR) },
+        feeGrowthInsideY: { v: new BN(4).mul(GROWTH_DENOMINATOR) },
+        tokensOwedX: { v: new BN(100).mul(DENOMINATOR) },
+        tokensOwedY: { v: new BN(100).mul(DENOMINATOR) }
+      }
+
+      const tokensOwedParams: TokensOwed = {
+        position: positionData,
+        feeGrowthInsideX: new BN(5).mul(GROWTH_DENOMINATOR),
+        feeGrowthInsideY: new BN(5).mul(GROWTH_DENOMINATOR)
+      }
+      const [tokensOwedXTotal, tokensOwedYTotal] = calculateTokensOwed(tokensOwedParams)
+      assert.ok(tokensOwedXTotal.eq(new BN(101).mul(DENOMINATOR)))
+      assert.ok(tokensOwedYTotal.eq(new BN(101).mul(DENOMINATOR)))
+    })
+  })
+
+  // TODO add simulation tests
+  describe('test simulateSwap', () => {
+    // it('Simple up', async () => {
+    //   let tickmap: Tickmap = { bitmap: new Array(25000).map(i => (i = 0)) }
+    //   const { byte, bit } = tickToPosition(new BN(0), new BN(1))
+    //   const poolData: PoolData = {
+    //     currentTickIndex: -10,
+    //     tickSpacing: 5,
+    //     liquidity: { v: new BN('09c6496aea43d91e7187') },
+    //     fee: { v: new BN('2e90edd000') },
+    //     sqrtPrice: { v: new BN('e8c04edfee') }
+    //   }
+    //   const swapParameters: SimulateSwapInterface = {
+    //     xToY: true,
+    //     byAmountIn: true,
+    //     swapAmount: new BN('123000000'),
+    //     currentPrice: { v: new BN('998562598722') },
+    //     slippage: { v: new BN('10000000000') },
+    //     ticks: ticks,
+    //     tickmap: tickmap,
+    //     pool: poolData
+    //   }
+    //   const simulationResult: SimulationResult = simulateSwap(swapParameters)
+    // })
   })
 })
