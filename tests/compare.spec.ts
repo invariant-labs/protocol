@@ -10,8 +10,7 @@ import {
   CreateFeeTier,
   CreatePool,
   InitPosition,
-  Swap,
-  swapLimit
+  Swap
 } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
