@@ -44,6 +44,8 @@ import { setInitialized } from './testUtils'
 import { Decimal, PoolData, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
 import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
 import { Keypair } from '@solana/web3.js'
+import { fromSeed } from 'bip32'
+import { swapParameters } from './swap'
 
 describe('Math', () => {
   describe('Test sqrt price calculation', () => {
@@ -1199,8 +1201,8 @@ describe('Math', () => {
       assert.ok(feeGrowthInsideY.eq(expectedY))
     })
   })
-  describe('test calculateClaimAmount', () => {
-    let decimalZero = { v: new BN(0) }
+  describe('test calculateTokensOwed', () => {
+    const decimalZero = { v: new BN(0) }
 
     it('Zero liquidity zero tokens owed', async () => {
       const positionData: PositionClaimData = {
@@ -1257,30 +1259,62 @@ describe('Math', () => {
       assert.ok(tokensOwedYTotal.eq(new BN(101).mul(DENOMINATOR)))
     })
   })
+  describe('test calculateClaimAmount', () => {
+    const decimalZero = { v: new BN(0) }
+    it('Basic claim', async () => {
+      const positionData: PositionClaimData = {
+        liquidity: { v: new BN(1).mul(DENOMINATOR) },
+        feeGrowthInsideX: { v: new BN(4).mul(GROWTH_DENOMINATOR) },
+        feeGrowthInsideY: { v: new BN(4).mul(GROWTH_DENOMINATOR) },
+        tokensOwedX: { v: new BN(100).mul(DENOMINATOR) },
+        tokensOwedY: { v: new BN(100).mul(DENOMINATOR) }
+      }
 
-  // TODO add simulation tests
+      const lowerTick: Tick = {
+        pool: Keypair.generate().publicKey,
+        index: -2,
+        sign: true,
+        liquidityChange: decimalZero,
+        liquidityGross: decimalZero,
+        sqrtPrice: decimalZero,
+        feeGrowthOutsideX: decimalZero,
+        feeGrowthOutsideY: decimalZero,
+        bump: 0
+      }
+      const upperTick: Tick = {
+        pool: Keypair.generate().publicKey,
+        index: 2,
+        sign: true,
+        liquidityChange: decimalZero,
+        liquidityGross: decimalZero,
+        sqrtPrice: decimalZero,
+        feeGrowthOutsideX: decimalZero,
+        feeGrowthOutsideY: decimalZero,
+        bump: 0
+      }
+
+      const claim: SimulateClaim = {
+        position: positionData,
+        tickLower: lowerTick,
+        tickUpper: upperTick,
+        tickCurrent: 0,
+        feeGrowthGlobalX: { v: new BN(20).mul(GROWTH_DENOMINATOR) },
+        feeGrowthGlobalY: { v: new BN(20).mul(GROWTH_DENOMINATOR) }
+      }
+
+      const [tokensOwedXTotal, tokensOwedYTotal] = calculateClaimAmount(claim)
+      assert.ok(tokensOwedXTotal.eq(new BN(116000000000000)))
+      assert.ok(tokensOwedYTotal.eq(new BN(116000000000000)))
+    })
+  })
   describe('test simulateSwap', () => {
-    // it('Simple up', async () => {
-    //   let tickmap: Tickmap = { bitmap: new Array(25000).map(i => (i = 0)) }
-    //   const { byte, bit } = tickToPosition(new BN(0), new BN(1))
-    //   const poolData: PoolData = {
-    //     currentTickIndex: -10,
-    //     tickSpacing: 5,
-    //     liquidity: { v: new BN('09c6496aea43d91e7187') },
-    //     fee: { v: new BN('2e90edd000') },
-    //     sqrtPrice: { v: new BN('e8c04edfee') }
-    //   }
-    //   const swapParameters: SimulateSwapInterface = {
-    //     xToY: true,
-    //     byAmountIn: true,
-    //     swapAmount: new BN('123000000'),
-    //     currentPrice: { v: new BN('998562598722') },
-    //     slippage: { v: new BN('10000000000') },
-    //     ticks: ticks,
-    //     tickmap: tickmap,
-    //     pool: poolData
-    //   }
-    //   const simulationResult: SimulationResult = simulateSwap(swapParameters)
-    // })
+    it('Swap', async () => {
+      const simulationResult: SimulationResult = simulateSwap(swapParameters)
+
+      assert.ok(simulationResult.accumulatedAmountIn.eq(new BN(994)))
+      assert.ok(simulationResult.accumulatedAmountOut.eq(new BN(993)))
+      assert.ok(simulationResult.accumulatedFee.eq(new BN(6)))
+      assert.ok(simulationResult.amountPerTick[0].eq(new BN(1000)))
+    })
   })
 })
