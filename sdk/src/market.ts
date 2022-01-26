@@ -675,7 +675,13 @@ export class Market {
     for (const tick of ticksArray) {
       ticks.set(tick.index, tick)
     }
-
+    const poolData: PoolData = {
+      currentTickIndex: pool.currentTickIndex,
+      tickSpacing: pool.tickSpacing,
+      liquidity: pool.liquidity,
+      fee: pool.fee,
+      sqrtPrice: pool.sqrtPrice
+    }
     // simulate swap to get exact amount of tokens swapped between tick crosses
     const swapParameters: SimulateSwapInterface = {
       xToY: xToY,
@@ -685,10 +691,9 @@ export class Market {
       slippage: slippage,
       ticks: ticks,
       tickmap,
-      pool: pool,
-      market: this,
-      pair: pair
+      pool: poolData
     }
+
     const simulationResult: SimulationResult = simulateSwap(swapParameters)
     const amountPerTick: BN[] = simulationResult.amountPerTick
     let sum: BN = new BN(0)
@@ -749,6 +754,12 @@ export class Market {
 
   async swap(swap: Swap, signer: Keypair, overridePriceLimit?: BN) {
     const tx = await this.swapTransaction(swap, overridePriceLimit)
+
+    await signAndSend(tx, [signer], this.connection)
+  }
+
+  async swapSplit(swap: Swap, signer: Keypair, overridePriceLimit?: BN) {
+    const tx = await this.swapTransactionSplit(swap, overridePriceLimit)
 
     await signAndSend(tx, [signer], this.connection)
   }
@@ -1058,6 +1069,37 @@ export class Market {
 
     await signAndSend(tx, [signer], this.connection)
   }
+
+  async changeFeeReceiverInstruction(changeFeeReceiver: ChangeFeeReceiver) {
+    const { pair, feeReceiver } = changeFeeReceiver
+    const adminPubkey = changeFeeReceiver.admin ?? this.wallet.publicKey
+    const { address: stateAddress } = await this.getStateAddress()
+    const poolAddress = await pair.getAddress(this.program.programId)
+
+    return this.program.instruction.changeFeeReceiver({
+      accounts: {
+        state: stateAddress,
+        pool: poolAddress,
+        tokenX: pair.tokenX,
+        tokenY: pair.tokenY,
+        admin: adminPubkey,
+        feeReceiver: feeReceiver,
+        programAuthority: this.programAuthority
+      }
+    })
+  }
+
+  async changeFeeReceiverTransaction(changeFeeReceiver: ChangeFeeReceiver) {
+    const ix = await this.changeFeeReceiverInstruction(changeFeeReceiver)
+
+    return new Transaction().add(ix)
+  }
+
+  async changeFeeReceiver(changeFeeReceiver: ChangeFeeReceiver, signer: Keypair) {
+    const tx = await this.changeFeeReceiverTransaction(changeFeeReceiver)
+
+    await signAndSend(tx, [signer], this.connection)
+  }
 }
 
 export interface Decimal {
@@ -1107,8 +1149,19 @@ export interface PoolStructure {
   bump: number
 }
 
+export interface PoolData {
+  currentTickIndex: number
+  tickSpacing: number
+  liquidity: Decimal
+  fee: Decimal
+  sqrtPrice: Decimal
+}
 export interface Tickmap {
   bitmap: number[]
+}
+export interface TickPosition {
+  byte: number
+  bit: number
 }
 export interface PositionList {
   head: number
@@ -1247,4 +1300,10 @@ export interface TransferPositionOwnership {
 export interface InitializeOracle {
   pair: Pair
   payer: Keypair
+}
+
+export interface ChangeFeeReceiver {
+  pair: Pair
+  admin?: PublicKey
+  feeReceiver: PublicKey
 }

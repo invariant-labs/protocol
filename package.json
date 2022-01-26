@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "test:invariant-all": "npm run test:swap && npm run test:cross && npm run test:reversed && npm run test:position && npm run test:math && npm run test:withdraw && npm run test:position-list && npm run test:claim && npm run test:protocol-fee && npm run test:target && npm run test:slippage && npm run test:fee-tier && npm run test:simulate-swap && npm run test:claim-amount && npm run test:oracle && npm run test:limits && npm run test:big-swap && npm run test:change-protocol-fee && npm run test:compare",
+    "test:invariant-all": "npm run test:swap && npm run test:cross && npm run test:reversed && npm run test:position && npm run test:math && npm run test:withdraw && npm run test:position-list && npm run test:claim && npm run test:protocol-fee && npm run test:target && npm run test:slippage && npm run test:fee-tier && npm run test:simulate-swap && npm run test:claim-amount && npm run test:oracle && npm run test:limits && npm run test:big-swap && npm run test:change-protocol-fee && npm run test:compare && npm run test:tickmap && npm run test:change-fee-receiver",
     "test:staker-all": "npm run test:create && npm run test:stake && npm run test:withdraw-staker && npm run test:end-incentive && npm run test:multicall",
     "test:all": "npm run test:invariant-all && npm run test:staker-all",
     "test:swap": "anchor test --skip-build tests/swap.spec.ts",
@@ -28,6 +28,8 @@
     "test:fee-tier": "anchor test --skip-build tests/fee-tier.spec.ts",
     "test:big-swap": "anchor test --skip-build tests/big-swap.spec.ts",
     "test:change-protocol-fee": "anchor test --skip-build tests/change-protocol-fee.spec.ts",
+    "test:tickmap": "anchor test --skip-build tests/tickmap.spec.ts",
+    "test:change-fee-receiver": "anchor test --skip-build tests/change-fee-receiver.spec.ts",
     "build:invariant": "cd sdk && npm run build",
     "build:staker": "cd sdk-staker && npm run build",
     "build:all": "npm run build:invariant && npm run build:staker"
@@ -38,6 +40,11 @@
     "@solana/buffer-layout": "^4.0.0",
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.25.0",
+    "@ledgerhq/hw-transport-node-hid": "^6.2.0",
+    "bip32": "^2.0.6",
+    "bs58": "^4.0.1",
+    "dotenv": "^10.0.0",
+    "ed25519-hd-key": "^1.2.0",
     "eslint-config-standard-with-typescript": "^21.0.1",
     "eslint-plugin-prettier": "^4.0.0",
     "ts-mocha": "^8.0.0"

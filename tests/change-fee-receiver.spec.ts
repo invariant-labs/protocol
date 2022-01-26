@@ -1,13 +1,11 @@
-import { TICK_LIMIT, DENOMINATOR, Network, sleep } from '@invariant-labs/sdk'
-import { Market, Pair } from '@invariant-labs/sdk/src'
+import { Market, Pair, Network, TICK_LIMIT, DENOMINATOR } from '@invariant-labs/sdk'
 import {
-  ChangeProtocolFee,
+  ChangeFeeReceiver,
   CreateFeeTier,
   CreatePool,
-  Decimal,
   FeeTier
-} from '@invariant-labs/sdk/src/market'
-import { assertThrowsAsync, fromFee } from '@invariant-labs/sdk/src/utils'
+} from '@invariant-labs/sdk/lib/market'
+import { assertThrowsAsync, fromFee } from '@invariant-labs/sdk/lib/utils'
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
@@ -15,15 +13,16 @@ import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken } from './testUtils'
 
-describe('change-protocol-fee', () => {
+describe('change-fee-receiver', () => {
   const provider = Provider.local()
   const connection = provider.connection
+
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
   const mintAuthority = Keypair.generate()
-  const positionOwner = Keypair.generate()
   const admin = Keypair.generate()
   const feeReceiver = Keypair.generate()
+
   let market: Market
   const feeTier: FeeTier = {
     fee: fromFee(new BN(600)),
@@ -45,7 +44,6 @@ describe('change-protocol-fee', () => {
     await Promise.all([
       await connection.requestAirdrop(mintAuthority.publicKey, 1e12),
       await connection.requestAirdrop(admin.publicKey, 1e12),
-      await connection.requestAirdrop(positionOwner.publicKey, 1e12),
       await connection.requestAirdrop(feeReceiver.publicKey, 1e12)
     ])
 
@@ -58,6 +56,7 @@ describe('change-protocol-fee', () => {
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
+
   it('#createState()', async () => {
     await market.createState(admin.publicKey, admin)
   })
@@ -95,43 +94,30 @@ describe('change-protocol-fee', () => {
     assert.ok(tickmapData.bitmap.every(v => v === 0))
   })
 
-  it('#change-protocol-fee() state admin', async () => {
-    const protocolFee: Decimal = { v: fromFee(new BN(11000)) }
+  it('#changeFeeReceiver()', async () => {
+    const newFeeReceiver = Keypair.generate()
+    await connection.requestAirdrop(newFeeReceiver.publicKey, 1e12)
 
-    const changeProtocolFeeVars: ChangeProtocolFee = {
+    const changeFeeReceiverVars: ChangeFeeReceiver = {
       pair,
-      protocolFee,
+      feeReceiver: newFeeReceiver.publicKey,
       admin: admin.publicKey
     }
-    await market.changeProtocolFee(changeProtocolFeeVars, admin)
+    await market.changeFeeReceiver(changeFeeReceiverVars, admin)
 
     const pool = await market.getPool(pair)
-    assert.ok(pool.protocolFee.v.eq(new BN(110000000000)))
+    assert.ok(pool.feeReceiver.equals(newFeeReceiver.publicKey))
   })
 
-  it('#change-protocol-fee() fee receiver', async () => {
-    const protocolFee: Decimal = { v: fromFee(new BN(11000)) }
+  it('#changeFeeReceiver() Non-admin', async () => {
+    const newFeeReceiver = Keypair.generate()
+    await connection.requestAirdrop(newFeeReceiver.publicKey, 1e12)
 
-    const changeProtocolFeeVars: ChangeProtocolFee = {
+    const changeFeeReceiverVars: ChangeFeeReceiver = {
       pair,
-      protocolFee,
-      admin: feeReceiver.publicKey
+      feeReceiver: newFeeReceiver.publicKey,
+      admin: wallet.publicKey
     }
-    await assertThrowsAsync(market.changeProtocolFee(changeProtocolFeeVars, feeReceiver))
-  })
-
-  it('#change-protocol-fee() other account', async () => {
-    const protocolFee: Decimal = { v: fromFee(new BN(11000)) }
-
-    const user = Keypair.generate()
-    await connection.requestAirdrop(user.publicKey, 1e10)
-    await sleep(500)
-
-    const changeProtocolFeeVars: ChangeProtocolFee = {
-      pair,
-      protocolFee,
-      admin: user.publicKey
-    }
-    await assertThrowsAsync(market.changeProtocolFee(changeProtocolFeeVars, user))
+    await assertThrowsAsync(market.changeFeeReceiver(changeFeeReceiverVars, wallet))
   })
 })

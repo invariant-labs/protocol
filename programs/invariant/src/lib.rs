@@ -22,7 +22,7 @@ use util::*;
 
 use instructions::claim_fee::ClaimFee;
 
-declare_id!("95B4XeB4YWCGZjwv32Qgkh92CwKucR9TreoLzqKWEdSE");
+declare_id!("Ag59kszeH2E1NFAwkV1A4uiWrLR8Motfj4zcx2TZpy6v");
 const SEED: &str = "Invariant";
 
 #[program]
@@ -124,6 +124,11 @@ pub mod invariant {
         protocol_fee: Decimal,
     ) -> ProgramResult {
         instructions::change_protocol_fee::handler(ctx, protocol_fee)
+    }
+
+    #[access_control(admin(&ctx.accounts.state, &ctx.accounts.admin))]
+    pub fn change_fee_receiver(ctx: Context<ChangeFeeReceiver>) -> ProgramResult {
+        instructions::change_fee_receiver::handler(ctx)
     }
 }
 

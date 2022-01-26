@@ -74,17 +74,13 @@ describe('compare', () => {
   it('#create()', async () => {
     const createPoolVars: CreatePool = {
       pair: firstPair,
-      payer: admin,
-      tokenX,
-      tokenY
+      payer: admin
     }
     await market.createPool(createPoolVars)
 
     const createPoolVars2: CreatePool = {
       pair: secondPair,
-      payer: admin,
-      tokenX: tokenZ,
-      tokenY: tokenW
+      payer: admin
     }
     await market.createPool(createPoolVars2)
 
@@ -198,7 +194,7 @@ describe('compare', () => {
       accountY,
       byAmountIn: true
     }
-    await market.swap(swapVars, owner)
+    await market.swapSplit(swapVars, owner)
 
     // make swap on second pool without simulation TODO
     const swapVars2: Swap = {

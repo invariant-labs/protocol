@@ -68,9 +68,7 @@ describe('withdraw', () => {
     // 0.6% / 10
     const createPoolVars: CreatePool = {
       pair,
-      payer: admin,
-      tokenX,
-      tokenY
+      payer: admin
     }
     await market.createPool(createPoolVars)
 

@@ -66,9 +66,7 @@ describe('reversed', () => {
   it('#create()', async () => {
     const createPoolVars: CreatePool = {
       pair,
-      payer: admin,
-      tokenX,
-      tokenY
+      payer: admin
     }
     await market.createPool(createPoolVars)
 

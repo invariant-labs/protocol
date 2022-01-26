@@ -1,6 +1,6 @@
-export type Invariant = {
+export type Amm = {
   "version": "0.1.0",
-  "name": "invariant",
+  "name": "amm",
   "instructions": [
     {
       "name": "createState",
@@ -121,28 +121,18 @@ export type Invariant = {
         },
         {
           "name": "tokenXReserve",
-          "isMut": true,
-          "isSigner": true
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "tokenYReserve",
-          "isMut": true,
-          "isSigner": true
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "payer",
           "isMut": true,
           "isSigner": true
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
         },
         {
           "name": "rent",
@@ -921,47 +911,6 @@ export type Invariant = {
           }
         }
       ]
-    },
-    {
-      "name": "changeFeeReceiver",
-      "accounts": [
-        {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "admin",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "feeReceiver",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "programAuthority",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
     }
   ],
   "accounts": [
@@ -1249,10 +1198,6 @@ export type Invariant = {
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "pool",
-            "type": "publicKey"
-          },
           {
             "name": "index",
             "type": "i32"
@@ -1479,9 +1424,9 @@ export type Invariant = {
   ]
 };
 
-export const IDL: Invariant = {
+export const IDL: Amm = {
   "version": "0.1.0",
-  "name": "invariant",
+  "name": "amm",
   "instructions": [
     {
       "name": "createState",
@@ -1602,28 +1547,18 @@ export const IDL: Invariant = {
         },
         {
           "name": "tokenXReserve",
-          "isMut": true,
-          "isSigner": true
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "tokenYReserve",
-          "isMut": true,
-          "isSigner": true
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "payer",
           "isMut": true,
           "isSigner": true
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
         },
         {
           "name": "rent",
@@ -2402,47 +2337,6 @@ export const IDL: Invariant = {
           }
         }
       ]
-    },
-    {
-      "name": "changeFeeReceiver",
-      "accounts": [
-        {
-          "name": "state",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "admin",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "feeReceiver",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "programAuthority",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
     }
   ],
   "accounts": [
@@ -2730,10 +2624,6 @@ export const IDL: Invariant = {
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "pool",
-            "type": "publicKey"
-          },
           {
             "name": "index",
             "type": "i32"
