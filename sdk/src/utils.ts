@@ -10,7 +10,16 @@ import {
   TransactionInstruction
 } from '@solana/web3.js'
 import { calculatePriceSqrt, MAX_TICK, Pair, TICK_LIMIT, Market } from '.'
-import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap, Tick, Position } from './market'
+import {
+  Decimal,
+  FeeTier,
+  FEE_TIER,
+  PoolStructure,
+  Tickmap,
+  Tick,
+  Position,
+  PoolData
+} from './market'
 import { calculatePriceAfterSlippage, calculateSwapStep } from './math'
 import { getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
@@ -18,8 +27,10 @@ import { struct, u32, u8 } from '@solana/buffer-layout'
 
 export const SEED = 'Invariant'
 export const DECIMAL = 12
+export const GROWTH_SCALE = 24
 export const FEE_DECIMAL = 5
 export const DENOMINATOR = new BN(10).pow(new BN(DECIMAL))
+export const GROWTH_DENOMINATOR = new BN(10).pow(new BN(GROWTH_SCALE))
 export const FEE_OFFSET = new BN(10).pow(new BN(DECIMAL - FEE_DECIMAL))
 export const FEE_DENOMINATOR = 10 ** FEE_DECIMAL
 export const U128MAX = new BN('340282366920938463463374607431768211455')
@@ -74,9 +85,7 @@ export interface SimulateSwapInterface {
   slippage: Decimal
   ticks: Map<number, Tick>
   tickmap: Tickmap
-  pool: PoolStructure
-  market: Market
-  pair: Pair
+  pool: PoolData
 }
 
 export interface SimulationResult {
@@ -86,13 +95,34 @@ export interface SimulationResult {
   accumulatedFee: BN
 }
 
-export interface SimulateClaim {
-  position: Position
+export interface FeeGrowthInside {
   tickLower: Tick
   tickUpper: Tick
   tickCurrent: number
   feeGrowthGlobalX: Decimal
   feeGrowthGlobalY: Decimal
+}
+
+export interface TokensOwed {
+  position: PositionClaimData
+  feeGrowthInsideX: BN
+  feeGrowthInsideY: BN
+}
+
+export interface SimulateClaim {
+  position: PositionClaimData
+  tickLower: Tick
+  tickUpper: Tick
+  tickCurrent: number
+  feeGrowthGlobalX: Decimal
+  feeGrowthGlobalY: Decimal
+}
+export interface PositionClaimData {
+  liquidity: Decimal
+  feeGrowthInsideX: Decimal
+  feeGrowthInsideY: Decimal
+  tokensOwedX: Decimal
+  tokensOwedY: Decimal
 }
 
 export interface CloserLimit {
@@ -390,6 +420,68 @@ export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
 
   return parsed
 }
+export const calculateFeeGrowthInside = ({
+  tickLower,
+  tickUpper,
+  tickCurrent,
+  feeGrowthGlobalX,
+  feeGrowthGlobalY
+}: FeeGrowthInside) => {
+  // determine position relative to current tick
+  const currentAboveLower = tickCurrent >= tickLower.index
+  const currentBelowUpper = tickCurrent < tickUpper.index
+  let feeGrowthBelowX: BN
+  let feeGrowthBelowY: BN
+  let feeGrowthAboveX: BN
+  let feeGrowthAboveY: BN
+
+  // calculate fee growth below
+  if (currentAboveLower) {
+    feeGrowthBelowX = tickLower.feeGrowthOutsideX.v
+    feeGrowthBelowY = tickLower.feeGrowthOutsideY.v
+  } else {
+    feeGrowthBelowX = feeGrowthGlobalX.v.sub(tickLower.feeGrowthOutsideX.v)
+    feeGrowthBelowY = feeGrowthGlobalY.v.sub(tickLower.feeGrowthOutsideY.v)
+  }
+
+  // calculate fee growth above
+  if (currentBelowUpper) {
+    feeGrowthAboveX = tickUpper.feeGrowthOutsideX.v
+    feeGrowthAboveY = tickUpper.feeGrowthOutsideY.v
+  } else {
+    feeGrowthAboveX = feeGrowthGlobalX.v.sub(tickUpper.feeGrowthOutsideX.v)
+    feeGrowthAboveY = feeGrowthGlobalY.v.sub(tickUpper.feeGrowthOutsideY.v)
+  }
+
+  // calculate fee growth inside
+  let feeGrowthInsideX = feeGrowthGlobalX.v.sub(feeGrowthBelowX).sub(feeGrowthAboveX)
+  let feeGrowthInsideY = feeGrowthGlobalY.v.sub(feeGrowthBelowY).sub(feeGrowthAboveY)
+
+  if (feeGrowthInsideX.lt(new BN(0))) {
+    feeGrowthInsideX = U128MAX.sub(feeGrowthInsideX.abs()).addn(1)
+  }
+  if (feeGrowthInsideY.lt(new BN(0))) {
+    feeGrowthInsideY = U128MAX.sub(feeGrowthInsideY.abs()).addn(1)
+  }
+
+  return [feeGrowthInsideX, feeGrowthInsideY]
+}
+
+export const calculateTokensOwed = ({
+  position,
+  feeGrowthInsideX,
+  feeGrowthInsideY
+}: TokensOwed) => {
+  const tokensOwedX = position.liquidity.v
+    .mul(feeGrowthInsideX.sub(position.feeGrowthInsideX.v))
+    .div(GROWTH_DENOMINATOR)
+  const tokensOwedY = position.liquidity.v
+    .mul(feeGrowthInsideY.sub(position.feeGrowthInsideY.v))
+    .div(GROWTH_DENOMINATOR)
+  const tokensOwedXTotal = position.tokensOwedX.v.add(tokensOwedX).div(DENOMINATOR)
+  const tokensOwedYTotal = position.tokensOwedY.v.add(tokensOwedY).div(DENOMINATOR)
+  return [tokensOwedXTotal, tokensOwedYTotal]
+}
 
 export const calculateClaimAmount = ({
   position,
@@ -400,64 +492,23 @@ export const calculateClaimAmount = ({
   feeGrowthGlobalY
 }: SimulateClaim) => {
   // determine position relative to current tick
-  const currentAboveLower = tickCurrent >= tickLower.index
-  const currentBelowUpper = tickCurrent < tickUpper.index
-  let feeGrowthBelowX: BN
-  let feeGrowthBelowY: BN
-  let feeGrowthAboveX: BN
-  let feeGrowthAboveY: BN
+  const feeGrowthParams: FeeGrowthInside = {
+    tickLower: tickLower,
+    tickUpper: tickUpper,
+    tickCurrent: tickCurrent,
+    feeGrowthGlobalX: feeGrowthGlobalX,
+    feeGrowthGlobalY: feeGrowthGlobalY
+  }
+  const [feeGrowthInsideX, feeGrowthInsideY] = calculateFeeGrowthInside(feeGrowthParams)
 
-  const lowerDiffX: BN = feeGrowthGlobalX.v.sub(tickLower.feeGrowthOutsideX.v)
-  const lowerDiffY: BN = feeGrowthGlobalY.v.sub(tickLower.feeGrowthOutsideY.v)
-  const upperDiffX: BN = feeGrowthGlobalX.v.sub(tickUpper.feeGrowthOutsideX.v)
-  const upperDiffY: BN = feeGrowthGlobalY.v.sub(tickUpper.feeGrowthOutsideY.v)
-
-  // calculate fee growth below
-  if (currentAboveLower) {
-    feeGrowthBelowX = tickLower.feeGrowthOutsideX.v
-    feeGrowthBelowY = tickLower.feeGrowthOutsideY.v
-  } else {
-    if (feeGrowthGlobalX.v.gte(tickLower.feeGrowthOutsideX.v)) {
-      feeGrowthBelowX = lowerDiffX
-    } else {
-      feeGrowthBelowX = U128MAX.sub(lowerDiffX.abs())
-    }
-    if (feeGrowthGlobalY.v.gte(tickLower.feeGrowthOutsideY.v)) {
-      feeGrowthBelowY = lowerDiffY
-    } else {
-      feeGrowthBelowY = U128MAX.sub(lowerDiffY.abs())
-    }
+  const tokensOwedParams: TokensOwed = {
+    position: position,
+    feeGrowthInsideX: feeGrowthInsideX,
+    feeGrowthInsideY: feeGrowthInsideY
   }
 
-  // calculate fee growth above
-  if (currentBelowUpper) {
-    feeGrowthAboveX = tickUpper.feeGrowthOutsideX.v
-    feeGrowthAboveY = tickUpper.feeGrowthOutsideY.v
-  } else {
-    if (feeGrowthGlobalX.v.gte(tickUpper.feeGrowthOutsideX.v)) {
-      feeGrowthAboveX = upperDiffX
-    } else {
-      U128MAX.sub(upperDiffX.abs())
-    }
-    if (feeGrowthGlobalY.v.gte(tickUpper.feeGrowthOutsideY.v)) {
-      feeGrowthAboveY = upperDiffY
-    } else {
-      U128MAX.sub(upperDiffY.abs())
-    }
-  }
+  const [tokensOwedXTotal, tokensOwedYTotal] = calculateTokensOwed(tokensOwedParams)
 
-  // calculate fee growth inside
-  const feeGrowthInsideX = feeGrowthGlobalX.v.sub(feeGrowthBelowX.sub(feeGrowthAboveX))
-  const feeGrowthInsideY = feeGrowthGlobalY.v.sub(feeGrowthBelowY.sub(feeGrowthAboveY))
-
-  const tokensOwedX = position.liquidity.v
-    .mul(feeGrowthInsideX.sub(position.feeGrowthInsideX.v))
-    .div(DENOMINATOR)
-  const tokensOwedY = position.liquidity.v
-    .mul(feeGrowthInsideY.sub(position.feeGrowthInsideY.v))
-    .div(DENOMINATOR)
-  const tokensOwedXTotal = position.tokensOwedX.v.add(tokensOwedX)
-  const tokensOwedYTotal = position.tokensOwedY.v.add(tokensOwedY)
   return [tokensOwedXTotal, tokensOwedYTotal]
 }
 

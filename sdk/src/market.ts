@@ -675,7 +675,13 @@ export class Market {
     for (const tick of ticksArray) {
       ticks.set(tick.index, tick)
     }
-
+    const poolData: PoolData = {
+      currentTickIndex: pool.currentTickIndex,
+      tickSpacing: pool.tickSpacing,
+      liquidity: pool.liquidity,
+      fee: pool.fee,
+      sqrtPrice: pool.sqrtPrice
+    }
     // simulate swap to get exact amount of tokens swapped between tick crosses
     const swapParameters: SimulateSwapInterface = {
       xToY: xToY,
@@ -685,10 +691,9 @@ export class Market {
       slippage: slippage,
       ticks: ticks,
       tickmap,
-      pool: pool,
-      market: this,
-      pair: pair
+      pool: poolData
     }
+
     const simulationResult: SimulationResult = simulateSwap(swapParameters)
     const amountPerTick: BN[] = simulationResult.amountPerTick
     let sum: BN = new BN(0)
@@ -1144,6 +1149,13 @@ export interface PoolStructure {
   bump: number
 }
 
+export interface PoolData {
+  currentTickIndex: number
+  tickSpacing: number
+  liquidity: Decimal
+  fee: Decimal
+  sqrtPrice: Decimal
+}
 export interface Tickmap {
   bitmap: number[]
 }

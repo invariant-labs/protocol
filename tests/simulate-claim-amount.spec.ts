@@ -174,7 +174,7 @@ describe('claim', () => {
     const tickUpperStruct = await market.getTick(pair, upperTick)
     const tickLowerStruct = await market.getTick(pair, lowerTick)
 
-    const [tokens_owed_x_total, tokens_owed_y_total] = calculateClaimAmount({
+    const [tokensOwedXTotal, tokensOwedYTotal] = calculateClaimAmount({
       position: positionBeforeClaim,
       tickLower: tickLowerStruct,
       tickUpper: tickUpperStruct,
@@ -182,8 +182,6 @@ describe('claim', () => {
       feeGrowthGlobalX: poolDataAfter.feeGrowthGlobalX,
       feeGrowthGlobalY: poolDataAfter.feeGrowthGlobalY
     })
-    // console.log('##############', tokens_owed_x_total.div(DENOMINATOR.mul(DENOMINATOR)).toString())
-    // console.log('##############', tokens_owed_y_total.toString())
 
     const reservesBeforeClaim = await market.getReserveBalances(pair, tokenX, tokenY)
     const userTokenXAccountBeforeClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
@@ -207,13 +205,7 @@ describe('claim', () => {
     assert.ok(
       userTokenXAccountAfterClaim.sub(userTokenXAccountBeforeClaim).eqn(expectedTokensClaimed)
     )
-    // console.log(positionAfterClaim.tokensOwedX.v.toString())
-    // console.log(userTokenXAccountAfterClaim.sub(userTokenXAccountBeforeClaim).toString())
 
-    assert.ok(
-      userTokenXAccountAfterClaim
-        .sub(userTokenXAccountBeforeClaim)
-        .eq(tokens_owed_x_total.div(DENOMINATOR.mul(DENOMINATOR)))
-    )
+    assert.ok(userTokenXAccountAfterClaim.sub(userTokenXAccountBeforeClaim).eq(tokensOwedXTotal))
   })
 })
