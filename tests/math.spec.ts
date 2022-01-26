@@ -1234,8 +1234,8 @@ describe('Math', () => {
         feeGrowthInsideY: new BN(5).mul(GROWTH_DENOMINATOR)
       }
       const [tokensOwedXTotal, tokensOwedYTotal] = calculateTokensOwed(tokensOwedParams)
-      assert.ok(tokensOwedXTotal.eq(new BN(100).mul(DENOMINATOR)))
-      assert.ok(tokensOwedYTotal.eq(new BN(100).mul(DENOMINATOR)))
+      assert.ok(tokensOwedXTotal.eq(new BN(100)))
+      assert.ok(tokensOwedYTotal.eq(new BN(100)))
     })
     it('fee should change', async () => {
       const positionData: PositionClaimData = {
@@ -1252,8 +1252,8 @@ describe('Math', () => {
         feeGrowthInsideY: new BN(5).mul(GROWTH_DENOMINATOR)
       }
       const [tokensOwedXTotal, tokensOwedYTotal] = calculateTokensOwed(tokensOwedParams)
-      assert.ok(tokensOwedXTotal.eq(new BN(101).mul(DENOMINATOR)))
-      assert.ok(tokensOwedYTotal.eq(new BN(101).mul(DENOMINATOR)))
+      assert.ok(tokensOwedXTotal.eq(new BN(101)))
+      assert.ok(tokensOwedYTotal.eq(new BN(101)))
     })
   })
   describe('test calculateClaimAmount', () => {
@@ -1299,8 +1299,8 @@ describe('Math', () => {
       }
 
       const [tokensOwedXTotal, tokensOwedYTotal] = calculateClaimAmount(claim)
-      assert.ok(tokensOwedXTotal.eq(new BN(116000000000000)))
-      assert.ok(tokensOwedYTotal.eq(new BN(116000000000000)))
+      assert.ok(tokensOwedXTotal.eq(new BN(116)))
+      assert.ok(tokensOwedYTotal.eq(new BN(116)))
     })
   })
   describe('test simulateSwap', () => {

@@ -1,9 +1,9 @@
-import { PoolData, Tickmap } from '@invariant-labs/sdk/lib/market'
+import { PoolData, Tick } from '@invariant-labs/sdk/lib/market'
 import { SimulateSwapInterface } from '@invariant-labs/sdk/lib/utils'
 import { BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 
-const ticks = new Map([
+const ticks: Map<number, Tick> = new Map([
   [
     -20,
     {
