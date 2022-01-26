@@ -1063,30 +1063,29 @@ describe('Math', () => {
     })
   })
   describe('test calculateFeeGrowthInside', () => {
-    const decimalZero = { v: new BN(0) }
     const feeGrowthGlobalX = { v: new BN(15).mul(GROWTH_DENOMINATOR) }
     const feeGrowthGlobalY = { v: new BN(15).mul(GROWTH_DENOMINATOR) }
 
-    let lowerTick: Tick = {
+    const lowerTick: Tick = {
       pool: Keypair.generate().publicKey,
       index: -2,
       sign: true,
-      liquidityChange: decimalZero,
-      liquidityGross: decimalZero,
-      sqrtPrice: decimalZero,
-      feeGrowthOutsideX: decimalZero,
-      feeGrowthOutsideY: decimalZero,
+      liquidityChange: { v: new BN(0) },
+      liquidityGross: { v: new BN(0) },
+      sqrtPrice: { v: new BN(0) },
+      feeGrowthOutsideX: { v: new BN(0) },
+      feeGrowthOutsideY: { v: new BN(0) },
       bump: 0
     }
-    let upperTick: Tick = {
+    const upperTick: Tick = {
       pool: Keypair.generate().publicKey,
       index: 2,
       sign: true,
-      liquidityChange: decimalZero,
-      liquidityGross: decimalZero,
-      sqrtPrice: decimalZero,
-      feeGrowthOutsideX: decimalZero,
-      feeGrowthOutsideY: decimalZero,
+      liquidityChange: { v: new BN(0) },
+      liquidityGross: { v: new BN(0) },
+      sqrtPrice: { v: new BN(0) },
+      feeGrowthOutsideX: { v: new BN(0) },
+      feeGrowthOutsideY: { v: new BN(0) },
       bump: 0
     }
 
@@ -1202,15 +1201,13 @@ describe('Math', () => {
     })
   })
   describe('test calculateTokensOwed', () => {
-    const decimalZero = { v: new BN(0) }
-
     it('Zero liquidity zero tokens owed', async () => {
       const positionData: PositionClaimData = {
-        liquidity: decimalZero,
-        feeGrowthInsideX: decimalZero,
-        feeGrowthInsideY: decimalZero,
-        tokensOwedX: decimalZero,
-        tokensOwedY: decimalZero
+        liquidity: { v: new BN(0) },
+        feeGrowthInsideX: { v: new BN(0) },
+        feeGrowthInsideY: { v: new BN(0) },
+        tokensOwedX: { v: new BN(0) },
+        tokensOwedY: { v: new BN(0) }
       }
 
       const tokensOwedParams: TokensOwed = {
@@ -1224,7 +1221,7 @@ describe('Math', () => {
     })
     it('zero liquidity fee should not change', async () => {
       const positionData: PositionClaimData = {
-        liquidity: decimalZero,
+        liquidity: { v: new BN(0) },
         feeGrowthInsideX: { v: new BN(4).mul(GROWTH_DENOMINATOR) },
         feeGrowthInsideY: { v: new BN(4).mul(GROWTH_DENOMINATOR) },
         tokensOwedX: { v: new BN(100).mul(DENOMINATOR) },
@@ -1260,7 +1257,6 @@ describe('Math', () => {
     })
   })
   describe('test calculateClaimAmount', () => {
-    const decimalZero = { v: new BN(0) }
     it('Basic claim', async () => {
       const positionData: PositionClaimData = {
         liquidity: { v: new BN(1).mul(DENOMINATOR) },
@@ -1274,22 +1270,22 @@ describe('Math', () => {
         pool: Keypair.generate().publicKey,
         index: -2,
         sign: true,
-        liquidityChange: decimalZero,
-        liquidityGross: decimalZero,
-        sqrtPrice: decimalZero,
-        feeGrowthOutsideX: decimalZero,
-        feeGrowthOutsideY: decimalZero,
+        liquidityChange: { v: new BN(0) },
+        liquidityGross: { v: new BN(0) },
+        sqrtPrice: { v: new BN(0) },
+        feeGrowthOutsideX: { v: new BN(0) },
+        feeGrowthOutsideY: { v: new BN(0) },
         bump: 0
       }
       const upperTick: Tick = {
         pool: Keypair.generate().publicKey,
         index: 2,
         sign: true,
-        liquidityChange: decimalZero,
-        liquidityGross: decimalZero,
-        sqrtPrice: decimalZero,
-        feeGrowthOutsideX: decimalZero,
-        feeGrowthOutsideY: decimalZero,
+        liquidityChange: { v: new BN(0) },
+        liquidityGross: { v: new BN(0) },
+        sqrtPrice: { v: new BN(0) },
+        feeGrowthOutsideX: { v: new BN(0) },
+        feeGrowthOutsideY: { v: new BN(0) },
         bump: 0
       }
 
