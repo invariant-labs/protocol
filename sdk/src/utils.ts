@@ -478,8 +478,8 @@ export const calculateTokensOwed = ({
   const tokensOwedY = position.liquidity.v
     .mul(feeGrowthInsideY.sub(position.feeGrowthInsideY.v))
     .div(GROWTH_DENOMINATOR)
-  const tokensOwedXTotal = position.tokensOwedX.v.add(tokensOwedX)
-  const tokensOwedYTotal = position.tokensOwedY.v.add(tokensOwedY)
+  const tokensOwedXTotal = position.tokensOwedX.v.add(tokensOwedX).div(DENOMINATOR)
+  const tokensOwedYTotal = position.tokensOwedY.v.add(tokensOwedY).div(DENOMINATOR)
   return [tokensOwedXTotal, tokensOwedYTotal]
 }
 

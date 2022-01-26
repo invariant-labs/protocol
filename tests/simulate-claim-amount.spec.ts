@@ -206,10 +206,6 @@ describe('claim', () => {
       userTokenXAccountAfterClaim.sub(userTokenXAccountBeforeClaim).eqn(expectedTokensClaimed)
     )
 
-    assert.ok(
-      userTokenXAccountAfterClaim
-        .sub(userTokenXAccountBeforeClaim)
-        .eq(tokensOwedXTotal.div(DENOMINATOR))
-    )
+    assert.ok(userTokenXAccountAfterClaim.sub(userTokenXAccountBeforeClaim).eq(tokensOwedXTotal))
   })
 })
