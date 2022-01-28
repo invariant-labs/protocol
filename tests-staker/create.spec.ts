@@ -1,11 +1,10 @@
 import * as anchor from '@project-serum/anchor'
 import { Program, Provider, BN } from '@project-serum/anchor'
 import { Market, Pair } from '@invariant-labs/sdk'
-import { Staker as StakerIdl } from '../sdk-staker/src/idl/staker'
 import { Staker, CreateIncentive } from '../sdk-staker/lib/staker'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { assert } from 'chai'
-import { Decimal } from '../sdk-staker/src/staker'
+import { Decimal, LiquidityMining } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
 import {
   eqDecimal,
@@ -25,14 +24,14 @@ import { Network } from '../sdk-staker/lib'
 describe('Create incentive tests', () => {
   const provider = Provider.local()
   const connection = provider.connection
-  const program = anchor.workspace.Staker as Program<StakerIdl>
+  //const program = anchor.workspace.Staker as Program<StakerIdl>
   // @ts-expect-error
   const wallet = provider.wallet.payer as Account
   let stakerAuthority: PublicKey
   const mintAuthority = Keypair.generate()
   const founderAccount = Keypair.generate()
   const admin = Keypair.generate()
-  let staker: Staker
+  let staker: LiquidityMining
   let pool: PublicKey
   let invariant: PublicKey
   let incentiveToken: Token
@@ -48,10 +47,15 @@ describe('Create incentive tests', () => {
     // create staker instance
     const [_mintAuthority] = await anchor.web3.PublicKey.findProgramAddress(
       [STAKER_SEED],
-      program.programId
+      anchor.workspace.Staker.programId
     )
     stakerAuthority = _mintAuthority
-    staker = new Staker(connection, Network.LOCAL, provider.wallet, program.programId)
+    staker = new LiquidityMining(
+      connection,
+      Network.LOCAL,
+      provider.wallet,
+      anchor.workspace.Staker.programId
+    )
 
     // create token
     incentiveToken = await createToken(connection, wallet, wallet)
@@ -102,9 +106,7 @@ describe('Create incentive tests', () => {
 
     const createPoolVars: CreatePool = {
       pair,
-      payer: admin,
-      tokenX,
-      tokenY
+      payer: admin
     }
     await market.createPool(createPoolVars)
     pool = await pair.getAddress(anchor.workspace.Invariant.programId)

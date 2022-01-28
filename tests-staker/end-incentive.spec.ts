@@ -5,7 +5,7 @@ import { Staker as StakerIdl } from '../sdk-staker/src/idl/staker'
 import { Network, Staker } from '../sdk-staker/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import { Decimal } from '../sdk-staker/src/staker'
+import { Decimal, LiquidityMining } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
 import { createToken, tou64 } from './utils'
 import { createToken as createTkn } from '../tests/testUtils'
@@ -25,7 +25,7 @@ describe('End incentive tests', () => {
   const mintAuthority = Keypair.generate()
 
   let stakerAuthority: PublicKey
-  let staker: Staker
+  let staker: LiquidityMining
   let pool: PublicKey
   let invariant: PublicKey
   let incentiveToken: Token
@@ -40,10 +40,15 @@ describe('End incentive tests', () => {
     // create staker instance
     const [_mintAuthority] = await anchor.web3.PublicKey.findProgramAddress(
       [STAKER_SEED],
-      program.programId
+      anchor.workspace.Staker.programId
     )
     stakerAuthority = _mintAuthority
-    staker = new Staker(connection, Network.LOCAL, provider.wallet, program.programId)
+    staker = new LiquidityMining(
+      connection,
+      Network.LOCAL,
+      provider.wallet,
+      anchor.workspace.Staker.programId
+    )
 
     // create token
     incentiveToken = await createToken(connection, wallet, wallet)
@@ -58,8 +63,7 @@ describe('End incentive tests', () => {
     amount = new anchor.BN(100 * 1e6)
     await incentiveToken.mintTo(founderTokenAcc, wallet, [], tou64(amount))
 
-    /// ////////////////////
-    // create invariant and pool
+    //create invariant and pool
     const admin = Keypair.generate()
     const market = await Market.build(
       0,
@@ -95,9 +99,7 @@ describe('End incentive tests', () => {
 
     const createPoolVars: CreatePool = {
       pair,
-      payer: admin,
-      tokenX,
-      tokenY
+      payer: admin
     }
     await market.createPool(createPoolVars)
 
@@ -140,7 +142,7 @@ describe('End incentive tests', () => {
       connection
     )
 
-    await sleep(12000)
+    await sleep(18000)
 
     const ixEndIncentive = await staker.endIncentiveInstruction({
       incentive: incentiveAccount.publicKey,

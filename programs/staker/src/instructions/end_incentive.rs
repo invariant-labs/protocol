@@ -44,9 +44,10 @@ impl<'info> ReturnFounds<'info> {
 pub fn handler(ctx: Context<ReturnFounds>, bump_authority: u8) -> ProgramResult {
     let incentive = ctx.accounts.incentive.load()?;
     let current_time = get_current_timestamp();
-    require!(current_time > incentive.end_time, NotEnded);
-    require!(incentive.num_of_stakes == 0, StakeExist);
-    require!(incentive.total_reward_unclaimed.v > 0, ZeroReward);
+    require!(current_time > incentive.end_claim_time, TooEarly);
+    //require!(incentive.num_of_stakes == 0, StakeExist);
+    //require!(incentive.total_reward_unclaimed.v > 0, ZeroReward);
+    
 
     // TODO: would be nice to have this bump saved somewhere
     let seeds = &[STAKER_SEED.as_bytes(), &[bump_authority]];

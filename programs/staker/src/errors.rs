@@ -25,8 +25,8 @@ pub enum ErrorCode {
     #[msg("Seconds per liquidity is zero")]
     ZeroSecPerLiq = 10, // 177a
     #[msg("Incentive not ended")]
-    NotEnded = 11, // 177b
-    #[msg("Can't end id stake exists")]
+    TooEarly = 11, // 177b
+    #[msg("Too early to remove incentive")]
     StakeExist = 12, // 177c
     #[msg("Remaining reward is 0")]
     ZeroReward = 13, // 177d

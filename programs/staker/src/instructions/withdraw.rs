@@ -1,3 +1,5 @@
+use std::thread::AccessError;
+
 use crate::decimal::*;
 use crate::math::*;
 use crate::structs::*;
@@ -24,15 +26,16 @@ pub struct Withdraw<'info> {
         constraint = &incentive_token_account.owner == staker_authority.to_account_info().key
     )]
     pub incentive_token_account: Account<'info, TokenAccount>,
-    #[account(mut,
-        constraint = owner_token_account.to_account_info().key != incentive_token_account.to_account_info().key,
-        constraint = &owner_token_account.owner == owner.to_account_info().key
-    )]
-    pub owner_token_account: Account<'info, TokenAccount>,
     #[account(constraint = check_position_seeds(owner.to_account_info(), position.to_account_info().key, index))]
     pub position: AccountLoader<'info, Position>,
+    #[account(mut,
+        constraint = owner_token_account.to_account_info().key != incentive_token_account.to_account_info().key,
+        constraint = owner_token_account.owner == position.load()?.owner
+    )]
+    pub owner_token_account: Account<'info, TokenAccount>,
+    
     pub staker_authority: AccountInfo<'info>, // validate with state
-    pub owner: Signer<'info>,
+    pub owner: AccountInfo<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
     pub invariant: Program<'info, Invariant>, //TODO: program address
@@ -101,8 +104,15 @@ pub fn handler(ctx: Context<Withdraw>, nonce: u8) -> ProgramResult {
     let cpi_ctx = ctx.accounts.withdraw().with_signer(signer);
 
     token::transfer(cpi_ctx, reward)?;
+    if current_time > incentive.end_claim_time {
+        close(
+        ctx.accounts.user_stake.to_account_info(),
+        ctx.accounts.position.owner.to_account_info(),
+    )
+    .unwrap();
 
     incentive.num_of_stakes -= 1;
+}
 
     Ok(())
 }

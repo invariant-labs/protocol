@@ -1,6 +1,6 @@
 import { Network } from './network'
-import idl from './idl/staker.json'
-import { BN, Idl, Program, Provider } from '@project-serum/anchor'
+import { Staker, IDL } from './idl/staker'
+import { BN, Program, Provider } from '@project-serum/anchor'
 import { IWallet } from '.'
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import {
@@ -14,13 +14,12 @@ import {
 } from '@solana/web3.js'
 import { STAKER_SEED } from './utils'
 
-export class Staker {
+export class LiquidityMining {
   connection: Connection
   network: Network
   wallet: IWallet
   programId: PublicKey
-  idl: Idl = idl as Idl
-  public program: Program
+  public program: Program<Staker>
 
   opts?: ConfirmOptions
 
@@ -39,7 +38,7 @@ export class Staker {
     switch (network) {
       case Network.LOCAL:
         this.programId = programId
-        this.program = new Program(idl as any, this.programId, provider)
+        this.program = new Program(IDL, this.programId, provider)
         break
       default:
         throw new Error('Not supported')
@@ -137,7 +136,7 @@ export class Staker {
 
   public async getStake(incentive: PublicKey, pool: PublicKey, id: BN) {
     const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
-    return (await this.program.account.userStake.fetch(userStakeAddress)) as Stake
+    return await this.program.account.userStake.fetch(userStakeAddress)
   }
 
   public async withdrawInstruction({
@@ -213,7 +212,18 @@ export class Staker {
     const ix = await this.endIncentiveInstruction(endIncentive)
     return new Transaction().add(ix)
   }
+
+  // async getAllIncentiveStakes(incentive: PublicKey) {
+  //   return (
+  //     await this.program.account.userStake.all([
+  //       {
+  //         memcmp: { bytes: bs58.encode(incentive.toBuffer()), offset: 8 }
+  //       }
+  //     ])
+  //   ).map(a => a.account) as Stake[]
+  // }
 }
+
 export interface CreateIncentive {
   reward: Decimal
   startTime: BN

@@ -1,15 +1,9 @@
-import { Decimal } from '../sdk-staker/src/staker'
+import { Decimal, LiquidityMining } from '../sdk-staker/src/staker'
 import { Connection, Keypair } from '@solana/web3.js'
 import { Token, u64 } from '@solana/spl-token'
 import { TokenInstructions } from '@project-serum/serum'
 import { BN } from '@project-serum/anchor'
-import {
-  CreateIncentive,
-  CreateStake,
-  EndIncentive,
-  Withdraw,
-  Staker
-} from '../sdk-staker/lib/staker'
+import { CreateIncentive, CreateStake, EndIncentive, Withdraw } from '../sdk-staker/lib/staker'
 import { signAndSend } from '../sdk-staker/lib/utils'
 import { UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
 import { Market } from '@invariant-labs/sdk'
@@ -85,7 +79,7 @@ export const createToken = async (
 
 export const updatePositionAndCreateStake = async (
   market: Market,
-  staker: Staker,
+  staker: LiquidityMining,
   updateSecondsPerLiquidity: UpdateSecondsPerLiquidity,
   createStake: CreateStake,
   signers: Keypair[],
@@ -99,7 +93,7 @@ export const updatePositionAndCreateStake = async (
 
 export const updatePositionAndWithdraw = async (
   market: Market,
-  staker: Staker,
+  staker: LiquidityMining,
   updateSecondsPerLiquidity: UpdateSecondsPerLiquidity,
   withdraw: Withdraw,
   signers: Keypair[],
@@ -116,7 +110,7 @@ export const almostEqual = (num1: BN, num2: BN, epsilon: BN = new BN(10)) => {
 }
 
 export const createIncentive = async (
-  staker: Staker,
+  staker: LiquidityMining,
   createIncentive: CreateIncentive,
   signers: Keypair[]
 ) => {

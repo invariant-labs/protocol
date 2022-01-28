@@ -5,7 +5,7 @@ import { Staker as StakerIdl } from '../sdk-staker/src/idl/staker'
 import { Network, Staker } from '../sdk-staker/src'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { assert } from 'chai'
-import { Decimal } from '../sdk-staker/src/staker'
+import { Decimal, LiquidityMining } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
 import {
   eqDecimal,
@@ -39,7 +39,7 @@ describe('Stake tests', () => {
   const founderAccount = Keypair.generate()
   const positionOwner = Keypair.generate()
   const admin = Keypair.generate()
-  let staker: Staker
+  let staker: LiquidityMining
   let market: Market
   let pool: PublicKey
   let invariant: PublicKey
@@ -55,10 +55,15 @@ describe('Stake tests', () => {
     // create staker
     const [_mintAuthority] = await anchor.web3.PublicKey.findProgramAddress(
       [STAKER_SEED],
-      program.programId
+      anchor.workspace.Staker.programId
     )
     stakerAuthority = _mintAuthority
-    staker = new Staker(connection, Network.LOCAL, provider.wallet, program.programId)
+    staker = new LiquidityMining(
+      connection,
+      Network.LOCAL,
+      provider.wallet,
+      anchor.workspace.Staker.programId
+    )
 
     await Promise.all([
       await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
@@ -114,9 +119,7 @@ describe('Stake tests', () => {
 
     const createPoolVars: CreatePool = {
       pair,
-      payer: admin,
-      tokenX,
-      tokenY
+      payer: admin
     }
     await market.createPool(createPoolVars)
 

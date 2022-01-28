@@ -2,10 +2,10 @@ import * as anchor from '@project-serum/anchor'
 import { Program, Provider, BN } from '@project-serum/anchor'
 import { Market, Pair, DENOMINATOR, sleep } from '@invariant-labs/sdk'
 import { Staker as StakerIdl } from '../sdk-staker/src/idl/staker'
-import { Network, Staker } from '../sdk-staker/src'
+import { Network } from '../sdk-staker/src'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { assert } from 'chai'
-import { Decimal } from '../sdk-staker/src/staker'
+import { Decimal, LiquidityMining } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
 import {
   createToken,
@@ -46,7 +46,7 @@ describe('Multicall test', () => {
   const secondFounderAccount = Keypair.generate()
   const admin = Keypair.generate()
 
-  let staker: Staker
+  let staker: LiquidityMining
   let market: Market
   let pair: Pair
   let stakerAuthority: PublicKey
@@ -73,11 +73,16 @@ describe('Multicall test', () => {
     // create staker
     const [_mintAuthority, _nonce] = await anchor.web3.PublicKey.findProgramAddress(
       [STAKER_SEED],
-      program.programId
+      anchor.workspace.Staker.programId
     )
     stakerAuthority = _mintAuthority
     nonce = _nonce
-    staker = new Staker(connection, Network.LOCAL, provider.wallet, program.programId)
+    staker = new LiquidityMining(
+      connection,
+      Network.LOCAL,
+      provider.wallet,
+      anchor.workspace.Staker.programId
+    )
 
     await Promise.all([
       await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
@@ -142,9 +147,7 @@ describe('Multicall test', () => {
 
     const createPoolVars: CreatePool = {
       pair,
-      payer: admin,
-      tokenX,
-      tokenY
+      payer: admin
     }
     await market.createPool(createPoolVars)
 
@@ -158,7 +161,6 @@ describe('Multicall test', () => {
     const endTimeFirst = currentTime.add(new BN(100))
     const secondReward: Decimal = { v: new BN(100).mul(DENOMINATOR) }
     const endTimeSecond = currentTime.add(new BN(100000))
-
     const createIncentiveVars: CreateIncentive = {
       reward: firstReward,
       startTime,
@@ -171,7 +173,6 @@ describe('Multicall test', () => {
       invariant
     }
     await createIncentive(staker, createIncentiveVars, [firstFounderAccount, firstIncentiveAccount])
-
     const createIncentiveVars2: CreateIncentive = {
       reward: secondReward,
       startTime,
@@ -187,7 +188,6 @@ describe('Multicall test', () => {
       secondFounderAccount,
       secondIncentiveAccount
     ])
-
     // create first position
     const createTickVars: CreateTick = {
       pair,
@@ -195,18 +195,15 @@ describe('Multicall test', () => {
       payer: admin.publicKey
     }
     await market.createTick(createTickVars, admin)
-
     const createTickVars2: CreateTick = {
       pair,
       index: firstLowerTick,
       payer: admin.publicKey
     }
     await market.createTick(createTickVars2, admin)
-
     const firstUserTokenXAccount = await tokenX.createAccount(firstPositionOwner.publicKey)
     const firstUserTokenYAccount = await tokenY.createAccount(firstPositionOwner.publicKey)
     let mintAmount = tou64(new BN(10).pow(new BN(10)))
-
     await tokenX.mintTo(
       firstUserTokenXAccount,
       mintAuthority.publicKey,
@@ -219,9 +216,7 @@ describe('Multicall test', () => {
       [mintAuthority],
       mintAmount
     )
-
     await market.createPositionList(firstPositionOwner.publicKey, firstPositionOwner)
-
     const initPositionVars: InitPosition = {
       pair,
       owner: firstPositionOwner.publicKey,
@@ -232,27 +227,22 @@ describe('Multicall test', () => {
       liquidityDelta: fromInteger(1_000_000)
     }
     await market.initPosition(initPositionVars, firstPositionOwner)
-
     // create second position
-
     const createTickVars3: CreateTick = {
       pair,
       index: secondUpperTick,
       payer: admin.publicKey
     }
     await market.createTick(createTickVars3, admin)
-
     const createTickVars4: CreateTick = {
       pair,
       index: secondLowerTick,
       payer: admin.publicKey
     }
     await market.createTick(createTickVars4, admin)
-
     const secondUserTokenXAccount = await tokenX.createAccount(secondPositionOwner.publicKey)
     const secondUserTokenYAccount = await tokenY.createAccount(secondPositionOwner.publicKey)
     mintAmount = tou64(new BN(10).pow(new BN(10)))
-
     await tokenX.mintTo(
       secondUserTokenXAccount,
       mintAuthority.publicKey,
@@ -265,9 +255,7 @@ describe('Multicall test', () => {
       [mintAuthority],
       mintAmount
     )
-
     await market.createPositionList(secondPositionOwner.publicKey, secondPositionOwner)
-
     const initPositionVars2: InitPosition = {
       pair,
       owner: secondPositionOwner.publicKey,
@@ -278,19 +266,15 @@ describe('Multicall test', () => {
       liquidityDelta: fromInteger(2_000_000)
     }
     await market.initPosition(initPositionVars2, secondPositionOwner)
-
     const index = 0
-
     const { positionAddress: firstPosition } = await market.getPositionAddress(
       firstPositionOwner.publicKey,
       index
     )
-
     const { positionAddress: secondPosition } = await market.getPositionAddress(
       secondPositionOwner.publicKey,
       index
     )
-
     // create update instructions for positions
     const updateSecondsPerLiquidityVars: UpdateSecondsPerLiquidity = {
       pair,
@@ -300,7 +284,6 @@ describe('Multicall test', () => {
       index
     }
     await market.updateSecondsPerLiquidity(updateSecondsPerLiquidityVars, firstPositionOwner)
-
     const updateSecondsPerLiquidityVars2: UpdateSecondsPerLiquidity = {
       pair,
       owner: secondPositionOwner.publicKey,
@@ -309,16 +292,13 @@ describe('Multicall test', () => {
       index
     }
     await market.updateSecondsPerLiquidity(updateSecondsPerLiquidityVars2, secondPositionOwner)
-
     const firstPositionStructBefore = await market.getPosition(firstPositionOwner.publicKey, index)
     const firstPositionId = firstPositionStructBefore.id
-
     const secondPositionStructBefore = await market.getPosition(
       secondPositionOwner.publicKey,
       index
     )
     const secondPositionId = secondPositionStructBefore.id
-
     // stake first position on first incentive, first case
     const createStakeVars: CreateStake = {
       pool,
@@ -337,7 +317,6 @@ describe('Multicall test', () => {
       [firstPositionOwner],
       connection
     )
-
     // stake second position on first incentive, second case
     const createStakeVars2: CreateStake = {
       pool,
@@ -356,7 +335,6 @@ describe('Multicall test', () => {
       [secondPositionOwner],
       connection
     )
-
     // stake first position on second incentive, third case
     const createStakeVars3: CreateStake = {
       pool,
@@ -375,9 +353,7 @@ describe('Multicall test', () => {
       [firstPositionOwner],
       connection
     )
-
     // stake second position on second incentive, fourth case
-
     const createStakeVars4: CreateStake = {
       pool,
       id: secondPositionId,
@@ -395,20 +371,15 @@ describe('Multicall test', () => {
       [secondPositionOwner],
       connection
     )
-
     // swap
     const trader = Keypair.generate()
     await connection.requestAirdrop(trader.publicKey, 1e9)
     const amount = new BN(1000)
-
     const accountX = await tokenX.createAccount(trader.publicKey)
     const accountY = await tokenY.createAccount(trader.publicKey)
-
     await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
-
     // Swap
     const poolDataBefore = await market.getPool(pair)
-
     const swapVars: Swap = {
       pair,
       xToY: true,
@@ -421,9 +392,7 @@ describe('Multicall test', () => {
       owner: trader.publicKey
     }
     await market.swap(swapVars, trader)
-
     await sleep(10000)
-
     // withdraw first case
     const withdrawVars: Withdraw = {
       incentive: firstIncentiveAccount.publicKey,
@@ -445,12 +414,9 @@ describe('Multicall test', () => {
       [firstPositionOwner],
       connection
     )
-
     const balanceAfterFirst = (await firstIncentiveToken.getAccountInfo(firstOwnerTokenAcc)).amount
     assert.ok(almostEqual(balanceAfterFirst, new BN('9333332000000'), epsilon))
-
     // withdraw second case
-
     const withdrawVars2: Withdraw = {
       incentive: firstIncentiveAccount.publicKey,
       pool,
@@ -471,11 +437,9 @@ describe('Multicall test', () => {
       [secondPositionOwner],
       connection
     )
-
     const balanceAfterSecond = (await firstIncentiveToken.getAccountInfo(secondOwnerTokenAcc))
       .amount
     assert.ok(almostEqual(balanceAfterSecond, new BN('17333332000000'), epsilon))
-
     // withdraw third case
     const withdrawVars3: Withdraw = {
       incentive: secondIncentiveAccount.publicKey,
@@ -497,10 +461,8 @@ describe('Multicall test', () => {
       [firstPositionOwner],
       connection
     )
-
     const balanceAfterThird = (await firstIncentiveToken.getAccountInfo(firstOwnerTokenAcc)).amount
     assert.ok(almostEqual(balanceAfterThird, new BN('9337665333000'), epsilon))
-
     // withdraw fourth case
     const withdrawVars4: Withdraw = {
       incentive: secondIncentiveAccount.publicKey,
@@ -522,7 +484,6 @@ describe('Multicall test', () => {
       [secondPositionOwner],
       connection
     )
-
     const balanceAfterFourth = (await firstIncentiveToken.getAccountInfo(secondOwnerTokenAcc))
       .amount
     assert.ok(almostEqual(balanceAfterFourth, new BN('17341998665999'), epsilon))

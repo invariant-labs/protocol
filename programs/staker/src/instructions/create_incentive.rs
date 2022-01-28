@@ -9,6 +9,7 @@ use anchor_spl::token::{self, TokenAccount, Transfer};
 
 const MAX_TIME_BEFORE_START: u64 = 3_600; //hour in sec
 const MAX_DURATION: u64 = 31_556_926; //year in sec
+const WEEK: u64 = 604_800; //week in sec
 
 #[derive(Accounts)]
 #[instruction(bump: u8)]
@@ -82,6 +83,8 @@ pub fn handler(
         num_of_stakes: 0,
         start_time,
         end_time,
+        // TODO change to week or read from input
+        end_claim_time: end_time + 3,
         nonce,
     };
 
