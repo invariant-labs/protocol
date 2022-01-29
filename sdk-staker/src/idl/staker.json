@@ -13,7 +13,7 @@
         {
           "name": "incentiveTokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": true
         },
         {
           "name": "founderTokenAccount",
@@ -29,6 +29,11 @@
           "name": "founder",
           "isMut": true,
           "isSigner": true
+        },
+        {
+          "name": "incentiveToken",
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "stakerAuthority",
@@ -416,5 +421,8 @@
       "name": "ZeroReward",
       "msg": "Remaining reward is 0"
     }
-  ]
+  ],
+  "metadata": {
+    "address": "G5iMvLKhBKKscSMUazjiWKZXzacjL7oikJAm9FWRTvk"
+  }
 }

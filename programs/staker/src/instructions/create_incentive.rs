@@ -32,7 +32,7 @@ pub struct CreateIncentive<'info> {
     #[account(mut)]
     pub founder: Signer<'info>,
     pub incentive_token: Account<'info, Mint>,
-    #[account(seeds = [b"staker_invt".as_ref()], bump = nonce)]
+    // #[account(seeds = [b"staker_invt".as_ref()], bump = nonce)]
     pub staker_authority: AccountInfo<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,

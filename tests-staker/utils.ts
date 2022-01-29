@@ -1,4 +1,4 @@
-import { Decimal } from '../sdk-staker/src/staker'
+import { CreateIncentiveTransaction, Decimal } from '../sdk-staker/src/staker'
 import { Connection, Keypair } from '@solana/web3.js'
 import { Token, u64 } from '@solana/spl-token'
 import { TokenInstructions } from '@project-serum/serum'
@@ -120,7 +120,14 @@ export const createIncentive = async (
   createIncentive: CreateIncentive,
   signers: Keypair[]
 ) => {
-  const tx = await staker.createIncentiveTransaction(createIncentive)
+  const incentiveTokenAccount = Keypair.generate()
+
+  const createIncentiveTransaction: CreateIncentiveTransaction = {
+    incentiveTokenAccount: incentiveTokenAccount.publicKey,
+    ...createIncentive
+  }
+  const tx = await staker.createIncentiveTransaction(createIncentiveTransaction)
+  signers.push(incentiveTokenAccount)
   await signAndSend(tx, signers, staker.connection)
 }
 

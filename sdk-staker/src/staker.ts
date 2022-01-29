@@ -46,19 +46,19 @@ export class Staker {
     }
   }
 
-  public async createIncentiveInstruction({
+  public async createIncentiveTransaction({
     reward,
     startTime,
     endTime,
     founder,
     incentive,
+    incentiveToken,
+    incentiveTokenAccount,
     pool,
-    incentiveTokenAcc,
     founderTokenAcc,
     invariant
-  }: CreateIncentive) {
+  }: CreateIncentiveTransaction) {
     founder = founder ?? this.wallet.publicKey
-
     incentive = incentive ?? Keypair.generate().publicKey
 
     const [stakerAuthority, nonce] = await PublicKey.findProgramAddress(
@@ -66,11 +66,12 @@ export class Staker {
       this.programId
     )
 
-    return this.program.instruction.createIncentive(nonce, reward, startTime, endTime, {
+    const ix = await this.program.instruction.createIncentive(nonce, reward, startTime, endTime, {
       accounts: {
         incentive: incentive,
         pool,
-        incentiveTokenAccount: incentiveTokenAcc,
+        incentiveToken: incentiveToken,
+        incentiveTokenAccount,
         founderTokenAccount: founderTokenAcc,
         founder: founder,
         stakerAuthority,
@@ -80,10 +81,7 @@ export class Staker {
         rent: SYSVAR_RENT_PUBKEY
       }
     })
-  }
 
-  public async createIncentiveTransaction(createIncentive: CreateIncentive) {
-    const ix = await this.createIncentiveInstruction(createIncentive)
     return new Transaction().add(ix)
   }
 
@@ -221,9 +219,12 @@ export interface CreateIncentive {
   pool: PublicKey
   founder?: PublicKey
   incentive?: PublicKey
-  incentiveTokenAcc: PublicKey
+  incentiveToken: PublicKey
   founderTokenAcc: PublicKey
   invariant: PublicKey
+}
+export interface CreateIncentiveTransaction extends CreateIncentive {
+  incentiveTokenAccount: PublicKey
 }
 export interface CreateStake {
   pool: PublicKey

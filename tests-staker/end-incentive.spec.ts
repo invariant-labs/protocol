@@ -123,14 +123,13 @@ describe('End incentive tests', () => {
 
     const balanceBefore = (await incentiveToken.getAccountInfo(founderTokenAcc)).amount
 
-    const ixCreate = await staker.createIncentiveInstruction({
+    const ixCreate = await staker.createIncentiveTransaction({
       reward,
       startTime,
       endTime,
       incentive: incentiveAccount.publicKey,
       pool: pool,
       founder: founderAccount.publicKey,
-      incentiveTokenAcc: incentiveTokenAcc,
       founderTokenAcc: founderTokenAcc,
       invariant
     })

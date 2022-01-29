@@ -13,7 +13,7 @@ export type Staker = {
         {
           "name": "incentiveTokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": true
         },
         {
           "name": "founderTokenAccount",
@@ -29,6 +29,11 @@ export type Staker = {
           "name": "founder",
           "isMut": true,
           "isSigner": true
+        },
+        {
+          "name": "incentiveToken",
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "stakerAuthority",
@@ -434,7 +439,7 @@ export const IDL: Staker = {
         {
           "name": "incentiveTokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": true
         },
         {
           "name": "founderTokenAccount",
@@ -450,6 +455,11 @@ export const IDL: Staker = {
           "name": "founder",
           "isMut": true,
           "isSigner": true
+        },
+        {
+          "name": "incentiveToken",
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "stakerAuthority",
