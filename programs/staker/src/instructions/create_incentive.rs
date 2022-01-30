@@ -33,10 +33,11 @@ pub struct CreateIncentive<'info> {
     pub founder: Signer<'info>,
     pub incentive_token: Account<'info, Mint>,
     // #[account(seeds = [b"staker_invt".as_ref()], bump = nonce)]
-    pub staker_authority: AccountInfo<'info>,
+    pub staker_authority: AccountInfo<'info>, // TODO: save staker_authority in state
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
-    pub invariant: Program<'info, Invariant>, //TODO: Add program validation
+    #[account(address = invariant::ID)]
+    pub invariant: Program<'info, Invariant>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
