@@ -122,7 +122,7 @@ describe('Create incentive tests', () => {
     const endTime = currentTime.add(new BN(31_000_000))
     const totalSecondsClaimed: Decimal = { v: new BN(0) }
 
-    const createIncentiveVars: CreateIncentiveTransaction = {
+    const createIncentiveVars: CreateIncentive = {
       reward,
       startTime,
       endTime,

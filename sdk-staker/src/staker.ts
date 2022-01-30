@@ -57,7 +57,7 @@ export class Staker {
     pool,
     founderTokenAcc,
     invariant
-  }: CreateIncentiveTransaction) {
+  }: CreateIncentive) {
     founder = founder ?? this.wallet.publicKey
     incentive = incentive ?? Keypair.generate().publicKey
 
@@ -219,12 +219,10 @@ export interface CreateIncentive {
   pool: PublicKey
   founder?: PublicKey
   incentive?: PublicKey
+  incentiveTokenAccount: PublicKey
   incentiveToken: PublicKey
   founderTokenAcc: PublicKey
   invariant: PublicKey
-}
-export interface CreateIncentiveTransaction extends CreateIncentive {
-  incentiveTokenAccount: PublicKey
 }
 export interface CreateStake {
   pool: PublicKey
