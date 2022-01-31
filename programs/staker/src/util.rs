@@ -1,6 +1,6 @@
+use anchor_lang::prelude::*;
 use std::convert::TryInto;
 
-use anchor_lang::prelude::*;
 
 pub const STAKER_SEED: &str = "staker";
 
