@@ -929,6 +929,32 @@ mod tests {
 
     #[test]
     fn test_calculate_amount_delta() {
+        // current tick between lower tick and upper tick
+        {
+            let mut pool = Pool {
+                liquidity: Decimal::from_integer(0),
+                sqrt_price: Decimal::new(1000140000000),
+                current_tick_index: 2,
+                ..Default::default()
+            };
+
+            let liquidity_delta = Decimal::from_integer(5_000_000);
+            let liquidity_sign = true;
+            let upper_tick = 3;
+            let lower_tick = 0;
+
+            let (x, y) = calculate_amount_delta(
+                &mut pool,
+                liquidity_delta,
+                liquidity_sign,
+                upper_tick,
+                lower_tick,
+            )
+            .unwrap();
+
+            assert_eq!(x, TokenAmount(51));
+            assert_eq!(y, TokenAmount(700));
+        }
         // current tick smaller than lower tick
         {
             let mut pool = Pool {
@@ -942,7 +968,7 @@ mod tests {
             let upper_tick = 4;
             let lower_tick = 2;
 
-            let result = calculate_amount_delta(
+            let (x, y) = calculate_amount_delta(
                 &mut pool,
                 liquidity_delta,
                 liquidity_sign,
@@ -951,8 +977,8 @@ mod tests {
             )
             .unwrap();
 
-            assert_eq!(result.0, TokenAmount(1));
-            assert_eq!(result.1, TokenAmount(0));
+            assert_eq!(x, TokenAmount(1));
+            assert_eq!(y, TokenAmount(0));
         }
         // current tick greater than upper tick
         {
@@ -967,7 +993,7 @@ mod tests {
             let upper_tick = 4;
             let lower_tick = 2;
 
-            let result = calculate_amount_delta(
+            let (x, y) = calculate_amount_delta(
                 &mut pool,
                 liquidity_delta,
                 liquidity_sign,
@@ -976,8 +1002,8 @@ mod tests {
             )
             .unwrap();
 
-            assert_eq!(result.0, TokenAmount(0));
-            assert_eq!(result.1, TokenAmount(1));
+            assert_eq!(x, TokenAmount(0));
+            assert_eq!(y, TokenAmount(1));
         }
     }
     #[test]
