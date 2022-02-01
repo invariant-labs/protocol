@@ -40,4 +40,8 @@ pub mod staker {
     pub fn end_incentive(ctx: Context<ReturnFounds>, _bump_authority: u8) -> ProgramResult {
         instructions::end_incentive::handler(ctx, _bump_authority)
     }
+
+    pub fn close_stake_account(ctx: Context<CloseAccount>) -> ProgramResult {
+        instructions::close_stake_account::handler(ctx)
+    }
 }

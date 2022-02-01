@@ -104,15 +104,15 @@ pub fn handler(ctx: Context<Withdraw>, nonce: u8) -> ProgramResult {
     let cpi_ctx = ctx.accounts.withdraw().with_signer(signer);
 
     token::transfer(cpi_ctx, reward)?;
-    if current_time > incentive.end_claim_time {
+    if current_time > incentive.end_time {
         close(
         ctx.accounts.user_stake.to_account_info(),
-        ctx.accounts.position.owner.to_account_info(),
+        ctx.accounts.owner.to_account_info(),
     )
     .unwrap();
 
     incentive.num_of_stakes -= 1;
-}
+    }   
 
     Ok(())
 }

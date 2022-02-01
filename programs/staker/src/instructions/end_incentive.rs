@@ -1,6 +1,8 @@
 use crate::structs::*;
 use crate::util;
+use crate::util::close;
 use crate::util::get_current_timestamp;
+use anchor_lang::AccountsClose;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{self, TokenAccount, Transfer};
@@ -8,7 +10,7 @@ use util::STAKER_SEED;
 
 #[derive(Accounts)]
 pub struct ReturnFounds<'info> {
-    #[account(constraint = &incentive.load()?.founder == owner.to_account_info().key )]
+    #[account(mut, constraint = &incentive.load()?.founder == founder.to_account_info().key )]
     pub incentive: AccountLoader<'info, Incentive>,
     //TODO: Add token account and validate mints
     #[account(mut,
@@ -20,7 +22,8 @@ pub struct ReturnFounds<'info> {
     pub founder_token_account: Account<'info, TokenAccount>,
     //TODO: validate staker_authority
     pub staker_authority: AccountInfo<'info>,
-    pub owner: Signer<'info>,
+    // TODO only owner can close incentive
+    pub founder: Signer<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
     #[account(address = system_program::ID)]
@@ -42,6 +45,7 @@ impl<'info> ReturnFounds<'info> {
 }
 
 pub fn handler(ctx: Context<ReturnFounds>, bump_authority: u8) -> ProgramResult {
+    {
     let incentive = ctx.accounts.incentive.load()?;
     let current_time = get_current_timestamp();
     require!(current_time > incentive.end_claim_time, TooEarly);
@@ -54,7 +58,13 @@ pub fn handler(ctx: Context<ReturnFounds>, bump_authority: u8) -> ProgramResult 
     let signer = &[&seeds[..]];
     let cpi_ctx = ctx.accounts.return_to_founder().with_signer(signer);
 
-    token::transfer(cpi_ctx, incentive.total_reward_unclaimed.to_u64())?;
+    token::transfer(cpi_ctx, incentive.total_reward_unclaimed.to_u64())?;}
+
+    // TODO close incentive acc
+    close(
+        ctx.accounts.incentive.to_account_info(),
+        ctx.accounts.founder.to_account_info(),
+    ).unwrap();
 
     Ok(())
 }

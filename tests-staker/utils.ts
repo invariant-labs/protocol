@@ -1,9 +1,15 @@
-import { Decimal, LiquidityMining } from '../sdk-staker/src/staker'
-import { Connection, Keypair } from '@solana/web3.js'
+import { Decimal, LiquidityMining, Stake } from '../sdk-staker/src/staker'
+import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { Token, u64 } from '@solana/spl-token'
 import { TokenInstructions } from '@project-serum/serum'
 import { BN } from '@project-serum/anchor'
-import { CreateIncentive, CreateStake, EndIncentive, Withdraw } from '../sdk-staker/lib/staker'
+import {
+  CreateIncentive,
+  CreateStake,
+  EndIncentive,
+  RemoveStake,
+  Withdraw
+} from '../sdk-staker/lib/staker'
 import { signAndSend } from '../sdk-staker/lib/utils'
 import { UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
 import { Market } from '@invariant-labs/sdk'
@@ -20,7 +26,8 @@ export enum ERRORS {
 export enum ERRORS_STAKER {
   ZERO_AMOUNT = '0x1773', // 0
   START_IN_PAST = '0x1775', // 1
-  TO_LONG_DURATION = '0x1774' // 2
+  TO_LONG_DURATION = '0x1774', // 2
+  ENDED = '0x1776' // 3
 }
 
 export const eqDecimal = (a: Decimal, b: Decimal) => {
@@ -91,6 +98,18 @@ export const updatePositionAndCreateStake = async (
   await signAndSend(tx, signers, connection)
 }
 
+export const removeStake = async (
+  staker: LiquidityMining,
+  removeStake: RemoveStake,
+  signers: Keypair[],
+  connection: Connection
+) => {
+  const tx = new Transaction()
+  tx.add(await staker.removeStakeInstruction(removeStake))
+
+  await signAndSend(tx, signers, connection)
+}
+
 export const updatePositionAndWithdraw = async (
   market: Market,
   staker: LiquidityMining,
@@ -118,17 +137,25 @@ export const createIncentive = async (
   await signAndSend(tx, signers, staker.connection)
 }
 
-export const createStake = async (staker: Staker, createStake: CreateStake, signer: Keypair) => {
+export const createStake = async (
+  staker: LiquidityMining,
+  createStake: CreateStake,
+  signer: Keypair
+) => {
   const tx = await staker.createStakeTransaction(createStake)
   await signAndSend(tx, [signer], staker.connection)
 }
 
-export const withdraw = async (staker: Staker, withdraw: Withdraw, signer: Keypair) => {
+export const withdraw = async (staker: LiquidityMining, withdraw: Withdraw, signer: Keypair) => {
   const tx = await staker.withdrawTransaction(withdraw)
   await signAndSend(tx, [signer], staker.connection)
 }
 
-export const endIncentive = async (staker: Staker, endIncentive: EndIncentive, signer: Keypair) => {
+export const endIncentive = async (
+  staker: LiquidityMining,
+  endIncentive: EndIncentive,
+  signer: Keypair
+) => {
   const tx = await staker.endIncentiveTransaction(endIncentive)
   await signAndSend(tx, [signer], staker.connection)
 }

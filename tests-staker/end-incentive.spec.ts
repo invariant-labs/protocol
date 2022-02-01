@@ -2,12 +2,12 @@ import * as anchor from '@project-serum/anchor'
 import { Program, Provider, BN } from '@project-serum/anchor'
 import { Market, Pair, sleep } from '@invariant-labs/sdk'
 import { Staker as StakerIdl } from '../sdk-staker/src/idl/staker'
-import { Network, Staker } from '../sdk-staker/src'
+import { Network } from '../sdk-staker/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
 import { Decimal, LiquidityMining } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
-import { createToken, tou64 } from './utils'
+import { assertThrowsAsync, createToken, tou64 } from './utils'
 import { createToken as createTkn } from '../tests/testUtils'
 import { signAndSend } from '../sdk-staker/lib/utils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
@@ -18,7 +18,7 @@ import { CreateFeeTier, CreatePool } from '@invariant-labs/sdk/src/market'
 describe('End incentive tests', () => {
   const provider = Provider.local()
   const connection = provider.connection
-  const program = anchor.workspace.Staker as Program<StakerIdl>
+  // const program = anchor.workspace.Staker as Program<StakerIdl>
   // @ts-expect-error
   const wallet = provider.wallet.payer as Account
   const founderAccount = Keypair.generate()
@@ -63,7 +63,7 @@ describe('End incentive tests', () => {
     amount = new anchor.BN(100 * 1e6)
     await incentiveToken.mintTo(founderTokenAcc, wallet, [], tou64(amount))
 
-    //create invariant and pool
+    // create invariant and pool
     const admin = Keypair.generate()
     const market = await Market.build(
       0,
@@ -85,9 +85,6 @@ describe('End incentive tests', () => {
     }
 
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-
-    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
     await market.createState(admin.publicKey, admin)
 
@@ -154,5 +151,8 @@ describe('End incentive tests', () => {
 
     const balanceAfter = (await incentiveToken.getAccountInfo(founderTokenAcc)).amount
     assert.ok(balanceAfter.eq(balanceBefore))
+
+    // check if incentive account exist, should not
+    await assertThrowsAsync(staker.getIncentive(incentiveAccount.publicKey))
   })
 })

@@ -247,6 +247,40 @@ describe('Create incentive tests', () => {
       ERRORS_STAKER.TO_LONG_DURATION
     )
   })
+  it('Fail, try to create second incentive to same position', async () => {
+    const incentiveAccount = Keypair.generate()
+    await connection.requestAirdrop(incentiveAccount.publicKey, 10e9)
+    await new Promise(resolve => {
+      setTimeout(() => {
+        resolve(null)
+      }, 1000)
+    })
+
+    const seconds = new Date().valueOf() / 1000
+    const currentTime = new BN(Math.floor(seconds))
+    const reward: Decimal = { v: new BN(1000) }
+    const startTime = currentTime.add(new BN(0))
+    const endTime = currentTime.add(new BN(31_000_000))
+
+    const createIncentiveVars: CreateIncentive = {
+      reward,
+      startTime,
+      endTime,
+      incentive: incentiveAccount.publicKey,
+      pool,
+      founder: founderAccount.publicKey,
+      incentiveTokenAcc: incentiveTokenAcc,
+      founderTokenAcc: founderTokenAcc,
+      invariant
+    }
+
+    await createIncentive(staker, createIncentiveVars, [founderAccount, incentiveAccount])
+
+    await assertThrowsAsync(
+      createIncentive(staker, createIncentiveVars, [founderAccount, incentiveAccount])
+    )
+  })
+
   it('Check if amount on incentive token account after donate is correct', async () => {
     const incentiveAccount = Keypair.generate()
     await connection.requestAirdrop(incentiveAccount.publicKey, 10e9)

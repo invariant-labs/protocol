@@ -284,6 +284,10 @@ export type Staker = {
             "type": "u64"
           },
           {
+            "name": "endClaimTime",
+            "type": "u64"
+          },
+          {
             "name": "numOfStakes",
             "type": "u64"
           },
@@ -304,11 +308,11 @@ export type Staker = {
         "kind": "struct",
         "fields": [
           {
-            "name": "position",
+            "name": "incentive",
             "type": "publicKey"
           },
           {
-            "name": "incentive",
+            "name": "position",
             "type": "publicKey"
           },
           {
@@ -403,13 +407,13 @@ export type Staker = {
     },
     {
       "code": 6011,
-      "name": "NotEnded",
+      "name": "TooEarly",
       "msg": "Incentive not ended"
     },
     {
       "code": 6012,
       "name": "StakeExist",
-      "msg": "Can't end id stake exists"
+      "msg": "Too early to remove incentive"
     },
     {
       "code": 6013,
@@ -705,6 +709,10 @@ export const IDL: Staker = {
             "type": "u64"
           },
           {
+            "name": "endClaimTime",
+            "type": "u64"
+          },
+          {
             "name": "numOfStakes",
             "type": "u64"
           },
@@ -725,11 +733,11 @@ export const IDL: Staker = {
         "kind": "struct",
         "fields": [
           {
-            "name": "position",
+            "name": "incentive",
             "type": "publicKey"
           },
           {
-            "name": "incentive",
+            "name": "position",
             "type": "publicKey"
           },
           {
@@ -824,13 +832,13 @@ export const IDL: Staker = {
     },
     {
       "code": 6011,
-      "name": "NotEnded",
+      "name": "TooEarly",
       "msg": "Incentive not ended"
     },
     {
       "code": 6012,
       "name": "StakeExist",
-      "msg": "Can't end id stake exists"
+      "msg": "Too early to remove incentive"
     },
     {
       "code": 6013,

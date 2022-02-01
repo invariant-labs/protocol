@@ -13,6 +13,7 @@ import {
   Keypair
 } from '@solana/web3.js'
 import { STAKER_SEED } from './utils'
+import { bs58 } from '@project-serum/anchor/dist/cjs/utils/bytes'
 
 export class LiquidityMining {
   connection: Connection
@@ -139,6 +140,27 @@ export class LiquidityMining {
     return await this.program.account.userStake.fetch(userStakeAddress)
   }
 
+  public async removeStakeInstruction({ pool, id, incentive, founder }: RemoveStake) {
+    founder = founder ?? this.wallet.publicKey
+
+    const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
+
+    return this.program.instruction.closeStakeAccount({
+      accounts: {
+        incentive,
+        userStake: userStakeAddress,
+        founder: founder,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY
+      }
+    })
+  }
+
+  public async removeStakeTransaction(removeStake: RemoveStake) {
+    const ix = await this.removeStakeInstruction(removeStake)
+    return new Transaction().add(ix)
+  }
+
   public async withdrawInstruction({
     incentive,
     pool,
@@ -200,7 +222,7 @@ export class LiquidityMining {
         incentiveTokenAccount: incentiveTokenAcc,
         founderTokenAccount: ownerTokenAcc,
         stakerAuthority,
-        owner,
+        founder: owner,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY
@@ -213,15 +235,15 @@ export class LiquidityMining {
     return new Transaction().add(ix)
   }
 
-  // async getAllIncentiveStakes(incentive: PublicKey) {
-  //   return (
-  //     await this.program.account.userStake.all([
-  //       {
-  //         memcmp: { bytes: bs58.encode(incentive.toBuffer()), offset: 8 }
-  //       }
-  //     ])
-  //   ).map(a => a.account) as Stake[]
-  // }
+  async getAllIncentiveStakes(incentive: PublicKey) {
+    return (
+      await this.program.account.userStake.all([
+        {
+          memcmp: { bytes: bs58.encode(incentive.toBuffer()), offset: 8 }
+        }
+      ])
+    ).map(a => a.account) as Stake[]
+  }
 }
 
 export interface CreateIncentive {
@@ -244,13 +266,18 @@ export interface CreateStake {
   invariant: PublicKey
   index: number
 }
-export interface Stake {
-  position: PublicKey
+export interface RemoveStake {
+  pool: PublicKey
+  id: BN
   incentive: PublicKey
-  liquidity: Decimal
+  founder?: PublicKey
+}
+export interface Stake {
+  incentive: PublicKey
+  position: PublicKey
   secondsPerLiquidityInitial: Decimal
-  invariant: PublicKey
-  index: number
+  liquidity: Decimal
+  bump: number
 }
 export interface Withdraw {
   incentive: PublicKey
