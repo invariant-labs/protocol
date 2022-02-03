@@ -10,7 +10,8 @@ import {
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
   Transaction,
-  Keypair
+  Keypair,
+  sendAndConfirmRawTransaction
 } from '@solana/web3.js'
 import { STAKER_SEED } from './utils'
 import { bs58 } from '@project-serum/anchor/dist/cjs/utils/bytes'
@@ -24,6 +25,7 @@ export class LiquidityMining {
 
   opts?: ConfirmOptions
 
+  // TODO implement builder pattern
   public constructor(
     connection: Connection,
     network: Network,
@@ -46,21 +48,19 @@ export class LiquidityMining {
     }
   }
 
-  public async createIncentiveInstruction({
-    reward,
-    startTime,
-    endTime,
-    founder,
-    incentive,
-    pool,
-    incentiveTokenAcc,
-    founderTokenAcc,
-    invariant
-  }: CreateIncentive) {
-    founder = founder ?? this.wallet.publicKey
-
-    incentive = incentive ?? Keypair.generate().publicKey
-
+  public async createIncentiveInstruction(
+    {
+      reward,
+      startTime,
+      endTime,
+      founder,
+      pool,
+      incentiveTokenAcc,
+      founderTokenAcc,
+      invariant
+    }: CreateIncentive,
+    incentive: PublicKey
+  ) {
     const [stakerAuthority, nonce] = await PublicKey.findProgramAddress(
       [STAKER_SEED],
       this.programId
@@ -82,9 +82,13 @@ export class LiquidityMining {
     })
   }
 
-  public async createIncentiveTransaction(createIncentive: CreateIncentive) {
-    const ix = await this.createIncentiveInstruction(createIncentive)
-    return new Transaction().add(ix)
+  public async createIncentive(createIncentive: CreateIncentive, signers?: Keypair[]) {
+    const incentiveAccount = Keypair.generate()
+    const tx = new Transaction().add(
+      await this.createIncentiveInstruction(createIncentive, incentiveAccount.publicKey)
+    )
+    await this.signAndSend(tx, [incentiveAccount])
+    return incentiveAccount.publicKey
   }
 
   public async getIncentive(incentivePubKey: PublicKey) {
@@ -140,15 +144,15 @@ export class LiquidityMining {
     return await this.program.account.userStake.fetch(userStakeAddress)
   }
 
-  public async removeStakeInstruction({ pool, id, incentive, founder }: RemoveStake) {
-    founder = founder ?? this.wallet.publicKey
-
-    const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
-
+  public async removeStakeInstruction(
+    userStake: PublicKey,
+    incentive: PublicKey,
+    founder: PublicKey
+  ) {
     return this.program.instruction.closeStakeAccount({
       accounts: {
         incentive,
-        userStake: userStakeAddress,
+        userStake: userStake,
         founder: founder,
         systemProgram: SystemProgram.programId,
         rent: SYSVAR_RENT_PUBKEY
@@ -156,8 +160,12 @@ export class LiquidityMining {
     })
   }
 
-  public async removeStakeTransaction(removeStake: RemoveStake) {
-    const ix = await this.removeStakeInstruction(removeStake)
+  public async removeStakeTransaction(
+    userStake: PublicKey,
+    incentive: PublicKey,
+    founder: PublicKey
+  ) {
+    const ix = await this.removeStakeInstruction(userStake, incentive, founder)
     return new Transaction().add(ix)
   }
 
@@ -235,14 +243,29 @@ export class LiquidityMining {
     return new Transaction().add(ix)
   }
 
-  async getAllIncentiveStakes(incentive: PublicKey) {
-    return (
-      await this.program.account.userStake.all([
-        {
-          memcmp: { bytes: bs58.encode(incentive.toBuffer()), offset: 8 }
-        }
-      ])
-    ).map(a => a.account) as Stake[]
+  public async getAllIncentiveStakes(incentive: PublicKey) {
+    return await this.program.account.userStake.all([
+      {
+        memcmp: { bytes: bs58.encode(incentive.toBuffer()), offset: 8 }
+      }
+    ])
+  }
+
+  private async signAndSend(tx: Transaction, signers?: Keypair[], opts?: ConfirmOptions) {
+    const blockhash = await this.connection.getRecentBlockhash(
+      this.opts?.commitment || Provider.defaultOptions().commitment
+    )
+    tx.feePayer = this.wallet.publicKey
+    tx.recentBlockhash = blockhash.blockhash
+
+    await this.wallet.signTransaction(tx)
+    if (signers) tx.partialSign(...signers)
+
+    return await sendAndConfirmRawTransaction(
+      this.connection,
+      tx.serialize(),
+      opts ?? Provider.defaultOptions()
+    )
   }
 }
 
@@ -251,8 +274,7 @@ export interface CreateIncentive {
   startTime: BN
   endTime: BN
   pool: PublicKey
-  founder?: PublicKey
-  incentive?: PublicKey
+  founder: PublicKey
   incentiveTokenAcc: PublicKey
   founderTokenAcc: PublicKey
   invariant: PublicKey
@@ -267,10 +289,12 @@ export interface CreateStake {
   index: number
 }
 export interface RemoveStake {
+  staker: LiquidityMining
   pool: PublicKey
   id: BN
   incentive: PublicKey
-  founder?: PublicKey
+  founder: Keypair
+  connection: Connection
 }
 export interface Stake {
   incentive: PublicKey
