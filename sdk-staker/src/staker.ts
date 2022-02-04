@@ -88,6 +88,14 @@ export class LiquidityMining {
     return stringTx
   }
 
+  public async endIncentive(endIncentive: EndIncentive) {
+    const endIncentiveIx = await this.endIncentiveInstruction(endIncentive)
+    const tx = new Transaction().add(endIncentiveIx)
+    const stringTx = await this.signAndSend(tx)
+
+    return stringTx
+  }
+
   // instructions
 
   public async createIncentiveIx(
@@ -186,6 +194,31 @@ export class LiquidityMining {
     })
   }
 
+  public async endIncentiveInstruction({
+    incentive,
+    incentiveTokenAcc,
+    ownerTokenAcc,
+    founder
+  }: EndIncentive) {
+    const [stakerAuthority, stakerAuthorityBump] = await PublicKey.findProgramAddress(
+      [STAKER_SEED],
+      this.programId
+    )
+
+    return this.program.instruction.endIncentive(stakerAuthorityBump, {
+      accounts: {
+        incentive,
+        incentiveTokenAccount: incentiveTokenAcc,
+        founderTokenAccount: ownerTokenAcc,
+        stakerAuthority,
+        founder: founder,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY
+      }
+    })
+  }
+
   // getters
   public async getIncentive(incentivePubKey: PublicKey) {
     return (await this.program.account.incentive.fetch(incentivePubKey)) as IncentiveStructure
@@ -228,38 +261,6 @@ export class LiquidityMining {
     founder: PublicKey
   ) {
     const ix = await this.removeStakeInstruction(userStake, incentive, founder)
-    return new Transaction().add(ix)
-  }
-
-  public async endIncentiveInstruction({
-    incentive,
-    incentiveTokenAcc,
-    ownerTokenAcc,
-    owner
-  }: EndIncentive) {
-    owner = owner ?? this.wallet.publicKey
-
-    const [stakerAuthority, stakerAuthorityBump] = await PublicKey.findProgramAddress(
-      [STAKER_SEED],
-      this.programId
-    )
-
-    return this.program.instruction.endIncentive(stakerAuthorityBump, {
-      accounts: {
-        incentive,
-        incentiveTokenAccount: incentiveTokenAcc,
-        founderTokenAccount: ownerTokenAcc,
-        stakerAuthority,
-        founder: owner,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
-        rent: SYSVAR_RENT_PUBKEY
-      }
-    })
-  }
-
-  public async endIncentiveTransaction(endIncentive: EndIncentive) {
-    const ix = await this.endIncentiveInstruction(endIncentive)
     return new Transaction().add(ix)
   }
 
@@ -340,7 +341,7 @@ export interface EndIncentive {
   incentive: PublicKey
   incentiveTokenAcc: PublicKey
   ownerTokenAcc: PublicKey
-  owner?: PublicKey
+  founder: PublicKey
 }
 
 export interface IncentiveStructure {

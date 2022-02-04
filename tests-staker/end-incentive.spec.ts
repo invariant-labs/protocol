@@ -1,15 +1,13 @@
 import * as anchor from '@project-serum/anchor'
 import { Program, Provider, BN } from '@project-serum/anchor'
 import { Market, Pair, sleep } from '@invariant-labs/sdk'
-import { Staker as StakerIdl } from '../sdk-staker/src/idl/staker'
 import { Network } from '../sdk-staker/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import { Decimal, LiquidityMining } from '../sdk-staker/src/staker'
+import { CreateIncentive, Decimal, EndIncentive, LiquidityMining } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
-import { assertThrowsAsync, createToken, tou64 } from './utils'
+import { assertThrowsAsync, createToken, tou64, signAndSend } from './testUtils'
 import { createToken as createTkn } from '../tests/testUtils'
-import { signAndSend } from '../sdk-staker/lib/utils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
@@ -122,32 +120,32 @@ describe('End incentive tests', () => {
 
     const balanceBefore = (await incentiveToken.getAccountInfo(founderTokenAcc)).amount
 
-    const ixCreate = await staker.createIncentiveInstruction({
+    const createIncentiveVars: CreateIncentive = {
       reward,
       startTime,
       endTime,
-      incentive: incentiveAccount.publicKey,
-      pool: pool,
+      pool,
       founder: founderAccount.publicKey,
       incentiveTokenAcc: incentiveTokenAcc,
       founderTokenAcc: founderTokenAcc,
       invariant
-    })
-    await signAndSend(
-      new Transaction().add(ixCreate),
-      [incentiveAccount, founderAccount],
-      connection
-    )
+    }
+
+    const createIx = await staker.createIncentiveIx(createIncentiveVars, incentiveAccount.publicKey)
+    const createTx = new Transaction().add(createIx)
+    await signAndSend(createTx, [founderAccount, incentiveAccount], staker.connection)
 
     await sleep(18000)
 
-    const ixEndIncentive = await staker.endIncentiveInstruction({
+    const endIncentive: EndIncentive = {
       incentive: incentiveAccount.publicKey,
       incentiveTokenAcc: incentiveTokenAcc,
       ownerTokenAcc: founderTokenAcc,
-      owner: founderAccount.publicKey
-    })
-    await signAndSend(new Transaction().add(ixEndIncentive), [founderAccount], connection)
+      founder: founderAccount.publicKey
+    }
+    const endIncentiveIx = await staker.endIncentiveInstruction(endIncentive)
+    const endIncentiveTx = new Transaction().add(endIncentiveIx)
+    await signAndSend(endIncentiveTx, [founderAccount], staker.connection)
 
     const balanceAfter = (await incentiveToken.getAccountInfo(founderTokenAcc)).amount
     assert.ok(balanceAfter.eq(balanceBefore))

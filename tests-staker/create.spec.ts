@@ -12,7 +12,7 @@ import {
   assertThrowsAsync,
   ERRORS_STAKER,
   signAndSend
-} from './utils'
+} from './testUtils'
 import { createToken as createTkn } from '../tests/testUtils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'

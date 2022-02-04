@@ -193,18 +193,7 @@ describe('Multicall test', () => {
       staker.connection
     )
     // create first position
-    const createTickVars: CreateTick = {
-      pair,
-      index: firstUpperTick,
-      payer: admin.publicKey
-    }
-    await market.createTick(createTickVars, admin)
-    const createTickVars2: CreateTick = {
-      pair,
-      index: firstLowerTick,
-      payer: admin.publicKey
-    }
-    await market.createTick(createTickVars2, admin)
+
     const firstUserTokenXAccount = await tokenX.createAccount(firstPositionOwner.publicKey)
     const firstUserTokenYAccount = await tokenY.createAccount(firstPositionOwner.publicKey)
     let mintAmount = tou64(new BN(10).pow(new BN(10)))
@@ -232,18 +221,7 @@ describe('Multicall test', () => {
     }
     await market.initPosition(initPositionVars, firstPositionOwner)
     // create second position
-    const createTickVars3: CreateTick = {
-      pair,
-      index: secondUpperTick,
-      payer: admin.publicKey
-    }
-    await market.createTick(createTickVars3, admin)
-    const createTickVars4: CreateTick = {
-      pair,
-      index: secondLowerTick,
-      payer: admin.publicKey
-    }
-    await market.createTick(createTickVars4, admin)
+
     const secondUserTokenXAccount = await tokenX.createAccount(secondPositionOwner.publicKey)
     const secondUserTokenYAccount = await tokenY.createAccount(secondPositionOwner.publicKey)
     mintAmount = tou64(new BN(10).pow(new BN(10)))
