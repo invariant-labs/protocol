@@ -48,6 +48,45 @@ export class LiquidityMining {
         throw new Error('Not supported')
     }
   }
+
+  // frontend methods
+
+  public async createIncentive(createIncentive: CreateIncentive) {
+    const incentiveAccount = Keypair.generate()
+    const incentive = incentiveAccount.publicKey
+    const createIx = await this.createIncentiveIx(createIncentive, incentiveAccount.publicKey)
+    const tx = new Transaction().add(createIx)
+    const stringTx = await this.signAndSend(tx, [incentiveAccount])
+
+    return { stringTx, incentive }
+  }
+
+  public async createStake(
+    market: Market,
+    update: UpdateSecondsPerLiquidity,
+    createStake: CreateStake
+  ) {
+    const updateIx = await market.updateSecondsPerLiquidityInstruction(update)
+    const stakeIx = await this.createStakeIx(createStake)
+    const tx = new Transaction().add(updateIx).add(stakeIx)
+    const stringTx = await this.signAndSend(tx)
+    const [stake, bump] = await this.getUserStakeAddressAndBump(
+      createStake.incentive,
+      createStake.pool,
+      createStake.id
+    )
+
+    return { stringTx, stake }
+  }
+
+  public async withdraw(withdraw: Withdraw) {
+    const ix = await this.withdrawIx(withdraw)
+    const tx = new Transaction().add(ix)
+    const stringTx = await this.signAndSend(tx)
+
+    return stringTx
+  }
+
   // instructions
 
   public async createIncentiveIx(
@@ -111,34 +150,39 @@ export class LiquidityMining {
     })
   }
 
-  // public methods
-
-  public async createIncentive(createIncentive: CreateIncentive) {
-    const incentiveAccount = Keypair.generate()
-    const incentive = incentiveAccount.publicKey
-    const tx = new Transaction().add(
-      await this.createIncentiveIx(createIncentive, incentiveAccount.publicKey)
+  public async withdrawIx({
+    incentive,
+    pool,
+    id,
+    incentiveTokenAcc,
+    ownerTokenAcc,
+    position,
+    owner,
+    invariant,
+    index
+  }: Withdraw) {
+    const [stakerAuthority, nonce] = await PublicKey.findProgramAddress(
+      [STAKER_SEED],
+      this.programId
     )
-    const stringTx = await this.signAndSend(tx, [incentiveAccount])
-    return { stringTx, incentive }
-  }
 
-  public async createStake(
-    market: Market,
-    update: UpdateSecondsPerLiquidity,
-    createStake: CreateStake
-  ) {
-    const updateIx = await market.updateSecondsPerLiquidityInstruction(update)
-    const stakeIx = await this.createStakeIx(createStake)
-    const tx = new Transaction().add(updateIx).add(stakeIx)
+    const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
 
-    const stringTx = await this.signAndSend(tx)
-    const [stake, bump] = await this.getUserStakeAddressAndBump(
-      createStake.incentive,
-      createStake.pool,
-      createStake.id
-    )
-    return { stringTx, stake }
+    return this.program.instruction.withdraw(index, nonce, {
+      accounts: {
+        userStake: userStakeAddress,
+        incentive,
+        incentiveTokenAccount: incentiveTokenAcc,
+        ownerTokenAccount: ownerTokenAcc,
+        position,
+        stakerAuthority,
+        owner,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        invariant,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY
+      }
+    })
   }
 
   // getters
@@ -183,48 +227,6 @@ export class LiquidityMining {
     founder: PublicKey
   ) {
     const ix = await this.removeStakeInstruction(userStake, incentive, founder)
-    return new Transaction().add(ix)
-  }
-
-  public async withdrawInstruction({
-    incentive,
-    pool,
-    id,
-    incentiveTokenAcc,
-    ownerTokenAcc,
-    position,
-    owner,
-    invariant,
-    index
-  }: Withdraw) {
-    owner = owner ?? this.wallet.publicKey
-
-    const [stakerAuthority, nonce] = await PublicKey.findProgramAddress(
-      [STAKER_SEED],
-      this.programId
-    )
-
-    const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
-
-    return this.program.instruction.withdraw(index, nonce, {
-      accounts: {
-        userStake: userStakeAddress,
-        incentive,
-        incentiveTokenAccount: incentiveTokenAcc,
-        ownerTokenAccount: ownerTokenAcc,
-        position,
-        stakerAuthority,
-        owner,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        invariant,
-        systemProgram: SystemProgram.programId,
-        rent: SYSVAR_RENT_PUBKEY
-      }
-    })
-  }
-
-  public async withdrawTransaction(withdraw: Withdraw) {
-    const ix = await this.withdrawInstruction(withdraw)
     return new Transaction().add(ix)
   }
 

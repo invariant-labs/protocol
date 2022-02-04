@@ -144,27 +144,12 @@ describe('Stake tests', () => {
     const createTx = new Transaction().add(
       await staker.createIncentiveIx(createIncentiveVars, incentiveAccount.publicKey)
     )
-
     await signAndSend(createTx, [founderAccount, incentiveAccount], staker.connection)
 
     // create position
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
     const upperTick = 10
     const lowerTick = -20
-
-    const createTickVars: CreateTick = {
-      pair,
-      index: upperTick,
-      payer: admin.publicKey
-    }
-    await market.createTick(createTickVars, admin)
-
-    const createTickVars2: CreateTick = {
-      pair,
-      index: lowerTick,
-      payer: admin.publicKey
-    }
-    await market.createTick(createTickVars2, admin)
 
     const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
     const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)

@@ -2,8 +2,8 @@ import * as anchor from '@project-serum/anchor'
 import { Program, Provider, BN } from '@project-serum/anchor'
 import { Market, Pair, DENOMINATOR, sleep } from '@invariant-labs/sdk'
 import { Staker as StakerIdl } from '../sdk-staker/src/idl/staker'
-import { Network, Staker } from '../sdk-staker/src'
-import { Keypair, PublicKey } from '@solana/web3.js'
+import { Network } from '../sdk-staker/src'
+import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
 import { Decimal, LiquidityMining } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
@@ -12,10 +12,10 @@ import {
   tou64,
   getTime,
   almostEqual,
-  createIncentive,
   updatePositionAndCreateStake,
-  updatePositionAndWithdraw
-} from './utils'
+  updatePositionAndWithdraw,
+  signAndSend
+} from './testUtils'
 import { createToken as createTkn } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { toDecimal } from '../sdk-staker/lib/utils'
@@ -29,7 +29,7 @@ import {
   Swap,
   UpdateSecondsPerLiquidity
 } from '@invariant-labs/sdk/src/market'
-import { CreateIncentive, CreateStake, Withdraw } from '../sdk-staker/lib/staker'
+import { CreateIncentive, CreateStake, Withdraw } from '../sdk-staker/src/staker'
 
 describe('Withdraw tests', () => {
   const provider = Provider.local()
@@ -108,7 +108,6 @@ describe('Withdraw tests', () => {
     ])
 
     // create pool
-
     const feeTier: FeeTier = {
       fee: fromFee(new BN(600)),
       tickSpacing: 10
@@ -150,33 +149,21 @@ describe('Withdraw tests', () => {
       reward,
       startTime,
       endTime,
-      incentive: incentiveAccount.publicKey,
       pool,
       founder: founderAccount.publicKey,
       incentiveTokenAcc: incentiveTokenAcc,
       founderTokenAcc: founderTokenAcc,
       invariant
     }
-    await createIncentive(staker, createIncentiveVars, [founderAccount, incentiveAccount])
+    const createTx = new Transaction().add(
+      await staker.createIncentiveIx(createIncentiveVars, incentiveAccount.publicKey)
+    )
 
+    await signAndSend(createTx, [founderAccount, incentiveAccount], staker.connection)
     // create position
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
     const upperTick = 10
     const lowerTick = -30
-
-    const createTickVars: CreateTick = {
-      pair,
-      index: upperTick,
-      payer: admin.publicKey
-    }
-    await market.createTick(createTickVars, admin)
-
-    const createTickVars2: CreateTick = {
-      pair,
-      index: lowerTick,
-      payer: admin.publicKey
-    }
-    await market.createTick(createTickVars2, admin)
 
     const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
     const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
@@ -214,31 +201,28 @@ describe('Withdraw tests', () => {
     const positionId = positionStructBefore.id
 
     // stake
-    const updateSecondsPerLiquidityVars: UpdateSecondsPerLiquidity = {
+    const update: UpdateSecondsPerLiquidity = {
       pair,
       owner: positionOwner.publicKey,
       lowerTickIndex: lowerTick,
       upperTickIndex: upperTick,
       index
     }
-    const createStakeVars: CreateStake = {
+    const createStake: CreateStake = {
       pool: poolAddress,
       id: positionId,
       index,
       position,
       incentive: incentiveAccount.publicKey,
       owner: positionOwner.publicKey,
-      invariant
+      invariant: anchor.workspace.Invariant.programId
     }
 
-    await updatePositionAndCreateStake(
-      market,
-      staker,
-      updateSecondsPerLiquidityVars,
-      createStakeVars,
-      [positionOwner],
-      connection
-    )
+    const updateIx = await market.updateSecondsPerLiquidityInstruction(update)
+    const stakeIx = await staker.createStakeIx(createStake)
+    const tx = new Transaction().add(updateIx).add(stakeIx)
+
+    await signAndSend(tx, [positionOwner], staker.connection)
 
     // Create owner
     const trader = Keypair.generate()
@@ -270,7 +254,7 @@ describe('Withdraw tests', () => {
     await sleep(10000)
 
     // withdraw
-    const withdrawVars: Withdraw = {
+    const withdraw: Withdraw = {
       incentive: incentiveAccount.publicKey,
       pool: poolAddress,
       id: positionId,
@@ -282,14 +266,9 @@ describe('Withdraw tests', () => {
       index,
       nonce
     }
-    await updatePositionAndWithdraw(
-      market,
-      staker,
-      updateSecondsPerLiquidityVars,
-      withdrawVars,
-      [positionOwner],
-      connection
-    )
+    const ix = await staker.withdrawIx(withdraw)
+    const withdrawTx = new Transaction().add(ix)
+    await signAndSend(withdrawTx, [positionOwner], staker.connection)
 
     const balanceAfter = (await incentiveToken.getAccountInfo(ownerTokenAcc)).amount
     assert.ok(almostEqual(balanceAfter, new BN('12000000000000'), epsilon))
