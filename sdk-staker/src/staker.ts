@@ -89,8 +89,30 @@ export class LiquidityMining {
   }
 
   public async endIncentive(endIncentive: EndIncentive) {
-    const endIncentiveIx = await this.endIncentiveInstruction(endIncentive)
+    const endIncentiveIx = await this.endIncentiveIx(endIncentive)
     const tx = new Transaction().add(endIncentiveIx)
+    const stringTx = await this.signAndSend(tx)
+
+    return stringTx
+  }
+
+  public async removeStake(pool: PublicKey, id: BN, incentive: PublicKey, founder: PublicKey) {
+    const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
+
+    const removeIx = await this.removeStakeIx(userStakeAddress, incentive, founder)
+    const tx = new Transaction().add(removeIx)
+    const stringTx = await this.signAndSend(tx)
+
+    return stringTx
+  }
+
+  public async removeAllStakes(staker: LiquidityMining, incentive: PublicKey, founder: Keypair) {
+    const stakes = await staker.getAllIncentiveStakes(incentive)
+    let tx = new Transaction()
+
+    for (let stake of stakes) {
+      tx.add(await staker.removeStakeIx(stake.publicKey, incentive, founder.publicKey))
+    }
     const stringTx = await this.signAndSend(tx)
 
     return stringTx
@@ -194,7 +216,7 @@ export class LiquidityMining {
     })
   }
 
-  public async endIncentiveInstruction({
+  public async endIncentiveIx({
     incentive,
     incentiveTokenAcc,
     ownerTokenAcc,
@@ -219,6 +241,18 @@ export class LiquidityMining {
     })
   }
 
+  public async removeStakeIx(userStake: PublicKey, incentive: PublicKey, founder: PublicKey) {
+    return this.program.instruction.removeStake({
+      accounts: {
+        incentive,
+        userStake: userStake,
+        founder: founder,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY
+      }
+    })
+  }
+
   // getters
   public async getIncentive(incentivePubKey: PublicKey) {
     return (await this.program.account.incentive.fetch(incentivePubKey)) as IncentiveStructure
@@ -237,31 +271,6 @@ export class LiquidityMining {
   public async getStake(incentive: PublicKey, pool: PublicKey, id: BN) {
     const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
     return await this.program.account.userStake.fetch(userStakeAddress)
-  }
-
-  public async removeStakeInstruction(
-    userStake: PublicKey,
-    incentive: PublicKey,
-    founder: PublicKey
-  ) {
-    return this.program.instruction.closeStakeAccount({
-      accounts: {
-        incentive,
-        userStake: userStake,
-        founder: founder,
-        systemProgram: SystemProgram.programId,
-        rent: SYSVAR_RENT_PUBKEY
-      }
-    })
-  }
-
-  public async removeStakeTransaction(
-    userStake: PublicKey,
-    incentive: PublicKey,
-    founder: PublicKey
-  ) {
-    const ix = await this.removeStakeInstruction(userStake, incentive, founder)
-    return new Transaction().add(ix)
   }
 
   public async getAllIncentiveStakes(incentive: PublicKey) {

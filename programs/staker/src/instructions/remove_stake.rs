@@ -6,7 +6,7 @@ use anchor_lang::solana_program::system_program;
 
 
 #[derive(Accounts)]
-pub struct CloseAccount<'info> {
+pub struct RemoveStake<'info> {
     #[account(mut, constraint = &incentive.load()?.founder == founder.to_account_info().key )]
     pub incentive: AccountLoader<'info, Incentive>,
     #[account(mut,
@@ -19,7 +19,7 @@ pub struct CloseAccount<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn handler(ctx: Context<CloseAccount>) -> ProgramResult {
+pub fn handler(ctx: Context<RemoveStake>) -> ProgramResult {
     let mut incentive = ctx.accounts.incentive.load_mut()?;
     let current_time = get_current_timestamp();
     require!(current_time > incentive.end_claim_time, TooEarly);

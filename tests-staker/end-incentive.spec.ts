@@ -143,7 +143,7 @@ describe('End incentive tests', () => {
       ownerTokenAcc: founderTokenAcc,
       founder: founderAccount.publicKey
     }
-    const endIncentiveIx = await staker.endIncentiveInstruction(endIncentive)
+    const endIncentiveIx = await staker.endIncentiveIx(endIncentive)
     const endIncentiveTx = new Transaction().add(endIncentiveIx)
     await signAndSend(endIncentiveTx, [founderAccount], staker.connection)
 
