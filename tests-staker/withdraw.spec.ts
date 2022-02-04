@@ -266,8 +266,9 @@ describe('Withdraw tests', () => {
       index,
       nonce
     }
-    const ix = await staker.withdrawIx(withdraw)
-    const withdrawTx = new Transaction().add(ix)
+
+    const withdrawIx = await staker.withdrawIx(withdraw)
+    const withdrawTx = new Transaction().add(updateIx).add(withdrawIx)
     await signAndSend(withdrawTx, [positionOwner], staker.connection)
 
     const balanceAfter = (await incentiveToken.getAccountInfo(ownerTokenAcc)).amount

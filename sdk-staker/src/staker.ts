@@ -79,9 +79,10 @@ export class LiquidityMining {
     return { stringTx, stake }
   }
 
-  public async withdraw(withdraw: Withdraw) {
-    const ix = await this.withdrawIx(withdraw)
-    const tx = new Transaction().add(ix)
+  public async withdraw(market: Market, update: UpdateSecondsPerLiquidity, withdraw: Withdraw) {
+    const updateIx = await market.updateSecondsPerLiquidityInstruction(update)
+    const withdrawIx = await this.withdrawIx(withdraw)
+    const tx = new Transaction().add(updateIx).add(withdrawIx)
     const stringTx = await this.signAndSend(tx)
 
     return stringTx
