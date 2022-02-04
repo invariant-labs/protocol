@@ -118,6 +118,9 @@ pub fn handler(
 
     let sqrt_price_limit = Decimal::new(sqrt_price_limit);
     let mut pool = ctx.accounts.pool.load_mut()?;
+    msg!("Fee tier: {:?}", { pool.fee });
+    msg!("Tick spacing: {:?}", { pool.tick_spacing });
+    msg!("Tick index before swap: {:?}", { pool.current_tick_index });
     let tickmap = ctx.accounts.tickmap.load()?;
     let state = ctx.accounts.state.load()?;
 
@@ -134,6 +137,7 @@ pub fn handler(
     let mut total_amount_out = TokenAmount(0);
 
     while !remaining_amount.is_zero() {
+        msg!("remaining_amount: {:?}", remaining_amount);
         let (swap_limit, limiting_tick) = get_closer_limit(
             sqrt_price_limit,
             x_to_y,
@@ -150,6 +154,7 @@ pub fn handler(
             by_amount_in,
             pool.fee,
         );
+        msg!("pool.liquidity = {:?}", { pool.liquidity } );
 
         // make remaining amount smaller
         if by_amount_in {
@@ -160,6 +165,7 @@ pub fn handler(
 
         pool.add_fee(result.fee_amount, x_to_y);
 
+        msg!("current sqrt price = {:?}", { pool.sqrt_price });
         pool.sqrt_price = result.next_price_sqrt;
 
         total_amount_in = total_amount_in + result.amount_in + result.fee_amount;
@@ -198,15 +204,20 @@ pub fn handler(
                 let mut tick = loader.load_mut().unwrap();
 
                 // crossing tick
-                cross_tick(&mut tick, &mut pool)?;
+                msg!("CROSSING TICK {:?}", { tick.index });
+                if !remaining_amount.is_zero() {
+                    cross_tick(&mut tick, &mut pool)?;
+                }
+                
+                msg!("TICKED CROSSED");
             }
-
             // set tick to limit (below if price is going down, because current tick should always be below price)
             pool.current_tick_index = if x_to_y && !remaining_amount.is_zero() {
                 tick_index - pool.tick_spacing as i32
             } else {
                 tick_index
             };
+            msg!("new tick index: {:?}", { pool.current_tick_index });
         } else {
             assert!(
                 pool.current_tick_index
@@ -215,10 +226,15 @@ pub fn handler(
                     == 0,
                 "tick not divisible by spacing"
             );
+            
+            msg!("current tick index = {:?}", { pool.current_tick_index });
+            msg!("next sqrt price = {:?}", { result.next_price_sqrt });
             pool.current_tick_index =
                 get_tick_at_sqrt_price(result.next_price_sqrt, pool.tick_spacing);
+            msg!("next tick index = {:?}", { pool.current_tick_index });
         }
     }
+    msg!("Tick index after swap: {:?}", { pool.current_tick_index });
 
     // Execute swap
     let (take_ctx, send_ctx) = match x_to_y {
@@ -228,7 +244,14 @@ pub fn handler(
 
     let signer: &[&[&[u8]]] = get_signer!(state.nonce);
 
+    let reserve_x_amount =  ctx.accounts.reserve_x.amount;
+    let reserve_y_amount =  ctx.accounts.reserve_y.amount;
+    msg!("reserve_x_amount = {:?}", reserve_x_amount);
+    msg!("reserve_y_amount = {:?}", reserve_y_amount);
+
+    msg!("amount in = {:?}", total_amount_in);
     token::transfer(take_ctx, total_amount_in.0)?;
+    msg!("amount out = {:?}", total_amount_out.0);
     token::transfer(send_ctx.with_signer(signer), total_amount_out.0)?;
 
     Ok(())
