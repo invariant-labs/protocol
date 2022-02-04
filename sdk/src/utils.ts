@@ -10,16 +10,7 @@ import {
   TransactionInstruction
 } from '@solana/web3.js'
 import { calculatePriceSqrt, MAX_TICK, Pair, TICK_LIMIT, Market } from '.'
-import {
-  Decimal,
-  FeeTier,
-  FEE_TIER,
-  PoolStructure,
-  Tickmap,
-  Tick,
-  Position,
-  PoolData
-} from './market'
+import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap, Tick, PoolData } from './market'
 import { calculatePriceAfterSlippage, calculateSwapStep } from './math'
 import { getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
@@ -355,11 +346,13 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
       if (initialized) {
         const tick = ticks.get(tickIndex) as Tick
 
-        // trunk-ignore(eslint/no-mixed-operators)
-        if (currentTickIndex >= tick.index !== tick.sign) {
-          liquidity = { v: liquidity.v.add(tick.liquidityChange.v) }
-        } else {
-          liquidity = { v: liquidity.v.sub(tick.liquidityChange.v) }
+        if (!remainingAmount.eq(new BN(0))) {
+          // trunk-ignore(eslint/no-mixed-operators)
+          if (currentTickIndex >= tick.index !== tick.sign) {
+            liquidity = { v: liquidity.v.add(tick.liquidityChange.v) }
+          } else {
+            liquidity = { v: liquidity.v.sub(tick.liquidityChange.v) }
+          }
         }
       }
       if (xToY && !remainingAmount.eq(new BN(0))) {
