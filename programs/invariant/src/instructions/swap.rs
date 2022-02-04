@@ -162,6 +162,7 @@ pub fn handler(
         } else {
             remaining_amount = remaining_amount - result.amount_out;
         }
+        msg!("updated remaining_amount: {:?}", remaining_amount);
 
         pool.add_fee(result.fee_amount, x_to_y);
 
@@ -182,6 +183,10 @@ pub fn handler(
             let (tick_index, initialized) = limiting_tick.unwrap();
 
             if initialized {
+                if remaining_amount.is_zero() {
+                    msg!("PREVIOUS BUG CASE");
+                }
+
                 // Calculating address of the crossed tick
                 let (tick_address, _) = Pubkey::find_program_address(
                     &[
@@ -204,12 +209,11 @@ pub fn handler(
                 let mut tick = loader.load_mut().unwrap();
 
                 // crossing tick
-                msg!("CROSSING TICK {:?}", { tick.index });
                 if !remaining_amount.is_zero() {
+                    msg!("CROSSING TICK {:?}", { tick.index });
                     cross_tick(&mut tick, &mut pool)?;
+                    msg!("TICKED CROSSED");
                 }
-                
-                msg!("TICKED CROSSED");
             }
             // set tick to limit (below if price is going down, because current tick should always be below price)
             pool.current_tick_index = if x_to_y && !remaining_amount.is_zero() {
