@@ -3,6 +3,7 @@ import { Staker, IDL } from './idl/staker'
 import { BN, Program, Provider } from '@project-serum/anchor'
 import { IWallet } from '.'
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { InitPosition, UpdateSecondsPerLiquidity, Market } from '@invariant-labs/sdk/src/market'
 import {
   Connection,
   PublicKey,
@@ -47,8 +48,9 @@ export class LiquidityMining {
         throw new Error('Not supported')
     }
   }
+  // instructions
 
-  public async createIncentiveInstruction(
+  public async createIncentiveIx(
     {
       reward,
       startTime,
@@ -82,30 +84,7 @@ export class LiquidityMining {
     })
   }
 
-  public async createIncentive(createIncentive: CreateIncentive, signers?: Keypair[]) {
-    const incentiveAccount = Keypair.generate()
-    const tx = new Transaction().add(
-      await this.createIncentiveInstruction(createIncentive, incentiveAccount.publicKey)
-    )
-    await this.signAndSend(tx, [incentiveAccount])
-    return incentiveAccount.publicKey
-  }
-
-  public async getIncentive(incentivePubKey: PublicKey) {
-    return (await this.program.account.incentive.fetch(incentivePubKey)) as IncentiveStructure
-  }
-
-  public async getUserStakeAddressAndBump(incentive: PublicKey, pool: PublicKey, id: BN) {
-    const pubBuf = pool.toBuffer()
-    const idBuf = Buffer.alloc(16)
-    idBuf.writeBigUInt64LE(BigInt(id.toString()))
-    return await PublicKey.findProgramAddress(
-      [STAKER_SEED, incentive.toBuffer(), pubBuf, idBuf],
-      this.programId
-    )
-  }
-
-  public async createStakeInstruction({
+  public async createStakeIx({
     pool,
     id,
     position,
@@ -114,8 +93,6 @@ export class LiquidityMining {
     index,
     invariant
   }: CreateStake) {
-    owner = owner ?? this.wallet.publicKey
-
     const [userStakeAddress, userStakeBump] = await this.getUserStakeAddressAndBump(
       incentive,
       pool,
@@ -134,9 +111,49 @@ export class LiquidityMining {
     })
   }
 
-  public async createStakeTransaction(createStake: CreateStake) {
-    const ix = await this.createStakeInstruction(createStake)
-    return new Transaction().add(ix)
+  // public methods
+
+  public async createIncentive(createIncentive: CreateIncentive) {
+    const incentiveAccount = Keypair.generate()
+    const incentive = incentiveAccount.publicKey
+    const tx = new Transaction().add(
+      await this.createIncentiveIx(createIncentive, incentiveAccount.publicKey)
+    )
+    const stringTx = await this.signAndSend(tx, [incentiveAccount])
+    return { stringTx, incentive }
+  }
+
+  public async createStake(
+    market: Market,
+    update: UpdateSecondsPerLiquidity,
+    createStake: CreateStake
+  ) {
+    const updateIx = await market.updateSecondsPerLiquidityInstruction(update)
+    const stakeIx = await this.createStakeIx(createStake)
+    const tx = new Transaction().add(updateIx).add(stakeIx)
+
+    const stringTx = await this.signAndSend(tx)
+    const [stake, bump] = await this.getUserStakeAddressAndBump(
+      createStake.incentive,
+      createStake.pool,
+      createStake.id
+    )
+    return { stringTx, stake }
+  }
+
+  // getters
+  public async getIncentive(incentivePubKey: PublicKey) {
+    return (await this.program.account.incentive.fetch(incentivePubKey)) as IncentiveStructure
+  }
+
+  public async getUserStakeAddressAndBump(incentive: PublicKey, pool: PublicKey, id: BN) {
+    const pubBuf = pool.toBuffer()
+    const idBuf = Buffer.alloc(16)
+    idBuf.writeBigUInt64LE(BigInt(id.toString()))
+    return await PublicKey.findProgramAddress(
+      [STAKER_SEED, incentive.toBuffer(), pubBuf, idBuf],
+      this.programId
+    )
   }
 
   public async getStake(incentive: PublicKey, pool: PublicKey, id: BN) {
@@ -285,8 +302,8 @@ export interface CreateStake {
   position: PublicKey
   incentive: PublicKey
   owner?: PublicKey
-  invariant: PublicKey
   index: number
+  invariant: PublicKey
 }
 export interface RemoveStake {
   staker: LiquidityMining
