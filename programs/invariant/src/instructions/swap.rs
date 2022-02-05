@@ -145,6 +145,8 @@ pub fn handler(
             pool.tick_spacing,
             &tickmap,
         )?;
+        msg!("swap limit = {:?}", swap_limit);
+        msg!("limiting tick = {:?}", limiting_tick);
 
         let result = compute_swap_step(
             pool.sqrt_price,
@@ -154,6 +156,7 @@ pub fn handler(
             by_amount_in,
             pool.fee,
         );
+        msg!("swap step result = {:?}", result);
         msg!("pool.liquidity = {:?}", { pool.liquidity } );
 
         // make remaining amount smaller
@@ -168,6 +171,7 @@ pub fn handler(
 
         msg!("current sqrt price = {:?}", { pool.sqrt_price });
         pool.sqrt_price = result.next_price_sqrt;
+        msg!("next sqrt price = {:?}", { result.next_price_sqrt });
 
         total_amount_in = total_amount_in + result.amount_in + result.fee_amount;
         total_amount_out = total_amount_out + result.amount_out;
@@ -232,7 +236,6 @@ pub fn handler(
             );
             
             msg!("current tick index = {:?}", { pool.current_tick_index });
-            msg!("next sqrt price = {:?}", { result.next_price_sqrt });
             pool.current_tick_index =
                 get_tick_at_sqrt_price(result.next_price_sqrt, pool.tick_spacing);
             msg!("next tick index = {:?}", { pool.current_tick_index });
