@@ -17,7 +17,7 @@ import {
 } from '@invariant-labs/sdk/src/market'
 import { calculatePriceSqrt } from '@invariant-labs/sdk'
 
-describe('swap', () => {
+describe('Liquidity gap', () => {
   const provider = Provider.local()
   const connection = provider.connection
   // @ts-expect-error
@@ -88,7 +88,7 @@ describe('swap', () => {
     assert.ok(tickmapData.bitmap.length === TICK_LIMIT / 4)
     assert.ok(tickmapData.bitmap.every(v => v === 0))
   })
-  it('#swap() within a tick', async () => {
+  it('swap to limit without crossing', async () => {
     // Deposit
     const upperTick = 10
     const createTickVars: CreateTick = {
@@ -135,11 +135,10 @@ describe('swap', () => {
     const owner = Keypair.generate()
     await connection.requestAirdrop(owner.publicKey, 1e9)
 
-    // const amount = new BN(10067)
     const amount = new BN(10067)
     const accountX = await tokenX.createAccount(owner.publicKey)
     const accountY = await tokenY.createAccount(owner.publicKey)
-    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount.addn(10)))
+    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
 
     // Swap
     const poolDataBefore = await market.getPool(pair)
@@ -168,24 +167,22 @@ describe('swap', () => {
     assert.ok(poolData.sqrtPrice.v.eq(sqrtPriceAtTick.v))
 
     // Check amounts and fees
-    // const amountX = (await tokenX.getAccountInfo(accountX)).amount
-    // const amountY = (await tokenY.getAccountInfo(accountY)).amount
-    // const reserveXAfter = (await tokenX.getAccountInfo(poolData.tokenXReserve)).amount
-    // const reserveYAfter = (await tokenY.getAccountInfo(poolData.tokenYReserve)).amount
-    // const reserveXDelta = reserveXAfter.sub(reserveXBefore)
-    // const reserveYDelta = reserveYBefore.sub(reserveYAfter)
+    const amountX = (await tokenX.getAccountInfo(accountX)).amount
+    const amountY = (await tokenY.getAccountInfo(accountY)).amount
+    const reserveXAfter = (await tokenX.getAccountInfo(poolData.tokenXReserve)).amount
+    const reserveYAfter = (await tokenY.getAccountInfo(poolData.tokenYReserve)).amount
+    const reserveXDelta = reserveXAfter.sub(reserveXBefore)
+    const reserveYDelta = reserveYBefore.sub(reserveYAfter)
+    const expectedYAmountOut = new BN(9999)
 
-    // assert.ok(amountX.eqn(0))
-    // assert.ok(amountY.eq(amount.subn(7)))
-    // assert.ok(reserveXDelta.eq(amount))
-    // assert.ok(reserveYDelta.eq(amount.subn(7)))
-    // // assert.ok(poolData.feeGrowthGlobalX.v.eqn(5400000)) // 0.6 % of amount - protocol fee
-    // assert.ok(poolData.feeGrowthGlobalX.v.eq(new BN('4000000000000000000'))) // close enough?
-    // assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
-    // assert.ok(poolData.feeProtocolTokenX.eqn(2))
-    // assert.ok(poolData.feeProtocolTokenY.eqn(0))
-
-    // assert.equal(poolData.currentTickIndex, -20)
+    assert.ok(amountX.eqn(0))
+    assert.ok(amountY.eq(expectedYAmountOut))
+    assert.ok(reserveXDelta.eq(amount))
+    assert.ok(reserveYDelta.eq(expectedYAmountOut))
+    assert.ok(poolData.feeGrowthGlobalX.v.eq(new BN('2399280215935219435')))
+    assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
+    assert.ok(poolData.feeProtocolTokenX.eqn(13))
+    assert.ok(poolData.feeProtocolTokenY.eqn(0))
 
     // no liquidity swap
     // const swapVars2: Swap = {
