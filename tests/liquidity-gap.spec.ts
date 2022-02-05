@@ -185,18 +185,18 @@ describe('Liquidity gap', () => {
     assert.ok(poolData.feeProtocolTokenY.eqn(0))
 
     // no liquidity swap
-    // const swapVars2: Swap = {
-    //   pair,
-    //   xToY: true,
-    //   amount: new BN(1),
-    //   knownPrice: poolDataBefore.sqrtPrice,
-    //   slippage: toDecimal(1, 0),
-    //   accountX,
-    //   accountY,
-    //   byAmountIn: true,
-    //   owner: owner.publicKey
-    // }
-    // await assertThrowsAsync(market.swap(swapVars2, owner)) // throw error
+    const swapVars2: Swap = {
+      pair,
+      xToY: true,
+      amount: new BN(1),
+      knownPrice: poolDataBefore.sqrtPrice,
+      slippage: toDecimal(1, 0),
+      accountX,
+      accountY,
+      byAmountIn: true,
+      owner: owner.publicKey
+    }
+    await assertThrowsAsync(market.swap(swapVars2, owner))
 
     // const upperTickAfterSwap = -50
     // const createTickVars3: CreateTick = {
