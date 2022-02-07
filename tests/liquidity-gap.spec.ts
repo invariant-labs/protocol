@@ -223,7 +223,7 @@ describe('Liquidity gap', () => {
     }
     await market.createTick(createTickVars2, admin)
 
-    const liquidityDelta = { v: new BN(20006000).mul(DENOMINATOR) }
+    const liquidityDelta = { v: new BN(20008000).mul(DENOMINATOR) }
     const initPositionAfterSwapVars: InitPosition = {
       pair,
       owner: positionOwner.publicKey,
@@ -236,6 +236,11 @@ describe('Liquidity gap', () => {
     await market.initPosition(initPositionAfterSwapVars, positionOwner)
     const nextSwapAmount = new BN(20000)
     await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(nextSwapAmount))
+
+    const poolDataBefore = await market.getPool(pair)
+    const reserveXBefore = (await tokenX.getAccountInfo(poolDataBefore.tokenXReserve)).amount
+    const reserveYBefore = (await tokenY.getAccountInfo(poolDataBefore.tokenYReserve)).amount
+
     const nextSwapVars: Swap = {
       pair,
       xToY: true,
@@ -250,30 +255,29 @@ describe('Liquidity gap', () => {
     await market.swap(nextSwapVars, owner)
 
     // Check pool
-    // const poolData = await market.getPool(pair)
-    // assert.ok(poolData.liquidity.v.eq(poolDataBefore.liquidity.v))
-    // assert.equal(poolData.currentTickIndex, lowerTick)
-    // assert.ok(poolData.sqrtPrice.v.lt(poolDataBefore.sqrtPrice.v))
+    const poolData = await market.getPool(pair)
 
-    // // Check amounts and fees
-    // const amountX = (await tokenX.getAccountInfo(accountX)).amount
-    // const amountY = (await tokenY.getAccountInfo(accountY)).amount
-    // const reserveXAfter = (await tokenX.getAccountInfo(poolData.tokenXReserve)).amount
-    // const reserveYAfter = (await tokenY.getAccountInfo(poolData.tokenYReserve)).amount
-    // const reserveXDelta = reserveXAfter.sub(reserveXBefore)
-    // const reserveYDelta = reserveYBefore.sub(reserveYAfter)
+    assert.ok(
+      poolData.liquidity.v.sub(poolDataBefore.liquidity.v).eq(new BN(2000).mul(DENOMINATOR))
+    )
+    assert.equal(poolData.currentTickIndex, -70)
+    assert.ok(poolData.sqrtPrice.v.eq(new BN('996515578784')))
 
-    // assert.ok(amountX.eqn(0))
-    // assert.ok(amountY.eq(amount.subn(7)))
-    // assert.ok(reserveXDelta.eq(amount))
-    // assert.ok(reserveYDelta.eq(amount.subn(7)))
-    // // assert.ok(poolData.feeGrowthGlobalX.v.eqn(5400000)) // 0.6 % of amount - protocol fee
-    // assert.ok(poolData.feeGrowthGlobalX.v.eq(new BN('4000000000000000000'))) // close enough?
-    // assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
-    // assert.ok(poolData.feeProtocolTokenX.eqn(2))
-    // assert.ok(poolData.feeProtocolTokenY.eqn(0))
+    // Check amounts and fees
+    const amountX = (await tokenX.getAccountInfo(accountX)).amount
+    const amountY = (await tokenY.getAccountInfo(accountY)).amount
+    const reserveXAfter = (await tokenX.getAccountInfo(poolData.tokenXReserve)).amount
+    const reserveYAfter = (await tokenY.getAccountInfo(poolData.tokenYReserve)).amount
+    const reserveXDelta = reserveXAfter.sub(reserveXBefore)
+    const reserveYDelta = reserveYBefore.sub(reserveYAfter)
 
-    // assert.equal(poolData.currentTickIndex, -20)
-    // })
+    assert.ok(amountX.eqn(0))
+    assert.ok(amountY.eq(new BN(29760)))
+    assert.ok(reserveXDelta.eq(nextSwapAmount))
+    assert.ok(reserveYDelta.eq(new BN(19761)))
+    assert.ok(poolData.feeGrowthGlobalX.v.eq(new BN('7197360983628142266')))
+    assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
+    assert.ok(poolData.feeProtocolTokenX.eqn(37))
+    assert.ok(poolData.feeProtocolTokenY.eqn(0))
   })
 })
