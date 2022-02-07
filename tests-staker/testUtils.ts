@@ -1,5 +1,5 @@
 import * as anchor from '@project-serum/anchor'
-import { Decimal, LiquidityMining, Stake } from '../sdk-staker/src/staker'
+import { Decimal, LiquidityMining } from '../sdk-staker/src/staker'
 import {
   ConfirmOptions,
   Connection,
@@ -11,14 +11,7 @@ import {
 import { Token, u64 } from '@solana/spl-token'
 import { TokenInstructions } from '@project-serum/serum'
 import { BN, Provider } from '@project-serum/anchor'
-import {
-  CreateIncentive,
-  CreateStake,
-  EndIncentive,
-  RemoveStake,
-  Withdraw
-} from '../sdk-staker/lib/staker'
-//import { signAndSend } from '../sdk-staker/lib/utils'
+import { CreateStake } from '../sdk-staker/src/staker'
 import { InitPosition, UpdateSecondsPerLiquidity, Market } from '@invariant-labs/sdk/src/market'
 import { DENOMINATOR, Pair } from '@invariant-labs/sdk'
 
@@ -108,83 +101,11 @@ export const createToken = async (
   return token
 }
 
-export const updatePositionAndCreateStake = async (
-  market: Market,
-  staker: LiquidityMining,
-  updateSecondsPerLiquidity: UpdateSecondsPerLiquidity,
-  createStake: CreateStake,
-  signers: Keypair[],
-  connection: Connection
-) => {
-  const tx = await market.updateSecondsPerLiquidityTransaction(updateSecondsPerLiquidity)
-  tx.add(await staker.createStakeInstruction(createStake))
-
-  await signAndSend(tx, signers, connection)
-}
-
-export const removeStake = async (
-  staker: LiquidityMining,
-  pool: PublicKey,
-  id: BN,
-  incentive: PublicKey,
-  founder: Keypair,
-  connection: Connection
-) => {
-  const [userStakeAddress] = await staker.getUserStakeAddressAndBump(incentive, pool, id)
-
-  const tx = await staker.removeStakeTransaction(userStakeAddress, incentive, founder.publicKey)
-
-  await signAndSend(tx, [founder], connection)
-}
-export const removeAllStakes = async (
-  staker: LiquidityMining,
-  incentive: PublicKey,
-  founder: Keypair,
-  connection: Connection
-) => {
-  const stakes = await staker.getAllIncentiveStakes(incentive)
-  let tx = new Transaction()
-
-  for (let stake of stakes) {
-    tx.add(await staker.removeStakeInstruction(stake.publicKey, incentive, founder.publicKey))
-  }
-  await signAndSend(tx, [founder], connection)
-}
-
-export const updatePositionAndWithdraw = async (
-  market: Market,
-  staker: LiquidityMining,
-  updateSecondsPerLiquidity: UpdateSecondsPerLiquidity,
-  withdraw: Withdraw,
-  signers: Keypair[],
-  connection: Connection
-) => {
-  const tx = await market.updateSecondsPerLiquidityTransaction(updateSecondsPerLiquidity)
-  tx.add(await staker.withdrawInstruction(withdraw))
-
-  await signAndSend(tx, signers, connection)
-}
-
 export const almostEqual = (num1: BN, num2: BN, epsilon: BN = new BN(10)) => {
   return num1.sub(num2).abs().lt(epsilon)
 }
 
-export const withdraw = async (staker: LiquidityMining, withdraw: Withdraw, signer: Keypair) => {
-  const tx = await staker.withdrawTransaction(withdraw)
-  await signAndSend(tx, [signer], staker.connection)
-}
-
-export const endIncentive = async (
-  staker: LiquidityMining,
-  endIncentive: EndIncentive,
-  signer: Keypair
-) => {
-  const tx = await staker.endIncentiveTransaction(endIncentive)
-
-  await signAndSend(tx, [signer], staker.connection)
-}
-
-export const createPositionAndStake = async (
+export const createSomePositionsAndStakes = async (
   market: Market,
   staker: LiquidityMining,
   pair: Pair,
@@ -221,14 +142,14 @@ export const createPositionAndStake = async (
     const positionId = positionStructBefore.id
 
     // create stake
-    const updateSecondsPerLiquidityVars: UpdateSecondsPerLiquidity = {
+    const update: UpdateSecondsPerLiquidity = {
       pair,
       owner: positionOwner.publicKey,
       lowerTickIndex: i * 10,
       upperTickIndex: (i + 1) * 10,
       index
     }
-    const createStakeVars: CreateStake = {
+    const createStake: CreateStake = {
       pool: poolAddress,
       id: positionId,
       index,
@@ -238,13 +159,10 @@ export const createPositionAndStake = async (
       invariant: anchor.workspace.Invariant.programId
     }
 
-    await updatePositionAndCreateStake(
-      market,
-      staker,
-      updateSecondsPerLiquidityVars,
-      createStakeVars,
-      [positionOwner],
-      connection
-    )
+    const updateIx = await market.updateSecondsPerLiquidityInstruction(update)
+    const stakeIx = await staker.createStakeIx(createStake)
+    const tx = new Transaction().add(updateIx).add(stakeIx)
+
+    await signAndSend(tx, [positionOwner], staker.connection)
   }
 }

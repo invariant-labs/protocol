@@ -83,8 +83,7 @@ pub fn handler(
         num_of_stakes: 0,
         start_time,
         end_time,
-        // TODO change to week or read from input
-        end_claim_time: end_time + 3,
+        end_claim_time: end_time + WEEK,
         nonce,
     };
 

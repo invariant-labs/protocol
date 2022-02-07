@@ -30,4 +30,6 @@ pub enum ErrorCode {
     StakeExist = 12, // 177c
     #[msg("Remaining reward is 0")]
     ZeroReward = 13, // 177d
+    #[msg("There is no any stakes")]
+    NoStakes = 14, // 177e
 }

@@ -23,6 +23,7 @@ pub fn handler(ctx: Context<RemoveStake>) -> ProgramResult {
     let mut incentive = ctx.accounts.incentive.load_mut()?;
     let current_time = get_current_timestamp();
     require!(current_time > incentive.end_claim_time, TooEarly);
+    require!(incentive.num_of_stakes != 0, NoStakes);
 
     //close stake nad send sol to founder
     close(

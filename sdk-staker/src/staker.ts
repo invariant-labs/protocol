@@ -106,14 +106,21 @@ export class LiquidityMining {
     return stringTx
   }
 
-  public async removeAllStakes(staker: LiquidityMining, incentive: PublicKey, founder: Keypair) {
-    const stakes = await staker.getAllIncentiveStakes(incentive)
+  public async removeAllStakes(staker: LiquidityMining, incentive: PublicKey, founder: PublicKey) {
+    const stakes = await this.getAllIncentiveStakes(incentive)
     let tx = new Transaction()
+    let stringTx: string[]
 
-    for (let stake of stakes) {
-      tx.add(await staker.removeStakeIx(stake.publicKey, incentive, founder.publicKey))
+    // put max 18 Ix per Tx, sign and return array of tx hashes
+    for (let i = 0; i < stakes.length; i++) {
+      const removeIx = await staker.removeStakeIx(stakes[i].publicKey, incentive, founder)
+      tx.add(removeIx)
+      // sign and send when max Ix or last stake
+      if ((i + 1) % 18 == 0 || i + 1 == stakes.length) {
+        stringTx.push(await this.signAndSend(tx))
+        tx = new Transaction()
+      }
     }
-    const stringTx = await this.signAndSend(tx)
 
     return stringTx
   }
