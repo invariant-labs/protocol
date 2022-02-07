@@ -1,11 +1,11 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { Keypair } from '@solana/web3.js'
+import { Keypair, PublicKey } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken } from './testUtils'
 import { Market, Pair, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@invariant-labs/sdk'
-import { FeeTier } from '@invariant-labs/sdk/lib/market'
+import { Decimal, FeeTier } from '@invariant-labs/sdk/lib/market'
 import { assertThrowsAsync, fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import {
@@ -24,7 +24,14 @@ describe('Liquidity gap', () => {
   const wallet = provider.wallet.payer as Keypair
   const mintAuthority = Keypair.generate()
   const admin = Keypair.generate()
+  const positionOwner = Keypair.generate()
+  let userTokenXAccount: PublicKey
+  let userTokenYAccount: PublicKey
   let market: Market
+  let owner: Keypair
+  let knownPrice: Decimal
+  let accountX: PublicKey
+  let accountY: PublicKey
   const feeTier: FeeTier = {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
@@ -106,10 +113,9 @@ describe('Liquidity gap', () => {
     }
     await market.createTick(createTickVars2, admin)
 
-    const positionOwner = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
-    const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
-    const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
+    userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
+    userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
     const mintAmount = tou64(new BN(10).pow(new BN(10)))
 
     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
@@ -132,12 +138,12 @@ describe('Liquidity gap', () => {
     assert.ok((await market.getPool(pair)).liquidity.v.eq(liquidityDelta.v))
 
     // Create owner
-    const owner = Keypair.generate()
+    owner = Keypair.generate()
     await connection.requestAirdrop(owner.publicKey, 1e9)
 
     const amount = new BN(10067)
-    const accountX = await tokenX.createAccount(owner.publicKey)
-    const accountY = await tokenY.createAccount(owner.publicKey)
+    accountX = await tokenX.createAccount(owner.publicKey)
+    accountY = await tokenY.createAccount(owner.publicKey)
     await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
 
     // Swap
@@ -160,6 +166,7 @@ describe('Liquidity gap', () => {
 
     // Check pool
     const poolData = await market.getPool(pair)
+    knownPrice = poolData.sqrtPrice
     const sqrtPriceAtTick = calculatePriceSqrt(lowerTick)
 
     assert.ok(poolData.liquidity.v.eq(poolDataBefore.liquidity.v))
@@ -183,13 +190,14 @@ describe('Liquidity gap', () => {
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
     assert.ok(poolData.feeProtocolTokenX.eqn(13))
     assert.ok(poolData.feeProtocolTokenY.eqn(0))
-
+  })
+  it('no liquidity swap should fail', async () => {
     // no liquidity swap
     const swapVars2: Swap = {
       pair,
       xToY: true,
       amount: new BN(1),
-      knownPrice: poolDataBefore.sqrtPrice,
+      knownPrice,
       slippage: toDecimal(1, 0),
       accountX,
       accountY,
@@ -197,49 +205,49 @@ describe('Liquidity gap', () => {
       owner: owner.publicKey
     }
     await assertThrowsAsync(market.swap(swapVars2, owner))
+  })
+  it('should skip gap then swap', async () => {
+    // Add liquidity
+    const upperTickAfterSwap = -50
+    const createTickVars: CreateTick = {
+      pair,
+      index: upperTickAfterSwap,
+      payer: admin.publicKey
+    }
+    await market.createTick(createTickVars, admin)
+    const lowerTickAfterSwap = -90
+    const createTickVars2: CreateTick = {
+      pair,
+      index: lowerTickAfterSwap,
+      payer: admin.publicKey
+    }
+    await market.createTick(createTickVars2, admin)
 
-    // const upperTickAfterSwap = -50
-    // const createTickVars3: CreateTick = {
-    //   pair,
-    //   index: upperTickAfterSwap,
-    //   payer: admin.publicKey
-    // }
-    // await market.createTick(createTickVars3, admin)
-
-    // const lowerTickAfterSwap = -90
-    // const createTickVars4: CreateTick = {
-    //   pair,
-    //   index: lowerTickAfterSwap,
-    //   payer: admin.publicKey
-    // }
-    // await market.createTick(createTickVars4, admin)
-
-    // const initPositionAfterSwapVars: InitPosition = {
-    //   pair,
-    //   owner: positionOwner.publicKey,
-    //   userTokenX: userTokenXAccount,
-    //   userTokenY: userTokenYAccount,
-    //   lowerTick: lowerTickAfterSwap,
-    //   upperTick: upperTickAfterSwap,
-    //   liquidityDelta
-    // }
-    // await market.initPosition(initPositionAfterSwapVars, positionOwner)
-
-    // const nextSwapAmount = new BN(20000)
-    // await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(nextSwapAmount))
-
-    // const nextSwapVars: Swap = {
-    //   pair,
-    //   xToY: true,
-    //   amount: nextSwapAmount,
-    //   knownPrice: poolDataBefore.sqrtPrice,
-    //   slippage: toDecimal(1, 0),
-    //   accountX,
-    //   accountY,
-    //   byAmountIn: true,
-    //   owner: owner.publicKey
-    // }
-    // await market.swap(nextSwapVars, owner)
+    const liquidityDelta = { v: new BN(20006000).mul(DENOMINATOR) }
+    const initPositionAfterSwapVars: InitPosition = {
+      pair,
+      owner: positionOwner.publicKey,
+      userTokenX: userTokenXAccount,
+      userTokenY: userTokenYAccount,
+      lowerTick: lowerTickAfterSwap,
+      upperTick: upperTickAfterSwap,
+      liquidityDelta
+    }
+    await market.initPosition(initPositionAfterSwapVars, positionOwner)
+    const nextSwapAmount = new BN(20000)
+    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(nextSwapAmount))
+    const nextSwapVars: Swap = {
+      pair,
+      xToY: true,
+      amount: nextSwapAmount,
+      knownPrice: knownPrice,
+      slippage: toDecimal(1, 0),
+      accountX,
+      accountY,
+      byAmountIn: true,
+      owner: owner.publicKey
+    }
+    await market.swap(nextSwapVars, owner)
 
     // Check pool
     // const poolData = await market.getPool(pair)
@@ -266,5 +274,6 @@ describe('Liquidity gap', () => {
     // assert.ok(poolData.feeProtocolTokenY.eqn(0))
 
     // assert.equal(poolData.currentTickIndex, -20)
+    // })
   })
 })
