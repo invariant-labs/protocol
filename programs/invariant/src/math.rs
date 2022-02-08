@@ -101,6 +101,7 @@ pub fn compute_swap_step(
     fee: Decimal,
 ) -> SwapResult {
     let x_to_y = current_price_sqrt >= target_price_sqrt;
+    msg!("x_to_y = {:?}", x_to_y);
 
     let next_price_sqrt;
     let mut amount_in = TokenAmount(0);
@@ -420,6 +421,8 @@ pub fn is_enough_amount_to_push_price(
         get_next_sqrt_price_y_down(current_price_sqrt, liquidity, amount_after_fee, true)
     };
 
+    println!("current_price_sqrt = {:?}", current_price_sqrt);
+    println!("next_price_sqrt    = {:?}", next_price_sqrt);
     current_price_sqrt.ne(&next_price_sqrt)
 }
 
@@ -1092,6 +1095,21 @@ mod tests {
                 current_timestamp,
             );
             assert_eq!(seconds_per_liquidity_inside.v, 1000000110);
+        }
+    }
+    #[test]
+    fn test_is_enough_amount_to_push_price() {
+        // -20 crossing tick with 1 token amount
+        {
+            let amount = TokenAmount(1);
+            let current_price_sqrt = Decimal::new(999500149965); // at -20 tick
+            let liquidity = Decimal::new(20006000000000000000);
+            let fee = Decimal::from_decimal(6, 4); // 0.0006 -> 0.06%
+            let x_to_y = true;
+
+            let result =
+                is_enough_amount_to_push_price(amount, current_price_sqrt, liquidity, fee, x_to_y);
+            assert_eq!(result, false);
         }
     }
 }
