@@ -249,7 +249,7 @@ export type Staker = {
       ]
     },
     {
-      "name": "closeStakeAccount",
+      "name": "removeStake",
       "accounts": [
         {
           "name": "incentive",
@@ -705,7 +705,7 @@ export const IDL: Staker = {
       ]
     },
     {
-      "name": "closeStakeAccount",
+      "name": "removeStake",
       "accounts": [
         {
           "name": "incentive",
