@@ -1,5 +1,3 @@
-use std::thread::AccessError;
-
 use crate::decimal::*;
 use crate::math::*;
 use crate::structs::*;
@@ -16,7 +14,8 @@ use anchor_spl::token::{self, TokenAccount, Transfer};
 pub struct Withdraw<'info> {
     #[account(mut,
         seeds = [b"staker", incentive.to_account_info().key.as_ref(), &position.load()?.pool.as_ref(), &position.load()?.id.to_le_bytes()],
-        bump = user_stake.load()?.bump)]
+        bump = user_stake.load()?.bump,
+    )]
     pub user_stake: AccountLoader<'info, UserStake>,
     #[account(mut,
         constraint = &user_stake.load()?.incentive == incentive.to_account_info().key
@@ -58,10 +57,12 @@ impl<'info> Withdraw<'info> {
 }
 
 pub fn handler(ctx: Context<Withdraw>, nonce: u8) -> ProgramResult {
+    let mut incentive = ctx.accounts.incentive.load_mut()?;
+    
     msg!("WITHDRAW");
     let user_stake = &mut ctx.accounts.user_stake.load_mut()?;
     let position = ctx.accounts.position.load()?;
-    let mut incentive = ctx.accounts.incentive.load_mut()?;
+
     let current_time = get_current_timestamp();
     let update_slot = position.last_slot;
     let slot = get_current_slot();
@@ -104,14 +105,15 @@ pub fn handler(ctx: Context<Withdraw>, nonce: u8) -> ProgramResult {
     let cpi_ctx = ctx.accounts.withdraw().with_signer(signer);
 
     token::transfer(cpi_ctx, reward)?;
+    
     if current_time > incentive.end_time {
         close(
         ctx.accounts.user_stake.to_account_info(),
         ctx.accounts.owner.to_account_info(),
-    )
-    .unwrap();
+        ).unwrap();
 
-    incentive.num_of_stakes -= 1;
+        incentive.num_of_stakes -= 1;
+
     }   
 
     Ok(())

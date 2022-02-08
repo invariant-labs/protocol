@@ -8,9 +8,10 @@ use util::STAKER_SEED;
 
 #[derive(Accounts)]
 pub struct ReturnFounds<'info> {
-    #[account(mut, 
+    #[account(mut,
         close = founder,
-        constraint = &incentive.load()?.founder == founder.to_account_info().key )]
+        constraint = &incentive.load()?.founder == founder.to_account_info().key
+    )]
     pub incentive: AccountLoader<'info, Incentive>,
     //TODO: Add token account and validate mints
     #[account(mut,

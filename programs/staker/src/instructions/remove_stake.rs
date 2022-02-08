@@ -1,5 +1,5 @@
 use crate::structs::{Incentive, UserStake};
-use crate::util::{get_current_timestamp, close, };
+use crate::util::{get_current_timestamp};
 
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
