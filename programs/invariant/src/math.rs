@@ -405,6 +405,24 @@ pub fn calculate_seconds_per_liquidity_inside(
     pool.seconds_per_liquidity_global - seconds_per_liquidity_below - seconds_per_liquidity_above
 }
 
+pub fn is_enough_amount_to_push_price(
+    amount: TokenAmount,
+    current_price_sqrt: Decimal,
+    liquidity: Decimal,
+    fee: Decimal,
+    x_to_y: bool,
+) -> bool {
+    let amount_after_fee = amount.big_mul(Decimal::one() - fee).to_token_floor();
+
+    let next_price_sqrt = if x_to_y {
+        get_next_sqrt_price_x_up(current_price_sqrt, liquidity, amount_after_fee, true)
+    } else {
+        get_next_sqrt_price_y_down(current_price_sqrt, liquidity, amount_after_fee, true)
+    };
+
+    current_price_sqrt.ne(&next_price_sqrt)
+}
+
 #[cfg(test)]
 mod tests {
     use std::ops::Div;
