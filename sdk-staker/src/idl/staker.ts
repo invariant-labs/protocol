@@ -146,13 +146,13 @@ export type Staker = {
           "isSigner": false
         },
         {
-          "name": "ownerTokenAccount",
-          "isMut": true,
+          "name": "position",
+          "isMut": false,
           "isSigner": false
         },
         {
-          "name": "position",
-          "isMut": false,
+          "name": "ownerTokenAccount",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -162,8 +162,8 @@ export type Staker = {
         },
         {
           "name": "owner",
-          "isMut": true,
-          "isSigner": true
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "tokenProgram",
@@ -221,8 +221,8 @@ export type Staker = {
           "isSigner": false
         },
         {
-          "name": "owner",
-          "isMut": true,
+          "name": "founder",
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -247,6 +247,37 @@ export type Staker = {
           "type": "u8"
         }
       ]
+    },
+    {
+      "name": "removeStake",
+      "accounts": [
+        {
+          "name": "incentive",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userStake",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "founder",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -284,6 +315,10 @@ export type Staker = {
             "type": "u64"
           },
           {
+            "name": "endClaimTime",
+            "type": "u64"
+          },
+          {
             "name": "numOfStakes",
             "type": "u64"
           },
@@ -304,11 +339,11 @@ export type Staker = {
         "kind": "struct",
         "fields": [
           {
-            "name": "position",
+            "name": "incentive",
             "type": "publicKey"
           },
           {
-            "name": "incentive",
+            "name": "position",
             "type": "publicKey"
           },
           {
@@ -403,18 +438,23 @@ export type Staker = {
     },
     {
       "code": 6011,
-      "name": "NotEnded",
+      "name": "TooEarly",
       "msg": "Incentive not ended"
     },
     {
       "code": 6012,
       "name": "StakeExist",
-      "msg": "Can't end id stake exists"
+      "msg": "Too early to remove incentive"
     },
     {
       "code": 6013,
       "name": "ZeroReward",
       "msg": "Remaining reward is 0"
+    },
+    {
+      "code": 6014,
+      "name": "NoStakes",
+      "msg": "There is no any stakes"
     }
   ]
 };
@@ -567,13 +607,13 @@ export const IDL: Staker = {
           "isSigner": false
         },
         {
-          "name": "ownerTokenAccount",
-          "isMut": true,
+          "name": "position",
+          "isMut": false,
           "isSigner": false
         },
         {
-          "name": "position",
-          "isMut": false,
+          "name": "ownerTokenAccount",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -583,8 +623,8 @@ export const IDL: Staker = {
         },
         {
           "name": "owner",
-          "isMut": true,
-          "isSigner": true
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "tokenProgram",
@@ -642,8 +682,8 @@ export const IDL: Staker = {
           "isSigner": false
         },
         {
-          "name": "owner",
-          "isMut": true,
+          "name": "founder",
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -668,6 +708,37 @@ export const IDL: Staker = {
           "type": "u8"
         }
       ]
+    },
+    {
+      "name": "removeStake",
+      "accounts": [
+        {
+          "name": "incentive",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userStake",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "founder",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -705,6 +776,10 @@ export const IDL: Staker = {
             "type": "u64"
           },
           {
+            "name": "endClaimTime",
+            "type": "u64"
+          },
+          {
             "name": "numOfStakes",
             "type": "u64"
           },
@@ -725,11 +800,11 @@ export const IDL: Staker = {
         "kind": "struct",
         "fields": [
           {
-            "name": "position",
+            "name": "incentive",
             "type": "publicKey"
           },
           {
-            "name": "incentive",
+            "name": "position",
             "type": "publicKey"
           },
           {
@@ -824,18 +899,23 @@ export const IDL: Staker = {
     },
     {
       "code": 6011,
-      "name": "NotEnded",
+      "name": "TooEarly",
       "msg": "Incentive not ended"
     },
     {
       "code": 6012,
       "name": "StakeExist",
-      "msg": "Can't end id stake exists"
+      "msg": "Too early to remove incentive"
     },
     {
       "code": 6013,
       "name": "ZeroReward",
       "msg": "Remaining reward is 0"
+    },
+    {
+      "code": 6014,
+      "name": "NoStakes",
+      "msg": "There is no any stakes"
     }
   ]
 };

@@ -4,26 +4,36 @@ import { Market, Pair, sleep } from '@invariant-labs/sdk'
 import { Network } from '../sdk-staker/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import { CreateIncentive, Decimal, EndIncentive, Staker } from '../sdk-staker/src/staker'
+import { CreateIncentive, Decimal, Staker } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
-import { assertThrowsAsync, createToken, tou64, signAndSend } from './testUtils'
-import { createToken as createTkn } from '../tests/testUtils'
+import {
+  createToken,
+  tou64,
+  createSomePositionsAndStakes,
+  signAndSend,
+  createToken as createTkn
+} from './testUtils'
+
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { Token } from '@solana/spl-token'
 import { CreateFeeTier, CreatePool, FeeTier } from '@invariant-labs/sdk/src/market'
 
 // To run this test you have change WEEK to 3 sec in staker program
 
-describe('End incentive tests', () => {
+describe('Remove all takes', () => {
   const provider = Provider.local()
   const connection = provider.connection
+  // const program = anchor.workspace.Staker as Program<StakerIdl>
   // @ts-expect-error
   const wallet = provider.wallet.payer as Account
-  const founderAccount = Keypair.generate()
-  const mintAuthority = Keypair.generate()
-
   let stakerAuthority: PublicKey
+  const mintAuthority = Keypair.generate()
+  const incentiveAccount = Keypair.generate()
+  const founderAccount = Keypair.generate()
+  const positionOwner = Keypair.generate()
+  const admin = Keypair.generate()
   let staker: Staker
+  let market: Market
   let pool: PublicKey
   let invariant: PublicKey
   let incentiveToken: Token
@@ -31,9 +41,11 @@ describe('End incentive tests', () => {
   let incentiveTokenAcc: PublicKey
   let amount: BN
   let pair: Pair
+  let tokenX: Token
+  let tokenY: Token
 
   before(async () => {
-    // create staker instance
+    // create staker
     const [_mintAuthority] = await anchor.web3.PublicKey.findProgramAddress(
       [STAKER_SEED],
       anchor.workspace.Staker.programId
@@ -45,6 +57,12 @@ describe('End incentive tests', () => {
       connection,
       anchor.workspace.Staker.programId
     )
+
+    await Promise.all([
+      await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
+      await connection.requestAirdrop(positionOwner.publicKey, 1e9),
+      await connection.requestAirdrop(incentiveAccount.publicKey, 10e9)
+    ])
 
     // create token
     incentiveToken = await createToken(connection, wallet, wallet)
@@ -60,8 +78,8 @@ describe('End incentive tests', () => {
     await incentiveToken.mintTo(founderTokenAcc, wallet, [], tou64(amount))
 
     // create invariant and pool
-    const admin = Keypair.generate()
-    const market = await Market.build(
+
+    market = await Market.build(
       0,
       provider.wallet,
       connection,
@@ -81,6 +99,8 @@ describe('End incentive tests', () => {
     }
 
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
+    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
+    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
     await market.createState(admin.publicKey, admin)
 
@@ -100,23 +120,14 @@ describe('End incentive tests', () => {
     invariant = anchor.workspace.Invariant.programId
   })
 
-  it('End incentive ', async () => {
-    const incentiveAccount = Keypair.generate()
-
-    await connection.requestAirdrop(incentiveAccount.publicKey, 10e9)
-    await new Promise(resolve => {
-      setTimeout(() => {
-        resolve(null)
-      }, 1000)
-    })
-
+  it('Remove', async () => {
+    // create incentive
+    const duration = 30
     const seconds = new Date().valueOf() / 1000
     const currentTime = new BN(Math.floor(seconds))
     const reward: Decimal = { v: new BN(10) }
     const startTime = currentTime.add(new BN(0))
-    const endTime = currentTime.add(new BN(10))
-
-    const balanceBefore = (await incentiveToken.getAccountInfo(founderTokenAcc)).amount
+    const endTime = currentTime.add(new BN(duration))
 
     const createIncentiveVars: CreateIncentive = {
       reward,
@@ -129,26 +140,64 @@ describe('End incentive tests', () => {
       invariant
     }
 
-    const createIx = await staker.createIncentiveIx(createIncentiveVars, incentiveAccount.publicKey)
-    const createTx = new Transaction().add(createIx)
+    const createTx = new Transaction().add(
+      await staker.createIncentiveIx(createIncentiveVars, incentiveAccount.publicKey)
+    )
     await signAndSend(createTx, [founderAccount, incentiveAccount], staker.connection)
 
-    await sleep(18000)
+    // create position
+    await connection.requestAirdrop(positionOwner.publicKey, 1e9)
 
-    const endIncentive: EndIncentive = {
-      incentive: incentiveAccount.publicKey,
-      incentiveTokenAcc: incentiveTokenAcc,
-      ownerTokenAcc: founderTokenAcc,
-      founder: founderAccount.publicKey
+    const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
+    const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
+    const mintAmount = tou64(new BN(10).pow(new BN(10)))
+
+    await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+    await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+
+    // create some positions and stakes
+    const begin = new Date().valueOf() / 1000
+    const numOfStakes = 24
+    await createSomePositionsAndStakes(
+      market,
+      staker,
+      pair,
+      positionOwner,
+      userTokenXAccount,
+      userTokenYAccount,
+      incentiveAccount.publicKey,
+      numOfStakes
+    )
+    const end = new Date().valueOf() / 1000
+
+    const incentiveBefore = await staker.getIncentive(incentiveAccount.publicKey)
+    assert.ok(incentiveBefore.numOfStakes.eq(new BN(numOfStakes)))
+
+    // wait for the end of incentive
+    const delay = (duration - (end - begin) + 5) * 1000
+    await sleep(delay)
+
+    const stakes = await staker.getAllIncentiveStakes(incentiveAccount.publicKey)
+
+    let tx = new Transaction()
+    let stringTx: string[] = []
+
+    // put max 18 Ix per Tx, sign and return array of tx hashes
+
+    for (let i = 0; i < stakes.length; i++) {
+      const removeIx = await staker.removeStakeIx(
+        stakes[i].publicKey,
+        incentiveAccount.publicKey,
+        founderAccount.publicKey
+      )
+      tx.add(removeIx)
+      if ((i + 1) % 18 == 0 || i + 1 == stakes.length) {
+        stringTx.push(await signAndSend(tx, [founderAccount], staker.connection))
+        tx = new Transaction()
+      }
     }
-    const endIncentiveIx = await staker.endIncentiveIx(endIncentive)
-    const endIncentiveTx = new Transaction().add(endIncentiveIx)
-    await signAndSend(endIncentiveTx, [founderAccount], staker.connection)
 
-    const balanceAfter = (await incentiveToken.getAccountInfo(founderTokenAcc)).amount
-    assert.ok(balanceAfter.eq(balanceBefore))
-
-    // check if incentive account exist, should not
-    await assertThrowsAsync(staker.getIncentive(incentiveAccount.publicKey))
+    const incentiveAfter = await staker.getIncentive(incentiveAccount.publicKey)
+    assert.ok(incentiveAfter.numOfStakes.eq(new BN('0')))
   })
 })

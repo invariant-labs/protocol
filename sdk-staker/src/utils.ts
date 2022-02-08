@@ -1,11 +1,4 @@
-import { BN, Provider } from '@project-serum/anchor'
-import {
-  ConfirmOptions,
-  Connection,
-  Keypair,
-  sendAndConfirmRawTransaction,
-  Transaction
-} from '@solana/web3.js'
+import { BN } from '@project-serum/anchor'
 
 export const DECIMAL = 12
 export const DENOMINATOR = new BN(10).pow(new BN(DECIMAL))
@@ -31,20 +24,4 @@ export const STAKER_SEED = Buffer.from('staker')
 
 export const fromInteger = (integer: number): { v: BN } => {
   return { v: new BN(integer).mul(DENOMINATOR) }
-}
-
-export const signAndSend = async (
-  tx: Transaction,
-  signers: Keypair[],
-  connection: Connection,
-  opts?: ConfirmOptions
-) => {
-  tx.setSigners(...signers.map(s => s.publicKey))
-  const blockhash = await connection.getRecentBlockhash(
-    opts?.commitment ?? Provider.defaultOptions().commitment
-  )
-  tx.recentBlockhash = blockhash.blockhash
-  tx.partialSign(...signers)
-  const rawTx = tx.serialize()
-  return await sendAndConfirmRawTransaction(connection, rawTx)
 }
