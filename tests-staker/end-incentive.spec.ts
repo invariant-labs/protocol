@@ -12,6 +12,8 @@ import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { Token } from '@solana/spl-token'
 import { CreateFeeTier, CreatePool, FeeTier } from '@invariant-labs/sdk/src/market'
 
+// To run this test you have change WEEK to 3 sec in staker program
+
 describe('End incentive tests', () => {
   const provider = Provider.local()
   const connection = provider.connection

@@ -450,6 +450,11 @@ export type Staker = {
       "code": 6013,
       "name": "ZeroReward",
       "msg": "Remaining reward is 0"
+    },
+    {
+      "code": 6014,
+      "name": "NoStakes",
+      "msg": "There is no any stakes"
     }
   ]
 };
@@ -906,6 +911,11 @@ export const IDL: Staker = {
       "code": 6013,
       "name": "ZeroReward",
       "msg": "Remaining reward is 0"
+    },
+    {
+      "code": 6014,
+      "name": "NoStakes",
+      "msg": "There is no any stakes"
     }
   ]
 };
