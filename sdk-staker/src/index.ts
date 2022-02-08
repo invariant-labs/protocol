@@ -1,5 +1,5 @@
 import { BN } from '@project-serum/anchor'
-import { LiquidityMining } from './staker'
+import { Staker } from './staker'
 import { Network } from './network'
 
 import { PublicKey, Transaction } from '@solana/web3.js'
@@ -8,4 +8,4 @@ export interface IWallet {
   signAllTransactions: (txs: Transaction[]) => Promise<Transaction[]>
   publicKey: PublicKey
 }
-export { BN, Network, LiquidityMining }
+export { BN, Network, Staker }

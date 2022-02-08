@@ -1,9 +1,9 @@
 import { Network } from './network'
-import { Staker, IDL } from './idl/staker'
+import { Staker as StakerIdl, IDL } from './idl/staker'
 import { BN, Program, Provider } from '@project-serum/anchor'
 import { IWallet } from '.'
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { InitPosition, UpdateSecondsPerLiquidity, Market } from '@invariant-labs/sdk/src/market'
+import { UpdateSecondsPerLiquidity, Market } from '@invariant-labs/sdk/src/market'
 import {
   Connection,
   PublicKey,
@@ -17,17 +17,16 @@ import {
 import { STAKER_SEED } from './utils'
 import { bs58 } from '@project-serum/anchor/dist/cjs/utils/bytes'
 
-export class LiquidityMining {
+export class Staker {
   connection: Connection
   network: Network
   wallet: IWallet
-  programId: PublicKey
-  public program: Program<Staker>
-
+  private programId: PublicKey
+  private program: Program<StakerIdl>
+  private programAuthority: ProgramAuthority
   opts?: ConfirmOptions
 
-  // TODO implement builder pattern
-  public constructor(
+  private constructor(
     connection: Connection,
     network: Network,
     wallet: IWallet,
@@ -49,8 +48,19 @@ export class LiquidityMining {
     }
   }
 
-  // frontend methods
+  public static async build(
+    network: Network,
+    wallet: IWallet,
+    connection: Connection,
+    programId?: PublicKey
+  ): Promise<Staker> {
+    const instance = new Staker(connection, network, wallet, programId)
+    instance.programAuthority = await instance.getProgramAuthority()
 
+    return instance
+  }
+
+  // frontend methods
   public async createIncentive(createIncentive: CreateIncentive) {
     const incentiveAccount = Keypair.generate()
     const incentive = incentiveAccount.publicKey
@@ -106,10 +116,10 @@ export class LiquidityMining {
     return stringTx
   }
 
-  public async removeAllStakes(staker: LiquidityMining, incentive: PublicKey, founder: PublicKey) {
+  public async removeAllStakes(staker: Staker, incentive: PublicKey, founder: PublicKey) {
     const stakes = await this.getAllIncentiveStakes(incentive)
     let tx = new Transaction()
-    let stringTx: string[]
+    let txs: Transaction[]
 
     // put max 18 Ix per Tx, sign and return array of tx hashes
     for (let i = 0; i < stakes.length; i++) {
@@ -117,12 +127,12 @@ export class LiquidityMining {
       tx.add(removeIx)
       // sign and send when max Ix or last stake
       if ((i + 1) % 18 == 0 || i + 1 == stakes.length) {
-        stringTx.push(await this.signAndSend(tx))
+        txs.push(tx)
         tx = new Transaction()
       }
     }
 
-    return stringTx
+    return this.signAndSendAll(txs)
   }
 
   // instructions
@@ -140,25 +150,26 @@ export class LiquidityMining {
     }: CreateIncentive,
     incentive: PublicKey
   ) {
-    const [stakerAuthority, nonce] = await PublicKey.findProgramAddress(
-      [STAKER_SEED],
-      this.programId
-    )
-
-    return this.program.instruction.createIncentive(nonce, reward, startTime, endTime, {
-      accounts: {
-        incentive: incentive,
-        pool,
-        incentiveTokenAccount: incentiveTokenAcc,
-        founderTokenAccount: founderTokenAcc,
-        founder: founder,
-        stakerAuthority,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
-        invariant,
-        rent: SYSVAR_RENT_PUBKEY
+    return this.program.instruction.createIncentive(
+      this.programAuthority.nonce,
+      reward,
+      startTime,
+      endTime,
+      {
+        accounts: {
+          incentive: incentive,
+          pool,
+          incentiveTokenAccount: incentiveTokenAcc,
+          founderTokenAccount: founderTokenAcc,
+          founder: founder,
+          stakerAuthority: this.programAuthority.authority,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+          invariant,
+          rent: SYSVAR_RENT_PUBKEY
+        }
       }
-    })
+    )
   }
 
   public async createStakeIx({
@@ -199,21 +210,16 @@ export class LiquidityMining {
     invariant,
     index
   }: Withdraw) {
-    const [stakerAuthority, nonce] = await PublicKey.findProgramAddress(
-      [STAKER_SEED],
-      this.programId
-    )
-
     const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
 
-    return this.program.instruction.withdraw(index, nonce, {
+    return this.program.instruction.withdraw(index, this.programAuthority.nonce, {
       accounts: {
         userStake: userStakeAddress,
         incentive,
         incentiveTokenAccount: incentiveTokenAcc,
         ownerTokenAccount: ownerTokenAcc,
         position,
-        stakerAuthority,
+        stakerAuthority: this.programAuthority.authority,
         owner,
         tokenProgram: TOKEN_PROGRAM_ID,
         invariant,
@@ -229,17 +235,12 @@ export class LiquidityMining {
     ownerTokenAcc,
     founder
   }: EndIncentive) {
-    const [stakerAuthority, stakerAuthorityBump] = await PublicKey.findProgramAddress(
-      [STAKER_SEED],
-      this.programId
-    )
-
-    return this.program.instruction.endIncentive(stakerAuthorityBump, {
+    return this.program.instruction.endIncentive(this.programAuthority.nonce, {
       accounts: {
         incentive,
         incentiveTokenAccount: incentiveTokenAcc,
         founderTokenAccount: ownerTokenAcc,
-        stakerAuthority,
+        stakerAuthority: this.programAuthority.authority,
         founder: founder,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
@@ -261,6 +262,18 @@ export class LiquidityMining {
   }
 
   // getters
+  async getProgramAuthority() {
+    const [authority, nonce] = await PublicKey.findProgramAddress(
+      [Buffer.from(STAKER_SEED)],
+      this.program.programId
+    )
+
+    return {
+      authority,
+      nonce
+    }
+  }
+
   public async getIncentive(incentivePubKey: PublicKey) {
     return (await this.program.account.incentive.fetch(incentivePubKey)) as IncentiveStructure
   }
@@ -304,8 +317,36 @@ export class LiquidityMining {
       opts ?? Provider.defaultOptions()
     )
   }
-}
 
+  private async signAndSendAll(txs: Transaction[], opts?: ConfirmOptions) {
+    const blockhash = await this.connection.getRecentBlockhash(
+      this.opts?.commitment || Provider.defaultOptions().commitment
+    )
+    txs.forEach(tx => {
+      tx.feePayer = this.wallet.publicKey
+      tx.recentBlockhash = blockhash.blockhash
+    })
+
+    await this.wallet.signAllTransactions(txs)
+
+    const stringTx: string[] = []
+    for (let i = 0; i < txs.length; i++) {
+      stringTx.push(
+        await sendAndConfirmRawTransaction(
+          this.connection,
+          txs[i].serialize(),
+          opts ?? Provider.defaultOptions()
+        )
+      )
+    }
+
+    return stringTx
+  }
+}
+export interface ProgramAuthority {
+  authority: PublicKey
+  nonce: number
+}
 export interface CreateIncentive {
   reward: Decimal
   startTime: BN
@@ -324,14 +365,6 @@ export interface CreateStake {
   owner?: PublicKey
   index: number
   invariant: PublicKey
-}
-export interface RemoveStake {
-  staker: LiquidityMining
-  pool: PublicKey
-  id: BN
-  incentive: PublicKey
-  founder: Keypair
-  connection: Connection
 }
 export interface Stake {
   incentive: PublicKey

@@ -1,5 +1,5 @@
 import * as anchor from '@project-serum/anchor'
-import { Decimal, LiquidityMining } from '../sdk-staker/src/staker'
+import { Decimal, Staker } from '../sdk-staker/src/staker'
 import {
   ConfirmOptions,
   Connection,
@@ -107,13 +107,12 @@ export const almostEqual = (num1: BN, num2: BN, epsilon: BN = new BN(10)) => {
 
 export const createSomePositionsAndStakes = async (
   market: Market,
-  staker: LiquidityMining,
+  staker: Staker,
   pair: Pair,
   positionOwner: Keypair,
   tokenX: PublicKey,
   tokenY: PublicKey,
   incentive: PublicKey,
-  connection: Connection,
   amount: number
 ) => {
   const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) }

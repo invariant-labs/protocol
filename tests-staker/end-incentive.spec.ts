@@ -1,34 +1,30 @@
 import * as anchor from '@project-serum/anchor'
-import { Program, Provider, BN } from '@project-serum/anchor'
+import { Provider, BN } from '@project-serum/anchor'
 import { Market, Pair, sleep } from '@invariant-labs/sdk'
 import { Network } from '../sdk-staker/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import { CreateIncentive, Decimal, EndIncentive, LiquidityMining } from '../sdk-staker/src/staker'
+import { CreateIncentive, Decimal, EndIncentive, Staker } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
 import { assertThrowsAsync, createToken, tou64, signAndSend } from './testUtils'
 import { createToken as createTkn } from '../tests/testUtils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { FeeTier } from '@invariant-labs/sdk/lib/market'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { CreateFeeTier, CreatePool } from '@invariant-labs/sdk/src/market'
+import { Token } from '@solana/spl-token'
+import { CreateFeeTier, CreatePool, FeeTier } from '@invariant-labs/sdk/src/market'
 
 describe('End incentive tests', () => {
   const provider = Provider.local()
   const connection = provider.connection
-  // const program = anchor.workspace.Staker as Program<StakerIdl>
   // @ts-expect-error
   const wallet = provider.wallet.payer as Account
   const founderAccount = Keypair.generate()
   const mintAuthority = Keypair.generate()
 
   let stakerAuthority: PublicKey
-  let staker: LiquidityMining
+  let staker: Staker
   let pool: PublicKey
   let invariant: PublicKey
   let incentiveToken: Token
-  let tokenX: Token
-  let tokenY: Token
   let founderTokenAcc: PublicKey
   let incentiveTokenAcc: PublicKey
   let amount: BN
@@ -41,10 +37,10 @@ describe('End incentive tests', () => {
       anchor.workspace.Staker.programId
     )
     stakerAuthority = _mintAuthority
-    staker = new LiquidityMining(
-      connection,
+    staker = await Staker.build(
       Network.LOCAL,
       provider.wallet,
+      connection,
       anchor.workspace.Staker.programId
     )
 

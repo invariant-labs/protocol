@@ -5,17 +5,9 @@ import { Staker as StakerIdl } from '../sdk-staker/src/idl/staker'
 import { Network } from '../sdk-staker/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import { Decimal, LiquidityMining } from '../sdk-staker/src/staker'
+import { Decimal, Staker } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
-import {
-  createToken,
-  tou64,
-  getTime,
-  almostEqual,
-  updatePositionAndCreateStake,
-  updatePositionAndWithdraw,
-  signAndSend
-} from './testUtils'
+import { createToken, tou64, getTime, almostEqual, signAndSend } from './testUtils'
 import { createToken as createTkn } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { toDecimal } from '../sdk-staker/lib/utils'
@@ -24,7 +16,6 @@ import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import {
   CreateFeeTier,
   CreatePool,
-  CreateTick,
   InitPosition,
   Swap,
   UpdateSecondsPerLiquidity
@@ -43,7 +34,7 @@ describe('Withdraw tests', () => {
   const founderAccount = Keypair.generate()
   const admin = Keypair.generate()
   let nonce: number
-  let staker: LiquidityMining
+  let staker: Staker
   let market: Market
   let pool: PublicKey
   let invariant: PublicKey
@@ -66,10 +57,10 @@ describe('Withdraw tests', () => {
     )
     stakerAuthority = _mintAuthority
     nonce = _nonce
-    staker = new LiquidityMining(
-      connection,
+    staker = await Staker.build(
       Network.LOCAL,
       provider.wallet,
+      connection,
       anchor.workspace.Staker.programId
     )
 

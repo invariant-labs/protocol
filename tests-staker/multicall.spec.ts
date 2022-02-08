@@ -5,7 +5,7 @@ import { Staker as StakerIdl } from '../sdk-staker/src/idl/staker'
 import { Network } from '../sdk-staker/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import { Decimal, LiquidityMining } from '../sdk-staker/src/staker'
+import { Decimal, Staker } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
 import { createToken, tou64, getTime, almostEqual, signAndSend } from './testUtils'
 import { createToken as createTkn } from '../tests/testUtils'
@@ -16,7 +16,6 @@ import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import {
   CreateFeeTier,
   CreatePool,
-  CreateTick,
   InitPosition,
   Swap,
   UpdateSecondsPerLiquidity
@@ -38,7 +37,7 @@ describe('Multicall test', () => {
   const secondFounderAccount = Keypair.generate()
   const admin = Keypair.generate()
 
-  let staker: LiquidityMining
+  let staker: Staker
   let market: Market
   let pair: Pair
   let stakerAuthority: PublicKey
@@ -69,10 +68,10 @@ describe('Multicall test', () => {
     )
     stakerAuthority = _mintAuthority
     nonce = _nonce
-    staker = new LiquidityMining(
-      connection,
+    staker = await Staker.build(
       Network.LOCAL,
       provider.wallet,
+      connection,
       anchor.workspace.Staker.programId
     )
 

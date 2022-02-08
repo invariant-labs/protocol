@@ -4,7 +4,7 @@ import { Market, Pair, sleep } from '@invariant-labs/sdk'
 import { Network } from '../sdk-staker/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import { CreateIncentive, Decimal, LiquidityMining } from '../sdk-staker/src/staker'
+import { CreateIncentive, Decimal, Staker } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
 import {
   createToken,
@@ -32,7 +32,7 @@ describe('Remove all takes', () => {
   const founderAccount = Keypair.generate()
   const positionOwner = Keypair.generate()
   const admin = Keypair.generate()
-  let staker: LiquidityMining
+  let staker: Staker
   let market: Market
   let pool: PublicKey
   let invariant: PublicKey
@@ -51,10 +51,10 @@ describe('Remove all takes', () => {
       anchor.workspace.Staker.programId
     )
     stakerAuthority = _mintAuthority
-    staker = new LiquidityMining(
-      connection,
+    staker = await Staker.build(
       Network.LOCAL,
       provider.wallet,
+      connection,
       anchor.workspace.Staker.programId
     )
 
@@ -166,7 +166,6 @@ describe('Remove all takes', () => {
       userTokenXAccount,
       userTokenYAccount,
       incentiveAccount.publicKey,
-      connection,
       numOfStakes
     )
     const end = new Date().valueOf() / 1000

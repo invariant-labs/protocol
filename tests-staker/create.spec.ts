@@ -3,7 +3,7 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Market, Pair } from '@invariant-labs/sdk'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import { CreateIncentive, Decimal, LiquidityMining } from '../sdk-staker/src/staker'
+import { CreateIncentive, Decimal, Staker } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
 import {
   eqDecimal,
@@ -30,7 +30,7 @@ describe('Create incentive tests', () => {
   const mintAuthority = Keypair.generate()
   const founderAccount = Keypair.generate()
   const admin = Keypair.generate()
-  let staker: LiquidityMining
+  let staker: Staker
   let pool: PublicKey
   let invariant: PublicKey
   let incentiveToken: Token
@@ -49,10 +49,10 @@ describe('Create incentive tests', () => {
       anchor.workspace.Staker.programId
     )
     stakerAuthority = _mintAuthority
-    staker = new LiquidityMining(
-      connection,
+    staker = await Staker.build(
       Network.LOCAL,
       provider.wallet,
+      connection,
       anchor.workspace.Staker.programId
     )
 

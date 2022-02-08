@@ -4,7 +4,7 @@ import { Market, Pair, DENOMINATOR, sleep } from '@invariant-labs/sdk'
 import { Network } from '../sdk-staker/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import { CreateIncentive, CreateStake, Decimal, LiquidityMining } from '../sdk-staker/src/staker'
+import { CreateIncentive, CreateStake, Decimal, Staker } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
 import { eqDecimal, createToken, tou64, signAndSend } from './testUtils'
 import { createToken as createTkn } from '../tests/testUtils'
@@ -32,7 +32,7 @@ describe('Remove Stake tests', () => {
   const founderAccount = Keypair.generate()
   const positionOwner = Keypair.generate()
   const admin = Keypair.generate()
-  let staker: LiquidityMining
+  let staker: Staker
   let market: Market
   let pool: PublicKey
   let invariant: PublicKey
@@ -51,10 +51,10 @@ describe('Remove Stake tests', () => {
       anchor.workspace.Staker.programId
     )
     stakerAuthority = _mintAuthority
-    staker = new LiquidityMining(
-      connection,
+    staker = await Staker.build(
       Network.LOCAL,
       provider.wallet,
+      connection,
       anchor.workspace.Staker.programId
     )
 
