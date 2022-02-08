@@ -10,6 +10,7 @@ pub struct RemoveStake<'info> {
     #[account(mut, constraint = &incentive.load()?.founder == founder.to_account_info().key )]
     pub incentive: AccountLoader<'info, Incentive>,
     #[account(mut,
+        close = founder,
         constraint = &user_stake.load()?.incentive == incentive.to_account_info().key
     )]
     pub user_stake: AccountLoader<'info, UserStake>,
@@ -24,13 +25,7 @@ pub fn handler(ctx: Context<RemoveStake>) -> ProgramResult {
     let current_time = get_current_timestamp();
     require!(current_time > incentive.end_claim_time, TooEarly);
     require!(incentive.num_of_stakes != 0, NoStakes);
-
-    //close stake nad send sol to founder
-    close(
-        ctx.accounts.user_stake.to_account_info(),
-        ctx.accounts.founder.to_account_info(),
-    ).unwrap();
-
+    
     // decrease number of stakes by 1
     incentive.num_of_stakes -= 1;
 
