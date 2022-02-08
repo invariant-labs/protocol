@@ -504,6 +504,31 @@ mod tests {
             };
             assert_eq!(result, expected_result)
         }
+        // empty swap step when price is at tick
+        {
+            let current_price_sqrt = Decimal::new(999500149965);
+            let target_price_sqrt = Decimal::new(999500149965);
+            let liquidity = Decimal::new(20006000000000000000);
+            let amount = TokenAmount(1_000_000);
+            let by_amount_in = true;
+            let fee = Decimal::from_decimal(6, 4); // 0.0006 -> 0.06%
+
+            let result = compute_swap_step(
+                current_price_sqrt,
+                target_price_sqrt,
+                liquidity,
+                amount,
+                by_amount_in,
+                fee,
+            );
+            let expected_result = SwapResult {
+                next_price_sqrt: current_price_sqrt,
+                amount_in: TokenAmount(0),
+                amount_out: TokenAmount(0),
+                fee_amount: TokenAmount(0),
+            };
+            assert_eq!(result, expected_result)
+        }
     }
 
     #[test]
