@@ -220,13 +220,13 @@ pub fn handler(
                 };
                 let mut tick = loader.load_mut().unwrap();
 
-                if is_enough_amount_to_cross {
-                    // crossing tick
+                // crossing tick
+                if !x_to_y || is_enough_amount_to_cross {
                     msg!("CROSSING TICK {:?}", { tick.index });
                     cross_tick(&mut tick, &mut pool)?;
-                    msg!("TICKED CROSSED");
+                    msg!("TICKED CROSSED")
                 } else {
-                    total_amount_in = remaining_amount;
+                    total_amount_in = total_amount_in + remaining_amount;
                     remaining_amount = TokenAmount(0);
                 }
             }
