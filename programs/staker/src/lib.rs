@@ -40,4 +40,8 @@ pub mod staker {
     pub fn end_incentive(ctx: Context<ReturnFounds>, _bump_authority: u8) -> ProgramResult {
         instructions::end_incentive::handler(ctx, _bump_authority)
     }
+
+    pub fn remove_stake(ctx: Context<RemoveStake>) -> ProgramResult {
+        instructions::remove_stake::handler(ctx)
+    }
 }

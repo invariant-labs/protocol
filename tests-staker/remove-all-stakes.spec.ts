@@ -1,30 +1,37 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
-import { Market, Pair, DENOMINATOR } from '@invariant-labs/sdk'
+import { Market, Pair, sleep } from '@invariant-labs/sdk'
 import { Network } from '../sdk-staker/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import { Decimal, Staker, CreateStake, CreateIncentive } from '../sdk-staker/src/staker'
+import { CreateIncentive, Decimal, Staker } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
-import { createToken, tou64, signAndSend, eqDecimal } from './testUtils'
-// TODO fix create token
-import { createToken as createTkn, initEverything } from '../tests/testUtils'
+import {
+  createToken,
+  tou64,
+  createSomePositionsAndStakes,
+  signAndSend,
+  createToken as createTkn
+} from './testUtils'
+
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { FeeTier } from '@invariant-labs/sdk/lib/market'
-import { InitPosition, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
+import { CreateFeeTier, CreatePool, FeeTier } from '@invariant-labs/sdk/src/market'
 
-describe('Stake tests', () => {
+// To run this test you have change WEEK to 3 sec in staker program
+
+describe('Remove all takes', () => {
   const provider = Provider.local()
   const connection = provider.connection
+  // const program = anchor.workspace.Staker as Program<StakerIdl>
   // @ts-expect-error
   const wallet = provider.wallet.payer as Account
+  let stakerAuthority: PublicKey
   const mintAuthority = Keypair.generate()
   const incentiveAccount = Keypair.generate()
   const founderAccount = Keypair.generate()
   const positionOwner = Keypair.generate()
   const admin = Keypair.generate()
-  let stakerAuthority: PublicKey
   let staker: Staker
   let market: Market
   let pool: PublicKey
@@ -52,9 +59,9 @@ describe('Stake tests', () => {
     )
 
     await Promise.all([
-      connection.requestAirdrop(mintAuthority.publicKey, 1e9),
-      connection.requestAirdrop(positionOwner.publicKey, 1e9),
-      connection.requestAirdrop(incentiveAccount.publicKey, 10e9)
+      await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
+      await connection.requestAirdrop(positionOwner.publicKey, 1e9),
+      await connection.requestAirdrop(incentiveAccount.publicKey, 10e9)
     ])
 
     // create token
@@ -82,7 +89,7 @@ describe('Stake tests', () => {
     const tokens = await Promise.all([
       createTkn(connection, wallet, mintAuthority),
       createTkn(connection, wallet, mintAuthority),
-      connection.requestAirdrop(admin.publicKey, 1e9)
+      await connection.requestAirdrop(admin.publicKey, 1e9)
     ])
 
     // create pool
@@ -94,23 +101,33 @@ describe('Stake tests', () => {
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
-    invariant = anchor.workspace.Invariant.programId
 
-    // create tokens
-  })
+    await market.createState(admin.publicKey, admin)
 
-  it('#init()', async () => {
-    await initEverything(market, [pair], admin)
+    const createFeeTierVars: CreateFeeTier = {
+      feeTier,
+      admin: admin.publicKey
+    }
+    await market.createFeeTier(createFeeTierVars, admin)
+
+    const createPoolVars: CreatePool = {
+      pair,
+      payer: admin
+    }
+    await market.createPool(createPoolVars)
+
     pool = await pair.getAddress(anchor.workspace.Invariant.programId)
+    invariant = anchor.workspace.Invariant.programId
   })
 
-  it('Stake', async () => {
+  it('Remove', async () => {
     // create incentive
+    const duration = 30
     const seconds = new Date().valueOf() / 1000
     const currentTime = new BN(Math.floor(seconds))
     const reward: Decimal = { v: new BN(10) }
     const startTime = currentTime.add(new BN(0))
-    const endTime = currentTime.add(new BN(31_000_000))
+    const endTime = currentTime.add(new BN(duration))
 
     const createIncentiveVars: CreateIncentive = {
       reward,
@@ -122,6 +139,7 @@ describe('Stake tests', () => {
       founderTokenAcc: founderTokenAcc,
       invariant
     }
+
     const createTx = new Transaction().add(
       await staker.createIncentiveIx(createIncentiveVars, incentiveAccount.publicKey)
     )
@@ -129,8 +147,6 @@ describe('Stake tests', () => {
 
     // create position
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
-    const upperTick = 10
-    const lowerTick = -20
 
     const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
     const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
@@ -139,64 +155,49 @@ describe('Stake tests', () => {
     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
 
-    const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) }
-
-    await market.createPositionList(positionOwner.publicKey, positionOwner)
-
-    const initPositionVars: InitPosition = {
+    // create some positions and stakes
+    const begin = new Date().valueOf() / 1000
+    const numOfStakes = 24
+    await createSomePositionsAndStakes(
+      market,
+      staker,
       pair,
-      owner: positionOwner.publicKey,
-      userTokenX: userTokenXAccount,
-      userTokenY: userTokenYAccount,
-      lowerTick,
-      upperTick,
-      liquidityDelta
-    }
-    await market.initPosition(initPositionVars, positionOwner)
-
-    const index = 0
-
-    const { positionAddress: position } = await market.getPositionAddress(
-      positionOwner.publicKey,
-      index
+      positionOwner,
+      userTokenXAccount,
+      userTokenYAccount,
+      incentiveAccount.publicKey,
+      numOfStakes
     )
-    const positionStructBefore = await market.getPosition(positionOwner.publicKey, index)
-    const poolAddress = positionStructBefore.pool
-    const positionId = positionStructBefore.id
+    const end = new Date().valueOf() / 1000
 
-    // stake
-    const update: UpdateSecondsPerLiquidity = {
-      pair,
-      owner: positionOwner.publicKey,
-      lowerTickIndex: lowerTick,
-      upperTickIndex: upperTick,
-      index
+    const incentiveBefore = await staker.getIncentive(incentiveAccount.publicKey)
+    assert.ok(incentiveBefore.numOfStakes.eq(new BN(numOfStakes)))
+
+    // wait for the end of incentive
+    const delay = (duration - (end - begin) + 5) * 1000
+    await sleep(delay)
+
+    const stakes = await staker.getAllIncentiveStakes(incentiveAccount.publicKey)
+
+    let tx = new Transaction()
+    const stringTx: string[] = []
+
+    // put max 18 Ix per Tx, sign and return array of tx hashes
+
+    for (let i = 0; i < stakes.length; i++) {
+      const removeIx = await staker.removeStakeIx(
+        stakes[i].publicKey,
+        incentiveAccount.publicKey,
+        founderAccount.publicKey
+      )
+      tx.add(removeIx)
+      if ((i + 1) % 18 === 0 || i + 1 === stakes.length) {
+        stringTx.push(await signAndSend(tx, [founderAccount], staker.connection))
+        tx = new Transaction()
+      }
     }
-    const createStake: CreateStake = {
-      pool: poolAddress,
-      id: positionId,
-      index,
-      position,
-      incentive: incentiveAccount.publicKey,
-      owner: positionOwner.publicKey,
-      invariant: anchor.workspace.Invariant.programId
-    }
 
-    const updateIx = await market.updateSecondsPerLiquidityInstruction(update)
-    const stakeIx = await staker.createStakeIx(createStake)
-    const tx = new Transaction().add(updateIx).add(stakeIx)
-
-    await signAndSend(tx, [positionOwner], staker.connection)
-
-    const stake = await staker.getStake(incentiveAccount.publicKey, poolAddress, positionId)
-    const positionStructAfter = await market.getPosition(positionOwner.publicKey, index)
-    const liquidity: Decimal = { v: new BN(liquidityDelta.v) }
-
-    assert.ok(stake.position.equals(position))
-    assert.ok(stake.incentive.equals(incentiveAccount.publicKey))
-    assert.ok(
-      eqDecimal(stake.secondsPerLiquidityInitial, positionStructAfter.secondsPerLiquidityInside)
-    )
-    assert.ok(eqDecimal(stake.liquidity, liquidity))
+    const incentiveAfter = await staker.getIncentive(incentiveAccount.publicKey)
+    assert.ok(incentiveAfter.numOfStakes.eq(new BN('0')))
   })
 })
