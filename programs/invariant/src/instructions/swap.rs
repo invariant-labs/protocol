@@ -157,7 +157,7 @@ pub fn handler(
             pool.fee,
         );
         msg!("swap step result = {:?}", result);
-        msg!("pool.liquidity = {:?}", { pool.liquidity } );
+        msg!("pool.liquidity = {:?}", { pool.liquidity });
 
         // make remaining amount smaller
         if by_amount_in {
@@ -186,11 +186,19 @@ pub fn handler(
         if result.next_price_sqrt == swap_limit && limiting_tick.is_some() {
             let (tick_index, initialized) = limiting_tick.unwrap();
 
-            if initialized {
-                if remaining_amount.is_zero() {
-                    msg!("PREVIOUS BUG CASE");
-                }
+            let is_enough_amount_to_cross = is_enough_amount_to_push_price(
+                remaining_amount,
+                result.next_price_sqrt,
+                pool.liquidity,
+                pool.fee,
+                x_to_y,
+            );
+            msg!(
+                "is_enough_amount_to_cross = {:?}",
+                is_enough_amount_to_cross
+            );
 
+            if initialized {
                 // Calculating address of the crossed tick
                 let (tick_address, _) = Pubkey::find_program_address(
                     &[
@@ -212,15 +220,18 @@ pub fn handler(
                 };
                 let mut tick = loader.load_mut().unwrap();
 
-                // crossing tick
-                if !remaining_amount.is_zero() {
+                if is_enough_amount_to_cross {
+                    // crossing tick
                     msg!("CROSSING TICK {:?}", { tick.index });
                     cross_tick(&mut tick, &mut pool)?;
                     msg!("TICKED CROSSED");
+                } else {
+                    total_amount_in = remaining_amount;
+                    remaining_amount = TokenAmount(0);
                 }
             }
             // set tick to limit (below if price is going down, because current tick should always be below price)
-            pool.current_tick_index = if x_to_y && !remaining_amount.is_zero() {
+            pool.current_tick_index = if x_to_y && is_enough_amount_to_cross {
                 tick_index - pool.tick_spacing as i32
             } else {
                 tick_index
@@ -234,7 +245,7 @@ pub fn handler(
                     == 0,
                 "tick not divisible by spacing"
             );
-            
+
             msg!("current tick index = {:?}", { pool.current_tick_index });
             pool.current_tick_index =
                 get_tick_at_sqrt_price(result.next_price_sqrt, pool.tick_spacing);
@@ -251,8 +262,8 @@ pub fn handler(
 
     let signer: &[&[&[u8]]] = get_signer!(state.nonce);
 
-    let reserve_x_amount =  ctx.accounts.reserve_x.amount;
-    let reserve_y_amount =  ctx.accounts.reserve_y.amount;
+    let reserve_x_amount = ctx.accounts.reserve_x.amount;
+    let reserve_y_amount = ctx.accounts.reserve_y.amount;
     msg!("reserve_x_amount = {:?}", reserve_x_amount);
     msg!("reserve_y_amount = {:?}", reserve_y_amount);
 
