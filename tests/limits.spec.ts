@@ -11,6 +11,7 @@ import { assert } from 'chai'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
 import { Pair } from '@invariant-labs/sdk/lib/pair'
+import { INVARIANT_ERRORS } from '@invariant-labs/sdk'
 
 describe('limits', () => {
   const provider = Provider.local()
@@ -99,7 +100,7 @@ describe('limits', () => {
       accountY: userAccountY,
       byAmountIn: true
     }
-    await market.swap(swapVars, owner)
+    await assertThrowsAsync(market.swap(swapVars, owner), INVARIANT_ERRORS.NO_GAIN_SWAP)
 
     it('big deposit X and swap Y', async () => {
       const mintAmount = new BN(2).pow(new BN(64)).subn(1)
