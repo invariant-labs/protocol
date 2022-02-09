@@ -254,6 +254,10 @@ pub fn handler(
     }
     msg!("Tick index after swap: {:?}", { pool.current_tick_index });
 
+    if total_amount_out.0 == 0 {
+        return Err(ErrorCode::NoGainSwap.into());
+    }
+
     // Execute swap
     let (take_ctx, send_ctx) = match x_to_y {
         true => (ctx.accounts.take_x(), ctx.accounts.send_y()),
