@@ -226,6 +226,7 @@ pub fn handler(
                     cross_tick(&mut tick, &mut pool)?;
                     msg!("TICKED CROSSED")
                 } else {
+                    // TODO: decide what to do with this amount
                     total_amount_in = total_amount_in + remaining_amount;
                     remaining_amount = TokenAmount(0);
                 }

@@ -26,7 +26,7 @@ import {
 import { getLiquidityByX } from '@invariant-labs/sdk/lib/math'
 import { calculatePriceSqrt } from '@invariant-labs/sdk'
 
-describe('swap limit without cross', () => {
+describe('swap with cross both side', () => {
   const provider = Provider.local()
   const connection = provider.connection
   // @ts-expect-error
@@ -99,7 +99,7 @@ describe('swap limit without cross', () => {
     assert.ok(tickmapData.bitmap.length === TICK_LIMIT / 4)
     assert.ok(tickmapData.bitmap.every(v => v === 0))
   })
-  it('swap (push price to tick without crossing)', async () => {
+  it('push price to tick without crossing and push price to tick with crossing', async () => {
     // Deposit
     const upperTick = 10
     const createTickVars: CreateTick = {
@@ -235,7 +235,8 @@ describe('swap limit without cross', () => {
     await assertThrowsAsync(market.swap(swapNotCrossingVars, owner), INVARIANT_ERRORS.NO_GAIN_SWAP)
     // TODO: validate state
 
-    const swapCrossingVars: Swap = {
+    // crossing tick with decreasing price
+    const swapCrossingDecreasingVars: Swap = {
       pair,
       xToY: true,
       amount: minAmountToCrossFromTickPrice,
@@ -246,7 +247,22 @@ describe('swap limit without cross', () => {
       byAmountIn: true,
       owner: owner.publicKey
     }
-    await market.swap(swapCrossingVars, owner)
+    await market.swap(swapCrossingDecreasingVars, owner)
+    // TODO: validate state
+
+    // crossing tick with increasing price
+    const swapCrossingIncreasingVars: Swap = {
+      pair,
+      xToY: false,
+      amount: minAmountToCrossFromTickPrice,
+      knownPrice: poolDataBefore.sqrtPrice,
+      slippage: toDecimal(1, 2),
+      accountX,
+      accountY,
+      byAmountIn: true,
+      owner: owner.publicKey
+    }
+    await market.swap(swapCrossingIncreasingVars, owner)
     // TODO: validate state
   })
 })

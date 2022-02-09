@@ -20,6 +20,8 @@ jobs:
           [
             'npm run test:swap',
             'npm run test:cross',
+            'npm run test:cross-both-side',
+            'npm run test:liquidity-gap',
             'npm run test:reversed',
             'npm run test:position',
             'npm run test:math',
