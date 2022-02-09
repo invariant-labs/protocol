@@ -6,7 +6,7 @@
   "types": "lib/index.d.ts",
   "author": "Norbert Bodziony",
   "scripts": {
-    "prebuild": "rm -rf ./src/idl/* && cp -r ../target/idl/staker* ./src/idl && cp -r ../target/types/staker* ./src/idl",
+    "prebuild": "rm -rf ./src/idl/* && cp -r ../target/types/staker.ts ./src/idl",
     "build": "tsc"
   },
   "keywords": [],

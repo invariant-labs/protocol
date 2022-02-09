@@ -1,14 +1,12 @@
 import * as anchor from '@project-serum/anchor'
-import { Program, Provider, BN } from '@project-serum/anchor'
-import { Market, Pair, DENOMINATOR } from '@invariant-labs/sdk'
-import { Staker as StakerIdl } from '../sdk-staker/src/idl/staker'
+import { Provider, BN } from '@project-serum/anchor'
+import { Market, Pair, DENOMINATOR, sleep } from '@invariant-labs/sdk'
 import { Network } from '../sdk-staker/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import { Decimal, Staker, CreateStake, CreateIncentive } from '../sdk-staker/src/staker'
+import { CreateIncentive, CreateStake, Decimal, Staker } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
-import { createToken, tou64, signAndSend, eqDecimal } from './testUtils'
-// TODO fix create token
+import { eqDecimal, createToken, tou64, signAndSend } from './testUtils'
 import { createToken as createTkn } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
@@ -16,15 +14,16 @@ import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import {
   CreateFeeTier,
   CreatePool,
-  CreateTick,
   InitPosition,
   UpdateSecondsPerLiquidity
 } from '@invariant-labs/sdk/src/market'
 
-describe('Stake tests', () => {
+// To run this test you have change WEEK to 3 sec in staker program
+
+describe('Remove Stake tests', () => {
   const provider = Provider.local()
   const connection = provider.connection
-  const program = anchor.workspace.Staker as Program<StakerIdl>
+  // const program = anchor.workspace.Staker as Program<StakerIdl>
   // @ts-expect-error
   const wallet = provider.wallet.payer as Account
   let stakerAuthority: PublicKey
@@ -119,17 +118,15 @@ describe('Stake tests', () => {
 
     pool = await pair.getAddress(anchor.workspace.Invariant.programId)
     invariant = anchor.workspace.Invariant.programId
-
-    // create tokens
   })
 
-  it('Stake', async () => {
+  it('Remove', async () => {
     // create incentive
     const seconds = new Date().valueOf() / 1000
     const currentTime = new BN(Math.floor(seconds))
     const reward: Decimal = { v: new BN(10) }
     const startTime = currentTime.add(new BN(0))
-    const endTime = currentTime.add(new BN(31_000_000))
+    const endTime = currentTime.add(new BN(5))
 
     const createIncentiveVars: CreateIncentive = {
       reward,
@@ -141,10 +138,12 @@ describe('Stake tests', () => {
       founderTokenAcc: founderTokenAcc,
       invariant
     }
-    const createTx = new Transaction().add(
+
+    const tx = new Transaction().add(
       await staker.createIncentiveIx(createIncentiveVars, incentiveAccount.publicKey)
     )
-    await signAndSend(createTx, [founderAccount, incentiveAccount], staker.connection)
+
+    await signAndSend(tx, [founderAccount, incentiveAccount], staker.connection)
 
     // create position
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
@@ -183,7 +182,7 @@ describe('Stake tests', () => {
     const poolAddress = positionStructBefore.pool
     const positionId = positionStructBefore.id
 
-    // stake
+    // create stake
     const update: UpdateSecondsPerLiquidity = {
       pair,
       owner: positionOwner.publicKey,
@@ -198,14 +197,14 @@ describe('Stake tests', () => {
       position,
       incentive: incentiveAccount.publicKey,
       owner: positionOwner.publicKey,
-      invariant: anchor.workspace.Invariant.programId
+      invariant
     }
 
     const updateIx = await market.updateSecondsPerLiquidityInstruction(update)
     const stakeIx = await staker.createStakeIx(createStake)
-    const tx = new Transaction().add(updateIx).add(stakeIx)
+    const stakeTx = new Transaction().add(updateIx).add(stakeIx)
 
-    await signAndSend(tx, [positionOwner], staker.connection)
+    await signAndSend(stakeTx, [positionOwner], staker.connection)
 
     const stake = await staker.getStake(incentiveAccount.publicKey, poolAddress, positionId)
     const positionStructAfter = await market.getPosition(positionOwner.publicKey, index)
@@ -217,5 +216,26 @@ describe('Stake tests', () => {
       eqDecimal(stake.secondsPerLiquidityInitial, positionStructAfter.secondsPerLiquidityInside)
     )
     assert.ok(eqDecimal(stake.liquidity, liquidity))
+
+    const incentiveBefore = await staker.getIncentive(incentiveAccount.publicKey)
+    assert.ok(incentiveBefore.numOfStakes.eq(new BN('1')))
+
+    await sleep(10000)
+    const [userStakeAddress] = await staker.getUserStakeAddressAndBump(
+      incentiveAccount.publicKey,
+      pool,
+      positionId
+    )
+
+    const removeIx = await staker.removeStakeIx(
+      userStakeAddress,
+      incentiveAccount.publicKey,
+      founderAccount.publicKey
+    )
+    const removeTx = new Transaction().add(removeIx)
+    await signAndSend(removeTx, [founderAccount], staker.connection)
+
+    const incentiveAfter = await staker.getIncentive(incentiveAccount.publicKey)
+    assert.ok(incentiveAfter.numOfStakes.eq(new BN('0')))
   })
 })
