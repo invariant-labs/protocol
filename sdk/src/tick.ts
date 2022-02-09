@@ -3,6 +3,7 @@ import { TICK_LIMIT } from '.'
 import { Decimal } from './market'
 import { calculatePriceSqrt, TICK_SEARCH_RANGE } from './math'
 
+// TODO: test and replace this implementation
 export const getTickFromPrice = (
   currentTick: number,
   tickSpacing: number,

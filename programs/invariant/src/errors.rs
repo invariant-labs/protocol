@@ -44,4 +44,6 @@ pub enum ErrorCode {
     LimitReached = 19, // 1783
     #[msg("Invalid protocol fee")]
     InvalidProtocolFee = 20, // 1784
+    #[msg("Swap amount out is 0")]
+    NoGainSwap = 21, // 1785
 }

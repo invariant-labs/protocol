@@ -565,3 +565,17 @@ export const calculateFeeGrowthInside = (
 
   return [feeGrowthInsideX, feeGrowthInsideY]
 }
+
+// TODO: test this function
+export const isEnoughAmountToPushPrice = (
+  amount: BN,
+  currentPriceSqrt: Decimal,
+  liquidity: Decimal,
+  fee: Decimal,
+  aToB: boolean
+) => {
+  const amountAfterFee: BN = fromInteger(1).v.sub(fee.v).mul(amount).div(DENOMINATOR)
+  const nextSqrtPrice = getNextPriceFromInput(currentPriceSqrt, liquidity, amountAfterFee, aToB)
+
+  return !currentPriceSqrt.v.eq(nextSqrtPrice.v)
+}

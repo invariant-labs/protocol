@@ -1475,6 +1475,11 @@ export type Invariant = {
       "code": 6020,
       "name": "InvalidProtocolFee",
       "msg": "Invalid protocol fee"
+    },
+    {
+      "code": 6021,
+      "name": "NoGainSwap",
+      "msg": "Swap amount out is 0"
     }
   ]
 };
@@ -2956,6 +2961,11 @@ export const IDL: Invariant = {
       "code": 6020,
       "name": "InvalidProtocolFee",
       "msg": "Invalid protocol fee"
+    },
+    {
+      "code": 6021,
+      "name": "NoGainSwap",
+      "msg": "Swap amount out is 0"
     }
   ]
 };

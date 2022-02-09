@@ -6,9 +6,9 @@ export enum Network {
 export const getMarketAddress = (network: Network) => {
   switch (network) {
     case Network.LOCAL:
-      return 'Ag59kszeH2E1NFAwkV1A4uiWrLR8Motfj4zcx2TZpy6v'
+      return '6jtEY7kz17tLjKCNTybJBz8GbXSjwAiV5Ufjqsiyauys'
     case Network.DEV:
-      return 'Ag59kszeH2E1NFAwkV1A4uiWrLR8Motfj4zcx2TZpy6v'
+      return '6jtEY7kz17tLjKCNTybJBz8GbXSjwAiV5Ufjqsiyauys'
     default:
       throw new Error('Unknown network')
   }
