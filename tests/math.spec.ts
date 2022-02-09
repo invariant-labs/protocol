@@ -34,17 +34,15 @@ import {
   PositionClaimData,
   SimulateClaim,
   simulateSwap,
-  SimulateSwapInterface,
   SimulationResult,
   toDecimal,
   TokensOwed,
   U128MAX
 } from '@invariant-labs/sdk/src/utils'
 import { setInitialized } from './testUtils'
-import { Decimal, PoolData, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
+import { Decimal, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
 import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
 import { Keypair } from '@solana/web3.js'
-import { fromSeed } from 'bip32'
 import { swapParameters } from './swap'
 
 describe('Math', () => {

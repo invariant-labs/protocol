@@ -12,7 +12,6 @@ describe('oracle', () => {
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
   const admin = Keypair.generate()
-
   let market: Market
   let pair: Pair
 

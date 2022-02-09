@@ -10,16 +10,7 @@ import {
   TransactionInstruction
 } from '@solana/web3.js'
 import { calculatePriceSqrt, MAX_TICK, Pair, TICK_LIMIT, Market } from '.'
-import {
-  Decimal,
-  FeeTier,
-  FEE_TIER,
-  PoolStructure,
-  Tickmap,
-  Tick,
-  Position,
-  PoolData
-} from './market'
+import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap, Tick, PoolData } from './market'
 import { calculatePriceAfterSlippage, calculateSwapStep } from './math'
 import { getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'

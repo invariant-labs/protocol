@@ -3,18 +3,12 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
-import { createToken, createUserWithTokens } from './testUtils'
-import { Market, Pair, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@invariant-labs/sdk'
+import { createToken, createUserWithTokens, initEverything } from './testUtils'
+import { Market, Pair, tou64, DENOMINATOR, Network } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
-import {
-  CreateFeeTier,
-  CreatePool,
-  CreateTick,
-  InitPosition,
-  Swap
-} from '@invariant-labs/sdk/src/market'
+import { CreateTick, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 
 describe('target', () => {
   const provider = Provider.local()
@@ -54,38 +48,10 @@ describe('target', () => {
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
-
-    await market.createState(admin.publicKey, admin)
-
-    const createFeeTierVars: CreateFeeTier = {
-      feeTier,
-      admin: admin.publicKey
-    }
-    await market.createFeeTier(createFeeTierVars, admin)
   })
-  it('#create()', async () => {
-    const createPoolVars: CreatePool = {
-      pair,
-      payer: admin
-    }
-    await market.createPool(createPoolVars)
 
-    const createdPool = await market.getPool(pair)
-    assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
-    assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
-    assert.ok(createdPool.fee.v.eq(pair.feeTier.fee))
-    assert.equal(createdPool.tickSpacing, pair.feeTier.tickSpacing)
-    assert.ok(createdPool.liquidity.v.eqn(0))
-    assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR))
-    assert.ok(createdPool.currentTickIndex === 0)
-    assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
-    assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenX.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenY.eqn(0))
-
-    const tickmapData = await market.getTickmap(pair)
-    assert.ok(tickmapData.bitmap.length === TICK_LIMIT / 4)
-    assert.ok(tickmapData.bitmap.every(v => v === 0))
+  it('#init()', async () => {
+    await initEverything(market, [pair], admin)
   })
 
   it('#swap by target', async () => {
