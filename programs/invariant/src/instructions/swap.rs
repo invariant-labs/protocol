@@ -159,6 +159,7 @@ pub fn handler(
         }
 
         pool.add_fee(result.fee_amount, x_to_y);
+
         pool.sqrt_price = result.next_price_sqrt;
 
         total_amount_in = total_amount_in + result.amount_in + result.fee_amount;
@@ -227,7 +228,6 @@ pub fn handler(
                     == 0,
                 "tick not divisible by spacing"
             );
-
             pool.current_tick_index =
                 get_tick_at_sqrt_price(result.next_price_sqrt, pool.tick_spacing);
         }

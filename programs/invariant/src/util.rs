@@ -99,14 +99,10 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
     tick.seconds_per_liquidity_outside =
         pool.seconds_per_liquidity_global - tick.seconds_per_liquidity_outside;
 
-    msg!("pool.liquidity = {:?}", { pool.liquidity });
-    msg!("tick.liquidity_change = {:?}", { tick.liquidity_change });
     // When going to higher tick net_liquidity should be added and for going lower subtracted
     if (pool.current_tick_index >= tick.index) ^ tick.sign {
-        msg!("add liquidity");
         pool.liquidity = pool.liquidity + tick.liquidity_change;
     } else {
-        msg!("sub liquidity");
         pool.liquidity = pool.liquidity - tick.liquidity_change;
     }
 

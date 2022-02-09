@@ -101,7 +101,6 @@ pub fn compute_swap_step(
     fee: Decimal,
 ) -> SwapResult {
     let x_to_y = current_price_sqrt >= target_price_sqrt;
-    msg!("x_to_y = {:?}", x_to_y);
 
     let next_price_sqrt;
     let mut amount_in = TokenAmount(0);
