@@ -146,13 +146,13 @@ export type Staker = {
           "isSigner": false
         },
         {
-          "name": "ownerTokenAccount",
-          "isMut": true,
+          "name": "position",
+          "isMut": false,
           "isSigner": false
         },
         {
-          "name": "position",
-          "isMut": false,
+          "name": "ownerTokenAccount",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -162,8 +162,8 @@ export type Staker = {
         },
         {
           "name": "owner",
-          "isMut": true,
-          "isSigner": true
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "tokenProgram",
@@ -221,8 +221,8 @@ export type Staker = {
           "isSigner": false
         },
         {
-          "name": "owner",
-          "isMut": true,
+          "name": "founder",
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -247,6 +247,37 @@ export type Staker = {
           "type": "u8"
         }
       ]
+    },
+    {
+      "name": "removeStake",
+      "accounts": [
+        {
+          "name": "incentive",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userStake",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "founder",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -419,6 +450,11 @@ export type Staker = {
       "code": 6013,
       "name": "ZeroReward",
       "msg": "Remaining reward is 0"
+    },
+    {
+      "code": 6014,
+      "name": "NoStakes",
+      "msg": "There is no any stakes"
     }
   ]
 };
@@ -571,13 +607,13 @@ export const IDL: Staker = {
           "isSigner": false
         },
         {
-          "name": "ownerTokenAccount",
-          "isMut": true,
+          "name": "position",
+          "isMut": false,
           "isSigner": false
         },
         {
-          "name": "position",
-          "isMut": false,
+          "name": "ownerTokenAccount",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -587,8 +623,8 @@ export const IDL: Staker = {
         },
         {
           "name": "owner",
-          "isMut": true,
-          "isSigner": true
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "tokenProgram",
@@ -646,8 +682,8 @@ export const IDL: Staker = {
           "isSigner": false
         },
         {
-          "name": "owner",
-          "isMut": true,
+          "name": "founder",
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -672,6 +708,37 @@ export const IDL: Staker = {
           "type": "u8"
         }
       ]
+    },
+    {
+      "name": "removeStake",
+      "accounts": [
+        {
+          "name": "incentive",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userStake",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "founder",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -844,6 +911,11 @@ export const IDL: Staker = {
       "code": 6013,
       "name": "ZeroReward",
       "msg": "Remaining reward is 0"
+    },
+    {
+      "code": 6014,
+      "name": "NoStakes",
+      "msg": "There is no any stakes"
     }
   ]
 };

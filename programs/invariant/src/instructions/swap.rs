@@ -124,6 +124,8 @@ pub fn handler(
     let tickmap = ctx.accounts.tickmap.load()?;
     let state = ctx.accounts.state.load()?;
 
+    msg!("Pool sqrt price before swap = {:?}", { pool.sqrt_price });
+    msg!("sqrt price limit before swap = {:?}", { sqrt_price_limit });
     // limit is on the right side of price
     if x_to_y {
         require!({ pool.sqrt_price } > sqrt_price_limit, WrongLimit);
