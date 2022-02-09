@@ -22,7 +22,6 @@ import { Network } from '../sdk-staker/lib'
 describe('Create incentive tests', () => {
   const provider = Provider.local()
   const connection = provider.connection
-  // const program = anchor.workspace.Staker as Program<StakerIdl>
   // @ts-expect-error
   const wallet = provider.wallet.payer as Account
   const mintAuthority = Keypair.generate()
