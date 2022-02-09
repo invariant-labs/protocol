@@ -12,7 +12,8 @@ import {
 } from '@invariant-labs/sdk/src/market'
 import { feeToTickSpacing, FEE_TIERS, generateTicksArray } from '@invariant-labs/sdk/src/utils'
 import BN from 'bn.js'
-import { Pair, tou64, TICK_LIMIT } from '@invariant-labs/sdk'
+import { Pair, tou64, TICK_LIMIT, calculatePriceSqrt } from '@invariant-labs/sdk'
+import { assert } from 'chai'
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {
@@ -283,4 +284,57 @@ export const createTicksFromRange = async (
       await market.createTick(createTickVars, signer)
     })
   )
+}
+
+export const initEverything = async (
+  market: Market,
+  pairs: Pair[],
+  admin: Keypair,
+  initTick?: number
+) => {
+  await market.createState(admin.publicKey, admin)
+
+  const state = await market.getState()
+  const { bump } = await market.getStateAddress()
+  const { programAuthority, nonce } = await market.getProgramAuthority()
+  assert.ok(state.admin.equals(admin.publicKey))
+  assert.ok(state.authority.equals(programAuthority))
+  assert.ok(state.nonce === nonce)
+  assert.ok(state.bump === bump)
+
+  for (const pair of pairs) {
+    try {
+      await market.getFeeTier(pair.feeTier)
+    } catch (e) {
+      const createFeeTierVars: CreateFeeTier = {
+        feeTier: pair.feeTier,
+        admin: admin.publicKey
+      }
+      await market.createFeeTier(createFeeTierVars, admin)
+    }
+
+    const createPoolVars: CreatePool = {
+      pair,
+      payer: admin,
+      initTick: initTick
+    }
+    await market.createPool(createPoolVars)
+
+    const createdPool = await market.getPool(pair)
+    assert.ok(createdPool.tokenX.equals(pair.tokenX))
+    assert.ok(createdPool.tokenY.equals(pair.tokenY))
+    assert.ok(createdPool.fee.v.eq(pair.feeTier.fee))
+    assert.equal(createdPool.tickSpacing, pair.feeTier.tickSpacing)
+    assert.ok(createdPool.liquidity.v.eqn(0))
+    assert.ok(createdPool.sqrtPrice.v.eq(calculatePriceSqrt(initTick ?? 0).v))
+    assert.ok(createdPool.currentTickIndex === (initTick ?? 0))
+    assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
+    assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
+    assert.ok(createdPool.feeProtocolTokenX.eqn(0))
+    assert.ok(createdPool.feeProtocolTokenY.eqn(0))
+
+    const tickmapData = await market.getTickmap(pair)
+    assert.ok(tickmapData.bitmap.length === TICK_LIMIT / 4)
+    assert.ok(tickmapData.bitmap.every(v => v === 0))
+  }
 }

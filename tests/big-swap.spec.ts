@@ -1,15 +1,14 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
-import { Network, Market, Pair, DENOMINATOR, TICK_LIMIT } from '@invariant-labs/sdk'
+import { Network, Market, Pair, DENOMINATOR } from '@invariant-labs/sdk'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { createPosition, createToken, performSwap } from './testUtils'
+import { createPosition, createToken, initEverything, performSwap } from './testUtils'
 import { assert } from 'chai'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier, RemovePosition } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { calculateFeeGrowthInside } from '@invariant-labs/sdk/src/math'
-import { CreateFeeTier, CreatePool } from '@invariant-labs/sdk/src/market'
 
 describe('big-swap', () => {
   const provider = Provider.local()
@@ -19,11 +18,11 @@ describe('big-swap', () => {
   const mintAuthority = Keypair.generate()
   const positionOwner = Keypair.generate()
   const admin = Keypair.generate()
-  let market: Market
   const feeTier: FeeTier = {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
   }
+  let market: Market
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -37,9 +36,9 @@ describe('big-swap', () => {
     )
 
     await Promise.all([
-      await connection.requestAirdrop(mintAuthority.publicKey, 1e12),
-      await connection.requestAirdrop(admin.publicKey, 1e12),
-      await connection.requestAirdrop(positionOwner.publicKey, 1e12)
+      connection.requestAirdrop(mintAuthority.publicKey, 1e12),
+      connection.requestAirdrop(admin.publicKey, 1e12),
+      connection.requestAirdrop(positionOwner.publicKey, 1e12)
     ])
 
     const tokens = await Promise.all([
@@ -52,40 +51,8 @@ describe('big-swap', () => {
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
 
-  it('#createState()', async () => {
-    await market.createState(admin.publicKey, admin)
-  })
-
-  it('#createFeeTier()', async () => {
-    const createFeeTierVars: CreateFeeTier = {
-      feeTier,
-      admin: admin.publicKey
-    }
-    await market.createFeeTier(createFeeTierVars, admin)
-  })
-
-  it('#create()', async () => {
-    const createPoolVars: CreatePool = {
-      pair,
-      payer: admin
-    }
-    await market.createPool(createPoolVars)
-    const createdPool = await market.getPool(pair)
-    assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
-    assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
-    assert.ok(createdPool.fee.v.eq(feeTier.fee))
-    assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
-    assert.ok(createdPool.liquidity.v.eqn(0))
-    assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR))
-    assert.ok(createdPool.currentTickIndex === 0)
-    assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
-    assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenX.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenY.eqn(0))
-
-    const tickmapData = await market.getTickmap(pair)
-    assert.ok(tickmapData.bitmap.length === TICK_LIMIT / 4)
-    assert.ok(tickmapData.bitmap.every(v => v === 0))
+  it('#init()', async () => {
+    await initEverything(market, [pair], admin)
   })
 
   it('#swap()', async () => {

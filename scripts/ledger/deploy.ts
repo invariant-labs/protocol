@@ -1,4 +1,4 @@
-import {  MOCK_TOKENS, Network, Pair } from '@invariant-labs/sdk'
+import { MOCK_TOKENS, Network, Pair } from '@invariant-labs/sdk'
 import { FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
 import { CreateFeeTier, Market } from '@invariant-labs/sdk/src/market'
 import { Provider } from '@project-serum/anchor'
@@ -10,7 +10,7 @@ import { getLedgerWallet, signAndSendLedger } from '../walletProvider/wallet'
 require('dotenv').config()
 
 const provider = Provider.local(clusterApiUrl('devnet'), {
-    skipPreflight: true
+  skipPreflight: true
 })
 const connection = provider.connection
 
@@ -26,21 +26,21 @@ const createStandardFeeTiers = async (market: Market, ledgerWallet: LedgerWallet
 }
 
 const createUsdcUsdt = async (market: Market, ledgerWallet: LedgerWalletProvider) => {
-    for (const i of [0, 1, 2]) {
-      const pair = new Pair(
-        new PublicKey(MOCK_TOKENS.USDC),
-        new PublicKey(MOCK_TOKENS.USDT),
-        FEE_TIERS[i]
-      )
+  for (const i of [0, 1, 2]) {
+    const pair = new Pair(
+      new PublicKey(MOCK_TOKENS.USDC),
+      new PublicKey(MOCK_TOKENS.USDT),
+      FEE_TIERS[i]
+    )
 
-      market.createPoolTx({pair, payer: ledgerWallet.publicKey, initTick: 0})
+    market.createPoolTx({ pair, payer: ledgerWallet.publicKey, initTick: 0 })
     //   const createPoolVars: CreatePool = {
     //     pair,
     //     payer: ledgerWallet.publicKey,
     //   }
     //   await market.createPool(createPoolVars)
-    }
   }
+}
 
 const main = async () => {
   const ledgerWallet = await getLedgerWallet()

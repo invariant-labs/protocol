@@ -3,19 +3,12 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
-import { assertThrowsAsync, createToken } from './testUtils'
-import { Market, Pair, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@invariant-labs/sdk'
+import { assertThrowsAsync, createToken, initEverything } from './testUtils'
+import { Market, Pair, tou64, DENOMINATOR, Network } from '@invariant-labs/sdk'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
-import {
-  CreateFeeTier,
-  CreatePool,
-  CreateTick,
-  InitPosition,
-  RemovePosition,
-  Swap
-} from '@invariant-labs/sdk/src/market'
+import { CreateTick, InitPosition, RemovePosition, Swap } from '@invariant-labs/sdk/src/market'
 
 describe('withdraw', () => {
   const provider = Provider.local()
@@ -24,11 +17,11 @@ describe('withdraw', () => {
   const wallet = provider.wallet.payer as Keypair
   const mintAuthority = Keypair.generate()
   const admin = Keypair.generate()
-  let market: Market
   const feeTier: FeeTier = {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
   }
+  let market: Market
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -43,8 +36,8 @@ describe('withdraw', () => {
 
     // Request airdrops
     await Promise.all([
-      await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
-      await connection.requestAirdrop(admin.publicKey, 1e9)
+      connection.requestAirdrop(mintAuthority.publicKey, 1e9),
+      connection.requestAirdrop(admin.publicKey, 1e9)
     ])
     // Create tokens
     const tokens = await Promise.all([
@@ -55,40 +48,12 @@ describe('withdraw', () => {
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
-
-    await market.createState(admin.publicKey, admin)
-
-    const createFeeTierVars: CreateFeeTier = {
-      feeTier,
-      admin: admin.publicKey
-    }
-    await market.createFeeTier(createFeeTierVars, admin)
   })
-  it('#create()', async () => {
-    // 0.6% / 10
-    const createPoolVars: CreatePool = {
-      pair,
-      payer: admin
-    }
-    await market.createPool(createPoolVars)
 
-    const createdPool = await market.getPool(pair)
-    assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
-    assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
-    assert.ok(createdPool.fee.v.eq(feeTier.fee))
-    assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
-    assert.ok(createdPool.liquidity.v.eqn(0))
-    assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR))
-    assert.ok(createdPool.currentTickIndex === 0)
-    assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
-    assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenX.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenY.eqn(0))
-
-    const tickmapData = await market.getTickmap(pair)
-    assert.ok(tickmapData.bitmap.length === TICK_LIMIT / 4)
-    assert.ok(tickmapData.bitmap.every(v => v === 0))
+  it('#init()', async () => {
+    await initEverything(market, [pair], admin)
   })
+
   it('#withdraw', async () => {
     // Deposit
     const upperTick = 10

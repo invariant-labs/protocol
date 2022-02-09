@@ -1,5 +1,5 @@
 import * as anchor from '@project-serum/anchor'
-import { Decimal, Staker } from '../sdk-staker/src/staker'
+import { Decimal, Staker, CreateStake } from '../sdk-staker/src/staker'
 import {
   ConfirmOptions,
   Connection,
@@ -11,7 +11,6 @@ import {
 import { Token, u64 } from '@solana/spl-token'
 import { TokenInstructions } from '@project-serum/serum'
 import { BN, Provider } from '@project-serum/anchor'
-import { CreateStake } from '../sdk-staker/src/staker'
 import { InitPosition, UpdateSecondsPerLiquidity, Market } from '@invariant-labs/sdk/src/market'
 import { DENOMINATOR, Pair } from '@invariant-labs/sdk'
 
@@ -131,7 +130,7 @@ export const createSomePositionsAndStakes = async (
     await market.initPosition(initPositionVars, positionOwner)
 
     const index = i
-    //get position data
+    // get position data
     const { positionAddress: position } = await market.getPositionAddress(
       positionOwner.publicKey,
       index

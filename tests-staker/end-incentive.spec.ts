@@ -6,22 +6,21 @@ import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
 import { CreateIncentive, Decimal, EndIncentive, Staker } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
-import { assertThrowsAsync, createToken, tou64, signAndSend } from './testUtils'
-import { createToken as createTkn } from '../tests/testUtils'
+import { assertThrowsAsync, createToken, signAndSend, tou64 } from './testUtils'
+import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
+import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { Token } from '@solana/spl-token'
-import { CreateFeeTier, CreatePool, FeeTier } from '@invariant-labs/sdk/src/market'
-
-// To run this test you have change WEEK to 3 sec in staker program
 
 describe('End incentive tests', () => {
   const provider = Provider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Account
+  const admin = Keypair.generate()
   const founderAccount = Keypair.generate()
   const mintAuthority = Keypair.generate()
-
+  let market: Market
   let stakerAuthority: PublicKey
   let staker: Staker
   let pool: PublicKey
@@ -49,7 +48,10 @@ describe('End incentive tests', () => {
     // create token
     incentiveToken = await createToken(connection, wallet, wallet)
     // add SOL to founder acc
-    await connection.requestAirdrop(founderAccount.publicKey, 10e9)
+    await Promise.all([
+      connection.requestAirdrop(founderAccount.publicKey, 10e9),
+      connection.requestAirdrop(admin.publicKey, 10e9)
+    ])
 
     // create taken acc for founder and staker
     founderTokenAcc = await incentiveToken.createAccount(founderAccount.publicKey)
@@ -60,8 +62,7 @@ describe('End incentive tests', () => {
     await incentiveToken.mintTo(founderTokenAcc, wallet, [], tou64(amount))
 
     // create invariant and pool
-    const admin = Keypair.generate()
-    const market = await Market.build(
+    market = await Market.build(
       0,
       provider.wallet,
       connection,
@@ -70,8 +71,7 @@ describe('End incentive tests', () => {
 
     const tokens = await Promise.all([
       createTkn(connection, wallet, mintAuthority),
-      createTkn(connection, wallet, mintAuthority),
-      await connection.requestAirdrop(admin.publicKey, 1e9)
+      createTkn(connection, wallet, mintAuthority)
     ])
 
     // create pool
@@ -81,23 +81,12 @@ describe('End incentive tests', () => {
     }
 
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-
-    await market.createState(admin.publicKey, admin)
-
-    const createFeeTierVars: CreateFeeTier = {
-      feeTier,
-      admin: admin.publicKey
-    }
-    await market.createFeeTier(createFeeTierVars, admin)
-
-    const createPoolVars: CreatePool = {
-      pair,
-      payer: admin
-    }
-    await market.createPool(createPoolVars)
-
-    pool = await pair.getAddress(anchor.workspace.Invariant.programId)
     invariant = anchor.workspace.Invariant.programId
+  })
+
+  it('#init()', async () => {
+    await initEverything(market, [pair], admin)
+    pool = await pair.getAddress(anchor.workspace.Invariant.programId)
   })
 
   it('End incentive ', async () => {

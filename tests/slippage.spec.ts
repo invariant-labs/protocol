@@ -13,7 +13,6 @@ describe('slippage', () => {
   const wallet = provider.wallet.payer as Keypair
   const admin = Keypair.generate()
   let market: Market
-
   let knownPrice: Decimal
   let expectedPrice: BN
 

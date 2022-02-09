@@ -3,15 +3,9 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
-import { createToken } from './testUtils'
-import { Market, Pair, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@invariant-labs/sdk'
-import {
-  FeeTier,
-  CreateFeeTier,
-  CreatePool,
-  InitPosition,
-  Swap
-} from '@invariant-labs/sdk/lib/market'
+import { createToken, initEverything } from './testUtils'
+import { Market, Pair, tou64, DENOMINATOR, Network } from '@invariant-labs/sdk'
+import { FeeTier, InitPosition, Swap } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 // TODO add to tests
@@ -22,11 +16,11 @@ describe('compare', () => {
   const wallet = provider.wallet.payer as Keypair
   const mintAuthority = Keypair.generate()
   const admin = Keypair.generate()
-  let market: Market
   const feeTier: FeeTier = {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
   }
+  let market: Market
   let firstPair: Pair
   let secondPair: Pair
   let tokenX: Token
@@ -44,8 +38,8 @@ describe('compare', () => {
 
     // Request airdrops
     await Promise.all([
-      await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
-      await connection.requestAirdrop(admin.publicKey, 1e9)
+      connection.requestAirdrop(mintAuthority.publicKey, 1e9),
+      connection.requestAirdrop(admin.publicKey, 1e9)
     ])
     // Create tokens
     const tokens = await Promise.all([
@@ -62,63 +56,10 @@ describe('compare', () => {
     secondPair = new Pair(tokens[2].publicKey, tokens[3].publicKey, feeTier)
     tokenZ = new Token(connection, secondPair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenW = new Token(connection, secondPair.tokenY, TOKEN_PROGRAM_ID, wallet)
-
-    await market.createState(admin.publicKey, admin)
-
-    const createFeeTierVars: CreateFeeTier = {
-      feeTier,
-      admin: admin.publicKey
-    }
-    await market.createFeeTier(createFeeTierVars, admin)
   })
-  it('#create()', async () => {
-    const createPoolVars: CreatePool = {
-      pair: firstPair,
-      payer: admin
-    }
-    await market.createPool(createPoolVars)
 
-    const createPoolVars2: CreatePool = {
-      pair: secondPair,
-      payer: admin
-    }
-    await market.createPool(createPoolVars2)
-
-    // check first pool
-    const firstPool = await market.getPool(firstPair)
-    assert.ok(firstPool.tokenX.equals(tokenX.publicKey))
-    assert.ok(firstPool.tokenY.equals(tokenY.publicKey))
-    assert.ok(firstPool.fee.v.eq(feeTier.fee))
-    assert.equal(firstPool.tickSpacing, feeTier.tickSpacing)
-    assert.ok(firstPool.liquidity.v.eqn(0))
-    assert.ok(firstPool.sqrtPrice.v.eq(DENOMINATOR))
-    assert.ok(firstPool.currentTickIndex === 0)
-    assert.ok(firstPool.feeGrowthGlobalX.v.eqn(0))
-    assert.ok(firstPool.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(firstPool.feeProtocolTokenX.eqn(0))
-    assert.ok(firstPool.feeProtocolTokenY.eqn(0))
-
-    const firstTickmapData = await market.getTickmap(firstPair)
-    assert.ok(firstTickmapData.bitmap.length === TICK_LIMIT / 4)
-    assert.ok(firstTickmapData.bitmap.every(v => v === 0))
-
-    // check second pool
-    const secondPool = await market.getPool(secondPair)
-    assert.ok(secondPool.tokenX.equals(tokenZ.publicKey))
-    assert.ok(secondPool.tokenY.equals(tokenW.publicKey))
-    assert.ok(secondPool.fee.v.eq(feeTier.fee))
-    assert.equal(secondPool.tickSpacing, feeTier.tickSpacing)
-    assert.ok(secondPool.liquidity.v.eqn(0))
-    assert.ok(secondPool.sqrtPrice.v.eq(DENOMINATOR))
-    assert.ok(secondPool.currentTickIndex === 0)
-    assert.ok(secondPool.feeGrowthGlobalX.v.eqn(0))
-    assert.ok(secondPool.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(secondPool.feeProtocolTokenX.eqn(0))
-    assert.ok(secondPool.feeProtocolTokenY.eqn(0))
-
-    const secondTickmapData = await market.getTickmap(secondPair)
-    assert.ok(secondTickmapData.bitmap.length === TICK_LIMIT / 4)
-    assert.ok(secondTickmapData.bitmap.every(v => v === 0))
+  it('#init()', async () => {
+    await initEverything(market, [firstPair, secondPair], admin)
   })
 
   it('#swap() within a tick', async () => {
