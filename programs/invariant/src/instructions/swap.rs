@@ -118,14 +118,9 @@ pub fn handler(
 
     let sqrt_price_limit = Decimal::new(sqrt_price_limit);
     let mut pool = ctx.accounts.pool.load_mut()?;
-    msg!("Fee tier: {:?}", { pool.fee });
-    msg!("Tick spacing: {:?}", { pool.tick_spacing });
-    msg!("Tick index before swap: {:?}", { pool.current_tick_index });
     let tickmap = ctx.accounts.tickmap.load()?;
     let state = ctx.accounts.state.load()?;
 
-    msg!("Pool sqrt price before swap = {:?}", { pool.sqrt_price });
-    msg!("sqrt price limit before swap = {:?}", { sqrt_price_limit });
     // limit is on the right side of price
     if x_to_y {
         require!({ pool.sqrt_price } > sqrt_price_limit, WrongLimit);
@@ -139,7 +134,6 @@ pub fn handler(
     let mut total_amount_out = TokenAmount(0);
 
     while !remaining_amount.is_zero() {
-        msg!("remaining_amount: {:?}", remaining_amount);
         let (swap_limit, limiting_tick) = get_closer_limit(
             sqrt_price_limit,
             x_to_y,
@@ -147,8 +141,6 @@ pub fn handler(
             pool.tick_spacing,
             &tickmap,
         )?;
-        msg!("swap limit = {:?}", swap_limit);
-        msg!("limiting tick = {:?}", limiting_tick);
 
         let result = compute_swap_step(
             pool.sqrt_price,
@@ -158,8 +150,6 @@ pub fn handler(
             by_amount_in,
             pool.fee,
         );
-        msg!("swap step result = {:?}", result);
-        msg!("pool.liquidity = {:?}", { pool.liquidity });
 
         // make remaining amount smaller
         if by_amount_in {
@@ -167,13 +157,9 @@ pub fn handler(
         } else {
             remaining_amount = remaining_amount - result.amount_out;
         }
-        msg!("updated remaining_amount: {:?}", remaining_amount);
 
         pool.add_fee(result.fee_amount, x_to_y);
-
-        msg!("current sqrt price = {:?}", { pool.sqrt_price });
         pool.sqrt_price = result.next_price_sqrt;
-        msg!("next sqrt price = {:?}", { result.next_price_sqrt });
 
         total_amount_in = total_amount_in + result.amount_in + result.fee_amount;
         total_amount_out = total_amount_out + result.amount_out;
@@ -194,10 +180,6 @@ pub fn handler(
                 pool.liquidity,
                 pool.fee,
                 x_to_y,
-            );
-            msg!(
-                "is_enough_amount_to_cross = {:?}",
-                is_enough_amount_to_cross
             );
 
             if initialized {
@@ -224,9 +206,7 @@ pub fn handler(
 
                 // crossing tick
                 if !x_to_y || is_enough_amount_to_cross {
-                    msg!("CROSSING TICK {:?}", { tick.index });
                     cross_tick(&mut tick, &mut pool)?;
-                    msg!("TICKED CROSSED")
                 } else {
                     // TODO: decide what to do with this amount
                     total_amount_in = total_amount_in + remaining_amount;
@@ -239,7 +219,6 @@ pub fn handler(
             } else {
                 tick_index
             };
-            msg!("new tick index: {:?}", { pool.current_tick_index });
         } else {
             assert!(
                 pool.current_tick_index
@@ -249,13 +228,10 @@ pub fn handler(
                 "tick not divisible by spacing"
             );
 
-            msg!("current tick index = {:?}", { pool.current_tick_index });
             pool.current_tick_index =
                 get_tick_at_sqrt_price(result.next_price_sqrt, pool.tick_spacing);
-            msg!("next tick index = {:?}", { pool.current_tick_index });
         }
     }
-    msg!("Tick index after swap: {:?}", { pool.current_tick_index });
 
     if total_amount_out.0 == 0 {
         return Err(ErrorCode::NoGainSwap.into());
@@ -269,14 +245,7 @@ pub fn handler(
 
     let signer: &[&[&[u8]]] = get_signer!(state.nonce);
 
-    let reserve_x_amount = ctx.accounts.reserve_x.amount;
-    let reserve_y_amount = ctx.accounts.reserve_y.amount;
-    msg!("reserve_x_amount = {:?}", reserve_x_amount);
-    msg!("reserve_y_amount = {:?}", reserve_y_amount);
-
-    msg!("amount in = {:?}", total_amount_in);
     token::transfer(take_ctx, total_amount_in.0)?;
-    msg!("amount out = {:?}", total_amount_out.0);
     token::transfer(send_ctx.with_signer(signer), total_amount_out.0)?;
 
     Ok(())
