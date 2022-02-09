@@ -32,6 +32,7 @@
     "test:change-protocol-fee": "anchor test --skip-build tests/change-protocol-fee.spec.ts",
     "test:tickmap": "anchor test --skip-build tests/tickmap.spec.ts",
     "test:change-fee-receiver": "anchor test --skip-build tests/change-fee-receiver.spec.ts",
+    "test:whole-liquidity": "anchor test --skip-build tests/whole-liquidity.spec.ts",
     "test:remove-stake": "anchor test --skip-build tests-staker/remove-stake.spec.ts",
     "test:remove-all-stakes": "anchor test --skip-build tests-staker/remove-all-stakes.spec.ts",
     "build:invariant": "cd sdk && npm run build",

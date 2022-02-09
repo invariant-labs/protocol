@@ -1100,6 +1100,24 @@ export class Market {
 
     await signAndSend(tx, [signer], this.connection)
   }
+
+  async getWholeLiquidity(pair: Pair) {
+    const poolPublicKey = await pair.getAddress(this.program.programId)
+    const positions: Position[] = (
+      await this.program.account.position.all([
+        {
+          memcmp: { bytes: bs58.encode(poolPublicKey.toBuffer()), offset: 40 }
+        }
+      ])
+    ).map(a => a.account) as Position[]
+
+    let liquidity = new BN(0)
+    for (const position of positions) {
+      liquidity = liquidity.add(position.liquidity.v)
+    }
+
+    return liquidity
+  }
 }
 
 export interface Decimal {
