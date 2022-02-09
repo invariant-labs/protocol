@@ -405,6 +405,24 @@ pub fn calculate_seconds_per_liquidity_inside(
     pool.seconds_per_liquidity_global - seconds_per_liquidity_below - seconds_per_liquidity_above
 }
 
+pub fn is_enough_amount_to_push_price(
+    amount: TokenAmount,
+    current_price_sqrt: Decimal,
+    liquidity: Decimal,
+    fee: Decimal,
+    x_to_y: bool,
+) -> bool {
+    let amount_after_fee = amount.big_mul(Decimal::one() - fee).to_token_floor();
+
+    let next_price_sqrt = if x_to_y {
+        get_next_sqrt_price_x_up(current_price_sqrt, liquidity, amount_after_fee, true)
+    } else {
+        get_next_sqrt_price_y_down(current_price_sqrt, liquidity, amount_after_fee, true)
+    };
+
+    current_price_sqrt.ne(&next_price_sqrt)
+}
+
 #[cfg(test)]
 mod tests {
     use std::ops::Div;
@@ -482,6 +500,31 @@ mod tests {
                 amount_in: TokenAmount(197), // (5000000000000 * (101 - 100.9999996)) /  (101 * 100.9999996)
                 amount_out: amount,
                 fee_amount: TokenAmount(1),
+            };
+            assert_eq!(result, expected_result)
+        }
+        // empty swap step when price is at tick
+        {
+            let current_price_sqrt = Decimal::new(999500149965);
+            let target_price_sqrt = Decimal::new(999500149965);
+            let liquidity = Decimal::new(20006000000000000000);
+            let amount = TokenAmount(1_000_000);
+            let by_amount_in = true;
+            let fee = Decimal::from_decimal(6, 4); // 0.0006 -> 0.06%
+
+            let result = compute_swap_step(
+                current_price_sqrt,
+                target_price_sqrt,
+                liquidity,
+                amount,
+                by_amount_in,
+                fee,
+            );
+            let expected_result = SwapResult {
+                next_price_sqrt: current_price_sqrt,
+                amount_in: TokenAmount(0),
+                amount_out: TokenAmount(0),
+                fee_amount: TokenAmount(0),
             };
             assert_eq!(result, expected_result)
         }
@@ -929,6 +972,32 @@ mod tests {
 
     #[test]
     fn test_calculate_amount_delta() {
+        // current tick between lower tick and upper tick
+        {
+            let mut pool = Pool {
+                liquidity: Decimal::from_integer(0),
+                sqrt_price: Decimal::new(1000140000000),
+                current_tick_index: 2,
+                ..Default::default()
+            };
+
+            let liquidity_delta = Decimal::from_integer(5_000_000);
+            let liquidity_sign = true;
+            let upper_tick = 3;
+            let lower_tick = 0;
+
+            let (x, y) = calculate_amount_delta(
+                &mut pool,
+                liquidity_delta,
+                liquidity_sign,
+                upper_tick,
+                lower_tick,
+            )
+            .unwrap();
+
+            assert_eq!(x, TokenAmount(51));
+            assert_eq!(y, TokenAmount(700));
+        }
         // current tick smaller than lower tick
         {
             let mut pool = Pool {
@@ -942,7 +1011,7 @@ mod tests {
             let upper_tick = 4;
             let lower_tick = 2;
 
-            let result = calculate_amount_delta(
+            let (x, y) = calculate_amount_delta(
                 &mut pool,
                 liquidity_delta,
                 liquidity_sign,
@@ -951,8 +1020,8 @@ mod tests {
             )
             .unwrap();
 
-            assert_eq!(result.0, TokenAmount(1));
-            assert_eq!(result.1, TokenAmount(0));
+            assert_eq!(x, TokenAmount(1));
+            assert_eq!(y, TokenAmount(0));
         }
         // current tick greater than upper tick
         {
@@ -967,7 +1036,7 @@ mod tests {
             let upper_tick = 4;
             let lower_tick = 2;
 
-            let result = calculate_amount_delta(
+            let (x, y) = calculate_amount_delta(
                 &mut pool,
                 liquidity_delta,
                 liquidity_sign,
@@ -976,8 +1045,8 @@ mod tests {
             )
             .unwrap();
 
-            assert_eq!(result.0, TokenAmount(0));
-            assert_eq!(result.1, TokenAmount(1));
+            assert_eq!(x, TokenAmount(0));
+            assert_eq!(y, TokenAmount(1));
         }
     }
     #[test]
@@ -1048,6 +1117,33 @@ mod tests {
                 current_timestamp,
             );
             assert_eq!(seconds_per_liquidity_inside.v, 1000000110);
+        }
+    }
+    #[test]
+    fn test_is_enough_amount_to_push_price() {
+        // -20 crossing tick with 1 token amount
+        {
+            let amount = TokenAmount(1);
+            let current_price_sqrt = Decimal::new(999500149965); // at -20 tick
+            let liquidity = Decimal::new(20006000000000000000);
+            let fee = Decimal::from_decimal(6, 4); // 0.0006 -> 0.06%
+            let x_to_y = true;
+
+            let result =
+                is_enough_amount_to_push_price(amount, current_price_sqrt, liquidity, fee, x_to_y);
+            assert_eq!(result, false);
+        }
+        // -20 crossing tick with 2 token amount
+        {
+            let amount = TokenAmount(2);
+            let current_price_sqrt = Decimal::new(999500149965); // at -20 tick
+            let liquidity = Decimal::new(20006000000000000000);
+            let fee = Decimal::from_decimal(6, 4); // 0.0006 -> 0.06%
+            let x_to_y = true;
+
+            let result =
+                is_enough_amount_to_push_price(amount, current_price_sqrt, liquidity, fee, x_to_y);
+            assert_eq!(result, true);
         }
     }
 }

@@ -11,7 +11,7 @@ import {
 } from '@solana/web3.js'
 import { calculatePriceSqrt, MAX_TICK, Pair, TICK_LIMIT, Market } from '.'
 import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap, Tick, PoolData } from './market'
-import { calculatePriceAfterSlippage, calculateSwapStep } from './math'
+import { calculatePriceAfterSlippage, calculateSwapStep, isEnoughAmountToPushPrice } from './math'
 import { getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
 import { struct, u32, u8 } from '@solana/buffer-layout'
@@ -53,7 +53,8 @@ export enum INVARIANT_ERRORS {
   INVALID_POOL_LIQUIDITY = '0x177c',
   INVALID_POSITION_INDEX = '0x177d',
   POSITION_WITHOUT_LIQUIDITY = '0x177e',
-  INVALID_POOL_TOKEN_ADDRESSES = '0x1780'
+  INVALID_POOL_TOKEN_ADDRESSES = '0x1780',
+  NO_GAIN_SWAP = '0x1785'
 }
 
 export interface SimulateSwapPrice {
@@ -343,17 +344,31 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
       const tickIndex: number = limitingTick.index
       const initialized: boolean = limitingTick.initialized
 
+      const isEnoughAmountToCross = isEnoughAmountToPushPrice(
+        remainingAmount,
+        result.nextPrice,
+        pool.liquidity,
+        pool.fee,
+        xToY
+      )
+
+      // cross
       if (initialized) {
         const tick = ticks.get(tickIndex) as Tick
 
-        // trunk-ignore(eslint/no-mixed-operators)
-        if (currentTickIndex >= tick.index !== tick.sign) {
-          liquidity = { v: liquidity.v.add(tick.liquidityChange.v) }
+        if (!xToY || isEnoughAmountToCross) {
+          // trunk-ignore(eslint/no-mixed-operators)
+          if (currentTickIndex >= tick.index !== tick.sign) {
+            liquidity = { v: liquidity.v.add(tick.liquidityChange.v) }
+          } else {
+            liquidity = { v: liquidity.v.sub(tick.liquidityChange.v) }
+          }
         } else {
-          liquidity = { v: liquidity.v.sub(tick.liquidityChange.v) }
+          accumulatedAmountIn = accumulatedAmountIn.add(remainingAmount)
+          remainingAmount = new BN(0)
         }
       }
-      if (xToY && !remainingAmount.eq(new BN(0))) {
+      if (xToY && isEnoughAmountToCross) {
         currentTickIndex = tickIndex - tickSpacing
       } else {
         currentTickIndex = tickIndex

@@ -175,6 +175,14 @@ pub fn handler(
         if result.next_price_sqrt == swap_limit && limiting_tick.is_some() {
             let (tick_index, initialized) = limiting_tick.unwrap();
 
+            let is_enough_amount_to_cross = is_enough_amount_to_push_price(
+                remaining_amount,
+                result.next_price_sqrt,
+                pool.liquidity,
+                pool.fee,
+                x_to_y,
+            );
+
             if initialized {
                 // Calculating address of the crossed tick
                 let (tick_address, _) = Pubkey::find_program_address(
@@ -198,11 +206,16 @@ pub fn handler(
                 let mut tick = loader.load_mut().unwrap();
 
                 // crossing tick
-                cross_tick(&mut tick, &mut pool)?;
+                if !x_to_y || is_enough_amount_to_cross {
+                    cross_tick(&mut tick, &mut pool)?;
+                } else {
+                    // TODO: decide what to do with this amount
+                    total_amount_in = total_amount_in + remaining_amount;
+                    remaining_amount = TokenAmount(0);
+                }
             }
-
             // set tick to limit (below if price is going down, because current tick should always be below price)
-            pool.current_tick_index = if x_to_y && !remaining_amount.is_zero() {
+            pool.current_tick_index = if x_to_y && is_enough_amount_to_cross {
                 tick_index - pool.tick_spacing as i32
             } else {
                 tick_index
@@ -218,6 +231,10 @@ pub fn handler(
             pool.current_tick_index =
                 get_tick_at_sqrt_price(result.next_price_sqrt, pool.tick_spacing);
         }
+    }
+
+    if total_amount_out.0 == 0 {
+        return Err(ErrorCode::NoGainSwap.into());
     }
 
     // Execute swap
