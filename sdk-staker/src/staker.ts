@@ -303,7 +303,7 @@ export class Staker {
 
   private async signAndSend(tx: Transaction, signers?: Keypair[], opts?: ConfirmOptions) {
     const blockhash = await this.connection.getRecentBlockhash(
-      this.opts?.commitment ?? Provider.defaultOptions().commitment
+      this.opts?.commitment || Provider.defaultOptions().commitment
     )
     tx.feePayer = this.wallet.publicKey
     tx.recentBlockhash = blockhash.blockhash
@@ -320,7 +320,7 @@ export class Staker {
 
   private async signAndSendAll(txs: Transaction[], opts?: ConfirmOptions) {
     const blockhash = await this.connection.getRecentBlockhash(
-      this.opts?.commitment ?? Provider.defaultOptions().commitment
+      this.opts?.commitment || Provider.defaultOptions().commitment
     )
     txs.forEach(tx => {
       tx.feePayer = this.wallet.publicKey

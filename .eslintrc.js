@@ -13,6 +13,7 @@ module.exports = {
     '@typescript-eslint/restrict-plus-operands': 'off',
     '@typescript-eslint/strict-boolean-expressions': 'off',
     '@typescript-eslint/promise-function-async': 'off',
+    '@typescript-eslint/prefer-nullish-coalescing': 'off',
     'prettier/prettier': ['error']
   }
 }
