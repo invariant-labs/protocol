@@ -37,6 +37,7 @@ pub struct Withdraw<'info> {
     pub owner: AccountInfo<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
+    #[account(address = invariant::ID)]
     pub invariant: Program<'info, Invariant>, //TODO: program address
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
