@@ -116,14 +116,14 @@ export class Staker {
     return stringTx
   }
 
-  public async removeAllStakes(staker: Staker, incentive: PublicKey, founder: PublicKey) {
+  public async removeAllStakes(incentive: PublicKey, founder: PublicKey) {
     const stakes = await this.getAllIncentiveStakes(incentive)
     let tx = new Transaction()
     let txs: Transaction[]
 
     // put max 18 Ix per Tx, sign and return array of tx hashes
     for (let i = 0; i < stakes.length; i++) {
-      const removeIx = await staker.removeStakeIx(stakes[i].publicKey, incentive, founder)
+      const removeIx = await this.removeStakeIx(stakes[i].publicKey, incentive, founder)
       tx.add(removeIx)
       // sign and send when max Ix or last stake
       if ((i + 1) % 18 === 0 || i + 1 === stakes.length) {
@@ -144,8 +144,9 @@ export class Staker {
       endTime,
       founder,
       pool,
-      incentiveTokenAcc,
-      founderTokenAcc,
+      incentiveTokenAccount,
+      incentiveToken,
+      founderTokenAccount,
       invariant
     }: CreateIncentive,
     incentive: PublicKey
@@ -159,8 +160,9 @@ export class Staker {
         accounts: {
           incentive: incentive,
           pool,
-          incentiveTokenAccount: incentiveTokenAcc,
-          founderTokenAccount: founderTokenAcc,
+          incentiveTokenAccount,
+          incentiveToken,
+          founderTokenAccount,
           founder: founder,
           stakerAuthority: this.programAuthority.authority,
           tokenProgram: TOKEN_PROGRAM_ID,
@@ -353,8 +355,9 @@ export interface CreateIncentive {
   endTime: BN
   pool: PublicKey
   founder: PublicKey
-  incentiveTokenAcc: PublicKey
-  founderTokenAcc: PublicKey
+  incentiveTokenAccount: PublicKey
+  incentiveToken: PublicKey
+  founderTokenAccount: PublicKey
   invariant: PublicKey
 }
 export interface CreateStake {
