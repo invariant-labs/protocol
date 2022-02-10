@@ -4,10 +4,10 @@ use crate::util::check_position_seeds;
 use crate::util::get_current_slot;
 use crate::util::get_current_timestamp;
 
-use invariant::program::Invariant;
-use invariant::structs::Position;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
+use invariant::program::Invariant;
+use invariant::structs::Position;
 
 #[derive(Accounts)]
 #[instruction(index: u32, bump: u8)]
@@ -24,7 +24,7 @@ pub struct CreateUserStake<'info> {
     #[account(mut)]
     pub owner: Signer<'info>,
     #[account(address = invariant::ID)]
-    pub invariant: Program<'info, Invariant>, //TODO: validate program address
+    pub invariant: Program<'info, Invariant>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,

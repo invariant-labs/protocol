@@ -63,12 +63,18 @@ export class Staker {
   // frontend methods
   public async createIncentive(createIncentive: CreateIncentive) {
     const incentiveAccount = Keypair.generate()
+    const incentiveTokenAccount = Keypair.generate()
     const incentive = incentiveAccount.publicKey
-    const createIx = await this.createIncentiveIx(createIncentive, incentiveAccount.publicKey)
+    const incentiveToken = incentiveTokenAccount.publicKey
+    const createIx = await this.createIncentiveIx(
+      createIncentive,
+      incentiveAccount.publicKey,
+      incentiveTokenAccount.publicKey
+    )
     const tx = new Transaction().add(createIx)
-    const stringTx = await this.signAndSend(tx, [incentiveAccount])
+    const stringTx = await this.signAndSend(tx, [incentiveAccount, incentiveTokenAccount])
 
-    return { stringTx, incentive }
+    return { stringTx, incentive, incentiveToken }
   }
 
   public async createStake(
@@ -144,12 +150,12 @@ export class Staker {
       endTime,
       founder,
       pool,
-      incentiveTokenAccount,
       incentiveToken,
       founderTokenAccount,
       invariant
     }: CreateIncentive,
-    incentive: PublicKey
+    incentive: PublicKey,
+    incentiveTokenAccount: PublicKey
   ) {
     return this.program.instruction.createIncentive(
       this.programAuthority.nonce,
@@ -205,7 +211,7 @@ export class Staker {
     incentive,
     pool,
     id,
-    incentiveTokenAcc,
+    incentiveTokenAccount,
     ownerTokenAcc,
     position,
     owner,
@@ -218,7 +224,7 @@ export class Staker {
       accounts: {
         userStake: userStakeAddress,
         incentive,
-        incentiveTokenAccount: incentiveTokenAcc,
+        incentiveTokenAccount: incentiveTokenAccount,
         ownerTokenAccount: ownerTokenAcc,
         position,
         stakerAuthority: this.programAuthority.authority,
@@ -233,15 +239,17 @@ export class Staker {
 
   public async endIncentiveIx({
     incentive,
-    incentiveTokenAcc,
-    ownerTokenAcc,
+    incentiveToken,
+    incentiveTokenAccount,
+    ownerTokenAccount,
     founder
   }: EndIncentive) {
     return this.program.instruction.endIncentive(this.programAuthority.nonce, {
       accounts: {
         incentive,
-        incentiveTokenAccount: incentiveTokenAcc,
-        founderTokenAccount: ownerTokenAcc,
+        incentiveToken,
+        incentiveTokenAccount: incentiveTokenAccount,
+        founderTokenAccount: ownerTokenAccount,
         stakerAuthority: this.programAuthority.authority,
         founder: founder,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -355,7 +363,6 @@ export interface CreateIncentive {
   endTime: BN
   pool: PublicKey
   founder: PublicKey
-  incentiveTokenAccount: PublicKey
   incentiveToken: PublicKey
   founderTokenAccount: PublicKey
   invariant: PublicKey
@@ -380,7 +387,7 @@ export interface Withdraw {
   incentive: PublicKey
   pool: PublicKey
   id: BN
-  incentiveTokenAcc: PublicKey
+  incentiveTokenAccount: PublicKey
   ownerTokenAcc: PublicKey
   position: PublicKey
   owner?: PublicKey
@@ -391,8 +398,9 @@ export interface Withdraw {
 
 export interface EndIncentive {
   incentive: PublicKey
-  incentiveTokenAcc: PublicKey
-  ownerTokenAcc: PublicKey
+  incentiveToken: PublicKey
+  incentiveTokenAccount: PublicKey
+  ownerTokenAccount: PublicKey
   founder: PublicKey
 }
 
