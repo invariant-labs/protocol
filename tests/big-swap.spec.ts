@@ -126,6 +126,9 @@ describe('big-swap', () => {
     }
 
     const poolAfterSwaps = await market.getPool(pair)
+    const { globalFeeX, globalFeeY } = await market.getGlobalFee(pair)
+    assert.ok(globalFeeX.eq(new BN(188)))
+    assert.ok(globalFeeY.eq(new BN(205)))
     for (let i = -40; i < 50; i += 10) {
       let lowerTick
       try {
@@ -263,6 +266,10 @@ describe('big-swap', () => {
     }
 
     const poolAfterSwaps2 = await market.getPool(pair)
+    const { globalFeeX: globalFeeX2, globalFeeY: globalFeeY2 } = await market.getGlobalFee(pair)
+    assert.ok(globalFeeX2.eq(new BN(494)))
+    assert.ok(globalFeeY2.eq(new BN(598)))
+
     for (let i = -40; i < 50; i += 10) {
       let lowerTick
       try {

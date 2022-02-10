@@ -22,7 +22,7 @@ import {
   SimulationResult
 } from './utils'
 import { Invariant, IDL } from './idl/invariant'
-import { ComputeUnitsInstruction, IWallet, Pair, signAndSend } from '.'
+import { ComputeUnitsInstruction, DENOMINATOR, IWallet, Pair, signAndSend } from '.'
 import { getMarketAddress, Network } from './network'
 import { bs58 } from '@project-serum/anchor/dist/cjs/utils/bytes'
 
@@ -1117,6 +1117,15 @@ export class Market {
     }
 
     return liquidity
+  }
+
+  async getGlobalFee(pair: Pair) {
+    const { feeGrowthGlobalX, feeGrowthGlobalY } = await this.getPool(pair)
+    const liquidity = await this.getWholeLiquidity(pair)
+    const globalFeeX = feeGrowthGlobalX.v.mul(liquidity).div(DENOMINATOR.pow(new BN(3)))
+    const globalFeeY = feeGrowthGlobalY.v.mul(liquidity).div(DENOMINATOR.pow(new BN(3)))
+
+    return { globalFeeX, globalFeeY }
   }
 }
 

@@ -4,7 +4,15 @@ import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken } from './testUtils'
-import { Market, Pair, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@invariant-labs/sdk'
+import {
+  Market,
+  Pair,
+  tou64,
+  DENOMINATOR,
+  TICK_LIMIT,
+  Network,
+  calculatePriceSqrt
+} from '@invariant-labs/sdk'
 import { Decimal, FeeTier } from '@invariant-labs/sdk/lib/market'
 import { assertThrowsAsync, fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
@@ -15,7 +23,6 @@ import {
   InitPosition,
   Swap
 } from '@invariant-labs/sdk/src/market'
-import { calculatePriceSqrt } from '@invariant-labs/sdk'
 
 describe('Liquidity gap', () => {
   const provider = Provider.local()
