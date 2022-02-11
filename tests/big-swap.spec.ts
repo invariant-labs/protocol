@@ -147,7 +147,7 @@ describe('big-swap', () => {
         pair,
         swaps[i][0],
         swaps[i][1],
-        pool.sqrtPrice,
+        pool.sqrtPrice, // ignore price impact using high slippage tolerance
         toDecimal(1, 2),
         true,
         connection,
@@ -284,7 +284,7 @@ describe('big-swap', () => {
         pair,
         swaps2[i][0],
         swaps2[i][1],
-        pool.sqrtPrice,
+        pool.sqrtPrice, // ignore price impact using high slippage tolerance
         toDecimal(1, 2),
         true,
         connection,
