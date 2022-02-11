@@ -392,7 +392,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     accumulatedAmountIn,
     accumulatedAmountOut,
     accumulatedFee,
-    priceAfterSwap: pool.sqrtPrice.v
+    priceAfterSwap: sqrtPrice.v
   }
 }
 
