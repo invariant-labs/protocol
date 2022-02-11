@@ -1,31 +1,22 @@
 import * as anchor from '@project-serum/anchor'
-import { Program, Provider, BN } from '@project-serum/anchor'
+import { Provider, BN } from '@project-serum/anchor'
 import { Market, Pair, DENOMINATOR, sleep } from '@invariant-labs/sdk'
-import { Staker as StakerIdl } from '../sdk-staker/src/idl/staker'
 import { Network } from '../sdk-staker/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import { Decimal, Staker } from '../sdk-staker/src/staker'
 import { STAKER_SEED } from '../sdk-staker/src/utils'
 import { createToken, tou64, getTime, almostEqual, signAndSend } from './testUtils'
-import { createToken as createTkn } from '../tests/testUtils'
+import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { fromInteger, toDecimal } from '../sdk-staker/lib/utils'
 import { DECIMAL, fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
-import {
-  CreateFeeTier,
-  CreatePool,
-  InitPosition,
-  Swap,
-  UpdateSecondsPerLiquidity
-} from '@invariant-labs/sdk/src/market'
-import { CreateIncentive, CreateStake, Withdraw } from '../sdk-staker/src/staker'
+import { InitPosition, Swap, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
+import { CreateIncentive, CreateStake, Withdraw, Decimal, Staker } from '../sdk-staker/src/staker'
 
 describe('Multicall test', () => {
   const provider = Provider.local()
   const connection = provider.connection
-  const program = anchor.workspace.Staker as Program<StakerIdl>
   // @ts-expect-error
   const wallet = provider.wallet.payer as Account
   const mintAuthority = Keypair.generate()
@@ -36,7 +27,11 @@ describe('Multicall test', () => {
   const firstFounderAccount = Keypair.generate()
   const secondFounderAccount = Keypair.generate()
   const admin = Keypair.generate()
-
+  const firstUpperTick = 20
+  const firstLowerTick = -40
+  const secondUpperTick = 10
+  const secondLowerTick = -30
+  const epsilon = new BN(10).pow(new BN(DECIMAL)).mul(new BN(2))
   let staker: Staker
   let market: Market
   let pair: Pair
@@ -54,11 +49,6 @@ describe('Multicall test', () => {
   let tokenY: Token
   let firstIncentiveToken: Token
   let amount: BN
-  const firstUpperTick = 20
-  const firstLowerTick = -40
-  const secondUpperTick = 10
-  const secondLowerTick = -30
-  const epsilon = new BN(10).pow(new BN(DECIMAL)).mul(new BN(2))
 
   before(async () => {
     // create staker
@@ -76,13 +66,13 @@ describe('Multicall test', () => {
     )
 
     await Promise.all([
-      await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
-      await connection.requestAirdrop(firstPositionOwner.publicKey, 1e9),
-      await connection.requestAirdrop(secondPositionOwner.publicKey, 1e9),
-      await connection.requestAirdrop(firstIncentiveAccount.publicKey, 1e9),
-      await connection.requestAirdrop(secondIncentiveAccount.publicKey, 1e9),
-      await connection.requestAirdrop(firstFounderAccount.publicKey, 1e9),
-      await connection.requestAirdrop(secondFounderAccount.publicKey, 1e9)
+      connection.requestAirdrop(mintAuthority.publicKey, 1e9),
+      connection.requestAirdrop(firstPositionOwner.publicKey, 1e9),
+      connection.requestAirdrop(secondPositionOwner.publicKey, 1e9),
+      connection.requestAirdrop(firstIncentiveAccount.publicKey, 1e9),
+      connection.requestAirdrop(secondIncentiveAccount.publicKey, 1e9),
+      connection.requestAirdrop(firstFounderAccount.publicKey, 1e9),
+      connection.requestAirdrop(secondFounderAccount.publicKey, 1e9)
     ])
 
     // create token
@@ -113,7 +103,7 @@ describe('Multicall test', () => {
     const tokens = await Promise.all([
       createTkn(connection, wallet, mintAuthority),
       createTkn(connection, wallet, mintAuthority),
-      await connection.requestAirdrop(admin.publicKey, 1e9)
+      connection.requestAirdrop(admin.publicKey, 1e9)
     ])
 
     // create pool
@@ -124,27 +114,16 @@ describe('Multicall test', () => {
     }
 
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-
-    await market.createState(admin.publicKey, admin)
-
-    const createFeeTierVars: CreateFeeTier = {
-      feeTier,
-      admin: admin.publicKey
-    }
-    await market.createFeeTier(createFeeTierVars, admin)
-
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
-
-    const createPoolVars: CreatePool = {
-      pair,
-      payer: admin
-    }
-    await market.createPool(createPoolVars)
-
-    pool = await pair.getAddress(anchor.workspace.Invariant.programId)
     invariant = anchor.workspace.Invariant.programId
   })
+
+  it('#init()', async () => {
+    await initEverything(market, [pair], admin)
+    pool = await pair.getAddress(anchor.workspace.Invariant.programId)
+  })
+
   it('Multicall', async () => {
     const currentTime = getTime()
     const startTime = currentTime.add(new BN(0))

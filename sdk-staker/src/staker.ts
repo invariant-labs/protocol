@@ -21,8 +21,8 @@ export class Staker {
   connection: Connection
   network: Network
   wallet: IWallet
-  private programId: PublicKey
-  private program: Program<StakerIdl>
+  private readonly programId: PublicKey
+  private readonly program: Program<StakerIdl>
   private programAuthority: ProgramAuthority
   opts?: ConfirmOptions
 
@@ -80,7 +80,7 @@ export class Staker {
     const stakeIx = await this.createStakeIx(createStake)
     const tx = new Transaction().add(updateIx).add(stakeIx)
     const stringTx = await this.signAndSend(tx)
-    const [stake, bump] = await this.getUserStakeAddressAndBump(
+    const [stake] = await this.getUserStakeAddressAndBump(
       createStake.incentive,
       createStake.pool,
       createStake.id
@@ -126,13 +126,13 @@ export class Staker {
       const removeIx = await staker.removeStakeIx(stakes[i].publicKey, incentive, founder)
       tx.add(removeIx)
       // sign and send when max Ix or last stake
-      if ((i + 1) % 18 == 0 || i + 1 == stakes.length) {
+      if ((i + 1) % 18 === 0 || i + 1 === stakes.length) {
         txs.push(tx)
         tx = new Transaction()
       }
     }
 
-    return this.signAndSendAll(txs)
+    return await this.signAndSendAll(txs)
   }
 
   // instructions

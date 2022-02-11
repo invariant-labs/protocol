@@ -25,11 +25,11 @@ describe('Position list', () => {
   const mintAuthority = Keypair.generate()
   const positionOwner = Keypair.generate()
   const admin = Keypair.generate()
-  let market: Market
   const feeTier: FeeTier = {
     fee: fromFee(new BN(600)),
     tickSpacing: 3
   }
+  let market: Market
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -50,10 +50,10 @@ describe('Position list', () => {
 
     // Request airdrops
     await Promise.all([
-      await connection.requestAirdrop(wallet.publicKey, 1e9),
-      await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
-      await connection.requestAirdrop(admin.publicKey, 1e9),
-      await connection.requestAirdrop(positionOwner.publicKey, 1e9)
+      connection.requestAirdrop(wallet.publicKey, 1e9),
+      connection.requestAirdrop(mintAuthority.publicKey, 1e9),
+      connection.requestAirdrop(admin.publicKey, 1e9),
+      connection.requestAirdrop(positionOwner.publicKey, 1e9)
     ])
     // Create pair
     const tokens = await Promise.all([

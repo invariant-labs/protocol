@@ -1,18 +1,10 @@
 import * as anchor from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
-import {
-  Market,
-  Pair,
-  tou64,
-  TICK_LIMIT,
-  calculatePriceSqrt,
-  fromInteger,
-  Network
-} from '@invariant-labs/sdk'
+import { Market, Pair, tou64, calculatePriceSqrt, fromInteger, Network } from '@invariant-labs/sdk'
 import { Provider, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { createToken, eqDecimal } from './testUtils'
+import { createToken, eqDecimal, initEverything } from './testUtils'
 import { MAX_TICK, MIN_TICK } from '@invariant-labs/sdk/lib/math'
 import { fromFee, assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
 import { CreatePool, CreateTick, InitPosition } from '@invariant-labs/sdk/src/market'
@@ -26,8 +18,8 @@ describe('position', () => {
   const mintAuthority = Keypair.generate()
   const positionOwner = Keypair.generate()
   const admin = Keypair.generate()
-  let market: Market
   const feeTier: FeeTier = { fee: fromFee(new BN(20)), tickSpacing: 4 }
+  let market: Market
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -44,10 +36,10 @@ describe('position', () => {
 
     // Request airdrops
     await Promise.all([
-      await connection.requestAirdrop(wallet.publicKey, 1e9),
-      await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
-      await connection.requestAirdrop(admin.publicKey, 1e9),
-      await connection.requestAirdrop(positionOwner.publicKey, 1e9)
+      connection.requestAirdrop(wallet.publicKey, 1e9),
+      connection.requestAirdrop(mintAuthority.publicKey, 1e9),
+      connection.requestAirdrop(admin.publicKey, 1e9),
+      connection.requestAirdrop(positionOwner.publicKey, 1e9)
     ])
     // Create pair
     const tokens = await Promise.all([
@@ -57,10 +49,8 @@ describe('position', () => {
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
-
-    await market.createState(admin.publicKey, admin)
-    await market.createFeeTier({ feeTier: feeTier, admin: admin.publicKey }, admin)
   })
+
   it('#create() should fail because of token addresses', async () => {
     const spoofPair = new Pair(pair.tokenX, pair.tokenY, feeTier)
     spoofPair.tokenX = pair.tokenY
@@ -72,34 +62,12 @@ describe('position', () => {
     }
     await assertThrowsAsync(market.createPool(createPoolVars))
   })
-  it('#create()', async () => {
-    // fee tier 0.02% / 4
+
+  it('#init()', async () => {
     initTick = -23028
-
-    const createPoolVars: CreatePool = {
-      pair,
-      payer: admin,
-      initTick
-    }
-    await market.createPool(createPoolVars)
-
-    const createdPool = await market.getPool(pair)
-    assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
-    assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
-    assert.ok(createdPool.fee.v.eq(feeTier.fee))
-    assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
-    assert.ok(createdPool.liquidity.v.eqn(0))
-    assert.ok(createdPool.sqrtPrice.v.eq(calculatePriceSqrt(initTick).v))
-    assert.ok(createdPool.currentTickIndex === initTick)
-    assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
-    assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenX.eqn(0))
-    assert.ok(createdPool.feeProtocolTokenY.eqn(0))
-
-    const tickmapData = await market.getTickmap(pair)
-    assert.ok(tickmapData.bitmap.length === TICK_LIMIT / 4)
-    assert.ok(tickmapData.bitmap.every(v => v === 0))
+    await initEverything(market, [pair], admin, initTick)
   })
+
   it('#createPositionList()', async () => {
     await market.createPositionList(positionOwner.publicKey, positionOwner)
 

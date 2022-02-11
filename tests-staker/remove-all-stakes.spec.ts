@@ -180,7 +180,7 @@ describe('Remove all takes', () => {
     const stakes = await staker.getAllIncentiveStakes(incentiveAccount.publicKey)
 
     let tx = new Transaction()
-    let stringTx: string[] = []
+    const stringTx: string[] = []
 
     // put max 18 Ix per Tx, sign and return array of tx hashes
 
@@ -191,7 +191,7 @@ describe('Remove all takes', () => {
         founderAccount.publicKey
       )
       tx.add(removeIx)
-      if ((i + 1) % 18 == 0 || i + 1 == stakes.length) {
+      if ((i + 1) % 18 === 0 || i + 1 === stakes.length) {
         stringTx.push(await signAndSend(tx, [founderAccount], staker.connection))
         tx = new Transaction()
       }

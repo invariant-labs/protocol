@@ -11,7 +11,6 @@ describe('fee-tier', () => {
   const connection = provider.connection
   const admin = Keypair.generate()
   const user = Keypair.generate()
-  let market: Market
   const feeTierAdmin: FeeTier = {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
@@ -20,6 +19,7 @@ describe('fee-tier', () => {
     fee: fromFee(new BN(700)),
     tickSpacing: 10
   }
+  let market: Market
 
   before(async () => {
     market = await Market.build(
@@ -30,8 +30,8 @@ describe('fee-tier', () => {
     )
 
     await Promise.all([
-      await connection.requestAirdrop(admin.publicKey, 1e10),
-      await connection.requestAirdrop(user.publicKey, 1e10)
+      connection.requestAirdrop(admin.publicKey, 1e10),
+      connection.requestAirdrop(user.publicKey, 1e10)
     ])
   })
 

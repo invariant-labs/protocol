@@ -13,30 +13,26 @@ import {
   ERRORS_STAKER,
   signAndSend
 } from './testUtils'
-import { createToken as createTkn } from '../tests/testUtils'
+import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { CreateFeeTier, CreatePool } from '@invariant-labs/sdk/src/market'
+import { Token } from '@solana/spl-token'
 import { Network } from '../sdk-staker/lib'
 
 describe('Create incentive tests', () => {
   const provider = Provider.local()
   const connection = provider.connection
-  //const program = anchor.workspace.Staker as Program<StakerIdl>
   // @ts-expect-error
   const wallet = provider.wallet.payer as Account
-  let stakerAuthority: PublicKey
   const mintAuthority = Keypair.generate()
   const founderAccount = Keypair.generate()
   const admin = Keypair.generate()
+  let market: Market
+  let stakerAuthority: PublicKey
   let staker: Staker
   let pool: PublicKey
   let invariant: PublicKey
   let incentiveToken: Token
-
-  let tokenX: Token
-  let tokenY: Token
   let founderTokenAcc: PublicKey
   let incentiveTokenAcc: PublicKey
   let amount: BN
@@ -71,7 +67,7 @@ describe('Create incentive tests', () => {
 
     // create invariant and pool
 
-    const market = await Market.build(
+    market = await Market.build(
       0,
       provider.wallet,
       connection,
@@ -81,7 +77,7 @@ describe('Create incentive tests', () => {
     const tokens = await Promise.all([
       createTkn(connection, wallet, mintAuthority),
       createTkn(connection, wallet, mintAuthority),
-      await connection.requestAirdrop(admin.publicKey, 1e9)
+      connection.requestAirdrop(admin.publicKey, 1e9)
     ])
 
     // create pool
@@ -91,25 +87,12 @@ describe('Create incentive tests', () => {
     }
 
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-
-    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
-
-    await market.createState(admin.publicKey, admin)
-
-    const createFeeTierVars: CreateFeeTier = {
-      feeTier,
-      admin: admin.publicKey
-    }
-    await market.createFeeTier(createFeeTierVars, admin)
-
-    const createPoolVars: CreatePool = {
-      pair,
-      payer: admin
-    }
-    await market.createPool(createPoolVars)
-    pool = await pair.getAddress(anchor.workspace.Invariant.programId)
     invariant = anchor.workspace.Invariant.programId
+  })
+
+  it('#init()', async () => {
+    await initEverything(market, [pair], admin)
+    pool = await pair.getAddress(anchor.workspace.Invariant.programId)
   })
 
   it('Create incentive ', async () => {

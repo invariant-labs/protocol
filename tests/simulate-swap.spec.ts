@@ -14,7 +14,7 @@ import {
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { createToken } from './testUtils'
-// TODO add to tests
+
 describe('swap', () => {
   const provider = Provider.local()
   const connection = provider.connection
@@ -22,11 +22,11 @@ describe('swap', () => {
   const wallet = provider.wallet.payer as Keypair
   const mintAuthority = Keypair.generate()
   const admin = Keypair.generate()
-  let market: Market
   const feeTier: FeeTier = {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
   }
+  let market: Market
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
@@ -41,8 +41,8 @@ describe('swap', () => {
 
     // Request airdrops
     await Promise.all([
-      await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
-      await connection.requestAirdrop(admin.publicKey, 1e9)
+      connection.requestAirdrop(mintAuthority.publicKey, 1e9),
+      connection.requestAirdrop(admin.publicKey, 1e9)
     ])
     // Create tokens
     const tokens = await Promise.all([
@@ -87,6 +87,7 @@ describe('swap', () => {
     assert.ok(tickmapData.bitmap.every(v => v === 0))
   })
 
+  // Working from version 1.9, therefore skipped
   it.skip('#swap', async () => {
     // Deposit
 
@@ -141,7 +142,7 @@ describe('swap', () => {
       byAmountIn: true,
       owner: owner.publicKey
     }
-    await market.swap(swapVars, owner)
+    await market.swapSplit(swapVars, owner)
 
     // make swap bigger than cross tick
     const swapVars2: Swap = {
@@ -155,7 +156,7 @@ describe('swap', () => {
       byAmountIn: true,
       owner: owner.publicKey
     }
-    await market.swap(swapVars2, owner)
+    await market.swapSplit(swapVars2, owner)
 
     // Check pool
     const poolData = await market.getPool(pair)
@@ -169,6 +170,7 @@ describe('swap', () => {
     const reserveYDelta = reserveYAfter.sub(reserveYBefore)
 
     assert.ok(amountX.eqn(7496))
+    console.log(amountY.toString())
     assert.ok(amountY.eqn(12477))
     assert.ok(reserveXDelta.eqn(2504))
     assert.ok(reserveYDelta.eqn(2477))

@@ -15,11 +15,12 @@ describe('limits', () => {
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
   const admin = Keypair.generate()
+  const knownPrice: Decimal = { v: new BN(DENOMINATOR) }
+  const feeTier = FEE_TIERS[0]
   let market: Market
   let pair: Pair
   let mintAuthority: Keypair
   const assumedTargetPrice: Decimal = { v: new BN(DENOMINATOR) }
-  const feeTier = FEE_TIERS[0]
 
   before(async () => {
     market = await Market.build(
