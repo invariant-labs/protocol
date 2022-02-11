@@ -10,8 +10,7 @@ describe('slippage', () => {
   const provider = Provider.local()
   const connection = provider.connection
   // @ts-expect-error
-  const wallet = provider.wallet.payer
-   as Keypair
+  const wallet = provider.wallet.payer as Keypair
   const admin = Keypair.generate()
   let market: Market
   let assumedTargetPrice: Decimal
