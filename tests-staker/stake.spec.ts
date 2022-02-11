@@ -5,9 +5,7 @@ import { Network } from '../sdk-staker/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
 import { Decimal, Staker, CreateStake, CreateIncentive } from '../sdk-staker/src/staker'
-import { STAKER_SEED } from '../sdk-staker/src/utils'
 import { createToken, tou64, signAndSend, eqDecimal } from './testUtils'
-// TODO fix create token
 import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
@@ -24,14 +22,13 @@ describe('Stake tests', () => {
   const founderAccount = Keypair.generate()
   const positionOwner = Keypair.generate()
   const admin = Keypair.generate()
-  let stakerAuthority: PublicKey
   let staker: Staker
   let market: Market
   let pool: PublicKey
   let invariant: PublicKey
   let incentiveToken: Token
-  let founderTokenAcc: PublicKey
-  let incentiveTokenAcc: PublicKey
+  let founderTokenAccount: PublicKey
+  let incentiveTokenAccount: Keypair
   let amount: BN
   let pair: Pair
   let tokenX: Token
@@ -39,11 +36,7 @@ describe('Stake tests', () => {
 
   before(async () => {
     // create staker
-    const [_mintAuthority] = await anchor.web3.PublicKey.findProgramAddress(
-      [STAKER_SEED],
-      anchor.workspace.Staker.programId
-    )
-    stakerAuthority = _mintAuthority
+
     staker = await Staker.build(
       Network.LOCAL,
       provider.wallet,
@@ -63,12 +56,12 @@ describe('Stake tests', () => {
     await connection.requestAirdrop(founderAccount.publicKey, 10e9)
 
     // create taken acc for founder and staker
-    founderTokenAcc = await incentiveToken.createAccount(founderAccount.publicKey)
-    incentiveTokenAcc = await incentiveToken.createAccount(stakerAuthority)
+    founderTokenAccount = await incentiveToken.createAccount(founderAccount.publicKey)
+    incentiveTokenAccount = Keypair.generate()
 
     // mint to founder acc
     amount = new anchor.BN(100 * 1e6)
-    await incentiveToken.mintTo(founderTokenAcc, wallet, [], tou64(amount))
+    await incentiveToken.mintTo(founderTokenAccount, wallet, [], tou64(amount))
 
     // create invariant and pool
 
@@ -118,14 +111,22 @@ describe('Stake tests', () => {
       endTime,
       pool,
       founder: founderAccount.publicKey,
-      incentiveTokenAcc: incentiveTokenAcc,
-      founderTokenAcc: founderTokenAcc,
+      incentiveToken: incentiveToken.publicKey,
+      founderTokenAccount: founderTokenAccount,
       invariant
     }
     const createTx = new Transaction().add(
-      await staker.createIncentiveIx(createIncentiveVars, incentiveAccount.publicKey)
+      await staker.createIncentiveIx(
+        createIncentiveVars,
+        incentiveAccount.publicKey,
+        incentiveTokenAccount.publicKey
+      )
     )
-    await signAndSend(createTx, [founderAccount, incentiveAccount], staker.connection)
+    await signAndSend(
+      createTx,
+      [founderAccount, incentiveAccount, incentiveTokenAccount],
+      staker.connection
+    )
 
     // create position
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
