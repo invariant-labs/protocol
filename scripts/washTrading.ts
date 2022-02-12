@@ -54,7 +54,7 @@ const main = async () => {
       accountY: accountY,
       amount: tou64(amount),
       byAmountIn: true,
-      knownPrice: pool.sqrtPrice,
+      estimatedPriceAfterSwap: pool.sqrtPrice,
       slippage: toDecimal(2, 2),
       pair,
       owner: MINTER.publicKey

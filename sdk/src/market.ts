@@ -555,7 +555,16 @@ export class Market {
   }
 
   async swapInstruction(swap: Swap, overridePriceLimit?: BN) {
-    const { pair, xToY, amount, knownPrice, slippage, accountX, accountY, byAmountIn } = swap
+    const {
+      pair,
+      xToY,
+      amount,
+      estimatedPriceAfterSwap,
+      slippage,
+      accountX,
+      accountY,
+      byAmountIn
+    } = swap
     const owner = swap.owner ?? this.wallet.publicKey
 
     const [pool, tickmap, poolAddress] = await Promise.all([
@@ -565,7 +574,7 @@ export class Market {
     ])
 
     const priceLimit =
-      overridePriceLimit ?? calculatePriceAfterSlippage(knownPrice, slippage, !xToY).v
+      overridePriceLimit ?? calculatePriceAfterSlippage(estimatedPriceAfterSwap, slippage, !xToY).v
 
     const indexesInDirection = findClosestTicks(
       tickmap.bitmap,
@@ -621,7 +630,16 @@ export class Market {
   }
 
   async swapTransactionSplit(swap: Swap, overridePriceLimit?: BN) {
-    const { pair, xToY, amount, knownPrice, slippage, accountX, accountY, byAmountIn } = swap
+    const {
+      pair,
+      xToY,
+      amount,
+      estimatedPriceAfterSwap: knownPrice,
+      slippage,
+      accountX,
+      accountY,
+      byAmountIn
+    } = swap
     const owner = swap.owner ?? this.wallet.publicKey
 
     const [pool, tickmap, poolAddress] = await Promise.all([
@@ -1250,7 +1268,7 @@ export interface Swap {
   owner?: PublicKey
   xToY: boolean
   amount: BN
-  knownPrice: Decimal
+  estimatedPriceAfterSwap: Decimal
   slippage: Decimal
   accountX: PublicKey
   accountY: PublicKey

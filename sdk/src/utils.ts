@@ -85,6 +85,7 @@ export interface SimulationResult {
   accumulatedAmountIn: BN
   accumulatedAmountOut: BN
   accumulatedFee: BN
+  priceAfterSwap: BN
 }
 
 export interface FeeGrowthInside {
@@ -390,7 +391,8 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     amountPerTick,
     accumulatedAmountIn,
     accumulatedAmountOut,
-    accumulatedFee
+    accumulatedFee,
+    priceAfterSwap: sqrtPrice.v
   }
 }
 

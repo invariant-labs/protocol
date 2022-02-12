@@ -13,7 +13,7 @@ describe('slippage', () => {
   const wallet = provider.wallet.payer as Keypair
   const admin = Keypair.generate()
   let market: Market
-  let knownPrice: Decimal
+  let assumedTargetPrice: Decimal
   let expectedPrice: BN
 
   before(async () => {
@@ -35,7 +35,7 @@ describe('slippage', () => {
       connection,
       mintAuthority
     )
-    knownPrice = (await market.getPool(pair)).sqrtPrice
+    assumedTargetPrice = (await market.getPool(pair)).sqrtPrice
     const amount = new BN(1e8)
 
     const swapVars: Swap = {
@@ -43,7 +43,7 @@ describe('slippage', () => {
       xToY: false,
       owner: owner.publicKey,
       amount,
-      knownPrice,
+      estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
       slippage: toDecimal(5, 2),
       accountX: userAccountX,
       accountY: userAccountY,
@@ -70,7 +70,7 @@ describe('slippage', () => {
       xToY: false,
       owner: owner.publicKey,
       amount,
-      knownPrice,
+      estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
       slippage: toDecimal(5, 2),
       accountX: userAccountX,
       accountY: userAccountY,
@@ -95,7 +95,7 @@ describe('slippage', () => {
       xToY: false,
       owner: owner.publicKey,
       amount,
-      knownPrice,
+      estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
       slippage: toDecimal(5, 2),
       accountX: userAccountX,
       accountY: userAccountY,
@@ -119,7 +119,7 @@ describe('slippage', () => {
       xToY: false,
       owner: owner.publicKey,
       amount,
-      knownPrice,
+      estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
       slippage: toDecimal(5, 2),
       accountX: userAccountX,
       accountY: userAccountY,
@@ -143,7 +143,7 @@ describe('slippage', () => {
       xToY: false,
       owner: owner.publicKey,
       amount,
-      knownPrice,
+      estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
       slippage: toDecimal(5, 2),
       accountX: userAccountX,
       accountY: userAccountY,
