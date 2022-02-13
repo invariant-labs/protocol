@@ -264,5 +264,22 @@ describe('swap with cross both side', () => {
     }
     await market.swap(swapCrossingIncreasingVars, owner)
     // TODO: validate state
+
+    // no crossing tick with descending price and by amount out
+    const swapNotCrossingDecreasingByAmountOutVars: Swap = {
+      pair,
+      xToY: true,
+      amount: new BN(1),
+      estimatedPriceAfterSwap: poolDataBefore.sqrtPrice, // ignore price impact using high slippage tolerance
+      slippage: toDecimal(1, 2),
+      accountX,
+      accountY,
+      byAmountIn: false,
+      owner: owner.publicKey
+    }
+    await assertThrowsAsync(
+      market.swap(swapNotCrossingDecreasingByAmountOutVars, owner),
+      INVARIANT_ERRORS.NO_GAIN_SWAP
+    )
   })
 })
