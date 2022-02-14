@@ -39,7 +39,7 @@ pub mod invariant {
         fee: u128,
         tick_spacing: u16,
     ) -> ProgramResult {
-        ctx.handler(bump, fee, tick_spacing)
+        ctx.accounts.handler(bump, fee, tick_spacing)
     }
 
     pub fn create_pool(ctx: Context<CreatePool>, bump: u8, init_tick: i32) -> ProgramResult {
