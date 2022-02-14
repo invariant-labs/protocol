@@ -14,7 +14,7 @@ describe('slippage', () => {
   const admin = Keypair.generate()
   let market: Market
   let assumedTargetPrice: Decimal
-  let expectedPrice: BN
+  let currentPrice: BN
 
   before(async () => {
     market = await Market.build(
@@ -51,7 +51,7 @@ describe('slippage', () => {
     }
     await market.swap(swapVars, owner)
 
-    expectedPrice = (await market.getPool(pair)).sqrtPrice.v
+    currentPrice = (await market.getPool(pair)).sqrtPrice.v
   })
 
   it('#swap with target just above limit', async () => {
@@ -62,7 +62,7 @@ describe('slippage', () => {
       connection,
       mintAuthority
     )
-    const priceLimit = expectedPrice.addn(1)
+    const priceLimit = currentPrice.addn(1)
     const amount = new BN(1e8)
 
     const swapVars: Swap = {
@@ -70,85 +70,85 @@ describe('slippage', () => {
       xToY: false,
       owner: owner.publicKey,
       amount,
-      estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
+      estimatedPriceAfterSwap: { v: priceLimit },
       slippage: toDecimal(5, 2),
       accountX: userAccountX,
       accountY: userAccountY,
       byAmountIn: true
     }
-    await market.swap(swapVars, owner, priceLimit)
+    await market.swap(swapVars, owner)
   })
 
-  it('#swap with target at limit', async () => {
-    const { pair, mintAuthority } = await createPoolWithLiquidity(market, connection, wallet)
-    const { owner, userAccountX, userAccountY } = await createUserWithTokens(
-      pair,
-      connection,
-      mintAuthority
-    )
-    // because not every token swapped will change the price price will be reached before all tokens are swapped
-    const priceLimit = expectedPrice
-    const amount = new BN(1e8)
+  // it('#swap with target at limit', async () => {
+  //   const { pair, mintAuthority } = await createPoolWithLiquidity(market, connection, wallet)
+  //   const { owner, userAccountX, userAccountY } = await createUserWithTokens(
+  //     pair,
+  //     connection,
+  //     mintAuthority
+  //   )
+  //   // because not every token swapped will change the price price will be reached before all tokens are swapped
+  //   const priceLimit = expectedPrice
+  //   const amount = new BN(1e8)
 
-    const swapVars: Swap = {
-      pair,
-      xToY: false,
-      owner: owner.publicKey,
-      amount,
-      estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
-      slippage: toDecimal(5, 2),
-      accountX: userAccountX,
-      accountY: userAccountY,
-      byAmountIn: true
-    }
-    await assertThrowsAsync(market.swap(swapVars, owner, priceLimit))
-  })
+  //   const swapVars: Swap = {
+  //     pair,
+  //     xToY: false,
+  //     owner: owner.publicKey,
+  //     amount,
+  //     estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
+  //     slippage: toDecimal(5, 2),
+  //     accountX: userAccountX,
+  //     accountY: userAccountY,
+  //     byAmountIn: true
+  //   }
+  //   await assertThrowsAsync(market.swap(swapVars, owner, priceLimit))
+  // })
 
-  it('#swap with target just below the limit', async () => {
-    const { pair, mintAuthority } = await createPoolWithLiquidity(market, connection, wallet)
-    const { owner, userAccountX, userAccountY } = await createUserWithTokens(
-      pair,
-      connection,
-      mintAuthority
-    )
-    const priceLimit = expectedPrice.subn(1)
-    const amount = new BN(1e8)
+  // it('#swap with target just below the limit', async () => {
+  //   const { pair, mintAuthority } = await createPoolWithLiquidity(market, connection, wallet)
+  //   const { owner, userAccountX, userAccountY } = await createUserWithTokens(
+  //     pair,
+  //     connection,
+  //     mintAuthority
+  //   )
+  //   const priceLimit = expectedPrice.subn(1)
+  //   const amount = new BN(1e8)
 
-    const swapVars: Swap = {
-      pair,
-      xToY: false,
-      owner: owner.publicKey,
-      amount,
-      estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
-      slippage: toDecimal(5, 2),
-      accountX: userAccountX,
-      accountY: userAccountY,
-      byAmountIn: true
-    }
-    await assertThrowsAsync(market.swap(swapVars, owner, priceLimit))
-  })
+  //   const swapVars: Swap = {
+  //     pair,
+  //     xToY: false,
+  //     owner: owner.publicKey,
+  //     amount,
+  //     estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
+  //     slippage: toDecimal(5, 2),
+  //     accountX: userAccountX,
+  //     accountY: userAccountY,
+  //     byAmountIn: true
+  //   }
+  //   await assertThrowsAsync(market.swap(swapVars, owner, priceLimit))
+  // })
 
-  it('#swap with target on the other side of price', async () => {
-    const { pair, mintAuthority } = await createPoolWithLiquidity(market, connection, wallet)
-    const { owner, userAccountX, userAccountY } = await createUserWithTokens(
-      pair,
-      connection,
-      mintAuthority
-    )
-    const priceLimit = expectedPrice.muln(-1)
-    const amount = new BN(1e8)
+  // it('#swap with target on the other side of price', async () => {
+  //   const { pair, mintAuthority } = await createPoolWithLiquidity(market, connection, wallet)
+  //   const { owner, userAccountX, userAccountY } = await createUserWithTokens(
+  //     pair,
+  //     connection,
+  //     mintAuthority
+  //   )
+  //   const priceLimit = expectedPrice.muln(-1)
+  //   const amount = new BN(1e8)
 
-    const swapVars: Swap = {
-      pair,
-      xToY: false,
-      owner: owner.publicKey,
-      amount,
-      estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
-      slippage: toDecimal(5, 2),
-      accountX: userAccountX,
-      accountY: userAccountY,
-      byAmountIn: true
-    }
-    await assertThrowsAsync(market.swap(swapVars, owner, priceLimit))
-  })
+  //   const swapVars: Swap = {
+  //     pair,
+  //     xToY: false,
+  //     owner: owner.publicKey,
+  //     amount,
+  //     estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
+  //     slippage: toDecimal(5, 2),
+  //     accountX: userAccountX,
+  //     accountY: userAccountY,
+  //     byAmountIn: true
+  //   }
+  //   await assertThrowsAsync(market.swap(swapVars, owner, priceLimit))
+  // })
 })
