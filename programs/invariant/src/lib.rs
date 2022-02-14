@@ -43,7 +43,7 @@ pub mod invariant {
     }
 
     pub fn create_pool(ctx: Context<CreatePool>, bump: u8, init_tick: i32) -> ProgramResult {
-        instructions::create_pool::handler(ctx, bump, init_tick)
+        ctx.accounts.handler(bump, init_tick)
     }
 
     pub fn swap(
