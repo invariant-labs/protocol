@@ -554,7 +554,7 @@ export class Market {
     await signAndSend(tx, [signer], this.connection)
   }
 
-  async swapInstruction(swap: Swap, overridePriceLimit?: BN) {
+  async swapInstruction(swap: Swap) {
     const {
       pair,
       xToY,
@@ -573,8 +573,7 @@ export class Market {
       pair.getAddress(this.program.programId)
     ])
 
-    const priceLimit =
-      overridePriceLimit ?? calculatePriceAfterSlippage(estimatedPriceAfterSwap, slippage, !xToY).v
+    const priceLimit = calculatePriceAfterSlippage(estimatedPriceAfterSwap, slippage, !xToY).v
 
     const indexesInDirection = findClosestTicks(
       tickmap.bitmap,
@@ -629,12 +628,12 @@ export class Market {
     return tx
   }
 
-  async swapTransactionSplit(swap: Swap, overridePriceLimit?: BN) {
+  async swapTransactionSplit(swap: Swap) {
     const {
       pair,
       xToY,
       amount,
-      estimatedPriceAfterSwap: knownPrice,
+      estimatedPriceAfterSwap,
       slippage,
       accountX,
       accountY,
@@ -648,8 +647,7 @@ export class Market {
       pair.getAddress(this.program.programId)
     ])
 
-    const priceLimit =
-      overridePriceLimit ?? calculatePriceAfterSlippage(knownPrice, slippage, !xToY).v
+    const priceLimit = calculatePriceAfterSlippage(estimatedPriceAfterSwap, slippage, !xToY).v
 
     const indexesInDirection = findClosestTicks(
       tickmap.bitmap,
@@ -705,7 +703,7 @@ export class Market {
       xToY: xToY,
       byAmountIn: byAmountIn,
       swapAmount: amount,
-      currentPrice: pool.sqrtPrice,
+      priceLimit: { v: priceLimit },
       slippage: slippage,
       ticks: ticks,
       tickmap,
@@ -765,19 +763,19 @@ export class Market {
     return tx
   }
 
-  async swapTransaction(swap: Swap, overridePriceLimit?: BN) {
-    const ix = await this.swapInstruction(swap, overridePriceLimit)
+  async swapTransaction(swap: Swap) {
+    const ix = await this.swapInstruction(swap)
     return new Transaction().add(ix)
   }
 
-  async swap(swap: Swap, signer: Keypair, overridePriceLimit?: BN) {
-    const tx = await this.swapTransaction(swap, overridePriceLimit)
+  async swap(swap: Swap, signer: Keypair) {
+    const tx = await this.swapTransaction(swap)
 
     await signAndSend(tx, [signer], this.connection)
   }
 
-  async swapSplit(swap: Swap, signer: Keypair, overridePriceLimit?: BN) {
-    const tx = await this.swapTransactionSplit(swap, overridePriceLimit)
+  async swapSplit(swap: Swap, signer: Keypair) {
+    const tx = await this.swapTransactionSplit(swap)
 
     await signAndSend(tx, [signer], this.connection)
   }
