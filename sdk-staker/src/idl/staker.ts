@@ -13,7 +13,7 @@ export type Staker = {
         {
           "name": "incentiveTokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": true
         },
         {
           "name": "founderTokenAccount",
@@ -32,6 +32,11 @@ export type Staker = {
         },
         {
           "name": "stakerAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "incentiveToken",
           "isMut": false,
           "isSigner": false
         },
@@ -216,6 +221,11 @@ export type Staker = {
           "isSigner": false
         },
         {
+          "name": "incentiveToken",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "stakerAuthority",
           "isMut": false,
           "isSigner": false
@@ -243,7 +253,7 @@ export type Staker = {
       ],
       "args": [
         {
-          "name": "bumpAuthority",
+          "name": "nonce",
           "type": "u8"
         }
       ]
@@ -474,7 +484,7 @@ export const IDL: Staker = {
         {
           "name": "incentiveTokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": true
         },
         {
           "name": "founderTokenAccount",
@@ -493,6 +503,11 @@ export const IDL: Staker = {
         },
         {
           "name": "stakerAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "incentiveToken",
           "isMut": false,
           "isSigner": false
         },
@@ -677,6 +692,11 @@ export const IDL: Staker = {
           "isSigner": false
         },
         {
+          "name": "incentiveToken",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "stakerAuthority",
           "isMut": false,
           "isSigner": false
@@ -704,7 +724,7 @@ export const IDL: Staker = {
       ],
       "args": [
         {
-          "name": "bumpAuthority",
+          "name": "nonce",
           "type": "u8"
         }
       ]
