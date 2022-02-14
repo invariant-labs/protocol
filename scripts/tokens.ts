@@ -11,10 +11,6 @@ const provider = Provider.local('https://api.devnet.solana.com', {
   skipPreflight: true
 })
 
-const SOL_DECIMAL = 9
-const USDT_DECIMAL = 6
-const USDC_DECIMAL = 6
-
 const main = async () => {
   const connection = provider.connection
   // @ts-expect-error
