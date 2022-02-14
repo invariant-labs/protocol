@@ -1,5 +1,5 @@
 import { PoolData, Tick } from '@invariant-labs/sdk/lib/market'
-import { SimulateSwapInterface } from '@invariant-labs/sdk/lib/utils'
+import { SimulateSwapInterface, toDecimal } from '@invariant-labs/sdk/lib/utils'
 import { BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 
@@ -792,8 +792,8 @@ export const swapParameters: SimulateSwapInterface = {
   xToY: true,
   byAmountIn: true,
   swapAmount: new BN(1000),
-  currentPrice: { v: new BN(1000000000000) },
-  slippage: { v: new BN(10000000000) },
+  priceLimit: { v: new BN(1000000000000) }, // ignore price impact using high slippage tolerance
+  slippage: toDecimal(1, 0),
   ticks: ticks,
   tickmap: { bitmap },
   pool: poolData

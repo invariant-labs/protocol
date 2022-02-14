@@ -73,7 +73,7 @@ export interface SimulateSwapInterface {
   xToY: boolean
   byAmountIn: boolean
   swapAmount: BN
-  currentPrice: Decimal
+  priceLimit: Decimal
   slippage: Decimal
   ticks: Map<number, Tick>
   tickmap: Tickmap
@@ -284,20 +284,21 @@ export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
 }
 
 export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationResult => {
-  const { xToY, byAmountIn, swapAmount, slippage, ticks, tickmap, pool } = swapParameters
-  let { currentTickIndex, tickSpacing, liquidity, fee, sqrtPrice } = pool
+  const { xToY, byAmountIn, swapAmount, slippage, ticks, tickmap, priceLimit, pool } =
+    swapParameters
+  let { currentTickIndex, tickSpacing, liquidity, sqrtPrice, fee } = pool
   const amountPerTick: BN[] = []
   let accumulatedAmount: BN = new BN(0)
   let accumulatedAmountOut: BN = new BN(0)
   let accumulatedAmountIn: BN = new BN(0)
   let accumulatedFee: BN = new BN(0)
-  const priceLimit = calculatePriceAfterSlippage(sqrtPrice, slippage, !xToY)
+  const priceLimitAfterSlippage = calculatePriceAfterSlippage(priceLimit, slippage, !xToY)
   if (xToY) {
-    if (sqrtPrice.v.lt(priceLimit.v)) {
+    if (sqrtPrice.v.lt(priceLimitAfterSlippage.v)) {
       throw new Error('Price limit is on the wrong side of price')
     }
   } else {
-    if (sqrtPrice.v.gt(priceLimit.v)) {
+    if (sqrtPrice.v.gt(priceLimitAfterSlippage.v)) {
       throw new Error('Price limit is on the wrong side of price')
     }
   }
@@ -305,7 +306,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
   while (!remainingAmount.lte(new BN(0))) {
     // find closest initialized tick
     const closerLimit: CloserLimit = {
-      sqrtPriceLimit: priceLimit,
+      sqrtPriceLimit: priceLimitAfterSlippage,
       xToY: xToY,
       currentTick: currentTickIndex,
       tickSpacing: tickSpacing,
@@ -336,7 +337,8 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     remainingAmount = remainingAmount.sub(amountDiff)
     sqrtPrice = result.nextPrice
 
-    if (sqrtPrice.v.eq(priceLimit.v) && remainingAmount.gt(new BN(0))) {
+    // here
+    if (sqrtPrice.v.eq(priceLimitAfterSlippage.v) && remainingAmount.gt(new BN(0))) {
       throw new Error('Price would cross swap limit')
     }
 
