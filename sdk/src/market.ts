@@ -1120,12 +1120,25 @@ export class Market {
   }
 
   async getGlobalFee(pair: Pair) {
-    const { feeGrowthGlobalX, feeGrowthGlobalY } = await this.getPool(pair)
-    const liquidity = await this.getWholeLiquidity(pair)
-    const globalFeeX = feeGrowthGlobalX.v.mul(liquidity).div(DENOMINATOR.pow(new BN(3)))
-    const globalFeeY = feeGrowthGlobalY.v.mul(liquidity).div(DENOMINATOR.pow(new BN(3)))
+    const pool = await this.getPool(pair)
+    const { feeProtocolTokenX, feeProtocolTokenY, protocolFee } = pool
 
-    return { globalFeeX, globalFeeY }
+    const feeX = feeProtocolTokenX.mul(DENOMINATOR).div(protocolFee.v)
+    const feeY = feeProtocolTokenY.mul(DENOMINATOR).div(protocolFee.v)
+
+    return { feeX, feeY }
+  }
+
+  async getVolume(pair: Pair) {
+    const pool = await this.getPool(pair)
+    const { feeProtocolTokenX, feeProtocolTokenY, protocolFee, fee } = pool
+
+    const feeDenominator = protocolFee.v.mul(fee.v).div(DENOMINATOR)
+
+    const volumeX = feeProtocolTokenX.mul(DENOMINATOR).div(feeDenominator)
+    const volumeY = feeProtocolTokenY.mul(DENOMINATOR).div(feeDenominator)
+
+    return { volumeX, volumeY }
   }
 }
 

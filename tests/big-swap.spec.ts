@@ -60,16 +60,16 @@ describe('big-swap', () => {
     const userTokenY = await tokenY.createAccount(positionOwner.publicKey)
 
     const positionsInfo: Array<[ticks: [lower: number, upper: number], liquidity: BN]> = [
-      [[0, 20], new BN(1000000).mul(DENOMINATOR)],
-      [[-10, 30], new BN(1800000).mul(DENOMINATOR)],
-      [[-30, 0], new BN(1400000).mul(DENOMINATOR)],
-      [[-40, 10], new BN(1900000).mul(DENOMINATOR)],
-      [[20, 50], new BN(1500000).mul(DENOMINATOR)],
-      [[0, 30], new BN(950000).mul(DENOMINATOR)],
-      [[-30, 30], new BN(1150000).mul(DENOMINATOR)],
-      [[-20, 20], new BN(1350000).mul(DENOMINATOR)],
-      [[-10, 50], new BN(1250000).mul(DENOMINATOR)],
-      [[-40, 0], new BN(1550000).mul(DENOMINATOR)]
+      [[0, 20], new BN(10000000000000).mul(DENOMINATOR)],
+      [[-10, 30], new BN(180000000000).mul(DENOMINATOR)],
+      [[-30, 0], new BN(14000000000000).mul(DENOMINATOR)],
+      [[-40, 10], new BN(1900000000000).mul(DENOMINATOR)],
+      [[20, 50], new BN(1500000000000).mul(DENOMINATOR)],
+      [[0, 30], new BN(950000000000).mul(DENOMINATOR)],
+      [[-30, 30], new BN(1150000000000).mul(DENOMINATOR)],
+      [[-20, 20], new BN(1350000000000).mul(DENOMINATOR)],
+      [[-10, 50], new BN(1250000000000).mul(DENOMINATOR)],
+      [[-40, 0], new BN(1550000000000).mul(DENOMINATOR)]
     ]
 
     for (let i = 0; i < positionsInfo.length; i++) {
@@ -90,22 +90,22 @@ describe('big-swap', () => {
     }
 
     const swaps: Array<[xToY: boolean, amount: BN]> = [
-      [true, new BN(3000)],
-      [true, new BN(3260)],
-      [false, new BN(2950)],
-      [true, new BN(3660)],
-      [false, new BN(3160)],
-      [false, new BN(4030)],
-      [false, new BN(3900)],
-      [true, new BN(2940)],
-      [false, new BN(3800)],
-      [true, new BN(3700)],
-      [false, new BN(3350)],
-      [false, new BN(3940)],
-      [true, new BN(2840)],
-      [true, new BN(3040)],
-      [false, new BN(2940)],
-      [true, new BN(3670)]
+      [true, new BN(3000000000)],
+      [true, new BN(3260000000)],
+      [false, new BN(2950000000)],
+      [true, new BN(3660000000)],
+      [false, new BN(3160000000)],
+      [false, new BN(4030000000)],
+      [false, new BN(3900000000)],
+      [true, new BN(2940000000)],
+      [false, new BN(3800000000)],
+      [true, new BN(3700000000)],
+      [false, new BN(3350000000)],
+      [false, new BN(3940000000)],
+      [true, new BN(2840000000)],
+      [true, new BN(3040000000)],
+      [false, new BN(2940000000)],
+      [true, new BN(3670000000)]
     ]
 
     for (let i = 0; i < swaps.length; i++) {
@@ -126,9 +126,12 @@ describe('big-swap', () => {
     }
 
     const poolAfterSwaps = await market.getPool(pair)
-    const { globalFeeX, globalFeeY } = await market.getGlobalFee(pair)
-    assert.ok(globalFeeX.eq(new BN(188)))
-    assert.ok(globalFeeY.eq(new BN(205)))
+    const { feeX, feeY } = await market.getGlobalFee(pair)
+    const { volumeX, volumeY } = await market.getVolume(pair)
+    assert.ok(feeX.eq(new BN(156655455)))
+    assert.ok(feeY.eq(new BN(168147510)))
+    assert.ok(volumeX.eq(new BN(26109242500)))
+    assert.ok(volumeY.eq(new BN(28024585000)))
     for (let i = -40; i < 50; i += 10) {
       let lowerTick
       try {
@@ -196,21 +199,21 @@ describe('big-swap', () => {
     await market.removePosition(removePositionVars4, positionOwner)
 
     const positionsInfo2: Array<[ticks: [lower: number, upper: number], liquidity: BN]> = [
-      [[-30, 20], new BN(500000).mul(DENOMINATOR)],
-      [[-20, 10], new BN(900000).mul(DENOMINATOR)],
-      [[-20, 0], new BN(400000).mul(DENOMINATOR)],
-      [[-40, 30], new BN(1000000).mul(DENOMINATOR)],
-      [[10, 40], new BN(800000).mul(DENOMINATOR)],
-      [[-40, 10], new BN(200000).mul(DENOMINATOR)],
-      [[20, 50], new BN(1600000).mul(DENOMINATOR)],
-      [[0, 30], new BN(450000).mul(DENOMINATOR)],
-      [[-30, 30], new BN(1350000).mul(DENOMINATOR)],
-      [[-20, 20], new BN(1750000).mul(DENOMINATOR)],
-      [[0, 50], new BN(950000).mul(DENOMINATOR)],
-      [[-10, 30], new BN(350000).mul(DENOMINATOR)],
-      [[0, 20], new BN(1530000).mul(DENOMINATOR)],
-      [[-10, 30], new BN(1630000).mul(DENOMINATOR)],
-      [[-30, 0], new BN(1110000).mul(DENOMINATOR)]
+      [[-30, 20], new BN(50000000000).mul(DENOMINATOR)],
+      [[-20, 10], new BN(90000000000).mul(DENOMINATOR)],
+      [[-20, 0], new BN(40000000000).mul(DENOMINATOR)],
+      [[-40, 30], new BN(100000000000).mul(DENOMINATOR)],
+      [[10, 40], new BN(80000000000).mul(DENOMINATOR)],
+      [[-40, 10], new BN(20000000000).mul(DENOMINATOR)],
+      [[20, 50], new BN(160000000000).mul(DENOMINATOR)],
+      [[0, 30], new BN(45000000000).mul(DENOMINATOR)],
+      [[-30, 30], new BN(135000000000).mul(DENOMINATOR)],
+      [[-20, 20], new BN(175000000000).mul(DENOMINATOR)],
+      [[0, 50], new BN(95000000000).mul(DENOMINATOR)],
+      [[-10, 30], new BN(35000000000).mul(DENOMINATOR)],
+      [[0, 20], new BN(153000000000).mul(DENOMINATOR)],
+      [[-10, 30], new BN(163000000000).mul(DENOMINATOR)],
+      [[-30, 0], new BN(111000000000).mul(DENOMINATOR)]
     ]
 
     for (let i = 0; i < positionsInfo2.length; i++) {
@@ -231,21 +234,21 @@ describe('big-swap', () => {
     }
 
     const swaps2: Array<[xToY: boolean, amount: BN]> = [
-      [true, new BN(3000)],
-      [true, new BN(3260)],
-      [true, new BN(2950)],
-      [true, new BN(3660)],
-      [true, new BN(3160)],
-      [true, new BN(4030)],
-      [false, new BN(2940)],
-      [false, new BN(3800)],
-      [false, new BN(3700)],
-      [false, new BN(3350)],
-      [false, new BN(3940)],
-      [false, new BN(2840)],
-      [false, new BN(3040)],
-      [false, new BN(2940)],
-      [false, new BN(3670)]
+      [true, new BN(300000000)],
+      [true, new BN(326000000)],
+      [true, new BN(295000000)],
+      [true, new BN(366000000)],
+      [true, new BN(316000000)],
+      [true, new BN(403000000)],
+      [false, new BN(294000000)],
+      [false, new BN(380000000)],
+      [false, new BN(370000000)],
+      [false, new BN(335000000)],
+      [false, new BN(394000000)],
+      [false, new BN(284000000)],
+      [false, new BN(304000000)],
+      [false, new BN(294000000)],
+      [false, new BN(367000000)]
     ]
 
     for (let i = 0; i < swaps2.length; i++) {
@@ -266,9 +269,13 @@ describe('big-swap', () => {
     }
 
     const poolAfterSwaps2 = await market.getPool(pair)
-    const { globalFeeX: globalFeeX2, globalFeeY: globalFeeY2 } = await market.getGlobalFee(pair)
-    assert.ok(globalFeeX2.eq(new BN(494)))
-    assert.ok(globalFeeY2.eq(new BN(598)))
+    const { feeX: feeX2, feeY: feeY2 } = await market.getGlobalFee(pair)
+    const { volumeX: volumeX2, volumeY: volumeY2 } = await market.getVolume(pair)
+
+    assert.ok(feeX2.eq(new BN(168682645)))
+    assert.ok(feeY2.eq(new BN(186276700)))
+    assert.ok(volumeX2.eq(new BN(28113774166)))
+    assert.ok(volumeY2.eq(new BN(31046116666)))
 
     for (let i = -40; i < 50; i += 10) {
       let lowerTick

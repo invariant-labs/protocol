@@ -1,9 +1,8 @@
 use crate::structs::{Incentive, UserStake};
-use crate::util::{get_current_timestamp};
+use crate::util::get_current_timestamp;
 
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
-
 
 #[derive(Accounts)]
 pub struct RemoveStake<'info> {
@@ -25,7 +24,7 @@ pub fn handler(ctx: Context<RemoveStake>) -> ProgramResult {
     let current_time = get_current_timestamp();
     require!(current_time > incentive.end_claim_time, TooEarly);
     require!(incentive.num_of_stakes != 0, NoStakes);
-    
+
     // decrease number of stakes by 1
     incentive.num_of_stakes -= 1;
 

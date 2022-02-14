@@ -206,7 +206,7 @@ export const createPosition = async (
   wallet: Keypair,
   mintAuthority: Keypair
 ) => {
-  const mintAmount = tou64(new BN(10).pow(new BN(10)))
+  const mintAmount = tou64(new BN(10).pow(new BN(18)))
   if ((await tokenX.getAccountInfo(ownerTokenXAccount)).amount.eq(new BN(0))) {
     await tokenX.mintTo(ownerTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
   }
