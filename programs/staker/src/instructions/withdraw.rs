@@ -4,9 +4,7 @@ use crate::structs::*;
 use crate::util::*;
 
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{self, TokenAccount, Transfer};
-use invariant::program::Invariant;
 use invariant::structs::Position;
 
 #[derive(Accounts)]
@@ -37,11 +35,6 @@ pub struct Withdraw<'info> {
     pub owner: AccountInfo<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
-    #[account(address = invariant::ID)]
-    pub invariant: Program<'info, Invariant>,
-    #[account(address = system_program::ID)]
-    pub system_program: AccountInfo<'info>,
-    pub rent: Sysvar<'info, Rent>,
 }
 
 impl<'info> Withdraw<'info> {

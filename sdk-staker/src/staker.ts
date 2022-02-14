@@ -215,7 +215,6 @@ export class Staker {
     ownerTokenAcc,
     position,
     owner,
-    invariant,
     index
   }: Withdraw) {
     const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
@@ -229,10 +228,7 @@ export class Staker {
         position,
         stakerAuthority: this.programAuthority.authority,
         owner,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        invariant,
-        systemProgram: SystemProgram.programId,
-        rent: SYSVAR_RENT_PUBKEY
+        tokenProgram: TOKEN_PROGRAM_ID
       }
     })
   }
@@ -252,9 +248,7 @@ export class Staker {
         founderTokenAccount: ownerTokenAccount,
         stakerAuthority: this.programAuthority.authority,
         founder: founder,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
-        rent: SYSVAR_RENT_PUBKEY
+        tokenProgram: TOKEN_PROGRAM_ID
       }
     })
   }
@@ -264,9 +258,7 @@ export class Staker {
       accounts: {
         incentive,
         userStake: userStake,
-        founder: founder,
-        systemProgram: SystemProgram.programId,
-        rent: SYSVAR_RENT_PUBKEY
+        founder: founder
       }
     })
   }
@@ -391,7 +383,6 @@ export interface Withdraw {
   ownerTokenAcc: PublicKey
   position: PublicKey
   owner?: PublicKey
-  invariant: PublicKey
   index: number
   nonce: number
 }

@@ -28,9 +28,6 @@ pub struct ReturnFounds<'info> {
     pub founder: Signer<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
-    #[account(address = system_program::ID)]
-    pub system_program: AccountInfo<'info>,
-    pub rent: Sysvar<'info, Rent>,
 }
 
 impl<'info> ReturnFounds<'info> {
