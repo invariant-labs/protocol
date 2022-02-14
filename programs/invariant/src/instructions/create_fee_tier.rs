@@ -21,6 +21,28 @@ pub struct CreateFeeTier<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
+impl<'info> CreateFeeTier<'info> {
+    pub fn handler(
+        ctx: Context<CreateFeeTier>,
+        bump: u8,
+        fee: u128,
+        tick_spacing: u16,
+    ) -> ProgramResult {
+        msg!("INVARIANT: CREATE FEE TIER");
+
+        let fee_tier = &mut ctx.accounts.fee_tier.load_init()?;
+        let fee = Decimal::new(fee);
+
+        **fee_tier = FeeTier {
+            fee,
+            tick_spacing,
+            bump,
+        };
+
+        Ok(())
+    }
+}
+
 pub fn handler(
     ctx: Context<CreateFeeTier>,
     bump: u8,
