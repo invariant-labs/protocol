@@ -116,7 +116,7 @@ pub mod invariant {
 
     #[access_control(receiver(&ctx.accounts.pool, &ctx.accounts.authority))]
     pub fn withdraw_protocol_fee(ctx: Context<WithdrawProtocolFee>) -> ProgramResult {
-        instructions::withdraw_protocol_fee::handler(ctx)
+        ctx.accounts.handler()
     }
 
     #[access_control(receiver(&ctx.accounts.pool, &ctx.accounts.admin))]

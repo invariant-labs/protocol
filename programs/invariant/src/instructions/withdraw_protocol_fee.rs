@@ -71,22 +71,24 @@ impl<'info> SendTokens<'info> for WithdrawProtocolFee<'info> {
     }
 }
 
-pub fn handler(ctx: Context<WithdrawProtocolFee>) -> ProgramResult {
-    msg!("INVARIANT: WITHDRAW PROTOCOL FEE");
+impl<'info> WithdrawProtocolFee<'info> {
+    pub fn handler(self: &Self) -> ProgramResult {
+        msg!("INVARIANT: WITHDRAW PROTOCOL FEE");
 
-    let state = ctx.accounts.state.load()?;
-    let mut pool = ctx.accounts.pool.load_mut()?;
+        let state = self.state.load()?;
+        let mut pool = self.pool.load_mut()?;
 
-    let signer: &[&[&[u8]]] = get_signer!(state.nonce);
+        let signer: &[&[&[u8]]] = get_signer!(state.nonce);
 
-    let cpi_ctx_x = ctx.accounts.send_x().with_signer(signer);
-    let cpi_ctx_y = ctx.accounts.send_y().with_signer(signer);
+        let cpi_ctx_x = self.send_x().with_signer(signer);
+        let cpi_ctx_y = self.send_y().with_signer(signer);
 
-    token::transfer(cpi_ctx_x, pool.fee_protocol_token_x)?;
-    token::transfer(cpi_ctx_y, pool.fee_protocol_token_y)?;
+        token::transfer(cpi_ctx_x, pool.fee_protocol_token_x)?;
+        token::transfer(cpi_ctx_y, pool.fee_protocol_token_y)?;
 
-    pool.fee_protocol_token_x = 0;
-    pool.fee_protocol_token_y = 0;
+        pool.fee_protocol_token_x = 0;
+        pool.fee_protocol_token_y = 0;
 
-    Ok(())
+        Ok(())
+    }
 }
