@@ -102,7 +102,7 @@ pub mod invariant {
         _lower_tick_index: i32,
         _upper_tick_index: i32,
     ) -> ProgramResult {
-        instructions::claim_fee::handler(ctx)
+        ctx.accounts.handler()
     }
 
     pub fn update_seconds_per_liquidity(

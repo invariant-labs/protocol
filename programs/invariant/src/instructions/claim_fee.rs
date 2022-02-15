@@ -92,41 +92,45 @@ impl<'info> interfaces::SendTokens<'info> for ClaimFee<'info> {
     }
 }
 
-pub fn handler(ctx: Context<ClaimFee>) -> ProgramResult {
-    msg!("INVARIANT: CLAIM FEE");
+impl<'info> ClaimFee<'info> {
+    pub fn handler(self: &Self) -> ProgramResult {
+        msg!("INVARIANT: CLAIM FEE");
 
-    let state = ctx.accounts.state.load()?;
-    let pool = &mut ctx.accounts.pool.load_mut()?;
-    let position = &mut ctx.accounts.position.load_mut()?;
-    let lower_tick = &mut ctx.accounts.lower_tick.load_mut()?;
-    let upper_tick = &mut ctx.accounts.upper_tick.load_mut()?;
-    let current_timestamp = get_current_timestamp();
+        let state = self.state.load()?;
+        let pool = &mut self.pool.load_mut()?;
+        let position = &mut self.position.load_mut()?;
+        let lower_tick = &mut self.lower_tick.load_mut()?;
+        let upper_tick = &mut self.upper_tick.load_mut()?;
+        let current_timestamp = get_current_timestamp();
 
-    check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
+        check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
 
-    position
-        .modify(
-            pool,
-            upper_tick,
-            lower_tick,
-            Decimal::new(0),
-            true,
-            current_timestamp,
-        )
-        .unwrap();
+        position
+            .modify(
+                pool,
+                upper_tick,
+                lower_tick,
+                Decimal::new(0),
+                true,
+                current_timestamp,
+            )
+            .unwrap();
 
-    let fee_to_collect_x = position.tokens_owed_x.to_token_floor();
-    let fee_to_collect_y = position.tokens_owed_y.to_token_floor();
-    position.tokens_owed_x = position.tokens_owed_x - Decimal::from_token_amount(fee_to_collect_x);
-    position.tokens_owed_y = position.tokens_owed_y - Decimal::from_token_amount(fee_to_collect_y);
+        let fee_to_collect_x = position.tokens_owed_x.to_token_floor();
+        let fee_to_collect_y = position.tokens_owed_y.to_token_floor();
+        position.tokens_owed_x =
+            position.tokens_owed_x - Decimal::from_token_amount(fee_to_collect_x);
+        position.tokens_owed_y =
+            position.tokens_owed_y - Decimal::from_token_amount(fee_to_collect_y);
 
-    let signer: &[&[&[u8]]] = get_signer!(state.nonce);
+        let signer: &[&[&[u8]]] = get_signer!(state.nonce);
 
-    let cpi_ctx_x = ctx.accounts.send_x().with_signer(signer);
-    let cpi_ctx_y = ctx.accounts.send_y().with_signer(signer);
+        let cpi_ctx_x = self.send_x().with_signer(signer);
+        let cpi_ctx_y = self.send_y().with_signer(signer);
 
-    token::transfer(cpi_ctx_x, fee_to_collect_x.0)?;
-    token::transfer(cpi_ctx_y, fee_to_collect_y.0)?;
+        token::transfer(cpi_ctx_x, fee_to_collect_x.0)?;
+        token::transfer(cpi_ctx_y, fee_to_collect_y.0)?;
 
-    Ok(())
+        Ok(())
+    }
 }
