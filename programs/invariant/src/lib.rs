@@ -57,7 +57,7 @@ pub mod invariant {
     }
 
     pub fn initialize_oracle(ctx: Context<InitializeOracle>) -> ProgramResult {
-        instructions::initialize_oracle::handler(ctx)
+        ctx.accounts.handler()
     }
 
     pub fn create_tick(ctx: Context<CreateTick>, bump: u8, index: i32) -> ProgramResult {

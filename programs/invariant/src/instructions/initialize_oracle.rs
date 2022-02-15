@@ -24,19 +24,38 @@ pub struct InitializeOracle<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
-pub fn handler(ctx: Context<InitializeOracle>) -> ProgramResult {
-    msg!("INVARIANT: INITIALIZE ORACLE");
+impl<'info> InitializeOracle<'info> {
+    pub fn handler(self: &Self) -> ProgramResult {
+        msg!("INVARIANT: INITIALIZE ORACLE");
 
-    let oracle = &mut ctx.accounts.oracle.load_init()?;
-    let pool = &mut ctx.accounts.pool.load_mut()?;
+        let oracle = &mut self.oracle.load_init()?;
+        let pool = &mut self.pool.load_mut()?;
 
-    require!(
-        !pool.oracle_initialized,
-        ErrorCode::OracleAlreadyInitialized
-    );
+        require!(
+            !pool.oracle_initialized,
+            ErrorCode::OracleAlreadyInitialized
+        );
 
-    pool.set_oracle(ctx.accounts.oracle.key());
-    oracle.init();
+        pool.set_oracle(self.oracle.key());
+        oracle.init();
 
-    Ok(())
+        Ok(())
+    }
 }
+
+// pub fn handler(ctx: Context<InitializeOracle>) -> ProgramResult {
+//     msg!("INVARIANT: INITIALIZE ORACLE");
+
+//     let oracle = &mut ctx.accounts.oracle.load_init()?;
+//     let pool = &mut ctx.accounts.pool.load_mut()?;
+
+//     require!(
+//         !pool.oracle_initialized,
+//         ErrorCode::OracleAlreadyInitialized
+//     );
+
+//     pool.set_oracle(ctx.accounts.oracle.key());
+//     oracle.init();
+
+//     Ok(())
+// }
