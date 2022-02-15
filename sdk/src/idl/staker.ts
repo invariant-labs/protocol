@@ -120,10 +120,6 @@ export type Staker = {
         {
           "name": "index",
           "type": "i32"
-        },
-        {
-          "name": "bump",
-          "type": "u8"
         }
       ]
     },
@@ -243,7 +239,7 @@ export type Staker = {
       ],
       "args": [
         {
-          "name": "bumpAuthority",
+          "name": "nonce",
           "type": "u8"
         }
       ]
@@ -581,10 +577,6 @@ export const IDL: Staker = {
         {
           "name": "index",
           "type": "i32"
-        },
-        {
-          "name": "bump",
-          "type": "u8"
         }
       ]
     },
@@ -704,7 +696,7 @@ export const IDL: Staker = {
       ],
       "args": [
         {
-          "name": "bumpAuthority",
+          "name": "nonce",
           "type": "u8"
         }
       ]

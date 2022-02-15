@@ -33,10 +33,6 @@ export type Invariant = {
       ],
       "args": [
         {
-          "name": "bump",
-          "type": "u8"
-        },
-        {
           "name": "nonce",
           "type": "u8"
         }
@@ -72,10 +68,6 @@ export type Invariant = {
         }
       ],
       "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        },
         {
           "name": "fee",
           "type": "u128"
@@ -156,10 +148,6 @@ export type Invariant = {
         }
       ],
       "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        },
         {
           "name": "initTick",
           "type": "i32"
@@ -336,10 +324,6 @@ export type Invariant = {
       ],
       "args": [
         {
-          "name": "bump",
-          "type": "u8"
-        },
-        {
           "name": "index",
           "type": "i32"
         }
@@ -374,12 +358,7 @@ export type Invariant = {
           "isSigner": false
         }
       ],
-      "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        }
-      ]
+      "args": []
     },
     {
       "name": "createPosition",
@@ -481,10 +460,6 @@ export type Invariant = {
         }
       ],
       "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        },
         {
           "name": "lowerTickIndex",
           "type": "i32"
@@ -655,10 +630,6 @@ export type Invariant = {
         }
       ],
       "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        },
         {
           "name": "index",
           "type": "u32"
@@ -1519,10 +1490,6 @@ export const IDL: Invariant = {
       ],
       "args": [
         {
-          "name": "bump",
-          "type": "u8"
-        },
-        {
           "name": "nonce",
           "type": "u8"
         }
@@ -1558,10 +1525,6 @@ export const IDL: Invariant = {
         }
       ],
       "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        },
         {
           "name": "fee",
           "type": "u128"
@@ -1642,10 +1605,6 @@ export const IDL: Invariant = {
         }
       ],
       "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        },
         {
           "name": "initTick",
           "type": "i32"
@@ -1822,10 +1781,6 @@ export const IDL: Invariant = {
       ],
       "args": [
         {
-          "name": "bump",
-          "type": "u8"
-        },
-        {
           "name": "index",
           "type": "i32"
         }
@@ -1860,12 +1815,7 @@ export const IDL: Invariant = {
           "isSigner": false
         }
       ],
-      "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        }
-      ]
+      "args": []
     },
     {
       "name": "createPosition",
@@ -1967,10 +1917,6 @@ export const IDL: Invariant = {
         }
       ],
       "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        },
         {
           "name": "lowerTickIndex",
           "type": "i32"
@@ -2141,10 +2087,6 @@ export const IDL: Invariant = {
         }
       ],
       "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        },
         {
           "name": "index",
           "type": "u32"
