@@ -53,7 +53,15 @@ pub mod invariant {
         by_amount_in: bool, // whether amount specifies input or output
         sqrt_price_limit: u128,
     ) -> ProgramResult {
-        instructions::swap::handler(ctx, x_to_y, amount, by_amount_in, sqrt_price_limit)
+        Swap::handler(
+            ctx,
+            x_to_y,
+            amount,
+            by_amount_in,
+            sqrt_price_limit,
+            // ctx.program_id,
+            // ctx.remaining_accounts,
+        )
     }
 
     pub fn initialize_oracle(ctx: Context<InitializeOracle>) -> ProgramResult {
