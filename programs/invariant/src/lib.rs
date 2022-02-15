@@ -111,7 +111,7 @@ pub mod invariant {
         _upper_tick_index: i32,
         _index: i32,
     ) -> ProgramResult {
-        instructions::update_seconds_per_liquidity::handler(ctx)
+        ctx.accounts.handler()
     }
 
     #[access_control(receiver(&ctx.accounts.pool, &ctx.accounts.authority))]

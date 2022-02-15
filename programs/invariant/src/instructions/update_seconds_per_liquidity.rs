@@ -43,17 +43,19 @@ pub struct UpdateSecondsPerLiquidity<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
-pub fn handler(ctx: Context<UpdateSecondsPerLiquidity>) -> ProgramResult {
-    msg!("INVARIANT: UPDATE SECOND PER LIQUIDITY");
+impl<'info> UpdateSecondsPerLiquidity<'info> {
+    pub fn handler(self: &Self) -> ProgramResult {
+        msg!("INVARIANT: UPDATE SECOND PER LIQUIDITY");
 
-    let pool = &mut ctx.accounts.pool.load_mut()?;
-    let lower_tick = *ctx.accounts.lower_tick.load()?;
-    let upper_tick = *ctx.accounts.upper_tick.load()?;
-    let current_time = get_current_timestamp();
-    let position = &mut ctx.accounts.position.load_mut()?;
-    position.seconds_per_liquidity_inside =
-        calculate_seconds_per_liquidity_inside(lower_tick, upper_tick, pool, current_time);
-    position.last_slot = get_current_slot();
+        let pool = &mut self.pool.load_mut()?;
+        let lower_tick = *self.lower_tick.load()?;
+        let upper_tick = *self.upper_tick.load()?;
+        let current_time = get_current_timestamp();
+        let position = &mut self.position.load_mut()?;
+        position.seconds_per_liquidity_inside =
+            calculate_seconds_per_liquidity_inside(lower_tick, upper_tick, pool, current_time);
+        position.last_slot = get_current_slot();
 
-    Ok(())
+        Ok(())
+    }
 }
