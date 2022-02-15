@@ -346,7 +346,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
 
     // crossing tick
     if (result.nextPrice.v.eq(swapLimit.v) && limitingTick != null) {
-      const tickIndex: number = limitingTick.index
+      const tickIndex: number = parseInt(limitingTick.index.toString())
       const initialized: boolean = limitingTick.initialized
 
       const isEnoughAmountToCross = isEnoughAmountToPushPrice(
@@ -359,6 +359,8 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
 
       // cross
       if (initialized) {
+        if (!ticks.has(tickIndex)) throw new Error('tick crossed but not passed to simulation')
+
         const tick = ticks.get(tickIndex) as Tick
 
         if (!xToY || isEnoughAmountToCross) {
@@ -390,9 +392,11 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
       accumulatedAmount = new BN(0)
     }
 
-    if (currentTickIndex == previousTickIndex && !remainingAmount.eqn(0))
+    if (currentTickIndex == previousTickIndex && !remainingAmount.eqn(0)) {
       throw new Error('Looks like infinite loop')
-    else previousTickIndex = currentTickIndex
+    } else {
+      previousTickIndex = currentTickIndex
+    }
   }
 
   return {
