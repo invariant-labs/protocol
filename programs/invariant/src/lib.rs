@@ -93,7 +93,7 @@ pub mod invariant {
         bump: u8,
         index: u32,
     ) -> ProgramResult {
-        instructions::transfer_position_ownership::handler(ctx, bump, index)
+        ctx.accounts.handler(bump, index)
     }
 
     pub fn claim_fee(
