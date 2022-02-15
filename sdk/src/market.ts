@@ -1247,7 +1247,7 @@ export enum Errors {
   InvalidTickSpacing = '0x130', // 4
   InvalidTickInterval = '0x131', // 5
   NoMoreTicks = '0x132 ', // 6
-  TickNotFound = '0x13 3', // 7
+  TickNotFound = '0x133', // 7
   PriceLimitReached = '0x134' // 8
 }
 
