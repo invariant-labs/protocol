@@ -1,6 +1,5 @@
 use crate::decimal::*;
 use crate::structs::*;
-use crate::util::check_position_seeds;
 use crate::util::get_current_slot;
 use crate::util::get_current_timestamp;
 
@@ -17,7 +16,13 @@ pub struct CreateUserStake<'info> {
         payer = owner,
         bump)]
     pub user_stake: AccountLoader<'info, UserStake>,
-    #[account(constraint = check_position_seeds(owner.to_account_info(), position.to_account_info().key, index))]
+    #[account(
+        seeds = [b"positionv1",
+        owner.key.as_ref(),
+        &index.to_le_bytes(),],
+        bump = position.load()?.bump,
+        seeds::program = invariant::ID
+    )]
     pub position: AccountLoader<'info, Position>,
     #[account(mut)]
     pub incentive: AccountLoader<'info, Incentive>,
