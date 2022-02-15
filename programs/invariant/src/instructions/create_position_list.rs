@@ -19,11 +19,13 @@ pub struct CreatePositionList<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
-pub fn handler(ctx: Context<CreatePositionList>, bump: u8) -> ProgramResult {
-    msg!("INVARIANT: CREATE POSITION LIST");
-    let mut position_list = ctx.accounts.position_list.load_init()?;
+impl<'info> CreatePositionList<'info> {
+    pub fn handler(self: &Self, bump: u8) -> ProgramResult {
+        msg!("INVARIANT: CREATE POSITION LIST");
+        let mut position_list = self.position_list.load_init()?;
 
-    *position_list = PositionList { head: 0, bump };
+        *position_list = PositionList { head: 0, bump };
 
-    Ok(())
+        Ok(())
+    }
 }

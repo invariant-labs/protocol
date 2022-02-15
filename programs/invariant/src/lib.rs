@@ -65,7 +65,7 @@ pub mod invariant {
     }
 
     pub fn create_position_list(ctx: Context<CreatePositionList>, bump: u8) -> ProgramResult {
-        instructions::create_position_list::handler(ctx, bump)
+        ctx.accounts.handler(bump)
     }
 
     pub fn create_position(
