@@ -61,7 +61,7 @@ pub mod invariant {
     }
 
     pub fn create_tick(ctx: Context<CreateTick>, bump: u8, index: i32) -> ProgramResult {
-        instructions::create_tick::handler(ctx, bump, index)
+        ctx.accounts.handler(bump, index)
     }
 
     pub fn create_position_list(ctx: Context<CreatePositionList>, bump: u8) -> ProgramResult {
