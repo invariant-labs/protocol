@@ -287,6 +287,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
   const { xToY, byAmountIn, swapAmount, slippage, ticks, tickmap, priceLimit, pool } =
     swapParameters
   let { currentTickIndex, tickSpacing, liquidity, sqrtPrice, fee } = pool
+  let previousTickIndex = MAX_TICK + 1
   const amountPerTick: BN[] = []
   let accumulatedAmount: BN = new BN(0)
   let accumulatedAmountOut: BN = new BN(0)
@@ -322,6 +323,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
       byAmountIn,
       fee
     )
+
     accumulatedAmountIn = accumulatedAmountIn.add(result.amountIn)
     accumulatedAmountOut = accumulatedAmountOut.add(result.amountOut)
     accumulatedFee = accumulatedFee.add(result.feeAmount)
@@ -387,6 +389,10 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
       amountPerTick.push(accumulatedAmount)
       accumulatedAmount = new BN(0)
     }
+
+    if (currentTickIndex == previousTickIndex && remainingAmount.eqn(0))
+      throw new Error('Looks like infinite loop')
+    else previousTickIndex = currentTickIndex
   }
 
   return {
