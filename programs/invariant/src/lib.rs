@@ -129,7 +129,7 @@ pub mod invariant {
 
     #[access_control(admin(&ctx.accounts.state, &ctx.accounts.admin))]
     pub fn change_fee_receiver(ctx: Context<ChangeFeeReceiver>) -> ProgramResult {
-        instructions::change_fee_receiver::handler(ctx)
+        ctx.accounts.handler()
     }
 }
 

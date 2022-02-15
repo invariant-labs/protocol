@@ -23,9 +23,11 @@ pub struct ChangeFeeReceiver<'info> {
     pub program_authority: AccountInfo<'info>,
 }
 
-pub fn handler(ctx: Context<ChangeFeeReceiver>) -> ProgramResult {
-    let mut pool = ctx.accounts.pool.load_mut()?;
-    pool.fee_receiver = ctx.accounts.fee_receiver.key();
+impl<'info> ChangeFeeReceiver<'info> {
+    pub fn handler(self: &Self) -> ProgramResult {
+        let mut pool = self.pool.load_mut()?;
+        pool.fee_receiver = self.fee_receiver.key();
 
-    Ok(())
+        Ok(())
+    }
 }
