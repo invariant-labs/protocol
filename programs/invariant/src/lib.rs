@@ -124,7 +124,7 @@ pub mod invariant {
         ctx: Context<ChangeProtocolFee>,
         protocol_fee: Decimal,
     ) -> ProgramResult {
-        instructions::change_protocol_fee::handler(ctx, protocol_fee)
+        ctx.accounts.handler(protocol_fee)
     }
 
     #[access_control(admin(&ctx.accounts.state, &ctx.accounts.admin))]
