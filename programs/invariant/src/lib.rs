@@ -84,7 +84,8 @@ pub mod invariant {
         lower_tick_index: i32,
         upper_tick_index: i32,
     ) -> ProgramResult {
-        instructions::remove_position::handler(ctx, index, lower_tick_index, upper_tick_index)
+        ctx.accounts
+            .handler(index, lower_tick_index, upper_tick_index)
     }
 
     pub fn transfer_position_ownership(
