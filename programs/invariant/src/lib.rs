@@ -75,7 +75,7 @@ pub mod invariant {
         _upper_tick_index: i32,
         liquidity_delta: Decimal,
     ) -> ProgramResult {
-        instructions::create_position::handler(ctx, bump, liquidity_delta)
+        ctx.accounts.handler(bump, liquidity_delta)
     }
 
     pub fn remove_position(
