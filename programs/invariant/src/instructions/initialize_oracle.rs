@@ -42,20 +42,3 @@ impl<'info> InitializeOracle<'info> {
         Ok(())
     }
 }
-
-// pub fn handler(ctx: Context<InitializeOracle>) -> ProgramResult {
-//     msg!("INVARIANT: INITIALIZE ORACLE");
-
-//     let oracle = &mut ctx.accounts.oracle.load_init()?;
-//     let pool = &mut ctx.accounts.pool.load_mut()?;
-
-//     require!(
-//         !pool.oracle_initialized,
-//         ErrorCode::OracleAlreadyInitialized
-//     );
-
-//     pool.set_oracle(ctx.accounts.oracle.key());
-//     oracle.init();
-
-//     Ok(())
-// }
