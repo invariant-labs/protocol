@@ -45,20 +45,19 @@ impl<'info> ReturnFounds<'info> {
     }
 }
 
-pub fn handler(ctx: Context<ReturnFounds>, bump_authority: u8) -> ProgramResult {
+pub fn handler(ctx: Context<ReturnFounds>, nonce: u8) -> ProgramResult {
     {
-    let incentive = ctx.accounts.incentive.load()?;
-    let current_time = get_current_timestamp();
-    require!(current_time > incentive.end_claim_time, TooEarly);
-    require!(incentive.num_of_stakes == 0, StakeExist);
-    
+        let incentive = ctx.accounts.incentive.load()?;
+        let current_time = get_current_timestamp();
+        require!(current_time > incentive.end_claim_time, TooEarly);
+        require!(incentive.num_of_stakes == 0, StakeExist);
 
-    // TODO: would be nice to have this bump saved somewhere
-    let seeds = &[STAKER_SEED.as_bytes(), &[bump_authority]];
-    let signer = &[&seeds[..]];
-    let cpi_ctx = ctx.accounts.return_to_founder().with_signer(signer);
+        let seeds = &[STAKER_SEED.as_bytes(), &[nonce]];
+        let signer = &[&seeds[..]];
+        let cpi_ctx = ctx.accounts.return_to_founder().with_signer(signer);
 
-    token::transfer(cpi_ctx, incentive.total_reward_unclaimed.to_u64())?;}
+        token::transfer(cpi_ctx, incentive.total_reward_unclaimed.to_u64())?;
+    }
 
     Ok(())
 }

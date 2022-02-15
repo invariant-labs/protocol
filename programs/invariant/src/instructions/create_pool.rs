@@ -13,13 +13,12 @@ use anchor_spl::token::Token;
 use anchor_spl::token::{Mint, TokenAccount};
 
 #[derive(Accounts)]
-#[instruction(bump: u8)]
 pub struct CreatePool<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
     #[account(init,
         seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref(), &fee_tier.load()?.fee.v.to_le_bytes(), &fee_tier.load()?.tick_spacing.to_le_bytes()],
-        bump = bump, payer = payer
+        bump, payer = payer
     )]
     pub pool: AccountLoader<'info, Pool>,
     #[account(
@@ -53,7 +52,7 @@ pub struct CreatePool<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
-pub fn handler(ctx: Context<CreatePool>, bump: u8, init_tick: i32) -> ProgramResult {
+pub fn handler(ctx: Context<CreatePool>, init_tick: i32) -> ProgramResult {
     msg!("INVARIANT: CREATE POOL");
 
     let token_x_address = &ctx.accounts.token_x.key();
@@ -95,7 +94,7 @@ pub fn handler(ctx: Context<CreatePool>, bump: u8, init_tick: i32) -> ProgramRes
         fee_receiver: ctx.accounts.state.load()?.admin,
         oracle_address: Pubkey::default(),
         oracle_initialized: false,
-        bump,
+        bump: *ctx.bumps.get("pool").unwrap(),
     };
 
     Ok(())

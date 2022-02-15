@@ -29,21 +29,20 @@ const SEED: &str = "Invariant";
 pub mod invariant {
     use super::*;
 
-    pub fn create_state(ctx: Context<CreateState>, bump: u8, nonce: u8) -> ProgramResult {
-        instructions::create_state::handler(ctx, bump, nonce)
+    pub fn create_state(ctx: Context<CreateState>, nonce: u8) -> ProgramResult {
+        instructions::create_state::handler(ctx, nonce)
     }
     #[access_control(admin(&ctx.accounts.state, &ctx.accounts.admin))]
     pub fn create_fee_tier(
         ctx: Context<CreateFeeTier>,
-        bump: u8,
         fee: u128,
         tick_spacing: u16,
     ) -> ProgramResult {
-        instructions::create_fee_tier::handler(ctx, bump, fee, tick_spacing)
+        instructions::create_fee_tier::handler(ctx, fee, tick_spacing)
     }
 
-    pub fn create_pool(ctx: Context<CreatePool>, bump: u8, init_tick: i32) -> ProgramResult {
-        instructions::create_pool::handler(ctx, bump, init_tick)
+    pub fn create_pool(ctx: Context<CreatePool>, init_tick: i32) -> ProgramResult {
+        instructions::create_pool::handler(ctx, init_tick)
     }
 
     pub fn swap(
@@ -60,22 +59,21 @@ pub mod invariant {
         instructions::initialize_oracle::handler(ctx)
     }
 
-    pub fn create_tick(ctx: Context<CreateTick>, bump: u8, index: i32) -> ProgramResult {
-        instructions::create_tick::handler(ctx, bump, index)
+    pub fn create_tick(ctx: Context<CreateTick>, index: i32) -> ProgramResult {
+        instructions::create_tick::handler(ctx, index)
     }
 
-    pub fn create_position_list(ctx: Context<CreatePositionList>, bump: u8) -> ProgramResult {
-        instructions::create_position_list::handler(ctx, bump)
+    pub fn create_position_list(ctx: Context<CreatePositionList>) -> ProgramResult {
+        instructions::create_position_list::handler(ctx)
     }
 
     pub fn create_position(
         ctx: Context<CreatePosition>,
-        bump: u8,
         _lower_tick_index: i32,
         _upper_tick_index: i32,
         liquidity_delta: Decimal,
     ) -> ProgramResult {
-        instructions::create_position::handler(ctx, bump, liquidity_delta)
+        instructions::create_position::handler(ctx, liquidity_delta)
     }
 
     pub fn remove_position(
@@ -89,10 +87,9 @@ pub mod invariant {
 
     pub fn transfer_position_ownership(
         ctx: Context<TransferPositionOwnership>,
-        bump: u8,
         index: u32,
     ) -> ProgramResult {
-        instructions::transfer_position_ownership::handler(ctx, bump, index)
+        instructions::transfer_position_ownership::handler(ctx, index)
     }
 
     pub fn claim_fee(

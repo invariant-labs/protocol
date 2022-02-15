@@ -15,7 +15,7 @@ use anchor_spl::token;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
 #[derive(Accounts)]
-#[instruction(bump: u8, lower_tick_index: i32, upper_tick_index: i32)]
+#[instruction( lower_tick_index: i32, upper_tick_index: i32)]
 pub struct CreatePosition<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
@@ -23,7 +23,7 @@ pub struct CreatePosition<'info> {
         seeds = [b"positionv1",
         owner.key.as_ref(),
         &position_list.load()?.head.to_le_bytes()],
-        bump = bump, payer = payer,
+        bump, payer = payer,
     )]
     pub position: AccountLoader<'info, Position>,
     #[account(mut,
@@ -113,7 +113,7 @@ impl<'info> TakeTokens<'info> for CreatePosition<'info> {
     }
 }
 
-pub fn handler(ctx: Context<CreatePosition>, bump: u8, liquidity_delta: Decimal) -> ProgramResult {
+pub fn handler(ctx: Context<CreatePosition>, liquidity_delta: Decimal) -> ProgramResult {
     msg!("INVARIANT: CREATE POSITION");
 
     let mut position = ctx.accounts.position.load_init()?;
@@ -152,7 +152,7 @@ pub fn handler(ctx: Context<CreatePosition>, bump: u8, liquidity_delta: Decimal)
         last_slot: slot,
         tokens_owed_x: Decimal::new(0),
         tokens_owed_y: Decimal::new(0),
-        bump,
+        bump: *ctx.bumps.get("position").unwrap(),
     };
 
     let (amount_x, amount_y) = position.modify(

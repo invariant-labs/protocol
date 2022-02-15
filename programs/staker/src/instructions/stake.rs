@@ -4,18 +4,18 @@ use crate::util::check_position_seeds;
 use crate::util::get_current_slot;
 use crate::util::get_current_timestamp;
 
-use invariant::program::Invariant;
-use invariant::structs::Position;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
+use invariant::program::Invariant;
+use invariant::structs::Position;
 
 #[derive(Accounts)]
-#[instruction(index: u32, bump: u8)]
+#[instruction(index: u32)]
 pub struct CreateUserStake<'info> {
     #[account(init,
         seeds = [b"staker", incentive.to_account_info().key.as_ref(), &position.load()?.pool.as_ref(), &position.load()?.id.to_le_bytes() ],
         payer = owner,
-        bump = bump)]
+        bump)]
     pub user_stake: AccountLoader<'info, UserStake>,
     #[account(constraint = check_position_seeds(owner.to_account_info(), position.to_account_info().key, index))]
     pub position: AccountLoader<'info, Position>,
@@ -29,7 +29,7 @@ pub struct CreateUserStake<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn handler(ctx: Context<CreateUserStake>, bump: u8) -> ProgramResult {
+pub fn handler(ctx: Context<CreateUserStake>) -> ProgramResult {
     msg!("STAKE");
     let mut incentive = ctx.accounts.incentive.load_mut()?;
     let current_time = get_current_timestamp();
@@ -46,7 +46,7 @@ pub fn handler(ctx: Context<CreateUserStake>, bump: u8) -> ProgramResult {
         position: *ctx.accounts.position.to_account_info().key,
         liquidity: Decimal::new(position.liquidity.v),
         incentive: *ctx.accounts.incentive.to_account_info().key,
-        bump,
+        bump: *ctx.bumps.get("user_stake").unwrap(),
         seconds_per_liquidity_initial: Decimal::new(position.seconds_per_liquidity_inside.v),
     };
     incentive.num_of_stakes += 1;

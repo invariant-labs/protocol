@@ -4,7 +4,7 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 
 #[derive(Accounts)]
-#[instruction(bump: u8, index: u32)]
+#[instruction( index: u32)]
 pub struct TransferPositionOwnership<'info> {
     #[account(mut,
         seeds = [b"positionlistv1", owner.key().as_ref()],
@@ -21,7 +21,7 @@ pub struct TransferPositionOwnership<'info> {
         seeds = [b"positionv1",
         recipient.key().as_ref(),
         &recipient_list.load()?.head.to_le_bytes()],
-        bump = bump, payer = owner,
+        bump, payer = owner,
     )]
     pub new_position: AccountLoader<'info, Position>,
     #[account(mut,
@@ -47,7 +47,7 @@ pub struct TransferPositionOwnership<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
-pub fn handler(ctx: Context<TransferPositionOwnership>, bump: u8, index: u32) -> ProgramResult {
+pub fn handler(ctx: Context<TransferPositionOwnership>, index: u32) -> ProgramResult {
     msg!("INVARIANT: TRANSFER POSITION");
 
     let mut owner_list = ctx.accounts.owner_list.load_mut()?;
@@ -73,7 +73,7 @@ pub fn handler(ctx: Context<TransferPositionOwnership>, bump: u8, index: u32) ->
             tokens_owed_x: removed_position.tokens_owed_x,
             tokens_owed_y: removed_position.tokens_owed_y,
             last_slot: removed_position.last_slot,
-            bump, // assign new bump
+            bump: *ctx.bumps.get("new_position").unwrap(), // assign new bump
         };
     }
 
