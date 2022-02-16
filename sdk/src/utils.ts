@@ -256,7 +256,7 @@ export const toDecimal = (x: number, decimals: number = 0): Decimal => {
 
 export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
   const { sqrtPriceLimit, xToY, currentTick, tickSpacing, tickmap } = closerLimit
-  let index
+  let index: number | null
 
   if (xToY) {
     index = getPreviousTick(tickmap, currentTick, tickSpacing)
@@ -270,7 +270,7 @@ export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
     sqrtPrice = calculatePriceSqrt(index)
     init = true
   } else {
-    index = getSearchLimit(new BN(currentTick), new BN(tickSpacing), !xToY)
+    index = getSearchLimit(new BN(currentTick), new BN(tickSpacing), !xToY).toNumber()
     sqrtPrice = calculatePriceSqrt(index)
     init = false
   }
@@ -346,7 +346,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
 
     // crossing tick
     if (result.nextPrice.v.eq(swapLimit.v) && limitingTick != null) {
-      const tickIndex: number = parseInt(limitingTick.index.toString())
+      const tickIndex: number = limitingTick.index
       const initialized: boolean = limitingTick.initialized
 
       const isEnoughAmountToCross = isEnoughAmountToPushPrice(
@@ -393,7 +393,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     }
 
     if (currentTickIndex == previousTickIndex && !remainingAmount.eqn(0)) {
-      throw new Error('Looks like infinite loop')
+      throw new Error('At the end of price range')
     } else {
       previousTickIndex = currentTickIndex
     }
