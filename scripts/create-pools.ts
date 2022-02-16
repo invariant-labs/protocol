@@ -34,7 +34,7 @@ const createUsdcBtc = async (market: Market) => {
     const createPoolVars: CreatePool = {
       pair,
       payer: wallet,
-      initTick: -106800
+      initTick: 106800
     }
     await market.createPool(createPoolVars)
   }
@@ -50,19 +50,18 @@ const createUsdcRenDoge = async (market: Market) => {
     const createPoolVars: CreatePool = {
       pair,
       payer: wallet,
-      initTick: -65200
+      initTick: 65200
     }
     await market.createPool(createPoolVars)
   }
 }
 
 const createBtcRenDoge = async (market: Market) => {
+  const renDoge = new PublicKey(MOCK_TOKENS.REN_DOGE)
+  const btc = new PublicKey(MOCK_TOKENS.BTC)
+
   for (const i of [1, 2, 3]) {
-    const pair = new Pair(
-      new PublicKey(MOCK_TOKENS.REN_DOGE),
-      new PublicKey(MOCK_TOKENS.BTC),
-      FEE_TIERS[i]
-    )
+    const pair = new Pair(renDoge, btc, FEE_TIERS[i])
     const createPoolVars: CreatePool = {
       pair,
       payer: wallet,
