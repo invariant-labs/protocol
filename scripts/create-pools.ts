@@ -50,7 +50,7 @@ const createUsdcRenDoge = async (market: Market) => {
     const createPoolVars: CreatePool = {
       pair,
       payer: wallet,
-      initTick: 65200
+      initTick: -65200
     }
     await market.createPool(createPoolVars)
   }
