@@ -554,6 +554,76 @@ export class Market {
     await signAndSend(tx, [signer], this.connection)
   }
 
+  async initPoolAndPositionTx(
+    {
+      pair,
+      owner,
+      userTokenX,
+      userTokenY,
+      lowerTick,
+      upperTick,
+      liquidityDelta,
+      initTick
+    }: InitPoolAndPosition,
+    payer?: Keypair
+  ) {
+    const payerPubkey = payer?.publicKey ?? this.wallet.publicKey
+    const bitmapKeypair = Keypair.generate()
+    const tokenXReserve = Keypair.generate()
+    const tokenYReserve = Keypair.generate()
+    const tick = initTick ?? 0
+
+    const { address: stateAddress } = await this.getStateAddress()
+
+    const [poolAddress, bump] = await pair.getAddressAndBump(this.program.programId)
+    const { address: feeTierAddress } = await this.getFeeTierAddress(pair.feeTier)
+
+    const createIx = this.program.instruction.createPool(bump, tick, {
+      accounts: {
+        state: stateAddress,
+        pool: poolAddress,
+        feeTier: feeTierAddress,
+        tickmap: bitmapKeypair.publicKey,
+        tokenX: pair.tokenX,
+        tokenY: pair.tokenY,
+        tokenXReserve: tokenXReserve.publicKey,
+        tokenYReserve: tokenYReserve.publicKey,
+        authority: this.programAuthority,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        payer: payerPubkey,
+        rent: SYSVAR_RENT_PUBKEY,
+        systemProgram: SystemProgram.programId
+      }
+    })
+
+    const transaction = new Transaction({
+      feePayer: payerPubkey
+    })
+      .add(
+        SystemProgram.createAccount({
+          fromPubkey: payerPubkey,
+          newAccountPubkey: bitmapKeypair.publicKey,
+          space: this.program.account.tickmap.size,
+          lamports: await this.connection.getMinimumBalanceForRentExemption(
+            this.program.account.tickmap.size
+          ),
+          programId: this.program.programId
+        })
+      )
+      .add(createIx)
+
+    return {
+      transaction,
+      signers: [bitmapKeypair, tokenXReserve, tokenYReserve]
+    }
+  }
+
+  async initPoolAndPosition(createPool: InitPoolAndPosition, signer: Keypair) {
+    const { transaction, signers } = await this.initPoolAndPositionTx(createPool, signer)
+
+    await signAndSend(transaction, [signer, ...signers], this.connection)
+  }
+
   async swapInstruction(swap: Swap) {
     const {
       pair,
@@ -1235,6 +1305,10 @@ export interface InitPosition {
   lowerTick: number
   upperTick: number
   liquidityDelta: Decimal
+}
+
+export interface InitPoolAndPosition extends InitPosition {
+  initTick?: number
 }
 
 export interface ModifyPosition {
