@@ -4,6 +4,7 @@ use crate::structs::tick::Tick;
 use crate::structs::tickmap::Tickmap;
 use crate::structs::FeeGrowth;
 use crate::util::check_tick;
+use crate::ErrorCode::*;
 use crate::{decimal::Decimal, util::get_current_timestamp};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
@@ -23,16 +24,16 @@ pub struct CreateTick<'info> {
     )]
     pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
-        constraint = tickmap.key() == pool.load()?.tickmap,
-        constraint = tickmap.to_account_info().owner == program_id,
+        constraint = tickmap.key() == pool.load()?.tickmap @ InvalidTickmap,
+        constraint = tickmap.to_account_info().owner == program_id @ InvalidTickmapOwner,
     )]
     pub tickmap: AccountLoader<'info, Tickmap>,
     #[account(mut)]
     pub payer: Signer<'info>,
     #[account(
-        constraint = token_x.key() == pool.load()?.token_x)]
+        constraint = token_x.key() == pool.load()?.token_x @ InvalidTokenAccount)]
     pub token_x: Account<'info, Mint>,
-    #[account(constraint = token_y.key() == pool.load()?.token_y)]
+    #[account(constraint = token_y.key() == pool.load()?.token_y @ InvalidTokenAccount)]
     pub token_y: Account<'info, Mint>,
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]
