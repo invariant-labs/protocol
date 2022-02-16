@@ -9,7 +9,7 @@ use crate::math::calculate_price_sqrt;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::structs::tickmap::Tickmap;
-use crate::structs::tickmap::{get_search_limit, MAX_TICK, TICK_LIMIT, TICK_SEARCH_RANGE};
+use crate::structs::tickmap::{get_search_limit, MAX_TICK, TICK_LIMIT};
 use crate::*;
 
 pub fn check_ticks(tick_lower: i32, tick_upper: i32, tick_spacing: u16) -> Result<()> {
@@ -107,62 +107,6 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
     }
 
     Ok(())
-}
-
-// trunk-ignore(clippy/dead_code)
-pub fn get_tick_from_price(
-    current_tick: i32,
-    tick_spacing: u16,
-    price: Decimal,
-    x_to_y: bool,
-) -> i32 {
-    assert!(
-        current_tick.checked_rem(tick_spacing.into()).unwrap() == 0,
-        "tick not divisible by spacing"
-    );
-
-    if x_to_y {
-        price_to_tick_in_range(
-            price,
-            (-TICK_LIMIT).max(current_tick.checked_sub(TICK_SEARCH_RANGE).unwrap()),
-            current_tick,
-            tick_spacing.into(),
-        )
-    } else {
-        price_to_tick_in_range(
-            price,
-            current_tick,
-            TICK_LIMIT.min(current_tick.checked_add(TICK_SEARCH_RANGE).unwrap()),
-            tick_spacing.into(),
-        )
-    }
-}
-
-// trunk-ignore(clippy/dead_code)
-pub fn price_to_tick_in_range(price: Decimal, low: i32, high: i32, step: i32) -> i32 {
-    let mut low = low.checked_div(step).unwrap();
-    let mut high = high.checked_div(step).unwrap().checked_add(1).unwrap();
-    let target_value = price;
-
-    while high.checked_sub(low).unwrap() > 1 {
-        let mid = ((high.checked_sub(low).unwrap()).checked_div(2).unwrap())
-            .checked_add(low)
-            .unwrap();
-        let val = calculate_price_sqrt(mid.checked_mul(step).unwrap());
-
-        if val == target_value {
-            return mid.checked_mul(step).unwrap();
-        }
-
-        if val < target_value {
-            low = mid;
-        }
-
-        if val > target_value {
-            high = mid;
-        }
-    }
-    low.checked_mul(step).unwrap()
 }
 
 pub fn get_current_timestamp() -> u64 {

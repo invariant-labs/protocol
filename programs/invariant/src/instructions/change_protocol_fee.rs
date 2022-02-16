@@ -25,13 +25,15 @@ pub struct ChangeProtocolFee<'info> {
     pub program_authority: AccountInfo<'info>,
 }
 
-pub fn handler(ctx: Context<ChangeProtocolFee>, protocol_fee: Decimal) -> ProgramResult {
-    require!(
-        protocol_fee.ge(&Decimal::new(0)) && protocol_fee.le(&Decimal::from_integer(1)),
-        InvalidProtocolFee
-    );
-    let pool = &mut ctx.accounts.pool.load_mut()?;
-    pool.protocol_fee = protocol_fee;
+impl<'info> ChangeProtocolFee<'info> {
+    pub fn handler(self: &Self, protocol_fee: Decimal) -> ProgramResult {
+        require!(
+            protocol_fee.ge(&Decimal::new(0)) && protocol_fee.le(&Decimal::from_integer(1)),
+            InvalidProtocolFee
+        );
+        let pool = &mut self.pool.load_mut()?;
+        pool.protocol_fee = protocol_fee;
 
-    Ok(())
+        Ok(())
+    }
 }

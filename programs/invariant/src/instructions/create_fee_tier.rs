@@ -21,22 +21,20 @@ pub struct CreateFeeTier<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
-pub fn handler(
-    ctx: Context<CreateFeeTier>,
-    bump: u8,
-    fee: u128,
-    tick_spacing: u16,
-) -> ProgramResult {
-    msg!("INVARIANT: CREATE FEE TIER");
+ impl<'info> CreateFeeTier<'info> {
 
-    let fee_tier = &mut ctx.accounts.fee_tier.load_init()?;
-    let fee = Decimal::new(fee);
+    pub fn handler(self: &Self, bump: u8, fee: u128, tick_spacing: u16) -> ProgramResult {
+        msg!("INVARIANT: CREATE FEE TIER");
 
-    **fee_tier = FeeTier {
-        fee,
-        tick_spacing,
-        bump,
-    };
+        let fee_tier = &mut self.fee_tier.load_init()?;
+        let fee = Decimal::new(fee);
 
-    Ok(())
+        **fee_tier = FeeTier {
+            fee,
+            tick_spacing,
+            bump,
+        };
+
+        Ok(())
+    }
 }
