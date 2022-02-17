@@ -1,15 +1,15 @@
 use crate::structs::{Incentive, UserStake};
 use crate::util::get_current_timestamp;
-
+use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct RemoveStake<'info> {
-    #[account(mut, constraint = &incentive.load()?.founder == founder.to_account_info().key )]
+    #[account(mut, constraint = &incentive.load()?.founder == founder.to_account_info().key @ InvalidFounder)]
     pub incentive: AccountLoader<'info, Incentive>,
     #[account(mut,
         close = founder,
-        constraint = &user_stake.load()?.incentive == incentive.to_account_info().key
+        constraint = &user_stake.load()?.incentive == incentive.to_account_info().key @ InvalidStake
     )]
     pub user_stake: AccountLoader<'info, UserStake>,
     pub founder: Signer<'info>,

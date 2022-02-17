@@ -32,4 +32,18 @@ pub enum ErrorCode {
     ZeroReward = 13, // 177d
     #[msg("There is no any stakes")]
     NoStakes = 14, // 177e
+    #[msg("Founder address is different than expected")]
+    InvalidFounder = 15, // 177f
+    #[msg("Provided stake doesn't belong to incentive")]
+    InvalidStake = 16, // 1780
+    #[msg("Provided token account is different than expected")]
+    InvalidTokenAccount = 17, // 1781
+    #[msg("Incentive address is different than expected")]
+    InvalidIncentive = 18, // 1782
+    #[msg("Provided authority is different than expected")]
+    InvalidAuthority = 19, // 1783
+    #[msg("Provided token owner is different than expected")]
+    InvalidOwner = 20, // 1784
+    #[msg("Provided token account mint is different than expected mint token")]
+    InvalidMint = 21, // 1785
 }

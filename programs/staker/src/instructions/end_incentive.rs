@@ -1,8 +1,8 @@
 use crate::structs::*;
 use crate::util;
 use crate::util::get_current_timestamp;
+use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{self, Mint, TokenAccount, Transfer};
 use util::STAKER_SEED;
 
@@ -11,13 +11,13 @@ use util::STAKER_SEED;
 pub struct ReturnFounds<'info> {
     #[account(mut,
         close = founder,
-        constraint = &incentive.load()?.founder == founder.to_account_info().key
+        constraint = &incentive.load()?.founder == founder.to_account_info().key @ InvalidFounder
     )]
     pub incentive: AccountLoader<'info, Incentive>,
     #[account(mut,
-        constraint = &incentive_token_account.owner == staker_authority.to_account_info().key,
-        constraint = &incentive.load()?.token_account == incentive_token_account.to_account_info().key,
-        constraint = incentive_token_account.mint == incentive_token.key(),
+        constraint = &incentive_token_account.owner == staker_authority.to_account_info().key @ InvalidTokenAccount,
+        constraint = &incentive.load()?.token_account == incentive_token_account.to_account_info().key @ InvalidTokenAccount,
+        constraint = incentive_token_account.mint == incentive_token.key() @ InvalidMint
     )]
     pub incentive_token_account: Account<'info, TokenAccount>,
     #[account(mut)]

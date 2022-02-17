@@ -1,6 +1,7 @@
 use crate::decimal::*;
 use crate::structs::*;
 use crate::util::get_current_timestamp;
+use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::Mint;
@@ -24,9 +25,9 @@ pub struct CreateIncentive<'info> {
     )]
     pub incentive_token_account: Account<'info, TokenAccount>,
     #[account(mut,
-        constraint = founder_token_account.to_account_info().key != incentive_token_account.to_account_info().key,
-        constraint = founder_token_account.mint == incentive_token.key(),
-        constraint = &founder_token_account.owner == founder.to_account_info().key
+        constraint = founder_token_account.to_account_info().key != incentive_token_account.to_account_info().key @ InvalidTokenAccount,
+        constraint = founder_token_account.mint == incentive_token.key() @ InvalidMint,
+        constraint = &founder_token_account.owner == founder.to_account_info().key @ InvalidOwner
     )]
     pub founder_token_account: Account<'info, TokenAccount>,
     pub pool: AccountLoader<'info, Pool>,
