@@ -430,6 +430,41 @@ export type Staker = {
       "code": 6014,
       "name": "NoStakes",
       "msg": "There is no any stakes"
+    },
+    {
+      "code": 6015,
+      "name": "InvalidFounder",
+      "msg": "Founder address is different than expected"
+    },
+    {
+      "code": 6016,
+      "name": "InvalidStake",
+      "msg": "Provided stake doesn't belong to incentive"
+    },
+    {
+      "code": 6017,
+      "name": "InvalidTokenAccount",
+      "msg": "Provided token account is different than expected"
+    },
+    {
+      "code": 6018,
+      "name": "InvalidIncentive",
+      "msg": "Incentive address is different than expected"
+    },
+    {
+      "code": 6019,
+      "name": "InvalidAuthority",
+      "msg": "Provided authority is different than expected"
+    },
+    {
+      "code": 6020,
+      "name": "InvalidOwner",
+      "msg": "Provided token owner is different than expected"
+    },
+    {
+      "code": 6021,
+      "name": "InvalidMint",
+      "msg": "Provided token account mint is different than expected mint token"
     }
   ]
 };
@@ -866,6 +901,41 @@ export const IDL: Staker = {
       "code": 6014,
       "name": "NoStakes",
       "msg": "There is no any stakes"
+    },
+    {
+      "code": 6015,
+      "name": "InvalidFounder",
+      "msg": "Founder address is different than expected"
+    },
+    {
+      "code": 6016,
+      "name": "InvalidStake",
+      "msg": "Provided stake doesn't belong to incentive"
+    },
+    {
+      "code": 6017,
+      "name": "InvalidTokenAccount",
+      "msg": "Provided token account is different than expected"
+    },
+    {
+      "code": 6018,
+      "name": "InvalidIncentive",
+      "msg": "Incentive address is different than expected"
+    },
+    {
+      "code": 6019,
+      "name": "InvalidAuthority",
+      "msg": "Provided authority is different than expected"
+    },
+    {
+      "code": 6020,
+      "name": "InvalidOwner",
+      "msg": "Provided token owner is different than expected"
+    },
+    {
+      "code": 6021,
+      "name": "InvalidMint",
+      "msg": "Provided token account mint is different than expected mint token"
     }
   ]
 };
