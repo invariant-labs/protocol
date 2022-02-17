@@ -3,14 +3,12 @@ use crate::math::*;
 use crate::structs::*;
 use crate::util::*;
 
-use invariant::program::Invariant;
-use invariant::structs::Position;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{self, TokenAccount, Transfer};
+use invariant::structs::Position;
 
 #[derive(Accounts)]
-#[instruction(index: u32)]
+#[instruction(index: u32, nonce: u8)]
 pub struct Withdraw<'info> {
     #[account(mut,
         seeds = [b"staker", incentive.to_account_info().key.as_ref(), &position.load()?.pool.as_ref(), &position.load()?.id.to_le_bytes()],
@@ -32,15 +30,11 @@ pub struct Withdraw<'info> {
         constraint = owner_token_account.owner == position.load()?.owner
     )]
     pub owner_token_account: Account<'info, TokenAccount>,
-    
-    pub staker_authority: AccountInfo<'info>, // validate with state
+    #[account(seeds = [b"staker".as_ref()], bump = nonce)]
+    pub staker_authority: AccountInfo<'info>,
     pub owner: AccountInfo<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
-    pub invariant: Program<'info, Invariant>, //TODO: program address
-    #[account(address = system_program::ID)]
-    pub system_program: AccountInfo<'info>,
-    pub rent: Sysvar<'info, Rent>,
 }
 
 impl<'info> Withdraw<'info> {
@@ -56,9 +50,9 @@ impl<'info> Withdraw<'info> {
     }
 }
 
-pub fn handler(ctx: Context<Withdraw>, nonce: u8) -> ProgramResult {
+pub fn handler(ctx: Context<Withdraw>, _index: i32, nonce: u8) -> ProgramResult {
     let mut incentive = ctx.accounts.incentive.load_mut()?;
-    
+
     msg!("WITHDRAW");
     let user_stake = &mut ctx.accounts.user_stake.load_mut()?;
     let position = ctx.accounts.position.load()?;
@@ -105,16 +99,16 @@ pub fn handler(ctx: Context<Withdraw>, nonce: u8) -> ProgramResult {
     let cpi_ctx = ctx.accounts.withdraw().with_signer(signer);
 
     token::transfer(cpi_ctx, reward)?;
-    
+
     if current_time > incentive.end_time {
         close(
-        ctx.accounts.user_stake.to_account_info(),
-        ctx.accounts.owner.to_account_info(),
-        ).unwrap();
+            ctx.accounts.user_stake.to_account_info(),
+            ctx.accounts.owner.to_account_info(),
+        )
+        .unwrap();
 
         incentive.num_of_stakes -= 1;
-
-    }   
+    }
 
     Ok(())
 }

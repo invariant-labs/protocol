@@ -13,7 +13,7 @@ export type Staker = {
         {
           "name": "incentiveTokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": true
         },
         {
           "name": "founderTokenAccount",
@@ -32,6 +32,11 @@ export type Staker = {
         },
         {
           "name": "stakerAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "incentiveToken",
           "isMut": false,
           "isSigner": false
         },
@@ -169,21 +174,6 @@ export type Staker = {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "invariant",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": [
@@ -216,6 +206,11 @@ export type Staker = {
           "isSigner": false
         },
         {
+          "name": "incentiveToken",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "stakerAuthority",
           "isMut": false,
           "isSigner": false
@@ -229,21 +224,11 @@ export type Staker = {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": [
         {
-          "name": "bumpAuthority",
+          "name": "nonce",
           "type": "u8"
         }
       ]
@@ -265,16 +250,6 @@ export type Staker = {
           "name": "founder",
           "isMut": false,
           "isSigner": true
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": []
@@ -474,7 +449,7 @@ export const IDL: Staker = {
         {
           "name": "incentiveTokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": true
         },
         {
           "name": "founderTokenAccount",
@@ -493,6 +468,11 @@ export const IDL: Staker = {
         },
         {
           "name": "stakerAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "incentiveToken",
           "isMut": false,
           "isSigner": false
         },
@@ -630,21 +610,6 @@ export const IDL: Staker = {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "invariant",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": [
@@ -677,6 +642,11 @@ export const IDL: Staker = {
           "isSigner": false
         },
         {
+          "name": "incentiveToken",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "stakerAuthority",
           "isMut": false,
           "isSigner": false
@@ -690,21 +660,11 @@ export const IDL: Staker = {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": [
         {
-          "name": "bumpAuthority",
+          "name": "nonce",
           "type": "u8"
         }
       ]
@@ -726,16 +686,6 @@ export const IDL: Staker = {
           "name": "founder",
           "isMut": false,
           "isSigner": true
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": []
