@@ -1309,6 +1309,7 @@ describe('Math', () => {
       assert.ok(simulationResult.accumulatedAmountOut.eq(new BN(993)))
       assert.ok(simulationResult.accumulatedFee.eq(new BN(6)))
       assert.ok(simulationResult.amountPerTick[0].eq(new BN(1000)))
+      assert.ok(simulationResult.priceAfterSwap.eq(new BN('999006987055')))
     })
   })
 })

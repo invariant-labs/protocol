@@ -50,7 +50,6 @@ pub fn handler(ctx: Context<ReturnFounds>, bump_authority: u8) -> ProgramResult 
         require!(current_time > incentive.end_claim_time, TooEarly);
         require!(incentive.num_of_stakes == 0, StakeExist);
 
-        // TODO: would be nice to have this bump saved somewhere
         let seeds = &[STAKER_SEED.as_bytes(), &[bump_authority]];
         let signer = &[&seeds[..]];
         let cpi_ctx = ctx.accounts.return_to_founder().with_signer(signer);

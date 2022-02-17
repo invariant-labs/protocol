@@ -5,6 +5,8 @@ import { assertThrowsAsync, createPoolWithLiquidity, createUserWithTokens } from
 import { Market, Network, sleep } from '@invariant-labs/sdk'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { Decimal, Swap } from '@invariant-labs/sdk/src/market'
+import { DENOMINATOR } from '@invariant-labs/sdk'
+import { assert } from 'chai'
 
 describe('slippage', () => {
   const provider = Provider.local()
@@ -13,7 +15,7 @@ describe('slippage', () => {
   const wallet = provider.wallet.payer as Keypair
   const admin = Keypair.generate()
   let market: Market
-  let knownPrice: Decimal
+  let assumedTargetPrice: Decimal
   let expectedPrice: BN
 
   before(async () => {
@@ -35,7 +37,7 @@ describe('slippage', () => {
       connection,
       mintAuthority
     )
-    knownPrice = (await market.getPool(pair)).sqrtPrice
+    assumedTargetPrice = (await market.getPool(pair)).sqrtPrice
     const amount = new BN(1e8)
 
     const swapVars: Swap = {
@@ -43,7 +45,7 @@ describe('slippage', () => {
       xToY: false,
       owner: owner.publicKey,
       amount,
-      knownPrice,
+      estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
       slippage: toDecimal(5, 2),
       accountX: userAccountX,
       accountY: userAccountY,
@@ -70,13 +72,13 @@ describe('slippage', () => {
       xToY: false,
       owner: owner.publicKey,
       amount,
-      knownPrice,
-      slippage: toDecimal(5, 2),
+      estimatedPriceAfterSwap: { v: priceLimit },
+      slippage: toDecimal(0, 0),
       accountX: userAccountX,
       accountY: userAccountY,
       byAmountIn: true
     }
-    await market.swap(swapVars, owner, priceLimit)
+    await market.swap(swapVars, owner)
   })
 
   it('#swap with target at limit', async () => {
@@ -95,13 +97,13 @@ describe('slippage', () => {
       xToY: false,
       owner: owner.publicKey,
       amount,
-      knownPrice,
-      slippage: toDecimal(5, 2),
+      estimatedPriceAfterSwap: { v: priceLimit },
+      slippage: toDecimal(0, 0),
       accountX: userAccountX,
       accountY: userAccountY,
       byAmountIn: true
     }
-    await assertThrowsAsync(market.swap(swapVars, owner, priceLimit))
+    await assertThrowsAsync(market.swap(swapVars, owner))
   })
 
   it('#swap with target just below the limit', async () => {
@@ -119,13 +121,13 @@ describe('slippage', () => {
       xToY: false,
       owner: owner.publicKey,
       amount,
-      knownPrice,
-      slippage: toDecimal(5, 2),
+      estimatedPriceAfterSwap: { v: priceLimit },
+      slippage: toDecimal(0, 0),
       accountX: userAccountX,
       accountY: userAccountY,
       byAmountIn: true
     }
-    await assertThrowsAsync(market.swap(swapVars, owner, priceLimit))
+    await assertThrowsAsync(market.swap(swapVars, owner))
   })
 
   it('#swap with target on the other side of price', async () => {
@@ -135,7 +137,8 @@ describe('slippage', () => {
       connection,
       mintAuthority
     )
-    const priceLimit = expectedPrice.muln(-1)
+
+    const priceLimit = DENOMINATOR.muln(2).sub(expectedPrice)
     const amount = new BN(1e8)
 
     const swapVars: Swap = {
@@ -143,12 +146,42 @@ describe('slippage', () => {
       xToY: false,
       owner: owner.publicKey,
       amount,
-      knownPrice,
-      slippage: toDecimal(5, 2),
+      estimatedPriceAfterSwap: { v: priceLimit },
+      slippage: toDecimal(0, 0),
       accountX: userAccountX,
       accountY: userAccountY,
       byAmountIn: true
     }
-    await assertThrowsAsync(market.swap(swapVars, owner, priceLimit))
+    await assertThrowsAsync(market.swap(swapVars, owner))
+  })
+
+  it.only('#swap actual slippage', async () => {
+    const { pair, mintAuthority } = await createPoolWithLiquidity(market, connection, wallet)
+    const { owner, userAccountX, userAccountY } = await createUserWithTokens(
+      pair,
+      connection,
+      mintAuthority
+    )
+
+    const amount = new BN(1e8)
+
+    const swapVars: Swap = {
+      pair,
+      xToY: false,
+      owner: owner.publicKey,
+      amount,
+      estimatedPriceAfterSwap: { v: expectedPrice },
+      slippage: toDecimal(3, 2),
+      accountX: userAccountX,
+      accountY: userAccountY,
+      byAmountIn: true
+    }
+
+    await market.swap(swapVars, owner)
+
+    assert.equal((await market.getPool(pair)).sqrtPrice.v.toString(), expectedPrice.toString())
+
+    await market.swap(swapVars, owner)
+    await assertThrowsAsync(market.swap(swapVars, owner))
   })
 })

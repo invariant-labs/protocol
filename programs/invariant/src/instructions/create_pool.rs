@@ -6,6 +6,7 @@ use crate::structs::pool::Pool;
 use crate::structs::tickmap::Tickmap;
 use crate::util::check_tick;
 use crate::util::get_current_timestamp;
+use crate::ErrorCode::*;
 use crate::{decimal::Decimal, structs::FeeGrowth, structs::State};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
@@ -45,7 +46,7 @@ pub struct CreatePool<'info> {
     pub token_y_reserve: Account<'info, TokenAccount>,
     #[account(mut)]
     pub payer: Signer<'info>,
-    #[account(constraint = &state.load()?.authority == authority.key)]
+    #[account(constraint = &state.load()?.authority == authority.key @ InvalidAuthority)]
     pub authority: AccountInfo<'info>,
     pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
@@ -53,50 +54,52 @@ pub struct CreatePool<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
-pub fn handler(ctx: Context<CreatePool>, bump: u8, init_tick: i32) -> ProgramResult {
-    msg!("INVARIANT: CREATE POOL");
+impl<'info> CreatePool<'info> {
+    pub fn handler(self: &Self, bump: u8, init_tick: i32) -> ProgramResult {
+        msg!("INVARIANT: CREATE POOL");
 
-    let token_x_address = &ctx.accounts.token_x.key();
-    let token_y_address = &ctx.accounts.token_y.key();
-    require!(
-        token_x_address
-            .to_string()
-            .cmp(&token_y_address.to_string())
-            == Ordering::Less,
-        InvalidPoolTokenAddresses
-    );
+        let token_x_address = &self.token_x.key();
+        let token_y_address = &self.token_y.key();
+        require!(
+            token_x_address
+                .to_string()
+                .cmp(&token_y_address.to_string())
+                == Ordering::Less,
+            InvalidPoolTokenAddresses
+        );
 
-    let pool = &mut ctx.accounts.pool.load_init()?;
-    let fee_tier = ctx.accounts.fee_tier.load()?;
-    let current_timestamp = get_current_timestamp();
+        let pool = &mut self.pool.load_init()?;
+        let fee_tier = self.fee_tier.load()?;
+        let current_timestamp = get_current_timestamp();
 
-    check_tick(init_tick, fee_tier.tick_spacing)?;
+        check_tick(init_tick, fee_tier.tick_spacing)?;
 
-    **pool = Pool {
-        token_x: *token_x_address,
-        token_y: *token_y_address,
-        token_x_reserve: *ctx.accounts.token_x_reserve.to_account_info().key,
-        token_y_reserve: *ctx.accounts.token_y_reserve.to_account_info().key,
-        tick_spacing: fee_tier.tick_spacing,
-        fee: fee_tier.fee,
-        protocol_fee: Decimal::new(200_000_000_000),
-        liquidity: Decimal::new(0),
-        sqrt_price: calculate_price_sqrt(init_tick),
-        current_tick_index: init_tick,
-        tickmap: *ctx.accounts.tickmap.to_account_info().key,
-        fee_growth_global_x: FeeGrowth::zero(),
-        fee_growth_global_y: FeeGrowth::zero(),
-        fee_protocol_token_x: 0,
-        fee_protocol_token_y: 0,
-        position_iterator: 0,
-        seconds_per_liquidity_global: Decimal::new(0),
-        start_timestamp: current_timestamp,
-        last_timestamp: current_timestamp,
-        fee_receiver: ctx.accounts.state.load()?.admin,
-        oracle_address: Pubkey::default(),
-        oracle_initialized: false,
-        bump,
-    };
+        **pool = Pool {
+            token_x: *token_x_address,
+            token_y: *token_y_address,
+            token_x_reserve: *self.token_x_reserve.to_account_info().key,
+            token_y_reserve: *self.token_y_reserve.to_account_info().key,
+            tick_spacing: fee_tier.tick_spacing,
+            fee: fee_tier.fee,
+            protocol_fee: Decimal::new(200_000_000_000),
+            liquidity: Decimal::new(0),
+            sqrt_price: calculate_price_sqrt(init_tick),
+            current_tick_index: init_tick,
+            tickmap: *self.tickmap.to_account_info().key,
+            fee_growth_global_x: FeeGrowth::zero(),
+            fee_growth_global_y: FeeGrowth::zero(),
+            fee_protocol_token_x: 0,
+            fee_protocol_token_y: 0,
+            position_iterator: 0,
+            seconds_per_liquidity_global: Decimal::new(0),
+            start_timestamp: current_timestamp,
+            last_timestamp: current_timestamp,
+            fee_receiver: self.state.load()?.admin,
+            oracle_address: Pubkey::default(),
+            oracle_initialized: false,
+            bump,
+        };
 
-    Ok(())
+        Ok(())
+    }
 }

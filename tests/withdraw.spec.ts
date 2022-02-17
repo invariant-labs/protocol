@@ -116,7 +116,7 @@ describe('withdraw', () => {
       xToY: true,
       owner: owner.publicKey,
       amount,
-      knownPrice: poolDataBefore.sqrtPrice,
+      estimatedPriceAfterSwap: poolDataBefore.sqrtPrice, // ignore price impact using high slippage tolerance
       slippage: toDecimal(1, 2),
       accountX,
       accountY,

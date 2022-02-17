@@ -3,6 +3,7 @@ use crate::structs::pool::Pool;
 use crate::structs::position::Position;
 use crate::structs::tick::Tick;
 use crate::util::{get_current_slot, get_current_timestamp};
+use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::Mint;
@@ -33,9 +34,9 @@ pub struct UpdateSecondsPerLiquidity<'info> {
         bump = position.load()?.bump
     )]
     pub position: AccountLoader<'info, Position>,
-    #[account(constraint = token_x.key() == pool.load()?.token_x,)]
+    #[account(constraint = token_x.key() == pool.load()?.token_x @ InvalidTokenAccount)]
     pub token_x: Account<'info, Mint>,
-    #[account(constraint = token_y.key() == pool.load()?.token_y,)]
+    #[account(constraint = token_y.key() == pool.load()?.token_y @ InvalidTokenAccount)]
     pub token_y: Account<'info, Mint>,
     pub owner: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
@@ -43,17 +44,19 @@ pub struct UpdateSecondsPerLiquidity<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
-pub fn handler(ctx: Context<UpdateSecondsPerLiquidity>) -> ProgramResult {
-    msg!("INVARIANT: UPDATE SECOND PER LIQUIDITY");
+impl<'info> UpdateSecondsPerLiquidity<'info> {
+    pub fn handler(self: &Self) -> ProgramResult {
+        msg!("INVARIANT: UPDATE SECOND PER LIQUIDITY");
 
-    let pool = &mut ctx.accounts.pool.load_mut()?;
-    let lower_tick = *ctx.accounts.lower_tick.load()?;
-    let upper_tick = *ctx.accounts.upper_tick.load()?;
-    let current_time = get_current_timestamp();
-    let position = &mut ctx.accounts.position.load_mut()?;
-    position.seconds_per_liquidity_inside =
-        calculate_seconds_per_liquidity_inside(lower_tick, upper_tick, pool, current_time);
-    position.last_slot = get_current_slot();
+        let pool = &mut self.pool.load_mut()?;
+        let lower_tick = *self.lower_tick.load()?;
+        let upper_tick = *self.upper_tick.load()?;
+        let current_time = get_current_timestamp();
+        let position = &mut self.position.load_mut()?;
+        position.seconds_per_liquidity_inside =
+            calculate_seconds_per_liquidity_inside(lower_tick, upper_tick, pool, current_time);
+        position.last_slot = get_current_slot();
 
-    Ok(())
+        Ok(())
+    }
 }

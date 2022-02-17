@@ -20,6 +20,7 @@ describe('limits', () => {
   let market: Market
   let pair: Pair
   let mintAuthority: Keypair
+  const assumedTargetPrice: Decimal = { v: new BN(DENOMINATOR) }
 
   before(async () => {
     market = await Market.build(
@@ -74,7 +75,7 @@ describe('limits', () => {
           pair,
           xToY: true,
           amount,
-          knownPrice,
+          estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
           slippage: toDecimal(5000 + i, 5),
           accountX: userAccountX,
           accountY: userAccountY,
@@ -87,7 +88,7 @@ describe('limits', () => {
           pair,
           xToY: false,
           amount: amount.subn(6),
-          knownPrice,
+          estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
           slippage: toDecimal(5000 + i, 5),
           accountX: userAccountX,
           accountY: userAccountY,
