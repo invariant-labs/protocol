@@ -1,6 +1,7 @@
 use crate::interfaces::SendTokens;
 use crate::structs::pool::Pool;
 use crate::structs::state::State;
+use crate::ErrorCode::*;
 use crate::SEED;
 use crate::*;
 use anchor_lang::prelude::*;
@@ -15,33 +16,33 @@ pub struct WithdrawProtocolFee<'info> {
         bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,
-    #[account(constraint = token_x.key() == pool.load()?.token_x)]
+    #[account(constraint = token_x.key() == pool.load()?.token_x @ InvalidTokenAccount)]
     pub token_x: Account<'info, Mint>,
-    #[account(constraint = token_y.key() == pool.load()?.token_y)]
+    #[account(constraint = token_y.key() == pool.load()?.token_y @ InvalidTokenAccount)]
     pub token_y: Account<'info, Mint>,
     #[account(mut,
-        constraint = account_x.mint == token_x.key()
+        constraint = account_x.mint == token_x.key() @ InvalidMint
     )]
     pub account_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = account_y.mint == token_y.key()
+        constraint = account_y.mint == token_y.key() @ InvalidMint
     )]
     pub account_y: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = reserve_x.mint == token_x.key(),
-        constraint = &reserve_x.owner == program_authority.key,
-        constraint = reserve_x.key() == pool.load()?.token_x_reserve
+        constraint = reserve_x.mint == token_x.key() @ InvalidMint,
+        constraint = &reserve_x.owner == program_authority.key @ InvalidAuthority,
+        constraint = reserve_x.key() == pool.load()?.token_x_reserve @ InvalidTokenAccount
     )]
     pub reserve_x: Account<'info, TokenAccount>,
     #[account(mut,
-        constraint = reserve_y.mint == token_y.key(),
-        constraint = &reserve_y.owner == program_authority.key,
-        constraint = reserve_y.key() == pool.load()?.token_y_reserve
+        constraint = reserve_y.mint == token_y.key() @ InvalidMint,
+        constraint = &reserve_y.owner == program_authority.key @ InvalidAuthority,
+        constraint = reserve_y.key() == pool.load()?.token_y_reserve @ InvalidTokenAccount
     )]
     pub reserve_y: Account<'info, TokenAccount>,
-    #[account(constraint = &pool.load()?.fee_receiver == authority.key)]
+    #[account(constraint = &pool.load()?.fee_receiver == authority.key @ InvalidAuthority)]
     pub authority: Signer<'info>,
-    #[account(constraint = &state.load()?.authority == program_authority.key)]
+    #[account(constraint = &state.load()?.authority == program_authority.key @ InvalidAuthority)]
     pub program_authority: AccountInfo<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,

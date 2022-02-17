@@ -142,44 +142,6 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_price_to_tick_in_range() {
-        // Exact
-        {
-            let target_tick = 4;
-            let result = price_to_tick_in_range(calculate_price_sqrt(target_tick), 0, 8, 2);
-            assert_eq!(result, target_tick);
-        }
-        // Between
-        {
-            let target_tick = 4;
-            let target_price = calculate_price_sqrt(target_tick) + Decimal::new(1);
-            let result = price_to_tick_in_range(target_price, 0, 8, 2);
-            assert_eq!(result, target_tick);
-        }
-        // Big step
-        {
-            let target_tick = 50;
-            let target_price = calculate_price_sqrt(target_tick) + Decimal::new(1);
-            let result = price_to_tick_in_range(target_price, 0, 200, 50);
-            assert_eq!(result, target_tick);
-        }
-        // Big range
-        {
-            let target_tick = 1234;
-            let target_price = calculate_price_sqrt(target_tick);
-            let result = price_to_tick_in_range(target_price, 0, 100_000, 2);
-            assert_eq!(result, target_tick);
-        }
-        // Negative
-        {
-            let target_tick = -50;
-            let target_price = calculate_price_sqrt(target_tick) + Decimal::new(1);
-            let result = price_to_tick_in_range(target_price, -200, 100, 2);
-            assert_eq!(result, target_tick);
-        }
-    }
-
-    #[test]
     fn test_get_closer_limit() -> Result<()> {
         let tickmap = &mut Tickmap::default();
         tickmap.flip(true, 0, 1);

@@ -1,6 +1,7 @@
 use crate::errors::ErrorCode;
 use crate::structs::oracle::Oracle;
 use crate::structs::pool::Pool;
+use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::Mint;
@@ -14,9 +15,9 @@ pub struct InitializeOracle<'info> {
     pub pool: AccountLoader<'info, Pool>,
     #[account(zero)]
     pub oracle: AccountLoader<'info, Oracle>,
-    #[account(constraint = token_x.key() == pool.load()?.token_x,)]
+    #[account(constraint = token_x.key() == pool.load()?.token_x @ InvalidTokenAccount)]
     pub token_x: Box<Account<'info, Mint>>,
-    #[account(constraint = token_y.key() == pool.load()?.token_y,)]
+    #[account(constraint = token_y.key() == pool.load()?.token_y @ InvalidTokenAccount)]
     pub token_y: Box<Account<'info, Mint>>,
     pub payer: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,

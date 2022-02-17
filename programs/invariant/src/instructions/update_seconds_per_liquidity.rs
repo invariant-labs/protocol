@@ -3,6 +3,7 @@ use crate::structs::pool::Pool;
 use crate::structs::position::Position;
 use crate::structs::tick::Tick;
 use crate::util::{get_current_slot, get_current_timestamp};
+use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::Mint;
@@ -33,9 +34,9 @@ pub struct UpdateSecondsPerLiquidity<'info> {
         bump = position.load()?.bump
     )]
     pub position: AccountLoader<'info, Position>,
-    #[account(constraint = token_x.key() == pool.load()?.token_x,)]
+    #[account(constraint = token_x.key() == pool.load()?.token_x @ InvalidTokenAccount)]
     pub token_x: Account<'info, Mint>,
-    #[account(constraint = token_y.key() == pool.load()?.token_y,)]
+    #[account(constraint = token_y.key() == pool.load()?.token_y @ InvalidTokenAccount)]
     pub token_y: Account<'info, Mint>,
     pub owner: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,

@@ -1,7 +1,7 @@
+use crate::structs::{Pool, State};
+use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
-
-use crate::structs::{Pool, State};
 
 #[derive(Accounts)]
 pub struct ChangeFeeReceiver<'info> {
@@ -12,14 +12,14 @@ pub struct ChangeFeeReceiver<'info> {
         bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,
-    #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x,)]
+    #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x @ InvalidTokenAccount) ]
     pub token_x: Account<'info, Mint>,
-    #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y,)]
+    #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y @ InvalidTokenAccount)]
     pub token_y: Account<'info, Mint>,
-    #[account(constraint = &state.load()?.admin == admin.key)]
+    #[account(constraint = &state.load()?.admin == admin.key @ InvalidAdmin)]
     pub admin: Signer<'info>,
     pub fee_receiver: AccountInfo<'info>,
-    #[account(constraint = &state.load()?.authority == program_authority.key)]
+    #[account(constraint = &state.load()?.authority == program_authority.key @ InvalidAuthority)]
     pub program_authority: AccountInfo<'info>,
 }
 

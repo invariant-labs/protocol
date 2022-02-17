@@ -6,6 +6,7 @@ use crate::structs::pool::Pool;
 use crate::structs::tickmap::Tickmap;
 use crate::util::check_tick;
 use crate::util::get_current_timestamp;
+use crate::ErrorCode::*;
 use crate::{decimal::Decimal, structs::FeeGrowth, structs::State};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
@@ -45,7 +46,7 @@ pub struct CreatePool<'info> {
     pub token_y_reserve: Account<'info, TokenAccount>,
     #[account(mut)]
     pub payer: Signer<'info>,
-    #[account(constraint = &state.load()?.authority == authority.key)]
+    #[account(constraint = &state.load()?.authority == authority.key @ InvalidAuthority)]
     pub authority: AccountInfo<'info>,
     pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
