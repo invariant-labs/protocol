@@ -31,7 +31,7 @@ pub fn handler(ctx: Context<CreateFeeTier>, fee: u128, tick_spacing: u16) -> Pro
     **fee_tier = FeeTier {
         fee,
         tick_spacing,
-        bump: fee_tier.bump,
+        bump: *ctx.bumps.get("fee_tier").unwrap(),
     };
 
     Ok(())
