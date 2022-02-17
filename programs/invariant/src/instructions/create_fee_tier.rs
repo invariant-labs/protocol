@@ -1,5 +1,6 @@
 use crate::decimal::Decimal;
 use crate::structs::fee_tier::FeeTier;
+use crate::ErrorCode::*;
 use crate::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
@@ -14,15 +15,14 @@ pub struct CreateFeeTier<'info> {
     pub fee_tier: AccountLoader<'info, FeeTier>,
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
-    #[account(mut, constraint = &state.load()?.admin == admin.key)]
+    #[account(mut, constraint = &state.load()?.admin == admin.key @ InvalidAdmin)]
     pub admin: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }
 
- impl<'info> CreateFeeTier<'info> {
-
+impl<'info> CreateFeeTier<'info> {
     pub fn handler(self: &Self, bump: u8, fee: u128, tick_spacing: u16) -> ProgramResult {
         msg!("INVARIANT: CREATE FEE TIER");
 
