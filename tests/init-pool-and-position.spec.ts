@@ -10,6 +10,7 @@ import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { CreateTick, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 import { u64 } from '@project-serum/serum/lib/layout'
+import { isInitialized } from '@invariant-labs/sdk/lib/math'
 
 describe('swap', () => {
   const provider = Provider.local()
@@ -64,25 +65,38 @@ describe('swap', () => {
     const owner = Keypair.generate()
     const [userTokenX, userTokenY] = await Promise.all([
       tokenX.createAccount(owner.publicKey),
-      tokenX.createAccount(owner.publicKey),
+      tokenY.createAccount(owner.publicKey),
       connection.requestAirdrop(owner.publicKey, 1e9)
     ])
     await Promise.all([
       tokenX.mintTo(userTokenX, mintAuthority, [], tou64(1e9)),
-      tokenX.mintTo(userTokenY, mintAuthority, [], tou64(1e9))
+      tokenY.mintTo(userTokenY, mintAuthority, [], tou64(1e9))
     ])
+
+    const lowerTick = pair.tickSpacing * 2
+    const upperTick = pair.tickSpacing * 4
+
+    const liquidity = new BN(1000)
 
     const props: InitPoolAndPosition = {
       pair,
       owner: owner.publicKey,
       userTokenX,
       userTokenY,
-      lowerTick: 10,
-      upperTick: 20,
-      liquidityDelta: { v: new BN(1e9) },
-      initTick: 0
+      lowerTick,
+      upperTick,
+      liquidityDelta: { v: liquidity },
+      initTick: pair.tickSpacing * 3
     }
 
     await market.initPoolAndPosition(props, owner)
+    const pool = await market.getPool(pair)
+    const position = await market.getPosition(owner.publicKey, 0)
+    const tickmap = await market.getTickmap(pair)
+
+    assert.equal(pool.liquidity.v.toString(), liquidity.toString())
+    assert.equal(position.liquidity.v.toString(), liquidity.toString())
+    assert.isTrue(isInitialized(tickmap, lowerTick, pair.tickSpacing))
+    assert.isTrue(isInitialized(tickmap, upperTick, pair.tickSpacing))
   })
 })

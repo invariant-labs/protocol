@@ -578,27 +578,19 @@ export class Market {
     const [poolAddress, bump] = await pair.getAddressAndBump(this.program.programId)
     const { address: feeTierAddress } = await this.getFeeTierAddress(pair.feeTier)
 
-    const createIx = this.program.instruction.createPool(bump, tick, {
-      accounts: {
-        state: stateAddress,
-        pool: poolAddress,
-        feeTier: feeTierAddress,
-        tickmap: bitmapKeypair.publicKey,
-        tokenX: pair.tokenX,
-        tokenY: pair.tokenY,
-        tokenXReserve: tokenXReserve.publicKey,
-        tokenYReserve: tokenYReserve.publicKey,
-        authority: this.programAuthority,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        payer: payerPubkey,
-        rent: SYSVAR_RENT_PUBKEY,
-        systemProgram: SystemProgram.programId
-      }
-    })
+    const { positionListAddress } = await this.getPositionListAddress(payerPubkey)
+    const { tickAddress, tickBump } = await this.getTickAddress(pair, lowerTick)
+    const { tickAddress: tickAddressUpper, tickBump: bumpUpper } = await this.getTickAddress(
+      pair,
+      upperTick
+    )
+
+    const { positionAddress, positionBump } = await this.getPositionAddress(payerPubkey, 0)
 
     const transaction = new Transaction({
       feePayer: payerPubkey
     })
+      // .add(ComputeUnitsInstruction(300000, owner)) // UNCOMMENT ME WHEN 1.9 HITS
       .add(
         SystemProgram.createAccount({
           fromPubkey: payerPubkey,
@@ -610,77 +602,85 @@ export class Market {
           programId: this.program.programId
         })
       )
-      .add(createIx)
-
-    // undefined - tmp solution
-    let lowerInstruction: TransactionInstruction | undefined
-    let upperInstruction: TransactionInstruction | undefined
-    let listInstruction: TransactionInstruction | undefined
-    let positionInstruction: TransactionInstruction
-
-    // lowerInstruction = await this.createTickInstruction({
-    //   pair,
-    //   index: lowerTick,
-    //   payer: payerPubkey
-    // })
-
-    // upperInstruction = await this.createTickInstruction({
-    //   pair,
-    //   index: upperTick,
-    //   payer: payerPubkey
-    // })
-
-    const { positionListAddress } = await this.getPositionListAddress(payerPubkey)
-    // const account = await this.connection.getAccountInfo(positionListAddress)
-
-    // let listExists = true
-    // if (account === null) {
-    //   listExists = false
-    //   listInstruction = await this.createPositionListInstruction(payerPubkey)
-    //   positionInstruction = await this.initPositionInstruction(initPosition, true)
-    // } else {
-    //   positionInstruction = await this.initPositionInstruction(initPosition, false)
-    // }
-
-    // transaction.add(ComputeUnitsInstruction(400000, payerPubkey))
-    // transaction.add(lowerInstruction)
-    // transaction.add(upperInstruction)
-    // transaction.add(listInstruction)
-    ///////////////////////////////////////////////
-
-    const { tickAddress, tickBump } = await this.getTickAddress(pair, lowerTick)
-    transaction.add(
-      this.program.instruction.createTick(tickBump, lowerTick, {
-        accounts: {
-          tick: tickAddress,
-          pool: poolAddress,
-          tickmap: bitmapKeypair.publicKey,
-          payer: payerPubkey,
-          tokenX: pair.tokenX,
-          tokenY: pair.tokenY,
-          rent: SYSVAR_RENT_PUBKEY,
-          systemProgram: SystemProgram.programId
-        }
-      })
-    )
-    const { tickAddress: tickAddressUpper, tickBump: bumpUpper } = await this.getTickAddress(
-      pair,
-      upperTick
-    )
-    transaction.add(
-      this.program.instruction.createTick(bumpUpper, upperTick, {
-        accounts: {
-          tick: tickAddressUpper,
-          pool: poolAddress,
-          tickmap: bitmapKeypair.publicKey,
-          payer: payerPubkey,
-          tokenX: pair.tokenX,
-          tokenY: pair.tokenY,
-          rent: SYSVAR_RENT_PUBKEY,
-          systemProgram: SystemProgram.programId
-        }
-      })
-    )
+      .add(
+        this.program.instruction.createPool(bump, tick, {
+          accounts: {
+            state: stateAddress,
+            pool: poolAddress,
+            feeTier: feeTierAddress,
+            tickmap: bitmapKeypair.publicKey,
+            tokenX: pair.tokenX,
+            tokenY: pair.tokenY,
+            tokenXReserve: tokenXReserve.publicKey,
+            tokenYReserve: tokenYReserve.publicKey,
+            authority: this.programAuthority,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            payer: payerPubkey,
+            rent: SYSVAR_RENT_PUBKEY,
+            systemProgram: SystemProgram.programId
+          }
+        })
+      )
+      .add(
+        this.program.instruction.createTick(tickBump, lowerTick, {
+          accounts: {
+            tick: tickAddress,
+            pool: poolAddress,
+            tickmap: bitmapKeypair.publicKey,
+            payer: payerPubkey,
+            tokenX: pair.tokenX,
+            tokenY: pair.tokenY,
+            rent: SYSVAR_RENT_PUBKEY,
+            systemProgram: SystemProgram.programId
+          }
+        })
+      )
+      .add(
+        this.program.instruction.createTick(bumpUpper, upperTick, {
+          accounts: {
+            tick: tickAddressUpper,
+            pool: poolAddress,
+            tickmap: bitmapKeypair.publicKey,
+            payer: payerPubkey,
+            tokenX: pair.tokenX,
+            tokenY: pair.tokenY,
+            rent: SYSVAR_RENT_PUBKEY,
+            systemProgram: SystemProgram.programId
+          }
+        })
+      )
+      .add(await this.createPositionListInstruction(payerPubkey))
+      .add(
+        this.program.instruction.createPosition(
+          positionBump,
+          lowerTick,
+          upperTick,
+          liquidityDelta,
+          {
+            accounts: {
+              state: this.stateAddress,
+              pool: poolAddress,
+              positionList: positionListAddress,
+              position: positionAddress,
+              tickmap: bitmapKeypair.publicKey,
+              owner,
+              payer: owner,
+              lowerTick: tickAddress,
+              upperTick: tickAddressUpper,
+              tokenX: pair.tokenX,
+              tokenY: pair.tokenY,
+              accountX: userTokenX,
+              accountY: userTokenY,
+              reserveX: tokenXReserve.publicKey,
+              reserveY: tokenYReserve.publicKey,
+              programAuthority: this.programAuthority,
+              tokenProgram: TOKEN_PROGRAM_ID,
+              rent: SYSVAR_RENT_PUBKEY,
+              systemProgram: SystemProgram.programId
+            }
+          }
+        )
+      )
 
     return {
       transaction,
