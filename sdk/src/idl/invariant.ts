@@ -1480,6 +1480,46 @@ export type Invariant = {
       "code": 6021,
       "name": "NoGainSwap",
       "msg": "Swap amount out is 0"
+    },
+    {
+      "code": 6022,
+      "name": "InvalidTokenAccount",
+      "msg": "Provided token account is different than expected"
+    },
+    {
+      "code": 6023,
+      "name": "InvalidAdmin",
+      "msg": "Admin address is different than expected"
+    },
+    {
+      "code": 6024,
+      "name": "InvalidAuthority",
+      "msg": "Provided authority is different than expected"
+    },
+    {
+      "code": 6025,
+      "name": "InvalidOwner",
+      "msg": "Provided token owner is different than expected"
+    },
+    {
+      "code": 6026,
+      "name": "InvalidMint",
+      "msg": "Provided token account mint is different than expected mint token"
+    },
+    {
+      "code": 6027,
+      "name": "InvalidTickmap",
+      "msg": "Provided tickmap is different than expected"
+    },
+    {
+      "code": 6028,
+      "name": "InvalidTickmapOwner",
+      "msg": "Provided tickmap owner is different than program ID"
+    },
+    {
+      "code": 6029,
+      "name": "InvalidListOwner",
+      "msg": "Recipient list address and owner list address should be different"
     }
   ]
 };
@@ -2966,6 +3006,46 @@ export const IDL: Invariant = {
       "code": 6021,
       "name": "NoGainSwap",
       "msg": "Swap amount out is 0"
+    },
+    {
+      "code": 6022,
+      "name": "InvalidTokenAccount",
+      "msg": "Provided token account is different than expected"
+    },
+    {
+      "code": 6023,
+      "name": "InvalidAdmin",
+      "msg": "Admin address is different than expected"
+    },
+    {
+      "code": 6024,
+      "name": "InvalidAuthority",
+      "msg": "Provided authority is different than expected"
+    },
+    {
+      "code": 6025,
+      "name": "InvalidOwner",
+      "msg": "Provided token owner is different than expected"
+    },
+    {
+      "code": 6026,
+      "name": "InvalidMint",
+      "msg": "Provided token account mint is different than expected mint token"
+    },
+    {
+      "code": 6027,
+      "name": "InvalidTickmap",
+      "msg": "Provided tickmap is different than expected"
+    },
+    {
+      "code": 6028,
+      "name": "InvalidTickmapOwner",
+      "msg": "Provided tickmap owner is different than program ID"
+    },
+    {
+      "code": 6029,
+      "name": "InvalidListOwner",
+      "msg": "Recipient list address and owner list address should be different"
     }
   ]
 };
