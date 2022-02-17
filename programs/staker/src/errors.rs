@@ -32,7 +32,7 @@ pub enum ErrorCode {
     ZeroReward = 13, // 177d
     #[msg("There is no any stakes")]
     NoStakes = 14, // 177e
-    #[msg("Admin address is different than expected")]
+    #[msg("Founder address is different than expected")]
     InvalidFounder = 15, // 177f
     #[msg("Provided stake doesn't belong to incentive")]
     InvalidStake = 16, // 1780
