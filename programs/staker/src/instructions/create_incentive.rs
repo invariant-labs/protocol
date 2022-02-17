@@ -1,11 +1,12 @@
 use crate::decimal::*;
 use crate::structs::*;
 use crate::util::get_current_timestamp;
-use invariant::program::Invariant;
-use invariant::structs::Pool;
+use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{self, TokenAccount, Transfer};
+use invariant::program::Invariant;
+use invariant::structs::Pool;
 
 const MAX_TIME_BEFORE_START: u64 = 3_600; //hour in sec
 const MAX_DURATION: u64 = 31_556_926; //year in sec
@@ -17,12 +18,12 @@ pub struct CreateIncentive<'info> {
     #[account(init, payer = founder)]
     pub incentive: AccountLoader<'info, Incentive>,
     #[account(mut,
-        constraint = &incentive_token_account.owner == staker_authority.to_account_info().key
+        constraint = &incentive_token_account.owner == staker_authority.to_account_info().key @InvalidOwner
     )]
     pub incentive_token_account: Account<'info, TokenAccount>,
     #[account(mut,
-        constraint = founder_token_account.to_account_info().key != incentive_token_account.to_account_info().key,
-        constraint = &founder_token_account.owner == founder.to_account_info().key
+        constraint = founder_token_account.to_account_info().key != incentive_token_account.to_account_info().key @ InvalidTokenAccount,
+        constraint = &founder_token_account.owner == founder.to_account_info().key @InvalidListOwner
     )]
     pub founder_token_account: Account<'info, TokenAccount>,
     //TODO: Add token account and validate mints
