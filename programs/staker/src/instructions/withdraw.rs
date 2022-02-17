@@ -2,7 +2,7 @@ use crate::decimal::*;
 use crate::math::*;
 use crate::structs::*;
 use crate::util::*;
-
+use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, TokenAccount, Transfer};
 use invariant::structs::Position;
@@ -16,18 +16,18 @@ pub struct Withdraw<'info> {
     )]
     pub user_stake: AccountLoader<'info, UserStake>,
     #[account(mut,
-        constraint = &user_stake.load()?.incentive == incentive.to_account_info().key
+        constraint = &user_stake.load()?.incentive == incentive.to_account_info().key @ InvalidIncentive
     )]
     pub incentive: AccountLoader<'info, Incentive>,
     #[account(mut,
-        constraint = &incentive_token_account.owner == staker_authority.to_account_info().key
+        constraint = &incentive_token_account.owner == staker_authority.to_account_info().key @ InvalidTokenAccount
     )]
     pub incentive_token_account: Account<'info, TokenAccount>,
     #[account(constraint = check_position_seeds(owner.to_account_info(), position.to_account_info().key, index))]
     pub position: AccountLoader<'info, Position>,
     #[account(mut,
-        constraint = owner_token_account.to_account_info().key != incentive_token_account.to_account_info().key,
-        constraint = owner_token_account.owner == position.load()?.owner
+        constraint = owner_token_account.to_account_info().key != incentive_token_account.to_account_info().key @ InvalidTokenAccount,
+        constraint = owner_token_account.owner == position.load()?.owner @ InvalidOwner
     )]
     pub owner_token_account: Account<'info, TokenAccount>,
     #[account(seeds = [b"staker".as_ref()], bump = nonce)]
