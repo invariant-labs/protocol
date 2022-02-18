@@ -416,10 +416,6 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
   }
 }
 
-function myXOR(a, b) {
-  return (a || b) && !(a && b)
-}
-
 export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
   let currentLiquidity = new BN(0)
 
