@@ -195,12 +195,7 @@ export class Market {
     return (await this.program.account.tick.fetch(tickAddress)) as Tick
   }
 
-  async getClosestTicks(
-    pair: Pair,
-    limit: number,
-    maxRange?: number,
-    oneWay: 'up' | 'down' | undefined = undefined
-  ) {
+  async getClosestTicks(pair: Pair, limit: number, maxRange?: number, oneWay?: 'up' | 'down') {
     const state = await this.getPool(pair)
     const tickmap = await this.getTickmap(pair)
     const indexes = findClosestTicks(
@@ -554,145 +549,139 @@ export class Market {
     await signAndSend(tx, [signer], this.connection)
   }
 
-  async initPoolAndPositionTx(
-    {
-      pair,
-      owner,
-      userTokenX,
-      userTokenY,
-      lowerTick,
-      upperTick,
-      liquidityDelta,
-      initTick
-    }: InitPoolAndPosition,
-    payer?: Keypair
-  ) {
-    const payerPubkey = payer?.publicKey ?? this.wallet.publicKey
-    const bitmapKeypair = Keypair.generate()
-    const tokenXReserve = Keypair.generate()
-    const tokenYReserve = Keypair.generate()
-    const tick = initTick ?? 0
+  // async initPoolAndPositionTx(
+  //   {
+  //     pair,
+  //     owner,
+  //     userTokenX,
+  //     userTokenY,
+  //     lowerTick,
+  //     upperTick,
+  //     liquidityDelta,
+  //     initTick
+  //   }: InitPoolAndPosition,
+  //   payer?: Keypair
+  // ) {
+  //   const payerPubkey = payer?.publicKey ?? this.wallet.publicKey
+  //   const bitmapKeypair = Keypair.generate()
+  //   const tokenXReserve = Keypair.generate()
+  //   const tokenYReserve = Keypair.generate()
+  //   const tick = initTick ?? 0
 
-    const { address: stateAddress } = await this.getStateAddress()
+  //   const { address: stateAddress } = await this.getStateAddress()
 
-    const [poolAddress, bump] = await pair.getAddressAndBump(this.program.programId)
-    const { address: feeTierAddress } = await this.getFeeTierAddress(pair.feeTier)
+  //   const [poolAddress, bump] = await pair.getAddressAndBump(this.program.programId)
+  //   const { address: feeTierAddress } = await this.getFeeTierAddress(pair.feeTier)
 
-    const { positionListAddress } = await this.getPositionListAddress(payerPubkey)
-    const { tickAddress, tickBump } = await this.getTickAddress(pair, lowerTick)
-    const { tickAddress: tickAddressUpper, tickBump: bumpUpper } = await this.getTickAddress(
-      pair,
-      upperTick
-    )
+  //   const { positionListAddress } = await this.getPositionListAddress(payerPubkey)
+  //   const { tickAddress, tickBump } = await this.getTickAddress(pair, lowerTick)
+  //   const { tickAddress: tickAddressUpper, tickBump: bumpUpper } = await this.getTickAddress(
+  //     pair,
+  //     upperTick
+  //   )
 
-    const { positionAddress, positionBump } = await this.getPositionAddress(payerPubkey, 0)
+  //   const { positionAddress, positionBump } = await this.getPositionAddress(payerPubkey, 0)
 
-    const transaction = new Transaction({
-      feePayer: payerPubkey
-    })
-      // .add(ComputeUnitsInstruction(300000, owner)) // UNCOMMENT ME WHEN 1.9 HITS
-      .add(
-        SystemProgram.createAccount({
-          fromPubkey: payerPubkey,
-          newAccountPubkey: bitmapKeypair.publicKey,
-          space: this.program.account.tickmap.size,
-          lamports: await this.connection.getMinimumBalanceForRentExemption(
-            this.program.account.tickmap.size
-          ),
-          programId: this.program.programId
-        })
-      )
-      .add(
-        this.program.instruction.createPool(bump, tick, {
-          accounts: {
-            state: stateAddress,
-            pool: poolAddress,
-            feeTier: feeTierAddress,
-            tickmap: bitmapKeypair.publicKey,
-            tokenX: pair.tokenX,
-            tokenY: pair.tokenY,
-            tokenXReserve: tokenXReserve.publicKey,
-            tokenYReserve: tokenYReserve.publicKey,
-            authority: this.programAuthority,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            payer: payerPubkey,
-            rent: SYSVAR_RENT_PUBKEY,
-            systemProgram: SystemProgram.programId
-          }
-        })
-      )
-      .add(
-        this.program.instruction.createTick(tickBump, lowerTick, {
-          accounts: {
-            tick: tickAddress,
-            pool: poolAddress,
-            tickmap: bitmapKeypair.publicKey,
-            payer: payerPubkey,
-            tokenX: pair.tokenX,
-            tokenY: pair.tokenY,
-            rent: SYSVAR_RENT_PUBKEY,
-            systemProgram: SystemProgram.programId
-          }
-        })
-      )
-      .add(
-        this.program.instruction.createTick(bumpUpper, upperTick, {
-          accounts: {
-            tick: tickAddressUpper,
-            pool: poolAddress,
-            tickmap: bitmapKeypair.publicKey,
-            payer: payerPubkey,
-            tokenX: pair.tokenX,
-            tokenY: pair.tokenY,
-            rent: SYSVAR_RENT_PUBKEY,
-            systemProgram: SystemProgram.programId
-          }
-        })
-      )
-      .add(await this.createPositionListInstruction(payerPubkey))
-      .add(
-        this.program.instruction.createPosition(
-          positionBump,
-          lowerTick,
-          upperTick,
-          liquidityDelta,
-          {
-            accounts: {
-              state: this.stateAddress,
-              pool: poolAddress,
-              positionList: positionListAddress,
-              position: positionAddress,
-              tickmap: bitmapKeypair.publicKey,
-              owner,
-              payer: owner,
-              lowerTick: tickAddress,
-              upperTick: tickAddressUpper,
-              tokenX: pair.tokenX,
-              tokenY: pair.tokenY,
-              accountX: userTokenX,
-              accountY: userTokenY,
-              reserveX: tokenXReserve.publicKey,
-              reserveY: tokenYReserve.publicKey,
-              programAuthority: this.programAuthority,
-              tokenProgram: TOKEN_PROGRAM_ID,
-              rent: SYSVAR_RENT_PUBKEY,
-              systemProgram: SystemProgram.programId
-            }
-          }
-        )
-      )
+  //   const transaction = new Transaction({
+  //     feePayer: payerPubkey
+  //   })
+  //     // .add(ComputeUnitsInstruction(300000, owner)) // UNCOMMENT ME WHEN 1.9 HITS
+  //     .add(
+  //       SystemProgram.createAccount({
+  //         fromPubkey: payerPubkey,
+  //         newAccountPubkey: bitmapKeypair.publicKey,
+  //         space: this.program.account.tickmap.size,
+  //         lamports: await this.connection.getMinimumBalanceForRentExemption(
+  //           this.program.account.tickmap.size
+  //         ),
+  //         programId: this.program.programId
+  //       })
+  //     )
+  //     .add(
+  //       this.program.instruction.createPool(bump, tick, {
+  //         accounts: {
+  //           state: stateAddress,
+  //           pool: poolAddress,
+  //           feeTier: feeTierAddress,
+  //           tickmap: bitmapKeypair.publicKey,
+  //           tokenX: pair.tokenX,
+  //           tokenY: pair.tokenY,
+  //           tokenXReserve: tokenXReserve.publicKey,
+  //           tokenYReserve: tokenYReserve.publicKey,
+  //           authority: this.programAuthority,
+  //           tokenProgram: TOKEN_PROGRAM_ID,
+  //           payer: payerPubkey,
+  //           rent: SYSVAR_RENT_PUBKEY,
+  //           systemProgram: SystemProgram.programId
+  //         }
+  //       })
+  //     )
+  //     .add(
+  //       this.program.instruction.createTick(tickBump, lowerTick, {
+  //         accounts: {
+  //           tick: tickAddress,
+  //           pool: poolAddress,
+  //           tickmap: bitmapKeypair.publicKey,
+  //           payer: payerPubkey,
+  //           tokenX: pair.tokenX,
+  //           tokenY: pair.tokenY,
+  //           rent: SYSVAR_RENT_PUBKEY,
+  //           systemProgram: SystemProgram.programId
+  //         }
+  //       })
+  //     )
+  //     .add(
+  //       this.program.instruction.createTick(bumpUpper, upperTick, {
+  //         accounts: {
+  //           tick: tickAddressUpper,
+  //           pool: poolAddress,
+  //           tickmap: bitmapKeypair.publicKey,
+  //           payer: payerPubkey,
+  //           tokenX: pair.tokenX,
+  //           tokenY: pair.tokenY,
+  //           rent: SYSVAR_RENT_PUBKEY,
+  //           systemProgram: SystemProgram.programId
+  //         }
+  //       })
+  //     )
+  //     .add(await this.createPositionListInstruction(payerPubkey))
+  //     .add(
+  //       this.program.instruction.createPosition(lowerTick, upperTick, liquidityDelta, {
+  //         accounts: {
+  //           state: this.stateAddress,
+  //           pool: poolAddress,
+  //           positionList: positionListAddress,
+  //           position: positionAddress,
+  //           tickmap: bitmapKeypair.publicKey,
+  //           owner,
+  //           payer: owner,
+  //           lowerTick: tickAddress,
+  //           upperTick: tickAddressUpper,
+  //           tokenX: pair.tokenX,
+  //           tokenY: pair.tokenY,
+  //           accountX: userTokenX,
+  //           accountY: userTokenY,
+  //           reserveX: tokenXReserve.publicKey,
+  //           reserveY: tokenYReserve.publicKey,
+  //           programAuthority: this.programAuthority,
+  //           tokenProgram: TOKEN_PROGRAM_ID,
+  //           rent: SYSVAR_RENT_PUBKEY,
+  //           systemProgram: SystemProgram.programId
+  //         }
+  //       })
+  //     )
 
-    return {
-      transaction,
-      signers: [bitmapKeypair, tokenXReserve, tokenYReserve]
-    }
-  }
+  //   return {
+  //     transaction,
+  //     signers: [bitmapKeypair, tokenXReserve, tokenYReserve]
+  //   }
+  // }
 
-  async initPoolAndPosition(createPool: InitPoolAndPosition, signer: Keypair) {
-    const { transaction, signers } = await this.initPoolAndPositionTx(createPool, signer)
+  // async initPoolAndPosition(createPool: InitPoolAndPosition, signer: Keypair) {
+  //   const { transaction, signers } = await this.initPoolAndPositionTx(createPool, signer)
 
-    await signAndSend(transaction, [signer, ...signers], this.connection)
-  }
+  //   await signAndSend(transaction, [signer, ...signers], this.connection)
+  // }
 
   async swapInstruction(swap: Swap) {
     const {
