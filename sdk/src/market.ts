@@ -195,12 +195,7 @@ export class Market {
     return (await this.program.account.tick.fetch(tickAddress)) as Tick
   }
 
-  async getClosestTicks(
-    pair: Pair,
-    limit: number,
-    maxRange?: number,
-    oneWay: 'up' | 'down' | undefined = undefined
-  ) {
+  async getClosestTicks(pair: Pair, limit: number, maxRange?: number, oneWay?: 'up' | 'down') {
     const state = await this.getPool(pair)
     const tickmap = await this.getTickmap(pair)
     const indexes = findClosestTicks(

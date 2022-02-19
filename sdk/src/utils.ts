@@ -417,36 +417,15 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
 }
 
 export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
-  let indexOfTickBelow = -1
-  // find first tick
-  for (let i = 0; i < ticks.length; i++) {
-    if (ticks[i].index <= pool.currentTickIndex) {
-      indexOfTickBelow = i
-    } else break
-  }
+  let currentLiquidity = new BN(0)
 
-  const parsed = ticks.map(({ liquidityChange, sign, index }) => {
-    return { index, liquidityChange, sign, liquidity: new BN(-1) }
+  return ticks.map(tick => {
+    currentLiquidity = currentLiquidity.add(tick.liquidityChange.v.muln(tick.sign ? 1 : -1))
+    return {
+      liquidity: currentLiquidity,
+      index: tick.index
+    }
   })
-  parsed[indexOfTickBelow].liquidity = pool.liquidity.v
-
-  for (let i = indexOfTickBelow + 1; i < parsed.length; i++) {
-    if (ticks[i].sign) {
-      parsed[i].liquidity = parsed[i - 1].liquidity.add(ticks[i].liquidityChange.v)
-    } else {
-      parsed[i].liquidity = parsed[i - 1].liquidity.sub(ticks[i].liquidityChange.v)
-    }
-  }
-
-  for (let i = indexOfTickBelow - 1; i >= 0; i--) {
-    if (!ticks[i].sign) {
-      parsed[i].liquidity = parsed[i + 1].liquidity.add(ticks[i].liquidityChange.v)
-    } else {
-      parsed[i].liquidity = parsed[i + 1].liquidity.sub(ticks[i].liquidityChange.v)
-    }
-  }
-
-  return parsed
 }
 export const calculateFeeGrowthInside = ({
   tickLower,
