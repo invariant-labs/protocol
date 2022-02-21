@@ -36,7 +36,7 @@ pub struct Withdraw<'info> {
         constraint = owner_token_account.owner == position.load()?.owner @ InvalidOwner
     )]
     pub owner_token_account: Account<'info, TokenAccount>,
-
+    #[account(seeds = [b"staker".as_ref()], bump = nonce)]
     pub staker_authority: AccountInfo<'info>, // validate with state
     pub owner: AccountInfo<'info>,
     #[account(address = token::ID)]
