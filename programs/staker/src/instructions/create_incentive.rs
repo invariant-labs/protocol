@@ -14,6 +14,7 @@ const MAX_DURATION: u64 = 31_556_926; //year in sec
 const WEEK: u64 = 604_800; //week in sec
 
 #[derive(Accounts)]
+#[instruction(nonce: u8)]
 pub struct CreateIncentive<'info> {
     #[account(init, payer = founder)]
     pub incentive: AccountLoader<'info, Incentive>,
