@@ -592,7 +592,7 @@ export class Market {
         })
       )
       .add(
-        this.program.instruction.createPool(bump, tick, {
+        this.program.instruction.createPool(tick, {
           accounts: {
             state: stateAddress,
             pool: poolAddress,
@@ -611,7 +611,7 @@ export class Market {
         })
       )
       .add(
-        this.program.instruction.createTick(tickBump, lowerTick, {
+        this.program.instruction.createTick(lowerTick, {
           accounts: {
             tick: tickAddress,
             pool: poolAddress,
@@ -625,7 +625,7 @@ export class Market {
         })
       )
       .add(
-        this.program.instruction.createTick(bumpUpper, upperTick, {
+        this.program.instruction.createTick(upperTick, {
           accounts: {
             tick: tickAddressUpper,
             pool: poolAddress,
@@ -640,35 +640,29 @@ export class Market {
       )
       .add(await this.createPositionListInstruction(payerPubkey))
       .add(
-        this.program.instruction.createPosition(
-          positionBump,
-          lowerTick,
-          upperTick,
-          liquidityDelta,
-          {
-            accounts: {
-              state: this.stateAddress,
-              pool: poolAddress,
-              positionList: positionListAddress,
-              position: positionAddress,
-              tickmap: bitmapKeypair.publicKey,
-              owner: payerPubkey,
-              payer: payerPubkey,
-              lowerTick: tickAddress,
-              upperTick: tickAddressUpper,
-              tokenX: pair.tokenX,
-              tokenY: pair.tokenY,
-              accountX: userTokenX,
-              accountY: userTokenY,
-              reserveX: tokenXReserve.publicKey,
-              reserveY: tokenYReserve.publicKey,
-              programAuthority: this.programAuthority,
-              tokenProgram: TOKEN_PROGRAM_ID,
-              rent: SYSVAR_RENT_PUBKEY,
-              systemProgram: SystemProgram.programId
-            }
+        this.program.instruction.createPosition(lowerTick, upperTick, liquidityDelta, {
+          accounts: {
+            state: this.stateAddress,
+            pool: poolAddress,
+            positionList: positionListAddress,
+            position: positionAddress,
+            tickmap: bitmapKeypair.publicKey,
+            owner: payerPubkey,
+            payer: payerPubkey,
+            lowerTick: tickAddress,
+            upperTick: tickAddressUpper,
+            tokenX: pair.tokenX,
+            tokenY: pair.tokenY,
+            accountX: userTokenX,
+            accountY: userTokenY,
+            reserveX: tokenXReserve.publicKey,
+            reserveY: tokenYReserve.publicKey,
+            programAuthority: this.programAuthority,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            rent: SYSVAR_RENT_PUBKEY,
+            systemProgram: SystemProgram.programId
           }
-        )
+        })
       )
 
     return {
