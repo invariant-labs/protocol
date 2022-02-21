@@ -585,7 +585,7 @@ export class Market {
     const transaction = new Transaction({
       feePayer: payerPubkey
     })
-      // .add(ComputeUnitsInstruction(300000, owner)) // UNCOMMENT ME WHEN 1.9 HITS
+      // .add(ComputeUnitsInstruction(300000, payerPubkey)) // UNCOMMENT ME WHEN 1.9 HITS
       .add(
         SystemProgram.createAccount({
           fromPubkey: payerPubkey,
@@ -658,8 +658,8 @@ export class Market {
               positionList: positionListAddress,
               position: positionAddress,
               tickmap: bitmapKeypair.publicKey,
-              owner,
-              payer: owner,
+              owner: payerPubkey,
+              payer: payerPubkey,
               lowerTick: tickAddress,
               upperTick: tickAddressUpper,
               tokenX: pair.tokenX,
