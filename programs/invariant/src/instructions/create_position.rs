@@ -16,7 +16,7 @@ use anchor_spl::token;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
 #[derive(Accounts)]
-#[instruction(bump: u8, lower_tick_index: i32, upper_tick_index: i32)]
+#[instruction( lower_tick_index: i32, upper_tick_index: i32)]
 pub struct CreatePosition<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
@@ -24,7 +24,7 @@ pub struct CreatePosition<'info> {
         seeds = [b"positionv1",
         owner.key.as_ref(),
         &position_list.load()?.head.to_le_bytes()],
-        bump = bump, payer = payer,
+        bump, payer = payer,
     )]
     pub position: AccountLoader<'info, Position>,
     #[account(mut,
@@ -115,7 +115,7 @@ impl<'info> TakeTokens<'info> for CreatePosition<'info> {
 }
 
 impl<'info> CreatePosition<'info> {
-    pub fn handler(self: &Self, bump: u8, liquidity_delta: Decimal) -> ProgramResult {
+    pub fn handler(self: &Self, liquidity_delta: Decimal, bump: u8) -> ProgramResult {
         msg!("INVARIANT: CREATE POSITION");
 
         let mut position = self.position.load_init()?;

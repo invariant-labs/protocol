@@ -29,21 +29,22 @@ const SEED: &str = "Invariant";
 pub mod invariant {
     use super::*;
 
-    pub fn create_state(ctx: Context<CreateState>, bump: u8, nonce: u8) -> ProgramResult {
-        instructions::create_state::handler(ctx, bump, nonce)
+    pub fn create_state(ctx: Context<CreateState>, nonce: u8) -> ProgramResult {
+        instructions::create_state::handler(ctx, nonce)
     }
     #[access_control(admin(&ctx.accounts.state, &ctx.accounts.admin))]
     pub fn create_fee_tier(
         ctx: Context<CreateFeeTier>,
-        bump: u8,
         fee: u128,
         tick_spacing: u16,
     ) -> ProgramResult {
-        ctx.accounts.handler(bump, fee, tick_spacing)
+        ctx.accounts
+            .handler(fee, tick_spacing, *ctx.bumps.get("fee_tier").unwrap())
     }
 
-    pub fn create_pool(ctx: Context<CreatePool>, bump: u8, init_tick: i32) -> ProgramResult {
-        ctx.accounts.handler(bump, init_tick)
+    pub fn create_pool(ctx: Context<CreatePool>, init_tick: i32) -> ProgramResult {
+        ctx.accounts
+            .handler(init_tick, *ctx.bumps.get("pool").unwrap())
     }
 
     pub fn swap(
@@ -60,22 +61,23 @@ pub mod invariant {
         ctx.accounts.handler()
     }
 
-    pub fn create_tick(ctx: Context<CreateTick>, bump: u8, index: i32) -> ProgramResult {
-        ctx.accounts.handler(bump, index)
+    pub fn create_tick(ctx: Context<CreateTick>, index: i32) -> ProgramResult {
+        ctx.accounts.handler(index, *ctx.bumps.get("tick").unwrap())
     }
 
-    pub fn create_position_list(ctx: Context<CreatePositionList>, bump: u8) -> ProgramResult {
-        ctx.accounts.handler(bump)
+    pub fn create_position_list(ctx: Context<CreatePositionList>) -> ProgramResult {
+        ctx.accounts
+            .handler(*ctx.bumps.get("position_list").unwrap())
     }
 
     pub fn create_position(
         ctx: Context<CreatePosition>,
-        bump: u8,
         _lower_tick_index: i32,
         _upper_tick_index: i32,
         liquidity_delta: Decimal,
     ) -> ProgramResult {
-        ctx.accounts.handler(bump, liquidity_delta)
+        ctx.accounts
+            .handler(liquidity_delta, *ctx.bumps.get("position").unwrap())
     }
 
     pub fn remove_position(
@@ -90,10 +92,10 @@ pub mod invariant {
 
     pub fn transfer_position_ownership(
         ctx: Context<TransferPositionOwnership>,
-        bump: u8,
         index: u32,
     ) -> ProgramResult {
-        ctx.accounts.handler(bump, index)
+        ctx.accounts
+            .handler(index, *ctx.bumps.get("new_position").unwrap())
     }
 
     pub fn claim_fee(

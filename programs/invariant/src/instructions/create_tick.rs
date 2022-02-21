@@ -11,11 +11,11 @@ use anchor_lang::solana_program::system_program;
 use anchor_spl::token::Mint;
 
 #[derive(Accounts)]
-#[instruction(bump: u8, index: i32)]
+#[instruction( index: i32)]
 pub struct CreateTick<'info> {
     #[account(init,
         seeds = [b"tickv1", pool.key().as_ref(), &index.to_le_bytes()],
-        bump = bump, payer = payer
+        bump, payer = payer
     )]
     pub tick: AccountLoader<'info, Tick>,
     #[account(
@@ -41,7 +41,7 @@ pub struct CreateTick<'info> {
 }
 
 impl<'info> CreateTick<'info> {
-    pub fn handler(self: &Self, bump: u8, index: i32) -> ProgramResult {
+    pub fn handler(self: &Self, index: i32, bump: u8) -> ProgramResult {
         msg!("INVARIANT: CREATE_TICK");
 
         let mut tick = self.tick.load_init()?;

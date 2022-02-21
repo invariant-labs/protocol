@@ -14,13 +14,12 @@ use anchor_spl::token::Token;
 use anchor_spl::token::{Mint, TokenAccount};
 
 #[derive(Accounts)]
-#[instruction(bump: u8)]
 pub struct CreatePool<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
     #[account(init,
         seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref(), &fee_tier.load()?.fee.v.to_le_bytes(), &fee_tier.load()?.tick_spacing.to_le_bytes()],
-        bump = bump, payer = payer
+        bump, payer = payer
     )]
     pub pool: AccountLoader<'info, Pool>,
     #[account(
@@ -55,7 +54,7 @@ pub struct CreatePool<'info> {
 }
 
 impl<'info> CreatePool<'info> {
-    pub fn handler(self: &Self, bump: u8, init_tick: i32) -> ProgramResult {
+    pub fn handler(self: &Self, init_tick: i32, bump: u8) -> ProgramResult {
         msg!("INVARIANT: CREATE POOL");
 
         let token_x_address = &self.token_x.key();

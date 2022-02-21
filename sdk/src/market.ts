@@ -84,10 +84,10 @@ export class Market {
 
     const { address: stateAddress } = await this.getStateAddress()
 
-    const [poolAddress, bump] = await pair.getAddressAndBump(this.program.programId)
+    const [poolAddress] = await pair.getAddressAndBump(this.program.programId)
     const { address: feeTierAddress } = await this.getFeeTierAddress(pair.feeTier)
 
-    const createIx = this.program.instruction.createPool(bump, tick, {
+    const createIx = this.program.instruction.createPool(tick, {
       accounts: {
         state: stateAddress,
         pool: poolAddress,
@@ -311,10 +311,10 @@ export class Market {
   async createFeeTierInstruction({ feeTier, admin }: CreateFeeTier) {
     admin = admin ?? this.wallet.publicKey
     const { fee, tickSpacing } = feeTier
-    const { address, bump } = await this.getFeeTierAddress(feeTier)
+    const { address } = await this.getFeeTierAddress(feeTier)
     const ts = tickSpacing ?? feeToTickSpacing(fee)
 
-    return this.program.instruction.createFeeTier(bump, fee, ts, {
+    return this.program.instruction.createFeeTier(fee, ts, {
       accounts: {
         state: this.stateAddress,
         feeTier: address,
@@ -340,9 +340,9 @@ export class Market {
   async createStateInstruction(admin?: PublicKey) {
     admin = admin ?? this.wallet.publicKey
     const { programAuthority, nonce } = await this.getProgramAuthority()
-    const { address, bump } = await this.getStateAddress()
+    const { address } = await this.getStateAddress()
 
-    return this.program.instruction.createState(bump, nonce, {
+    return this.program.instruction.createState(nonce, {
       accounts: {
         state: address,
         admin,
@@ -384,9 +384,9 @@ export class Market {
   async createTickInstruction({ pair, index, payer }: CreateTick) {
     payer = payer ?? this.wallet.publicKey
     const state = await this.getPool(pair)
-    const { tickAddress, tickBump } = await this.getTickAddress(pair, index)
+    const { tickAddress } = await this.getTickAddress(pair, index)
 
-    return this.program.instruction.createTick(tickBump, index, {
+    return this.program.instruction.createTick(index, {
       accounts: {
         tick: tickAddress,
         pool: await pair.getAddress(this.program.programId),
@@ -413,9 +413,9 @@ export class Market {
 
   async createPositionListInstruction(owner?: PublicKey) {
     owner = owner ?? this.wallet.publicKey
-    const { positionListAddress, positionListBump } = await this.getPositionListAddress(owner)
+    const { positionListAddress } = await this.getPositionListAddress(owner)
 
-    return this.program.instruction.createPositionList(positionListBump, {
+    return this.program.instruction.createPositionList({
       accounts: {
         positionList: positionListAddress,
         owner,
@@ -450,42 +450,36 @@ export class Market {
     // maybe in the future index cloud be store at market
     const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTickIndex)
     const { tickAddress: upperTickAddress } = await this.getTickAddress(pair, upperTickIndex)
-    const { positionAddress, positionBump } = await this.getPositionAddress(
+    const { positionAddress } = await this.getPositionAddress(
       owner,
       assumeFirstPosition ? 0 : (await this.getPositionList(owner)).head
     )
     const { positionListAddress } = await this.getPositionListAddress(owner)
     const poolAddress = await pair.getAddress(this.program.programId)
 
-    return this.program.instruction.createPosition(
-      positionBump,
-      lowerTickIndex,
-      upperTickIndex,
-      liquidityDelta,
-      {
-        accounts: {
-          state: this.stateAddress,
-          pool: poolAddress,
-          positionList: positionListAddress,
-          position: positionAddress,
-          tickmap: state.tickmap,
-          owner,
-          payer: owner,
-          lowerTick: lowerTickAddress,
-          upperTick: upperTickAddress,
-          tokenX: pair.tokenX,
-          tokenY: pair.tokenY,
-          accountX: userTokenX,
-          accountY: userTokenY,
-          reserveX: state.tokenXReserve,
-          reserveY: state.tokenYReserve,
-          programAuthority: this.programAuthority,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          rent: SYSVAR_RENT_PUBKEY,
-          systemProgram: SystemProgram.programId
-        }
+    return this.program.instruction.createPosition(lowerTickIndex, upperTickIndex, liquidityDelta, {
+      accounts: {
+        state: this.stateAddress,
+        pool: poolAddress,
+        positionList: positionListAddress,
+        position: positionAddress,
+        tickmap: state.tickmap,
+        owner,
+        payer: owner,
+        lowerTick: lowerTickAddress,
+        upperTick: upperTickAddress,
+        tokenX: pair.tokenX,
+        tokenY: pair.tokenY,
+        accountX: userTokenX,
+        accountY: userTokenY,
+        reserveX: state.tokenXReserve,
+        reserveY: state.tokenYReserve,
+        programAuthority: this.programAuthority,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+        systemProgram: SystemProgram.programId
       }
-    )
+    })
   }
 
   async initPositionTx(initPosition: InitPosition) {
@@ -598,7 +592,7 @@ export class Market {
         })
       )
       .add(
-        this.program.instruction.createPool(bump, tick, {
+        this.program.instruction.createPool(tick, {
           accounts: {
             state: stateAddress,
             pool: poolAddress,
@@ -617,7 +611,7 @@ export class Market {
         })
       )
       .add(
-        this.program.instruction.createTick(tickBump, lowerTick, {
+        this.program.instruction.createTick(lowerTick, {
           accounts: {
             tick: tickAddress,
             pool: poolAddress,
@@ -631,7 +625,7 @@ export class Market {
         })
       )
       .add(
-        this.program.instruction.createTick(bumpUpper, upperTick, {
+        this.program.instruction.createTick(upperTick, {
           accounts: {
             tick: tickAddressUpper,
             pool: poolAddress,
@@ -646,35 +640,29 @@ export class Market {
       )
       .add(await this.createPositionListInstruction(payerPubkey))
       .add(
-        this.program.instruction.createPosition(
-          positionBump,
-          lowerTick,
-          upperTick,
-          liquidityDelta,
-          {
-            accounts: {
-              state: this.stateAddress,
-              pool: poolAddress,
-              positionList: positionListAddress,
-              position: positionAddress,
-              tickmap: bitmapKeypair.publicKey,
-              owner: payerPubkey,
-              payer: payerPubkey,
-              lowerTick: tickAddress,
-              upperTick: tickAddressUpper,
-              tokenX: pair.tokenX,
-              tokenY: pair.tokenY,
-              accountX: userTokenX,
-              accountY: userTokenY,
-              reserveX: tokenXReserve.publicKey,
-              reserveY: tokenYReserve.publicKey,
-              programAuthority: this.programAuthority,
-              tokenProgram: TOKEN_PROGRAM_ID,
-              rent: SYSVAR_RENT_PUBKEY,
-              systemProgram: SystemProgram.programId
-            }
+        this.program.instruction.createPosition(lowerTick, upperTick, liquidityDelta, {
+          accounts: {
+            state: this.stateAddress,
+            pool: poolAddress,
+            positionList: positionListAddress,
+            position: positionAddress,
+            tickmap: bitmapKeypair.publicKey,
+            owner: payerPubkey,
+            payer: payerPubkey,
+            lowerTick: tickAddress,
+            upperTick: tickAddressUpper,
+            tokenX: pair.tokenX,
+            tokenY: pair.tokenY,
+            accountX: userTokenX,
+            accountY: userTokenY,
+            reserveX: tokenXReserve.publicKey,
+            reserveY: tokenYReserve.publicKey,
+            programAuthority: this.programAuthority,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            rent: SYSVAR_RENT_PUBKEY,
+            systemProgram: SystemProgram.programId
           }
-        )
+        })
       )
 
     return {
@@ -1092,10 +1080,9 @@ export class Market {
       owner,
       ownerPositionList.head - 1
     )
-    const { positionAddress: newPosition, positionBump: newPositionBump } =
-      await this.getNewPositionAddress(recipient)
+    const { positionAddress: newPosition } = await this.getNewPositionAddress(recipient)
 
-    return this.program.instruction.transferPositionOwnership(newPositionBump, index, {
+    return this.program.instruction.transferPositionOwnership(index, {
       accounts: {
         owner,
         recipient,
