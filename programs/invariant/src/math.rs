@@ -410,14 +410,14 @@ pub fn is_enough_amount_to_push_price(
     current_price_sqrt: Decimal,
     liquidity: Decimal,
     fee: Decimal,
+    by_amount_in: bool,
     x_to_y: bool,
 ) -> bool {
-    let amount_after_fee = amount.big_mul(Decimal::one() - fee).to_token_floor();
-
-    let next_price_sqrt = if x_to_y {
-        get_next_sqrt_price_x_up(current_price_sqrt, liquidity, amount_after_fee, true)
+    let next_price_sqrt = if by_amount_in {
+        let amount_after_fee = amount.big_mul(Decimal::one() - fee).to_token_floor();
+        get_next_sqrt_price_from_input(current_price_sqrt, liquidity, amount_after_fee, x_to_y)
     } else {
-        get_next_sqrt_price_y_down(current_price_sqrt, liquidity, amount_after_fee, true)
+        get_next_sqrt_price_from_output(current_price_sqrt, liquidity, amount, x_to_y)
     };
 
     current_price_sqrt.ne(&next_price_sqrt)
@@ -1121,28 +1121,56 @@ mod tests {
     }
     #[test]
     fn test_is_enough_amount_to_push_price() {
-        // -20 crossing tick with 1 token amount
+        let current_price_sqrt = Decimal::new(999500149965); // at -20 tick
+        let liquidity = Decimal::new(20006000000000000000);
+        let fee = Decimal::from_decimal(6, 4); // 0.0006 -> 0.06%
+
+        // -20 crossing tick with 1 token amount by amount in
         {
             let amount = TokenAmount(1);
-            let current_price_sqrt = Decimal::new(999500149965); // at -20 tick
-            let liquidity = Decimal::new(20006000000000000000);
-            let fee = Decimal::from_decimal(6, 4); // 0.0006 -> 0.06%
+            let by_amount_in = true;
             let x_to_y = true;
 
-            let result =
-                is_enough_amount_to_push_price(amount, current_price_sqrt, liquidity, fee, x_to_y);
+            let result = is_enough_amount_to_push_price(
+                amount,
+                current_price_sqrt,
+                liquidity,
+                fee,
+                by_amount_in,
+                x_to_y,
+            );
             assert_eq!(result, false);
         }
-        // -20 crossing tick with 2 token amount
+        // -20 crossing tick with 1 token amount by amount out
         {
-            let amount = TokenAmount(2);
-            let current_price_sqrt = Decimal::new(999500149965); // at -20 tick
-            let liquidity = Decimal::new(20006000000000000000);
-            let fee = Decimal::from_decimal(6, 4); // 0.0006 -> 0.06%
+            let amount = TokenAmount(1);
+            let by_amount_in = false;
             let x_to_y = true;
 
-            let result =
-                is_enough_amount_to_push_price(amount, current_price_sqrt, liquidity, fee, x_to_y);
+            let result = is_enough_amount_to_push_price(
+                amount,
+                current_price_sqrt,
+                liquidity,
+                fee,
+                by_amount_in,
+                x_to_y,
+            );
+            assert_eq!(result, true);
+        }
+        // -20 crossing tick with 2 token amount by amount in
+        {
+            let amount = TokenAmount(2);
+            let by_amount_in = true;
+            let x_to_y = true;
+
+            let result = is_enough_amount_to_push_price(
+                amount,
+                current_price_sqrt,
+                liquidity,
+                fee,
+                by_amount_in,
+                x_to_y,
+            );
             assert_eq!(result, true);
         }
     }

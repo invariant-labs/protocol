@@ -180,6 +180,7 @@ pub fn handler(
                 result.next_price_sqrt,
                 pool.liquidity,
                 pool.fee,
+                by_amount_in,
                 x_to_y,
             );
 
