@@ -479,12 +479,26 @@ export const calculateTokensOwed = ({
   feeGrowthInsideX,
   feeGrowthInsideY
 }: TokensOwed) => {
-  const tokensOwedX = position.liquidity.v
-    .mul(feeGrowthInsideX.sub(position.feeGrowthInsideX.v))
-    .div(GROWTH_DENOMINATOR)
-  const tokensOwedY = position.liquidity.v
-    .mul(feeGrowthInsideY.sub(position.feeGrowthInsideY.v))
-    .div(GROWTH_DENOMINATOR)
+  let tokensOwedX
+  let tokensOwedY
+  if (feeGrowthInsideX.lt(position.feeGrowthInsideX.v)) {
+    tokensOwedX = position.liquidity.v
+      .mul(feeGrowthInsideX.add(U128MAX.sub(position.feeGrowthInsideX.v)))
+      .div(GROWTH_DENOMINATOR)
+  } else {
+    tokensOwedX = position.liquidity.v
+      .mul(feeGrowthInsideX.sub(position.feeGrowthInsideX.v))
+      .div(GROWTH_DENOMINATOR)
+  }
+  if (feeGrowthInsideY.lt(position.feeGrowthInsideY.v)) {
+    tokensOwedY = position.liquidity.v
+      .mul(feeGrowthInsideY.add(U128MAX.sub(position.feeGrowthInsideY.v)))
+      .div(GROWTH_DENOMINATOR)
+  } else {
+    tokensOwedY = position.liquidity.v
+      .mul(feeGrowthInsideY.sub(position.feeGrowthInsideY.v))
+      .div(GROWTH_DENOMINATOR)
+  }
   const tokensOwedXTotal = position.tokensOwedX.v.add(tokensOwedX).div(DENOMINATOR)
   const tokensOwedYTotal = position.tokensOwedY.v.add(tokensOwedY).div(DENOMINATOR)
   return [tokensOwedXTotal, tokensOwedYTotal]

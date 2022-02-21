@@ -1300,6 +1300,51 @@ describe('Math', () => {
       assert.ok(tokensOwedXTotal.eq(new BN(116)))
       assert.ok(tokensOwedYTotal.eq(new BN(116)))
     })
+    it('External data', async () => {
+      const positionData: PositionClaimData = {
+        liquidity: { v: new BN('01386cfed7bbff207000', 'hex') },
+        feeGrowthInsideX: { v: new BN('ffffffffffffffffffc8ee8de34d553d', 'hex') },
+        feeGrowthInsideY: { v: new BN('ffffffffffffffffffd3fd7d514848b6', 'hex') },
+        tokensOwedX: { v: new BN(0) },
+        tokensOwedY: { v: new BN(0) }
+      }
+
+      const lowerTick: Tick = {
+        pool: Keypair.generate().publicKey,
+        index: 21109,
+        sign: true,
+        liquidityChange: { v: new BN('0b12b681a4aba5c5ff51d0', 'hex') },
+        liquidityGross: { v: new BN('0b12b681a4aba5c5ff51d0', 'hex') },
+        sqrtPrice: { v: new BN('029cf3124f61', 'hex') },
+        feeGrowthOutsideX: { v: new BN('0c4fee04dd2b3b8c', 'hex') },
+        feeGrowthOutsideY: { v: new BN('01a99cb6b2bd6911e7', 'hex') },
+        bump: 0
+      }
+      const upperTick: Tick = {
+        pool: Keypair.generate().publicKey,
+        index: 21129,
+        sign: false,
+        liquidityChange: { v: new BN('09fbe1e935b90af3ccf7d9', 'hex') },
+        liquidityGross: { v: new BN('0b9af0d9def1a2deea57d9', 'hex') },
+        sqrtPrice: { v: new BN('029d9e665157', 'hex') },
+        feeGrowthOutsideX: { v: new BN('3b9f3a68b9c225', 'hex') },
+        feeGrowthOutsideY: { v: new BN('2c0282aeb7b74a', 'hex') },
+        bump: 0
+      }
+
+      const claim: SimulateClaim = {
+        position: positionData,
+        tickLower: lowerTick,
+        tickUpper: upperTick,
+        tickCurrent: 0,
+        feeGrowthGlobalX: { v: new BN(20).mul(GROWTH_DENOMINATOR) },
+        feeGrowthGlobalY: { v: new BN(20).mul(GROWTH_DENOMINATOR) }
+      }
+
+      const [tokensOwedXTotal, tokensOwedYTotal] = calculateClaimAmount(claim)
+      assert.ok(tokensOwedXTotal.eq(new BN(5105)))
+      assert.ok(tokensOwedYTotal.eq(new BN(176750)))
+    })
   })
   describe('test simulateSwap', () => {
     it('Swap', async () => {
