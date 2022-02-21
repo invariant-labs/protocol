@@ -38,11 +38,13 @@ pub mod invariant {
         fee: u128,
         tick_spacing: u16,
     ) -> ProgramResult {
-        instructions::create_fee_tier::handler(ctx, fee, tick_spacing)
+        ctx.accounts
+            .handler(fee, tick_spacing, *ctx.bumps.get("fee_tier").unwrap())
     }
 
     pub fn create_pool(ctx: Context<CreatePool>, init_tick: i32) -> ProgramResult {
-        instructions::create_pool::handler(ctx, init_tick)
+        ctx.accounts
+            .handler(init_tick, *ctx.bumps.get("pool").unwrap())
     }
 
     pub fn swap(
@@ -52,19 +54,20 @@ pub mod invariant {
         by_amount_in: bool, // whether amount specifies input or output
         sqrt_price_limit: u128,
     ) -> ProgramResult {
-        instructions::swap::handler(ctx, x_to_y, amount, by_amount_in, sqrt_price_limit)
+        Swap::handler(ctx, x_to_y, amount, by_amount_in, sqrt_price_limit)
     }
 
     pub fn initialize_oracle(ctx: Context<InitializeOracle>) -> ProgramResult {
-        instructions::initialize_oracle::handler(ctx)
+        ctx.accounts.handler()
     }
 
     pub fn create_tick(ctx: Context<CreateTick>, index: i32) -> ProgramResult {
-        instructions::create_tick::handler(ctx, index)
+        ctx.accounts.handler(index, *ctx.bumps.get("tick").unwrap())
     }
 
     pub fn create_position_list(ctx: Context<CreatePositionList>) -> ProgramResult {
-        instructions::create_position_list::handler(ctx)
+        ctx.accounts
+            .handler(*ctx.bumps.get("position_list").unwrap())
     }
 
     pub fn create_position(
@@ -73,7 +76,8 @@ pub mod invariant {
         _upper_tick_index: i32,
         liquidity_delta: Decimal,
     ) -> ProgramResult {
-        instructions::create_position::handler(ctx, liquidity_delta)
+        ctx.accounts
+            .handler(liquidity_delta, *ctx.bumps.get("position").unwrap())
     }
 
     pub fn remove_position(
@@ -82,14 +86,16 @@ pub mod invariant {
         lower_tick_index: i32,
         upper_tick_index: i32,
     ) -> ProgramResult {
-        instructions::remove_position::handler(ctx, index, lower_tick_index, upper_tick_index)
+        ctx.accounts
+            .handler(index, lower_tick_index, upper_tick_index)
     }
 
     pub fn transfer_position_ownership(
         ctx: Context<TransferPositionOwnership>,
         index: u32,
     ) -> ProgramResult {
-        instructions::transfer_position_ownership::handler(ctx, index)
+        ctx.accounts
+            .handler(index, *ctx.bumps.get("new_position").unwrap())
     }
 
     pub fn claim_fee(
@@ -98,7 +104,7 @@ pub mod invariant {
         _lower_tick_index: i32,
         _upper_tick_index: i32,
     ) -> ProgramResult {
-        instructions::claim_fee::handler(ctx)
+        ctx.accounts.handler()
     }
 
     pub fn update_seconds_per_liquidity(
@@ -107,12 +113,12 @@ pub mod invariant {
         _upper_tick_index: i32,
         _index: i32,
     ) -> ProgramResult {
-        instructions::update_seconds_per_liquidity::handler(ctx)
+        ctx.accounts.handler()
     }
 
     #[access_control(receiver(&ctx.accounts.pool, &ctx.accounts.authority))]
     pub fn withdraw_protocol_fee(ctx: Context<WithdrawProtocolFee>) -> ProgramResult {
-        instructions::withdraw_protocol_fee::handler(ctx)
+        ctx.accounts.handler()
     }
 
     #[access_control(receiver(&ctx.accounts.pool, &ctx.accounts.admin))]
@@ -120,12 +126,12 @@ pub mod invariant {
         ctx: Context<ChangeProtocolFee>,
         protocol_fee: Decimal,
     ) -> ProgramResult {
-        instructions::change_protocol_fee::handler(ctx, protocol_fee)
+        ctx.accounts.handler(protocol_fee)
     }
 
     #[access_control(admin(&ctx.accounts.state, &ctx.accounts.admin))]
     pub fn change_fee_receiver(ctx: Context<ChangeFeeReceiver>) -> ProgramResult {
-        instructions::change_fee_receiver::handler(ctx)
+        ctx.accounts.handler()
     }
 }
 

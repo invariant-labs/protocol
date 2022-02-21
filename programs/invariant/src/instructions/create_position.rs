@@ -7,6 +7,7 @@ use crate::structs::tick::Tick;
 use crate::structs::FeeGrowth;
 use crate::structs::Tickmap;
 use crate::util::check_ticks;
+use crate::ErrorCode::*;
 use crate::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
@@ -50,37 +51,37 @@ pub struct CreatePosition<'info> {
     )]
     pub upper_tick: AccountLoader<'info, Tick>,
     #[account(mut,
-        constraint = tickmap.key() == pool.load()?.tickmap,
-        constraint = tickmap.to_account_info().owner == program_id,
+        constraint = tickmap.key() == pool.load()?.tickmap @ InvalidTickmap,
+        constraint = tickmap.to_account_info().owner == program_id @ InvalidTickmapOwner,
     )]
     pub tickmap: AccountLoader<'info, Tickmap>,
-    #[account(constraint = token_x.key() == pool.load()?.token_x,)]
+    #[account(constraint = token_x.key() == pool.load()?.token_x @ InvalidTokenAccount)]
     pub token_x: Account<'info, Mint>,
-    #[account(constraint = token_y.key() == pool.load()?.token_y,)]
+    #[account(constraint = token_y.key() == pool.load()?.token_y @ InvalidTokenAccount)]
     pub token_y: Account<'info, Mint>,
     #[account(mut,
-        constraint = account_x.mint == token_x.key(),
-        constraint = &account_x.owner == owner.key,
+        constraint = account_x.mint == token_x.key() @ InvalidMint,
+        constraint = &account_x.owner == owner.key @ InvalidOwner,
     )]
     pub account_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = account_y.mint == token_y.key(),
-        constraint = &account_y.owner == owner.key
+        constraint = account_y.mint == token_y.key() @ InvalidMint,
+        constraint = &account_y.owner == owner.key @ InvalidOwner
     )]
     pub account_y: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = reserve_x.mint == token_x.key(),
-        constraint = &reserve_x.owner == program_authority.key,
-        constraint = reserve_x.key() == pool.load()?.token_x_reserve
+        constraint = reserve_x.mint == token_x.key() @ InvalidMint,
+        constraint = &reserve_x.owner == program_authority.key @ InvalidOwner,
+        constraint = reserve_x.key() == pool.load()?.token_x_reserve @ InvalidTokenAccount
     )]
     pub reserve_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = reserve_y.mint == token_y.key(),
-        constraint = &reserve_y.owner == program_authority.key,
-        constraint = reserve_y.key() == pool.load()?.token_y_reserve
+        constraint = reserve_y.mint == token_y.key() @ InvalidMint,
+        constraint = &reserve_y.owner == program_authority.key @ InvalidOwner,
+        constraint = reserve_y.key() == pool.load()?.token_y_reserve @ InvalidTokenAccount
     )]
     pub reserve_y: Box<Account<'info, TokenAccount>>,
-    #[account(constraint = &state.load()?.authority == program_authority.key)]
+    #[account(constraint = &state.load()?.authority == program_authority.key @ InvalidAuthority)]
     pub program_authority: AccountInfo<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
@@ -113,58 +114,60 @@ impl<'info> TakeTokens<'info> for CreatePosition<'info> {
     }
 }
 
-pub fn handler(ctx: Context<CreatePosition>, liquidity_delta: Decimal) -> ProgramResult {
-    msg!("INVARIANT: CREATE POSITION");
+impl<'info> CreatePosition<'info> {
+    pub fn handler(self: &Self, liquidity_delta: Decimal, bump: u8) -> ProgramResult {
+        msg!("INVARIANT: CREATE POSITION");
 
-    let mut position = ctx.accounts.position.load_init()?;
-    let mut pool = &mut ctx.accounts.pool.load_mut()?;
-    let lower_tick = &mut ctx.accounts.lower_tick.load_mut()?;
-    let upper_tick = &mut ctx.accounts.upper_tick.load_mut()?;
-    let mut position_list = ctx.accounts.position_list.load_mut()?;
-    let current_timestamp = get_current_timestamp();
-    let mut tickmap = ctx.accounts.tickmap.load_mut()?;
-    let slot = get_current_slot();
-    // validate ticks
-    check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
+        let mut position = self.position.load_init()?;
+        let mut pool = &mut self.pool.load_mut()?;
+        let lower_tick = &mut self.lower_tick.load_mut()?;
+        let upper_tick = &mut self.upper_tick.load_mut()?;
+        let mut position_list = self.position_list.load_mut()?;
+        let current_timestamp = get_current_timestamp();
+        let mut tickmap = self.tickmap.load_mut()?;
+        let slot = get_current_slot();
+        // validate ticks
+        check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
 
-    if !tickmap.get(lower_tick.index, pool.tick_spacing) {
-        tickmap.flip(true, lower_tick.index, pool.tick_spacing)
+        if !tickmap.get(lower_tick.index, pool.tick_spacing) {
+            tickmap.flip(true, lower_tick.index, pool.tick_spacing)
+        }
+        if !tickmap.get(upper_tick.index, pool.tick_spacing) {
+            tickmap.flip(true, upper_tick.index, pool.tick_spacing)
+        }
+
+        // update position_list head
+        position_list.head = position_list.head.checked_add(1).unwrap();
+        position.initialized_id(&mut pool);
+
+        // init position
+        *position = Position {
+            owner: *self.owner.to_account_info().key,
+            pool: *self.pool.to_account_info().key,
+            id: position.id,
+            liquidity: Decimal::new(0),
+            lower_tick_index: lower_tick.index,
+            upper_tick_index: upper_tick.index,
+            fee_growth_inside_x: FeeGrowth::zero(),
+            fee_growth_inside_y: FeeGrowth::zero(),
+            seconds_per_liquidity_inside: Decimal::new(0),
+            last_slot: slot,
+            tokens_owed_x: Decimal::new(0),
+            tokens_owed_y: Decimal::new(0),
+            bump,
+        };
+
+        let (amount_x, amount_y) = position.modify(
+            pool,
+            upper_tick,
+            lower_tick,
+            liquidity_delta,
+            true,
+            current_timestamp,
+        )?;
+
+        token::transfer(self.take_x(), amount_x.0)?;
+        token::transfer(self.take_y(), amount_y.0)?;
+        Ok(())
     }
-    if !tickmap.get(upper_tick.index, pool.tick_spacing) {
-        tickmap.flip(true, upper_tick.index, pool.tick_spacing)
-    }
-
-    // update position_list head
-    position_list.head = position_list.head.checked_add(1).unwrap();
-    position.initialized_id(&mut pool);
-
-    // init position
-    *position = Position {
-        owner: *ctx.accounts.owner.to_account_info().key,
-        pool: *ctx.accounts.pool.to_account_info().key,
-        id: position.id,
-        liquidity: Decimal::new(0),
-        lower_tick_index: lower_tick.index,
-        upper_tick_index: upper_tick.index,
-        fee_growth_inside_x: FeeGrowth::zero(),
-        fee_growth_inside_y: FeeGrowth::zero(),
-        seconds_per_liquidity_inside: Decimal::new(0),
-        last_slot: slot,
-        tokens_owed_x: Decimal::new(0),
-        tokens_owed_y: Decimal::new(0),
-        bump: *ctx.bumps.get("position").unwrap(),
-    };
-
-    let (amount_x, amount_y) = position.modify(
-        pool,
-        upper_tick,
-        lower_tick,
-        liquidity_delta,
-        true,
-        current_timestamp,
-    )?;
-
-    token::transfer(ctx.accounts.take_x(), amount_x.0)?;
-    token::transfer(ctx.accounts.take_y(), amount_y.0)?;
-    Ok(())
 }

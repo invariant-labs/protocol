@@ -34,7 +34,7 @@ pub mod staker {
     }
 
     pub fn withdraw(ctx: Context<Withdraw>, _index: i32, nonce: u8) -> ProgramResult {
-        instructions::withdraw::handler(ctx, nonce)
+        instructions::withdraw::handler(ctx, _index, nonce)
     }
 
     pub fn end_incentive(ctx: Context<ReturnFounds>, nonce: u8) -> ProgramResult {

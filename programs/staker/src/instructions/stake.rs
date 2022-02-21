@@ -28,7 +28,8 @@ pub struct CreateUserStake<'info> {
     pub incentive: AccountLoader<'info, Incentive>,
     #[account(mut)]
     pub owner: Signer<'info>,
-    pub invariant: Program<'info, Invariant>, //TODO: validate program address
+    #[account(address = invariant::ID)]
+    pub invariant: Program<'info, Invariant>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,

@@ -2,15 +2,13 @@ use crate::decimal::*;
 use crate::math::*;
 use crate::structs::*;
 use crate::util::*;
-
+use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::system_program;
 use anchor_spl::token::{self, TokenAccount, Transfer};
-use invariant::program::Invariant;
 use invariant::structs::Position;
 
 #[derive(Accounts)]
-#[instruction(index: u32)]
+#[instruction(index: u32, nonce: u8)]
 pub struct Withdraw<'info> {
     #[account(mut,
         seeds = [b"staker", incentive.to_account_info().key.as_ref(), &position.load()?.pool.as_ref(), &position.load()?.id.to_le_bytes()],
@@ -18,11 +16,11 @@ pub struct Withdraw<'info> {
     )]
     pub user_stake: AccountLoader<'info, UserStake>,
     #[account(mut,
-        constraint = &user_stake.load()?.incentive == incentive.to_account_info().key
+        constraint = &user_stake.load()?.incentive == incentive.to_account_info().key @ InvalidIncentive
     )]
     pub incentive: AccountLoader<'info, Incentive>,
     #[account(mut,
-        constraint = &incentive_token_account.owner == staker_authority.to_account_info().key
+        constraint = &incentive_token_account.owner == staker_authority.to_account_info().key @ InvalidTokenAccount
     )]
     pub incentive_token_account: Account<'info, TokenAccount>,
     #[account(
@@ -34,8 +32,8 @@ pub struct Withdraw<'info> {
     )]
     pub position: AccountLoader<'info, Position>,
     #[account(mut,
-        constraint = owner_token_account.to_account_info().key != incentive_token_account.to_account_info().key,
-        constraint = owner_token_account.owner == position.load()?.owner
+        constraint = owner_token_account.to_account_info().key != incentive_token_account.to_account_info().key @ InvalidTokenAccount,
+        constraint = owner_token_account.owner == position.load()?.owner @ InvalidOwner
     )]
     pub owner_token_account: Account<'info, TokenAccount>,
 
@@ -43,10 +41,6 @@ pub struct Withdraw<'info> {
     pub owner: AccountInfo<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
-    pub invariant: Program<'info, Invariant>, //TODO: program address
-    #[account(address = system_program::ID)]
-    pub system_program: AccountInfo<'info>,
-    pub rent: Sysvar<'info, Rent>,
 }
 
 impl<'info> Withdraw<'info> {
@@ -62,7 +56,7 @@ impl<'info> Withdraw<'info> {
     }
 }
 
-pub fn handler(ctx: Context<Withdraw>, nonce: u8) -> ProgramResult {
+pub fn handler(ctx: Context<Withdraw>, _index: i32, nonce: u8) -> ProgramResult {
     let mut incentive = ctx.accounts.incentive.load_mut()?;
 
     msg!("WITHDRAW");

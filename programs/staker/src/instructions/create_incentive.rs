@@ -1,8 +1,10 @@
 use crate::decimal::*;
 use crate::structs::*;
 use crate::util::get_current_timestamp;
+use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
+use anchor_spl::token::Mint;
 use anchor_spl::token::{self, TokenAccount, Transfer};
 use invariant::program::Invariant;
 use invariant::structs::Pool;
@@ -15,24 +17,28 @@ const WEEK: u64 = 604_800; //week in sec
 pub struct CreateIncentive<'info> {
     #[account(init, payer = founder)]
     pub incentive: AccountLoader<'info, Incentive>,
-    #[account(mut,
-        constraint = &incentive_token_account.owner == staker_authority.to_account_info().key
+    #[account(init,
+        token::mint = incentive_token,
+        token::authority = staker_authority,
+        payer = founder,
     )]
     pub incentive_token_account: Account<'info, TokenAccount>,
     #[account(mut,
-        constraint = founder_token_account.to_account_info().key != incentive_token_account.to_account_info().key,
-        constraint = &founder_token_account.owner == founder.to_account_info().key
+        constraint = founder_token_account.to_account_info().key != incentive_token_account.to_account_info().key @ InvalidTokenAccount,
+        constraint = founder_token_account.mint == incentive_token.key() @ InvalidMint,
+        constraint = &founder_token_account.owner == founder.to_account_info().key @ InvalidOwner
     )]
     pub founder_token_account: Account<'info, TokenAccount>,
-    //TODO: Add token account and validate mints
     pub pool: AccountLoader<'info, Pool>,
     #[account(mut)]
     pub founder: Signer<'info>,
-    //TODO: save staker_authority in state
+    #[account(seeds = [b"staker".as_ref()], bump = nonce)]
     pub staker_authority: AccountInfo<'info>,
+    pub incentive_token: Account<'info, Mint>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
-    pub invariant: Program<'info, Invariant>, //TODO: Add program validation
+    #[account(address = invariant::ID)]
+    pub invariant: Program<'info, Invariant>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,

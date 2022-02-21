@@ -54,7 +54,15 @@ export enum INVARIANT_ERRORS {
   INVALID_POSITION_INDEX = '0x177d',
   POSITION_WITHOUT_LIQUIDITY = '0x177e',
   INVALID_POOL_TOKEN_ADDRESSES = '0x1780',
-  NO_GAIN_SWAP = '0x1785'
+  NO_GAIN_SWAP = '0x1785',
+  INVALID_TOKEN_ACCOUNT = '0x1786',
+  INVALID_ADMIN = '0x1787',
+  INVALID_AUTHORITY = '0x1788',
+  INVALID_OWNER = '0x1789',
+  INVALID_MINT = '0x178a',
+  INVALID_TICKMAP = '0x178b',
+  INVALID_TICKMAP_OWNER = '0x178c',
+  INVALID_LIST_OWNER = '0x178d'
 }
 
 export interface SimulateSwapPrice {
@@ -256,7 +264,7 @@ export const toDecimal = (x: number, decimals: number = 0): Decimal => {
 
 export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
   const { sqrtPriceLimit, xToY, currentTick, tickSpacing, tickmap } = closerLimit
-  let index
+  let index: number | null
 
   if (xToY) {
     index = getPreviousTick(tickmap, currentTick, tickSpacing)
@@ -270,7 +278,7 @@ export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
     sqrtPrice = calculatePriceSqrt(index)
     init = true
   } else {
-    index = getSearchLimit(new BN(currentTick), new BN(tickSpacing), !xToY)
+    index = getSearchLimit(new BN(currentTick), new BN(tickSpacing), !xToY).toNumber()
     sqrtPrice = calculatePriceSqrt(index)
     init = false
   }
@@ -287,6 +295,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
   const { xToY, byAmountIn, swapAmount, slippage, ticks, tickmap, priceLimit, pool } =
     swapParameters
   let { currentTickIndex, tickSpacing, liquidity, sqrtPrice, fee } = pool
+  let previousTickIndex = MAX_TICK + 1
   const amountPerTick: BN[] = []
   let accumulatedAmount: BN = new BN(0)
   let accumulatedAmountOut: BN = new BN(0)
@@ -322,6 +331,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
       byAmountIn,
       fee
     )
+
     accumulatedAmountIn = accumulatedAmountIn.add(result.amountIn)
     accumulatedAmountOut = accumulatedAmountOut.add(result.amountOut)
     accumulatedFee = accumulatedFee.add(result.feeAmount)
@@ -357,6 +367,8 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
 
       // cross
       if (initialized) {
+        if (!ticks.has(tickIndex)) throw new Error('tick crossed but not passed to simulation')
+
         const tick = ticks.get(tickIndex) as Tick
 
         if (!xToY || isEnoughAmountToCross) {
@@ -386,6 +398,12 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     if ((limitingTick !== null && limitingTick.initialized) || remainingAmount.eqn(0)) {
       amountPerTick.push(accumulatedAmount)
       accumulatedAmount = new BN(0)
+    }
+
+    if (currentTickIndex == previousTickIndex && !remainingAmount.eqn(0)) {
+      throw new Error('At the end of price range')
+    } else {
+      previousTickIndex = currentTickIndex
     }
   }
 

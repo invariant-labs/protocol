@@ -9,7 +9,7 @@ use crate::math::calculate_price_sqrt;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::structs::tickmap::Tickmap;
-use crate::structs::tickmap::{get_search_limit, MAX_TICK, TICK_LIMIT, TICK_SEARCH_RANGE};
+use crate::structs::tickmap::{get_search_limit, MAX_TICK, TICK_LIMIT};
 use crate::*;
 
 pub fn check_ticks(tick_lower: i32, tick_upper: i32, tick_spacing: u16) -> Result<()> {
@@ -109,62 +109,6 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
     Ok(())
 }
 
-// trunk-ignore(clippy/dead_code)
-pub fn get_tick_from_price(
-    current_tick: i32,
-    tick_spacing: u16,
-    price: Decimal,
-    x_to_y: bool,
-) -> i32 {
-    assert!(
-        current_tick.checked_rem(tick_spacing.into()).unwrap() == 0,
-        "tick not divisible by spacing"
-    );
-
-    if x_to_y {
-        price_to_tick_in_range(
-            price,
-            (-TICK_LIMIT).max(current_tick.checked_sub(TICK_SEARCH_RANGE).unwrap()),
-            current_tick,
-            tick_spacing.into(),
-        )
-    } else {
-        price_to_tick_in_range(
-            price,
-            current_tick,
-            TICK_LIMIT.min(current_tick.checked_add(TICK_SEARCH_RANGE).unwrap()),
-            tick_spacing.into(),
-        )
-    }
-}
-
-// trunk-ignore(clippy/dead_code)
-pub fn price_to_tick_in_range(price: Decimal, low: i32, high: i32, step: i32) -> i32 {
-    let mut low = low.checked_div(step).unwrap();
-    let mut high = high.checked_div(step).unwrap().checked_add(1).unwrap();
-    let target_value = price;
-
-    while high.checked_sub(low).unwrap() > 1 {
-        let mid = ((high.checked_sub(low).unwrap()).checked_div(2).unwrap())
-            .checked_add(low)
-            .unwrap();
-        let val = calculate_price_sqrt(mid.checked_mul(step).unwrap());
-
-        if val == target_value {
-            return mid.checked_mul(step).unwrap();
-        }
-
-        if val < target_value {
-            low = mid;
-        }
-
-        if val > target_value {
-            high = mid;
-        }
-    }
-    low.checked_mul(step).unwrap()
-}
-
 pub fn get_current_timestamp() -> u64 {
     Clock::get().unwrap().unix_timestamp.try_into().unwrap()
 }
@@ -196,44 +140,6 @@ pub fn close<'info>(
 #[cfg(test)]
 mod test {
     use super::*;
-
-    #[test]
-    fn test_price_to_tick_in_range() {
-        // Exact
-        {
-            let target_tick = 4;
-            let result = price_to_tick_in_range(calculate_price_sqrt(target_tick), 0, 8, 2);
-            assert_eq!(result, target_tick);
-        }
-        // Between
-        {
-            let target_tick = 4;
-            let target_price = calculate_price_sqrt(target_tick) + Decimal::new(1);
-            let result = price_to_tick_in_range(target_price, 0, 8, 2);
-            assert_eq!(result, target_tick);
-        }
-        // Big step
-        {
-            let target_tick = 50;
-            let target_price = calculate_price_sqrt(target_tick) + Decimal::new(1);
-            let result = price_to_tick_in_range(target_price, 0, 200, 50);
-            assert_eq!(result, target_tick);
-        }
-        // Big range
-        {
-            let target_tick = 1234;
-            let target_price = calculate_price_sqrt(target_tick);
-            let result = price_to_tick_in_range(target_price, 0, 100_000, 2);
-            assert_eq!(result, target_tick);
-        }
-        // Negative
-        {
-            let target_tick = -50;
-            let target_price = calculate_price_sqrt(target_tick) + Decimal::new(1);
-            let result = price_to_tick_in_range(target_price, -200, 100, 2);
-            assert_eq!(result, target_tick);
-        }
-    }
 
     #[test]
     fn test_get_closer_limit() -> Result<()> {

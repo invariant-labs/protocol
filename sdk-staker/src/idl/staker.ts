@@ -13,7 +13,7 @@ export type Staker = {
         {
           "name": "incentiveTokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": true
         },
         {
           "name": "founderTokenAccount",
@@ -32,6 +32,11 @@ export type Staker = {
         },
         {
           "name": "stakerAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "incentiveToken",
           "isMut": false,
           "isSigner": false
         },
@@ -165,21 +170,6 @@ export type Staker = {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "invariant",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": [
@@ -212,6 +202,11 @@ export type Staker = {
           "isSigner": false
         },
         {
+          "name": "incentiveToken",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "stakerAuthority",
           "isMut": false,
           "isSigner": false
@@ -223,16 +218,6 @@ export type Staker = {
         },
         {
           "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
           "isMut": false,
           "isSigner": false
         }
@@ -261,16 +246,6 @@ export type Staker = {
           "name": "founder",
           "isMut": false,
           "isSigner": true
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": []
@@ -451,6 +426,41 @@ export type Staker = {
       "code": 6014,
       "name": "NoStakes",
       "msg": "There is no any stakes"
+    },
+    {
+      "code": 6015,
+      "name": "InvalidFounder",
+      "msg": "Founder address is different than expected"
+    },
+    {
+      "code": 6016,
+      "name": "InvalidStake",
+      "msg": "Provided stake doesn't belong to incentive"
+    },
+    {
+      "code": 6017,
+      "name": "InvalidTokenAccount",
+      "msg": "Provided token account is different than expected"
+    },
+    {
+      "code": 6018,
+      "name": "InvalidIncentive",
+      "msg": "Incentive address is different than expected"
+    },
+    {
+      "code": 6019,
+      "name": "InvalidAuthority",
+      "msg": "Provided authority is different than expected"
+    },
+    {
+      "code": 6020,
+      "name": "InvalidOwner",
+      "msg": "Provided token owner is different than expected"
+    },
+    {
+      "code": 6021,
+      "name": "InvalidMint",
+      "msg": "Provided token account mint is different than expected mint token"
     }
   ]
 };
@@ -470,7 +480,7 @@ export const IDL: Staker = {
         {
           "name": "incentiveTokenAccount",
           "isMut": true,
-          "isSigner": false
+          "isSigner": true
         },
         {
           "name": "founderTokenAccount",
@@ -489,6 +499,11 @@ export const IDL: Staker = {
         },
         {
           "name": "stakerAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "incentiveToken",
           "isMut": false,
           "isSigner": false
         },
@@ -622,21 +637,6 @@ export const IDL: Staker = {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "invariant",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": [
@@ -669,6 +669,11 @@ export const IDL: Staker = {
           "isSigner": false
         },
         {
+          "name": "incentiveToken",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "stakerAuthority",
           "isMut": false,
           "isSigner": false
@@ -680,16 +685,6 @@ export const IDL: Staker = {
         },
         {
           "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
           "isMut": false,
           "isSigner": false
         }
@@ -718,16 +713,6 @@ export const IDL: Staker = {
           "name": "founder",
           "isMut": false,
           "isSigner": true
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": []
@@ -908,6 +893,41 @@ export const IDL: Staker = {
       "code": 6014,
       "name": "NoStakes",
       "msg": "There is no any stakes"
+    },
+    {
+      "code": 6015,
+      "name": "InvalidFounder",
+      "msg": "Founder address is different than expected"
+    },
+    {
+      "code": 6016,
+      "name": "InvalidStake",
+      "msg": "Provided stake doesn't belong to incentive"
+    },
+    {
+      "code": 6017,
+      "name": "InvalidTokenAccount",
+      "msg": "Provided token account is different than expected"
+    },
+    {
+      "code": 6018,
+      "name": "InvalidIncentive",
+      "msg": "Incentive address is different than expected"
+    },
+    {
+      "code": 6019,
+      "name": "InvalidAuthority",
+      "msg": "Provided authority is different than expected"
+    },
+    {
+      "code": 6020,
+      "name": "InvalidOwner",
+      "msg": "Provided token owner is different than expected"
+    },
+    {
+      "code": 6021,
+      "name": "InvalidMint",
+      "msg": "Provided token account mint is different than expected mint token"
     }
   ]
 };

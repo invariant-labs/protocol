@@ -7,7 +7,7 @@ import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken, initEverything } from './testUtils'
 import { assert } from 'chai'
-import { assertThrowsAsync, ERRORS, toDecimal } from '@invariant-labs/sdk/src/utils'
+import { assertThrowsAsync, INVARIANT_ERRORS, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { CreateTick, InitPosition, Swap, WithdrawProtocolFee } from '@invariant-labs/sdk/src/market'
 
 describe('protocol-fee', () => {
@@ -189,7 +189,7 @@ describe('protocol-fee', () => {
     }
     await assertThrowsAsync(
       market.withdrawProtocolFee(withdrawProtocolFeeVars, user),
-      ERRORS.CONSTRAINT_RAW
+      INVARIANT_ERRORS.INVALID_AUTHORITY
     )
   })
 })
