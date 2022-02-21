@@ -195,12 +195,7 @@ export class Market {
     return (await this.program.account.tick.fetch(tickAddress)) as Tick
   }
 
-  async getClosestTicks(
-    pair: Pair,
-    limit: number,
-    maxRange?: number,
-    oneWay: 'up' | 'down' | undefined = undefined
-  ) {
+  async getClosestTicks(pair: Pair, limit: number, maxRange?: number, oneWay?: 'up' | 'down') {
     const state = await this.getPool(pair)
     const tickmap = await this.getTickmap(pair)
     const indexes = findClosestTicks(
@@ -584,7 +579,7 @@ export class Market {
     const transaction = new Transaction({
       feePayer: payerPubkey
     })
-      // .add(ComputeUnitsInstruction(300000, owner)) // UNCOMMENT ME WHEN 1.9 HITS
+      // .add(ComputeUnitsInstruction(300000, payerPubkey)) // UNCOMMENT ME WHEN 1.9 HITS
       .add(
         SystemProgram.createAccount({
           fromPubkey: payerPubkey,
@@ -657,8 +652,8 @@ export class Market {
               positionList: positionListAddress,
               position: positionAddress,
               tickmap: bitmapKeypair.publicKey,
-              owner,
-              payer: owner,
+              owner: payerPubkey,
+              payer: payerPubkey,
               lowerTick: tickAddress,
               upperTick: tickAddressUpper,
               tokenX: pair.tokenX,
