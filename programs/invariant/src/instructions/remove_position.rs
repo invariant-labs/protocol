@@ -161,19 +161,29 @@ impl<'info> RemovePosition<'info> {
         };
 
         if close_lower {
+            {
+                let lower_tick = &mut self.lower_tick.load_mut()?;
+                **lower_tick = Default::default();
+            }
             close(
                 self.lower_tick.to_account_info(),
                 self.owner.to_account_info(),
             )
             .unwrap();
+
             tickmap.flip(false, lower_tick_index, pool.tick_spacing);
         }
         if close_upper {
+            {
+                let upper_tick = &mut self.upper_tick.load_mut()?;
+                **upper_tick = Default::default();
+            }
             close(
                 self.upper_tick.to_account_info(),
                 self.owner.to_account_info(),
             )
             .unwrap();
+
             tickmap.flip(false, upper_tick_index, pool.tick_spacing);
         }
 
@@ -182,7 +192,7 @@ impl<'info> RemovePosition<'info> {
 
         // when removed position is not the last one
         if position_list.head != index {
-            let last_position = self.last_position.load_mut()?;
+            let mut last_position = self.last_position.load_mut()?;
 
             // reassign all fields in position
             **removed_position = Position {
@@ -200,12 +210,14 @@ impl<'info> RemovePosition<'info> {
                 tokens_owed_x: last_position.tokens_owed_x,
                 tokens_owed_y: last_position.tokens_owed_y,
             };
+
+            *last_position = Default::default();
         }
 
         let signer: &[&[&[u8]]] = get_signer!(state.nonce);
         token::transfer(self.send_x().with_signer(signer), amount_x.0)?;
         token::transfer(self.send_y().with_signer(signer), amount_y.0)?;
-
+        msg!("END");
         Ok(())
     }
 }
