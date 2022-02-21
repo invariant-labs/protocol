@@ -31,7 +31,8 @@
     "Sysvar",
     "tickmap",
     "tickv",
-    "tweetnacl"
+    "tweetnacl",
+    "WSOL"
   ],
   "editor.formatOnSave": true,
   "[rust]": {

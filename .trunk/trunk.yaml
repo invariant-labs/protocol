@@ -12,7 +12,6 @@ lint:
   ignore:
     - linters: [ALL]
       paths:
-        - programs/staker/**
         - sdk/src/idl/**
         - sdk-staker/src/idl/**
         - .eslintrc.js

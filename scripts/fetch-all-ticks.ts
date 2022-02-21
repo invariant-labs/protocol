@@ -18,11 +18,27 @@ const main = async () => {
   const market = await Market.build(Network.DEV, provider.wallet, connection)
 
   const feeTier = FEE_TIERS[0]
-  const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.SOL), feeTier)
+  const pair = new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.USDT), feeTier)
 
   const ticks = await market.getClosestTicks(pair, Infinity)
   const pool = await market.getPool(pair)
-  console.log(parseLiquidityOnTicks(ticks, pool))
+
+  console.log(
+    ticks.map(({ liquidityChange, sign }) => {
+      return {
+        a: liquidityChange.v.toString(),
+        sign
+      }
+    })
+  )
+  console.log(
+    parseLiquidityOnTicks(ticks, pool).map(({ index, liquidity }) => ({
+      liquidity: liquidity.toString(),
+      index
+    }))
+  )
+
+  console.log(pool.liquidity.v.toString(), pool.currentTickIndex.toString())
 }
 // trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
 main()

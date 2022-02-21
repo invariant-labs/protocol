@@ -4,7 +4,6 @@ import { Market, Pair } from '@invariant-labs/sdk'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
 import { CreateIncentive, Decimal, Staker } from '../sdk-staker/src/staker'
-import { STAKER_SEED } from '../sdk-staker/src/utils'
 import {
   eqDecimal,
   createToken,
@@ -28,23 +27,18 @@ describe('Create incentive tests', () => {
   const founderAccount = Keypair.generate()
   const admin = Keypair.generate()
   let market: Market
-  let stakerAuthority: PublicKey
   let staker: Staker
   let pool: PublicKey
   let invariant: PublicKey
   let incentiveToken: Token
-  let founderTokenAcc: PublicKey
-  let incentiveTokenAcc: PublicKey
+  let founderTokenAccount: PublicKey
+  let incentiveTokenAccount: Keypair
   let amount: BN
   let pair: Pair
 
-  before(async () => {
+  beforeEach(async () => {
     // create staker instance
-    const [_mintAuthority] = await anchor.web3.PublicKey.findProgramAddress(
-      [STAKER_SEED],
-      anchor.workspace.Staker.programId
-    )
-    stakerAuthority = _mintAuthority
+
     staker = await Staker.build(
       Network.LOCAL,
       provider.wallet,
@@ -58,12 +52,12 @@ describe('Create incentive tests', () => {
     await connection.requestAirdrop(founderAccount.publicKey, 10e9)
 
     // create taken acc for founder and staker
-    founderTokenAcc = await incentiveToken.createAccount(founderAccount.publicKey)
-    incentiveTokenAcc = await incentiveToken.createAccount(stakerAuthority)
+    founderTokenAccount = await incentiveToken.createAccount(founderAccount.publicKey)
+    incentiveTokenAccount = Keypair.generate()
 
     // mint to founder acc
     amount = new anchor.BN(100 * 1e6)
-    await incentiveToken.mintTo(founderTokenAcc, wallet, [], tou64(amount))
+    await incentiveToken.mintTo(founderTokenAccount, wallet, [], tou64(amount))
 
     // create invariant and pool
 
@@ -110,15 +104,23 @@ describe('Create incentive tests', () => {
       endTime,
       pool,
       founder: founderAccount.publicKey,
-      incentiveTokenAcc: incentiveTokenAcc,
-      founderTokenAcc: founderTokenAcc,
+      incentiveToken: incentiveToken.publicKey,
+      founderTokenAccount: founderTokenAccount,
       invariant
     }
 
     const tx = new Transaction().add(
-      await staker.createIncentiveIx(createIncentiveVars, incentiveAccount.publicKey)
+      await staker.createIncentiveIx(
+        createIncentiveVars,
+        incentiveAccount.publicKey,
+        incentiveTokenAccount.publicKey
+      )
     )
-    await signAndSend(tx, [founderAccount, incentiveAccount], staker.connection)
+    await signAndSend(
+      tx,
+      [founderAccount, incentiveAccount, incentiveTokenAccount],
+      staker.connection
+    )
 
     const createdIncentive = await staker.getIncentive(incentiveAccount.publicKey)
     assert.ok(eqDecimal(createdIncentive.totalRewardUnclaimed, reward))
@@ -142,17 +144,21 @@ describe('Create incentive tests', () => {
       endTime,
       pool,
       founder: founderAccount.publicKey,
-      incentiveTokenAcc: incentiveTokenAcc,
-      founderTokenAcc: founderTokenAcc,
+      incentiveToken: incentiveToken.publicKey,
+      founderTokenAccount: founderTokenAccount,
       invariant
     }
 
     const tx = new Transaction().add(
-      await staker.createIncentiveIx(createIncentiveVars, incentiveAccount.publicKey)
+      await staker.createIncentiveIx(
+        createIncentiveVars,
+        incentiveAccount.publicKey,
+        incentiveTokenAccount.publicKey
+      )
     )
 
     await assertThrowsAsync(
-      signAndSend(tx, [founderAccount, incentiveAccount], staker.connection),
+      signAndSend(tx, [founderAccount, incentiveAccount, incentiveTokenAccount], staker.connection),
       ERRORS_STAKER.ZERO_AMOUNT
     )
   })
@@ -171,16 +177,20 @@ describe('Create incentive tests', () => {
       endTime,
       pool,
       founder: founderAccount.publicKey,
-      incentiveTokenAcc: incentiveTokenAcc,
-      founderTokenAcc: founderTokenAcc,
+      incentiveToken: incentiveToken.publicKey,
+      founderTokenAccount: founderTokenAccount,
       invariant
     }
     const tx = new Transaction().add(
-      await staker.createIncentiveIx(createIncentiveVars, incentiveAccount.publicKey)
+      await staker.createIncentiveIx(
+        createIncentiveVars,
+        incentiveAccount.publicKey,
+        incentiveTokenAccount.publicKey
+      )
     )
 
     await assertThrowsAsync(
-      signAndSend(tx, [founderAccount, incentiveAccount], staker.connection),
+      signAndSend(tx, [founderAccount, incentiveAccount, incentiveTokenAccount], staker.connection),
       ERRORS_STAKER.START_IN_PAST
     )
   })
@@ -199,23 +209,26 @@ describe('Create incentive tests', () => {
       endTime,
       pool,
       founder: founderAccount.publicKey,
-      incentiveTokenAcc: incentiveTokenAcc,
-      founderTokenAcc: founderTokenAcc,
+      incentiveToken: incentiveToken.publicKey,
+      founderTokenAccount: founderTokenAccount,
       invariant
     }
 
     const tx = new Transaction().add(
-      await staker.createIncentiveIx(createIncentiveVars, incentiveAccount.publicKey)
+      await staker.createIncentiveIx(
+        createIncentiveVars,
+        incentiveAccount.publicKey,
+        incentiveTokenAccount.publicKey
+      )
     )
 
     await assertThrowsAsync(
-      signAndSend(tx, [founderAccount, incentiveAccount], staker.connection),
+      signAndSend(tx, [founderAccount, incentiveAccount, incentiveTokenAccount], staker.connection),
       ERRORS_STAKER.TO_LONG_DURATION
     )
   })
   it('Check if amount on incentive token account after donate is correct', async () => {
     const incentiveAccount = Keypair.generate()
-    const balanceBefore = (await incentiveToken.getAccountInfo(incentiveTokenAcc)).amount
     const seconds = new Date().valueOf() / 1000
     const currentTime = new BN(Math.floor(seconds))
     const reward: Decimal = { v: new BN(1000) }
@@ -228,18 +241,26 @@ describe('Create incentive tests', () => {
       endTime,
       pool,
       founder: founderAccount.publicKey,
-      incentiveTokenAcc: incentiveTokenAcc,
-      founderTokenAcc: founderTokenAcc,
+      incentiveToken: incentiveToken.publicKey,
+      founderTokenAccount: founderTokenAccount,
       invariant
     }
 
     const tx = new Transaction().add(
-      await staker.createIncentiveIx(createIncentiveVars, incentiveAccount.publicKey)
+      await staker.createIncentiveIx(
+        createIncentiveVars,
+        incentiveAccount.publicKey,
+        incentiveTokenAccount.publicKey
+      )
     )
 
-    await signAndSend(tx, [founderAccount, incentiveAccount], staker.connection)
+    await signAndSend(
+      tx,
+      [founderAccount, incentiveAccount, incentiveTokenAccount],
+      staker.connection
+    )
 
-    const balance = (await incentiveToken.getAccountInfo(incentiveTokenAcc)).amount
-    assert.ok(balance.eq(new BN(reward.v).add(balanceBefore)))
+    const balance = (await incentiveToken.getAccountInfo(incentiveTokenAccount.publicKey)).amount
+    assert.ok(balance.eq(new BN(reward.v)))
   })
 })

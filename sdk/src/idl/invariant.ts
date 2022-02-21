@@ -33,10 +33,6 @@ export type Invariant = {
       ],
       "args": [
         {
-          "name": "bump",
-          "type": "u8"
-        },
-        {
           "name": "nonce",
           "type": "u8"
         }
@@ -72,10 +68,6 @@ export type Invariant = {
         }
       ],
       "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        },
         {
           "name": "fee",
           "type": "u128"
@@ -156,10 +148,6 @@ export type Invariant = {
         }
       ],
       "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        },
         {
           "name": "initTick",
           "type": "i32"
@@ -336,10 +324,6 @@ export type Invariant = {
       ],
       "args": [
         {
-          "name": "bump",
-          "type": "u8"
-        },
-        {
           "name": "index",
           "type": "i32"
         }
@@ -374,12 +358,7 @@ export type Invariant = {
           "isSigner": false
         }
       ],
-      "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        }
-      ]
+      "args": []
     },
     {
       "name": "createPosition",
@@ -481,10 +460,6 @@ export type Invariant = {
         }
       ],
       "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        },
         {
           "name": "lowerTickIndex",
           "type": "i32"
@@ -655,10 +630,6 @@ export type Invariant = {
         }
       ],
       "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        },
         {
           "name": "index",
           "type": "u32"
@@ -1480,6 +1451,46 @@ export type Invariant = {
       "code": 6021,
       "name": "NoGainSwap",
       "msg": "Swap amount out is 0"
+    },
+    {
+      "code": 6022,
+      "name": "InvalidTokenAccount",
+      "msg": "Provided token account is different than expected"
+    },
+    {
+      "code": 6023,
+      "name": "InvalidAdmin",
+      "msg": "Admin address is different than expected"
+    },
+    {
+      "code": 6024,
+      "name": "InvalidAuthority",
+      "msg": "Provided authority is different than expected"
+    },
+    {
+      "code": 6025,
+      "name": "InvalidOwner",
+      "msg": "Provided token owner is different than expected"
+    },
+    {
+      "code": 6026,
+      "name": "InvalidMint",
+      "msg": "Provided token account mint is different than expected mint token"
+    },
+    {
+      "code": 6027,
+      "name": "InvalidTickmap",
+      "msg": "Provided tickmap is different than expected"
+    },
+    {
+      "code": 6028,
+      "name": "InvalidTickmapOwner",
+      "msg": "Provided tickmap owner is different than program ID"
+    },
+    {
+      "code": 6029,
+      "name": "InvalidListOwner",
+      "msg": "Recipient list address and owner list address should be different"
     }
   ]
 };
@@ -1519,10 +1530,6 @@ export const IDL: Invariant = {
       ],
       "args": [
         {
-          "name": "bump",
-          "type": "u8"
-        },
-        {
           "name": "nonce",
           "type": "u8"
         }
@@ -1558,10 +1565,6 @@ export const IDL: Invariant = {
         }
       ],
       "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        },
         {
           "name": "fee",
           "type": "u128"
@@ -1642,10 +1645,6 @@ export const IDL: Invariant = {
         }
       ],
       "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        },
         {
           "name": "initTick",
           "type": "i32"
@@ -1822,10 +1821,6 @@ export const IDL: Invariant = {
       ],
       "args": [
         {
-          "name": "bump",
-          "type": "u8"
-        },
-        {
           "name": "index",
           "type": "i32"
         }
@@ -1860,12 +1855,7 @@ export const IDL: Invariant = {
           "isSigner": false
         }
       ],
-      "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        }
-      ]
+      "args": []
     },
     {
       "name": "createPosition",
@@ -1967,10 +1957,6 @@ export const IDL: Invariant = {
         }
       ],
       "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        },
         {
           "name": "lowerTickIndex",
           "type": "i32"
@@ -2141,10 +2127,6 @@ export const IDL: Invariant = {
         }
       ],
       "args": [
-        {
-          "name": "bump",
-          "type": "u8"
-        },
         {
           "name": "index",
           "type": "u32"
@@ -2966,6 +2948,46 @@ export const IDL: Invariant = {
       "code": 6021,
       "name": "NoGainSwap",
       "msg": "Swap amount out is 0"
+    },
+    {
+      "code": 6022,
+      "name": "InvalidTokenAccount",
+      "msg": "Provided token account is different than expected"
+    },
+    {
+      "code": 6023,
+      "name": "InvalidAdmin",
+      "msg": "Admin address is different than expected"
+    },
+    {
+      "code": 6024,
+      "name": "InvalidAuthority",
+      "msg": "Provided authority is different than expected"
+    },
+    {
+      "code": 6025,
+      "name": "InvalidOwner",
+      "msg": "Provided token owner is different than expected"
+    },
+    {
+      "code": 6026,
+      "name": "InvalidMint",
+      "msg": "Provided token account mint is different than expected mint token"
+    },
+    {
+      "code": 6027,
+      "name": "InvalidTickmap",
+      "msg": "Provided tickmap is different than expected"
+    },
+    {
+      "code": 6028,
+      "name": "InvalidTickmapOwner",
+      "msg": "Provided tickmap owner is different than program ID"
+    },
+    {
+      "code": 6029,
+      "name": "InvalidListOwner",
+      "msg": "Recipient list address and owner list address should be different"
     }
   ]
 };
