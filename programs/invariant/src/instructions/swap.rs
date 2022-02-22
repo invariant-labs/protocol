@@ -180,8 +180,8 @@ impl<'info> Swap<'info> {
                     result.next_price_sqrt,
                     pool.liquidity,
                     pool.fee,
-                    x_to_y,
                     by_amount_in,
+                    x_to_y,
                 );
 
                 if initialized {

@@ -174,6 +174,7 @@ describe('swap with cross both side', () => {
     const limitWithoutCrossTickAmount = new BN(10068)
     const notCrossAmount = new BN(1)
     const minAmountToCrossFromTickPrice = new BN(3)
+    const crossingAmountByAmountOut = new BN(3)
 
     const accountX = await tokenX.createAccount(owner.publicKey)
     const accountY = await tokenY.createAccount(owner.publicKey)
@@ -181,7 +182,12 @@ describe('swap with cross both side', () => {
       accountX,
       mintAuthority.publicKey,
       [mintAuthority],
-      tou64(limitWithoutCrossTickAmount.add(minAmountToCrossFromTickPrice).add(notCrossAmount))
+      tou64(
+        limitWithoutCrossTickAmount
+          .add(minAmountToCrossFromTickPrice)
+          .add(notCrossAmount)
+          .add(crossingAmountByAmountOut)
+      )
     )
 
     // Swap
@@ -265,7 +271,7 @@ describe('swap with cross both side', () => {
     await market.swap(swapCrossingIncreasingVars, owner)
     // TODO: validate state
 
-    // no crossing tick with descending price and by amount out
+    // crossing tick with descending price and by 1 token amount out
     const swapNotCrossingDecreasingByAmountOutVars: Swap = {
       pair,
       xToY: true,
@@ -277,9 +283,6 @@ describe('swap with cross both side', () => {
       byAmountIn: false,
       owner: owner.publicKey
     }
-    await assertThrowsAsync(
-      market.swap(swapNotCrossingDecreasingByAmountOutVars, owner),
-      INVARIANT_ERRORS.NO_GAIN_SWAP
-    )
+    await market.swap(swapNotCrossingDecreasingByAmountOutVars, owner)
   })
 })
