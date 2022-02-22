@@ -15,75 +15,61 @@ const provider = Provider.local(clusterApiUrl('devnet'), {
 const connection = provider.connection
 // @ts-expect-error
 const wallet = provider.wallet.payer as Keypair
-// const feeTier = FEE_TIERS[0]
 
 const main = async () => {
   const market = await Market.build(Network.DEV, provider.wallet, connection)
 
-  await createUsdcUsdt(market)
-  await createUsdcWSol(market)
-  // await createMsolSol(market)
-}
-const createUsdcUsdt = async (market: Market) => {
-  for (const i of [0]) {
-    const pair = new Pair(
-      new PublicKey(MOCK_TOKENS.USDC),
-      new PublicKey(MOCK_TOKENS.USDT),
-      FEE_TIERS[i]
-    )
-
-    const createPoolVars: CreatePool = {
-      pair,
-      payer: wallet
-    }
-    await market.createPool(createPoolVars)
-  }
+  await createBtcRenDoge(market)
+  await createUsdcBtc(market)
+  await createUsdcRenDoge(market)
 }
 
-const createUsdcWSol = async (market: Market) => {
-  for (const i of [0, 1, 2]) {
-    const pair = new Pair(
-      new PublicKey(MOCK_TOKENS.USDC),
-      new PublicKey(MOCK_TOKENS.WSOL),
-      FEE_TIERS[i]
-    )
+const createUsdcBtc = async (market: Market) => {
+  const btc = new PublicKey(MOCK_TOKENS.BTC)
+  const usdc = new PublicKey(MOCK_TOKENS.USDC)
+
+  for (const i of [1, 2, 3]) {
+    const pair = new Pair(btc, usdc, FEE_TIERS[i])
 
     const createPoolVars: CreatePool = {
       pair,
       payer: wallet,
-      initTick: 21200
+      initTick: 106800
     }
     await market.createPool(createPoolVars)
   }
 }
 
-// const createMsolWSol = async (market: Market) => {
-//   for (const i of [0, 1, 2]) {
-//     const pair = new Pair(
-//       new PublicKey(MOCK_TOKENS.USDC),
-//       new PublicKey(MOCK_TOKENS.WSOL),
-//       FEE_TIERS[i]
-//     )
+const createUsdcRenDoge = async (market: Market) => {
+  const renDoge = new PublicKey(MOCK_TOKENS.REN_DOGE)
+  const usdc = new PublicKey(MOCK_TOKENS.USDC)
 
-//     const createPoolVars: CreatePool = {
-//       pair,
-//       payer: wallet,
-//       initTick: 18000
-//     }
-//     await market.createPool(createPoolVars)
-//   }
-// }
+  for (const i of [3]) {
+    const pair = new Pair(renDoge, usdc, FEE_TIERS[i])
 
-// const createMsolSol = async (market: Market) => {
-//   const pair = new Pair(new PublicKey(MOCK_TOKENS.MSOL), new PublicKey(MOCK_TOKENS.SOL), feeTier)
+    const createPoolVars: CreatePool = {
+      pair,
+      payer: wallet,
+      initTick: 65000
+    }
+    await market.createPool(createPoolVars)
+  }
+}
 
-//   const createPoolVars: CreatePool = {
-//     pair,
-//     payer: wallet,
-//     initTick: 200
-//   }
-//   await market.createPool(createPoolVars)
-// }
+const createBtcRenDoge = async (market: Market) => {
+  const renDoge = new PublicKey(MOCK_TOKENS.REN_DOGE)
+  const btc = new PublicKey(MOCK_TOKENS.BTC)
+
+  for (const i of [1, 2, 3]) {
+    const pair = new Pair(renDoge, btc, FEE_TIERS[i])
+    const createPoolVars: CreatePool = {
+      pair,
+      payer: wallet,
+      initTick: 171600
+    }
+    await market.createPool(createPoolVars)
+  }
+}
 
 // trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
 main()

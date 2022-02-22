@@ -195,7 +195,7 @@ describe('swap with cross both side', () => {
       pair,
       xToY: true,
       amount: limitWithoutCrossTickAmount,
-      knownPrice: poolDataBefore.sqrtPrice,
+      estimatedPriceAfterSwap: poolDataBefore.sqrtPrice, // ignore price impact using high slippage tolerance
       slippage: toDecimal(1, 2),
       accountX,
       accountY,
@@ -225,7 +225,7 @@ describe('swap with cross both side', () => {
       pair,
       xToY: true,
       amount: notCrossAmount,
-      knownPrice: poolDataBefore.sqrtPrice,
+      estimatedPriceAfterSwap: poolDataBefore.sqrtPrice, // ignore price impact using high slippage tolerance
       slippage: toDecimal(1, 2),
       accountX,
       accountY,
@@ -240,7 +240,7 @@ describe('swap with cross both side', () => {
       pair,
       xToY: true,
       amount: minAmountToCrossFromTickPrice,
-      knownPrice: poolDataBefore.sqrtPrice,
+      estimatedPriceAfterSwap: poolDataBefore.sqrtPrice, // ignore price impact using high slippage tolerance
       slippage: toDecimal(1, 2),
       accountX,
       accountY,
@@ -255,7 +255,7 @@ describe('swap with cross both side', () => {
       pair,
       xToY: false,
       amount: minAmountToCrossFromTickPrice,
-      knownPrice: poolDataBefore.sqrtPrice,
+      estimatedPriceAfterSwap: poolDataBefore.sqrtPrice, // ignore price impact using high slippage tolerance
       slippage: toDecimal(1, 2),
       accountX,
       accountY,

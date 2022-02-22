@@ -1,7 +1,7 @@
 import { Network, Market } from '@invariant-labs/sdk'
 import { sleep, assertThrowsAsync } from '@invariant-labs/sdk/lib/utils'
 import { CreateFeeTier, FeeTier } from '@invariant-labs/sdk/src/market'
-import { ERRORS, fromFee } from '@invariant-labs/sdk/src/utils'
+import { INVARIANT_ERRORS, fromFee } from '@invariant-labs/sdk/src/utils'
 import * as anchor from '@project-serum/anchor'
 import { BN, Provider } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
@@ -55,6 +55,9 @@ describe('fee-tier', () => {
       feeTier: feeTierUser,
       admin: user.publicKey
     }
-    await assertThrowsAsync(market.createFeeTier(createFeeTierVars, user), ERRORS.CONSTRAINT_RAW)
+    await assertThrowsAsync(
+      market.createFeeTier(createFeeTierVars, user),
+      INVARIANT_ERRORS.INVALID_ADMIN
+    )
   })
 })

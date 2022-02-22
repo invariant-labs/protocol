@@ -3,11 +3,10 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 
 #[derive(Accounts)]
-#[instruction(bump: u8)]
 pub struct CreatePositionList<'info> {
     #[account(init,
         seeds = [b"positionlistv1", owner.key().as_ref()],
-        bump = bump,
+        bump,
         payer = signer
     )]
     pub position_list: AccountLoader<'info, PositionList>,
@@ -19,11 +18,12 @@ pub struct CreatePositionList<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
-pub fn handler(ctx: Context<CreatePositionList>, bump: u8) -> ProgramResult {
-    msg!("INVARIANT: CREATE POSITION LIST");
-    let mut position_list = ctx.accounts.position_list.load_init()?;
+impl<'info> CreatePositionList<'info> {
+    pub fn handler(&self, bump: u8) -> ProgramResult {
+        msg!("INVARIANT: CREATE POSITION LIST");
+        let mut position_list = self.position_list.load_init()?;
+        *position_list = PositionList { head: 0, bump };
 
-    *position_list = PositionList { head: 0, bump };
-
-    Ok(())
+        Ok(())
+    }
 }

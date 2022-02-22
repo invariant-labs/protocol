@@ -25,13 +25,13 @@ describe('limits', () => {
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
   const admin = Keypair.generate()
-  const knownPrice: Decimal = { v: new BN(DENOMINATOR) }
   const feeTier = FEE_TIERS[0]
   let market: Market
   let tokenX: Token
   let tokenY: Token
   let pair: Pair
   let mintAuthority: Keypair
+  const assumedTargetPrice: Decimal = { v: new BN(DENOMINATOR) }
 
   before(async () => {
     market = await Market.build(
@@ -100,7 +100,7 @@ describe('limits', () => {
       owner: owner.publicKey,
       xToY: true,
       amount: new BN(1),
-      knownPrice,
+      estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
       slippage: toDecimal(5, 2),
       accountX: userAccountX,
       accountY: userAccountY,
@@ -147,7 +147,7 @@ describe('limits', () => {
         owner: owner.publicKey,
         xToY: false,
         amount: mintAmount,
-        knownPrice,
+        estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
         slippage: toDecimal(5, 2),
         accountX: userAccountX,
         accountY: userAccountY,
@@ -197,7 +197,7 @@ describe('limits', () => {
         pair,
         xToY: true,
         amount: mintAmount,
-        knownPrice,
+        estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
         slippage: toDecimal(5, 2),
         accountX: userAccountX,
         accountY: userAccountY,
@@ -258,7 +258,7 @@ describe('limits', () => {
         pair,
         xToY: true,
         amount,
-        knownPrice,
+        estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
         slippage: toDecimal(5, 2),
         accountX: userAccountX,
         accountY: userAccountY,
@@ -271,7 +271,7 @@ describe('limits', () => {
         pair,
         xToY: false,
         amount,
-        knownPrice,
+        estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
         slippage: toDecimal(5, 2),
         accountX: userAccountX,
         accountY: userAccountY,
@@ -284,7 +284,7 @@ describe('limits', () => {
         pair,
         xToY: true,
         amount,
-        knownPrice,
+        estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
         slippage: toDecimal(5, 2),
         accountX: userAccountX,
         accountY: userAccountY,
@@ -297,7 +297,7 @@ describe('limits', () => {
         pair,
         xToY: false,
         amount,
-        knownPrice,
+        estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
         slippage: toDecimal(5, 2),
         accountX: userAccountX,
         accountY: userAccountY,
@@ -316,9 +316,9 @@ describe('limits', () => {
       mintAuthority = result.mintAuthority
 
       const poolData = await market.getPool(pair)
-      const knownPrice = poolData.sqrtPrice
+      const currentSqrtPrice = poolData.sqrtPrice
       assert.equal(poolData.currentTickIndex, initTick)
-      assert.equal(knownPrice.v.toString(), calculatePriceSqrt(initTick).v.toString())
+      assert.equal(currentSqrtPrice.v.toString(), calculatePriceSqrt(initTick).v.toString())
 
       tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
       tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
@@ -358,7 +358,7 @@ describe('limits', () => {
         pair,
         xToY: false,
         amount: new BN(1),
-        knownPrice,
+        estimatedPriceAfterSwap: currentSqrtPrice, // ignore price impact using high slippage tolerance
         slippage: toDecimal(5, 2),
         accountX: userAccountX,
         accountY: userAccountY,

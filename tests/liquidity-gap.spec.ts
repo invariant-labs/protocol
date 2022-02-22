@@ -36,7 +36,7 @@ describe('Liquidity gap', () => {
   let userTokenYAccount: PublicKey
   let market: Market
   let owner: Keypair
-  let knownPrice: Decimal
+  let assumedTargetPrice: Decimal
   let accountX: PublicKey
   let accountY: PublicKey
   const feeTier: FeeTier = {
@@ -162,7 +162,7 @@ describe('Liquidity gap', () => {
       pair,
       xToY: true,
       amount,
-      knownPrice: poolDataBefore.sqrtPrice,
+      estimatedPriceAfterSwap: poolDataBefore.sqrtPrice, // ignore price impact using high slippage tolerance
       slippage: toDecimal(1, 0),
       accountX,
       accountY,
@@ -173,7 +173,7 @@ describe('Liquidity gap', () => {
 
     // Check pool
     const poolData = await market.getPool(pair)
-    knownPrice = poolData.sqrtPrice
+    assumedTargetPrice = poolData.sqrtPrice
     const sqrtPriceAtTick = calculatePriceSqrt(lowerTick)
 
     assert.ok(poolData.liquidity.v.eq(poolDataBefore.liquidity.v))
@@ -204,7 +204,7 @@ describe('Liquidity gap', () => {
       pair,
       xToY: true,
       amount: new BN(1),
-      knownPrice,
+      estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
       slippage: toDecimal(1, 0),
       accountX,
       accountY,
@@ -252,7 +252,7 @@ describe('Liquidity gap', () => {
       pair,
       xToY: true,
       amount: nextSwapAmount,
-      knownPrice: knownPrice,
+      estimatedPriceAfterSwap: assumedTargetPrice, // ignore price impact using high slippage tolerance
       slippage: toDecimal(1, 0),
       accountX,
       accountY,

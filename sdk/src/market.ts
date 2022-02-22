@@ -84,10 +84,10 @@ export class Market {
 
     const { address: stateAddress } = await this.getStateAddress()
 
-    const [poolAddress, bump] = await pair.getAddressAndBump(this.program.programId)
+    const [poolAddress] = await pair.getAddressAndBump(this.program.programId)
     const { address: feeTierAddress } = await this.getFeeTierAddress(pair.feeTier)
 
-    const createIx = this.program.instruction.createPool(bump, tick, {
+    const createIx = this.program.instruction.createPool(tick, {
       accounts: {
         state: stateAddress,
         pool: poolAddress,
@@ -195,12 +195,7 @@ export class Market {
     return (await this.program.account.tick.fetch(tickAddress)) as Tick
   }
 
-  async getClosestTicks(
-    pair: Pair,
-    limit: number,
-    maxRange?: number,
-    oneWay: 'up' | 'down' | undefined = undefined
-  ) {
+  async getClosestTicks(pair: Pair, limit: number, maxRange?: number, oneWay?: 'up' | 'down') {
     const state = await this.getPool(pair)
     const tickmap = await this.getTickmap(pair)
     const indexes = findClosestTicks(
@@ -316,10 +311,10 @@ export class Market {
   async createFeeTierInstruction({ feeTier, admin }: CreateFeeTier) {
     admin = admin ?? this.wallet.publicKey
     const { fee, tickSpacing } = feeTier
-    const { address, bump } = await this.getFeeTierAddress(feeTier)
+    const { address } = await this.getFeeTierAddress(feeTier)
     const ts = tickSpacing ?? feeToTickSpacing(fee)
 
-    return this.program.instruction.createFeeTier(bump, fee, ts, {
+    return this.program.instruction.createFeeTier(fee, ts, {
       accounts: {
         state: this.stateAddress,
         feeTier: address,
@@ -345,9 +340,9 @@ export class Market {
   async createStateInstruction(admin?: PublicKey) {
     admin = admin ?? this.wallet.publicKey
     const { programAuthority, nonce } = await this.getProgramAuthority()
-    const { address, bump } = await this.getStateAddress()
+    const { address } = await this.getStateAddress()
 
-    return this.program.instruction.createState(bump, nonce, {
+    return this.program.instruction.createState(nonce, {
       accounts: {
         state: address,
         admin,
@@ -389,9 +384,9 @@ export class Market {
   async createTickInstruction({ pair, index, payer }: CreateTick) {
     payer = payer ?? this.wallet.publicKey
     const state = await this.getPool(pair)
-    const { tickAddress, tickBump } = await this.getTickAddress(pair, index)
+    const { tickAddress } = await this.getTickAddress(pair, index)
 
-    return this.program.instruction.createTick(tickBump, index, {
+    return this.program.instruction.createTick(index, {
       accounts: {
         tick: tickAddress,
         pool: await pair.getAddress(this.program.programId),
@@ -418,9 +413,9 @@ export class Market {
 
   async createPositionListInstruction(owner?: PublicKey) {
     owner = owner ?? this.wallet.publicKey
-    const { positionListAddress, positionListBump } = await this.getPositionListAddress(owner)
+    const { positionListAddress } = await this.getPositionListAddress(owner)
 
-    return this.program.instruction.createPositionList(positionListBump, {
+    return this.program.instruction.createPositionList({
       accounts: {
         positionList: positionListAddress,
         owner,
@@ -455,42 +450,36 @@ export class Market {
     // maybe in the future index cloud be store at market
     const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTickIndex)
     const { tickAddress: upperTickAddress } = await this.getTickAddress(pair, upperTickIndex)
-    const { positionAddress, positionBump } = await this.getPositionAddress(
+    const { positionAddress } = await this.getPositionAddress(
       owner,
       assumeFirstPosition ? 0 : (await this.getPositionList(owner)).head
     )
     const { positionListAddress } = await this.getPositionListAddress(owner)
     const poolAddress = await pair.getAddress(this.program.programId)
 
-    return this.program.instruction.createPosition(
-      positionBump,
-      lowerTickIndex,
-      upperTickIndex,
-      liquidityDelta,
-      {
-        accounts: {
-          state: this.stateAddress,
-          pool: poolAddress,
-          positionList: positionListAddress,
-          position: positionAddress,
-          tickmap: state.tickmap,
-          owner,
-          payer: owner,
-          lowerTick: lowerTickAddress,
-          upperTick: upperTickAddress,
-          tokenX: pair.tokenX,
-          tokenY: pair.tokenY,
-          accountX: userTokenX,
-          accountY: userTokenY,
-          reserveX: state.tokenXReserve,
-          reserveY: state.tokenYReserve,
-          programAuthority: this.programAuthority,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          rent: SYSVAR_RENT_PUBKEY,
-          systemProgram: SystemProgram.programId
-        }
+    return this.program.instruction.createPosition(lowerTickIndex, upperTickIndex, liquidityDelta, {
+      accounts: {
+        state: this.stateAddress,
+        pool: poolAddress,
+        positionList: positionListAddress,
+        position: positionAddress,
+        tickmap: state.tickmap,
+        owner,
+        payer: owner,
+        lowerTick: lowerTickAddress,
+        upperTick: upperTickAddress,
+        tokenX: pair.tokenX,
+        tokenY: pair.tokenY,
+        accountX: userTokenX,
+        accountY: userTokenY,
+        reserveX: state.tokenXReserve,
+        reserveY: state.tokenYReserve,
+        programAuthority: this.programAuthority,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+        systemProgram: SystemProgram.programId
       }
-    )
+    })
   }
 
   async initPositionTx(initPosition: InitPosition) {
@@ -554,8 +543,148 @@ export class Market {
     await signAndSend(tx, [signer], this.connection)
   }
 
-  async swapInstruction(swap: Swap, overridePriceLimit?: BN) {
-    const { pair, xToY, amount, knownPrice, slippage, accountX, accountY, byAmountIn } = swap
+  async initPoolAndPositionTx(
+    {
+      pair,
+      owner,
+      userTokenX,
+      userTokenY,
+      lowerTick,
+      upperTick,
+      liquidityDelta,
+      initTick
+    }: InitPoolAndPosition,
+    payer?: Keypair
+  ) {
+    const payerPubkey = payer?.publicKey ?? this.wallet.publicKey
+    const bitmapKeypair = Keypair.generate()
+    const tokenXReserve = Keypair.generate()
+    const tokenYReserve = Keypair.generate()
+    const tick = initTick ?? 0
+
+    const { address: stateAddress } = await this.getStateAddress()
+
+    const [poolAddress] = await pair.getAddressAndBump(this.program.programId)
+    const { address: feeTierAddress } = await this.getFeeTierAddress(pair.feeTier)
+
+    const { positionListAddress } = await this.getPositionListAddress(payerPubkey)
+    const { tickAddress } = await this.getTickAddress(pair, lowerTick)
+    const { tickAddress: tickAddressUpper } = await this.getTickAddress(pair, upperTick)
+
+    const { positionAddress } = await this.getPositionAddress(payerPubkey, 0)
+
+    const transaction = new Transaction({
+      feePayer: payerPubkey
+    })
+      // .add(ComputeUnitsInstruction(300000, payerPubkey)) // UNCOMMENT ME WHEN 1.9 HITS
+      .add(
+        SystemProgram.createAccount({
+          fromPubkey: payerPubkey,
+          newAccountPubkey: bitmapKeypair.publicKey,
+          space: this.program.account.tickmap.size,
+          lamports: await this.connection.getMinimumBalanceForRentExemption(
+            this.program.account.tickmap.size
+          ),
+          programId: this.program.programId
+        })
+      )
+      .add(
+        this.program.instruction.createPool(tick, {
+          accounts: {
+            state: stateAddress,
+            pool: poolAddress,
+            feeTier: feeTierAddress,
+            tickmap: bitmapKeypair.publicKey,
+            tokenX: pair.tokenX,
+            tokenY: pair.tokenY,
+            tokenXReserve: tokenXReserve.publicKey,
+            tokenYReserve: tokenYReserve.publicKey,
+            authority: this.programAuthority,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            payer: payerPubkey,
+            rent: SYSVAR_RENT_PUBKEY,
+            systemProgram: SystemProgram.programId
+          }
+        })
+      )
+      .add(
+        this.program.instruction.createTick(lowerTick, {
+          accounts: {
+            tick: tickAddress,
+            pool: poolAddress,
+            tickmap: bitmapKeypair.publicKey,
+            payer: payerPubkey,
+            tokenX: pair.tokenX,
+            tokenY: pair.tokenY,
+            rent: SYSVAR_RENT_PUBKEY,
+            systemProgram: SystemProgram.programId
+          }
+        })
+      )
+      .add(
+        this.program.instruction.createTick(upperTick, {
+          accounts: {
+            tick: tickAddressUpper,
+            pool: poolAddress,
+            tickmap: bitmapKeypair.publicKey,
+            payer: payerPubkey,
+            tokenX: pair.tokenX,
+            tokenY: pair.tokenY,
+            rent: SYSVAR_RENT_PUBKEY,
+            systemProgram: SystemProgram.programId
+          }
+        })
+      )
+      .add(await this.createPositionListInstruction(payerPubkey))
+      .add(
+        this.program.instruction.createPosition(lowerTick, upperTick, liquidityDelta, {
+          accounts: {
+            state: this.stateAddress,
+            pool: poolAddress,
+            positionList: positionListAddress,
+            position: positionAddress,
+            tickmap: bitmapKeypair.publicKey,
+            owner: payerPubkey,
+            payer: payerPubkey,
+            lowerTick: tickAddress,
+            upperTick: tickAddressUpper,
+            tokenX: pair.tokenX,
+            tokenY: pair.tokenY,
+            accountX: userTokenX,
+            accountY: userTokenY,
+            reserveX: tokenXReserve.publicKey,
+            reserveY: tokenYReserve.publicKey,
+            programAuthority: this.programAuthority,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            rent: SYSVAR_RENT_PUBKEY,
+            systemProgram: SystemProgram.programId
+          }
+        })
+      )
+
+    return {
+      transaction,
+      signers: [bitmapKeypair, tokenXReserve, tokenYReserve]
+    }
+  }
+
+  async initPoolAndPosition(createPool: InitPoolAndPosition, signer: Keypair) {
+    const { transaction, signers } = await this.initPoolAndPositionTx(createPool, signer)
+
+    await signAndSend(transaction, [signer, ...signers], this.connection)
+  }
+
+  async swapInstruction(swap: Swap) {
+    const {
+      pair,
+      xToY,
+      amount,
+      estimatedPriceAfterSwap,
+      slippage,
+      accountX,
+      accountY,
+      byAmountIn
+    } = swap
     const owner = swap.owner ?? this.wallet.publicKey
 
     const [pool, tickmap, poolAddress] = await Promise.all([
@@ -564,8 +693,7 @@ export class Market {
       pair.getAddress(this.program.programId)
     ])
 
-    const priceLimit =
-      overridePriceLimit ?? calculatePriceAfterSlippage(knownPrice, slippage, !xToY).v
+    const priceLimit = calculatePriceAfterSlippage(estimatedPriceAfterSwap, slippage, !xToY).v
 
     const indexesInDirection = findClosestTicks(
       tickmap.bitmap,
@@ -620,8 +748,17 @@ export class Market {
     return tx
   }
 
-  async swapTransactionSplit(swap: Swap, overridePriceLimit?: BN) {
-    const { pair, xToY, amount, knownPrice, slippage, accountX, accountY, byAmountIn } = swap
+  async swapTransactionSplit(swap: Swap) {
+    const {
+      pair,
+      xToY,
+      amount,
+      estimatedPriceAfterSwap,
+      slippage,
+      accountX,
+      accountY,
+      byAmountIn
+    } = swap
     const owner = swap.owner ?? this.wallet.publicKey
 
     const [pool, tickmap, poolAddress] = await Promise.all([
@@ -630,8 +767,7 @@ export class Market {
       pair.getAddress(this.program.programId)
     ])
 
-    const priceLimit =
-      overridePriceLimit ?? calculatePriceAfterSlippage(knownPrice, slippage, !xToY).v
+    const priceLimit = calculatePriceAfterSlippage(estimatedPriceAfterSwap, slippage, !xToY).v
 
     const indexesInDirection = findClosestTicks(
       tickmap.bitmap,
@@ -687,7 +823,7 @@ export class Market {
       xToY: xToY,
       byAmountIn: byAmountIn,
       swapAmount: amount,
-      currentPrice: pool.sqrtPrice,
+      priceLimit: { v: priceLimit },
       slippage: slippage,
       ticks: ticks,
       tickmap,
@@ -747,19 +883,19 @@ export class Market {
     return tx
   }
 
-  async swapTransaction(swap: Swap, overridePriceLimit?: BN) {
-    const ix = await this.swapInstruction(swap, overridePriceLimit)
+  async swapTransaction(swap: Swap) {
+    const ix = await this.swapInstruction(swap)
     return new Transaction().add(ix)
   }
 
-  async swap(swap: Swap, signer: Keypair, overridePriceLimit?: BN) {
-    const tx = await this.swapTransaction(swap, overridePriceLimit)
+  async swap(swap: Swap, signer: Keypair) {
+    const tx = await this.swapTransaction(swap)
 
     await signAndSend(tx, [signer], this.connection)
   }
 
-  async swapSplit(swap: Swap, signer: Keypair, overridePriceLimit?: BN) {
-    const tx = await this.swapTransactionSplit(swap, overridePriceLimit)
+  async swapSplit(swap: Swap, signer: Keypair) {
+    const tx = await this.swapTransactionSplit(swap)
 
     await signAndSend(tx, [signer], this.connection)
   }
@@ -941,10 +1077,9 @@ export class Market {
       owner,
       ownerPositionList.head - 1
     )
-    const { positionAddress: newPosition, positionBump: newPositionBump } =
-      await this.getNewPositionAddress(recipient)
+    const { positionAddress: newPosition } = await this.getNewPositionAddress(recipient)
 
-    return this.program.instruction.transferPositionOwnership(newPositionBump, index, {
+    return this.program.instruction.transferPositionOwnership(index, {
       accounts: {
         owner,
         recipient,
@@ -1261,6 +1396,10 @@ export interface InitPosition {
   liquidityDelta: Decimal
 }
 
+export interface InitPoolAndPosition extends InitPosition {
+  initTick?: number
+}
+
 export interface ModifyPosition {
   pair: Pair
   owner?: PublicKey
@@ -1290,7 +1429,7 @@ export interface Swap {
   owner?: PublicKey
   xToY: boolean
   amount: BN
-  knownPrice: Decimal
+  estimatedPriceAfterSwap: Decimal
   slippage: Decimal
   accountX: PublicKey
   accountY: PublicKey

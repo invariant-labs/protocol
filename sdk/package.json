@@ -1,11 +1,11 @@
 {
   "name": "@invariant-labs/sdk",
-  "version": "0.5.6",
+  "version": "0.5.23",
   "description": "",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "prebuild": "rm -rf ./src/idl && cp -r ../target/types/ ./src/idl",
+    "prebuild": "rm -rf ./src/idl/* && cp -r ../target/types/invariant.ts ./src/idl",
     "build": "tsc"
   },
   "keywords": [],

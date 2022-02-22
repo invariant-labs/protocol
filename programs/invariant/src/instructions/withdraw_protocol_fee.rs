@@ -1,6 +1,7 @@
 use crate::interfaces::SendTokens;
 use crate::structs::pool::Pool;
 use crate::structs::state::State;
+use crate::ErrorCode::*;
 use crate::SEED;
 use crate::*;
 use anchor_lang::prelude::*;
@@ -15,33 +16,33 @@ pub struct WithdrawProtocolFee<'info> {
         bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,
-    #[account(constraint = token_x.key() == pool.load()?.token_x)]
+    #[account(constraint = token_x.key() == pool.load()?.token_x @ InvalidTokenAccount)]
     pub token_x: Account<'info, Mint>,
-    #[account(constraint = token_y.key() == pool.load()?.token_y)]
+    #[account(constraint = token_y.key() == pool.load()?.token_y @ InvalidTokenAccount)]
     pub token_y: Account<'info, Mint>,
     #[account(mut,
-        constraint = account_x.mint == token_x.key()
+        constraint = account_x.mint == token_x.key() @ InvalidMint
     )]
     pub account_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = account_y.mint == token_y.key()
+        constraint = account_y.mint == token_y.key() @ InvalidMint
     )]
     pub account_y: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = reserve_x.mint == token_x.key(),
-        constraint = &reserve_x.owner == program_authority.key,
-        constraint = reserve_x.key() == pool.load()?.token_x_reserve
+        constraint = reserve_x.mint == token_x.key() @ InvalidMint,
+        constraint = &reserve_x.owner == program_authority.key @ InvalidAuthority,
+        constraint = reserve_x.key() == pool.load()?.token_x_reserve @ InvalidTokenAccount
     )]
     pub reserve_x: Account<'info, TokenAccount>,
     #[account(mut,
-        constraint = reserve_y.mint == token_y.key(),
-        constraint = &reserve_y.owner == program_authority.key,
-        constraint = reserve_y.key() == pool.load()?.token_y_reserve
+        constraint = reserve_y.mint == token_y.key() @ InvalidMint,
+        constraint = &reserve_y.owner == program_authority.key @ InvalidAuthority,
+        constraint = reserve_y.key() == pool.load()?.token_y_reserve @ InvalidTokenAccount
     )]
     pub reserve_y: Account<'info, TokenAccount>,
-    #[account(constraint = &pool.load()?.fee_receiver == authority.key)]
+    #[account(constraint = &pool.load()?.fee_receiver == authority.key @ InvalidAuthority)]
     pub authority: Signer<'info>,
-    #[account(constraint = &state.load()?.authority == program_authority.key)]
+    #[account(constraint = &state.load()?.authority == program_authority.key @ InvalidAuthority)]
     pub program_authority: AccountInfo<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
@@ -71,22 +72,24 @@ impl<'info> SendTokens<'info> for WithdrawProtocolFee<'info> {
     }
 }
 
-pub fn handler(ctx: Context<WithdrawProtocolFee>) -> ProgramResult {
-    msg!("INVARIANT: WITHDRAW PROTOCOL FEE");
+impl<'info> WithdrawProtocolFee<'info> {
+    pub fn handler(&self) -> ProgramResult {
+        msg!("INVARIANT: WITHDRAW PROTOCOL FEE");
 
-    let state = ctx.accounts.state.load()?;
-    let mut pool = ctx.accounts.pool.load_mut()?;
+        let state = self.state.load()?;
+        let mut pool = self.pool.load_mut()?;
 
-    let signer: &[&[&[u8]]] = get_signer!(state.nonce);
+        let signer: &[&[&[u8]]] = get_signer!(state.nonce);
 
-    let cpi_ctx_x = ctx.accounts.send_x().with_signer(signer);
-    let cpi_ctx_y = ctx.accounts.send_y().with_signer(signer);
+        let cpi_ctx_x = self.send_x().with_signer(signer);
+        let cpi_ctx_y = self.send_y().with_signer(signer);
 
-    token::transfer(cpi_ctx_x, pool.fee_protocol_token_x)?;
-    token::transfer(cpi_ctx_y, pool.fee_protocol_token_y)?;
+        token::transfer(cpi_ctx_x, pool.fee_protocol_token_x)?;
+        token::transfer(cpi_ctx_y, pool.fee_protocol_token_y)?;
 
-    pool.fee_protocol_token_x = 0;
-    pool.fee_protocol_token_y = 0;
+        pool.fee_protocol_token_x = 0;
+        pool.fee_protocol_token_y = 0;
 
-    Ok(())
+        Ok(())
+    }
 }

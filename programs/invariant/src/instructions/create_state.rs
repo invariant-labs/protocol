@@ -3,9 +3,9 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 
 #[derive(Accounts)]
-#[instruction(bump: u8, nonce: u8)]
+#[instruction( nonce: u8)]
 pub struct CreateState<'info> {
-    #[account(init, seeds = [b"statev1".as_ref()], bump = bump, payer = admin)]
+    #[account(init, seeds = [b"statev1".as_ref()], bump, payer = admin)]
     pub state: AccountLoader<'info, State>,
     #[account(mut)]
     pub admin: Signer<'info>,
@@ -16,7 +16,7 @@ pub struct CreateState<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
-pub fn handler(ctx: Context<CreateState>, bump: u8, nonce: u8) -> ProgramResult {
+pub fn handler(ctx: Context<CreateState>, nonce: u8) -> ProgramResult {
     msg!("INVARIANT: CREATE STATE");
 
     let state = &mut ctx.accounts.state.load_init()?;
@@ -24,7 +24,7 @@ pub fn handler(ctx: Context<CreateState>, bump: u8, nonce: u8) -> ProgramResult 
         admin: *ctx.accounts.admin.key,
         authority: *ctx.accounts.program_authority.key,
         nonce,
-        bump,
+        bump: *ctx.bumps.get("state").unwrap(),
     };
     Ok(())
 }
