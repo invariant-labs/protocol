@@ -1,3 +1,4 @@
+use crate::decimals::*;
 use crate::structs::OldFeeGrowth;
 use crate::uint::U256;
 
@@ -93,21 +94,21 @@ pub fn calculate_price_sqrt(tick_index: i32) -> OldDecimal {
 }
 
 pub fn compute_swap_step(
-    current_price_sqrt: OldDecimal,
-    target_price_sqrt: OldDecimal,
-    liquidity: OldDecimal,
-    amount: OldTokenAmount,
+    current_price_sqrt: Price,
+    target_price_sqrt: Price,
+    liquidity: Liquidity,
+    amount: TokenAmount,
     by_amount_in: bool,
     fee: OldDecimal,
 ) -> SwapResult {
     let x_to_y = current_price_sqrt >= target_price_sqrt;
 
     let next_price_sqrt;
-    let mut amount_in = OldTokenAmount(0);
-    let mut amount_out = OldTokenAmount(0);
+    let mut amount_in = TokenAmount(0);
+    let mut amount_out = TokenAmount(0);
 
     if by_amount_in {
-        let amount_after_fee = amount.big_mul(OldDecimal::one() - fee).to_token_floor();
+        let amount_after_fee = TokenAmount::from_decimal(amount.big_mul(OldDecimal::one() - fee));
 
         amount_in = if x_to_y {
             get_delta_x(target_price_sqrt, current_price_sqrt, liquidity, true)
@@ -180,11 +181,11 @@ pub fn compute_swap_step(
 
 // delta x = (L * delta_sqrt_price) / (lower_sqrt_price * higher_sqrt_price)
 pub fn get_delta_x(
-    sqrt_price_a: OldDecimal,
-    sqrt_price_b: OldDecimal,
-    liquidity: OldDecimal,
+    sqrt_price_a: Price,
+    sqrt_price_b: Price,
+    liquidity: Liquidity,
     up: bool,
-) -> OldTokenAmount {
+) -> TokenAmount {
     let delta_price = if sqrt_price_a > sqrt_price_b {
         sqrt_price_a - sqrt_price_b
     } else {
@@ -193,9 +194,10 @@ pub fn get_delta_x(
 
     let nominator = liquidity.big_mul(delta_price);
 
+    // TODO this will overflow but want to make it compile before fixing
     match up {
-        true => (nominator.big_div_up(sqrt_price_a * sqrt_price_b)).to_token_ceil(),
-        false => (nominator.big_div(sqrt_price_a.mul_up(sqrt_price_b))).to_token_floor(),
+        true => TokenAmount::from_decimal_up(nominator.big_div_up(sqrt_price_a * sqrt_price_b)),
+        false => TokenAmount::from_decimal(nominator.big_div(sqrt_price_a.mul_up(sqrt_price_b))),
     }
 }
 
@@ -289,9 +291,9 @@ pub fn calculate_fee_growth_inside(
     tick_lower: Tick,
     tick_upper: Tick,
     tick_current: i32,
-    fee_growth_global_x: OldFeeGrowth,
-    fee_growth_global_y: OldFeeGrowth,
-) -> (OldFeeGrowth, OldFeeGrowth) {
+    fee_growth_global_x: FeeGrowth,
+    fee_growth_global_y: FeeGrowth,
+) -> (FeeGrowth, FeeGrowth) {
     // determine position relative to current tick
     let current_above_lower = tick_current >= tick_lower.index;
     let current_below_upper = tick_current < tick_upper.index;
@@ -329,7 +331,7 @@ pub fn calculate_fee_growth_inside(
 
 pub fn calculate_amount_delta(
     pool: &mut Pool,
-    liquidity_delta: OldDecimal,
+    liquidity_delta: Liquidity,
     liquidity_sign: bool,
     upper_tick: i32,
     lower_tick: i32,

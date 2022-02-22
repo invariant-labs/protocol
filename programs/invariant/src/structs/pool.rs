@@ -1,6 +1,7 @@
 use crate::old_decimal::OldDecimal;
 use crate::*;
 use anchor_lang::prelude::*;
+use decimals::*;
 
 use super::{OldFeeGrowth, OldTokenAmount};
 
@@ -16,12 +17,12 @@ pub struct Pool {
     pub tick_spacing: u16,
     pub fee: OldDecimal,
     pub protocol_fee: OldDecimal,
-    pub liquidity: OldDecimal,
-    pub sqrt_price: OldDecimal,
+    pub liquidity: Liquidity,
+    pub sqrt_price: Price,
     pub current_tick_index: i32, // nearest tick below the current price
     pub tickmap: Pubkey,
-    pub fee_growth_global_x: OldFeeGrowth,
-    pub fee_growth_global_y: OldFeeGrowth,
+    pub fee_growth_global_x: FeeGrowth,
+    pub fee_growth_global_y: FeeGrowth,
     pub fee_protocol_token_x: u64, // should be changed to TokenAmount when Armani implements tuple structs
     pub fee_protocol_token_y: u64,
     pub seconds_per_liquidity_global: OldDecimal,
@@ -54,11 +55,7 @@ impl Pool {
         }
     }
 
-    pub fn update_liquidity_safely(
-        &mut self,
-        liquidity_delta: OldDecimal,
-        add: bool,
-    ) -> Result<()> {
+    pub fn update_liquidity_safely(&mut self, liquidity_delta: Liquidity, add: bool) -> Result<()> {
         // validate in decrease liquidity case
         if !add && { self.liquidity } < liquidity_delta {
             return Err(ErrorCode::InvalidPoolLiquidity.into());
@@ -74,7 +71,7 @@ impl Pool {
 
     pub fn update_seconds_per_liquidity_global(&mut self, current_timestamp: u64) {
         self.seconds_per_liquidity_global = self.seconds_per_liquidity_global
-            + (OldDecimal::from_integer((current_timestamp - self.last_timestamp) as u128)
+            + (FixedPoint::from_integer((current_timestamp - self.last_timestamp) as u128)
                 / self.liquidity);
 
         self.last_timestamp = current_timestamp;

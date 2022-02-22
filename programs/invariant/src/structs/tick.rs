@@ -3,7 +3,7 @@ use crate::*;
 use anchor_lang::prelude::*;
 
 use super::OldFeeGrowth;
-use decimals::{FeeGrowth, Liquidity, Price};
+use decimals::*;
 
 #[account(zero_copy)]
 #[repr(packed)]
@@ -17,7 +17,7 @@ pub struct Tick {
     pub sqrt_price: Price,
     pub fee_growth_outside_x: FeeGrowth,
     pub fee_growth_outside_y: FeeGrowth,
-    pub seconds_per_liquidity_outside: OldDecimal,
+    pub seconds_per_liquidity_outside: FixedPoint,
     pub seconds_outside: u64,
     pub bump: u8,
 }

@@ -4,7 +4,7 @@ use core::convert::TryInto;
 use decimal::decimal;
 use decimal::Decimal;
 
-use decimal::*;
+pub use decimal::*;
 
 use anchor_lang::prelude::*;
 
@@ -32,9 +32,14 @@ pub struct FeeGrowth {
 #[decimal(0)]
 #[zero_copy]
 #[derive(Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct TokenAmount {
-    pub v: u64,
+pub struct FixedPoint {
+    v: u128,
 }
+
+// legacy not serializable may implement later
+#[decimal(0)]
+#[derive(Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct TokenAmount(pub u64);
 
 #[cfg(test)]
 pub mod tests {
