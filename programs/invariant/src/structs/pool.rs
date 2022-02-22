@@ -42,7 +42,7 @@ impl Pool {
         if pool_fee.is_zero() || self.liquidity.is_zero() {
             return;
         }
-        let fee_growth = OldFeeGrowth::from_fee(self.liquidity, pool_fee);
+        let fee_growth = FeeGrowth::from_fee(self.liquidity, pool_fee);
 
         if in_x {
             // trunk-ignore(clippy/unaligned_references)
@@ -92,10 +92,10 @@ mod tests {
         // Invalid pool liquidity
         {
             let mut pool = Pool {
-                liquidity: OldDecimal::new(0),
+                liquidity: Liquidity::new(0),
                 ..Default::default()
             };
-            let liquidity_delta = OldDecimal::one();
+            let liquidity_delta = Liquidity::one();
             let add = false;
 
             let result = pool.update_liquidity_safely(liquidity_delta, add);
@@ -105,28 +105,28 @@ mod tests {
         // adding liquidity
         {
             let mut pool = Pool {
-                liquidity: OldDecimal::one(),
+                liquidity: Liquidity::from_integer(1),
                 ..Default::default()
             };
-            let liquidity_delta: OldDecimal = OldDecimal::from_integer(2);
-            let add: bool = true;
+            let liquidity_delta = Liquidity::from_integer(2);
+            let add = true;
 
             pool.update_liquidity_safely(liquidity_delta, add).unwrap();
 
-            assert_eq!({ pool.liquidity }, OldDecimal::from_integer(3));
+            assert_eq!({ pool.liquidity }, Liquidity::from_integer(3));
         }
         // subtracting liquidity
         {
             let mut pool = Pool {
-                liquidity: OldDecimal::from_integer(3),
+                liquidity: Liquidity::from_integer(3),
                 ..Default::default()
             };
-            let liquidity_delta: OldDecimal = OldDecimal::from_integer(2);
-            let add: bool = false;
+            let liquidity_delta = Liquidity::from_integer(2);
+            let add = false;
 
             pool.update_liquidity_safely(liquidity_delta, add).unwrap();
 
-            assert_eq!({ pool.liquidity }, OldDecimal::one());
+            assert_eq!({ pool.liquidity }, Liquidity::from_integer(1));
         }
     }
 }

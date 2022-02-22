@@ -154,9 +154,9 @@ impl<'info> Swap<'info> {
             );
             // make remaining amount smaller
             if by_amount_in {
-                remaining_amount = remaining_amount - result.amount_in - result.fee_amount;
+                remaining_amount -= result.amount_in + result.fee_amount;
             } else {
-                remaining_amount = remaining_amount - result.amount_out;
+                remaining_amount -= result.amount_out;
             }
 
             pool.add_fee(result.fee_amount, x_to_y);
@@ -215,7 +215,7 @@ impl<'info> Swap<'info> {
                             pool.add_fee(remaining_amount, x_to_y);
                             total_amount_in = total_amount_in + remaining_amount;
                         }
-                        remaining_amount = OldTokenAmount(0);
+                        remaining_amount = TokenAmount(0);
                     }
                 }
                 // set tick to limit (below if price is going down, because current tick should always be below price)

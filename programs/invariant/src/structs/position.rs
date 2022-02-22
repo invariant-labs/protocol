@@ -66,15 +66,13 @@ impl Position {
         )?;
 
         // calculate tokens amounts and update pool liquidity
-        let token_amounts = calculate_amount_delta(
+        calculate_amount_delta(
             pool,
             liquidity_delta,
             add,
             upper_tick.index,
             lower_tick.index,
-        )?;
-
-        Ok(token_amounts)
+        )
     }
 
     pub fn update(
@@ -104,7 +102,7 @@ impl Position {
 
     pub fn initialized_id(&mut self, pool: &mut Pool) {
         self.id = pool.position_iterator;
-        pool.position_iterator += 1; // REVIEW maybe u128 just to make sure we don't overflow 😆
+        pool.position_iterator += 1;
     }
 
     // for future use
@@ -262,8 +260,8 @@ mod tests {
             assert_eq!({ position.liquidity }, Liquidity::from_integer(2));
             assert_eq!({ position.fee_growth_inside_x }, FeeGrowth::from_integer(5));
             assert_eq!({ position.fee_growth_inside_y }, FeeGrowth::from_integer(5));
-            assert_eq!({ position.tokens_owed_x }, OldDecimal::from_integer(101));
-            assert_eq!({ position.tokens_owed_y }, OldDecimal::from_integer(101));
+            assert_eq!({ position.tokens_owed_x }, Liquidity::from_integer(101));
+            assert_eq!({ position.tokens_owed_y }, Liquidity::from_integer(101));
         }
     }
 
@@ -272,11 +270,11 @@ mod tests {
         // owed tokens after overflow
         {
             let mut position = Position {
-                liquidity: OldDecimal::from_integer(123),
+                liquidity: Liquidity::from_integer(123),
                 fee_growth_inside_x: FeeGrowth::new(u128::MAX) - FeeGrowth::from_integer(1234),
                 fee_growth_inside_y: FeeGrowth::new(u128::MAX) - FeeGrowth::from_integer(1234),
-                tokens_owed_x: OldDecimal::from_integer(0),
-                tokens_owed_y: OldDecimal::from_integer(0),
+                tokens_owed_x: Liquidity::from_integer(0),
+                tokens_owed_y: Liquidity::from_integer(0),
                 ..Default::default()
             };
             let mut pool = Pool {
@@ -289,14 +287,14 @@ mod tests {
                 index: -10,
                 fee_growth_outside_x: FeeGrowth::from_integer(15),
                 fee_growth_outside_y: FeeGrowth::from_integer(15),
-                liquidity_gross: OldDecimal::from_integer(123),
+                liquidity_gross: Liquidity::from_integer(123),
                 ..Default::default()
             };
             let mut lower_tick = Tick {
                 index: -20,
                 fee_growth_outside_x: FeeGrowth::from_integer(20),
                 fee_growth_outside_y: FeeGrowth::from_integer(20),
-                liquidity_gross: OldDecimal::from_integer(123),
+                liquidity_gross: Liquidity::from_integer(123),
                 ..Default::default()
             };
             let liquidity_delta = OldDecimal::from_integer(0);
@@ -321,7 +319,7 @@ mod tests {
 
             assert_eq!(
                 { position.tokens_owed_x },
-                OldDecimal::new(151167000000000000)
+                Liquidity::new(151167000000000000)
             );
         }
     }

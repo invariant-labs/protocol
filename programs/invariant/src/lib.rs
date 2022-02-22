@@ -13,6 +13,7 @@ mod util;
 use anchor_lang::prelude::*;
 use anchor_spl::token;
 
+use crate::decimals::*;
 use errors::ErrorCode;
 use errors::*;
 use instructions::*;
@@ -75,7 +76,7 @@ pub mod invariant {
         ctx: Context<CreatePosition>,
         _lower_tick_index: i32,
         _upper_tick_index: i32,
-        liquidity_delta: OldDecimal,
+        liquidity_delta: Liquidity,
     ) -> ProgramResult {
         ctx.accounts
             .handler(liquidity_delta, *ctx.bumps.get("position").unwrap())
@@ -125,7 +126,7 @@ pub mod invariant {
     #[access_control(receiver(&ctx.accounts.pool, &ctx.accounts.admin))]
     pub fn change_protocol_fee(
         ctx: Context<ChangeProtocolFee>,
-        protocol_fee: OldDecimal,
+        protocol_fee: FixedPoint,
     ) -> ProgramResult {
         ctx.accounts.handler(protocol_fee)
     }
