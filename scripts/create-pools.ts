@@ -71,4 +71,5 @@ const createBtcRenDoge = async (market: Market) => {
   }
 }
 
+// trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
 main()

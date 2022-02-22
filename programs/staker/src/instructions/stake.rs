@@ -12,7 +12,7 @@ use invariant::structs::Position;
 #[instruction(index: u32)]
 pub struct CreateUserStake<'info> {
     #[account(init,
-        seeds = [b"staker", incentive.to_account_info().key.as_ref(), &position.load()?.pool.as_ref(), &position.load()?.id.to_le_bytes() ],
+        seeds = [b"staker", incentive.to_account_info().key.as_ref(), position.load()?.pool.as_ref(), &position.load()?.id.to_le_bytes() ],
         payer = owner,
         bump)]
     pub user_stake: AccountLoader<'info, UserStake>,

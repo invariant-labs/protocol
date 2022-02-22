@@ -19,7 +19,7 @@ pub struct CreatePositionList<'info> {
 }
 
 impl<'info> CreatePositionList<'info> {
-    pub fn handler(self: &Self, bump: u8) -> ProgramResult {
+    pub fn handler(&self, bump: u8) -> ProgramResult {
         msg!("INVARIANT: CREATE POSITION LIST");
         let mut position_list = self.position_list.load_init()?;
         *position_list = PositionList { head: 0, bump };

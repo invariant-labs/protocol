@@ -45,7 +45,7 @@ pub struct UpdateSecondsPerLiquidity<'info> {
 }
 
 impl<'info> UpdateSecondsPerLiquidity<'info> {
-    pub fn handler(self: &Self) -> ProgramResult {
+    pub fn handler(&self) -> ProgramResult {
         msg!("INVARIANT: UPDATE SECOND PER LIQUIDITY");
 
         let pool = &mut self.pool.load_mut()?;

@@ -115,7 +115,7 @@ impl<'info> TakeTokens<'info> for CreatePosition<'info> {
 }
 
 impl<'info> CreatePosition<'info> {
-    pub fn handler(self: &Self, liquidity_delta: Decimal, bump: u8) -> ProgramResult {
+    pub fn handler(&self, liquidity_delta: Decimal, bump: u8) -> ProgramResult {
         msg!("INVARIANT: CREATE POSITION");
 
         let mut position = self.position.load_init()?;

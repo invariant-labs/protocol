@@ -117,7 +117,7 @@ impl<'info> SendTokens<'info> for RemovePosition<'info> {
 
 impl<'info> RemovePosition<'info> {
     pub fn handler(
-        self: &Self,
+        &self,
         index: u32,
         lower_tick_index: i32,
         upper_tick_index: i32,

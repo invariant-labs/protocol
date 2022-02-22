@@ -11,7 +11,7 @@ use invariant::structs::Position;
 #[instruction(index: u32, nonce: u8)]
 pub struct Withdraw<'info> {
     #[account(mut,
-        seeds = [b"staker", incentive.to_account_info().key.as_ref(), &position.load()?.pool.as_ref(), &position.load()?.id.to_le_bytes()],
+        seeds = [b"staker", incentive.to_account_info().key.as_ref(), position.load()?.pool.as_ref(), &position.load()?.id.to_le_bytes()],
         bump = user_stake.load()?.bump,
     )]
     pub user_stake: AccountLoader<'info, UserStake>,
