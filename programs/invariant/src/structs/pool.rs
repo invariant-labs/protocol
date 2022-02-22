@@ -35,8 +35,8 @@ pub struct Pool {
 }
 
 impl Pool {
-    pub fn add_fee(&mut self, amount: OldTokenAmount, in_x: bool) {
-        let protocol_fee = amount.big_mul(self.protocol_fee).to_token_ceil();
+    pub fn add_fee(&mut self, amount: TokenAmount, in_x: bool) {
+        let protocol_fee = TokenAmount::from_decimal_up(amount.big_mul(self.protocol_fee));
         let pool_fee = amount - protocol_fee;
 
         if pool_fee.is_zero() || self.liquidity.is_zero() {
