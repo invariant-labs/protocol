@@ -214,8 +214,8 @@ pub fn get_delta_y(
     };
 
     match up {
-        true => liquidity.big_mul_up(delta_price).to_token_ceil(),
-        false => liquidity.big_mul(delta_price).to_token_floor(),
+        true => TokenAmount::from_decimal_up(liquidity.big_mul_up(delta_price)),
+        false => TokenAmount::from_decimal(liquidity.big_mul(delta_price)),
     }
 }
 
@@ -278,7 +278,7 @@ fn get_next_sqrt_price_y_down(
     add: bool,
 ) -> Price {
     if add {
-        price_sqrt + Price::from_decimal((amount.big_div(liquidity)))
+        price_sqrt + Price::from_decimal(amount.big_div(liquidity))
     } else {
         let quotient = Price::from_decimal(amount.big_div_up(liquidity));
         assert!(!quotient.is_zero());
@@ -379,8 +379,8 @@ pub fn calculate_seconds_per_liquidity_inside(
     tick_upper: Tick,
     pool: &mut Pool,
     current_timestamp: u64,
-) -> OldDecimal {
-    if { pool.liquidity } != OldDecimal::new(0) {
+) -> FixedPoint {
+    if !pool.liquidity.is_zero() {
         pool.update_seconds_per_liquidity_global(current_timestamp);
     } else {
         pool.last_timestamp = current_timestamp;
@@ -407,15 +407,15 @@ pub fn calculate_seconds_per_liquidity_inside(
 }
 
 pub fn is_enough_amount_to_push_price(
-    amount: OldTokenAmount,
-    current_price_sqrt: OldDecimal,
-    liquidity: OldDecimal,
-    fee: OldDecimal,
+    amount: TokenAmount,
+    current_price_sqrt: Price,
+    liquidity: Liquidity,
+    fee: FixedPoint,
     by_amount_in: bool,
     x_to_y: bool,
 ) -> bool {
     let next_price_sqrt = if by_amount_in {
-        let amount_after_fee = amount.big_mul(OldDecimal::one() - fee).to_token_floor();
+        let amount_after_fee = amount.big_mul(FixedPoint::from_integer(1) - fee);
         get_next_sqrt_price_from_input(current_price_sqrt, liquidity, amount_after_fee, x_to_y)
     } else {
         get_next_sqrt_price_from_output(current_price_sqrt, liquidity, amount, x_to_y)
@@ -811,18 +811,18 @@ mod tests {
 
     #[test]
     fn test_calculate_fee_growth_inside() {
-        let fee_growth_global_x = OldFeeGrowth::from_integer(15);
-        let fee_growth_global_y = OldFeeGrowth::from_integer(15);
+        let fee_growth_global_x = FeeGrowth::from_integer(15);
+        let fee_growth_global_y = FeeGrowth::from_integer(15);
         let mut tick_lower = Tick {
             index: -2,
-            fee_growth_outside_x: OldFeeGrowth::new(0),
-            fee_growth_outside_y: OldFeeGrowth::new(0),
+            fee_growth_outside_x: FeeGrowth::new(0),
+            fee_growth_outside_y: FeeGrowth::new(0),
             ..Default::default()
         };
         let mut tick_upper = Tick {
             index: 2,
-            fee_growth_outside_x: OldFeeGrowth::from_integer(0),
-            fee_growth_outside_y: OldFeeGrowth::from_integer(0),
+            fee_growth_outside_x: FeeGrowth::from_integer(0),
+            fee_growth_outside_y: FeeGrowth::from_integer(0),
             ..Default::default()
         };
         // current tick inside range
@@ -840,8 +840,8 @@ mod tests {
                 fee_growth_global_y,
             );
 
-            assert_eq!(fee_growth_inside.0, OldFeeGrowth::from_integer(15)); // x fee growth inside
-            assert_eq!(fee_growth_inside.1, OldFeeGrowth::from_integer(15)); // y fee growth inside
+            assert_eq!(fee_growth_inside.0, FeeGrowth::from_integer(15)); // x fee growth inside
+            assert_eq!(fee_growth_inside.1, FeeGrowth::from_integer(15)); // y fee growth inside
         }
         // current tick below range
         // current  lower       upper
@@ -857,8 +857,8 @@ mod tests {
                 fee_growth_global_y,
             );
 
-            assert_eq!(fee_growth_inside.0, OldFeeGrowth::new(0)); // x fee growth inside
-            assert_eq!(fee_growth_inside.1, OldFeeGrowth::new(0)); // y fee growth inside
+            assert_eq!(fee_growth_inside.0, FeeGrowth::new(0)); // x fee growth inside
+            assert_eq!(fee_growth_inside.1, FeeGrowth::new(0)); // y fee growth inside
         }
 
         // current tick upper range
@@ -875,15 +875,15 @@ mod tests {
                 fee_growth_global_y,
             );
 
-            assert_eq!(fee_growth_inside.0, OldFeeGrowth::new(0)); // x fee growth inside
-            assert_eq!(fee_growth_inside.1, OldFeeGrowth::new(0)); // y fee growth inside
+            assert_eq!(fee_growth_inside.0, FeeGrowth::new(0)); // x fee growth inside
+            assert_eq!(fee_growth_inside.1, FeeGrowth::new(0)); // y fee growth inside
         }
 
         // subtracts upper tick if below
         tick_upper = Tick {
             index: 2,
-            fee_growth_outside_x: OldFeeGrowth::from_integer(2),
-            fee_growth_outside_y: OldFeeGrowth::from_integer(3),
+            fee_growth_outside_x: FeeGrowth::from_integer(2),
+            fee_growth_outside_y: FeeGrowth::from_integer(3),
             ..Default::default()
         };
         // current tick inside range
@@ -900,21 +900,21 @@ mod tests {
                 fee_growth_global_y,
             );
 
-            assert_eq!(fee_growth_inside.0, OldFeeGrowth::from_integer(13)); // x fee growth inside
-            assert_eq!(fee_growth_inside.1, OldFeeGrowth::from_integer(12)); // y fee growth inside
+            assert_eq!(fee_growth_inside.0, FeeGrowth::from_integer(13)); // x fee growth inside
+            assert_eq!(fee_growth_inside.1, FeeGrowth::from_integer(12)); // y fee growth inside
         }
 
         // subtracts lower tick if above
         tick_upper = Tick {
             index: 2,
-            fee_growth_outside_x: OldFeeGrowth::new(0),
-            fee_growth_outside_y: OldFeeGrowth::new(0),
+            fee_growth_outside_x: FeeGrowth::new(0),
+            fee_growth_outside_y: FeeGrowth::new(0),
             ..Default::default()
         };
         tick_lower = Tick {
             index: -2,
-            fee_growth_outside_x: OldFeeGrowth::from_integer(2),
-            fee_growth_outside_y: OldFeeGrowth::from_integer(3),
+            fee_growth_outside_x: FeeGrowth::from_integer(2),
+            fee_growth_outside_y: FeeGrowth::from_integer(3),
             ..Default::default()
         };
         // current tick inside range
@@ -931,24 +931,24 @@ mod tests {
                 fee_growth_global_y,
             );
 
-            assert_eq!(fee_growth_inside.0, OldFeeGrowth::from_integer(13)); // x fee growth inside
-            assert_eq!(fee_growth_inside.1, OldFeeGrowth::from_integer(12)); // y fee growth inside
+            assert_eq!(fee_growth_inside.0, FeeGrowth::from_integer(13)); // x fee growth inside
+            assert_eq!(fee_growth_inside.1, FeeGrowth::from_integer(12)); // y fee growth inside
         }
 
         {
             let tick_current = 0;
-            let fee_growth_global_x = OldFeeGrowth::from_integer(20);
-            let fee_growth_global_y = OldFeeGrowth::from_integer(20);
+            let fee_growth_global_x = FeeGrowth::from_integer(20);
+            let fee_growth_global_y = FeeGrowth::from_integer(20);
             tick_lower = Tick {
                 index: -20,
-                fee_growth_outside_x: OldFeeGrowth::from_integer(20),
-                fee_growth_outside_y: OldFeeGrowth::from_integer(20),
+                fee_growth_outside_x: FeeGrowth::from_integer(20),
+                fee_growth_outside_y: FeeGrowth::from_integer(20),
                 ..Default::default()
             };
             tick_upper = Tick {
                 index: -10,
-                fee_growth_outside_x: OldFeeGrowth::from_integer(15),
-                fee_growth_outside_y: OldFeeGrowth::from_integer(15),
+                fee_growth_outside_x: FeeGrowth::from_integer(15),
+                fee_growth_outside_y: FeeGrowth::from_integer(15),
                 ..Default::default()
             };
 
@@ -962,11 +962,11 @@ mod tests {
 
             assert_eq!(
                 fee_growth_inside.0,
-                OldFeeGrowth::new(u128::MAX) - OldFeeGrowth::from_integer(5) + OldFeeGrowth::new(1)
+                FeeGrowth::new(u128::MAX) - FeeGrowth::from_integer(5) + FeeGrowth::new(1)
             );
             assert_eq!(
                 fee_growth_inside.1,
-                OldFeeGrowth::new(u128::MAX) - OldFeeGrowth::from_integer(5) + OldFeeGrowth::new(1)
+                FeeGrowth::new(u128::MAX) - FeeGrowth::from_integer(5) + FeeGrowth::new(1)
             );
         }
     }
@@ -976,13 +976,13 @@ mod tests {
         // current tick between lower tick and upper tick
         {
             let mut pool = Pool {
-                liquidity: OldDecimal::from_integer(0),
-                sqrt_price: OldDecimal::new(1000140000000),
+                liquidity: Liquidity::from_integer(0),
+                sqrt_price: Price::new(1000140000000),
                 current_tick_index: 2,
                 ..Default::default()
             };
 
-            let liquidity_delta = OldDecimal::from_integer(5_000_000);
+            let liquidity_delta = Liquidity::from_integer(5_000_000);
             let liquidity_sign = true;
             let upper_tick = 3;
             let lower_tick = 0;

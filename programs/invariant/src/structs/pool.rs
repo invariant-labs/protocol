@@ -95,7 +95,7 @@ mod tests {
                 liquidity: Liquidity::new(0),
                 ..Default::default()
             };
-            let liquidity_delta = Liquidity::one();
+            let liquidity_delta = Liquidity::from_integer(1);
             let add = false;
 
             let result = pool.update_liquidity_safely(liquidity_delta, add);
