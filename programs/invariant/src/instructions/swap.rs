@@ -180,6 +180,7 @@ impl<'info> Swap<'info> {
                     result.next_price_sqrt,
                     pool.liquidity,
                     pool.fee,
+                    by_amount_in,
                     x_to_y,
                 );
 
@@ -208,9 +209,11 @@ impl<'info> Swap<'info> {
                     // crossing tick
                     if !x_to_y || is_enough_amount_to_cross {
                         cross_tick(&mut tick, &mut pool)?;
-                    } else {
-                        // TODO: decide what to do with this amount
-                        total_amount_in = total_amount_in + remaining_amount;
+                    } else if !remaining_amount.is_zero() {
+                        if by_amount_in {
+                            pool.add_fee(remaining_amount, x_to_y);
+                            total_amount_in = total_amount_in + remaining_amount;
+                        }
                         remaining_amount = TokenAmount(0);
                     }
                 }
