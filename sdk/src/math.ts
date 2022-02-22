@@ -572,10 +572,17 @@ export const isEnoughAmountToPushPrice = (
   currentPriceSqrt: Decimal,
   liquidity: Decimal,
   fee: Decimal,
+  byAmountIn: boolean,
   aToB: boolean
 ) => {
-  const amountAfterFee: BN = fromInteger(1).v.sub(fee.v).mul(amount).div(DENOMINATOR)
-  const nextSqrtPrice = getNextPriceFromInput(currentPriceSqrt, liquidity, amountAfterFee, aToB)
+  let nextSqrtPrice: Decimal
+
+  if (byAmountIn) {
+    const amountAfterFee: BN = fromInteger(1).v.sub(fee.v).mul(amount).div(DENOMINATOR)
+    nextSqrtPrice = getNextPriceFromInput(currentPriceSqrt, liquidity, amountAfterFee, aToB)
+  } else {
+    nextSqrtPrice = getNextPriceFromOutput(currentPriceSqrt, liquidity, amount, aToB)
+  }
 
   return !currentPriceSqrt.v.eq(nextSqrtPrice.v)
 }
