@@ -133,7 +133,7 @@ impl<'info> Swap<'info> {
         let mut remaining_amount = TokenAmount(amount);
 
         let mut total_amount_in = TokenAmount(0);
-        let mut total_amount_out = OldTokenAmount(0);
+        let mut total_amount_out = TokenAmount(0);
 
         while !remaining_amount.is_zero() {
             let (swap_limit, limiting_tick) = get_closer_limit(

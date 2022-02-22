@@ -10,10 +10,10 @@ use crate::*;
 
 #[derive(PartialEq, Debug)]
 pub struct SwapResult {
-    pub next_price_sqrt: OldDecimal,
-    pub amount_in: OldTokenAmount,
-    pub amount_out: OldTokenAmount,
-    pub fee_amount: OldTokenAmount,
+    pub next_price_sqrt: Price,
+    pub amount_in: TokenAmount,
+    pub amount_out: TokenAmount,
+    pub fee_amount: TokenAmount,
 }
 
 pub fn calculate_price_sqrt(tick_index: i32) -> Price {
@@ -98,7 +98,7 @@ pub fn compute_swap_step(
     liquidity: Liquidity,
     amount: TokenAmount,
     by_amount_in: bool,
-    fee: OldDecimal,
+    fee: FixedPoint,
 ) -> SwapResult {
     let x_to_y = current_price_sqrt >= target_price_sqrt;
 
@@ -107,7 +107,7 @@ pub fn compute_swap_step(
     let mut amount_out = TokenAmount(0);
 
     if by_amount_in {
-        let amount_after_fee = TokenAmount::from_decimal(amount.big_mul(OldDecimal::one() - fee));
+        let amount_after_fee = amount.big_mul(FixedPoint::from_integer(1) - fee);
 
         amount_in = if x_to_y {
             get_delta_x(target_price_sqrt, current_price_sqrt, liquidity, true)
@@ -167,7 +167,7 @@ pub fn compute_swap_step(
     let fee_amount = if by_amount_in && next_price_sqrt != target_price_sqrt {
         amount - amount_in
     } else {
-        amount_in.big_mul(fee).to_token_ceil()
+        amount_in.big_mul_up(fee)
     };
 
     SwapResult {
@@ -191,7 +191,7 @@ pub fn get_delta_x(
         sqrt_price_b - sqrt_price_a
     };
 
-    let nominator = liquidity.big_mul(delta_price);
+    let nominator = delta_price.big_mul(liquidity);
 
     // TODO this will overflow but want to make it compile before fixing
     match up {
@@ -214,8 +214,8 @@ pub fn get_delta_y(
     };
 
     match up {
-        true => TokenAmount::from_decimal_up(liquidity.big_mul_up(delta_price)),
-        false => TokenAmount::from_decimal(liquidity.big_mul(delta_price)),
+        true => TokenAmount::from_decimal_up(delta_price.big_mul_up(liquidity)),
+        false => TokenAmount::from_decimal(delta_price.big_mul(liquidity)),
     }
 }
 
@@ -334,10 +334,10 @@ pub fn calculate_amount_delta(
     liquidity_sign: bool,
     upper_tick: i32,
     lower_tick: i32,
-) -> Result<(OldTokenAmount, OldTokenAmount)> {
+) -> Result<(TokenAmount, TokenAmount)> {
     // assume that upper_tick > lower_tick
-    let mut amount_x = OldTokenAmount(0);
-    let mut amount_y = OldTokenAmount(0);
+    let mut amount_x = TokenAmount(0);
+    let mut amount_y = TokenAmount(0);
 
     if pool.current_tick_index < lower_tick {
         amount_x = get_delta_x(
@@ -434,84 +434,84 @@ mod tests {
     fn test_swap_step() {
         // one token by amount in
         {
-            let price = OldDecimal::one();
-            let target = (OldDecimal::from_integer(101) / OldDecimal::from_integer(100)).sqrt();
-            let liquidity = OldDecimal::from_integer(2000);
-            let amount = OldTokenAmount(1);
-            let fee = OldDecimal::from_decimal(6, 4);
+            let price = Price::from_integer(1);
+            let target = (Price::from_integer(101) / Price::from_integer(100)).sqrt();
+            let liquidity = Liquidity::from_integer(2000);
+            let amount = TokenAmount(1);
+            let fee = FixedPoint::from_scale(6, 4);
 
             let result = compute_swap_step(price, target, liquidity, amount, true, fee);
 
             let expected_result = SwapResult {
                 next_price_sqrt: price,
-                amount_in: OldTokenAmount(0),
-                amount_out: OldTokenAmount(0),
-                fee_amount: OldTokenAmount(1),
+                amount_in: TokenAmount(0),
+                amount_out: TokenAmount(0),
+                fee_amount: TokenAmount(1),
             };
             assert_eq!(result, expected_result)
         }
         // amount out capped at target price
         {
-            let price = OldDecimal::one();
-            let target = (OldDecimal::from_integer(101) / OldDecimal::from_integer(100)).sqrt();
-            let liquidity = OldDecimal::from_integer(2000);
-            let amount = OldTokenAmount(20);
-            let fee = OldDecimal::from_decimal(6, 4);
+            let price = Price::from_integer(1);
+            let target = (Price::from_integer(101) / Price::from_integer(100)).sqrt();
+            let liquidity = Liquidity::from_integer(2000);
+            let amount = TokenAmount(20);
+            let fee = FixedPoint::from_scale(6, 4);
 
             let result_in = compute_swap_step(price, target, liquidity, amount, true, fee);
             let result_out = compute_swap_step(price, target, liquidity, amount, false, fee);
 
             let expected_result = SwapResult {
                 next_price_sqrt: target,
-                amount_in: OldTokenAmount(10),
-                amount_out: OldTokenAmount(9),
-                fee_amount: OldTokenAmount(1),
+                amount_in: TokenAmount(10),
+                amount_out: TokenAmount(9),
+                fee_amount: TokenAmount(1),
             };
             assert_eq!(result_in, expected_result);
             assert_eq!(result_out, expected_result);
         }
         // amount in not capped
         {
-            let price = OldDecimal::from_integer(101) / OldDecimal::from_integer(100);
-            let target = OldDecimal::from_integer(10);
-            let liquidity = OldDecimal::from_integer(300000000);
-            let amount = OldTokenAmount(1000000);
-            let fee = OldDecimal::from_decimal(6, 4);
+            let price = Price::from_integer(101) / Price::from_integer(100);
+            let target = Price::from_integer(10);
+            let liquidity = Liquidity::from_integer(300000000);
+            let amount = TokenAmount(1000000);
+            let fee = FixedPoint::from_scale(6, 4);
 
             let result = compute_swap_step(price, target, liquidity, amount, true, fee);
             let expected_result = SwapResult {
-                next_price_sqrt: OldDecimal::new(1013331333333),
-                amount_in: OldTokenAmount(999400),
-                amount_out: OldTokenAmount(976487), // ((1.013331333333 - 1.01) * 300000000) / (1.013331333333 * 1.01)
-                fee_amount: OldTokenAmount(600),
+                next_price_sqrt: Price::new(1013331333333),
+                amount_in: TokenAmount(999400),
+                amount_out: TokenAmount(976487), // ((1.013331333333 - 1.01) * 300000000) / (1.013331333333 * 1.01)
+                fee_amount: TokenAmount(600),
             };
             assert_eq!(result, expected_result)
         }
         // amount out not capped
         {
-            let price = OldDecimal::from_integer(101);
-            let target = OldDecimal::from_integer(100);
-            let liquidity = OldDecimal::from_integer(5000000000000);
-            let amount = OldTokenAmount(2000000);
-            let fee = OldDecimal::from_decimal(6, 4);
+            let price = Price::from_integer(101);
+            let target = Price::from_integer(100);
+            let liquidity = Liquidity::from_integer(5000000000000);
+            let amount = TokenAmount(2000000);
+            let fee = FixedPoint::from_scale(6, 4);
 
             let result = compute_swap_step(price, target, liquidity, amount, false, fee);
             let expected_result = SwapResult {
-                next_price_sqrt: OldDecimal::new(100999999600000),
-                amount_in: OldTokenAmount(197), // (5000000000000 * (101 - 100.9999996)) /  (101 * 100.9999996)
+                next_price_sqrt: Price::new(100999999600000),
+                amount_in: TokenAmount(197), // (5000000000000 * (101 - 100.9999996)) /  (101 * 100.9999996)
                 amount_out: amount,
-                fee_amount: OldTokenAmount(1),
+                fee_amount: TokenAmount(1),
             };
             assert_eq!(result, expected_result)
         }
         // empty swap step when price is at tick
         {
-            let current_price_sqrt = OldDecimal::new(999500149965);
-            let target_price_sqrt = OldDecimal::new(999500149965);
-            let liquidity = OldDecimal::new(20006000000000000000);
-            let amount = OldTokenAmount(1_000_000);
+            let current_price_sqrt = Price::new(999500149965);
+            let target_price_sqrt = Price::new(999500149965);
+            let liquidity = Liquidity::new(20006000000000000000);
+            let amount = TokenAmount(1_000_000);
             let by_amount_in = true;
-            let fee = OldDecimal::from_decimal(6, 4); // 0.0006 -> 0.06%
+            let fee = FixedPoint::from_scale(6, 4); // 0.0006 -> 0.06%
 
             let result = compute_swap_step(
                 current_price_sqrt,
@@ -523,9 +523,9 @@ mod tests {
             );
             let expected_result = SwapResult {
                 next_price_sqrt: current_price_sqrt,
-                amount_in: OldTokenAmount(0),
-                amount_out: OldTokenAmount(0),
-                fee_amount: OldTokenAmount(0),
+                amount_in: TokenAmount(0),
+                amount_out: TokenAmount(0),
+                fee_amount: TokenAmount(0),
             };
             assert_eq!(result, expected_result)
         }
@@ -536,35 +536,35 @@ mod tests {
         // zero at zero liquidity
         {
             let result = get_delta_x(
-                OldDecimal::from_integer(1),
-                OldDecimal::from_integer(1),
-                OldDecimal::new(0),
+                Price::from_integer(1),
+                Price::from_integer(1),
+                Liquidity::new(0),
                 false,
             );
-            assert_eq!(result, OldTokenAmount(0));
+            assert_eq!(result, TokenAmount(0));
         }
         // equal at equal liquidity
         {
             let result = get_delta_x(
-                OldDecimal::from_integer(1),
-                OldDecimal::from_integer(2),
-                OldDecimal::from_integer(2),
+                Price::from_integer(1),
+                Price::from_integer(2),
+                Liquidity::from_integer(2),
                 false,
             );
-            assert_eq!(result, OldTokenAmount(1));
+            assert_eq!(result, TokenAmount(1));
         }
         // complex
         {
-            let sqrt_price_a = OldDecimal::new(234__878_324_943_782);
-            let sqrt_price_b = OldDecimal::new(87__854_456_421_658);
-            let liquidity = OldDecimal::new(983_983__249_092_300_399);
+            let sqrt_price_a = Price::new(234__878_324_943_782);
+            let sqrt_price_b = Price::new(87__854_456_421_658);
+            let liquidity = Liquidity::new(983_983__249_092_300_399);
 
             let result_down = get_delta_x(sqrt_price_a, sqrt_price_b, liquidity, false);
             let result_up = get_delta_x(sqrt_price_a, sqrt_price_b, liquidity, true);
 
             // 7010.8199533090222620342346078676429792113623790285962379282493052
-            assert_eq!(result_down, OldTokenAmount(7010));
-            assert_eq!(result_up, OldTokenAmount(7011));
+            assert_eq!(result_down, TokenAmount(7010));
+            assert_eq!(result_up, TokenAmount(7011));
         }
     }
 
@@ -573,35 +573,35 @@ mod tests {
         // zero at zero liquidity
         {
             let result = get_delta_y(
-                OldDecimal::from_integer(1),
-                OldDecimal::from_integer(1),
-                OldDecimal::new(0),
+                Price::from_integer(1),
+                Price::from_integer(1),
+                Liquidity::new(0),
                 false,
             );
-            assert_eq!(result, OldTokenAmount(0));
+            assert_eq!(result, TokenAmount(0));
         }
         // equal at equal liquidity
         {
             let result = get_delta_y(
-                OldDecimal::from_integer(1),
-                OldDecimal::from_integer(2),
-                OldDecimal::from_integer(2),
+                Price::from_integer(1),
+                Price::from_integer(2),
+                Liquidity::from_integer(2),
                 false,
             );
-            assert_eq!(result, OldTokenAmount(2));
+            assert_eq!(result, TokenAmount(2));
         }
         // big numbers
         {
-            let sqrt_price_a = OldDecimal::new(234__878_324_943_782);
-            let sqrt_price_b = OldDecimal::new(87__854_456_421_658);
-            let liquidity = OldDecimal::new(983_983__249_092_300_399);
+            let sqrt_price_a = Price::new(234__878_324_943_782);
+            let sqrt_price_b = Price::new(87__854_456_421_658);
+            let liquidity = Liquidity::new(983_983__249_092_300_399);
 
             let result_down = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, false);
             let result_up = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, true);
 
             // 144669023.842518763627991585527476
-            assert_eq!(result_down, OldTokenAmount(144669023));
-            assert_eq!(result_up, OldTokenAmount(144669024));
+            assert_eq!(result_down, TokenAmount(144669023));
+            assert_eq!(result_up, TokenAmount(144669024));
         }
     }
 
@@ -609,7 +609,7 @@ mod tests {
     fn test_calculate_price_sqrt() {
         {
             let result = calculate_price_sqrt(0);
-            assert_eq!(result, OldDecimal::one());
+            assert_eq!(result, Price::from_integer(1));
         }
         {
             // // test every single tick, takes a while
@@ -626,25 +626,25 @@ mod tests {
             let price_sqrt = calculate_price_sqrt(20_000);
             // expected 2.718145925979
             // real     2.718145926825...
-            assert_eq!(price_sqrt, OldDecimal::new(2718145925979));
+            assert_eq!(price_sqrt, Price::new(2718145925979));
         }
         {
             let price_sqrt = calculate_price_sqrt(200_000);
             // expected 22015.455979766288
             // real     22015.456048527954...
-            assert_eq!(price_sqrt, OldDecimal::new(22015455979766288))
+            assert_eq!(price_sqrt, Price::new(22015455979766288))
         }
         {
             let price_sqrt = calculate_price_sqrt(-20_000);
             // expected 0.367897834491
             // real     0.36789783437712...
-            assert_eq!(price_sqrt, OldDecimal::new(367897834491));
+            assert_eq!(price_sqrt, Price::new(367897834491));
         }
         {
             let price_sqrt = calculate_price_sqrt(-200_000);
             // expected 0.000045422634
             // real     0.00004542263388...
-            assert_eq!(price_sqrt, OldDecimal::new(45422634))
+            assert_eq!(price_sqrt, Price::new(45422634))
         }
     }
 
@@ -652,160 +652,147 @@ mod tests {
     fn test_get_next_sqrt_price_x_up() {
         // Add
         {
-            let price_sqrt = OldDecimal::from_integer(1);
-            let liquidity = OldDecimal::from_integer(1);
-            let amount = OldTokenAmount(1);
+            let price_sqrt = Price::from_integer(1);
+            let liquidity = Liquidity::from_integer(1);
+            let amount = TokenAmount(1);
 
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
 
+            assert_eq!(result, Price::from_scale(5, 1));
+        }
+        {
+            let price_sqrt = Price::from_integer(1);
+            let liquidity = Liquidity::from_integer(2);
+            let amount = TokenAmount(3);
+
+            let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
+
+            assert_eq!(result, Price::from_scale(4, 1));
+        }
+        {
+            let price_sqrt = Price::from_integer(2);
+            let liquidity = Liquidity::from_integer(3);
+            let amount = TokenAmount(5);
+
+            let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
+
+            // TODO will need more precision
             assert_eq!(
                 result,
-                OldDecimal::from_integer(1).div(OldDecimal::from_integer(2))
+                Price::new(461538461539) // rounded up Decimal::from_integer(6).div(Decimal::from_integer(13))
             );
         }
         {
-            let price_sqrt = OldDecimal::from_integer(1);
-            let liquidity = OldDecimal::from_integer(2);
-            let amount = OldTokenAmount(3);
+            let price_sqrt = Price::from_integer(24234);
+            let liquidity = Liquidity::from_integer(3000);
+            let amount = TokenAmount(5000);
 
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
 
             assert_eq!(
                 result,
-                OldDecimal::from_integer(2).div(OldDecimal::from_integer(5))
-            );
-        }
-        {
-            let price_sqrt = OldDecimal::from_integer(2);
-            let liquidity = OldDecimal::from_integer(3);
-            let amount = OldTokenAmount(5);
-
-            let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
-
-            assert_eq!(
-                result,
-                OldDecimal::new(461538461539) // rounded up Decimal::from_integer(6).div(Decimal::from_integer(13))
-            );
-        }
-        {
-            let price_sqrt = OldDecimal::from_integer(24234);
-            let liquidity = OldDecimal::from_integer(3000);
-            let amount = OldTokenAmount(5000);
-
-            let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
-
-            assert_eq!(
-                result,
-                OldDecimal::new(599985145206) // rounded up Decimal::from_integer(24234).div(Decimal::from_integer(40391))
+                Price::new(599985145206) // rounded up Decimal::from_integer(24234).div(Decimal::from_integer(40391))
             );
         }
         // Subtract
         {
-            let price_sqrt = OldDecimal::from_integer(1);
-            let liquidity = OldDecimal::from_integer(2);
-            let amount = OldTokenAmount(1);
+            let price_sqrt = Price::from_integer(1);
+            let liquidity = Liquidity::from_integer(2);
+            let amount = TokenAmount(1);
 
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
 
-            assert_eq!(result, OldDecimal::from_integer(2));
+            assert_eq!(result, Price::from_integer(2));
         }
         {
-            let price_sqrt = OldDecimal::from_integer(100_000);
-            let liquidity = OldDecimal::from_integer(500_000_000);
-            let amount = OldTokenAmount(4_000);
+            let price_sqrt = Price::from_integer(100_000);
+            let liquidity = Liquidity::from_integer(500_000_000);
+            let amount = TokenAmount(4_000);
 
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
 
-            assert_eq!(result, OldDecimal::from_integer(500_000));
+            assert_eq!(result, Price::from_integer(500_000));
         }
         {
-            let price_sqrt = OldDecimal::new(3_333333333333);
-            let liquidity = OldDecimal::new(222_222222222222);
-            let amount = OldTokenAmount(37);
+            let price_sqrt = Price::new(3_333333333333);
+            let liquidity = Liquidity::new(222_222222222222);
+            let amount = TokenAmount(37);
 
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
-            assert_eq!(result, OldDecimal::new(7_490636704119));
+            // TODO: will need more precision
+            assert_eq!(result, Price::new(7_490636704119));
         }
     }
 
     #[test]
     fn test_get_next_sqrt_price_y_down() {
         {
-            let price_sqrt = OldDecimal::from_integer(1);
-            let liquidity = OldDecimal::from_integer(1);
-            let amount = OldTokenAmount(1);
+            let price_sqrt = Price::from_integer(1);
+            let liquidity = Liquidity::from_integer(1);
+            let amount = TokenAmount(1);
 
             let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true);
 
-            assert_eq!(result, OldDecimal::from_integer(2));
+            assert_eq!(result, Price::from_integer(2));
         }
         {
-            let price_sqrt = OldDecimal::from_integer(1);
-            let liquidity = OldDecimal::from_integer(2);
-            let amount = OldTokenAmount(3);
+            let price_sqrt = Price::from_integer(1);
+            let liquidity = Liquidity::from_integer(2);
+            let amount = TokenAmount(3);
+
+            let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true);
+
+            assert_eq!(result, Price::from_scale(25, 1));
+        }
+        {
+            let price_sqrt = Price::from_integer(2);
+            let liquidity = Liquidity::from_integer(3);
+            let amount = TokenAmount(5);
+
+            let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true);
+
+            assert_eq!(result, Price::from_integer(11).div(Price::from_integer(3)));
+        }
+        {
+            let price_sqrt = Price::from_integer(24234);
+            let liquidity = Liquidity::from_integer(3000);
+            let amount = TokenAmount(5000);
 
             let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true);
 
             assert_eq!(
                 result,
-                OldDecimal::from_integer(5).div(OldDecimal::from_integer(2))
-            );
-        }
-        {
-            let price_sqrt = OldDecimal::from_integer(2);
-            let liquidity = OldDecimal::from_integer(3);
-            let amount = OldTokenAmount(5);
-
-            let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true);
-
-            assert_eq!(
-                result,
-                OldDecimal::from_integer(11).div(OldDecimal::from_integer(3))
-            );
-        }
-        {
-            let price_sqrt = OldDecimal::from_integer(24234);
-            let liquidity = OldDecimal::from_integer(3000);
-            let amount = OldTokenAmount(5000);
-
-            let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true);
-
-            assert_eq!(
-                result,
-                OldDecimal::from_integer(72707).div(OldDecimal::from_integer(3))
+                Price::from_integer(72707).div(Price::from_integer(3))
             );
         }
         // bool = false
         {
-            let price_sqrt = OldDecimal::from_integer(1);
-            let liquidity = OldDecimal::from_integer(2);
-            let amount = OldTokenAmount(1);
+            let price_sqrt = Price::from_integer(1);
+            let liquidity = Liquidity::from_integer(2);
+            let amount = TokenAmount(1);
 
             let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, false);
 
-            assert_eq!(
-                result,
-                OldDecimal::from_integer(1).div(OldDecimal::from_integer(2))
-            );
+            assert_eq!(result, Price::from_scale(1, 2));
         }
         {
-            let price_sqrt = OldDecimal::from_integer(100_000);
-            let liquidity = OldDecimal::from_integer(500_000_000);
-            let amount = OldTokenAmount(4_000);
+            let price_sqrt = Price::from_integer(100_000);
+            let liquidity = Liquidity::from_integer(500_000_000);
+            let amount = TokenAmount(4_000);
 
             let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, false);
-            assert_eq!(result, OldDecimal::new(99999999992000000));
+            assert_eq!(result, Price::new(99999999992000000));
         }
         {
-            let price_sqrt = OldDecimal::from_integer(3);
-            let liquidity = OldDecimal::from_integer(222);
-            let amount = OldTokenAmount(37);
+            let price_sqrt = Price::from_integer(3);
+            let liquidity = Liquidity::from_integer(222);
+            let amount = TokenAmount(37);
 
             let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, false);
 
             // expected 2.833333333333
             // real     2.999999999999833...
-            assert_eq!(result, OldDecimal::new(2833333333333));
+            assert_eq!(result, Price::new(2833333333333));
         }
     }
 
@@ -996,18 +983,18 @@ mod tests {
             )
             .unwrap();
 
-            assert_eq!(x, OldTokenAmount(51));
-            assert_eq!(y, OldTokenAmount(700));
+            assert_eq!(x, TokenAmount(51));
+            assert_eq!(y, TokenAmount(700));
         }
         // current tick smaller than lower tick
         {
             let mut pool = Pool {
-                liquidity: OldDecimal::from_integer(0),
+                liquidity: Liquidity::from_integer(0),
                 current_tick_index: 0,
                 ..Default::default()
             };
 
-            let liquidity_delta = OldDecimal::from_integer(10);
+            let liquidity_delta = Liquidity::from_integer(10);
             let liquidity_sign = true;
             let upper_tick = 4;
             let lower_tick = 2;
@@ -1021,18 +1008,18 @@ mod tests {
             )
             .unwrap();
 
-            assert_eq!(x, OldTokenAmount(1));
-            assert_eq!(y, OldTokenAmount(0));
+            assert_eq!(x, TokenAmount(1));
+            assert_eq!(y, TokenAmount(0));
         }
         // current tick greater than upper tick
         {
             let mut pool = Pool {
-                liquidity: OldDecimal::from_integer(0),
+                liquidity: Liquidity::from_integer(0),
                 current_tick_index: 6,
                 ..Default::default()
             };
 
-            let liquidity_delta = OldDecimal::from_integer(10);
+            let liquidity_delta = Liquidity::from_integer(10);
             let liquidity_sign = true;
             let upper_tick = 4;
             let lower_tick = 2;
@@ -1046,17 +1033,17 @@ mod tests {
             )
             .unwrap();
 
-            assert_eq!(x, OldTokenAmount(0));
-            assert_eq!(y, OldTokenAmount(1));
+            assert_eq!(x, TokenAmount(0));
+            assert_eq!(y, TokenAmount(1));
         }
     }
     #[test]
     fn test_update_seconds_per_liquidity_global() {
         let mut pool = Pool {
-            liquidity: OldDecimal::from_integer(1000),
+            liquidity: Liquidity::from_integer(1000),
             start_timestamp: 0,
             last_timestamp: 0,
-            seconds_per_liquidity_global: OldDecimal::new(0),
+            seconds_per_liquidity_global: FixedPoint::new(0),
             ..Default::default()
         };
 
@@ -1068,19 +1055,19 @@ mod tests {
     fn test_calculate_seconds_per_liquidity_inside() {
         let mut tick_lower = Tick {
             index: 0,
-            seconds_per_liquidity_outside: OldDecimal::new(3012300000),
+            seconds_per_liquidity_outside: FixedPoint::new(3012300000),
             ..Default::default()
         };
         let mut tick_upper = Tick {
             index: 10,
-            seconds_per_liquidity_outside: OldDecimal::new(2030400000),
+            seconds_per_liquidity_outside: FixedPoint::new(2030400000),
             ..Default::default()
         };
         let mut pool = Pool {
-            liquidity: OldDecimal::from_integer(1000),
+            liquidity: Liquidity::from_integer(1000),
             start_timestamp: 0,
             last_timestamp: 0,
-            seconds_per_liquidity_global: OldDecimal::new(0),
+            seconds_per_liquidity_global: FixedPoint::new(0),
             ..Default::default()
         };
         let current_timestamp = 100;
@@ -1108,8 +1095,8 @@ mod tests {
         }
 
         {
-            tick_lower.seconds_per_liquidity_outside = OldDecimal::new(2012333200);
-            tick_upper.seconds_per_liquidity_outside = OldDecimal::new(3012333310);
+            tick_lower.seconds_per_liquidity_outside = FixedPoint::new(2012333200);
+            tick_upper.seconds_per_liquidity_outside = FixedPoint::new(3012333310);
             pool.current_tick_index = 20;
             let seconds_per_liquidity_inside = calculate_seconds_per_liquidity_inside(
                 tick_lower,
@@ -1122,13 +1109,13 @@ mod tests {
     }
     #[test]
     fn test_is_enough_amount_to_push_price() {
-        let current_price_sqrt = OldDecimal::new(999500149965); // at -20 tick
-        let liquidity = OldDecimal::new(20006000000000000000);
-        let fee = OldDecimal::from_decimal(6, 4); // 0.0006 -> 0.06%
+        let current_price_sqrt = Price::new(999500149965); // at -20 tick
+        let liquidity = Liquidity::new(20006000000000000000);
+        let fee = FixedPoint::from_scale(6, 4); // 0.0006 -> 0.06%
 
         // -20 crossing tick with 1 token amount by amount in
         {
-            let amount = OldTokenAmount(1);
+            let amount = TokenAmount(1);
             let by_amount_in = true;
             let x_to_y = true;
 
@@ -1144,7 +1131,7 @@ mod tests {
         }
         // -20 crossing tick with 1 token amount by amount out
         {
-            let amount = OldTokenAmount(1);
+            let amount = TokenAmount(1);
             let by_amount_in = false;
             let x_to_y = true;
 
@@ -1160,7 +1147,7 @@ mod tests {
         }
         // -20 crossing tick with 2 token amount by amount in
         {
-            let amount = OldTokenAmount(2);
+            let amount = TokenAmount(2);
             let by_amount_in = true;
             let x_to_y = true;
 

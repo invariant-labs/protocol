@@ -42,12 +42,12 @@ pub fn check_tick(tick_index: i32, tick_spacing: u16) -> Result<()> {
 // Finds closes initialized tick in direction of trade
 // and compares its price to the price limit of the trade
 pub fn get_closer_limit(
-    sqrt_price_limit: OldDecimal,
+    sqrt_price_limit: Price,
     x_to_y: bool,
     current_tick: i32,
     tick_spacing: u16,
     tickmap: &Tickmap,
-) -> Result<(OldDecimal, Option<(i32, bool)>)> {
+) -> Result<(Price, Option<(i32, bool)>)> {
     let closes_tick_index = if x_to_y {
         tickmap.prev_initialized(current_tick, tick_spacing)
     } else {
@@ -148,33 +148,33 @@ mod test {
         // tick limit closer
         {
             let (result, from_tick) =
-                get_closer_limit(OldDecimal::from_integer(5), true, 100, 1, tickmap)?;
+                get_closer_limit(Price::from_integer(5), true, 100, 1, tickmap)?;
 
-            let expected = OldDecimal::from_integer(5);
+            let expected = Price::from_integer(5);
             assert_eq!(result, expected);
             assert_eq!(from_tick, None);
         }
         // trade limit closer
         {
             let (result, from_tick) =
-                get_closer_limit(OldDecimal::from_decimal(1, 1), true, 100, 1, tickmap)?;
-            let expected = OldDecimal::from_integer(1);
+                get_closer_limit(Price::from_scale(1, 1), true, 100, 1, tickmap)?;
+            let expected = Price::from_integer(1);
             assert_eq!(result, expected);
             assert_eq!(from_tick, Some((0, true)));
         }
         // other direction
         {
             let (result, from_tick) =
-                get_closer_limit(OldDecimal::from_integer(2), false, -5, 1, tickmap)?;
-            let expected = OldDecimal::from_integer(1);
+                get_closer_limit(Price::from_integer(2), false, -5, 1, tickmap)?;
+            let expected = Price::from_integer(1);
             assert_eq!(result, expected);
             assert_eq!(from_tick, Some((0, true)));
         }
         // other direction
         {
             let (result, from_tick) =
-                get_closer_limit(OldDecimal::from_decimal(1, 1), false, -100, 10, tickmap)?;
-            let expected = OldDecimal::from_decimal(1, 1);
+                get_closer_limit(Price::from_scale(1, 1), false, -100, 10, tickmap)?;
+            let expected = Price::from_scale(1, 1);
             assert_eq!(result, expected);
             assert_eq!(from_tick, None);
         }
