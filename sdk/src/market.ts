@@ -1235,7 +1235,6 @@ export class Market {
 
     await signAndSend(tx, [signer], this.connection)
   }
-<<<<<<< Updated upstream
 
   async getWholeLiquidity(pair: Pair) {
     const poolPublicKey = await pair.getAddress(this.program.programId)
@@ -1276,8 +1275,6 @@ export class Market {
 
     return { volumeX, volumeY }
   }
-=======
->>>>>>> Stashed changes
 }
 
 export interface Decimal {
