@@ -2,7 +2,14 @@ import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 import { createTokensAndPool, createUserWithTokens } from './testUtils'
-import { Market, DENOMINATOR, Network, sleep, calculatePriceSqrt } from '@invariant-labs/sdk'
+import {
+  Market,
+  DENOMINATOR,
+  Network,
+  sleep,
+  calculatePriceSqrt,
+  INVARIANT_ERRORS
+} from '@invariant-labs/sdk'
 import { assertThrowsAsync, getMaxTick, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { Decimal, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 import { getLiquidityByX, getLiquidityByY } from '@invariant-labs/sdk/src/math'
@@ -11,7 +18,6 @@ import { assert } from 'chai'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
 import { Pair } from '@invariant-labs/sdk/lib/pair'
-import { INVARIANT_ERRORS } from '@invariant-labs/sdk'
 
 describe('limits', () => {
   const provider = Provider.local()
@@ -19,7 +25,6 @@ describe('limits', () => {
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
   const admin = Keypair.generate()
-  const knownPrice: Decimal = { v: new BN(DENOMINATOR) }
   const feeTier = FEE_TIERS[0]
   let market: Market
   let tokenX: Token

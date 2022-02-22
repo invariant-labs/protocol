@@ -22,7 +22,7 @@ import {
   SimulationResult
 } from './utils'
 import { Invariant, IDL } from './idl/invariant'
-import { ComputeUnitsInstruction, IWallet, Pair, signAndSend } from '.'
+import { ComputeUnitsInstruction, DENOMINATOR, IWallet, Pair, signAndSend } from '.'
 import { getMarketAddress, Network } from './network'
 import { bs58 } from '@project-serum/anchor/dist/cjs/utils/bytes'
 
@@ -564,17 +564,14 @@ export class Market {
 
     const { address: stateAddress } = await this.getStateAddress()
 
-    const [poolAddress, bump] = await pair.getAddressAndBump(this.program.programId)
+    const [poolAddress] = await pair.getAddressAndBump(this.program.programId)
     const { address: feeTierAddress } = await this.getFeeTierAddress(pair.feeTier)
 
     const { positionListAddress } = await this.getPositionListAddress(payerPubkey)
-    const { tickAddress, tickBump } = await this.getTickAddress(pair, lowerTick)
-    const { tickAddress: tickAddressUpper, tickBump: bumpUpper } = await this.getTickAddress(
-      pair,
-      upperTick
-    )
+    const { tickAddress } = await this.getTickAddress(pair, lowerTick)
+    const { tickAddress: tickAddressUpper } = await this.getTickAddress(pair, upperTick)
 
-    const { positionAddress, positionBump } = await this.getPositionAddress(payerPubkey, 0)
+    const { positionAddress } = await this.getPositionAddress(payerPubkey, 0)
 
     const transaction = new Transaction({
       feePayer: payerPubkey
@@ -1238,6 +1235,46 @@ export class Market {
 
     await signAndSend(tx, [signer], this.connection)
   }
+
+  async getWholeLiquidity(pair: Pair) {
+    const poolPublicKey = await pair.getAddress(this.program.programId)
+    const positions: Position[] = (
+      await this.program.account.position.all([
+        {
+          memcmp: { bytes: bs58.encode(poolPublicKey.toBuffer()), offset: 40 }
+        }
+      ])
+    ).map(a => a.account) as Position[]
+
+    let liquidity = new BN(0)
+    for (const position of positions) {
+      liquidity = liquidity.add(position.liquidity.v)
+    }
+
+    return liquidity
+  }
+
+  async getGlobalFee(pair: Pair) {
+    const pool = await this.getPool(pair)
+    const { feeProtocolTokenX, feeProtocolTokenY, protocolFee } = pool
+
+    const feeX = feeProtocolTokenX.mul(DENOMINATOR).div(protocolFee.v)
+    const feeY = feeProtocolTokenY.mul(DENOMINATOR).div(protocolFee.v)
+
+    return { feeX, feeY }
+  }
+
+  async getVolume(pair: Pair) {
+    const pool = await this.getPool(pair)
+    const { feeProtocolTokenX, feeProtocolTokenY, protocolFee, fee } = pool
+
+    const feeDenominator = protocolFee.v.mul(fee.v).div(DENOMINATOR)
+
+    const volumeX = feeProtocolTokenX.mul(DENOMINATOR).div(feeDenominator)
+    const volumeY = feeProtocolTokenY.mul(DENOMINATOR).div(feeDenominator)
+
+    return { volumeX, volumeY }
+  }
 }
 
 export interface Decimal {
@@ -1345,7 +1382,7 @@ export enum Errors {
   InvalidTickSpacing = '0x130', // 4
   InvalidTickInterval = '0x131', // 5
   NoMoreTicks = '0x132 ', // 6
-  TickNotFound = '0x13 3', // 7
+  TickNotFound = '0x133', // 7
   PriceLimitReached = '0x134' // 8
 }
 

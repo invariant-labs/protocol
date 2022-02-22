@@ -41,7 +41,7 @@ pub struct CreateTick<'info> {
 }
 
 impl<'info> CreateTick<'info> {
-    pub fn handler(self: &Self, index: i32, bump: u8) -> ProgramResult {
+    pub fn handler(&self, index: i32, bump: u8) -> ProgramResult {
         msg!("INVARIANT: CREATE_TICK");
 
         let mut tick = self.tick.load_init()?;

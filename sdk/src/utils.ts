@@ -401,7 +401,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
       accumulatedAmount = new BN(0)
     }
 
-    if (currentTickIndex == previousTickIndex && !remainingAmount.eqn(0)) {
+    if (currentTickIndex === previousTickIndex && !remainingAmount.eqn(0)) {
       throw new Error('At the end of price range')
     } else {
       previousTickIndex = currentTickIndex

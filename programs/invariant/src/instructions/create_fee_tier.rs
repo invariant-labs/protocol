@@ -23,7 +23,7 @@ pub struct CreateFeeTier<'info> {
 }
 
 impl<'info> CreateFeeTier<'info> {
-    pub fn handler(self: &Self, fee: u128, tick_spacing: u16, bump: u8) -> ProgramResult {
+    pub fn handler(&self, fee: u128, tick_spacing: u16, bump: u8) -> ProgramResult {
         msg!("INVARIANT: CREATE FEE TIER");
 
         let fee_tier = &mut self.fee_tier.load_init()?;

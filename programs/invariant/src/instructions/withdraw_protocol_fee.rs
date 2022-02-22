@@ -73,7 +73,7 @@ impl<'info> SendTokens<'info> for WithdrawProtocolFee<'info> {
 }
 
 impl<'info> WithdrawProtocolFee<'info> {
-    pub fn handler(self: &Self) -> ProgramResult {
+    pub fn handler(&self) -> ProgramResult {
         msg!("INVARIANT: WITHDRAW PROTOCOL FEE");
 
         let state = self.state.load()?;

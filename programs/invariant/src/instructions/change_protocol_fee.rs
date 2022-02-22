@@ -26,7 +26,7 @@ pub struct ChangeProtocolFee<'info> {
 }
 
 impl<'info> ChangeProtocolFee<'info> {
-    pub fn handler(self: &Self, protocol_fee: Decimal) -> ProgramResult {
+    pub fn handler(&self, protocol_fee: Decimal) -> ProgramResult {
         require!(
             protocol_fee.ge(&Decimal::new(0)) && protocol_fee.le(&Decimal::from_integer(1)),
             InvalidProtocolFee
