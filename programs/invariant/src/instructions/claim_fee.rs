@@ -1,3 +1,4 @@
+use crate::decimals::*;
 use crate::interfaces::send_tokens::SendTokens;
 use crate::structs::pool::Pool;
 use crate::structs::position::Position;
@@ -111,18 +112,16 @@ impl<'info> ClaimFee<'info> {
                 pool,
                 upper_tick,
                 lower_tick,
-                OldDecimal::new(0),
+                FixedPoint::new(0),
                 true,
                 current_timestamp,
             )
             .unwrap();
 
-        let fee_to_collect_x = position.tokens_owed_x.to_token_floor();
-        let fee_to_collect_y = position.tokens_owed_y.to_token_floor();
-        position.tokens_owed_x =
-            position.tokens_owed_x - OldDecimal::from_token_amount(fee_to_collect_x);
-        position.tokens_owed_y =
-            position.tokens_owed_y - OldDecimal::from_token_amount(fee_to_collect_y);
+        let fee_to_collect_x = TokenAmount::from_decimal(position.tokens_owed_x);
+        let fee_to_collect_y = TokenAmount::from_decimal(position.tokens_owed_y);
+        position.tokens_owed_x = position.tokens_owed_x - Liquidity::from_decimal(fee_to_collect_x);
+        position.tokens_owed_y = position.tokens_owed_y - Liquidity::from_decimal(fee_to_collect_y);
 
         let signer: &[&[&[u8]]] = get_signer!(state.nonce);
 
