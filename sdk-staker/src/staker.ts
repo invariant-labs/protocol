@@ -380,7 +380,6 @@ export interface Withdraw {
   position: PublicKey
   owner?: PublicKey
   index: number
-  nonce: number
 }
 
 export interface EndIncentive {

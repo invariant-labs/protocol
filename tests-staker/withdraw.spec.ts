@@ -234,9 +234,7 @@ describe('Withdraw tests', () => {
       owner: positionOwner.publicKey,
       incentiveTokenAccount: incentiveTokenAccount.publicKey,
       ownerTokenAcc: ownerTokenAcc,
-      invariant,
-      index,
-      nonce
+      index
     }
 
     const withdrawIx = await staker.withdrawIx(withdraw)

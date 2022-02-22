@@ -8,7 +8,7 @@ import {
   PoolStructure,
   UpdateSecondsPerLiquidity
 } from '@invariant-labs/sdk/src/market'
-import { CreateStake } from '../../sdk-staker/lib/staker'
+import { Withdraw } from '../../sdk-staker/src/staker'
 import { getMarketAddress, Pair } from '@invariant-labs/sdk'
 
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
@@ -24,6 +24,7 @@ const POOL: PublicKey = new PublicKey('0')
 const OWNER: PublicKey = new PublicKey('0')
 const POSITION: PublicKey = new PublicKey('0')
 const INCENTIVE: PublicKey = new PublicKey('0')
+const INCENTIVE_TOKEN: PublicKey = new PublicKey('0')
 const POSITION_INDEX = 0
 
 const DEFINED: boolean = false
@@ -33,6 +34,7 @@ const main = async () => {
   const market = await Market.build(Network.DEV, provider.wallet, connection)
   const position = await market.getPosition(POSITION, POSITION_INDEX)
   const pool = (await market.program.account.pool.fetch(POOL)) as PoolStructure
+  const invariant = new PublicKey(getMarketAddress(Network.DEV))
   const feeTier: FeeTier = {
     fee: new BN(pool.fee.v),
     tickSpacing: pool.tickSpacing
@@ -46,18 +48,19 @@ const main = async () => {
     upperTickIndex: position.upperTickIndex,
     index: pool.currentTickIndex
   }
-  const createStake: CreateStake = {
+  const withdraw: Withdraw = {
+    incentive: INCENTIVE,
     pool: POOL,
     id: position.id,
-    index: POSITION_INDEX,
     position: POSITION,
-    incentive: INCENTIVE,
     owner: OWNER,
-    invariant: new PublicKey(getMarketAddress(Network.DEV))
+    incentiveTokenAccount: INCENTIVE_TOKEN,
+    ownerTokenAcc: OWNER,
+    index: POSITION_INDEX
   }
 
   if (DEFINED) {
-    await staker.createStake(market, update, createStake)
+    await staker.withdraw(market, update, withdraw)
   }
 }
 
