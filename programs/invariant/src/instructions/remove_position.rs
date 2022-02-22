@@ -1,5 +1,5 @@
-use crate::decimal::Decimal;
 use crate::interfaces::send_tokens::SendTokens;
+use crate::old_decimal::OldDecimal;
 use crate::structs::pool::Pool;
 use crate::structs::position::Position;
 use crate::structs::position_list::PositionList;
@@ -154,8 +154,8 @@ impl<'info> RemovePosition<'info> {
             let amount_x = amount_x + removed_position.tokens_owed_x.to_token_floor();
             let amount_y = amount_y + removed_position.tokens_owed_y.to_token_floor();
 
-            close_lower = { lower_tick.liquidity_gross } == Decimal::new(0);
-            close_upper = { upper_tick.liquidity_gross } == Decimal::new(0);
+            close_lower = { lower_tick.liquidity_gross } == OldDecimal::new(0);
+            close_upper = { upper_tick.liquidity_gross } == OldDecimal::new(0);
 
             (amount_x, amount_y)
         };

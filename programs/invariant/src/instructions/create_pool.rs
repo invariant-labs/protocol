@@ -7,7 +7,7 @@ use crate::structs::tickmap::Tickmap;
 use crate::util::check_tick;
 use crate::util::get_current_timestamp;
 use crate::ErrorCode::*;
-use crate::{decimal::Decimal, structs::FeeGrowth, structs::State};
+use crate::{old_decimal::OldDecimal, structs::FeeGrowth, structs::State};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::Token;
@@ -80,8 +80,8 @@ impl<'info> CreatePool<'info> {
             token_y_reserve: *self.token_y_reserve.to_account_info().key,
             tick_spacing: fee_tier.tick_spacing,
             fee: fee_tier.fee,
-            protocol_fee: Decimal::new(200_000_000_000),
-            liquidity: Decimal::new(0),
+            protocol_fee: OldDecimal::new(200_000_000_000),
+            liquidity: OldDecimal::new(0),
             sqrt_price: calculate_price_sqrt(init_tick),
             current_tick_index: init_tick,
             tickmap: *self.tickmap.to_account_info().key,
@@ -90,7 +90,7 @@ impl<'info> CreatePool<'info> {
             fee_protocol_token_x: 0,
             fee_protocol_token_y: 0,
             position_iterator: 0,
-            seconds_per_liquidity_global: Decimal::new(0),
+            seconds_per_liquidity_global: OldDecimal::new(0),
             start_timestamp: current_timestamp,
             last_timestamp: current_timestamp,
             fee_receiver: self.state.load()?.admin,

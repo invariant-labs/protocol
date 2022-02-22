@@ -1,10 +1,11 @@
-mod decimal;
+mod decimals;
 mod errors;
 mod instructions;
 mod interfaces;
 mod log;
 mod macros;
 mod math;
+mod old_decimal;
 pub mod structs;
 mod uint;
 mod util;
@@ -12,11 +13,11 @@ mod util;
 use anchor_lang::prelude::*;
 use anchor_spl::token;
 
-use decimal::*;
 use errors::ErrorCode;
 use errors::*;
 use instructions::*;
 use math::*;
+use old_decimal::*;
 use structs::{Pool, State};
 use util::*;
 
@@ -74,7 +75,7 @@ pub mod invariant {
         ctx: Context<CreatePosition>,
         _lower_tick_index: i32,
         _upper_tick_index: i32,
-        liquidity_delta: Decimal,
+        liquidity_delta: OldDecimal,
     ) -> ProgramResult {
         ctx.accounts
             .handler(liquidity_delta, *ctx.bumps.get("position").unwrap())
@@ -124,7 +125,7 @@ pub mod invariant {
     #[access_control(receiver(&ctx.accounts.pool, &ctx.accounts.admin))]
     pub fn change_protocol_fee(
         ctx: Context<ChangeProtocolFee>,
-        protocol_fee: Decimal,
+        protocol_fee: OldDecimal,
     ) -> ProgramResult {
         ctx.accounts.handler(protocol_fee)
     }

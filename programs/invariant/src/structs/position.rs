@@ -1,4 +1,4 @@
-use crate::decimal::Decimal;
+use crate::old_decimal::OldDecimal;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::structs::FeeGrowth;
@@ -14,15 +14,15 @@ pub struct Position {
     pub owner: Pubkey,
     pub pool: Pubkey,
     pub id: u128, // unique inside pool
-    pub liquidity: Decimal,
+    pub liquidity: OldDecimal,
     pub lower_tick_index: i32,
     pub upper_tick_index: i32,
     pub fee_growth_inside_x: FeeGrowth,
     pub fee_growth_inside_y: FeeGrowth,
-    pub seconds_per_liquidity_inside: Decimal,
+    pub seconds_per_liquidity_inside: OldDecimal,
     pub last_slot: u64,
-    pub tokens_owed_x: Decimal,
-    pub tokens_owed_y: Decimal,
+    pub tokens_owed_x: OldDecimal,
+    pub tokens_owed_y: OldDecimal,
     pub bump: u8,
 }
 
@@ -32,11 +32,11 @@ impl Position {
         pool: &mut Pool,
         upper_tick: &mut Tick,
         lower_tick: &mut Tick,
-        liquidity_delta: Decimal,
+        liquidity_delta: OldDecimal,
         add: bool,
         current_timestamp: u64,
     ) -> Result<(TokenAmount, TokenAmount)> {
-        if { pool.liquidity } != Decimal::new(0) {
+        if { pool.liquidity } != OldDecimal::new(0) {
             pool.update_seconds_per_liquidity_global(current_timestamp);
         } else {
             pool.last_timestamp = current_timestamp;
@@ -78,7 +78,7 @@ impl Position {
     pub fn update(
         &mut self,
         sign: bool,
-        liquidity_delta: Decimal,
+        liquidity_delta: OldDecimal,
         fee_growth_inside_x: FeeGrowth,
         fee_growth_inside_y: FeeGrowth,
     ) -> Result<()> {
@@ -116,8 +116,8 @@ impl Position {
     fn calculate_new_liquidity_safely(
         &mut self,
         sign: bool,
-        liquidity_delta: Decimal,
-    ) -> Result<Decimal> {
+        liquidity_delta: OldDecimal,
+    ) -> Result<OldDecimal> {
         // validate in decrease liquidity case
         if !sign && { self.liquidity } < liquidity_delta {
             return Err(ErrorCode::InvalidPositionLiquidity.into());
@@ -139,11 +139,11 @@ mod tests {
         // negative liquidity error
         {
             let mut position = Position {
-                liquidity: Decimal::from_integer(1),
+                liquidity: OldDecimal::from_integer(1),
                 ..Default::default()
             };
             let sign: bool = false;
-            let liquidity_delta: Decimal = Decimal::from_integer(2);
+            let liquidity_delta: OldDecimal = OldDecimal::from_integer(2);
 
             let result = position.calculate_new_liquidity_safely(sign, liquidity_delta);
 
@@ -152,32 +152,32 @@ mod tests {
         // adding liquidity
         {
             let mut position = Position {
-                liquidity: Decimal::from_integer(2),
+                liquidity: OldDecimal::from_integer(2),
                 ..Default::default()
             };
             let sign: bool = true;
-            let liquidity_delta: Decimal = Decimal::from_integer(2);
+            let liquidity_delta: OldDecimal = OldDecimal::from_integer(2);
 
             let new_liquidity = position
                 .calculate_new_liquidity_safely(sign, liquidity_delta)
                 .unwrap();
 
-            assert_eq!(new_liquidity, Decimal::from_integer(4));
+            assert_eq!(new_liquidity, OldDecimal::from_integer(4));
         }
         // subtracting liquidity
         {
             let mut position = Position {
-                liquidity: Decimal::from_integer(2),
+                liquidity: OldDecimal::from_integer(2),
                 ..Default::default()
             };
             let sign: bool = false;
-            let liquidity_delta: Decimal = Decimal::from_integer(2);
+            let liquidity_delta: OldDecimal = OldDecimal::from_integer(2);
 
             let new_liquidity = position
                 .calculate_new_liquidity_safely(sign, liquidity_delta)
                 .unwrap();
 
-            assert_eq!(new_liquidity, Decimal::from_integer(0));
+            assert_eq!(new_liquidity, OldDecimal::from_integer(0));
         }
     }
 
@@ -186,11 +186,11 @@ mod tests {
         // Disable empty position pokes error
         {
             let mut position = Position {
-                liquidity: Decimal::from_integer(0),
+                liquidity: OldDecimal::from_integer(0),
                 ..Default::default()
             };
             let sign = true;
-            let liquidity_delta = Decimal::from_integer(0);
+            let liquidity_delta = OldDecimal::from_integer(0);
             let fee_growth_inside_x = FeeGrowth::from_integer(1);
             let fee_growth_inside_y = FeeGrowth::from_integer(1);
 
@@ -206,15 +206,15 @@ mod tests {
         // zero liquidity fee shouldn't change
         {
             let mut position = Position {
-                liquidity: Decimal::from_integer(0),
+                liquidity: OldDecimal::from_integer(0),
                 fee_growth_inside_x: FeeGrowth::from_integer(4),
                 fee_growth_inside_y: FeeGrowth::from_integer(4),
-                tokens_owed_x: Decimal::from_integer(100),
-                tokens_owed_y: Decimal::from_integer(100),
+                tokens_owed_x: OldDecimal::from_integer(100),
+                tokens_owed_y: OldDecimal::from_integer(100),
                 ..Default::default()
             };
             let sign = true;
-            let liquidity_delta = Decimal::from_integer(1);
+            let liquidity_delta = OldDecimal::from_integer(1);
             let fee_growth_inside_x = FeeGrowth::from_integer(5);
             let fee_growth_inside_y = FeeGrowth::from_integer(5);
 
@@ -227,24 +227,24 @@ mod tests {
                 )
                 .unwrap();
 
-            assert_eq!({ position.liquidity }, Decimal::from_integer(1));
+            assert_eq!({ position.liquidity }, OldDecimal::from_integer(1));
             assert_eq!({ position.fee_growth_inside_x }, FeeGrowth::from_integer(5));
             assert_eq!({ position.fee_growth_inside_y }, FeeGrowth::from_integer(5));
-            assert_eq!({ position.tokens_owed_x }, Decimal::from_integer(100));
-            assert_eq!({ position.tokens_owed_y }, Decimal::from_integer(100));
+            assert_eq!({ position.tokens_owed_x }, OldDecimal::from_integer(100));
+            assert_eq!({ position.tokens_owed_y }, OldDecimal::from_integer(100));
         }
         // fee should change
         {
             let mut position = Position {
-                liquidity: Decimal::from_integer(1),
+                liquidity: OldDecimal::from_integer(1),
                 fee_growth_inside_x: FeeGrowth::from_integer(4),
                 fee_growth_inside_y: FeeGrowth::from_integer(4),
-                tokens_owed_x: Decimal::from_integer(100),
-                tokens_owed_y: Decimal::from_integer(100),
+                tokens_owed_x: OldDecimal::from_integer(100),
+                tokens_owed_y: OldDecimal::from_integer(100),
                 ..Default::default()
             };
             let sign = true;
-            let liquidity_delta = Decimal::from_integer(1);
+            let liquidity_delta = OldDecimal::from_integer(1);
             let fee_growth_inside_x = FeeGrowth::from_integer(5);
             let fee_growth_inside_y = FeeGrowth::from_integer(5);
 
@@ -257,11 +257,11 @@ mod tests {
                 )
                 .unwrap();
 
-            assert_eq!({ position.liquidity }, Decimal::from_integer(2));
+            assert_eq!({ position.liquidity }, OldDecimal::from_integer(2));
             assert_eq!({ position.fee_growth_inside_x }, FeeGrowth::from_integer(5));
             assert_eq!({ position.fee_growth_inside_y }, FeeGrowth::from_integer(5));
-            assert_eq!({ position.tokens_owed_x }, Decimal::from_integer(101));
-            assert_eq!({ position.tokens_owed_y }, Decimal::from_integer(101));
+            assert_eq!({ position.tokens_owed_x }, OldDecimal::from_integer(101));
+            assert_eq!({ position.tokens_owed_y }, OldDecimal::from_integer(101));
         }
     }
 
@@ -270,11 +270,11 @@ mod tests {
         // owed tokens after overflow
         {
             let mut position = Position {
-                liquidity: Decimal::from_integer(123),
+                liquidity: OldDecimal::from_integer(123),
                 fee_growth_inside_x: FeeGrowth::new(u128::MAX) - FeeGrowth::from_integer(1234),
                 fee_growth_inside_y: FeeGrowth::new(u128::MAX) - FeeGrowth::from_integer(1234),
-                tokens_owed_x: Decimal::from_integer(0),
-                tokens_owed_y: Decimal::from_integer(0),
+                tokens_owed_x: OldDecimal::from_integer(0),
+                tokens_owed_y: OldDecimal::from_integer(0),
                 ..Default::default()
             };
             let mut pool = Pool {
@@ -287,17 +287,17 @@ mod tests {
                 index: -10,
                 fee_growth_outside_x: FeeGrowth::from_integer(15),
                 fee_growth_outside_y: FeeGrowth::from_integer(15),
-                liquidity_gross: Decimal::from_integer(123),
+                liquidity_gross: OldDecimal::from_integer(123),
                 ..Default::default()
             };
             let mut lower_tick = Tick {
                 index: -20,
                 fee_growth_outside_x: FeeGrowth::from_integer(20),
                 fee_growth_outside_y: FeeGrowth::from_integer(20),
-                liquidity_gross: Decimal::from_integer(123),
+                liquidity_gross: OldDecimal::from_integer(123),
                 ..Default::default()
             };
-            let liquidity_delta = Decimal::from_integer(0);
+            let liquidity_delta = OldDecimal::from_integer(0);
             let add = true;
             let current_timestamp: u64 = 1234567890;
 
@@ -317,7 +317,10 @@ mod tests {
             //     (Decimal::from_integer(1234 - 5) + Decimal::new(1)) * Decimal::from_integer(123)
             // ) // 151167000000000123 so close enough?
 
-            assert_eq!({ position.tokens_owed_x }, Decimal::new(151167000000000000));
+            assert_eq!(
+                { position.tokens_owed_x },
+                OldDecimal::new(151167000000000000)
+            );
         }
     }
 }

@@ -1,4 +1,4 @@
-use crate::decimal::Decimal;
+use crate::old_decimal::OldDecimal;
 use crate::*;
 use anchor_lang::prelude::*;
 
@@ -14,17 +14,17 @@ pub struct Pool {
     pub token_y_reserve: Pubkey,
     pub position_iterator: u128,
     pub tick_spacing: u16,
-    pub fee: Decimal,
-    pub protocol_fee: Decimal,
-    pub liquidity: Decimal,
-    pub sqrt_price: Decimal,
+    pub fee: OldDecimal,
+    pub protocol_fee: OldDecimal,
+    pub liquidity: OldDecimal,
+    pub sqrt_price: OldDecimal,
     pub current_tick_index: i32, // nearest tick below the current price
     pub tickmap: Pubkey,
     pub fee_growth_global_x: FeeGrowth,
     pub fee_growth_global_y: FeeGrowth,
     pub fee_protocol_token_x: u64, // should be changed to TokenAmount when Armani implements tuple structs
     pub fee_protocol_token_y: u64,
-    pub seconds_per_liquidity_global: Decimal,
+    pub seconds_per_liquidity_global: OldDecimal,
     pub start_timestamp: u64,
     pub last_timestamp: u64,
     pub fee_receiver: Pubkey,
@@ -54,7 +54,11 @@ impl Pool {
         }
     }
 
-    pub fn update_liquidity_safely(&mut self, liquidity_delta: Decimal, add: bool) -> Result<()> {
+    pub fn update_liquidity_safely(
+        &mut self,
+        liquidity_delta: OldDecimal,
+        add: bool,
+    ) -> Result<()> {
         // validate in decrease liquidity case
         if !add && { self.liquidity } < liquidity_delta {
             return Err(ErrorCode::InvalidPoolLiquidity.into());
@@ -70,7 +74,7 @@ impl Pool {
 
     pub fn update_seconds_per_liquidity_global(&mut self, current_timestamp: u64) {
         self.seconds_per_liquidity_global = self.seconds_per_liquidity_global
-            + (Decimal::from_integer((current_timestamp - self.last_timestamp) as u128)
+            + (OldDecimal::from_integer((current_timestamp - self.last_timestamp) as u128)
                 / self.liquidity);
 
         self.last_timestamp = current_timestamp;
@@ -91,10 +95,10 @@ mod tests {
         // Invalid pool liquidity
         {
             let mut pool = Pool {
-                liquidity: Decimal::new(0),
+                liquidity: OldDecimal::new(0),
                 ..Default::default()
             };
-            let liquidity_delta = Decimal::one();
+            let liquidity_delta = OldDecimal::one();
             let add = false;
 
             let result = pool.update_liquidity_safely(liquidity_delta, add);
@@ -104,28 +108,28 @@ mod tests {
         // adding liquidity
         {
             let mut pool = Pool {
-                liquidity: Decimal::one(),
+                liquidity: OldDecimal::one(),
                 ..Default::default()
             };
-            let liquidity_delta: Decimal = Decimal::from_integer(2);
+            let liquidity_delta: OldDecimal = OldDecimal::from_integer(2);
             let add: bool = true;
 
             pool.update_liquidity_safely(liquidity_delta, add).unwrap();
 
-            assert_eq!({ pool.liquidity }, Decimal::from_integer(3));
+            assert_eq!({ pool.liquidity }, OldDecimal::from_integer(3));
         }
         // subtracting liquidity
         {
             let mut pool = Pool {
-                liquidity: Decimal::from_integer(3),
+                liquidity: OldDecimal::from_integer(3),
                 ..Default::default()
             };
-            let liquidity_delta: Decimal = Decimal::from_integer(2);
+            let liquidity_delta: OldDecimal = OldDecimal::from_integer(2);
             let add: bool = false;
 
             pool.update_liquidity_safely(liquidity_delta, add).unwrap();
 
-            assert_eq!({ pool.liquidity }, Decimal::one());
+            assert_eq!({ pool.liquidity }, OldDecimal::one());
         }
     }
 }
