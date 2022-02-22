@@ -413,6 +413,10 @@ pub fn is_enough_amount_to_push_price(
     by_amount_in: bool,
     x_to_y: bool,
 ) -> bool {
+    if liquidity.is_zero() {
+        return true;
+    }
+
     let next_price_sqrt = if by_amount_in {
         let amount_after_fee = amount.big_mul(Decimal::one() - fee).to_token_floor();
         get_next_sqrt_price_from_input(current_price_sqrt, liquidity, amount_after_fee, x_to_y)
@@ -1167,6 +1171,23 @@ mod tests {
                 amount,
                 current_price_sqrt,
                 liquidity,
+                fee,
+                by_amount_in,
+                x_to_y,
+            );
+            assert_eq!(result, true);
+        }
+        // should always be enough amount to cross tick when pool liquidity is zero
+        {
+            let no_liquidity = Decimal::new(0);
+            let amount = TokenAmount(1);
+            let by_amount_in = true;
+            let x_to_y = true;
+
+            let result = is_enough_amount_to_push_price(
+                amount,
+                current_price_sqrt,
+                no_liquidity,
                 fee,
                 by_amount_in,
                 x_to_y,
