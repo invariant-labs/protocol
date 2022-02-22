@@ -11,7 +11,8 @@ import {
   DENOMINATOR,
   TICK_LIMIT,
   Network,
-  INVARIANT_ERRORS
+  INVARIANT_ERRORS,
+  calculatePriceSqrt
 } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { assertThrowsAsync, fromFee } from '@invariant-labs/sdk/lib/utils'
@@ -24,7 +25,6 @@ import {
   Swap
 } from '@invariant-labs/sdk/src/market'
 import { getLiquidityByX } from '@invariant-labs/sdk/lib/math'
-import { calculatePriceSqrt } from '@invariant-labs/sdk'
 
 describe('swap with cross both side', () => {
   const provider = Provider.local()

@@ -1,17 +1,12 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider } from '@project-serum/anchor'
-import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
+import { clusterApiUrl, PublicKey } from '@solana/web3.js'
 import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
+// trunk-ignore(eslint/@typescript-eslint/no-unused-vars)
 import { MINTER } from './minter'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { Market, Pair, tou64 } from '@invariant-labs/sdk/src'
-import {
-  FEE_TIERS,
-  fromFee,
-  simulateSwap,
-  SimulateSwapInterface
-} from '@invariant-labs/sdk/src/utils'
-import { Swap, Tick } from '@invariant-labs/sdk/src/market'
+import { Market, Pair } from '@invariant-labs/sdk/src'
+import { FEE_TIERS, simulateSwap, SimulateSwapInterface } from '@invariant-labs/sdk/src/utils'
+import { Tick } from '@invariant-labs/sdk/src/market'
 
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
@@ -21,9 +16,6 @@ const provider = Provider.local(clusterApiUrl('devnet'), {
 })
 
 const connection = provider.connection
-
-// @ts-expect-error
-const wallet = provider.wallet.payer as Keypair
 
 const main = async () => {
   const market = await Market.build(Network.DEV, provider.wallet, connection)

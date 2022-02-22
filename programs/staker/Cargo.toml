@@ -19,5 +19,5 @@ default = []
 anchor-lang = "0.21.0"
 anchor-spl = "0.21.0"
 integer-sqrt = "0.1.5"
-uint = "0.9"
+uint = "0.9.1"
 invariant = { path = "../invariant", features = ["cpi"] }
