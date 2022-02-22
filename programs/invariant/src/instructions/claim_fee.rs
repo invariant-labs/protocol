@@ -112,7 +112,7 @@ impl<'info> ClaimFee<'info> {
                 pool,
                 upper_tick,
                 lower_tick,
-                FixedPoint::new(0),
+                Liquidity::new(0),
                 true,
                 current_timestamp,
             )
