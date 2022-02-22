@@ -263,8 +263,8 @@ fn get_next_sqrt_price_x_up(
     };
 
     let denominator = match add {
-        true => liquidity + Liquidity::new(price_sqrt.big_mul(amount).v),
-        false => liquidity - Liquidity::new(price_sqrt.big_mul(amount).v),
+        true => liquidity + Liquidity::from_decimal(price_sqrt.big_mul(amount)),
+        false => liquidity - Liquidity::from_decimal(price_sqrt.big_mul(amount)),
     };
 
     price_sqrt.big_mul_up(liquidity).big_div_up(denominator)
