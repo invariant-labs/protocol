@@ -214,8 +214,8 @@ pub fn get_delta_y(
     };
 
     match up {
-        true => liquidity.big_mul_up(delta_price).to_token_ceil(),
-        false => liquidity.big_mul(delta_price).to_token_floor(),
+        true => TokenAmount::from_decimal_up(liquidity.big_mul_up(delta_price)),
+        false => TokenAmount::from_decimal(liquidity.big_mul(delta_price)),
     }
 }
 
@@ -263,8 +263,8 @@ fn get_next_sqrt_price_x_up(
     };
 
     let denominator = match add {
-        true => liquidity + Liquidity::new(price_sqrt.big_mul(amount).v),
-        false => liquidity - Liquidity::new(price_sqrt.big_mul(amount).v),
+        true => liquidity + Liquidity::from_decimal(price_sqrt.big_mul(amount)),
+        false => liquidity - Liquidity::from_decimal(price_sqrt.big_mul(amount)),
     };
 
     price_sqrt.big_mul_up(liquidity).big_div_up(denominator)
@@ -278,7 +278,7 @@ fn get_next_sqrt_price_y_down(
     add: bool,
 ) -> Price {
     if add {
-        price_sqrt + Price::from_decimal((amount.big_div(liquidity)))
+        price_sqrt + Price::from_decimal(amount.big_div(liquidity))
     } else {
         let quotient = Price::from_decimal(amount.big_div_up(liquidity));
         assert!(!quotient.is_zero());
