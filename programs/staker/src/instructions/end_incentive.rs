@@ -43,14 +43,14 @@ impl<'info> ReturnFounds<'info> {
     }
 }
 
-pub fn handler(ctx: Context<ReturnFounds>, bump_authority: u8) -> ProgramResult {
+pub fn handler(ctx: Context<ReturnFounds>, nonce: u8) -> ProgramResult {
     {
         let incentive = ctx.accounts.incentive.load()?;
         let current_time = get_current_timestamp();
         require!(current_time > incentive.end_claim_time, TooEarly);
         require!(incentive.num_of_stakes == 0, StakeExist);
 
-        let seeds = &[STAKER_SEED.as_bytes(), &[bump_authority]];
+        let seeds = &[STAKER_SEED.as_bytes(), &[nonce]];
         let signer = &[&seeds[..]];
         let cpi_ctx = ctx.accounts.return_to_founder().with_signer(signer);
 

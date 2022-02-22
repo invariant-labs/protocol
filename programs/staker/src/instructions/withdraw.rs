@@ -23,7 +23,13 @@ pub struct Withdraw<'info> {
         constraint = &incentive_token_account.owner == staker_authority.to_account_info().key @ InvalidTokenAccount
     )]
     pub incentive_token_account: Account<'info, TokenAccount>,
-    #[account(constraint = check_position_seeds(owner.to_account_info(), position.to_account_info().key, index))]
+    #[account(
+        seeds = [b"positionv1",
+        owner.key.as_ref(),
+        &index.to_le_bytes(),],
+        bump = position.load()?.bump,
+        seeds::program = invariant::ID
+    )]
     pub position: AccountLoader<'info, Position>,
     #[account(mut,
         constraint = owner_token_account.to_account_info().key != incentive_token_account.to_account_info().key @ InvalidTokenAccount,
@@ -31,7 +37,7 @@ pub struct Withdraw<'info> {
     )]
     pub owner_token_account: Account<'info, TokenAccount>,
     #[account(seeds = [b"staker".as_ref()], bump = nonce)]
-    pub staker_authority: AccountInfo<'info>,
+    pub staker_authority: AccountInfo<'info>, // validate with state
     pub owner: AccountInfo<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,

@@ -125,10 +125,6 @@ export type Staker = {
         {
           "name": "index",
           "type": "i32"
-        },
-        {
-          "name": "bump",
-          "type": "u8"
         }
       ]
     },
@@ -596,10 +592,6 @@ export const IDL: Staker = {
         {
           "name": "index",
           "type": "i32"
-        },
-        {
-          "name": "bump",
-          "type": "u8"
         }
       ]
     },
