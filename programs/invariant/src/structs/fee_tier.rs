@@ -1,4 +1,4 @@
-use crate::{decimals::FixedPoint, old_decimal::OldDecimal};
+use crate::decimals::FixedPoint;
 use anchor_lang::prelude::*;
 
 #[account(zero_copy)]

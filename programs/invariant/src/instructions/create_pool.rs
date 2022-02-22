@@ -1,18 +1,17 @@
-use std::cmp::Ordering;
-
 use crate::decimals::*;
 use crate::math::calculate_price_sqrt;
 use crate::structs::fee_tier::FeeTier;
 use crate::structs::pool::Pool;
 use crate::structs::tickmap::Tickmap;
+use crate::structs::State;
 use crate::util::check_tick;
 use crate::util::get_current_timestamp;
 use crate::ErrorCode::*;
-use crate::{old_decimal::OldDecimal, structs::OldFeeGrowth, structs::State};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::Token;
 use anchor_spl::token::{Mint, TokenAccount};
+use std::cmp::Ordering;
 
 #[derive(Accounts)]
 pub struct CreatePool<'info> {

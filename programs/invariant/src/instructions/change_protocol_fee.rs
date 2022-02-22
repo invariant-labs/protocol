@@ -1,9 +1,6 @@
 use crate::decimals::*;
+use crate::structs::{Pool, State};
 use crate::ErrorCode::*;
-use crate::{
-    old_decimal::OldDecimal,
-    structs::{Pool, State},
-};
 use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
 

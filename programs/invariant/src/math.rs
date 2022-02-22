@@ -1,11 +1,8 @@
 use crate::decimals::*;
-use crate::uint::U256;
-
-use crate::old_decimal::{MulUp, OldDecimal};
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::structs::tickmap::MAX_TICK;
-use crate::structs::token_amount::OldTokenAmount;
+use crate::uint::U256;
 use crate::*;
 
 #[derive(PartialEq, Debug)]

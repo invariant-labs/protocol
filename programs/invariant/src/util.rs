@@ -5,7 +5,6 @@ use std::convert::TryInto;
 use std::io::Write;
 
 use crate::math::calculate_price_sqrt;
-use crate::old_decimal::OldDecimal;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::structs::tickmap::Tickmap;

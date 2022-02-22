@@ -9,7 +9,6 @@ use crate::structs::tickmap::Tickmap;
 use crate::util::get_closer_limit;
 use crate::ErrorCode::*;
 use crate::*;
-use crate::{old_decimal::OldDecimal, structs::OldTokenAmount};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 

@@ -1,10 +1,8 @@
 use crate::interfaces::take_tokens::TakeTokens;
-use crate::old_decimal::OldDecimal;
 use crate::structs::pool::Pool;
 use crate::structs::position::Position;
 use crate::structs::position_list::PositionList;
 use crate::structs::tick::Tick;
-use crate::structs::OldFeeGrowth;
 use crate::structs::Tickmap;
 use crate::util::check_ticks;
 use crate::ErrorCode::*;
@@ -151,7 +149,7 @@ impl<'info> CreatePosition<'info> {
             upper_tick_index: upper_tick.index,
             fee_growth_inside_x: FeeGrowth::new(0),
             fee_growth_inside_y: FeeGrowth::new(0),
-            seconds_per_liquidity_inside: OldDecimal::new(0),
+            seconds_per_liquidity_inside: FixedPoint::new(0),
             last_slot: slot,
             tokens_owed_x: Liquidity::new(0),
             tokens_owed_y: Liquidity::new(0),

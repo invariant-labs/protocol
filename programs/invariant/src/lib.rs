@@ -18,7 +18,6 @@ use errors::ErrorCode;
 use errors::*;
 use instructions::*;
 use math::*;
-use old_decimal::*;
 use structs::{Pool, State};
 use util::*;
 

@@ -1,5 +1,4 @@
 use crate::decimals::*;
-use crate::old_decimal::OldDecimal;
 use crate::structs::fee_tier::FeeTier;
 use crate::ErrorCode::*;
 use crate::*;

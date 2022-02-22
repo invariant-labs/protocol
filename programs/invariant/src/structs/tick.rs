@@ -1,8 +1,5 @@
-use crate::old_decimal::OldDecimal;
 use crate::*;
 use anchor_lang::prelude::*;
-
-use super::OldFeeGrowth;
 use decimals::*;
 
 #[account(zero_copy)]

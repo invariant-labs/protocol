@@ -1,10 +1,7 @@
-use crate::{
-    decimals::*,
-    math::calculate_price_sqrt,
-    old_decimal::{OldDecimal, DENOMINATOR},
-    structs::MAX_TICK,
-    uint::U256,
-};
+use crate::decimals::*;
+use crate::math::calculate_price_sqrt;
+use crate::structs::MAX_TICK;
+use crate::uint::U256;
 
 const LOG_SCALE: u128 = 64;
 const LOG_DOUBLE_SCALE: u128 = 128;
@@ -16,8 +13,10 @@ const LOG2_NEGATIVE_MAX_LOSE: u128 = 1200000000000000; // max accuracy in <-MAX_
 const LOG2_MIN_BINARY_POSITION: i32 = 14; // accuracy = 2^(-14)
 const LOG2_ACCURACY: u128 = 1u128 << (63 - LOG2_MIN_BINARY_POSITION);
 
+const PRICE_DENOMINATOR: u128 = Price::one();
+
 fn decimal_to_x64(decimal: Price) -> u128 {
-    decimal.v * LOG_ONE / DENOMINATOR
+    decimal.v * LOG_ONE / PRICE_DENOMINATOR
 }
 
 fn align_tick_to_spacing(accurate_tick: i32, tick_spacing: i32) -> i32 {
@@ -142,7 +141,6 @@ pub fn get_tick_at_sqrt_price(sqrt_price_decimal: Price, tick_spacing: u16) -> i
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{old_decimal::OldDecimal, structs::MAX_TICK};
 
     #[test]
     fn test_log2_x64() {

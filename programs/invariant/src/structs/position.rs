@@ -1,13 +1,8 @@
-use crate::decimals::{FeeGrowth, Liquidity, TokenAmount};
-use crate::old_decimal::OldDecimal;
+use crate::decimals::*;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
-use crate::structs::OldFeeGrowth;
 use crate::*;
 use anchor_lang::prelude::*;
-use decimal::*;
-
-use super::OldTokenAmount;
 
 #[account(zero_copy)]
 #[repr(packed)]
@@ -21,7 +16,7 @@ pub struct Position {
     pub upper_tick_index: i32,
     pub fee_growth_inside_x: FeeGrowth,
     pub fee_growth_inside_y: FeeGrowth,
-    pub seconds_per_liquidity_inside: OldDecimal,
+    pub seconds_per_liquidity_inside: FixedPoint,
     pub last_slot: u64,
     pub tokens_owed_x: Liquidity,
     pub tokens_owed_y: Liquidity,
@@ -297,7 +292,7 @@ mod tests {
                 liquidity_gross: Liquidity::from_integer(123),
                 ..Default::default()
             };
-            let liquidity_delta = OldDecimal::from_integer(0);
+            let liquidity_delta = Liquidity::new(0);
             let add = true;
             let current_timestamp: u64 = 1234567890;
 

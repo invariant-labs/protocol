@@ -1,9 +1,6 @@
-use crate::old_decimal::OldDecimal;
 use crate::*;
 use anchor_lang::prelude::*;
 use decimals::*;
-
-use super::{OldFeeGrowth, OldTokenAmount};
 
 #[account(zero_copy)]
 #[repr(packed)]
