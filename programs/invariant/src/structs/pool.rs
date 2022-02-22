@@ -2,7 +2,7 @@ use crate::old_decimal::OldDecimal;
 use crate::*;
 use anchor_lang::prelude::*;
 
-use super::{FeeGrowth, TokenAmount};
+use super::{OldFeeGrowth, OldTokenAmount};
 
 #[account(zero_copy)]
 #[repr(packed)]
@@ -20,8 +20,8 @@ pub struct Pool {
     pub sqrt_price: OldDecimal,
     pub current_tick_index: i32, // nearest tick below the current price
     pub tickmap: Pubkey,
-    pub fee_growth_global_x: FeeGrowth,
-    pub fee_growth_global_y: FeeGrowth,
+    pub fee_growth_global_x: OldFeeGrowth,
+    pub fee_growth_global_y: OldFeeGrowth,
     pub fee_protocol_token_x: u64, // should be changed to TokenAmount when Armani implements tuple structs
     pub fee_protocol_token_y: u64,
     pub seconds_per_liquidity_global: OldDecimal,
@@ -34,14 +34,14 @@ pub struct Pool {
 }
 
 impl Pool {
-    pub fn add_fee(&mut self, amount: TokenAmount, in_x: bool) {
+    pub fn add_fee(&mut self, amount: OldTokenAmount, in_x: bool) {
         let protocol_fee = amount.big_mul(self.protocol_fee).to_token_ceil();
         let pool_fee = amount - protocol_fee;
 
         if pool_fee.is_zero() || self.liquidity.is_zero() {
             return;
         }
-        let fee_growth = FeeGrowth::from_fee(self.liquidity, pool_fee);
+        let fee_growth = OldFeeGrowth::from_fee(self.liquidity, pool_fee);
 
         if in_x {
             // trunk-ignore(clippy/unaligned_references)

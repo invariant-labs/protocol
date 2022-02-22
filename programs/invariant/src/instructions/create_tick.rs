@@ -2,7 +2,7 @@ use crate::math::calculate_price_sqrt;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::structs::tickmap::Tickmap;
-use crate::structs::FeeGrowth;
+use crate::structs::OldFeeGrowth;
 use crate::util::check_tick;
 use crate::ErrorCode::*;
 use crate::{old_decimal::OldDecimal, util::get_current_timestamp};
@@ -61,11 +61,11 @@ impl<'info> CreateTick<'info> {
             sqrt_price: calculate_price_sqrt(index),
             fee_growth_outside_x: match below_current_tick {
                 true => pool.fee_growth_global_x,
-                false => FeeGrowth::zero(),
+                false => OldFeeGrowth::zero(),
             },
             fee_growth_outside_y: match below_current_tick {
                 true => pool.fee_growth_global_y,
-                false => FeeGrowth::zero(),
+                false => OldFeeGrowth::zero(),
             },
             seconds_outside: match below_current_tick {
                 true => (current_timestamp.checked_sub(pool.start_timestamp).unwrap()),

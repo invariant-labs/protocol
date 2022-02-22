@@ -1,4 +1,4 @@
-use crate::structs::token_amount::TokenAmount;
+use crate::structs::token_amount::OldTokenAmount;
 use crate::uint::U256;
 use anchor_lang::prelude::*;
 use integer_sqrt::IntegerSquareRoot;
@@ -55,7 +55,7 @@ impl OldDecimal {
         self.v == 0
     }
 
-    pub fn from_token_amount(amount: TokenAmount) -> OldDecimal {
+    pub fn from_token_amount(amount: OldTokenAmount) -> OldDecimal {
         OldDecimal::from_integer(amount.0.into())
     }
 
@@ -75,12 +75,12 @@ impl OldDecimal {
         OldDecimal::new(self.v.checked_mul(DENOMINATOR).unwrap().integer_sqrt())
     }
 
-    pub fn to_token_floor(self) -> TokenAmount {
-        TokenAmount(self.v.checked_div(DENOMINATOR).unwrap().try_into().unwrap())
+    pub fn to_token_floor(self) -> OldTokenAmount {
+        OldTokenAmount(self.v.checked_div(DENOMINATOR).unwrap().try_into().unwrap())
     }
 
-    pub fn to_token_ceil(self) -> TokenAmount {
-        TokenAmount(
+    pub fn to_token_ceil(self) -> OldTokenAmount {
+        OldTokenAmount(
             self.v
                 .checked_add(DENOMINATOR.checked_sub(1).unwrap())
                 .unwrap()
@@ -241,9 +241,9 @@ impl MulUp<OldDecimal> for OldDecimal {
     }
 }
 
-impl MulUp<TokenAmount> for OldDecimal {
-    fn mul_up(self, other: TokenAmount) -> TokenAmount {
-        TokenAmount(
+impl MulUp<OldTokenAmount> for OldDecimal {
+    fn mul_up(self, other: OldTokenAmount) -> OldTokenAmount {
+        OldTokenAmount(
             self.v
                 .checked_mul(other.0 as u128)
                 .unwrap()
@@ -308,13 +308,13 @@ mod tests {
         }
         {
             let a = OldDecimal::from_integer(1);
-            let b = TokenAmount(1);
-            assert_eq!(a.mul_up(b), TokenAmount(1));
+            let b = OldTokenAmount(1);
+            assert_eq!(a.mul_up(b), OldTokenAmount(1));
         }
         {
             let a = OldDecimal::from_integer(3) / OldDecimal::from_integer(10);
-            let b = TokenAmount(3);
-            assert_eq!(a.mul_up(b), TokenAmount(1));
+            let b = OldTokenAmount(3);
+            assert_eq!(a.mul_up(b), OldTokenAmount(1));
         }
     }
 
@@ -472,22 +472,22 @@ mod tests {
         {
             let d = OldDecimal::from_integer(1);
 
-            assert_eq!(d.to_token_floor(), TokenAmount(1));
-            assert_eq!(d.to_token_ceil(), TokenAmount(1));
+            assert_eq!(d.to_token_floor(), OldTokenAmount(1));
+            assert_eq!(d.to_token_ceil(), OldTokenAmount(1));
         }
         // little over
         {
             let d = OldDecimal::from_integer(1) + OldDecimal::new(1);
 
-            assert_eq!(d.to_token_floor(), TokenAmount(1));
-            assert_eq!(d.to_token_ceil(), TokenAmount(2));
+            assert_eq!(d.to_token_floor(), OldTokenAmount(1));
+            assert_eq!(d.to_token_ceil(), OldTokenAmount(2));
         }
         // little below
         {
             let d = OldDecimal::from_integer(2) - OldDecimal::new(1);
 
-            assert_eq!(d.to_token_floor(), TokenAmount(1));
-            assert_eq!(d.to_token_ceil(), TokenAmount(2));
+            assert_eq!(d.to_token_floor(), OldTokenAmount(1));
+            assert_eq!(d.to_token_ceil(), OldTokenAmount(2));
         }
     }
 

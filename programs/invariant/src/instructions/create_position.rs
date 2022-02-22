@@ -4,7 +4,7 @@ use crate::structs::pool::Pool;
 use crate::structs::position::Position;
 use crate::structs::position_list::PositionList;
 use crate::structs::tick::Tick;
-use crate::structs::FeeGrowth;
+use crate::structs::OldFeeGrowth;
 use crate::structs::Tickmap;
 use crate::util::check_ticks;
 use crate::ErrorCode::*;
@@ -148,8 +148,8 @@ impl<'info> CreatePosition<'info> {
             liquidity: OldDecimal::new(0),
             lower_tick_index: lower_tick.index,
             upper_tick_index: upper_tick.index,
-            fee_growth_inside_x: FeeGrowth::zero(),
-            fee_growth_inside_y: FeeGrowth::zero(),
+            fee_growth_inside_x: OldFeeGrowth::zero(),
+            fee_growth_inside_y: OldFeeGrowth::zero(),
             seconds_per_liquidity_inside: OldDecimal::new(0),
             last_slot: slot,
             tokens_owed_x: OldDecimal::new(0),

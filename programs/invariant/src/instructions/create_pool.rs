@@ -7,7 +7,7 @@ use crate::structs::tickmap::Tickmap;
 use crate::util::check_tick;
 use crate::util::get_current_timestamp;
 use crate::ErrorCode::*;
-use crate::{old_decimal::OldDecimal, structs::FeeGrowth, structs::State};
+use crate::{old_decimal::OldDecimal, structs::OldFeeGrowth, structs::State};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::Token;
@@ -85,8 +85,8 @@ impl<'info> CreatePool<'info> {
             sqrt_price: calculate_price_sqrt(init_tick),
             current_tick_index: init_tick,
             tickmap: *self.tickmap.to_account_info().key,
-            fee_growth_global_x: FeeGrowth::zero(),
-            fee_growth_global_y: FeeGrowth::zero(),
+            fee_growth_global_x: OldFeeGrowth::zero(),
+            fee_growth_global_y: OldFeeGrowth::zero(),
             fee_protocol_token_x: 0,
             fee_protocol_token_y: 0,
             position_iterator: 0,

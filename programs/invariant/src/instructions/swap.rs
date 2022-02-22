@@ -8,7 +8,7 @@ use crate::structs::tickmap::Tickmap;
 use crate::util::get_closer_limit;
 use crate::ErrorCode::*;
 use crate::*;
-use crate::{old_decimal::OldDecimal, structs::TokenAmount};
+use crate::{old_decimal::OldDecimal, structs::OldTokenAmount};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
@@ -129,10 +129,10 @@ impl<'info> Swap<'info> {
             require!({ pool.sqrt_price } < sqrt_price_limit, WrongLimit);
         }
 
-        let mut remaining_amount = TokenAmount(amount);
+        let mut remaining_amount = OldTokenAmount(amount);
 
-        let mut total_amount_in = TokenAmount(0);
-        let mut total_amount_out = TokenAmount(0);
+        let mut total_amount_in = OldTokenAmount(0);
+        let mut total_amount_out = OldTokenAmount(0);
 
         while !remaining_amount.is_zero() {
             let (swap_limit, limiting_tick) = get_closer_limit(
@@ -214,7 +214,7 @@ impl<'info> Swap<'info> {
                             pool.add_fee(remaining_amount, x_to_y);
                             total_amount_in = total_amount_in + remaining_amount;
                         }
-                        remaining_amount = TokenAmount(0);
+                        remaining_amount = OldTokenAmount(0);
                     }
                 }
                 // set tick to limit (below if price is going down, because current tick should always be below price)

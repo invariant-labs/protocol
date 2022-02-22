@@ -3,9 +3,9 @@ use crate::uint::U256;
 use std::ops::{Add, Sub};
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct TokenAmount(pub u64);
+pub struct OldTokenAmount(pub u64);
 
-impl TokenAmount {
+impl OldTokenAmount {
     pub fn is_zero(&self) -> bool {
         self.0 == 0
     }
@@ -45,19 +45,19 @@ impl TokenAmount {
     }
 }
 
-impl Add for TokenAmount {
-    type Output = TokenAmount;
+impl Add for OldTokenAmount {
+    type Output = OldTokenAmount;
 
-    fn add(self, other: TokenAmount) -> TokenAmount {
-        TokenAmount(self.0.checked_add(other.0).unwrap())
+    fn add(self, other: OldTokenAmount) -> OldTokenAmount {
+        OldTokenAmount(self.0.checked_add(other.0).unwrap())
     }
 }
 
-impl Sub for TokenAmount {
-    type Output = TokenAmount;
+impl Sub for OldTokenAmount {
+    type Output = OldTokenAmount;
 
-    fn sub(self, other: TokenAmount) -> TokenAmount {
-        TokenAmount(self.0.checked_sub(other.0).unwrap())
+    fn sub(self, other: OldTokenAmount) -> OldTokenAmount {
+        OldTokenAmount(self.0.checked_sub(other.0).unwrap())
     }
 }
 
@@ -69,28 +69,28 @@ mod tests {
     fn test_big_mul() {
         // precision
         {
-            let a = TokenAmount(1);
+            let a = OldTokenAmount(1);
             let b = OldDecimal::from_integer(1);
             let c = a.big_mul(b);
             assert_eq!(c, OldDecimal::from_integer(1));
         }
         // simple
         {
-            let a = TokenAmount(2);
+            let a = OldTokenAmount(2);
             let b = OldDecimal::from_integer(3);
             let c = a.big_mul(b);
             assert_eq!(c, OldDecimal::from_integer(6));
         }
         // big
         {
-            let a = TokenAmount(1);
+            let a = OldTokenAmount(1);
             let b = OldDecimal::new(2u128.pow(127));
             let c = a.big_mul(b);
             assert_eq!(c, b);
         }
         // random
         {
-            let a = TokenAmount(982383286787);
+            let a = OldTokenAmount(982383286787);
             let b = OldDecimal::new(87932487422289);
             let c = a.big_mul(b);
             // 87932487422289 * 982383286787
@@ -101,18 +101,18 @@ mod tests {
     #[test]
     fn test_big_div() {
         {
-            let a = TokenAmount(1);
+            let a = OldTokenAmount(1);
             let b = OldDecimal::from_integer(1000000000000);
             assert_eq!(a.big_div(b), OldDecimal::new(1));
         }
         {
-            let a = TokenAmount(111);
+            let a = OldTokenAmount(111);
             let b = OldDecimal::from_integer(37);
             assert_eq!(a.big_div(b), OldDecimal::from_integer(3));
             assert_eq!(a.big_div_up(b), OldDecimal::from_integer(3));
         }
         {
-            let a = TokenAmount(1);
+            let a = OldTokenAmount(1);
             let b = OldDecimal::from_integer(3);
             assert_eq!(a.big_div(b), OldDecimal::new(333333333333));
             assert_eq!(a.big_div_up(b), OldDecimal::new(333333333334));
@@ -123,18 +123,18 @@ mod tests {
     fn ops() {
         // Add
         {
-            assert_eq!(TokenAmount(0) + TokenAmount(0), TokenAmount(0));
+            assert_eq!(OldTokenAmount(0) + OldTokenAmount(0), OldTokenAmount(0));
             assert_eq!(
-                TokenAmount(10000000000) + TokenAmount(2345678910),
-                TokenAmount(12345678910)
+                OldTokenAmount(10000000000) + OldTokenAmount(2345678910),
+                OldTokenAmount(12345678910)
             );
         }
         // Sub
         {
-            assert_eq!(TokenAmount(0) + TokenAmount(0), TokenAmount(0));
+            assert_eq!(OldTokenAmount(0) + OldTokenAmount(0), OldTokenAmount(0));
             assert_eq!(
-                TokenAmount(12345678910) - TokenAmount(2345678910),
-                TokenAmount(10000000000)
+                OldTokenAmount(12345678910) - OldTokenAmount(2345678910),
+                OldTokenAmount(10000000000)
             );
         }
     }
