@@ -413,6 +413,10 @@ pub fn is_enough_amount_to_push_price(
     by_amount_in: bool,
     x_to_y: bool,
 ) -> bool {
+    if liquidity.is_zero() {
+        return true;
+    }
+
     let next_price_sqrt = if by_amount_in {
         let amount_after_fee = amount.big_mul(Decimal::one() - fee).to_token_floor();
         get_next_sqrt_price_from_input(current_price_sqrt, liquidity, amount_after_fee, x_to_y)
