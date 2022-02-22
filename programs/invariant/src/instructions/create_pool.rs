@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 
+use crate::decimals::*;
 use crate::math::calculate_price_sqrt;
 use crate::structs::fee_tier::FeeTier;
 use crate::structs::pool::Pool;
@@ -80,17 +81,17 @@ impl<'info> CreatePool<'info> {
             token_y_reserve: *self.token_y_reserve.to_account_info().key,
             tick_spacing: fee_tier.tick_spacing,
             fee: fee_tier.fee,
-            protocol_fee: OldDecimal::new(200_000_000_000),
-            liquidity: OldDecimal::new(0),
+            protocol_fee: FixedPoint::from_scale(2, 1),
+            liquidity: Liquidity::new(0),
             sqrt_price: calculate_price_sqrt(init_tick),
             current_tick_index: init_tick,
             tickmap: *self.tickmap.to_account_info().key,
-            fee_growth_global_x: OldFeeGrowth::zero(),
-            fee_growth_global_y: OldFeeGrowth::zero(),
+            fee_growth_global_x: FeeGrowth::new(0),
+            fee_growth_global_y: FeeGrowth::new(0),
             fee_protocol_token_x: 0,
             fee_protocol_token_y: 0,
             position_iterator: 0,
-            seconds_per_liquidity_global: OldDecimal::new(0),
+            seconds_per_liquidity_global: FixedPoint::new(0),
             start_timestamp: current_timestamp,
             last_timestamp: current_timestamp,
             fee_receiver: self.state.load()?.admin,

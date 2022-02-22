@@ -1,3 +1,4 @@
+use crate::decimals::*;
 use crate::math::calculate_price_sqrt;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
@@ -56,16 +57,16 @@ impl<'info> CreateTick<'info> {
             pool: self.pool.key(),
             index,
             sign: true,
-            liquidity_change: OldDecimal::new(0),
-            liquidity_gross: OldDecimal::new(0),
+            liquidity_change: Liquidity::new(0),
+            liquidity_gross: Liquidity::new(0),
             sqrt_price: calculate_price_sqrt(index),
             fee_growth_outside_x: match below_current_tick {
                 true => pool.fee_growth_global_x,
-                false => OldFeeGrowth::zero(),
+                false => FeeGrowth::new(0),
             },
             fee_growth_outside_y: match below_current_tick {
                 true => pool.fee_growth_global_y,
-                false => OldFeeGrowth::zero(),
+                false => FeeGrowth::new(0),
             },
             seconds_outside: match below_current_tick {
                 true => (current_timestamp.checked_sub(pool.start_timestamp).unwrap()),
@@ -73,7 +74,7 @@ impl<'info> CreateTick<'info> {
             },
             seconds_per_liquidity_outside: match below_current_tick {
                 true => pool.seconds_per_liquidity_global,
-                false => OldDecimal::new(0),
+                false => FixedPoint::new(0),
             },
             bump,
         };

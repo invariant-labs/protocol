@@ -1,9 +1,6 @@
 pub use crate::uint::U256;
 use core::convert::TryFrom;
 use core::convert::TryInto;
-use decimal::decimal;
-use decimal::Decimal;
-
 pub use decimal::*;
 
 use anchor_lang::prelude::*;
@@ -33,7 +30,7 @@ pub struct FeeGrowth {
 #[zero_copy]
 #[derive(Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct FixedPoint {
-    v: u128,
+    pub v: u128,
 }
 
 // legacy not serializable may implement later

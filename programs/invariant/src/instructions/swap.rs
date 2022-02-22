@@ -1,3 +1,4 @@
+use crate::decimals::*;
 use crate::interfaces::send_tokens::SendTokens;
 use crate::interfaces::take_tokens::TakeTokens;
 use crate::log::get_tick_at_sqrt_price;
@@ -117,7 +118,7 @@ impl<'info> Swap<'info> {
         msg!("INVARIANT: SWAP");
         require!(amount != 0, ZeroAmount);
 
-        let sqrt_price_limit = OldDecimal::new(sqrt_price_limit);
+        let sqrt_price_limit = Price::new(sqrt_price_limit);
         let mut pool = ctx.accounts.pool.load_mut()?;
         let tickmap = ctx.accounts.tickmap.load()?;
         let state = ctx.accounts.state.load()?;
@@ -129,9 +130,9 @@ impl<'info> Swap<'info> {
             require!({ pool.sqrt_price } < sqrt_price_limit, WrongLimit);
         }
 
-        let mut remaining_amount = OldTokenAmount(amount);
+        let mut remaining_amount = TokenAmount(amount);
 
-        let mut total_amount_in = OldTokenAmount(0);
+        let mut total_amount_in = TokenAmount(0);
         let mut total_amount_out = OldTokenAmount(0);
 
         while !remaining_amount.is_zero() {

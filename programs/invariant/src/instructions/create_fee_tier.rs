@@ -1,3 +1,4 @@
+use crate::decimals::*;
 use crate::old_decimal::OldDecimal;
 use crate::structs::fee_tier::FeeTier;
 use crate::ErrorCode::*;
@@ -27,7 +28,7 @@ impl<'info> CreateFeeTier<'info> {
         msg!("INVARIANT: CREATE FEE TIER");
 
         let fee_tier = &mut self.fee_tier.load_init()?;
-        let fee = OldDecimal::new(fee);
+        let fee = FixedPoint::new(fee);
 
         **fee_tier = FeeTier {
             fee,
