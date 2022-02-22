@@ -202,11 +202,11 @@ pub fn get_delta_x(
 
 // delta y = L * delta_sqrt_price
 pub fn get_delta_y(
-    sqrt_price_a: OldDecimal,
-    sqrt_price_b: OldDecimal,
-    liquidity: OldDecimal,
+    sqrt_price_a: Price,
+    sqrt_price_b: Price,
+    liquidity: Liquidity,
     up: bool,
-) -> OldTokenAmount {
+) -> TokenAmount {
     let delta_price = if sqrt_price_a > sqrt_price_b {
         sqrt_price_a - sqrt_price_b
     } else {
@@ -220,13 +220,13 @@ pub fn get_delta_y(
 }
 
 fn get_next_sqrt_price_from_input(
-    price_sqrt: OldDecimal,
-    liquidity: OldDecimal,
-    amount: OldTokenAmount,
+    price_sqrt: Price,
+    liquidity: Liquidity,
+    amount: TokenAmount,
     x_to_y: bool,
-) -> OldDecimal {
-    assert!(price_sqrt > OldDecimal::new(0));
-    assert!(liquidity > OldDecimal::new(0));
+) -> Price {
+    assert!(!price_sqrt.is_zero());
+    assert!(!liquidity.is_zero());
 
     if x_to_y {
         get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true)
@@ -236,13 +236,13 @@ fn get_next_sqrt_price_from_input(
 }
 
 fn get_next_sqrt_price_from_output(
-    price_sqrt: OldDecimal,
-    liquidity: OldDecimal,
-    amount: OldTokenAmount,
+    price_sqrt: Price,
+    liquidity: Liquidity,
+    amount: TokenAmount,
     x_to_y: bool,
-) -> OldDecimal {
-    assert!(price_sqrt > OldDecimal::new(0));
-    assert!(liquidity > OldDecimal::new(0));
+) -> Price {
+    assert!(!price_sqrt.is_zero());
+    assert!(!liquidity.is_zero());
 
     if x_to_y {
         get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, false)
@@ -253,35 +253,35 @@ fn get_next_sqrt_price_from_output(
 
 // L * price / (L +- amount * price)
 fn get_next_sqrt_price_x_up(
-    price_sqrt: OldDecimal,
-    liquidity: OldDecimal,
-    amount: OldTokenAmount,
+    price_sqrt: Price,
+    liquidity: Liquidity,
+    amount: TokenAmount,
     add: bool,
-) -> OldDecimal {
+) -> Price {
     if amount.is_zero() {
         return price_sqrt;
     };
 
     let denominator = match add {
-        true => liquidity + (amount.big_mul(price_sqrt)),
-        false => liquidity - (amount.big_mul(price_sqrt)),
+        true => liquidity + Liquidity::new(price_sqrt.big_mul(amount).v),
+        false => liquidity - Liquidity::new(price_sqrt.big_mul(amount).v),
     };
 
-    liquidity.big_mul_up(price_sqrt).big_div_up(denominator)
+    price_sqrt.big_mul_up(liquidity).big_div_up(denominator)
 }
 
-// price +- (amount / L)
+// price +- (amount / L),
 fn get_next_sqrt_price_y_down(
-    price_sqrt: OldDecimal,
-    liquidity: OldDecimal,
-    amount: OldTokenAmount,
+    price_sqrt: Price,
+    liquidity: Liquidity,
+    amount: TokenAmount,
     add: bool,
-) -> OldDecimal {
+) -> Price {
     if add {
-        price_sqrt + (amount.big_div(liquidity))
+        price_sqrt + Price::from_decimal((amount.big_div(liquidity)))
     } else {
-        let quotient = amount.big_div_up(liquidity);
-        assert!(price_sqrt > quotient);
+        let quotient = Price::from_decimal(amount.big_div_up(liquidity));
+        assert!(!quotient.is_zero());
         price_sqrt - quotient
     }
 }
