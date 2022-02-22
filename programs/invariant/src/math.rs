@@ -1,5 +1,4 @@
 use crate::decimals::*;
-use crate::structs::OldFeeGrowth;
 use crate::uint::U256;
 
 use crate::old_decimal::{MulUp, OldDecimal};
@@ -17,72 +16,72 @@ pub struct SwapResult {
     pub fee_amount: OldTokenAmount,
 }
 
-pub fn calculate_price_sqrt(tick_index: i32) -> OldDecimal {
+pub fn calculate_price_sqrt(tick_index: i32) -> Price {
     // checking if tick be converted to price (overflows if more)
     let tick = tick_index.abs();
     assert!(tick <= MAX_TICK, "tick over bounds");
 
-    let mut price = OldDecimal::one();
+    let mut price = Price::from_integer(1);
 
     if tick & 0x1 != 0 {
-        price = price * OldDecimal::new(1000049998750);
+        price = price * Price::new(1000049998750062496094023);
     }
     if tick & 0x2 != 0 {
-        price = price * OldDecimal::new(1000100000000);
+        price = price * Price::new(1000100000000000000000000);
     }
     if tick & 0x4 != 0 {
-        price = price * OldDecimal::new(1000200010000);
+        price = price * Price::new(1000200010000000000000000);
     }
     if tick & 0x8 != 0 {
-        price = price * OldDecimal::new(1000400060004);
+        price = price * Price::new(1000400060004000100000000);
     }
     if tick & 0x10 != 0 {
-        price = price * OldDecimal::new(1000800280056);
+        price = price * Price::new(1000800280056007000560028);
     }
     if tick & 0x20 != 0 {
-        price = price * OldDecimal::new(1001601200560);
+        price = price * Price::new(1001601200560182043688009);
     }
     if tick & 0x40 != 0 {
-        price = price * OldDecimal::new(1003204964963);
+        price = price * Price::new(1003204964963598014666528);
     }
     if tick & 0x80 != 0 {
-        price = price * OldDecimal::new(1006420201726);
+        price = price * Price::new(1006420201727613920156533);
     }
     if tick & 0x100 != 0 {
-        price = price * OldDecimal::new(1012881622442);
+        price = price * Price::new(1012881622445451097078095);
     }
     if tick & 0x200 != 0 {
-        price = price * OldDecimal::new(1025929181080);
+        price = price * Price::new(1025929181087729343658708);
     }
     if tick & 0x400 != 0 {
-        price = price * OldDecimal::new(1052530684591);
+        price = price * Price::new(1052530684607338948386589);
     }
     if tick & 0x800 != 0 {
-        price = price * OldDecimal::new(1107820842005);
+        price = price * Price::new(1107820842039993613899215);
     }
     if tick & 0x1000 != 0 {
-        price = price * OldDecimal::new(1227267017980);
+        price = price * Price::new(1227267018058200482050503);
     }
     if tick & 0x2000 != 0 {
-        price = price * OldDecimal::new(1506184333421);
+        price = price * Price::new(1506184333613467388107955);
     }
     if tick & 0x4000 != 0 {
-        price = price * OldDecimal::new(2268591246242);
+        price = price * Price::new(2268591246822644826925609);
     }
     if tick & 0x8000 != 0 {
-        price = price * OldDecimal::new(5146506242525);
+        price = price * Price::new(5146506245160322222537991);
     }
     if tick & 0x0001_0000 != 0 {
-        price = price * OldDecimal::new(26486526504348);
+        price = price * Price::new(26486526531474198664033811);
     }
     if tick & 0x0002_0000 != 0 {
-        price = price * OldDecimal::new(701536086265529);
+        price = price * Price::new(701536087702486644953017488);
     }
 
     if tick_index < 0 {
-        price = OldDecimal::new(
-            U256::from(OldDecimal::one().v)
-                .checked_mul(U256::from(OldDecimal::one().v))
+        price = Price::new(
+            U256::from(Price::from_integer(1).v)
+                .checked_mul(U256::from(Price::from_integer(1).v))
                 .unwrap()
                 .checked_div(U256::from(price.v))
                 .unwrap()
