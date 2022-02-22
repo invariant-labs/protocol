@@ -10,28 +10,28 @@ use anchor_lang::prelude::*;
 
 #[decimal(24)]
 #[zero_copy]
-#[derive(Default, std::fmt::Debug, PartialEq)]
+#[derive(Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Price {
     pub v: u128,
 }
 
 #[decimal(12)]
 #[zero_copy]
-#[derive(Default, std::fmt::Debug, PartialEq)]
+#[derive(Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Liquidity {
     pub v: u128,
 }
 
 #[decimal(24)]
 #[zero_copy]
-#[derive(Default, std::fmt::Debug, PartialEq)]
+#[derive(Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct FeeGrowth {
     pub v: u128,
 }
 
 #[decimal(0)]
 #[zero_copy]
-#[derive(Default, std::fmt::Debug, PartialEq)]
+#[derive(Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TokenAmount {
     pub v: u64,
 }

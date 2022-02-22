@@ -3,6 +3,7 @@ use crate::*;
 use anchor_lang::prelude::*;
 
 use super::OldFeeGrowth;
+use decimals::{FeeGrowth, Liquidity, Price};
 
 #[account(zero_copy)]
 #[repr(packed)]
@@ -11,11 +12,11 @@ pub struct Tick {
     pub pool: Pubkey,
     pub index: i32,
     pub sign: bool, // true means positive
-    pub liquidity_change: OldDecimal,
-    pub liquidity_gross: OldDecimal,
-    pub sqrt_price: OldDecimal,
-    pub fee_growth_outside_x: OldFeeGrowth,
-    pub fee_growth_outside_y: OldFeeGrowth,
+    pub liquidity_change: Liquidity,
+    pub liquidity_gross: Liquidity,
+    pub sqrt_price: Price,
+    pub fee_growth_outside_x: FeeGrowth,
+    pub fee_growth_outside_y: FeeGrowth,
     pub seconds_per_liquidity_outside: OldDecimal,
     pub seconds_outside: u64,
     pub bump: u8,
@@ -24,7 +25,7 @@ pub struct Tick {
 impl Tick {
     pub fn update(
         &mut self,
-        liquidity_delta: OldDecimal,
+        liquidity_delta: Liquidity,
         is_upper: bool,
         is_deposit: bool,
     ) -> Result<()> {
@@ -35,7 +36,7 @@ impl Tick {
         Ok(())
     }
 
-    fn update_liquidity_change(&mut self, liquidity_delta: OldDecimal, add: bool) {
+    fn update_liquidity_change(&mut self, liquidity_delta: Liquidity, add: bool) {
         if self.sign ^ add {
             if { self.liquidity_change } > liquidity_delta {
                 self.liquidity_change = self.liquidity_change - liquidity_delta;
@@ -51,8 +52,8 @@ impl Tick {
     fn calculate_new_liquidity_gross_safely(
         self,
         sign: bool,
-        liquidity_delta: OldDecimal,
-    ) -> Result<OldDecimal> {
+        liquidity_delta: Liquidity,
+    ) -> Result<Liquidity> {
         // validate in decrease liquidity case
         if !sign && { self.liquidity_gross } < liquidity_delta {
             return Err(ErrorCode::InvalidTickLiquidity.into());
@@ -77,55 +78,55 @@ mod tests {
         {
             let mut tick = Tick {
                 sign: true,
-                liquidity_change: OldDecimal::from_integer(2),
+                liquidity_change: Liquidity::from_integer(2),
                 ..Default::default()
             };
-            let liquidity_delta = OldDecimal::from_integer(3);
+            let liquidity_delta = Liquidity::from_integer(3);
             let add = true;
             tick.update_liquidity_change(liquidity_delta, add);
 
             assert_eq!(tick.sign, true);
-            assert_eq!({ tick.liquidity_change }, OldDecimal::from_integer(5));
+            assert_eq!({ tick.liquidity_change }, Liquidity::from_integer(5));
         }
         {
             let mut tick = Tick {
                 sign: false,
-                liquidity_change: OldDecimal::from_integer(2),
+                liquidity_change: Liquidity::from_integer(2),
                 ..Default::default()
             };
-            let liquidity_delta = OldDecimal::from_integer(3);
+            let liquidity_delta = Liquidity::from_integer(3);
             let add = false;
             tick.update_liquidity_change(liquidity_delta, add);
 
             assert_eq!(tick.sign, false);
-            assert_eq!({ tick.liquidity_change }, OldDecimal::from_integer(5));
+            assert_eq!({ tick.liquidity_change }, Liquidity::from_integer(5));
         }
         // update when tick sign and sign of liquidity change are different
         {
             let mut tick = Tick {
                 sign: true,
-                liquidity_change: OldDecimal::from_integer(2),
+                liquidity_change: Liquidity::from_integer(2),
                 ..Default::default()
             };
-            let liquidity_delta = OldDecimal::from_integer(3);
+            let liquidity_delta = Liquidity::from_integer(3);
             let add = false;
             tick.update_liquidity_change(liquidity_delta, add);
 
             assert_eq!(tick.sign, false);
-            assert_eq!({ tick.liquidity_change }, OldDecimal::from_integer(1));
+            assert_eq!({ tick.liquidity_change }, Liquidity::from_integer(1));
         }
         {
             let mut tick = Tick {
                 sign: false,
-                liquidity_change: OldDecimal::from_integer(2),
+                liquidity_change: Liquidity::from_integer(2),
                 ..Default::default()
             };
-            let liquidity_delta = OldDecimal::from_integer(3);
+            let liquidity_delta = Liquidity::from_integer(3);
             let add = true;
             tick.update_liquidity_change(liquidity_delta, add);
 
             assert_eq!(tick.sign, true);
-            assert_eq!({ tick.liquidity_change }, OldDecimal::from_integer(1));
+            assert_eq!({ tick.liquidity_change }, Liquidity::from_integer(1));
         }
     }
 
@@ -136,51 +137,45 @@ mod tests {
             let mut tick = Tick {
                 index: 0,
                 sign: true,
-                liquidity_change: OldDecimal::from_integer(2),
-                liquidity_gross: OldDecimal::from_integer(2),
-                fee_growth_outside_x: OldFeeGrowth::from_integer(2),
-                fee_growth_outside_y: OldFeeGrowth::from_integer(2),
+                liquidity_change: Liquidity::from_integer(2),
+                liquidity_gross: Liquidity::from_integer(2),
+                fee_growth_outside_x: FeeGrowth::from_integer(2),
+                fee_growth_outside_y: FeeGrowth::from_integer(2),
                 ..Default::default()
             };
-            let liquidity_delta: OldDecimal = OldDecimal::from_integer(1);
+            let liquidity_delta: Liquidity = Liquidity::from_integer(1);
             let is_upper: bool = false;
             let is_deposit: bool = true;
 
             tick.update(liquidity_delta, is_upper, is_deposit).unwrap();
 
             assert_eq!(tick.sign, true);
-            assert_eq!({ tick.liquidity_change }, OldDecimal::from_integer(3));
-            assert_eq!({ tick.liquidity_gross }, OldDecimal::from_integer(3));
-            assert_eq!({ tick.fee_growth_outside_x }, OldFeeGrowth::from_integer(2));
-            assert_eq!({ tick.fee_growth_outside_y }, OldFeeGrowth::from_integer(2));
+            assert_eq!({ tick.liquidity_change }, Liquidity::from_integer(3));
+            assert_eq!({ tick.liquidity_gross }, Liquidity::from_integer(3));
+            assert_eq!({ tick.fee_growth_outside_x }, FeeGrowth::from_integer(2));
+            assert_eq!({ tick.fee_growth_outside_y }, FeeGrowth::from_integer(2));
         }
         {
             let mut tick = Tick {
                 index: 5,
                 sign: true,
-                liquidity_change: OldDecimal::from_integer(3),
-                liquidity_gross: OldDecimal::from_integer(7),
-                fee_growth_outside_x: OldFeeGrowth::from_integer(13),
-                fee_growth_outside_y: OldFeeGrowth::from_integer(11),
+                liquidity_change: Liquidity::from_integer(3),
+                liquidity_gross: Liquidity::from_integer(7),
+                fee_growth_outside_x: FeeGrowth::from_integer(13),
+                fee_growth_outside_y: FeeGrowth::from_integer(11),
                 ..Default::default()
             };
-            let liquidity_delta: OldDecimal = OldDecimal::from_integer(1);
+            let liquidity_delta: Liquidity = Liquidity::from_integer(1);
             let is_upper: bool = true;
             let is_deposit: bool = true;
 
             tick.update(liquidity_delta, is_upper, is_deposit).unwrap();
 
             assert_eq!(tick.sign, true);
-            assert_eq!({ tick.liquidity_change }, OldDecimal::from_integer(2));
-            assert_eq!({ tick.liquidity_gross }, OldDecimal::from_integer(8));
-            assert_eq!(
-                { tick.fee_growth_outside_x },
-                OldFeeGrowth::from_integer(13)
-            );
-            assert_eq!(
-                { tick.fee_growth_outside_y },
-                OldFeeGrowth::from_integer(11)
-            );
+            assert_eq!({ tick.liquidity_change }, Liquidity::from_integer(2));
+            assert_eq!({ tick.liquidity_gross }, Liquidity::from_integer(8));
+            assert_eq!({ tick.fee_growth_outside_x }, FeeGrowth::from_integer(13));
+            assert_eq!({ tick.fee_growth_outside_y }, FeeGrowth::from_integer(11));
         }
     }
 }
