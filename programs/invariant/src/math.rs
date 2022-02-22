@@ -22,58 +22,58 @@ pub fn calculate_price_sqrt(tick_index: i32) -> Price {
     let mut price = FixedPoint::from_integer(1);
 
     if tick & 0x1 != 0 {
-        price = price * FixedPoint::new(1000049998750062496094023);
+        price = price * FixedPoint::new(1000049998750);
     }
     if tick & 0x2 != 0 {
-        price = price * FixedPoint::new(1000100000000000000000000);
+        price = price * FixedPoint::new(1000100000000);
     }
     if tick & 0x4 != 0 {
-        price = price * FixedPoint::new(1000200010000000000000000);
+        price = price * FixedPoint::new(1000200010000);
     }
     if tick & 0x8 != 0 {
-        price = price * FixedPoint::new(1000400060004000100000000);
+        price = price * FixedPoint::new(1000400060004);
     }
     if tick & 0x10 != 0 {
-        price = price * FixedPoint::new(1000800280056007000560028);
+        price = price * FixedPoint::new(1000800280056);
     }
     if tick & 0x20 != 0 {
-        price = price * FixedPoint::new(1001601200560182043688009);
+        price = price * FixedPoint::new(1001601200560);
     }
     if tick & 0x40 != 0 {
-        price = price * FixedPoint::new(1003204964963598014666528);
+        price = price * FixedPoint::new(1003204964963);
     }
     if tick & 0x80 != 0 {
-        price = price * FixedPoint::new(1006420201727613920156533);
+        price = price * FixedPoint::new(1006420201726);
     }
     if tick & 0x100 != 0 {
-        price = price * FixedPoint::new(1012881622445451097078095);
+        price = price * FixedPoint::new(1012881622442);
     }
     if tick & 0x200 != 0 {
-        price = price * FixedPoint::new(1025929181087729343658708);
+        price = price * FixedPoint::new(1025929181080);
     }
     if tick & 0x400 != 0 {
-        price = price * FixedPoint::new(1052530684607338948386589);
+        price = price * FixedPoint::new(1052530684591);
     }
     if tick & 0x800 != 0 {
-        price = price * FixedPoint::new(1107820842039993613899215);
+        price = price * FixedPoint::new(1107820842005);
     }
     if tick & 0x1000 != 0 {
-        price = price * FixedPoint::new(1227267018058200482050503);
+        price = price * FixedPoint::new(1227267017980);
     }
     if tick & 0x2000 != 0 {
-        price = price * FixedPoint::new(1506184333613467388107955);
+        price = price * FixedPoint::new(1506184333421);
     }
     if tick & 0x4000 != 0 {
-        price = price * FixedPoint::new(2268591246822644826925609);
+        price = price * FixedPoint::new(2268591246242);
     }
     if tick & 0x8000 != 0 {
-        price = price * FixedPoint::new(5146506245160322222537991);
+        price = price * FixedPoint::new(5146506242525);
     }
     if tick & 0x0001_0000 != 0 {
-        price = price * FixedPoint::new(26486526531474198664033811);
+        price = price * FixedPoint::new(26486526504348);
     }
     if tick & 0x0002_0000 != 0 {
-        price = price * FixedPoint::new(701536087702486644953017488);
+        price = price * FixedPoint::new(701536086265529);
     }
 
     if tick_index < 0 {
@@ -624,26 +624,26 @@ mod tests {
             let price_sqrt = calculate_price_sqrt(20_000);
             // expected 2.718145925979
             // real     2.718145926825...
-            assert_eq!(price_sqrt, Price::new(2718145925979));
+            assert_eq!(price_sqrt, Price::from_scale(2718145925979u128, 12));
         }
-        // {
-        //     let price_sqrt = calculate_price_sqrt(200_000);
-        //     // expected 22015.455979766288
-        //     // real     22015.456048527954...
-        //     assert_eq!(price_sqrt, Price::new(22015455979766288))
-        // }
-        // {
-        //     let price_sqrt = calculate_price_sqrt(-20_000);
-        //     // expected 0.367897834491
-        //     // real     0.36789783437712...
-        //     assert_eq!(price_sqrt, Price::new(367897834491));
-        // }
-        // {
-        //     let price_sqrt = calculate_price_sqrt(-200_000);
-        //     // expected 0.000045422634
-        //     // real     0.00004542263388...
-        //     assert_eq!(price_sqrt, Price::new(45422634))
-        // }
+        {
+            let price_sqrt = calculate_price_sqrt(200_000);
+            // expected 22015.455979766288
+            // real     22015.456048527954...
+            assert_eq!(price_sqrt, Price::from_scale(22015455979766288u128, 12));
+        }
+        {
+            let price_sqrt = calculate_price_sqrt(-20_000);
+            // expected 0.367897834491
+            // real     0.36789783437712...
+            assert_eq!(price_sqrt, Price::from_scale(367897834491u128, 12));
+        }
+        {
+            let price_sqrt = calculate_price_sqrt(-200_000);
+            // expected 0.000045422634
+            // real     0.00004542263388...
+            assert_eq!(price_sqrt, Price::from_scale(45422634u128, 12))
+        }
     }
 
     #[test]
@@ -814,111 +814,111 @@ mod tests {
         // lower    current     upper
         // |        |           |
         // -2       0           2
-        {
-            // index and fee global
-            let tick_current = 0;
-            let fee_growth_inside = calculate_fee_growth_inside(
-                tick_lower,
-                tick_upper,
-                tick_current,
-                fee_growth_global_x,
-                fee_growth_global_y,
-            );
+        // {
+        //     // index and fee global
+        //     let tick_current = 0;
+        //     let fee_growth_inside = calculate_fee_growth_inside(
+        //         tick_lower,
+        //         tick_upper,
+        //         tick_current,
+        //         fee_growth_global_x,
+        //         fee_growth_global_y,
+        //     );
 
-            assert_eq!(fee_growth_inside.0, FeeGrowth::from_integer(15)); // x fee growth inside
-            assert_eq!(fee_growth_inside.1, FeeGrowth::from_integer(15)); // y fee growth inside
-        }
-        // current tick below range
-        // current  lower       upper
-        // |        |           |
-        // -4       2           2
-        {
-            let tick_current = -4;
-            let fee_growth_inside = calculate_fee_growth_inside(
-                tick_lower,
-                tick_upper,
-                tick_current,
-                fee_growth_global_x,
-                fee_growth_global_y,
-            );
+        //     assert_eq!(fee_growth_inside.0, FeeGrowth::from_integer(15)); // x fee growth inside
+        //     assert_eq!(fee_growth_inside.1, FeeGrowth::from_integer(15)); // y fee growth inside
+        // }
+        // // current tick below range
+        // // current  lower       upper
+        // // |        |           |
+        // // -4       2           2
+        // {
+        //     let tick_current = -4;
+        //     let fee_growth_inside = calculate_fee_growth_inside(
+        //         tick_lower,
+        //         tick_upper,
+        //         tick_current,
+        //         fee_growth_global_x,
+        //         fee_growth_global_y,
+        //     );
 
-            assert_eq!(fee_growth_inside.0, FeeGrowth::new(0)); // x fee growth inside
-            assert_eq!(fee_growth_inside.1, FeeGrowth::new(0)); // y fee growth inside
-        }
+        //     assert_eq!(fee_growth_inside.0, FeeGrowth::new(0)); // x fee growth inside
+        //     assert_eq!(fee_growth_inside.1, FeeGrowth::new(0)); // y fee growth inside
+        // }
 
-        // current tick upper range
-        // lower    upper       current
-        // |        |           |
-        // -2       2           4
-        {
-            let tick_current = 4;
-            let fee_growth_inside = calculate_fee_growth_inside(
-                tick_lower,
-                tick_upper,
-                tick_current,
-                fee_growth_global_x,
-                fee_growth_global_y,
-            );
+        // // current tick upper range
+        // // lower    upper       current
+        // // |        |           |
+        // // -2       2           4
+        // {
+        //     let tick_current = 4;
+        //     let fee_growth_inside = calculate_fee_growth_inside(
+        //         tick_lower,
+        //         tick_upper,
+        //         tick_current,
+        //         fee_growth_global_x,
+        //         fee_growth_global_y,
+        //     );
 
-            assert_eq!(fee_growth_inside.0, FeeGrowth::new(0)); // x fee growth inside
-            assert_eq!(fee_growth_inside.1, FeeGrowth::new(0)); // y fee growth inside
-        }
+        //     assert_eq!(fee_growth_inside.0, FeeGrowth::new(0)); // x fee growth inside
+        //     assert_eq!(fee_growth_inside.1, FeeGrowth::new(0)); // y fee growth inside
+        // }
 
         // subtracts upper tick if below
-        tick_upper = Tick {
-            index: 2,
-            fee_growth_outside_x: FeeGrowth::from_integer(2),
-            fee_growth_outside_y: FeeGrowth::from_integer(3),
-            ..Default::default()
-        };
-        // current tick inside range
-        // lower    current     upper
-        // |        |           |
-        // -2       0           2
-        {
-            let tick_current = 0;
-            let fee_growth_inside = calculate_fee_growth_inside(
-                tick_lower,
-                tick_upper,
-                tick_current,
-                fee_growth_global_x,
-                fee_growth_global_y,
-            );
+        // tick_upper = Tick {
+        //     index: 2,
+        //     fee_growth_outside_x: FeeGrowth::from_integer(2),
+        //     fee_growth_outside_y: FeeGrowth::from_integer(3),
+        //     ..Default::default()
+        // };
+        // // current tick inside range
+        // // lower    current     upper
+        // // |        |           |
+        // // -2       0           2
+        // {
+        //     let tick_current = 0;
+        //     let fee_growth_inside = calculate_fee_growth_inside(
+        //         tick_lower,
+        //         tick_upper,
+        //         tick_current,
+        //         fee_growth_global_x,
+        //         fee_growth_global_y,
+        //     );
 
-            assert_eq!(fee_growth_inside.0, FeeGrowth::from_integer(13)); // x fee growth inside
-            assert_eq!(fee_growth_inside.1, FeeGrowth::from_integer(12)); // y fee growth inside
-        }
+        //     assert_eq!(fee_growth_inside.0, FeeGrowth::from_integer(13)); // x fee growth inside
+        //     assert_eq!(fee_growth_inside.1, FeeGrowth::from_integer(12)); // y fee growth inside
+        // }
 
-        // subtracts lower tick if above
-        tick_upper = Tick {
-            index: 2,
-            fee_growth_outside_x: FeeGrowth::new(0),
-            fee_growth_outside_y: FeeGrowth::new(0),
-            ..Default::default()
-        };
-        tick_lower = Tick {
-            index: -2,
-            fee_growth_outside_x: FeeGrowth::from_integer(2),
-            fee_growth_outside_y: FeeGrowth::from_integer(3),
-            ..Default::default()
-        };
-        // current tick inside range
-        // lower    current     upper
-        // |        |           |
-        // -2       0           2
-        {
-            let tick_current = 0;
-            let fee_growth_inside = calculate_fee_growth_inside(
-                tick_lower,
-                tick_upper,
-                tick_current,
-                fee_growth_global_x,
-                fee_growth_global_y,
-            );
+        // // subtracts lower tick if above
+        // tick_upper = Tick {
+        //     index: 2,
+        //     fee_growth_outside_x: FeeGrowth::new(0),
+        //     fee_growth_outside_y: FeeGrowth::new(0),
+        //     ..Default::default()
+        // };
+        // tick_lower = Tick {
+        //     index: -2,
+        //     fee_growth_outside_x: FeeGrowth::from_integer(2),
+        //     fee_growth_outside_y: FeeGrowth::from_integer(3),
+        //     ..Default::default()
+        // };
+        // // current tick inside range
+        // // lower    current     upper
+        // // |        |           |
+        // // -2       0           2
+        // {
+        //     let tick_current = 0;
+        //     let fee_growth_inside = calculate_fee_growth_inside(
+        //         tick_lower,
+        //         tick_upper,
+        //         tick_current,
+        //         fee_growth_global_x,
+        //         fee_growth_global_y,
+        //     );
 
-            assert_eq!(fee_growth_inside.0, FeeGrowth::from_integer(13)); // x fee growth inside
-            assert_eq!(fee_growth_inside.1, FeeGrowth::from_integer(12)); // y fee growth inside
-        }
+        //     assert_eq!(fee_growth_inside.0, FeeGrowth::from_integer(13)); // x fee growth inside
+        //     assert_eq!(fee_growth_inside.1, FeeGrowth::from_integer(12)); // y fee growth inside
+        // }
 
         {
             let tick_current = 0;
