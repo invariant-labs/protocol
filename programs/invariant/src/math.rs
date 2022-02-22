@@ -432,7 +432,7 @@ mod tests {
         // one token by amount in
         {
             let price = Price::from_integer(1);
-            let target = (Price::from_integer(101) / Price::from_integer(100)).sqrt();
+            let target = Price::new(1004987562112089027021926);
             let liquidity = Liquidity::from_integer(2000);
             let amount = TokenAmount(1);
             let fee = FixedPoint::from_scale(6, 4);
@@ -450,7 +450,7 @@ mod tests {
         // amount out capped at target price
         {
             let price = Price::from_integer(1);
-            let target = (Price::from_integer(101) / Price::from_integer(100)).sqrt();
+            let target = Price::new(1004987562112089027021926);
             let liquidity = Liquidity::from_integer(2000);
             let amount = TokenAmount(20);
             let fee = FixedPoint::from_scale(6, 4);
