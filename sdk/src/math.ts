@@ -575,6 +575,10 @@ export const isEnoughAmountToPushPrice = (
   byAmountIn: boolean,
   aToB: boolean
 ) => {
+  if (liquidity.v.eqn(0)) {
+    return true
+  }
+
   let nextSqrtPrice: Decimal
 
   if (byAmountIn) {
