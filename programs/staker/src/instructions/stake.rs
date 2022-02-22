@@ -1,4 +1,4 @@
-use crate::decimal::*;
+use crate::decimall::*;
 use crate::structs::*;
 use crate::util::get_current_slot;
 use crate::util::get_current_timestamp;

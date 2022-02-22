@@ -1,4 +1,4 @@
-use crate::decimal::{Decimal, DENOMINATOR, SCALE};
+use crate::old_decimal::{OldDecimal, DENOMINATOR, SCALE};
 use crate::structs::TokenAmount;
 use crate::uint::U256;
 use anchor_lang::prelude::*;
@@ -26,7 +26,7 @@ impl FeeGrowth {
         FeeGrowth { v: value }
     }
 
-    pub fn from_fee(liquidity: Decimal, amount: TokenAmount) -> FeeGrowth {
+    pub fn from_fee(liquidity: OldDecimal, amount: TokenAmount) -> FeeGrowth {
         let result: Result<u128, &str> = U256::from(amount.0)
             .checked_mul(U256::from(GROWTH_DENOMINATOR))
             .unwrap()
@@ -43,8 +43,8 @@ impl FeeGrowth {
         FeeGrowth { v: result.unwrap() }
     }
 
-    pub fn to_fee(self: FeeGrowth, liquidity: Decimal) -> Decimal {
-        Decimal {
+    pub fn to_fee(self: FeeGrowth, liquidity: OldDecimal) -> OldDecimal {
+        OldDecimal {
             v: U256::from(self.v)
                 .checked_mul(U256::from(liquidity.v))
                 .unwrap()
@@ -106,24 +106,24 @@ mod tests {
     fn test_new() {
         // One
         {
-            let fee_growth = FeeGrowth::from_fee(Decimal::from_integer(1), TokenAmount(1));
+            let fee_growth = FeeGrowth::from_fee(OldDecimal::from_integer(1), TokenAmount(1));
             assert_eq!(fee_growth.v, GROWTH_DENOMINATOR)
         }
         // Half
         {
-            let fee_growth = FeeGrowth::from_fee(Decimal::from_integer(2), TokenAmount(1));
+            let fee_growth = FeeGrowth::from_fee(OldDecimal::from_integer(2), TokenAmount(1));
             assert_eq!(fee_growth.v, GROWTH_DENOMINATOR / 2)
         }
         // Little
         {
             let fee_growth =
-                FeeGrowth::from_fee(Decimal::from_integer(u64::MAX.into()), TokenAmount(1));
+                FeeGrowth::from_fee(OldDecimal::from_integer(u64::MAX.into()), TokenAmount(1));
             assert_eq!(fee_growth.v, 54211)
         }
         // Fairly big
         {
             let fee_growth =
-                FeeGrowth::from_fee(Decimal::from_integer(100), TokenAmount(1_000_000));
+                FeeGrowth::from_fee(OldDecimal::from_integer(100), TokenAmount(1_000_000));
             assert_eq!(fee_growth.v, GROWTH_DENOMINATOR * 10000)
         }
     }
@@ -145,21 +145,21 @@ mod tests {
         // equal
         {
             let amount = TokenAmount(100);
-            let liquidity = Decimal::from_integer(1_000_000);
+            let liquidity = OldDecimal::from_integer(1_000_000);
 
             let fee_growth = FeeGrowth::from_fee(liquidity, amount);
             let out = fee_growth.to_fee(liquidity);
-            assert_eq!(out, Decimal::from_token_amount(amount));
+            assert_eq!(out, OldDecimal::from_token_amount(amount));
         }
         // greater liquidity
         {
             let amount = TokenAmount(100);
-            let liquidity_before = Decimal::from_integer(1_000_000);
-            let liquidity_after = Decimal::from_integer(10_000_000);
+            let liquidity_before = OldDecimal::from_integer(1_000_000);
+            let liquidity_after = OldDecimal::from_integer(10_000_000);
 
             let fee_growth = FeeGrowth::from_fee(liquidity_before, amount);
             let out = fee_growth.to_fee(liquidity_after);
-            assert_eq!(out, Decimal::from_integer(1000))
+            assert_eq!(out, OldDecimal::from_integer(1000))
         }
     }
 }

@@ -8,7 +8,7 @@ use crate::structs::tickmap::Tickmap;
 use crate::util::get_closer_limit;
 use crate::ErrorCode::*;
 use crate::*;
-use crate::{decimal::Decimal, structs::TokenAmount};
+use crate::{old_decimal::OldDecimal, structs::TokenAmount};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
@@ -117,7 +117,7 @@ impl<'info> Swap<'info> {
         msg!("INVARIANT: SWAP");
         require!(amount != 0, ZeroAmount);
 
-        let sqrt_price_limit = Decimal::new(sqrt_price_limit);
+        let sqrt_price_limit = OldDecimal::new(sqrt_price_limit);
         let mut pool = ctx.accounts.pool.load_mut()?;
         let tickmap = ctx.accounts.tickmap.load()?;
         let state = ctx.accounts.state.load()?;

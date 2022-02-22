@@ -4,8 +4,8 @@ use std::cell::RefMut;
 use std::convert::TryInto;
 use std::io::Write;
 
-use crate::decimal::Decimal;
 use crate::math::calculate_price_sqrt;
+use crate::old_decimal::OldDecimal;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::structs::tickmap::Tickmap;
@@ -42,12 +42,12 @@ pub fn check_tick(tick_index: i32, tick_spacing: u16) -> Result<()> {
 // Finds closes initialized tick in direction of trade
 // and compares its price to the price limit of the trade
 pub fn get_closer_limit(
-    sqrt_price_limit: Decimal,
+    sqrt_price_limit: OldDecimal,
     x_to_y: bool,
     current_tick: i32,
     tick_spacing: u16,
     tickmap: &Tickmap,
-) -> Result<(Decimal, Option<(i32, bool)>)> {
+) -> Result<(OldDecimal, Option<(i32, bool)>)> {
     let closes_tick_index = if x_to_y {
         tickmap.prev_initialized(current_tick, tick_spacing)
     } else {
@@ -91,7 +91,7 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
     let seconds_passed: u64 = current_timestamp.checked_sub(pool.start_timestamp).unwrap();
     tick.seconds_outside = seconds_passed - tick.seconds_outside;
 
-    if { pool.liquidity } != Decimal::new(0) {
+    if { pool.liquidity } != OldDecimal::new(0) {
         pool.update_seconds_per_liquidity_global(current_timestamp);
     } else {
         pool.last_timestamp = current_timestamp;
@@ -148,33 +148,33 @@ mod test {
         // tick limit closer
         {
             let (result, from_tick) =
-                get_closer_limit(Decimal::from_integer(5), true, 100, 1, tickmap)?;
+                get_closer_limit(OldDecimal::from_integer(5), true, 100, 1, tickmap)?;
 
-            let expected = Decimal::from_integer(5);
+            let expected = OldDecimal::from_integer(5);
             assert_eq!(result, expected);
             assert_eq!(from_tick, None);
         }
         // trade limit closer
         {
             let (result, from_tick) =
-                get_closer_limit(Decimal::from_decimal(1, 1), true, 100, 1, tickmap)?;
-            let expected = Decimal::from_integer(1);
+                get_closer_limit(OldDecimal::from_decimal(1, 1), true, 100, 1, tickmap)?;
+            let expected = OldDecimal::from_integer(1);
             assert_eq!(result, expected);
             assert_eq!(from_tick, Some((0, true)));
         }
         // other direction
         {
             let (result, from_tick) =
-                get_closer_limit(Decimal::from_integer(2), false, -5, 1, tickmap)?;
-            let expected = Decimal::from_integer(1);
+                get_closer_limit(OldDecimal::from_integer(2), false, -5, 1, tickmap)?;
+            let expected = OldDecimal::from_integer(1);
             assert_eq!(result, expected);
             assert_eq!(from_tick, Some((0, true)));
         }
         // other direction
         {
             let (result, from_tick) =
-                get_closer_limit(Decimal::from_decimal(1, 1), false, -100, 10, tickmap)?;
-            let expected = Decimal::from_decimal(1, 1);
+                get_closer_limit(OldDecimal::from_decimal(1, 1), false, -100, 10, tickmap)?;
+            let expected = OldDecimal::from_decimal(1, 1);
             assert_eq!(result, expected);
             assert_eq!(from_tick, None);
         }

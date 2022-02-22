@@ -111,7 +111,7 @@ impl<'info> ClaimFee<'info> {
                 pool,
                 upper_tick,
                 lower_tick,
-                Decimal::new(0),
+                OldDecimal::new(0),
                 true,
                 current_timestamp,
             )
@@ -120,9 +120,9 @@ impl<'info> ClaimFee<'info> {
         let fee_to_collect_x = position.tokens_owed_x.to_token_floor();
         let fee_to_collect_y = position.tokens_owed_y.to_token_floor();
         position.tokens_owed_x =
-            position.tokens_owed_x - Decimal::from_token_amount(fee_to_collect_x);
+            position.tokens_owed_x - OldDecimal::from_token_amount(fee_to_collect_x);
         position.tokens_owed_y =
-            position.tokens_owed_y - Decimal::from_token_amount(fee_to_collect_y);
+            position.tokens_owed_y - OldDecimal::from_token_amount(fee_to_collect_y);
 
         let signer: &[&[&[u8]]] = get_signer!(state.nonce);
 

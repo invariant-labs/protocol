@@ -1,4 +1,4 @@
-use crate::decimal::*;
+use crate::decimall::*;
 use crate::math::*;
 use crate::structs::*;
 use crate::util::*;

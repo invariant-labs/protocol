@@ -1,4 +1,4 @@
-use crate::Decimal;
+use crate::OldDecimal;
 use anchor_lang::prelude::*;
 
 const SIZE: u16 = 256; // UPDATE IN ARRAYS AS WELL!
@@ -15,11 +15,11 @@ pub struct Oracle {
 #[zero_copy]
 pub struct Record {
     pub timestamp: u64,
-    pub price: Decimal,
+    pub price: OldDecimal,
 }
 
 impl Oracle {
-    pub fn add_record(&mut self, timestamp: u64, price: Decimal) {
+    pub fn add_record(&mut self, timestamp: u64, price: OldDecimal) {
         let record = Record { timestamp, price };
 
         self.head = (self.head + 1) % self.size;
@@ -45,7 +45,7 @@ mod tests {
         print!("{}", std::mem::align_of::<Oracle>());
         let mut oracle = Oracle {
             data: [Record {
-                price: Decimal::from_integer(0),
+                price: OldDecimal::from_integer(0),
                 timestamp: 0,
             }; 256],
             head: SIZE - 1,
@@ -58,7 +58,7 @@ mod tests {
 
         // fill
         while index < SIZE as u64 {
-            oracle.add_record(index, Decimal { v: index as u128 });
+            oracle.add_record(index, OldDecimal { v: index as u128 });
 
             assert_eq!(oracle.head as u64, index);
             assert_eq!(oracle.amount as u64, index + 1);
@@ -70,7 +70,7 @@ mod tests {
 
         // second fill
         while index < 2 * SIZE as u64 {
-            oracle.add_record(index, Decimal { v: index as u128 });
+            oracle.add_record(index, OldDecimal { v: index as u128 });
 
             assert_eq!(oracle.head as u64, index - SIZE as u64);
             assert_eq!(oracle.amount as u64, SIZE as u64);

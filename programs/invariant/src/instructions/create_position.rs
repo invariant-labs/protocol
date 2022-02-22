@@ -1,5 +1,5 @@
-use crate::decimal::Decimal;
 use crate::interfaces::take_tokens::TakeTokens;
+use crate::old_decimal::OldDecimal;
 use crate::structs::pool::Pool;
 use crate::structs::position::Position;
 use crate::structs::position_list::PositionList;
@@ -115,7 +115,7 @@ impl<'info> TakeTokens<'info> for CreatePosition<'info> {
 }
 
 impl<'info> CreatePosition<'info> {
-    pub fn handler(self: &Self, liquidity_delta: Decimal, bump: u8) -> ProgramResult {
+    pub fn handler(self: &Self, liquidity_delta: OldDecimal, bump: u8) -> ProgramResult {
         msg!("INVARIANT: CREATE POSITION");
 
         let mut position = self.position.load_init()?;
@@ -145,15 +145,15 @@ impl<'info> CreatePosition<'info> {
             owner: *self.owner.to_account_info().key,
             pool: *self.pool.to_account_info().key,
             id: position.id,
-            liquidity: Decimal::new(0),
+            liquidity: OldDecimal::new(0),
             lower_tick_index: lower_tick.index,
             upper_tick_index: upper_tick.index,
             fee_growth_inside_x: FeeGrowth::zero(),
             fee_growth_inside_y: FeeGrowth::zero(),
-            seconds_per_liquidity_inside: Decimal::new(0),
+            seconds_per_liquidity_inside: OldDecimal::new(0),
             last_slot: slot,
-            tokens_owed_x: Decimal::new(0),
-            tokens_owed_y: Decimal::new(0),
+            tokens_owed_x: OldDecimal::new(0),
+            tokens_owed_y: OldDecimal::new(0),
             bump,
         };
 

@@ -471,7 +471,7 @@ export type Invariant = {
         {
           "name": "liquidityDelta",
           "type": {
-            "defined": "Decimal"
+            "defined": "OldDecimal"
           }
         }
       ]
@@ -888,7 +888,7 @@ export type Invariant = {
         {
           "name": "protocolFee",
           "type": {
-            "defined": "Decimal"
+            "defined": "OldDecimal"
           }
         }
       ]
@@ -944,7 +944,7 @@ export type Invariant = {
           {
             "name": "fee",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
@@ -1021,25 +1021,25 @@ export type Invariant = {
           {
             "name": "fee",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
             "name": "protocolFee",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
             "name": "liquidity",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
             "name": "sqrtPrice",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
@@ -1073,7 +1073,7 @@ export type Invariant = {
           {
             "name": "secondsPerLiquidityGlobal",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
@@ -1123,7 +1123,7 @@ export type Invariant = {
           {
             "name": "liquidity",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
@@ -1149,7 +1149,7 @@ export type Invariant = {
           {
             "name": "secondsPerLiquidityInside",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
@@ -1159,13 +1159,13 @@ export type Invariant = {
           {
             "name": "tokensOwedX",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
             "name": "tokensOwedY",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
@@ -1211,6 +1211,12 @@ export type Invariant = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "ez",
+            "type": {
+              "defined": "Ez"
+            }
           }
         ]
       }
@@ -1235,19 +1241,19 @@ export type Invariant = {
           {
             "name": "liquidityChange",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
             "name": "liquidityGross",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
             "name": "sqrtPrice",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
@@ -1265,7 +1271,7 @@ export type Invariant = {
           {
             "name": "secondsPerLiquidityOutside",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
@@ -1299,7 +1305,7 @@ export type Invariant = {
   ],
   "types": [
     {
-      "name": "Decimal",
+      "name": "FeeGrowth",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1311,7 +1317,7 @@ export type Invariant = {
       }
     },
     {
-      "name": "FeeGrowth",
+      "name": "OldDecimal",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1334,8 +1340,20 @@ export type Invariant = {
           {
             "name": "price",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Ez",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "u64"
           }
         ]
       }
@@ -1968,7 +1986,7 @@ export const IDL: Invariant = {
         {
           "name": "liquidityDelta",
           "type": {
-            "defined": "Decimal"
+            "defined": "OldDecimal"
           }
         }
       ]
@@ -2385,7 +2403,7 @@ export const IDL: Invariant = {
         {
           "name": "protocolFee",
           "type": {
-            "defined": "Decimal"
+            "defined": "OldDecimal"
           }
         }
       ]
@@ -2441,7 +2459,7 @@ export const IDL: Invariant = {
           {
             "name": "fee",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
@@ -2518,25 +2536,25 @@ export const IDL: Invariant = {
           {
             "name": "fee",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
             "name": "protocolFee",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
             "name": "liquidity",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
             "name": "sqrtPrice",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
@@ -2570,7 +2588,7 @@ export const IDL: Invariant = {
           {
             "name": "secondsPerLiquidityGlobal",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
@@ -2620,7 +2638,7 @@ export const IDL: Invariant = {
           {
             "name": "liquidity",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
@@ -2646,7 +2664,7 @@ export const IDL: Invariant = {
           {
             "name": "secondsPerLiquidityInside",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
@@ -2656,13 +2674,13 @@ export const IDL: Invariant = {
           {
             "name": "tokensOwedX",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
             "name": "tokensOwedY",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
@@ -2708,6 +2726,12 @@ export const IDL: Invariant = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "ez",
+            "type": {
+              "defined": "Ez"
+            }
           }
         ]
       }
@@ -2732,19 +2756,19 @@ export const IDL: Invariant = {
           {
             "name": "liquidityChange",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
             "name": "liquidityGross",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
             "name": "sqrtPrice",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
@@ -2762,7 +2786,7 @@ export const IDL: Invariant = {
           {
             "name": "secondsPerLiquidityOutside",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
           },
           {
@@ -2796,7 +2820,7 @@ export const IDL: Invariant = {
   ],
   "types": [
     {
-      "name": "Decimal",
+      "name": "FeeGrowth",
       "type": {
         "kind": "struct",
         "fields": [
@@ -2808,7 +2832,7 @@ export const IDL: Invariant = {
       }
     },
     {
-      "name": "FeeGrowth",
+      "name": "OldDecimal",
       "type": {
         "kind": "struct",
         "fields": [
@@ -2831,8 +2855,20 @@ export const IDL: Invariant = {
           {
             "name": "price",
             "type": {
-              "defined": "Decimal"
+              "defined": "OldDecimal"
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Ez",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "u64"
           }
         ]
       }

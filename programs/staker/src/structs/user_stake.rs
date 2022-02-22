@@ -1,4 +1,4 @@
-use crate::decimal::Decimal;
+use crate::decimall::Decimal;
 use anchor_lang::prelude::*;
 #[account(zero_copy)]
 #[derive(PartialEq, Default, Debug)]

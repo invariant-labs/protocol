@@ -1,6 +1,13 @@
-use crate::structs::state::State;
+use crate::structs::state::{Ez, State};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
+
+use core::convert::TryFrom;
+use core::convert::TryInto;
+use decimal::decimal;
+use decimal::traits::*;
+use decimal::Decimal;
+use decimal::U256;
 
 #[derive(Accounts)]
 #[instruction( nonce: u8)]
@@ -25,6 +32,7 @@ pub fn handler(ctx: Context<CreateState>, nonce: u8) -> ProgramResult {
         authority: *ctx.accounts.program_authority.key,
         nonce,
         bump: *ctx.bumps.get("state").unwrap(),
+        ez: Ez::from_integer(1),
     };
     Ok(())
 }
