@@ -49,7 +49,7 @@ pub struct FixedPoint {
 
 // legacy not serializable may implement later
 #[decimal(0)]
-#[derive(Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub struct TokenAmount(pub u64);
 
 #[cfg(test)]

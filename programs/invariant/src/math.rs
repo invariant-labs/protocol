@@ -488,7 +488,7 @@ mod tests {
         {
             let price = Price::from_integer(101);
             let target = Price::from_integer(100);
-            let liquidity = Liquidity::from_integer(5000000000000);
+            let liquidity = Liquidity::from_integer(5000000000000u128);
             let amount = TokenAmount(2000000);
             let fee = FixedPoint::from_scale(6, 4);
 

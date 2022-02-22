@@ -32,6 +32,7 @@ pub struct Pool {
 }
 
 impl Pool {
+    #[allow(unaligned_references)]
     pub fn add_fee(&mut self, amount: TokenAmount, in_x: bool) {
         let protocol_fee = TokenAmount::from_decimal_up(amount.big_mul(self.protocol_fee));
         let pool_fee = amount - protocol_fee;

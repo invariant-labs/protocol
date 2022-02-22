@@ -13,7 +13,7 @@ const LOG2_NEGATIVE_MAX_LOSE: u128 = 1200000000000000; // max accuracy in <-MAX_
 const LOG2_MIN_BINARY_POSITION: i32 = 14; // accuracy = 2^(-14)
 const LOG2_ACCURACY: u128 = 1u128 << (63 - LOG2_MIN_BINARY_POSITION);
 
-const PRICE_DENOMINATOR: u128 = Price::one();
+const PRICE_DENOMINATOR: u128 = 1_000000_000000_000000_000000;
 
 fn decimal_to_x64(decimal: Price) -> u128 {
     decimal.v * LOG_ONE / PRICE_DENOMINATOR
