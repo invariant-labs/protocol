@@ -38,7 +38,7 @@ impl FeeGrowth {
     }
 }
 
-#[decimal(0)]
+#[decimal(12)]
 #[zero_copy]
 #[derive(
     Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord, AnchorSerialize, AnchorDeserialize,
