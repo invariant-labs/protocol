@@ -217,7 +217,7 @@ impl<'info> RemovePosition<'info> {
         let signer: &[&[&[u8]]] = get_signer!(state.nonce);
         token::transfer(self.send_x().with_signer(signer), amount_x.0)?;
         token::transfer(self.send_y().with_signer(signer), amount_y.0)?;
-        msg!("END");
+
         Ok(())
     }
 }
