@@ -347,7 +347,6 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     remainingAmount = remainingAmount.sub(amountDiff)
     sqrtPrice = result.nextPrice
 
-    // here
     if (sqrtPrice.v.eq(priceLimitAfterSlippage.v) && remainingAmount.gt(new BN(0))) {
       throw new Error('Price would cross swap limit')
     }
@@ -378,8 +377,10 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
           } else {
             liquidity = { v: liquidity.v.sub(tick.liquidityChange.v) }
           }
-        } else {
-          accumulatedAmountIn = accumulatedAmountIn.add(remainingAmount)
+        } else if (!remainingAmount.eqn(0)) {
+          if (byAmountIn) {
+            accumulatedAmountIn = accumulatedAmountIn.add(remainingAmount)
+          }
           remainingAmount = new BN(0)
         }
       }
