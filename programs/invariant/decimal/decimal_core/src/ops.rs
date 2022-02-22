@@ -23,11 +23,23 @@ pub fn generate_ops(characteristics: DecimalCharacteristics) -> proc_macro::Toke
             }
         }
 
+        impl std::ops::AddAssign for #struct_name {
+            fn add_assign(&mut self, rhs: Self)  {
+                *self = *self + rhs
+            }
+        }
+
         impl std::ops::Sub for #struct_name {
             type Output = #struct_name;
 
             fn sub(self, rhs: Self) -> #struct_name {
                 Self::new(self.get().checked_sub(rhs.get()).unwrap())
+            }
+        }
+
+        impl std::ops::SubAssign for #struct_name {
+            fn sub_assign(&mut self, rhs: Self)  {
+                *self = *self - rhs
             }
         }
 
@@ -79,16 +91,20 @@ pub fn generate_ops(characteristics: DecimalCharacteristics) -> proc_macro::Toke
 
             #[test]
             fn test_add () {
-                let a = #struct_name::new(1);
+                let mut a = #struct_name::new(1);
                 let b = #struct_name::new(1);
                 assert_eq!(a + b, #struct_name::new(2));
+                a += b;
+                assert_eq!(a, #struct_name::new(2));
             }
 
             #[test]
             fn test_sub () {
-                let a = #struct_name::new(1);
+                let mut a = #struct_name::new(1);
                 let b = #struct_name::new(1);
                 assert_eq!(a - b, #struct_name::new(0));
+                a -= b;
+                assert_eq!(a, #struct_name::new(0));
             }
 
             #[test]
