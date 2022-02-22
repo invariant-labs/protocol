@@ -174,7 +174,7 @@ describe('swap with cross both side', () => {
     const limitWithoutCrossTickAmount = new BN(10068)
     const notCrossAmount = new BN(1)
     const minAmountToCrossFromTickPrice = new BN(3)
-    const crossingAmountByAmountOut = new BN(3)
+    const crossingAmountByAmountOut = new BN(20136101434)
 
     const accountX = await tokenX.createAccount(owner.publicKey)
     const accountY = await tokenY.createAccount(owner.publicKey)
@@ -271,7 +271,45 @@ describe('swap with cross both side', () => {
     await market.swap(swapCrossingIncreasingVars, owner)
     // TODO: validate state
 
-    // crossing tick with descending price and by 1 token amount out
+    // Add massive amount of liquidity to test extreme case of high accuracy
+    const massiveLiquidityAmountX = new BN(10).pow(new BN(19))
+    const massiveLiquidityAmountY = new BN(10).pow(new BN(19))
+
+    await tokenX.mintTo(
+      userTokenXAccount,
+      mintAuthority.publicKey,
+      [mintAuthority],
+      tou64(massiveLiquidityAmountX)
+    )
+    await tokenY.mintTo(
+      userTokenYAccount,
+      mintAuthority.publicKey,
+      [mintAuthority],
+      tou64(massiveLiquidityAmountY)
+    )
+
+    const currentPrice = (await market.getPool(pair)).sqrtPrice
+    const { liquidity: massiveLiquidityDelta } = getLiquidityByX(
+      massiveLiquidityAmountX.divn(10).muln(10),
+      -20,
+      0,
+      currentPrice,
+      false,
+      feeTier.tickSpacing
+    )
+
+    const massiveInitPositionMassive: InitPosition = {
+      pair,
+      owner: positionOwner.publicKey,
+      userTokenX: userTokenXAccount,
+      userTokenY: userTokenYAccount,
+      lowerTick: -20,
+      upperTick: 0,
+      liquidityDelta: massiveLiquidityDelta
+    }
+    await market.initPosition(massiveInitPositionMassive, positionOwner)
+
+    // Crossing tick with descending price and by 1 token amount out
     const swapNotCrossingDecreasingByAmountOutVars: Swap = {
       pair,
       xToY: true,
@@ -284,5 +322,7 @@ describe('swap with cross both side', () => {
       owner: owner.publicKey
     }
     await market.swap(swapNotCrossingDecreasingByAmountOutVars, owner)
+
+    // TODO: validate state
   })
 })
