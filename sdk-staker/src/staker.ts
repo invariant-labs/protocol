@@ -233,7 +233,7 @@ export class Staker {
     incentive,
     incentiveToken,
     incentiveTokenAccount,
-    ownerTokenAccount,
+    founderTokenAccount,
     founder
   }: EndIncentive) {
     return this.program.instruction.endIncentive(this.programAuthority.nonce, {
@@ -241,7 +241,7 @@ export class Staker {
         incentive,
         incentiveToken,
         incentiveTokenAccount: incentiveTokenAccount,
-        founderTokenAccount: ownerTokenAccount,
+        founderTokenAccount: founderTokenAccount,
         stakerAuthority: this.programAuthority.authority,
         founder: founder,
         tokenProgram: TOKEN_PROGRAM_ID
@@ -386,7 +386,7 @@ export interface EndIncentive {
   incentive: PublicKey
   incentiveToken: PublicKey
   incentiveTokenAccount: PublicKey
-  ownerTokenAccount: PublicKey
+  founderTokenAccount: PublicKey
   founder: PublicKey
 }
 

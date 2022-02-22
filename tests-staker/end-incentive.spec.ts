@@ -130,7 +130,7 @@ describe('End incentive tests', () => {
       incentive: incentiveAccount.publicKey,
       incentiveTokenAccount: incentiveTokenAccount.publicKey,
       incentiveToken: incentiveToken.publicKey,
-      ownerTokenAccount: founderTokenAccount,
+      founderTokenAccount: founderTokenAccount,
       founder: founderAccount.publicKey
     }
     const endIncentiveIx = await staker.endIncentiveIx(endIncentive)
