@@ -1177,5 +1177,22 @@ mod tests {
             );
             assert_eq!(result, true);
         }
+        // should always be enough amount to cross tick when pool liquidity is zero
+        {
+            let no_liquidity = Decimal::new(0);
+            let amount = TokenAmount(1);
+            let by_amount_in = true;
+            let x_to_y = true;
+
+            let result = is_enough_amount_to_push_price(
+                amount,
+                current_price_sqrt,
+                no_liquidity,
+                fee,
+                by_amount_in,
+                x_to_y,
+            );
+            assert_eq!(result, true);
+        }
     }
 }
