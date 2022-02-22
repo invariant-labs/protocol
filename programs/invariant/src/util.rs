@@ -91,7 +91,7 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
     let seconds_passed: u64 = current_timestamp.checked_sub(pool.start_timestamp).unwrap();
     tick.seconds_outside = seconds_passed - tick.seconds_outside;
 
-    if { pool.liquidity } != OldDecimal::new(0) {
+    if !pool.liquidity.is_zero() {
         pool.update_seconds_per_liquidity_global(current_timestamp);
     } else {
         pool.last_timestamp = current_timestamp;

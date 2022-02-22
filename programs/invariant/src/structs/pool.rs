@@ -25,7 +25,7 @@ pub struct Pool {
     pub fee_growth_global_y: FeeGrowth,
     pub fee_protocol_token_x: u64, // should be changed to TokenAmount when Armani implements tuple structs
     pub fee_protocol_token_y: u64,
-    pub seconds_per_liquidity_global: OldDecimal,
+    pub seconds_per_liquidity_global: FixedPoint,
     pub start_timestamp: u64,
     pub last_timestamp: u64,
     pub fee_receiver: Pubkey,
