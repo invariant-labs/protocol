@@ -34,7 +34,6 @@ const main = async () => {
   const market = await Market.build(Network.DEV, provider.wallet, connection)
   const position = await market.getPosition(POSITION, POSITION_INDEX)
   const pool = (await market.program.account.pool.fetch(POOL)) as PoolStructure
-  const invariant = new PublicKey(getMarketAddress(Network.DEV))
   const feeTier: FeeTier = {
     fee: new BN(pool.fee.v),
     tickSpacing: pool.tickSpacing
