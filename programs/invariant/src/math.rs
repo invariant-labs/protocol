@@ -478,7 +478,7 @@ mod tests {
         }
         // amount in not capped
         {
-            let price = Price::from_integer(101) / Price::from_integer(100);
+            let price = Price::from_scale(101, 2);
             let target = Price::from_integer(10);
             let liquidity = Liquidity::from_integer(300000000);
             let amount = TokenAmount(1000000);
@@ -486,7 +486,7 @@ mod tests {
 
             let result = compute_swap_step(price, target, liquidity, amount, true, fee);
             let expected_result = SwapResult {
-                next_price_sqrt: Price::new(1013331333333),
+                next_price_sqrt: Price::new(1013331333333_333333333333),
                 amount_in: TokenAmount(999400),
                 amount_out: TokenAmount(976487), // ((1.013331333333 - 1.01) * 300000000) / (1.013331333333 * 1.01)
                 fee_amount: TokenAmount(600),
@@ -503,7 +503,7 @@ mod tests {
 
             let result = compute_swap_step(price, target, liquidity, amount, false, fee);
             let expected_result = SwapResult {
-                next_price_sqrt: Price::new(100999999600000),
+                next_price_sqrt: Price::new(100999999600000_000000000000),
                 amount_in: TokenAmount(197), // (5000000000000 * (101 - 100.9999996)) /  (101 * 100.9999996)
                 amount_out: amount,
                 fee_amount: TokenAmount(1),
@@ -512,8 +512,8 @@ mod tests {
         }
         // empty swap step when price is at tick
         {
-            let current_price_sqrt = Price::new(999500149965);
-            let target_price_sqrt = Price::new(999500149965);
+            let current_price_sqrt = Price::new(999500149965_000000000000);
+            let target_price_sqrt = Price::new(999500149965_000000000000);
             let liquidity = Liquidity::new(20006000000000000000);
             let amount = TokenAmount(1_000_000);
             let by_amount_in = true;
@@ -1121,7 +1121,7 @@ mod tests {
     }
     #[test]
     fn test_is_enough_amount_to_push_price() {
-        let current_price_sqrt = Price::new(999500149965); // at -20 tick
+        let current_price_sqrt = calculate_price_sqrt(-20); // at -20 tick
         let liquidity = Liquidity::new(20006000000000000000);
         let fee = FixedPoint::from_scale(6, 4); // 0.0006 -> 0.06%
 
