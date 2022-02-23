@@ -424,8 +424,7 @@ describe('Math', () => {
       const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
       const x = getX(liquidity, upperSqrtPrice.v, currentSqrtPrice.v, lowerSqrtPrice.v)
-
-      assert.ok(x.eq(new BN(5972765607082)))
+      assert.ok(x.eq(new BN(5972765607079)))
     })
 
     it('lower < current < upper', async () => {
@@ -436,8 +435,7 @@ describe('Math', () => {
       const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
       const x = getX(liquidity, upperSqrtPrice.v, currentSqrtPrice.v, lowerSqrtPrice.v)
-
-      assert.ok(x.eq(new BN(3979852584363)))
+      assert.ok(x.eq(new BN(3979852584359)))
     })
 
     it('current > upper', async () => {
@@ -1356,6 +1354,7 @@ describe('Math', () => {
       assert.ok(simulationResult.accumulatedAmountOut.eq(new BN(993)))
       assert.ok(simulationResult.accumulatedFee.eq(new BN(6)))
       assert.ok(simulationResult.amountPerTick[0].eq(new BN(1000)))
+      console.log(simulationResult.priceAfterSwap.toString())
       assert.ok(simulationResult.priceAfterSwap.eq(new BN('999006987055')))
     })
   })

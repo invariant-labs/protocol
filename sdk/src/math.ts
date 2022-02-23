@@ -385,10 +385,10 @@ export const getX = (
   if (currentSqrtPrice.gte(upperSqrtPrice)) {
     return new BN(0)
   } else if (currentSqrtPrice.lt(lowerSqrtPrice)) {
-    denominator = lowerSqrtPrice.mul(upperSqrtPrice).div(DENOMINATOR)
+    denominator = lowerSqrtPrice.mul(upperSqrtPrice).div(PRICE_DENOMINATOR)
     nominator = upperSqrtPrice.sub(lowerSqrtPrice)
   } else {
-    denominator = upperSqrtPrice.mul(currentSqrtPrice).div(DENOMINATOR)
+    denominator = upperSqrtPrice.mul(currentSqrtPrice).div(PRICE_DENOMINATOR)
     nominator = upperSqrtPrice.sub(currentSqrtPrice)
   }
 
@@ -418,7 +418,7 @@ export const getY = (
     difference = currentSqrtPrice.sub(lowerSqrtPrice)
   }
 
-  return liquidity.mul(difference).div(DENOMINATOR)
+  return liquidity.mul(difference).div(PRICE_DENOMINATOR)
 }
 
 export const getLiquidityByX = (
