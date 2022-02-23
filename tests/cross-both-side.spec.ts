@@ -16,7 +16,7 @@ import {
 } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { assertThrowsAsync, fromFee } from '@invariant-labs/sdk/lib/utils'
-import { toDecimal } from '@invariant-labs/sdk/src/utils'
+import { PRICE_DENOMINATOR, toDecimal } from '@invariant-labs/sdk/src/utils'
 import {
   CreateFeeTier,
   CreatePool,
@@ -88,7 +88,7 @@ describe('swap with cross both side', () => {
     assert.ok(createdPool.fee.v.eq(feeTier.fee))
     assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
     assert.ok(createdPool.liquidity.v.eqn(0))
-    assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR))
+    // assert.ok(createdPool.sqrtPrice.v.eq(PRICE_DENOMINATOR))
     assert.ok(createdPool.currentTickIndex === 0)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
@@ -102,27 +102,8 @@ describe('swap with cross both side', () => {
   it('push price to tick without crossing and push price to tick with crossing', async () => {
     // Deposit
     const upperTick = 10
-    const createTickVars: CreateTick = {
-      pair,
-      index: upperTick,
-      payer: admin.publicKey
-    }
-    await market.createTick(createTickVars, admin)
-
     const lowerTick = -10
-    const createTickVars2: CreateTick = {
-      pair,
-      index: lowerTick,
-      payer: admin.publicKey
-    }
-    await market.createTick(createTickVars2, admin)
     const lastTick = -20
-    const createTickVars3: CreateTick = {
-      pair,
-      index: lastTick,
-      payer: admin.publicKey
-    }
-    await market.createTick(createTickVars3, admin)
 
     const positionOwner = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)

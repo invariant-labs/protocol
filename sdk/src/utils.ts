@@ -19,8 +19,10 @@ import { struct, u32, u8 } from '@solana/buffer-layout'
 export const SEED = 'Invariant'
 export const DECIMAL = 12
 export const GROWTH_SCALE = 24
+export const PRICE_SCALE = 24
 export const FEE_DECIMAL = 5
 export const DENOMINATOR = new BN(10).pow(new BN(DECIMAL))
+export const PRICE_DENOMINATOR = new BN(10).pow(new BN(PRICE_SCALE))
 export const GROWTH_DENOMINATOR = new BN(10).pow(new BN(GROWTH_SCALE))
 export const FEE_OFFSET = new BN(10).pow(new BN(DECIMAL - FEE_DECIMAL))
 export const FEE_DENOMINATOR = 10 ** FEE_DECIMAL

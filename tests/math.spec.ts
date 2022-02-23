@@ -32,6 +32,7 @@ import {
   getCloserLimit,
   GROWTH_DENOMINATOR,
   PositionClaimData,
+  PRICE_SCALE,
   SimulateClaim,
   simulateSwap,
   SimulationResult,
@@ -51,31 +52,31 @@ describe('Math', () => {
       const price = 20000
       const result = calculatePriceSqrt(price)
       // expected 2.718145925979
-      assert.ok(result.v.eq(new BN('2718145925979')))
+      assert.ok(result.v.eq(new BN('2718145925979' + '0'.repeat(PRICE_SCALE - 12))))
     })
     it('Test 200000', () => {
       const price = 200000
       const result = calculatePriceSqrt(price)
       // expected 22015.455979766288
-      assert.ok(result.v.eq(new BN('22015455979766288')))
+      assert.ok(result.v.eq(new BN('22015455979766288' + '0'.repeat(PRICE_SCALE - 12))))
     })
     it('Test -20000', () => {
       const price = -20000
       const result = calculatePriceSqrt(price)
       // expected 0.367897834491
-      assert.ok(result.v.eq(new BN('367897834491')))
+      assert.ok(result.v.eq(new BN('367897834491' + '0'.repeat(PRICE_SCALE - 12))))
     })
     it('Test -200000', () => {
       const price = -200000
       const result = calculatePriceSqrt(price)
       // expected 0.000045422634
-      assert.ok(result.v.eq(new BN('45422634')))
+      assert.ok(result.v.eq(new BN('45422634' + '0'.repeat(PRICE_SCALE - 12))))
     })
     it('Test 0', () => {
       const price = 0
       const result = calculatePriceSqrt(price)
       // expected 2.718145925979
-      assert.ok(result.v.eq(new BN('1000000000000')))
+      assert.ok(result.v.eq(new BN('1000000000000' + '0'.repeat(PRICE_SCALE - 12))))
     })
   })
   describe('calculate y, liquidity', () => {

@@ -1,7 +1,14 @@
 import { BN } from '@project-serum/anchor'
 import { assert } from 'chai'
 import { Decimal, Tick, Tickmap } from './market'
-import { DENOMINATOR, getMaxTick, getMinTick } from './utils'
+import {
+  DECIMAL,
+  DENOMINATOR,
+  getMaxTick,
+  getMinTick,
+  PRICE_DENOMINATOR,
+  PRICE_SCALE
+} from './utils'
 
 export const TICK_LIMIT = 100_000
 export const MAX_TICK = 221_818
@@ -62,7 +69,7 @@ export const calculatePriceSqrt = (tickIndex: number): Decimal => {
     price = DENOMINATOR.mul(DENOMINATOR).div(price)
   }
 
-  return { v: price.mul(DENOMINATOR) }
+  return { v: price.mul(new BN(10).pow(new BN(PRICE_SCALE - DECIMAL))) }
 }
 
 export const sqrt = (num: BN): BN => {
