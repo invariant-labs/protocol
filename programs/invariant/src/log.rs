@@ -193,15 +193,14 @@ mod tests {
             assert_eq!(sign, false);
             assert_eq!(value, 136598680297774514176);
         }
-        // TODO: fix this
         // log2 of max sqrt price
-        // {
-        //     let max_sqrt_price = Price::new(4294967295999999999883584678173065);
-        //     let sqrt_price_x64 = price_to_x64(max_sqrt_price);
-        //     let (sign, value) = log2_iterative_approximation_x64(sqrt_price_x64);
-        //     assert_eq!(sign, true);
-        //     assert_eq!(value, 440307928368758652928);
-        // }
+        {
+            let max_sqrt_price = Price::new(4294967295999999999883584678173065);
+            let sqrt_price_x64 = price_to_x64(max_sqrt_price);
+            let (sign, value) = log2_iterative_approximation_x64(sqrt_price_x64);
+            assert_eq!(sign, true);
+            assert_eq!(value, 590294684458798809088);
+        }
         // log2 of min sqrt price
         {
             let min_sqrt_price = Price::new(232830643653869);
