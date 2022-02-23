@@ -97,7 +97,7 @@ describe('Math', () => {
     })
     it('in current tick', async () => {
       // rust results:
-      const expectedL = { v: new BN('432392997000000000000000000000000') }
+      const expectedL = { v: new BN('432392997000000000000') }
       const expectedRoundUpY = new BN('434322')
       const expectedRoundDownY = new BN('434321')
 
@@ -117,7 +117,6 @@ describe('Math', () => {
         currentSqrtPrice,
         false
       )
-      console.log('###', roundUpLiquidity.v.toString())
       assert.ok(roundUpLiquidity.v.eq(expectedL.v))
       assert.ok(roundDownLiquidity.v.eq(expectedL.v))
       assert.ok(expectedRoundUpY.eq(roundUpY))
@@ -125,7 +124,7 @@ describe('Math', () => {
     })
     it('above current tick', async () => {
       // rust results:
-      const expectedL = { v: new BN('13548826311623850731629898846119') }
+      const expectedL = { v: new BN('13548826311623850731') }
       const expectedY = new BN(0)
 
       const lowerTick = 150
@@ -160,7 +159,7 @@ describe('Math', () => {
 
     it('below current tick', async () => {
       // rust results:
-      const expectedL = { v: new BN('2789052279103923275993666509928764493') }
+      const expectedL = { v: new BN('2789052279103923275993666') }
 
       const lowerTick = -22000
       const upperTick = -21000
@@ -187,7 +186,7 @@ describe('Math', () => {
     })
     it('in current tick', async () => {
       // rust results:
-      const expectedL = { v: new BN('584945290554346935615679081218681355') }
+      const expectedL = { v: new BN('584945290554346935615679') }
       const expectedXRoundUp = new BN('77539808126')
       const expectedXRoundDown = new BN('77539808125')
 
