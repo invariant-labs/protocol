@@ -341,7 +341,7 @@ export const findClosestTicks = (
 }
 
 const mulUp = (a: BN, b: BN) => {
-  return a.mul(b).add(DENOMINATOR.subn(1)).div(DENOMINATOR)
+  return a.mul(b).add(PRICE_DENOMINATOR.subn(1)).div(PRICE_DENOMINATOR)
 }
 
 const divUp = (a: BN, b: BN) => {
@@ -349,12 +349,12 @@ const divUp = (a: BN, b: BN) => {
 }
 
 const calculateY = (priceDiff: BN, liquidity: BN, roundingUp: boolean) => {
-  const shiftedLiquidity = liquidity.div(DENOMINATOR)
+  const shiftedLiquidity = liquidity.div(PRICE_DENOMINATOR)
 
   if (roundingUp) {
     return mulUp(priceDiff, shiftedLiquidity)
   }
-  return priceDiff.mul(shiftedLiquidity).div(DENOMINATOR)
+  return priceDiff.mul(shiftedLiquidity).div(PRICE_DENOMINATOR)
 }
 
 const calculateX = (nominator: BN, denominator: BN, liquidity: BN, roundingUp: boolean) => {
@@ -457,9 +457,9 @@ export const getLiquidityByXPrice = (
   }
 
   if (currentSqrtPrice.v.lt(lowerSqrtPrice.v)) {
-    const nominator = lowerSqrtPrice.v.mul(upperSqrtPrice.v).div(DENOMINATOR)
+    const nominator = lowerSqrtPrice.v.mul(upperSqrtPrice.v).div(PRICE_DENOMINATOR)
     const denominator = upperSqrtPrice.v.sub(lowerSqrtPrice.v)
-    const liquidity = x.mul(nominator).mul(DENOMINATOR).div(denominator)
+    const liquidity = x.mul(nominator).mul(PRICE_DENOMINATOR).div(denominator)
 
     return {
       liquidity: { v: liquidity },
@@ -467,9 +467,9 @@ export const getLiquidityByXPrice = (
     }
   }
 
-  const nominator = currentSqrtPrice.v.mul(upperSqrtPrice.v).div(DENOMINATOR)
+  const nominator = currentSqrtPrice.v.mul(upperSqrtPrice.v).div(PRICE_DENOMINATOR)
   const denominator = upperSqrtPrice.v.sub(currentSqrtPrice.v)
-  const liquidity = x.mul(nominator).div(denominator).mul(DENOMINATOR)
+  const liquidity = x.mul(nominator).div(denominator).mul(PRICE_DENOMINATOR)
   const priceDiff = currentSqrtPrice.v.sub(lowerSqrtPrice.v)
   const y = calculateY(priceDiff, liquidity, roundingUp)
 
