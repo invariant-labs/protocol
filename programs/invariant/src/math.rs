@@ -2,7 +2,6 @@ use crate::decimals::*;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::structs::tickmap::MAX_TICK;
-use crate::uint::U256;
 use crate::*;
 
 #[derive(PartialEq, Debug)]
@@ -189,15 +188,27 @@ pub fn get_delta_x(
         sqrt_price_b - sqrt_price_a
     };
 
-    let nominator = delta_price.big_mul(liquidity);
+    // log(2, 2^64 * 10^18 * 2^64 * 10^24) = 267.5..
+    // let nominator = delta_price.big_mul(liquidity);
+    let nominator = U256::from(delta_price.get())
+        .checked_mul(U256::from(liquidity.get()))
+        .unwrap()
+        .checked_div(U256::from(10u128.pow(Liquidity::scale() as u32)))
+        .unwrap();
+
+    msg!("just before");
 
     // TODO: please refactor me
-    match up {
+    let r = match up {
         // true => TokenAmount::from_decimal_up(nominator.big_div_up(sqrt_price_a * sqrt_price_b)),
-        true => TokenAmount(1).big_mul_up(nominator.big_div_mul_up(sqrt_price_a, sqrt_price_b)),
+        true => {
+            TokenAmount(1).big_mul_up(Price::big_div_mul_up(nominator, sqrt_price_a, sqrt_price_b))
+        }
         // false => TokenAmount::from_decimal(nominator.big_div(sqrt_price_a.mul_up(sqrt_price_b))),
-        false => TokenAmount(1).big_mul(nominator.big_div_mul(sqrt_price_a, sqrt_price_b)),
-    }
+        false => TokenAmount(1).big_mul(Price::big_div_mul(nominator, sqrt_price_a, sqrt_price_b)),
+    };
+    msg!("after");
+    r
 }
 
 // delta y = L * delta_sqrt_price
@@ -213,13 +224,18 @@ pub fn get_delta_y(
         sqrt_price_b - sqrt_price_a
     };
 
+    msg!("just before2");
     // TODO: please refactor me
-    match up {
+    let k = match up {
         // true => TokenAmount::from_decimal_up(delta_price.big_mul_up(liquidity)),
-        true => TokenAmount(1).big_mul_up(delta_price.big_mul_up(liquidity)),
+        // true => TokenAmount(1).big_mul_up(delta_price.big_mul_up(liquidity)),
+        true => Price::big_mul_to_token_up(delta_price, liquidity),
         // false => TokenAmount::from_decimal(delta_price.big_mul(liquidity)),
-        false => TokenAmount(1).big_mul(delta_price.big_mul(liquidity)),
-    }
+        // false => TokenAmount(1).big_mul(delta_price.big_mul(liquidity)),
+        false => Price::big_mul_to_token(delta_price, liquidity),
+    };
+    msg!("just after2");
+    k
 }
 
 fn get_next_sqrt_price_from_input(
@@ -345,6 +361,17 @@ pub fn calculate_amount_delta(
     // assume that upper_tick > lower_tick
     let mut amount_x = TokenAmount(0);
     let mut amount_y = TokenAmount(0);
+
+    msg!(
+        "calculate_amount_delta, liquidity_delta: {:?}",
+        liquidity_delta
+    );
+    msg!(
+        "lower_tick: {:?}, upper_tick: {:?}, current: {:?}",
+        lower_tick,
+        upper_tick,
+        pool.current_tick_index
+    );
 
     if pool.current_tick_index < lower_tick {
         amount_x = get_delta_x(
