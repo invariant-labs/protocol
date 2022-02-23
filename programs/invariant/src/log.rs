@@ -1,3 +1,5 @@
+use std::ops::{Div, Mul};
+
 use crate::decimals::*;
 use crate::math::calculate_price_sqrt;
 use crate::structs::MAX_TICK;
@@ -16,7 +18,10 @@ const LOG2_ACCURACY: u128 = 1u128 << (63 - LOG2_MIN_BINARY_POSITION);
 const PRICE_DENOMINATOR: u128 = 1_000000_000000_000000_000000;
 
 fn price_to_x64(decimal: Price) -> u128 {
-    decimal.v * LOG_ONE / PRICE_DENOMINATOR
+    U256::from(decimal.v)
+        .mul(U256::from(LOG_ONE))
+        .div(U256::from(PRICE_DENOMINATOR))
+        .as_u128()
 }
 
 fn align_tick_to_spacing(accurate_tick: i32, tick_spacing: i32) -> i32 {
@@ -148,6 +153,7 @@ mod tests {
         {
             let min_sqrt_price_decimal = Price::new(232830643653869);
             let min_sqrt_price_x64 = price_to_x64(min_sqrt_price_decimal);
+
             let expected_min_sqrt_price_x64 = 4294967295;
             assert_eq!(min_sqrt_price_x64, expected_min_sqrt_price_x64);
         }
