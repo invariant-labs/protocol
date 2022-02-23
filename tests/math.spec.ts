@@ -32,6 +32,7 @@ import {
   getCloserLimit,
   GROWTH_DENOMINATOR,
   PositionClaimData,
+  PRICE_DENOMINATOR,
   PRICE_SCALE,
   SimulateClaim,
   simulateSwap,
@@ -116,7 +117,7 @@ describe('Math', () => {
         currentSqrtPrice,
         false
       )
-
+      console.log('###', roundUpLiquidity.v.toString())
       assert.ok(roundUpLiquidity.v.eq(expectedL.v))
       assert.ok(roundDownLiquidity.v.eq(expectedL.v))
       assert.ok(expectedRoundUpY.eq(roundUpY))
@@ -979,13 +980,13 @@ describe('Math', () => {
       tickmap.bitmap[byte] ^= 1 << bit
 
       const closerLimit: CloserLimit = {
-        sqrtPriceLimit: { v: new BN(5).mul(DENOMINATOR) },
+        sqrtPriceLimit: { v: new BN(5).mul(PRICE_DENOMINATOR) },
         xToY: true,
         currentTick: 100,
         tickSpacing: 1,
         tickmap: tickmap
       }
-      const expected = { v: new BN(5).mul(DENOMINATOR) }
+      const expected = { v: new BN(5).mul(PRICE_DENOMINATOR) }
       const { swapLimit, limitingTick } = getCloserLimit(closerLimit)
       assert.ok(swapLimit.v.eq(expected.v))
       assert.equal(limitingTick, null)
@@ -999,7 +1000,7 @@ describe('Math', () => {
       tickmap.bitmap[byte] ^= 1 << bit
 
       const closerLimit: CloserLimit = {
-        sqrtPriceLimit: { v: new BN(5).mul(new BN(10).pow(new BN(11))) },
+        sqrtPriceLimit: { v: new BN(5).mul(new BN(10).pow(new BN(23))) },
         xToY: true,
         currentTick: 100,
         tickSpacing: 1,
@@ -1008,7 +1009,7 @@ describe('Math', () => {
 
       const { swapLimit, limitingTick } = getCloserLimit(closerLimit)
 
-      const expected = { v: new BN(1).mul(DENOMINATOR) }
+      const expected = { v: new BN(1).mul(PRICE_DENOMINATOR) }
 
       assert.ok(swapLimit.v.eq(expected.v))
       assert.equal(limitingTick?.index, 0)
@@ -1022,7 +1023,7 @@ describe('Math', () => {
       // let tickmap: Tickmap2 = new Tickmap2(25000)
       // await tickmap.flip(true, new BN(0), new BN(1))
       const closerLimit: CloserLimit = {
-        sqrtPriceLimit: { v: new BN(2).mul(DENOMINATOR) },
+        sqrtPriceLimit: { v: new BN(2).mul(PRICE_DENOMINATOR) },
         xToY: false,
         currentTick: -5,
         tickSpacing: 1,
@@ -1031,7 +1032,7 @@ describe('Math', () => {
 
       const { swapLimit, limitingTick } = getCloserLimit(closerLimit)
 
-      const expected = { v: new BN(1).mul(DENOMINATOR) }
+      const expected = { v: new BN(1).mul(PRICE_DENOMINATOR) }
 
       assert.ok(swapLimit.v.eq(expected.v))
       assert.equal(limitingTick?.index, 0)
@@ -1046,7 +1047,7 @@ describe('Math', () => {
       tickmap.bitmap[byte] ^= 1 << bit
 
       const closerLimit: CloserLimit = {
-        sqrtPriceLimit: { v: new BN(1).mul(new BN(10).pow(new BN(11))) },
+        sqrtPriceLimit: { v: new BN(1).mul(new BN(10).pow(new BN(23))) },
         xToY: false,
         currentTick: -100,
         tickSpacing: 10,
@@ -1055,7 +1056,7 @@ describe('Math', () => {
 
       const { swapLimit, limitingTick } = getCloserLimit(closerLimit)
 
-      const expected = { v: new BN(1).mul(new BN(10).pow(new BN(11))) }
+      const expected = { v: new BN(1).mul(new BN(10).pow(new BN(23))) }
 
       assert.ok(swapLimit.v.eq(expected.v))
       assert.equal(limitingTick, null)
