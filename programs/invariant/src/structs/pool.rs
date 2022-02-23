@@ -34,7 +34,7 @@ pub struct Pool {
 impl Pool {
     #[allow(unaligned_references)]
     pub fn add_fee(&mut self, amount: TokenAmount, in_x: bool) {
-        let protocol_fee = TokenAmount::from_decimal_up(amount.big_mul(self.protocol_fee));
+        let protocol_fee = TokenAmount::from_decimal_up(amount.big_mul_up(self.protocol_fee));
         let pool_fee = amount - protocol_fee;
 
         if pool_fee.is_zero() || self.liquidity.is_zero() {
@@ -126,5 +126,21 @@ mod tests {
 
             assert_eq!({ pool.liquidity }, Liquidity::from_integer(1));
         }
+    }
+
+    #[test]
+    fn test_add_fee() {
+        let mut pool = Pool {
+            protocol_fee: FixedPoint::from_scale(2, 1),
+            liquidity: Liquidity::from_integer(10),
+            ..Default::default()
+        };
+        let amount = TokenAmount::from_integer(6);
+        let in_x = true;
+
+        pool.add_fee(amount, in_x);
+
+        assert_eq!({ pool.fee_growth_global_x }, FeeGrowth::from_scale(4, 1));
+        assert_eq!({ pool.fee_protocol_token_x }, 2);
     }
 }
