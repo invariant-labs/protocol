@@ -144,15 +144,21 @@ mod tests {
 
     #[test]
     fn test_price_to_u64() {
-        // min sqrt price - sqrt(1 / (2^64 - 1))
+        // min sqrt price -> sqrt(1 / (2^64 - 1))
         {
             let min_sqrt_price_decimal = Price::new(232830643653869);
             let min_sqrt_price_x64 = price_to_x64(min_sqrt_price_decimal);
             let expected_min_sqrt_price_x64 = 4294967295;
             assert_eq!(min_sqrt_price_x64, expected_min_sqrt_price_x64);
         }
-        // max sqrt price
-        // {}
+        // max sqrt price -> sqrt(2^64 - 1)
+        {
+            let max_sqrt_price_decimal = Price::new(4294967295999999999883584678173065);
+            let max_sqrt_price_x64 = price_to_x64(max_sqrt_price_decimal);
+
+            let expected_max_sqrt_price_x64 = 79228162514264337591396466687;
+            assert_eq!(max_sqrt_price_x64, expected_max_sqrt_price_x64);
+        }
     }
 
     #[test]
