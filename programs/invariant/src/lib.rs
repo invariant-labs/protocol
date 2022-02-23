@@ -5,7 +5,6 @@ mod interfaces;
 mod log;
 mod macros;
 mod math;
-mod old_decimal;
 pub mod structs;
 mod uint;
 mod util;

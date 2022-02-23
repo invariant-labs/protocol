@@ -1,7 +1,6 @@
 use core::convert::TryFrom;
 use core::convert::TryInto;
 pub use decimal::*;
-use std::ops::Mul;
 
 use anchor_lang::prelude::*;
 
