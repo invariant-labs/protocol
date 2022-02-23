@@ -117,7 +117,7 @@ describe('swap with cross both side', () => {
       mintAmount.divn(10),
       lowerTick,
       upperTick,
-      { v: DENOMINATOR },
+      { v: PRICE_DENOMINATOR },
       false,
       feeTier.tickSpacing
     )

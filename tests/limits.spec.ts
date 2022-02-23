@@ -18,6 +18,7 @@ import { assert } from 'chai'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
 import { Pair } from '@invariant-labs/sdk/lib/pair'
+import { PRICE_DENOMINATOR } from '@invariant-labs/sdk/lib/utils'
 
 describe('limits', () => {
   const provider = Provider.local()
@@ -71,14 +72,14 @@ describe('limits', () => {
       mintAmount,
       lowerTick,
       upperTick,
-      { v: DENOMINATOR },
+      { v: PRICE_DENOMINATOR },
       false
     ).liquidity
     const liquidityByX = getLiquidityByX(
       mintAmount,
       lowerTick,
       upperTick,
-      { v: DENOMINATOR },
+      { v: PRICE_DENOMINATOR },
       false
     ).liquidity
     // calculation of liquidity might not be exactly equal on both tokens so taking smaller one
@@ -124,7 +125,7 @@ describe('limits', () => {
         mintAmount,
         lowerTick,
         upperTick,
-        { v: DENOMINATOR },
+        { v: PRICE_DENOMINATOR },
         true
       ).liquidity
 
@@ -175,7 +176,7 @@ describe('limits', () => {
         mintAmount,
         lowerTick,
         upperTick,
-        { v: DENOMINATOR },
+        { v: PRICE_DENOMINATOR },
         true
       ).liquidity
 
@@ -227,14 +228,14 @@ describe('limits', () => {
         posAmount,
         lowerTick,
         upperTick,
-        { v: DENOMINATOR },
+        { v: PRICE_DENOMINATOR },
         false
       ).liquidity
       const liquidityByX = getLiquidityByY(
         posAmount,
         lowerTick,
         upperTick,
-        { v: DENOMINATOR },
+        { v: PRICE_DENOMINATOR },
         false
       ).liquidity
       // calculation of liquidity might not be exactly equal on both tokens so taking smaller one
