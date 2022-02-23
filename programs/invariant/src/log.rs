@@ -193,6 +193,7 @@ mod tests {
             assert_eq!(sign, false);
             assert_eq!(value, 136598680297774514176);
         }
+        // TODO: fix this
         // log2 of max sqrt price
         // {
         //     let max_sqrt_price = Price::new(4294967295999999999883584678173065);
@@ -241,13 +242,13 @@ mod tests {
             }
             // get tick slightly below 1
             {
-                let sqrt_price_decimal = Price::new(999999999999);
+                let sqrt_price_decimal = Price::from_integer(1) - Price::new(1);
                 let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, -1);
             }
             // get tick slightly above 1
             {
-                let sqrt_price_decimal = Price::new(1000000000001);
+                let sqrt_price_decimal = Price::from_integer(1) + Price::new(1);
                 let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
                 assert_eq!(tick, 0);
             }
@@ -392,7 +393,7 @@ mod tests {
         }
         //get tick slightly above at min tick
         {
-            let min_sqrt_price = Price::new(15258932);
+            let min_sqrt_price = calculate_price_sqrt(-MAX_TICK);
             let sqrt_price_decimal = min_sqrt_price + Price::new(1);
             let tick = get_tick_at_sqrt_price(sqrt_price_decimal, 1);
             assert_eq!(tick, -MAX_TICK);
@@ -531,8 +532,7 @@ mod tests {
     #[test]
     fn test_all_negative_tick_spacing_greater_than_1() {
         let tick_spacing: i32 = 4;
-        // for n in 0..MAX_TICK {
-        for n in 0..4 {
+        for n in 0..MAX_TICK {
             {
                 let input_tick = -n;
                 let sqrt_price_decimal = calculate_price_sqrt(input_tick);
