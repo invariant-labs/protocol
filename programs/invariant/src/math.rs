@@ -21,58 +21,58 @@ pub fn calculate_price_sqrt(tick_index: i32) -> Price {
     let mut price = FixedPoint::from_integer(1);
 
     if tick & 0x1 != 0 {
-        price = price * FixedPoint::new(1000049998750);
+        price *= FixedPoint::new(1000049998750);
     }
     if tick & 0x2 != 0 {
-        price = price * FixedPoint::new(1000100000000);
+        price *= FixedPoint::new(1000100000000);
     }
     if tick & 0x4 != 0 {
-        price = price * FixedPoint::new(1000200010000);
+        price *= FixedPoint::new(1000200010000);
     }
     if tick & 0x8 != 0 {
-        price = price * FixedPoint::new(1000400060004);
+        price *= FixedPoint::new(1000400060004);
     }
     if tick & 0x10 != 0 {
-        price = price * FixedPoint::new(1000800280056);
+        price *= FixedPoint::new(1000800280056);
     }
     if tick & 0x20 != 0 {
-        price = price * FixedPoint::new(1001601200560);
+        price *= FixedPoint::new(1001601200560);
     }
     if tick & 0x40 != 0 {
-        price = price * FixedPoint::new(1003204964963);
+        price *= FixedPoint::new(1003204964963);
     }
     if tick & 0x80 != 0 {
-        price = price * FixedPoint::new(1006420201726);
+        price *= FixedPoint::new(1006420201726);
     }
     if tick & 0x100 != 0 {
-        price = price * FixedPoint::new(1012881622442);
+        price *= FixedPoint::new(1012881622442);
     }
     if tick & 0x200 != 0 {
-        price = price * FixedPoint::new(1025929181080);
+        price *= FixedPoint::new(1025929181080);
     }
     if tick & 0x400 != 0 {
-        price = price * FixedPoint::new(1052530684591);
+        price *= FixedPoint::new(1052530684591);
     }
     if tick & 0x800 != 0 {
-        price = price * FixedPoint::new(1107820842005);
+        price *= FixedPoint::new(1107820842005);
     }
     if tick & 0x1000 != 0 {
-        price = price * FixedPoint::new(1227267017980);
+        price *= FixedPoint::new(1227267017980);
     }
     if tick & 0x2000 != 0 {
-        price = price * FixedPoint::new(1506184333421);
+        price *= FixedPoint::new(1506184333421);
     }
     if tick & 0x4000 != 0 {
-        price = price * FixedPoint::new(2268591246242);
+        price *= FixedPoint::new(2268591246242);
     }
     if tick & 0x8000 != 0 {
-        price = price * FixedPoint::new(5146506242525);
+        price *= FixedPoint::new(5146506242525);
     }
     if tick & 0x0001_0000 != 0 {
-        price = price * FixedPoint::new(26486526504348);
+        price *= FixedPoint::new(26486526504348);
     }
     if tick & 0x0002_0000 != 0 {
-        price = price * FixedPoint::new(701536086265529);
+        price *= FixedPoint::new(701536086265529);
     }
 
     if tick_index < 0 {

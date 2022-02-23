@@ -162,8 +162,8 @@ impl<'info> Swap<'info> {
 
             pool.sqrt_price = result.next_price_sqrt;
 
-            total_amount_in = total_amount_in + result.amount_in + result.fee_amount;
-            total_amount_out = total_amount_out + result.amount_out;
+            total_amount_in += result.amount_in + result.fee_amount;
+            total_amount_out += result.amount_out;
 
             // Fail if price would go over swap limit
             if { pool.sqrt_price } == sqrt_price_limit && !remaining_amount.is_zero() {
@@ -212,7 +212,7 @@ impl<'info> Swap<'info> {
                     } else if !remaining_amount.is_zero() {
                         if by_amount_in {
                             pool.add_fee(remaining_amount, x_to_y);
-                            total_amount_in = total_amount_in + remaining_amount;
+                            total_amount_in += remaining_amount;
                         }
                         remaining_amount = TokenAmount(0);
                     }

@@ -75,7 +75,6 @@ describe('position', () => {
     const positionList = await market.getPositionList(positionOwner.publicKey)
     assert.equal(positionList.head, 0)
   })
-  // TODO: checkout sqrt price everywhere
   describe('#initPosition above current tick', () => {
     // -22980
     // 0
