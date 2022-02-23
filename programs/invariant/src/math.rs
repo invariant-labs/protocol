@@ -433,7 +433,6 @@ pub fn is_enough_amount_to_push_price(
 
 #[cfg(test)]
 mod tests {
-    use std::ops::Div;
 
     use super::*;
 
@@ -977,7 +976,7 @@ mod tests {
         {
             let mut pool = Pool {
                 liquidity: Liquidity::from_integer(0),
-                sqrt_price: Price::new(1000140000000),
+                sqrt_price: Price::new(1000140000000_000000000000),
                 current_tick_index: 2,
                 ..Default::default()
             };
@@ -999,56 +998,56 @@ mod tests {
             assert_eq!(x, TokenAmount(51));
             assert_eq!(y, TokenAmount(700));
         }
-        // // current tick smaller than lower tick
-        // {
-        //     let mut pool = Pool {
-        //         liquidity: Liquidity::from_integer(0),
-        //         current_tick_index: 0,
-        //         ..Default::default()
-        //     };
+        // current tick smaller than lower tick
+        {
+            let mut pool = Pool {
+                liquidity: Liquidity::from_integer(0),
+                current_tick_index: 0,
+                ..Default::default()
+            };
 
-        //     let liquidity_delta = Liquidity::from_integer(10);
-        //     let liquidity_sign = true;
-        //     let upper_tick = 4;
-        //     let lower_tick = 2;
+            let liquidity_delta = Liquidity::from_integer(10);
+            let liquidity_sign = true;
+            let upper_tick = 4;
+            let lower_tick = 2;
 
-        //     let (x, y) = calculate_amount_delta(
-        //         &mut pool,
-        //         liquidity_delta,
-        //         liquidity_sign,
-        //         upper_tick,
-        //         lower_tick,
-        //     )
-        //     .unwrap();
+            let (x, y) = calculate_amount_delta(
+                &mut pool,
+                liquidity_delta,
+                liquidity_sign,
+                upper_tick,
+                lower_tick,
+            )
+            .unwrap();
 
-        //     assert_eq!(x, TokenAmount(1));
-        //     assert_eq!(y, TokenAmount(0));
-        // }
-        // // current tick greater than upper tick
-        // {
-        //     let mut pool = Pool {
-        //         liquidity: Liquidity::from_integer(0),
-        //         current_tick_index: 6,
-        //         ..Default::default()
-        //     };
+            assert_eq!(x, TokenAmount(1));
+            assert_eq!(y, TokenAmount(0));
+        }
+        // current tick greater than upper tick
+        {
+            let mut pool = Pool {
+                liquidity: Liquidity::from_integer(0),
+                current_tick_index: 6,
+                ..Default::default()
+            };
 
-        //     let liquidity_delta = Liquidity::from_integer(10);
-        //     let liquidity_sign = true;
-        //     let upper_tick = 4;
-        //     let lower_tick = 2;
+            let liquidity_delta = Liquidity::from_integer(10);
+            let liquidity_sign = true;
+            let upper_tick = 4;
+            let lower_tick = 2;
 
-        //     let (x, y) = calculate_amount_delta(
-        //         &mut pool,
-        //         liquidity_delta,
-        //         liquidity_sign,
-        //         upper_tick,
-        //         lower_tick,
-        //     )
-        //     .unwrap();
+            let (x, y) = calculate_amount_delta(
+                &mut pool,
+                liquidity_delta,
+                liquidity_sign,
+                upper_tick,
+                lower_tick,
+            )
+            .unwrap();
 
-        //     assert_eq!(x, TokenAmount(0));
-        //     assert_eq!(y, TokenAmount(1));
-        // }
+            assert_eq!(x, TokenAmount(0));
+            assert_eq!(y, TokenAmount(1));
+        }
     }
     #[test]
     fn test_update_seconds_per_liquidity_global() {

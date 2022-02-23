@@ -32,12 +32,12 @@ pub fn generate_factories(characteristics: DecimalCharacteristics) -> proc_macro
                     if #scale > scale {
                         val.try_into().unwrap_or_else(|_| std::panic!("decimal: can't convert value"))
                         .checked_mul(
-                            (10 as #underlying_type).checked_pow((#scale - scale) as u32).unwrap()
+                            (#underlying_type::try_from(10).unwrap()).checked_pow((#scale - scale) as u32).unwrap()
                         )
                     } else {
                         val.try_into().unwrap_or_else(|_| std::panic!("decimal: can't convert value"))
                             .checked_div(
-                                (10 as #underlying_type).checked_pow((scale - #scale) as u32).unwrap()
+                                (#underlying_type::try_from(10).unwrap()).checked_pow((scale - #scale) as u32).unwrap()
                             )
                     }.unwrap()
                 )
@@ -48,10 +48,10 @@ pub fn generate_factories(characteristics: DecimalCharacteristics) -> proc_macro
                     if #scale > scale {
                         val.try_into().unwrap_or_else(|_| std::panic!("decimal: can't convert value"))
                         .checked_mul(
-                            (10 as #underlying_type).checked_pow((#scale - scale) as u32).unwrap()
+                            (#underlying_type::try_from(10).unwrap()).checked_pow((#scale - scale) as u32).unwrap()
                         )
                     } else {
-                        let denominator = (10 as #underlying_type).checked_pow((scale - #scale) as u32).unwrap();
+                        let denominator = (#underlying_type::try_from(10).unwrap()).checked_pow((scale - #scale) as u32).unwrap();
                         val.try_into().unwrap_or_else(|_| std::panic!("decimal: can't convert value"))
                             .checked_add(
                                 denominator.checked_sub(
