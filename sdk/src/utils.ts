@@ -266,6 +266,18 @@ export const toDecimal = (x: number, decimals: number = 0): Decimal => {
   return { v: DENOMINATOR.muln(x).div(new BN(10).pow(new BN(decimals))) }
 }
 
+export const toDecimalWithDenominator = (x: number, denominator: BN, decimals: number = 0) => {
+  return { v: denominator.muln(x).div(new BN(10).pow(new BN(decimals))) }
+}
+
+export const toPrice = (x: number, decimals: number = 0): Decimal => {
+  return toDecimalWithDenominator(x, PRICE_DENOMINATOR, decimals)
+}
+
+export const toPercent = (x: number, decimals: number = 0): Decimal => {
+  return toDecimalWithDenominator(x, DENOMINATOR, decimals)
+}
+
 export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
   const { sqrtPriceLimit, xToY, currentTick, tickSpacing, tickmap } = closerLimit
   let index: number | null
