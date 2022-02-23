@@ -1,7 +1,7 @@
-pub use crate::uint::U256;
 use core::convert::TryFrom;
 use core::convert::TryInto;
 pub use decimal::*;
+use std::ops::Mul;
 
 use anchor_lang::prelude::*;
 
@@ -28,16 +28,6 @@ pub struct FeeGrowth {
     pub v: u128,
 }
 
-impl FeeGrowth {
-    pub fn from_fee(liquidity: Liquidity, fee: TokenAmount) -> Self {
-        Self::from_decimal(fee).big_div_up(liquidity)
-    }
-
-    pub fn to_fee(self, liquidity: Liquidity) -> Liquidity {
-        Liquidity::from_decimal(self.big_mul(liquidity))
-    }
-}
-
 #[decimal(12)]
 #[zero_copy]
 #[derive(
@@ -51,6 +41,58 @@ pub struct FixedPoint {
 #[decimal(0)]
 #[derive(Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 pub struct TokenAmount(pub u64);
+
+impl FeeGrowth {
+    pub fn from_fee(liquidity: Liquidity, fee: TokenAmount) -> Self {
+        Self::from_decimal(fee).big_div_up(liquidity)
+    }
+
+    pub fn to_fee(self, liquidity: Liquidity) -> Liquidity {
+        Liquidity::from_decimal(self.big_mul(liquidity))
+    }
+}
+
+impl Price {
+    pub fn big_div_mul(self, lhs: Self, rhs: Self) -> Self {
+        Self::new(
+            U256::from(self.get())
+                .checked_mul(Self::one::<U256>())
+                .unwrap()
+                .checked_div(
+                    U256::from(lhs.get())
+                        .checked_mul(U256::from(rhs.get()))
+                        .unwrap()
+                        .checked_add(Self::almost_one::<U256>())
+                        .unwrap()
+                        .checked_div(Self::one::<U256>())
+                        .unwrap(),
+                )
+                .unwrap()
+                .try_into()
+                .unwrap(),
+        )
+    }
+
+    pub fn big_div_mul_up(self, lhs: Self, rhs: Self) -> Self {
+        Self::new({
+            let denominator = U256::from(lhs.get())
+                .checked_mul(U256::from(rhs.get()))
+                .unwrap()
+                .checked_div(Self::one::<U256>())
+                .unwrap();
+
+            U256::from(self.get())
+                .checked_mul(Self::one::<U256>())
+                .unwrap()
+                .checked_add(denominator.checked_sub(U256::from(1u32)).unwrap())
+                .unwrap()
+                .checked_div(denominator)
+                .unwrap()
+                .try_into()
+                .unwrap()
+        })
+    }
+}
 
 #[cfg(test)]
 pub mod tests {

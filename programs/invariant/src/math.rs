@@ -191,10 +191,12 @@ pub fn get_delta_x(
 
     let nominator = delta_price.big_mul(liquidity);
 
-    // TODO this will overflow but want to make it compile before fixing
+    // TODO: please refactor me
     match up {
-        true => TokenAmount::from_decimal_up(nominator.big_div_up(sqrt_price_a * sqrt_price_b)),
-        false => TokenAmount::from_decimal(nominator.big_div(sqrt_price_a.mul_up(sqrt_price_b))),
+        // true => TokenAmount::from_decimal_up(nominator.big_div_up(sqrt_price_a * sqrt_price_b)),
+        true => TokenAmount(1).big_mul_up(nominator.big_div_mul_up(sqrt_price_a, sqrt_price_b)),
+        // false => TokenAmount::from_decimal(nominator.big_div(sqrt_price_a.mul_up(sqrt_price_b))),
+        false => TokenAmount(1).big_mul(nominator.big_div_mul(sqrt_price_a, sqrt_price_b)),
     }
 }
 
@@ -211,9 +213,12 @@ pub fn get_delta_y(
         sqrt_price_b - sqrt_price_a
     };
 
+    // TODO: please refactor me
     match up {
-        true => TokenAmount::from_decimal_up(delta_price.big_mul_up(liquidity)),
-        false => TokenAmount::from_decimal(delta_price.big_mul(liquidity)),
+        // true => TokenAmount::from_decimal_up(delta_price.big_mul_up(liquidity)),
+        true => TokenAmount(1).big_mul_up(delta_price.big_mul_up(liquidity)),
+        // false => TokenAmount::from_decimal(delta_price.big_mul(liquidity)),
+        false => TokenAmount(1).big_mul(delta_price.big_mul(liquidity)),
     }
 }
 
@@ -557,8 +562,8 @@ mod tests {
         }
         // complex
         {
-            let sqrt_price_a = Price::new(234__878_324_943_782);
-            let sqrt_price_b = Price::new(87__854_456_421_658);
+            let sqrt_price_a = Price::new(234__878_324_943_782_000000000000);
+            let sqrt_price_b = Price::new(87__854_456_421_658_000000000000);
             let liquidity = Liquidity::new(983_983__249_092_300_399);
 
             let result_down = get_delta_x(sqrt_price_a, sqrt_price_b, liquidity, false);
@@ -594,8 +599,8 @@ mod tests {
         }
         // big numbers
         {
-            let sqrt_price_a = Price::new(234__878_324_943_782);
-            let sqrt_price_b = Price::new(87__854_456_421_658);
+            let sqrt_price_a = Price::new(234__878_324_943_782_000000000000);
+            let sqrt_price_b = Price::new(87__854_456_421_658_000000000000);
             let liquidity = Liquidity::new(983_983__249_092_300_399);
 
             let result_down = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, false);
@@ -681,7 +686,7 @@ mod tests {
             // TODO will need more precision
             assert_eq!(
                 result,
-                Price::new(461538461539) // rounded up Decimal::from_integer(6).div(Decimal::from_integer(13))
+                Price::new(461538461538461538461539) // rounded up Decimal::from_integer(6).div(Decimal::from_integer(13))
             );
         }
         {
@@ -693,7 +698,7 @@ mod tests {
 
             assert_eq!(
                 result,
-                Price::new(599985145206) // rounded up Decimal::from_integer(24234).div(Decimal::from_integer(40391))
+                Price::new(599985145205615112277488) // rounded up Decimal::from_integer(24234).div(Decimal::from_integer(40391))
             );
         }
         // Subtract
@@ -716,13 +721,15 @@ mod tests {
             assert_eq!(result, Price::from_integer(500_000));
         }
         {
-            let price_sqrt = Price::new(3_333333333333);
+            let price_sqrt = Price::new(3_333333333333333333333333);
             let liquidity = Liquidity::new(222_222222222222);
             let amount = TokenAmount(37);
 
+            // TODO validate me
+            // expected 7.490636704119834280183478
+            // real     7.49063670411985952952068173...
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
-            // TODO: will need more precision
-            assert_eq!(result, Price::new(7_490636704119));
+            assert_eq!(result, Price::new(7490636704119834280183478));
         }
     }
 
