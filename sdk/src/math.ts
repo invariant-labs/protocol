@@ -62,7 +62,7 @@ export const calculatePriceSqrt = (tickIndex: number): Decimal => {
     price = DENOMINATOR.mul(DENOMINATOR).div(price)
   }
 
-  return { v: price }
+  return { v: price.mul(DENOMINATOR) }
 }
 
 export const sqrt = (num: BN): BN => {
