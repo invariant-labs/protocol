@@ -281,9 +281,9 @@ fn get_next_sqrt_price_y_down(
     add: bool,
 ) -> Price {
     if add {
-        price_sqrt + Price::from_decimal(amount.big_div(liquidity))
+        price_sqrt + Price::from_decimal(amount).big_div(Price::from_decimal(liquidity))
     } else {
-        let quotient = Price::from_decimal(amount.big_div_up(liquidity));
+        let quotient = Price::from_decimal(amount).big_div_up(Price::from_decimal(liquidity));
         assert!(!quotient.is_zero());
         price_sqrt - quotient
     }
@@ -760,7 +760,10 @@ mod tests {
 
             let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true);
 
-            assert_eq!(result, Price::from_integer(11).div(Price::from_integer(3)));
+            assert_eq!(
+                result,
+                Price::from_integer(11).big_div(Price::from_integer(3))
+            );
         }
         {
             let price_sqrt = Price::from_integer(24234);
@@ -771,7 +774,7 @@ mod tests {
 
             assert_eq!(
                 result,
-                Price::from_integer(72707).div(Price::from_integer(3))
+                Price::from_integer(72707).big_div(Price::from_integer(3))
             );
         }
         // bool = false
@@ -782,7 +785,7 @@ mod tests {
 
             let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, false);
 
-            assert_eq!(result, Price::from_scale(1, 2));
+            assert_eq!(result, Price::from_scale(5, 1));
         }
         {
             let price_sqrt = Price::from_integer(100_000);
@@ -790,7 +793,7 @@ mod tests {
             let amount = TokenAmount(4_000);
 
             let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, false);
-            assert_eq!(result, Price::new(99999999992000000));
+            assert_eq!(result, Price::new(99999999992000000_000000000000));
         }
         {
             let price_sqrt = Price::from_integer(3);
@@ -801,8 +804,9 @@ mod tests {
 
             // expected 2.833333333333
             // real     2.999999999999833...
-            assert_eq!(result, Price::new(2833333333333));
+            assert_eq!(result, Price::new(2833333333333_333333333333));
         }
+        // TODO: test without integers
     }
 
     #[test]
