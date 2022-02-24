@@ -377,6 +377,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
         result.nextPrice,
         pool.liquidity,
         pool.fee,
+        byAmountIn,
         xToY
       )
 
