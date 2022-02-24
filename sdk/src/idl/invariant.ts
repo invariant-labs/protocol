@@ -1159,13 +1159,13 @@ export type Invariant = {
           {
             "name": "tokensOwedX",
             "type": {
-              "defined": "Liquidity"
+              "defined": "FixedPoint"
             }
           },
           {
             "name": "tokensOwedY",
             "type": {
-              "defined": "Liquidity"
+              "defined": "FixedPoint"
             }
           },
           {
@@ -2680,13 +2680,13 @@ export const IDL: Invariant = {
           {
             "name": "tokensOwedX",
             "type": {
-              "defined": "Liquidity"
+              "defined": "FixedPoint"
             }
           },
           {
             "name": "tokensOwedY",
             "type": {
-              "defined": "Liquidity"
+              "defined": "FixedPoint"
             }
           },
           {

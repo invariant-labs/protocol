@@ -151,8 +151,8 @@ impl<'info> CreatePosition<'info> {
             fee_growth_inside_y: FeeGrowth::new(0),
             seconds_per_liquidity_inside: FixedPoint::new(0),
             last_slot: slot,
-            tokens_owed_x: Liquidity::new(0),
-            tokens_owed_y: Liquidity::new(0),
+            tokens_owed_x: FixedPoint::new(0),
+            tokens_owed_y: FixedPoint::new(0),
             bump,
         };
 

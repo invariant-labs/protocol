@@ -46,8 +46,8 @@ impl FeeGrowth {
         Self::from_decimal(fee).big_div_up(liquidity)
     }
 
-    pub fn to_fee(self, liquidity: Liquidity) -> Liquidity {
-        Liquidity::from_decimal(self.big_mul(liquidity))
+    pub fn to_fee(self, liquidity: Liquidity) -> FixedPoint {
+        FixedPoint::from_decimal(self.big_mul(liquidity))
     }
 }
 

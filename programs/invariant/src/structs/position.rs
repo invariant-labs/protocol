@@ -18,8 +18,8 @@ pub struct Position {
     pub fee_growth_inside_y: FeeGrowth,
     pub seconds_per_liquidity_inside: FixedPoint,
     pub last_slot: u64,
-    pub tokens_owed_x: Liquidity,
-    pub tokens_owed_y: Liquidity,
+    pub tokens_owed_x: FixedPoint,
+    pub tokens_owed_y: FixedPoint,
     pub bump: u8,
 }
 
