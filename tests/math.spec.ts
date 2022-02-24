@@ -738,9 +738,9 @@ describe('Math', () => {
   })
   describe('test getDeltaY', () => {
     it('zero at zero liquidity', async () => {
-      const priceA: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
-      const priceB: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
-      const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('0')) }
+      const priceA: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('1')) }
+      const priceB: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('1')) }
+      const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN('0')) }
 
       const result = getDeltaY(priceA, priceB, liquidity, false)
 
@@ -748,9 +748,9 @@ describe('Math', () => {
       assert.ok(result.eq(expectedResult))
     })
     it('equal at equal liquidity', async () => {
-      const priceA: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
-      const priceB: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
-      const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
+      const priceA: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('1')) }
+      const priceB: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('2')) }
+      const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN('2')) }
 
       const result = getDeltaY(priceA, priceB, liquidity, false)
 
@@ -759,8 +759,8 @@ describe('Math', () => {
     })
 
     it('big numbers', async () => {
-      const priceA: Decimal = { v: new BN('234878324943782') }
-      const priceB: Decimal = { v: new BN('87854456421658') }
+      const priceA: Decimal = { v: new BN('234878324943782000000000000') }
+      const priceB: Decimal = { v: new BN('87854456421658000000000000') }
       const liquidity: Decimal = { v: new BN('983983249092300399') }
 
       const resultDown = getDeltaY(priceA, priceB, liquidity, false)

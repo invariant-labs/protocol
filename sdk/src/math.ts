@@ -217,10 +217,10 @@ export const getDeltaY = (
   if (up) {
     return liquidity.v
       .mul(deltaPrice.v)
-      .add(DENOMINATOR.mul(DENOMINATOR).subn(1))
-      .div(DENOMINATOR.mul(DENOMINATOR))
+      .add(LIQUIDITY_DENOMINATOR.mul(PRICE_DENOMINATOR).subn(1))
+      .div(LIQUIDITY_DENOMINATOR.mul(PRICE_DENOMINATOR))
   } else {
-    return liquidity.v.mul(deltaPrice.v).div(DENOMINATOR.mul(DENOMINATOR))
+    return liquidity.v.mul(deltaPrice.v).div(LIQUIDITY_DENOMINATOR.mul(PRICE_DENOMINATOR))
   }
 }
 
