@@ -286,10 +286,15 @@ export const getNextPriceYDown = (
   add: boolean
 ): Decimal => {
   if (add) {
-    return { v: amount.mul(DENOMINATOR.mul(DENOMINATOR)).div(liquidity.v).add(price.v) }
+    return {
+      v: amount.mul(LIQUIDITY_DENOMINATOR.mul(PRICE_DENOMINATOR)).div(liquidity.v).add(price.v)
+    }
   } else {
     const quotient: Decimal = {
-      v: amount.mul(DENOMINATOR.mul(DENOMINATOR)).add(liquidity.v.subn(1)).div(liquidity.v)
+      v: amount
+        .mul(LIQUIDITY_DENOMINATOR.mul(PRICE_DENOMINATOR))
+        .add(liquidity.v.subn(1))
+        .div(liquidity.v)
     }
     assert.isTrue(price.v.gt(quotient.v))
     return { v: price.v.sub(quotient.v) }
