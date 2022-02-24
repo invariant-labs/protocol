@@ -30,6 +30,7 @@ const POSITION_SEED = 'positionv1'
 const TICK_SEED = 'tickv1'
 const POSITION_LIST_SEED = 'positionlistv1'
 const STATE_SEED = 'statev1'
+const POOL_SEED = 'poolv1'
 const MAX_IX = 8
 const TICKS_PER_IX = 1
 export const FEE_TIER = 'feetierv1'
@@ -1274,6 +1275,16 @@ export class Market {
     const volumeY = feeProtocolTokenY.mul(DENOMINATOR).div(feeDenominator)
 
     return { volumeX, volumeY }
+  }
+
+  async getAllPools() {
+    return (
+      await this.program.account.pool.all([
+        {
+          memcmp: { bytes: bs58.encode(Buffer.from(utils.bytes.utf8.encode(POOL_SEED))), offset: 8 }
+        }
+      ])
+    ).map(a => a.account) as PoolStructure[]
   }
 }
 
