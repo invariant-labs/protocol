@@ -48,6 +48,7 @@ import { Decimal, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
 import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
 import { Keypair } from '@solana/web3.js'
 import { swapParameters } from './swap'
+import { LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk/lib/utils'
 
 describe('Math', () => {
   describe('Test sqrt price calculation', () => {
@@ -700,9 +701,9 @@ describe('Math', () => {
   })
   describe('test getDeltaX', () => {
     it('zero at zero liquidity', async () => {
-      const priceA: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
-      const priceB: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
-      const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('0')) }
+      const priceA: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('1')) }
+      const priceB: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('1')) }
+      const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN('0')) }
 
       const result = getDeltaX(priceA, priceB, liquidity, false)
 
@@ -710,9 +711,9 @@ describe('Math', () => {
       assert.ok(result.eq(expectedResult))
     })
     it('equal at equal liquidity', async () => {
-      const priceA: Decimal = { v: DENOMINATOR.mul(new BN('1')) }
-      const priceB: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
-      const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('2')) }
+      const priceA: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('1')) }
+      const priceB: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('2')) }
+      const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN('2')) }
 
       const result = getDeltaX(priceA, priceB, liquidity, false)
 
@@ -721,8 +722,8 @@ describe('Math', () => {
     })
 
     it('big numbers', async () => {
-      const priceA: Decimal = { v: new BN('234878324943782') }
-      const priceB: Decimal = { v: new BN('87854456421658') }
+      const priceA: Decimal = { v: new BN('234878324943782000000000000') }
+      const priceB: Decimal = { v: new BN('87854456421658000000000000') }
       const liquidity: Decimal = { v: new BN('983983249092300399') }
 
       const resultDown = getDeltaX(priceA, priceB, liquidity, false)
