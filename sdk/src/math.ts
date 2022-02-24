@@ -188,14 +188,16 @@ export const getDeltaX = (
     deltaPrice = { v: priceB.v.sub(priceA.v) }
   }
 
-  const nominator: Decimal = { v: liquidity.v.mul(deltaPrice.v).div(DENOMINATOR) }
+  const nominator: Decimal = { v: liquidity.v.mul(deltaPrice.v).div(LIQUIDITY_DENOMINATOR) }
 
   if (up) {
     return nominator.v
-      .add(priceA.v.mul(priceB.v).div(DENOMINATOR).subn(1))
-      .div(priceA.v.mul(priceB.v).div(DENOMINATOR))
+      .add(priceA.v.mul(priceB.v).div(PRICE_DENOMINATOR).subn(1))
+      .div(priceA.v.mul(priceB.v).div(PRICE_DENOMINATOR))
   } else {
-    return nominator.v.div(priceA.v.mul(priceB.v).add(DENOMINATOR.subn(1)).div(DENOMINATOR))
+    return nominator.v.div(
+      priceA.v.mul(priceB.v).add(PRICE_DENOMINATOR.subn(1)).div(PRICE_DENOMINATOR)
+    )
   }
 }
 
