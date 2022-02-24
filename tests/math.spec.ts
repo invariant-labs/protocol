@@ -603,13 +603,13 @@ describe('Math', () => {
   })
   describe('test calculateSwapStep', () => {
     it('one token by amount in', async () => {
-      const price: Decimal = { v: DENOMINATOR }
+      const price: Decimal = { v: PRICE_DENOMINATOR }
       const target: Decimal = {
-        v: sqrt(DENOMINATOR.mul(new BN('101')).div(new BN('100')).mul(DENOMINATOR))
+        v: sqrt(PRICE_DENOMINATOR.mul(new BN('101')).div(new BN('100')).mul(PRICE_DENOMINATOR))
       }
-      const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('2000')) }
+      const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN('2000')) }
       const amount: BN = new BN('1')
-      const fee = toDecimal(6, 4)
+      const fee = toPercent(6, 4)
 
       const result: SwapResult = calculateSwapStep(price, target, liquidity, amount, true, fee)
 
@@ -627,13 +627,13 @@ describe('Math', () => {
     })
 
     it('amount out capped at target price', async () => {
-      const price: Decimal = { v: DENOMINATOR }
+      const price: Decimal = { v: PRICE_DENOMINATOR }
       const target: Decimal = {
-        v: sqrt(DENOMINATOR.mul(new BN('101')).div(new BN('100')).mul(DENOMINATOR))
+        v: sqrt(PRICE_DENOMINATOR.mul(new BN('101')).div(new BN('100')).mul(PRICE_DENOMINATOR))
       }
-      const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('2000')) }
+      const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN('2000')) }
       const amount: BN = new BN('20')
-      const fee = toDecimal(6, 4)
+      const fee = toPercent(6, 4)
 
       const resultIn: SwapResult = calculateSwapStep(price, target, liquidity, amount, true, fee)
       const resultOut: SwapResult = calculateSwapStep(price, target, liquidity, amount, false, fee)
@@ -657,18 +657,18 @@ describe('Math', () => {
     })
 
     it('amount in not capped', async () => {
-      const price: Decimal = { v: DENOMINATOR.mul(new BN('101')).div(new BN('100')) }
-      const target: Decimal = { v: DENOMINATOR.mul(new BN('10')) }
-      const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('300000000')) }
+      const price: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('101')).div(new BN('100')) }
+      const target: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('10')) }
+      const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN('300000000')) }
       const amount: BN = new BN('1000000')
-      const fee = toDecimal(6, 4)
+      const fee = toPercent(6, 4)
 
       const result: SwapResult = calculateSwapStep(price, target, liquidity, amount, true, fee)
 
       const expectedResult: SwapResult = {
-        nextPrice: { v: new BN('1013331333333') },
+        nextPrice: { v: new BN('1013331333333' + '3'.repeat(PRICE_SCALE - 12)) },
         amountIn: new BN('999400'),
-        amountOut: new BN('976487'), // ((1.013331333333 - 1.01) * 300000000) / (1.013331333333 * 1.01)
+        amountOut: new BN('976487'), // ((1.0133313333333333333333333333 - 1.01) * 300000000) / (1.0133313333333333333333333333 * 1.01)
         feeAmount: new BN('600')
       }
 
@@ -678,18 +678,18 @@ describe('Math', () => {
       assert.ok(result.feeAmount.eq(expectedResult.feeAmount))
     })
     it('amount out not capped', async () => {
-      const price: Decimal = { v: DENOMINATOR.mul(new BN('101')) }
-      const target: Decimal = { v: DENOMINATOR.mul(new BN('100')) }
-      const liquidity: Decimal = { v: DENOMINATOR.mul(new BN('5000000000000')) }
+      const price: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('101')) }
+      const target: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('100')) }
+      const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN('5000000000000')) }
       const amount: BN = new BN('2000000')
-      const fee = toDecimal(6, 4)
+      const fee = toPercent(6, 4)
 
       const result: SwapResult = calculateSwapStep(price, target, liquidity, amount, false, fee)
 
       const expectedResult: SwapResult = {
-        nextPrice: { v: new BN('100999999600000') },
+        nextPrice: { v: new BN('100999999600000' + '0'.repeat(PRICE_SCALE - 12)) },
         amountIn: new BN('197'),
-        amountOut: amount, // (5000000000000 * (101 - 100.9999996)) /  (101 * 100.9999996)
+        amountOut: amount, // (5000000000000000000000000 * (101 - 100.9999996)) /  (101 * 100.9999996)
         feeAmount: new BN('1')
       }
 
