@@ -2,10 +2,9 @@
   "name": "stats",
   "version": "1.0.0",
   "description": "",
-  "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "snap": "ts-node index.ts"
+    "snap": "ts-node ./src/snap.ts"
   },
   "author": "",
   "license": "ISC",
@@ -13,6 +12,7 @@
     "@invariant-labs/sdk": "file:sdk",
     "@project-serum/anchor": "0.21.0",
     "@solana/web3.js": "1.18.0",
+    "@vercel/node": "^1.13.0",
     "dotenv": "^16.0.0",
     "ts-node": "^10.5.0"
   },
