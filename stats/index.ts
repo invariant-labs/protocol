@@ -38,13 +38,17 @@ export const createSnapshotForNetwork = async (network: Network) => {
 
       const { liquidityX, liquidityY } = await market.getPairLiquidityValues(pair)
 
+      const { feeX, feeY } = await market.getGlobalFee(pair)
+
       return {
         address: address.toString(),
         stats: {
           volumeX,
           volumeY,
           liquidityX,
-          liquidityY
+          liquidityY,
+          feeX,
+          feeY
         }
       }
     })
