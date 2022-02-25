@@ -204,8 +204,8 @@ mod tests {
                 liquidity: Liquidity::from_integer(0),
                 fee_growth_inside_x: FeeGrowth::from_integer(4),
                 fee_growth_inside_y: FeeGrowth::from_integer(4),
-                tokens_owed_x: Liquidity::from_integer(100),
-                tokens_owed_y: Liquidity::from_integer(100),
+                tokens_owed_x: FixedPoint::from_integer(100),
+                tokens_owed_y: FixedPoint::from_integer(100),
                 ..Default::default()
             };
             let sign = true;
@@ -225,8 +225,8 @@ mod tests {
             assert_eq!({ position.liquidity }, Liquidity::from_integer(1));
             assert_eq!({ position.fee_growth_inside_x }, FeeGrowth::from_integer(5));
             assert_eq!({ position.fee_growth_inside_y }, FeeGrowth::from_integer(5));
-            assert_eq!({ position.tokens_owed_x }, Liquidity::from_integer(100));
-            assert_eq!({ position.tokens_owed_y }, Liquidity::from_integer(100));
+            assert_eq!({ position.tokens_owed_x }, FixedPoint::from_integer(100));
+            assert_eq!({ position.tokens_owed_y }, FixedPoint::from_integer(100));
         }
         // fee should change
         {
@@ -234,8 +234,8 @@ mod tests {
                 liquidity: Liquidity::from_integer(1),
                 fee_growth_inside_x: FeeGrowth::from_integer(4),
                 fee_growth_inside_y: FeeGrowth::from_integer(4),
-                tokens_owed_x: Liquidity::from_integer(100),
-                tokens_owed_y: Liquidity::from_integer(100),
+                tokens_owed_x: FixedPoint::from_integer(100),
+                tokens_owed_y: FixedPoint::from_integer(100),
                 ..Default::default()
             };
             let sign = true;
@@ -255,8 +255,8 @@ mod tests {
             assert_eq!({ position.liquidity }, Liquidity::from_integer(2));
             assert_eq!({ position.fee_growth_inside_x }, FeeGrowth::from_integer(5));
             assert_eq!({ position.fee_growth_inside_y }, FeeGrowth::from_integer(5));
-            assert_eq!({ position.tokens_owed_x }, Liquidity::from_integer(101));
-            assert_eq!({ position.tokens_owed_y }, Liquidity::from_integer(101));
+            assert_eq!({ position.tokens_owed_x }, FixedPoint::from_integer(101));
+            assert_eq!({ position.tokens_owed_y }, FixedPoint::from_integer(101));
         }
     }
 
@@ -268,8 +268,8 @@ mod tests {
                 liquidity: Liquidity::from_integer(123),
                 fee_growth_inside_x: FeeGrowth::new(u128::MAX) - FeeGrowth::from_integer(1234),
                 fee_growth_inside_y: FeeGrowth::new(u128::MAX) - FeeGrowth::from_integer(1234),
-                tokens_owed_x: Liquidity::from_integer(0),
-                tokens_owed_y: Liquidity::from_integer(0),
+                tokens_owed_x: FixedPoint::from_integer(0),
+                tokens_owed_y: FixedPoint::from_integer(0),
                 ..Default::default()
             };
             let mut pool = Pool {
@@ -314,7 +314,7 @@ mod tests {
 
             assert_eq!(
                 { position.tokens_owed_x },
-                Liquidity::new(151167000000000000)
+                FixedPoint::new(151167000000000000)
             );
         }
     }

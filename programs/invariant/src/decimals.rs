@@ -186,7 +186,7 @@ pub mod tests {
 
             let fee_growth = FeeGrowth::from_fee(liquidity, amount);
             let out = fee_growth.to_fee(liquidity);
-            assert_eq!(out, Liquidity::from_decimal(amount));
+            assert_eq!(out, FixedPoint::from_decimal(amount));
         }
         // greater liquidity
         {
@@ -196,7 +196,7 @@ pub mod tests {
 
             let fee_growth = FeeGrowth::from_fee(liquidity_before, amount);
             let out = fee_growth.to_fee(liquidity_after);
-            assert_eq!(out, Liquidity::from_integer(1000))
+            assert_eq!(out, FixedPoint::from_integer(1000))
         }
     }
 }
