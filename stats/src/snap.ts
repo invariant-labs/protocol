@@ -43,12 +43,12 @@ export const createSnapshotForNetwork = async (network: Network) => {
       return {
         address: address.toString(),
         stats: {
-          volumeX,
-          volumeY,
-          liquidityX,
-          liquidityY,
-          feeX,
-          feeY
+          volumeX: volumeX.toString(),
+          volumeY: volumeY.toString(),
+          liquidityX: liquidityX.toString(),
+          liquidityY: liquidityY.toString(),
+          feeX: feeX.toString(),
+          feeY: feeY.toString()
         }
       }
     })

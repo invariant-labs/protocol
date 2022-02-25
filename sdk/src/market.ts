@@ -1284,7 +1284,9 @@ export class Market {
   }
 
   async getAllPools() {
-    return (await this.program.account.pool.all([])).map(a => a.account) as PoolStructure[]
+    return (await this.program.account.pool.all([])).map(
+      ({ account }) => account
+    ) as PoolStructure[]
   }
 
   async getPairLiquidityValues(pair: Pair) {
@@ -1296,7 +1298,7 @@ export class Market {
           memcmp: { bytes: bs58.encode(poolPublicKey.toBuffer()), offset: 40 }
         }
       ])
-    ).map(a => a.account) as Position[]
+    ).map(({ account }) => account) as Position[]
 
     let liquidityX = new BN(0)
     let liquidityY = new BN(0)
