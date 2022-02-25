@@ -69,11 +69,13 @@ impl<'info> CreatePool<'info> {
 
         let pool = &mut self.pool.load_init()?;
         let fee_tier = self.fee_tier.load()?;
+        let state_key = self.state.key();
         let current_timestamp = get_current_timestamp();
 
         check_tick(init_tick, fee_tier.tick_spacing)?;
 
         **pool = Pool {
+            state: state_key,
             token_x: *token_x_address,
             token_y: *token_y_address,
             token_x_reserve: *self.token_x_reserve.to_account_info().key,

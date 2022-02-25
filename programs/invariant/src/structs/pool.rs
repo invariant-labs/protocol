@@ -8,6 +8,7 @@ use super::{FeeGrowth, TokenAmount};
 #[repr(packed)]
 #[derive(PartialEq, Default, Debug)]
 pub struct Pool {
+    pub state: Pubkey,
     pub token_x: Pubkey,
     pub token_y: Pubkey,
     pub token_x_reserve: Pubkey,

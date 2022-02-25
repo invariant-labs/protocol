@@ -1299,6 +1299,7 @@ export interface FeeTierStructure {
 }
 
 export interface PoolStructure {
+  state: PublicKey
   tokenX: PublicKey
   tokenY: PublicKey
   tokenXReserve: PublicKey

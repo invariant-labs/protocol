@@ -995,6 +995,10 @@ export type Invariant = {
         "kind": "struct",
         "fields": [
           {
+            "name": "state",
+            "type": "publicKey"
+          },
+          {
             "name": "tokenX",
             "type": "publicKey"
           },
@@ -2491,6 +2495,10 @@ export const IDL: Invariant = {
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "state",
+            "type": "publicKey"
+          },
           {
             "name": "tokenX",
             "type": "publicKey"
