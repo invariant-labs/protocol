@@ -15,7 +15,7 @@ export const createSnapshotForNetwork = async (network: Network) => {
     case Network.DEV:
     default:
       provider = Provider.local(clusterApiUrl('devnet'))
-      fileName = './data/devnetStats.json'
+      fileName = './data/devnet.json'
   }
 
   const connection = provider.connection
@@ -29,21 +29,22 @@ export const createSnapshotForNetwork = async (network: Network) => {
 
   const allPools = await market.getAllPools()
 
-  const poolData = await Promise.all(
+  const poolsData = await Promise.all(
     allPools.map(async pool => {
       const pair = new Pair(pool.tokenX, pool.tokenY, { fee: pool.fee.v })
       const address = await pair.getAddress(market.program.programId)
 
       const { volumeX, volumeY } = await market.getVolume(pair)
 
-      const liquidity = await market.getWholeLiquidity(pair)
+      const { liquidityX, liquidityY } = await market.getPairLiquidityValues(pair)
 
       return {
         address: address.toString(),
         stats: {
           volumeX,
           volumeY,
-          liquidity
+          liquidityX,
+          liquidityY
         }
       }
     })
@@ -58,7 +59,7 @@ export const createSnapshotForNetwork = async (network: Network) => {
 
     const timestamp = Date.now()
 
-    poolData.forEach(({ address, stats }) => {
+    poolsData.forEach(({ address, stats }) => {
       if (!snaps[address]) {
         snaps[address] = []
       }

@@ -9,7 +9,14 @@ import {
   Transaction,
   TransactionInstruction
 } from '@solana/web3.js'
-import { calculatePriceAfterSlippage, findClosestTicks, isInitialized } from './math'
+import {
+  calculatePriceAfterSlippage,
+  calculatePriceSqrt,
+  findClosestTicks,
+  getX,
+  getY,
+  isInitialized
+} from './math'
 import {
   feeToTickSpacing,
   getFeeTierAddress,
@@ -30,7 +37,6 @@ const POSITION_SEED = 'positionv1'
 const TICK_SEED = 'tickv1'
 const POSITION_LIST_SEED = 'positionlistv1'
 const STATE_SEED = 'statev1'
-const POOL_SEED = 'poolv1'
 const MAX_IX = 8
 const TICKS_PER_IX = 1
 export const FEE_TIER = 'feetierv1'
@@ -1278,13 +1284,52 @@ export class Market {
   }
 
   async getAllPools() {
-    return (
-      await this.program.account.pool.all([
+    return (await this.program.account.pool.all([])).map(a => a.account) as PoolStructure[]
+  }
+
+  async getPairLiquidityValues(pair: Pair) {
+    const pool = await this.getPool(pair)
+    const poolPublicKey = await pair.getAddress(this.program.programId)
+    const positions: Position[] = (
+      await this.program.account.position.all([
         {
-          memcmp: { bytes: bs58.encode(Buffer.from(utils.bytes.utf8.encode(POOL_SEED))), offset: 8 }
+          memcmp: { bytes: bs58.encode(poolPublicKey.toBuffer()), offset: 40 }
         }
       ])
-    ).map(a => a.account) as PoolStructure[]
+    ).map(a => a.account) as Position[]
+
+    let liquidityX = new BN(0)
+    let liquidityY = new BN(0)
+    for (const position of positions) {
+      let xVal, yVal
+
+      try {
+        xVal = getX(
+          position.liquidity.v,
+          calculatePriceSqrt(position.upperTickIndex).v,
+          pool.sqrtPrice.v,
+          calculatePriceSqrt(position.lowerTickIndex).v
+        )
+      } catch (error) {
+        xVal = new BN(0)
+      }
+
+      try {
+        yVal = getY(
+          position.liquidity.v,
+          calculatePriceSqrt(position.upperTickIndex).v,
+          pool.sqrtPrice.v,
+          calculatePriceSqrt(position.lowerTickIndex).v
+        )
+      } catch (error) {
+        yVal = new BN(0)
+      }
+
+      liquidityX = liquidityX.add(xVal)
+      liquidityY = liquidityY.add(yVal)
+    }
+
+    return { liquidityX, liquidityY }
   }
 }
 
