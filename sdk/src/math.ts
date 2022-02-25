@@ -266,11 +266,11 @@ export const getNextPriceXUp = (
   if (amount.eqn(0)) {
     return price
   }
-  let denominator: Decimal = { v: new BN(0) }
+  let denominator: Decimal
   if (add) {
-    denominator = { v: liquidity.v.add(amount.mul(price.v)) }
+    denominator = { v: liquidity.v.add(amount.mul(price.v).div(LIQUIDITY_DENOMINATOR)) }
   } else {
-    denominator = { v: liquidity.v.sub(amount.mul(price.v)) }
+    denominator = { v: liquidity.v.sub(amount.mul(price.v).div(LIQUIDITY_DENOMINATOR)) }
   }
 
   return {
