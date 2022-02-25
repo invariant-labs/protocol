@@ -9,7 +9,14 @@ import {
   Transaction,
   TransactionInstruction
 } from '@solana/web3.js'
-import { calculatePriceAfterSlippage, findClosestTicks, isInitialized } from './math'
+import {
+  calculatePriceAfterSlippage,
+  calculatePriceSqrt,
+  findClosestTicks,
+  getX,
+  getY,
+  isInitialized
+} from './math'
 import {
   feeToTickSpacing,
   getFeeTierAddress,
@@ -1274,6 +1281,57 @@ export class Market {
     const volumeY = feeProtocolTokenY.mul(DENOMINATOR).div(feeDenominator)
 
     return { volumeX, volumeY }
+  }
+
+  async getAllPools() {
+    return (await this.program.account.pool.all([])).map(
+      ({ account }) => account
+    ) as PoolStructure[]
+  }
+
+  async getPairLiquidityValues(pair: Pair) {
+    const pool = await this.getPool(pair)
+    const poolPublicKey = await pair.getAddress(this.program.programId)
+    const positions: Position[] = (
+      await this.program.account.position.all([
+        {
+          memcmp: { bytes: bs58.encode(poolPublicKey.toBuffer()), offset: 40 }
+        }
+      ])
+    ).map(({ account }) => account) as Position[]
+
+    let liquidityX = new BN(0)
+    let liquidityY = new BN(0)
+    for (const position of positions) {
+      let xVal, yVal
+
+      try {
+        xVal = getX(
+          position.liquidity.v,
+          calculatePriceSqrt(position.upperTickIndex).v,
+          pool.sqrtPrice.v,
+          calculatePriceSqrt(position.lowerTickIndex).v
+        )
+      } catch (error) {
+        xVal = new BN(0)
+      }
+
+      try {
+        yVal = getY(
+          position.liquidity.v,
+          calculatePriceSqrt(position.upperTickIndex).v,
+          pool.sqrtPrice.v,
+          calculatePriceSqrt(position.lowerTickIndex).v
+        )
+      } catch (error) {
+        yVal = new BN(0)
+      }
+
+      liquidityX = liquidityX.add(xVal)
+      liquidityY = liquidityY.add(yVal)
+    }
+
+    return { liquidityX, liquidityY }
   }
 }
 
