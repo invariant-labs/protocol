@@ -481,6 +481,7 @@ version = "0.1.0"
 dependencies = [
  "decimal_core",
  "integer-sqrt",
+ "num-traits",
  "uint",
 ]
 
