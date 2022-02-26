@@ -20,8 +20,7 @@ pub trait BigOps<T> {
 
 pub trait Others<T> {
     fn mul_up(self, rhs: T) -> Self;
-    // fn div_up(self, rhs: T) -> Self;
-    // fn pow(self, rhs: T) -> Self;
+    fn div_up(self, rhs: T) -> Self;
 }
 
 pub trait Factories<T> {
@@ -33,4 +32,8 @@ pub trait Factories<T> {
 pub trait BetweenDecimals<T> {
     fn from_decimal(other: T) -> Self;
     fn from_decimal_up(other: T) -> Self;
+}
+
+pub trait ByNumber<T> {
+    fn big_div_up_by_number(self, number: T) -> Self;
 }
