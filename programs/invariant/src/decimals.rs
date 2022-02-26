@@ -83,38 +83,6 @@ impl Price {
                 .unwrap()
         })
     }
-
-    pub fn big_mul_to_token(self, other: Liquidity) -> TokenAmount {
-        TokenAmount::new(
-            U256::from(self.get())
-                .checked_mul(U256::from(other.get()))
-                .unwrap()
-                .checked_div(Liquidity::one())
-                .unwrap()
-                .checked_div(Self::one())
-                .unwrap()
-                .try_into()
-                .unwrap(),
-        )
-    }
-
-    pub fn big_mul_to_token_up(self, other: Liquidity) -> TokenAmount {
-        TokenAmount::new(
-            U256::from(self.get())
-                .checked_mul(U256::from(other.get()))
-                .unwrap()
-                .checked_add(Liquidity::almost_one())
-                .unwrap()
-                .checked_div(Liquidity::one())
-                .unwrap()
-                .checked_add(Self::almost_one())
-                .unwrap()
-                .checked_div(Self::one())
-                .unwrap()
-                .try_into()
-                .unwrap(),
-        )
-    }
 }
 
 #[cfg(test)]

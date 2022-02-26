@@ -216,18 +216,10 @@ pub fn get_delta_y(
         sqrt_price_b - sqrt_price_a
     };
 
-    msg!("just before2");
-    // TODO: please refactor me
-    let k = match up {
-        // true => TokenAmount::from_decimal_up(delta_price.big_mul_up(liquidity)),
-        // true => TokenAmount(1).big_mul_up(delta_price.big_mul_up(liquidity)),
-        true => Price::big_mul_to_token_up(delta_price, liquidity),
-        // false => TokenAmount::from_decimal(delta_price.big_mul(liquidity)),
-        // false => TokenAmount(1).big_mul(delta_price.big_mul(liquidity)),
-        false => Price::big_mul_to_token(delta_price, liquidity),
-    };
-    msg!("just after2");
-    k
+    match up {
+        true => TokenAmount::from_decimal_up(delta_price.big_mul_up(liquidity)),
+        false => TokenAmount::from_decimal(delta_price.big_mul(liquidity)),
+    }
 }
 
 fn get_next_sqrt_price_from_input(
