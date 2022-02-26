@@ -651,6 +651,7 @@ dependencies = [
  "anchor-spl",
  "decimal",
  "integer-sqrt",
+ "num-traits",
  "uint",
 ]
 
