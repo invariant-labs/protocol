@@ -75,18 +75,12 @@ pub fn calculate_price_sqrt(tick_index: i32) -> Price {
         price *= FixedPoint::new(701536086265529);
     }
 
-    if tick_index < 0 {
-        price = FixedPoint::new(
-            U256::from(FixedPoint::from_integer(1).v)
-                .checked_mul(U256::from(FixedPoint::from_integer(1).v))
-                .unwrap()
-                .checked_div(U256::from(price.v))
-                .unwrap()
-                .as_u128(),
-        );
+    // Parsing to the Price type by the end by convention (should always have 12 zeros at the end)
+    if tick_index >= 0 {
+        Price::from_decimal(price)
+    } else {
+        Price::from_decimal(FixedPoint::from_integer(1).big_div(price))
     }
-
-    Price::from_decimal(price)
 }
 
 pub fn compute_swap_step(
@@ -345,17 +339,6 @@ pub fn calculate_amount_delta(
     // assume that upper_tick > lower_tick
     let mut amount_x = TokenAmount(0);
     let mut amount_y = TokenAmount(0);
-
-    msg!(
-        "calculate_amount_delta, liquidity_delta: {:?}",
-        liquidity_delta
-    );
-    msg!(
-        "lower_tick: {:?}, upper_tick: {:?}, current: {:?}",
-        lower_tick,
-        upper_tick,
-        pool.current_tick_index
-    );
 
     if pool.current_tick_index < lower_tick {
         amount_x = get_delta_x(
