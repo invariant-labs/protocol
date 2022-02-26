@@ -297,9 +297,18 @@ fn get_next_sqrt_price_y_down(
     add: bool,
 ) -> Price {
     if add {
-        price_sqrt + Price::from_decimal(amount).big_div(Price::from_decimal(liquidity))
+        let quotient = Price::from_decimal(amount).big_div_by_number(
+            U256::from(liquidity.v)
+                .checked_mul(U256::from(PRICE_LIQUIDITY_DENOMINATOR))
+                .unwrap(),
+        );
+        price_sqrt + quotient
     } else {
-        let quotient = Price::from_decimal(amount).big_div_up(Price::from_decimal(liquidity));
+        let quotient = Price::from_decimal(amount).big_div_by_number_up(
+            U256::from(liquidity.v)
+                .checked_mul(U256::from(PRICE_LIQUIDITY_DENOMINATOR))
+                .unwrap(),
+        );
         assert!(!quotient.is_zero());
         price_sqrt - quotient
     }
