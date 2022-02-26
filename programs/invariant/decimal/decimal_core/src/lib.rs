@@ -75,7 +75,7 @@ pub fn decimal(
     result.extend(proc_macro::TokenStream::from(quote! {
         impl #struct_name {
             pub fn is_zero(self) -> bool {
-                self.#field_name == #underlying_type::try_from(0).unwrap()
+                self.#field_name == #underlying_type::from(0u8)
             }
         }
     }));

@@ -54,20 +54,12 @@ impl FeeGrowth {
 }
 
 impl Price {
-    pub fn big_div_mul(nominator: U256, lhs: Self, rhs: Self) -> TokenAmount {
+    pub fn big_div_values(nominator: U256, denominator: U256) -> TokenAmount {
         TokenAmount::new(
             nominator
                 .checked_mul(Self::one::<U256>())
                 .unwrap()
-                .checked_div(
-                    U256::from(lhs.get())
-                        .checked_mul(U256::from(rhs.get()))
-                        .unwrap()
-                        .checked_add(Self::almost_one::<U256>())
-                        .unwrap()
-                        .checked_div(Self::one::<U256>())
-                        .unwrap(),
-                )
+                .checked_div(denominator)
                 .unwrap()
                 .checked_div(Self::one::<U256>())
                 .unwrap()
@@ -76,14 +68,8 @@ impl Price {
         )
     }
 
-    pub fn big_div_mul_up(nominator: U256, lhs: Self, rhs: Self) -> TokenAmount {
+    pub fn big_div_values_up(nominator: U256, denominator: U256) -> TokenAmount {
         TokenAmount::new({
-            let denominator = U256::from(lhs.get())
-                .checked_mul(U256::from(rhs.get()))
-                .unwrap()
-                .checked_div(Self::one::<U256>())
-                .unwrap();
-
             nominator
                 .checked_mul(Self::one::<U256>())
                 .unwrap()
@@ -98,38 +84,6 @@ impl Price {
                 .try_into()
                 .unwrap()
         })
-    }
-
-    pub fn big_mul_to_token(self, other: Liquidity) -> TokenAmount {
-        TokenAmount::new(
-            U256::from(self.get())
-                .checked_mul(U256::from(other.get()))
-                .unwrap()
-                .checked_div(Liquidity::one())
-                .unwrap()
-                .checked_div(Self::one())
-                .unwrap()
-                .try_into()
-                .unwrap(),
-        )
-    }
-
-    pub fn big_mul_to_token_up(self, other: Liquidity) -> TokenAmount {
-        TokenAmount::new(
-            U256::from(self.get())
-                .checked_mul(U256::from(other.get()))
-                .unwrap()
-                .checked_add(Liquidity::almost_one())
-                .unwrap()
-                .checked_div(Liquidity::one())
-                .unwrap()
-                .checked_add(Self::almost_one())
-                .unwrap()
-                .checked_div(Self::one())
-                .unwrap()
-                .try_into()
-                .unwrap(),
-        )
     }
 }
 
