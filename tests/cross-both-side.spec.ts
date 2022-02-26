@@ -8,7 +8,6 @@ import {
   Market,
   Pair,
   tou64,
-  DENOMINATOR,
   TICK_LIMIT,
   Network,
   INVARIANT_ERRORS,
@@ -88,7 +87,7 @@ describe('swap with cross both side', () => {
     assert.ok(createdPool.fee.v.eq(feeTier.fee))
     assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
     assert.ok(createdPool.liquidity.v.eqn(0))
-    // assert.ok(createdPool.sqrtPrice.v.eq(PRICE_DENOMINATOR))
+    assert.ok(createdPool.sqrtPrice.v.eq(PRICE_DENOMINATOR))
     assert.ok(createdPool.currentTickIndex === 0)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
@@ -102,8 +101,27 @@ describe('swap with cross both side', () => {
   it('push price to tick without crossing and push price to tick with crossing', async () => {
     // Deposit
     const upperTick = 10
+    const createTickVars: CreateTick = {
+      pair,
+      index: upperTick,
+      payer: admin.publicKey
+    }
+    await market.createTick(createTickVars, admin)
+
     const lowerTick = -10
+    const createTickVars2: CreateTick = {
+      pair,
+      index: lowerTick,
+      payer: admin.publicKey
+    }
+    await market.createTick(createTickVars2, admin)
     const lastTick = -20
+    const createTickVars3: CreateTick = {
+      pair,
+      index: lastTick,
+      payer: admin.publicKey
+    }
+    await market.createTick(createTickVars3, admin)
 
     const positionOwner = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
@@ -290,8 +308,8 @@ describe('swap with cross both side', () => {
     }
     await market.initPosition(massiveInitPositionMassive, positionOwner)
 
-    // Crossing tick with descending price and by 1 token amount out
-    const swapNotCrossingDecreasingByAmountOutVars: Swap = {
+    // Crossing tick with descending price and by 1 token amount out (with massive liquidity ~1/2 liquidity)
+    const swapCrossingDecreasingByAmountOutVars: Swap = {
       pair,
       xToY: true,
       amount: new BN(1),
@@ -302,7 +320,21 @@ describe('swap with cross both side', () => {
       byAmountIn: false,
       owner: owner.publicKey
     }
-    await market.swap(swapNotCrossingDecreasingByAmountOutVars, owner)
+    await market.swap(swapCrossingDecreasingByAmountOutVars, owner)
+
+    // Crossing tick with increasing price and by token amount in
+    const swapCrossingIncreasingByAmountInVars: Swap = {
+      pair,
+      xToY: false,
+      amount: new BN(2),
+      estimatedPriceAfterSwap: poolDataBefore.sqrtPrice, // ignore price impact using high slippage tolerance
+      slippage: toDecimal(1, 2),
+      accountX,
+      accountY,
+      byAmountIn: true,
+      owner: owner.publicKey
+    }
+    await market.swap(swapCrossingIncreasingByAmountInVars, owner)
 
     // TODO: validate state
   })

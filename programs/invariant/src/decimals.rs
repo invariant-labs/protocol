@@ -4,6 +4,8 @@ pub use decimal::*;
 
 use anchor_lang::prelude::*;
 
+pub const PRICE_LIQUIDITY_DENOMINATOR: u128 = 1_000000_000000u128;
+
 #[decimal(24)]
 #[zero_copy]
 #[derive(Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord)]
