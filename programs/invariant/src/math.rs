@@ -188,27 +188,19 @@ pub fn get_delta_x(
         sqrt_price_b - sqrt_price_a
     };
 
-    // log(2, 2^64 * 10^18 * 2^64 * 10^24) = 267.5..
-    // let nominator = delta_price.big_mul(liquidity);
-    let nominator = U256::from(delta_price.get())
-        .checked_mul(U256::from(liquidity.get()))
-        .unwrap()
-        .checked_div(U256::from(10u128.pow(Liquidity::scale() as u32)))
-        .unwrap();
+    // log(2,  2^32 * 10^24 * 2^64 * 10^12 ) = 212.5..
+    let nominator = delta_price.big_mul_to_value(liquidity);
 
-    msg!("just before");
-
-    // TODO: please refactor me
-    let r = match up {
-        // true => TokenAmount::from_decimal_up(nominator.big_div_up(sqrt_price_a * sqrt_price_b)),
-        true => {
-            TokenAmount(1).big_mul_up(Price::big_div_mul_up(nominator, sqrt_price_a, sqrt_price_b))
-        }
-        // false => TokenAmount::from_decimal(nominator.big_div(sqrt_price_a.mul_up(sqrt_price_b))),
-        false => TokenAmount(1).big_mul(Price::big_div_mul(nominator, sqrt_price_a, sqrt_price_b)),
-    };
-    msg!("after");
-    r
+    match up {
+        true => TokenAmount::from_decimal_up(Price::big_div_values_up(
+            nominator,
+            sqrt_price_a.big_mul_to_value(sqrt_price_b),
+        )),
+        false => TokenAmount::from_decimal(Price::big_div_values(
+            nominator,
+            sqrt_price_a.big_mul_to_value_up(sqrt_price_b),
+        )),
+    }
 }
 
 // delta y = L * delta_sqrt_price
