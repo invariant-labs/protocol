@@ -3,11 +3,12 @@ use syn::parse_macro_input;
 
 mod base;
 mod big_ops;
+mod by_number;
 mod factories;
 mod ops;
+mod others;
 mod structs;
 mod utils;
-mod others;
 
 use structs::DecimalCharacteristics;
 
@@ -67,13 +68,14 @@ pub fn decimal(
     result.extend(base::generate_base(characteristics.clone()));
     result.extend(ops::generate_ops(characteristics.clone()));
     result.extend(big_ops::generate_big_ops(characteristics.clone()));
+    result.extend(by_number::generate_by_number(characteristics.clone()));
     result.extend(others::generate_others(characteristics.clone()));
     result.extend(factories::generate_factories(characteristics.clone()));
 
     result.extend(proc_macro::TokenStream::from(quote! {
         impl #struct_name {
             pub fn is_zero(self) -> bool {
-                self.#field_name == 0
+                self.#field_name == #underlying_type::try_from(0).unwrap()
             }
         }
     }));
