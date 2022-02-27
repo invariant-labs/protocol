@@ -23,6 +23,7 @@ import {
   InitPosition,
   Swap
 } from '@invariant-labs/sdk/src/market'
+import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('Liquidity gap', () => {
   const provider = Provider.local()
@@ -91,7 +92,7 @@ describe('Liquidity gap', () => {
     assert.ok(createdPool.fee.v.eq(feeTier.fee))
     assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
     assert.ok(createdPool.liquidity.v.eqn(0))
-    assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR))
+    assert.ok(createdPool.sqrtPrice.v.eq(PRICE_DENOMINATOR))
     assert.ok(createdPool.currentTickIndex === 0)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))

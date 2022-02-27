@@ -289,7 +289,7 @@ describe('swap with cross both side', () => {
 
     const currentPrice = (await market.getPool(pair)).sqrtPrice
     const { liquidity: massiveLiquidityDelta } = getLiquidityByX(
-      massiveLiquidityAmountX.divn(10).muln(10),
+      massiveLiquidityAmountX,
       -20,
       0,
       currentPrice,

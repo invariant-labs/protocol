@@ -37,7 +37,6 @@ import {
   SimulateClaim,
   simulateSwap,
   SimulationResult,
-  toDecimal,
   TokensOwed,
   toPercent,
   toPrice,
@@ -414,7 +413,7 @@ describe('Math', () => {
     })
   })
   describe('calculate x having price and liquidity', () => {
-    const liquidity = new BN(2000).mul(DENOMINATOR)
+    const liquidity = new BN(2000).mul(LIQUIDITY_DENOMINATOR)
     const lowerTick = 60
     const upperTick = 120
 
@@ -498,7 +497,7 @@ describe('Math', () => {
   })
 
   describe('calculate y having liquidity and price', () => {
-    const liquidity = new BN(2000).mul(DENOMINATOR)
+    const liquidity = new BN(2000).mul(LIQUIDITY_DENOMINATOR)
     const lowerTick = 60
     const upperTick = 120
 
@@ -837,7 +836,6 @@ describe('Math', () => {
         assert.ok(result.v.eq(expectedResult.v))
       })
       it('3', async () => {
-        1
         const price: Decimal = { v: new BN('3333333333333' + '3'.repeat(PRICE_SCALE - 12)) }
         const liquidity: Decimal = { v: new BN('222222222222222') }
         const amount: BN = new BN('37')
@@ -1245,7 +1243,7 @@ describe('Math', () => {
     })
     it('fee should change', async () => {
       const positionData: PositionClaimData = {
-        liquidity: { v: new BN(1).mul(DENOMINATOR) },
+        liquidity: { v: new BN(1).mul(LIQUIDITY_DENOMINATOR) },
         feeGrowthInsideX: { v: new BN(4).mul(GROWTH_DENOMINATOR) },
         feeGrowthInsideY: { v: new BN(4).mul(GROWTH_DENOMINATOR) },
         tokensOwedX: { v: new BN(100).mul(DENOMINATOR) },
