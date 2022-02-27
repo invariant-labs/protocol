@@ -6,7 +6,9 @@ import {
   signAndSend,
   sleep,
   INVARIANT_ERRORS,
-  ComputeUnitsInstruction
+  ComputeUnitsInstruction,
+  PRICE_DENOMINATOR,
+  LIQUIDITY_DENOMINATOR
 } from './utils'
 import {
   TICK_LIMIT,
@@ -33,6 +35,8 @@ export {
   SEED,
   INVARIANT_ERRORS,
   DENOMINATOR,
+  PRICE_DENOMINATOR,
+  LIQUIDITY_DENOMINATOR,
   TICK_LIMIT,
   MAX_TICK,
   MIN_TICK,
