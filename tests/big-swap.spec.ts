@@ -1,7 +1,7 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
-import { Network, Market, Pair, DENOMINATOR } from '@invariant-labs/sdk'
+import { Network, Market, Pair, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createPosition, createToken, initEverything, performSwap } from './testUtils'
 import { assert } from 'chai'
@@ -60,16 +60,16 @@ describe('big-swap', () => {
     const userTokenY = await tokenY.createAccount(positionOwner.publicKey)
 
     const positionsInfo: Array<[ticks: [lower: number, upper: number], liquidity: BN]> = [
-      [[0, 20], new BN(10000000000000).mul(DENOMINATOR)],
-      [[-10, 30], new BN(180000000000).mul(DENOMINATOR)],
-      [[-30, 0], new BN(14000000000000).mul(DENOMINATOR)],
-      [[-40, 10], new BN(1900000000000).mul(DENOMINATOR)],
-      [[20, 50], new BN(1500000000000).mul(DENOMINATOR)],
-      [[0, 30], new BN(950000000000).mul(DENOMINATOR)],
-      [[-30, 30], new BN(1150000000000).mul(DENOMINATOR)],
-      [[-20, 20], new BN(1350000000000).mul(DENOMINATOR)],
-      [[-10, 50], new BN(1250000000000).mul(DENOMINATOR)],
-      [[-40, 0], new BN(1550000000000).mul(DENOMINATOR)]
+      [[0, 20], new BN(10000000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[-10, 30], new BN(180000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[-30, 0], new BN(14000000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[-40, 10], new BN(1900000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[20, 50], new BN(1500000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[0, 30], new BN(950000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[-30, 30], new BN(1150000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[-20, 20], new BN(1350000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[-10, 50], new BN(1250000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[-40, 0], new BN(1550000000000).mul(LIQUIDITY_DENOMINATOR)]
     ]
 
     for (let i = 0; i < positionsInfo.length; i++) {
@@ -128,10 +128,10 @@ describe('big-swap', () => {
     const poolAfterSwaps = await market.getPool(pair)
     const { feeX, feeY } = await market.getGlobalFee(pair)
     const { volumeX, volumeY } = await market.getVolume(pair)
-    assert.ok(feeX.eq(new BN(156655455)))
-    assert.ok(feeY.eq(new BN(168147510)))
-    assert.ok(volumeX.eq(new BN(26109242500)))
-    assert.ok(volumeY.eq(new BN(28024585000)))
+    assert.ok(feeX.eq(new BN(156655385)))
+    assert.ok(feeY.eq(new BN(168147430)))
+    assert.ok(volumeX.eq(new BN(26109230833)))
+    assert.ok(volumeY.eq(new BN(28024571666)))
     for (let i = -40; i < 50; i += 10) {
       let lowerTick
       try {
@@ -199,21 +199,21 @@ describe('big-swap', () => {
     await market.removePosition(removePositionVars4, positionOwner)
 
     const positionsInfo2: Array<[ticks: [lower: number, upper: number], liquidity: BN]> = [
-      [[-30, 20], new BN(50000000000).mul(DENOMINATOR)],
-      [[-20, 10], new BN(90000000000).mul(DENOMINATOR)],
-      [[-20, 0], new BN(40000000000).mul(DENOMINATOR)],
-      [[-40, 30], new BN(100000000000).mul(DENOMINATOR)],
-      [[10, 40], new BN(80000000000).mul(DENOMINATOR)],
-      [[-40, 10], new BN(20000000000).mul(DENOMINATOR)],
-      [[20, 50], new BN(160000000000).mul(DENOMINATOR)],
-      [[0, 30], new BN(45000000000).mul(DENOMINATOR)],
-      [[-30, 30], new BN(135000000000).mul(DENOMINATOR)],
-      [[-20, 20], new BN(175000000000).mul(DENOMINATOR)],
-      [[0, 50], new BN(95000000000).mul(DENOMINATOR)],
-      [[-10, 30], new BN(35000000000).mul(DENOMINATOR)],
-      [[0, 20], new BN(153000000000).mul(DENOMINATOR)],
-      [[-10, 30], new BN(163000000000).mul(DENOMINATOR)],
-      [[-30, 0], new BN(111000000000).mul(DENOMINATOR)]
+      [[-30, 20], new BN(50000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[-20, 10], new BN(90000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[-20, 0], new BN(40000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[-40, 30], new BN(100000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[10, 40], new BN(80000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[-40, 10], new BN(20000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[20, 50], new BN(160000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[0, 30], new BN(45000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[-30, 30], new BN(135000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[-20, 20], new BN(175000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[0, 50], new BN(95000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[-10, 30], new BN(35000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[0, 20], new BN(153000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[-10, 30], new BN(163000000000).mul(LIQUIDITY_DENOMINATOR)],
+      [[-30, 0], new BN(111000000000).mul(LIQUIDITY_DENOMINATOR)]
     ]
 
     for (let i = 0; i < positionsInfo2.length; i++) {
@@ -272,10 +272,10 @@ describe('big-swap', () => {
     const { feeX: feeX2, feeY: feeY2 } = await market.getGlobalFee(pair)
     const { volumeX: volumeX2, volumeY: volumeY2 } = await market.getVolume(pair)
 
-    assert.ok(feeX2.eq(new BN(168682645)))
-    assert.ok(feeY2.eq(new BN(186276700)))
-    assert.ok(volumeX2.eq(new BN(28113774166)))
-    assert.ok(volumeY2.eq(new BN(31046116666)))
+    assert.ok(feeX2.eq(new BN(168682560)))
+    assert.ok(feeY2.eq(new BN(186276575)))
+    assert.ok(volumeX2.eq(new BN(28113760000)))
+    assert.ok(volumeY2.eq(new BN(31046095833)))
 
     for (let i = -40; i < 50; i += 10) {
       let lowerTick
