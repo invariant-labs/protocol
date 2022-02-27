@@ -1,7 +1,7 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
-import { Network, Market, Pair, DENOMINATOR, tou64 } from '@invariant-labs/sdk'
+import { Network, Market, Pair, LIQUIDITY_DENOMINATOR, tou64 } from '@invariant-labs/sdk'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken, initEverything } from './testUtils'
 import { assert } from 'chai'
@@ -66,7 +66,7 @@ describe('claim', () => {
     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
 
-    const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) }
+    const liquidityDelta = { v: new BN(1000000).mul(LIQUIDITY_DENOMINATOR) }
 
     await market.createPositionList(positionOwner.publicKey, positionOwner)
 

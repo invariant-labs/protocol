@@ -1,15 +1,21 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
-import { createTokensAndPool, createUserWithTokens } from './testUtils'
-import { Market, DENOMINATOR, Network, sleep } from '@invariant-labs/sdk'
+import { createStandardFeeTiers, createTokensAndPool, createUserWithTokens } from './testUtils'
+import {
+  Market,
+  PRICE_DENOMINATOR,
+  LIQUIDITY_DENOMINATOR,
+  Network,
+  sleep
+} from '@invariant-labs/sdk'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { Decimal, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 import { Pair } from '@invariant-labs/sdk/src'
 import { beforeEach } from 'mocha'
 import { FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
 
-describe('limits', () => {
+describe('random', () => {
   const provider = Provider.local()
   const connection = provider.connection
   // @ts-expect-error
@@ -19,7 +25,7 @@ describe('limits', () => {
   let market: Market
   let pair: Pair
   let mintAuthority: Keypair
-  const assumedTargetPrice: Decimal = { v: new BN(DENOMINATOR) }
+  const assumedTargetPrice: Decimal = { v: new BN(PRICE_DENOMINATOR) }
 
   before(async () => {
     market = await Market.build(
@@ -31,6 +37,7 @@ describe('limits', () => {
     await connection.requestAirdrop(admin.publicKey, 1e10)
     await sleep(500)
     await market.createState(admin.publicKey, admin)
+    await createStandardFeeTiers(market, admin)
   })
 
   beforeEach(async () => {
@@ -50,7 +57,7 @@ describe('limits', () => {
 
     const lowerTick = -10000
     const upperTick = 10000
-    const liquidityDelta = DENOMINATOR.mul(new BN(10).pow(new BN(18)))
+    const liquidityDelta = LIQUIDITY_DENOMINATOR.mul(new BN(10).pow(new BN(18)))
 
     const initPositionVars: InitPosition = {
       pair,

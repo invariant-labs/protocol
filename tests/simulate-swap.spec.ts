@@ -3,7 +3,15 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
-import { Market, Pair, tou64, DENOMINATOR, TICK_LIMIT, Network } from '@invariant-labs/sdk'
+import {
+  Market,
+  Pair,
+  tou64,
+  PRICE_DENOMINATOR,
+  LIQUIDITY_DENOMINATOR,
+  TICK_LIMIT,
+  Network
+} from '@invariant-labs/sdk'
 import {
   FeeTier,
   CreateFeeTier,
@@ -75,7 +83,7 @@ describe('swap', () => {
     assert.ok(createdPool.fee.v.eq(feeTier.fee))
     assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
     assert.ok(createdPool.liquidity.v.eqn(0))
-    assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR))
+    assert.ok(createdPool.sqrtPrice.v.eq(PRICE_DENOMINATOR))
     assert.ok(createdPool.currentTickIndex === 0)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
@@ -102,7 +110,7 @@ describe('swap', () => {
 
     await market.createPositionList(positionOwner.publicKey, positionOwner)
 
-    const liquidityDelta = { v: new BN(2000000).mul(DENOMINATOR) }
+    const liquidityDelta = { v: new BN(2000000).mul(LIQUIDITY_DENOMINATOR) }
     for (let i = -200; i < 200; i += 10) {
       const initPositionVars: InitPosition = {
         pair,
@@ -135,7 +143,7 @@ describe('swap', () => {
       pair,
       xToY: false,
       amount: new BN(500),
-      knownPrice: poolDataBefore.sqrtPrice,
+      estimatedPriceAfterSwap: poolDataBefore.sqrtPrice, // ignore price impact using high slippage tolerance
       slippage: toDecimal(2, 2),
       accountX,
       accountY,
@@ -149,7 +157,7 @@ describe('swap', () => {
       pair,
       xToY: true,
       amount: new BN(3000),
-      knownPrice: poolDataBefore.sqrtPrice,
+      estimatedPriceAfterSwap: poolDataBefore.sqrtPrice, // ignore price impact using high slippage tolerance
       slippage: toDecimal(2, 2),
       accountX,
       accountY,

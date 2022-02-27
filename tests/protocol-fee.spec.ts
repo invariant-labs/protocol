@@ -1,7 +1,7 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
-import { Market, Network, Pair, DENOMINATOR, tou64 } from '@invariant-labs/sdk'
+import { Market, Network, Pair, LIQUIDITY_DENOMINATOR, tou64 } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
@@ -83,7 +83,7 @@ describe('protocol-fee', () => {
     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
 
-    const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) }
+    const liquidityDelta = { v: new BN(1000000).mul(LIQUIDITY_DENOMINATOR) }
 
     await market.createPositionList(positionOwner.publicKey, positionOwner)
 
