@@ -1198,4 +1198,36 @@ mod tests {
             assert_eq!(result, true);
         }
     }
+    #[test]
+    fn test_max_liquidity_amount() {
+        // let max_token_amount: u64 = (10u128.pow(64) - 1).try_into().unwrap();
+        let max_token_amount: u64 = (10u128.pow(64) - 1) as u64;
+        let max_u64 = u64::max_value() as u128;
+        let max_u128 = u128::max_value();
+
+        // position range below current price
+        // L = y / (sqrt(pu) - sqrt(pl))
+        // 2^128 > L_MAX > 2^64
+        {
+            let max_y: TokenAmount = TokenAmount::new(max_token_amount);
+            let min_price_diff_between_tick = calculate_price_sqrt(0) - calculate_price_sqrt(-1);
+            let liquidity_denominator = U256::from(1000000000000u128);
+            let price_denominator = U256::from(1000000000000000000000000u128);
+
+            let max_liquidity = U256::from(max_y.0)
+                .checked_mul(liquidity_denominator)
+                .unwrap()
+                .checked_mul(price_denominator)
+                .unwrap()
+                .checked_div(U256::from(min_price_diff_between_tick.v))
+                .unwrap();
+
+            assert!(max_liquidity.as_u128().gt(&max_u64));
+            assert!(max_liquidity.as_u128().lt(&max_u128));
+            assert_eq!(
+                368962546285911549948015102172360883u128,
+                max_liquidity.as_u128()
+            )
+        }
+    }
 }
