@@ -441,6 +441,8 @@ pub fn is_enough_amount_to_push_price(
 #[cfg(test)]
 mod tests {
 
+    use std::{ops::Div, str::FromStr};
+
     use super::*;
 
     #[test]
@@ -620,44 +622,49 @@ mod tests {
 
     #[test]
     fn test_calculate_price_sqrt() {
+        // {
+        //     let result = calculate_price_sqrt(0);
+        //     assert_eq!(result, Price::from_integer(1));
+        // }
+        // {
+        //     // // test every single tick, takes a while
+        //     // let mut prev = Decimal::new(u128::MAX.into());
+        //     // for i in (((-MAX_TICK / 2) + 1)..(MAX_TICK / 2)).rev() {
+        //     //     let result = calculate_price_sqrt(i * 2);
+        //     //     assert!(result != Decimal::new(0));
+        //     //     assert_eq!(result, Decimal::from_decimal(10001, 4).pow(i.into()));
+        //     //     assert!(result < prev);
+        //     //     prev = result;
+        //     // }
+        // }
+        // {
+        //     let price_sqrt = calculate_price_sqrt(20_000);
+        //     // expected 2.718145925979
+        //     // real     2.718145926825...
+        //     assert_eq!(price_sqrt, Price::from_scale(2718145925979u128, 12));
+        // }
+        // {
+        //     let price_sqrt = calculate_price_sqrt(200_000);
+        //     // expected 22015.455979766288
+        //     // real     22015.456048527954...
+        //     assert_eq!(price_sqrt, Price::from_scale(22015455979766288u128, 12));
+        // }
+        // {
+        //     let price_sqrt = calculate_price_sqrt(-20_000);
+        //     // expected 0.367897834491
+        //     // real     0.36789783437712...
+        //     assert_eq!(price_sqrt, Price::from_scale(367897834491u128, 12));
+        // }
+        // {
+        //     let price_sqrt = calculate_price_sqrt(-200_000);
+        //     // expected 0.000045422634
+        //     // real     0.00004542263388...
+        //     assert_eq!(price_sqrt, Price::from_scale(45422634u128, 12))
+        // }
+        // max
         {
-            let result = calculate_price_sqrt(0);
-            assert_eq!(result, Price::from_integer(1));
-        }
-        {
-            // // test every single tick, takes a while
-            // let mut prev = Decimal::new(u128::MAX.into());
-            // for i in (((-MAX_TICK / 2) + 1)..(MAX_TICK / 2)).rev() {
-            //     let result = calculate_price_sqrt(i * 2);
-            //     assert!(result != Decimal::new(0));
-            //     assert_eq!(result, Decimal::from_decimal(10001, 4).pow(i.into()));
-            //     assert!(result < prev);
-            //     prev = result;
-            // }
-        }
-        {
-            let price_sqrt = calculate_price_sqrt(20_000);
-            // expected 2.718145925979
-            // real     2.718145926825...
-            assert_eq!(price_sqrt, Price::from_scale(2718145925979u128, 12));
-        }
-        {
-            let price_sqrt = calculate_price_sqrt(200_000);
-            // expected 22015.455979766288
-            // real     22015.456048527954...
-            assert_eq!(price_sqrt, Price::from_scale(22015455979766288u128, 12));
-        }
-        {
-            let price_sqrt = calculate_price_sqrt(-20_000);
-            // expected 0.367897834491
-            // real     0.36789783437712...
-            assert_eq!(price_sqrt, Price::from_scale(367897834491u128, 12));
-        }
-        {
-            let price_sqrt = calculate_price_sqrt(-200_000);
-            // expected 0.000045422634
-            // real     0.00004542263388...
-            assert_eq!(price_sqrt, Price::from_scale(45422634u128, 12))
+            let price_sqrt = calculate_price_sqrt(MAX_TICK + 5);
+            println!("price_sqrt = {:?}", price_sqrt);
         }
     }
 
@@ -1200,19 +1207,21 @@ mod tests {
     }
     #[test]
     fn test_max_liquidity_amount() {
-        // let max_token_amount: u64 = (10u128.pow(64) - 1).try_into().unwrap();
+        let liquidity_denominator = U256::from(1000000000000u128);
+        let price_denominator = U256::from(1000000000000000000000000u128);
         let max_token_amount: u64 = (10u128.pow(64) - 1) as u64;
+        // let max_sqrt_price_x2 = Price::new(4294967295999999999883584678173065);
+        let max_sqrt_price = calculate_price_sqrt(MAX_TICK);
         let max_u64 = u64::max_value() as u128;
         let max_u128 = u128::max_value();
 
         // position range below current price
         // L = y / (sqrt(pu) - sqrt(pl))
+        // L is greatest for max token amount and in price difference between position ticks
         // 2^128 > L_MAX > 2^64
         {
             let max_y: TokenAmount = TokenAmount::new(max_token_amount);
             let min_price_diff_between_tick = calculate_price_sqrt(0) - calculate_price_sqrt(-1);
-            let liquidity_denominator = U256::from(1000000000000u128);
-            let price_denominator = U256::from(1000000000000000000000000u128);
 
             let max_liquidity = U256::from(max_y.0)
                 .checked_mul(liquidity_denominator)
@@ -1224,10 +1233,48 @@ mod tests {
 
             assert!(max_liquidity.as_u128().gt(&max_u64));
             assert!(max_liquidity.as_u128().lt(&max_u128));
+
+            // ~ 2^74 * 10^12 ~ 2^113
             assert_eq!(
                 368962546285911549948015102172360883u128,
                 max_liquidity.as_u128()
             )
+        }
+        // position range above current price
+        // L = x * sqrt(pl) * sqrt(pu) / (sqrt(pu) - sqrt(pl))
+        // L is greatest for max token amount and in minimal price difference for the highest price
+        // 2^256 > L_MAX > 2^128
+        {
+            // 1.0001^(MAX_TICK - 5)
+            // let almost_max_sqrt_price_x2 = Price::new(4293893742052637352036752950259318);
+            // 1.0001^(MAX_TICK - 3)
+            let almost_max_sqrt_price = calculate_price_sqrt(MAX_TICK - 3);
+
+            let product = U256::from(max_sqrt_price.v)
+                .checked_mul(U256::from(almost_max_sqrt_price.v))
+                .unwrap()
+                .checked_mul(liquidity_denominator)
+                .unwrap()
+                .checked_div(price_denominator)
+                .unwrap();
+            let diff = U256::from(max_sqrt_price.v)
+                .checked_div(U256::from(almost_max_sqrt_price.v))
+                .unwrap();
+
+            //  ~2^112 * 10^12 ~ 2^152
+            let multiplier = product.div(diff); // log2(multiplier) = 2^104
+            println!("multiplier = {:?}", multiplier);
+
+            // ~2^176 * 10^12 ~2^216
+            let max_liquidity = U256::from(max_token_amount)
+                .checked_mul(multiplier)
+                .unwrap();
+
+            assert!(max_liquidity.gt(&U256::from(u128::MAX)));
+            assert!(max_liquidity.eq(&U256::from_str(
+                "C08F7C30DD18A520DF09AE7BEABE6DEA8036D5533828ECF3E03000"
+            )
+            .unwrap()));
         }
     }
 }
