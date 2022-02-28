@@ -14,6 +14,7 @@ module.exports = {
     '@typescript-eslint/strict-boolean-expressions': 'off',
     '@typescript-eslint/promise-function-async': 'off',
     '@typescript-eslint/prefer-nullish-coalescing': 'off',
+    'spaced-comment': 'off',
     'prettier/prettier': ['error']
   }
 }
