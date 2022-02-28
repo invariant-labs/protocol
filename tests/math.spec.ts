@@ -20,7 +20,8 @@ import {
   sqrt,
   SwapResult,
   calculatePriceAfterSlippage,
-  findClosestTicks
+  findClosestTicks,
+  isEnoughAmountToPushPrice
 } from '@invariant-labs/sdk/src/math'
 import {
   bigNumberToBuffer,
@@ -47,7 +48,7 @@ import { Decimal, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
 import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
 import { Keypair } from '@solana/web3.js'
 import { swapParameters } from './swap'
-import { LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk/lib/utils'
+import { LIQUIDITY_DENOMINATOR, toDecimal } from '@invariant-labs/sdk/lib/utils'
 
 describe('Math', () => {
   describe('Test sqrt price calculation', () => {
@@ -1360,6 +1361,73 @@ describe('Math', () => {
       assert.ok(simulationResult.accumulatedFee.eq(new BN(6)))
       assert.ok(simulationResult.amountPerTick[0].eq(new BN(1000)))
       assert.ok(simulationResult.priceAfterSwap.eq(new BN('999006987054867461743028')))
+    })
+  })
+  describe('test isEnoughAmountToPushPrice', () => {
+    const currentPriceSqrt = calculatePriceSqrt(-20)
+    const liquidity = { v: new BN('20006000000000000000') }
+    const fee = toDecimal(6, 4)
+
+    it('-20 crossing tick with 1 token amount by amount in', async () => {
+      const amount = new BN('1')
+      const byAmountIn = true
+      const xToY = true
+
+      const isEnoughAmountToCross = isEnoughAmountToPushPrice(
+        amount,
+        currentPriceSqrt,
+        liquidity,
+        fee,
+        byAmountIn,
+        xToY
+      )
+      assert.equal(isEnoughAmountToCross, false)
+    })
+    it('-20 crossing tick with 1 token amount by amount out', async () => {
+      const amount = new BN(1)
+      const byAmountIn = false
+      const xToY = true
+
+      const isEnoughAmountToCross = isEnoughAmountToPushPrice(
+        amount,
+        currentPriceSqrt,
+        liquidity,
+        fee,
+        byAmountIn,
+        xToY
+      )
+      assert.equal(isEnoughAmountToCross, true)
+    })
+    it('-20 crossing tick with 2 token amount by amount in', async () => {
+      const amount = new BN(2)
+      const byAmountIn = true
+      const xToY = true
+
+      const isEnoughAmountToCross = isEnoughAmountToPushPrice(
+        amount,
+        currentPriceSqrt,
+        liquidity,
+        fee,
+        byAmountIn,
+        xToY
+      )
+      assert.equal(isEnoughAmountToCross, true)
+    })
+    it('should always be enough amount to cross tick when pool liquidity is zero', async () => {
+      const noLiquidity = { v: new BN('0') }
+      const amount = new BN(1)
+      const byAmountIn = false
+      const xToY = true
+
+      const isEnoughAmountToCross = isEnoughAmountToPushPrice(
+        amount,
+        currentPriceSqrt,
+        noLiquidity,
+        fee,
+        byAmountIn,
+        xToY
+      )
+      assert.equal(isEnoughAmountToCross, true)
     })
   })
 })
