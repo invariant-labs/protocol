@@ -9,6 +9,7 @@ import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { ClaimFee, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
+import { LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('claim', () => {
   const provider = Provider.local()
@@ -66,7 +67,7 @@ describe('claim', () => {
     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
 
-    const liquidityDelta = { v: new BN(1000000).mul(PRICE_DENOMINATOR) }
+    const liquidityDelta = { v: new BN(1000000).mul(LIQUIDITY_DENOMINATOR) }
 
     await market.createPositionList(positionOwner.publicKey, positionOwner)
 
