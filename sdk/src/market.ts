@@ -528,9 +528,9 @@ export class Market {
       positionInstruction = await this.initPositionInstruction(initPosition, false)
     }
 
-    if (!lowerExists && !upperExists && listExists) {
-      tx.add(ComputeUnitsInstruction(400000, payer))
-    }
+    // if (!lowerExists && !upperExists && listExists) {
+    tx.add(ComputeUnitsInstruction(400000, payer))
+    // }
     if (!lowerExists && lowerInstruction) {
       tx.add(lowerInstruction)
     }

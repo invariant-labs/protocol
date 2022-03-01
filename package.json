@@ -27,6 +27,7 @@
     "test:protocol-fee": "anchor test --skip-build tests/protocol-fee.spec.ts",
     "test:target": "anchor test --skip-build tests/target.spec.ts",
     "test:slippage": "anchor test --skip-build tests/slippage.spec.ts",
+    "test:overflow": "anchor test --skip-build tests/overflow.spec.ts",
     "test:fee-tier": "anchor test --skip-build tests/fee-tier.spec.ts",
     "test:big-swap": "anchor test --skip-build tests/big-swap.spec.ts",
     "test:init-both": "anchor test --skip-build tests/init-pool-and-position.spec.ts",
