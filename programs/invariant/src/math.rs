@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use crate::decimals::*;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
@@ -184,7 +186,6 @@ pub fn get_delta_x(
 
     // log(2,  2^32 * 10^24 * 2^64 * 10^12 ) = 212.5..
     let nominator = delta_price.big_mul_to_value(liquidity);
-
     match up {
         true => TokenAmount::from_decimal_up(Price::big_div_values_up(
             nominator,

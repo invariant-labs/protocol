@@ -11,7 +11,8 @@ import {
   DENOMINATOR,
   TICK_LIMIT,
   Network,
-  calculatePriceSqrt
+  calculatePriceSqrt,
+  PRICE_DENOMINATOR
 } from '@invariant-labs/sdk'
 import { Decimal, FeeTier } from '@invariant-labs/sdk/lib/market'
 import { assertThrowsAsync, fromFee } from '@invariant-labs/sdk/lib/utils'
@@ -23,7 +24,6 @@ import {
   InitPosition,
   Swap
 } from '@invariant-labs/sdk/src/market'
-import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('Liquidity gap', () => {
   const provider = Provider.local()
