@@ -155,4 +155,23 @@ pub mod tests {
             assert_eq!(out, FixedPoint::from_integer(1000))
         }
     }
+
+    #[test]
+    fn test_decimal_ops() {
+        let liquidity = Liquidity::new(4_902_430_892__340393240932);
+        let price: Price = Price::new(9833__489034_289032_430082_130832);
+
+        // real:         4.8208000421189053044075394913280570348844921615424 × 10^13
+        // expected liq:   48208000421189053044075394
+        // expected price: 48208000421189053044075394913280570348
+
+        let expected = Liquidity::new(48208000421189053044075394);
+
+        assert_eq!(liquidity.big_mul(price), expected);
+        assert_eq!(liquidity.big_mul_up(price), expected + Liquidity::new(1));
+
+        let expected_price = Price::new(48208000421189053044075394913280570348);
+        assert_eq!(price.big_mul(liquidity), expected_price);
+        assert_eq!(price.big_mul_up(liquidity), expected_price + Price::new(1));
+    }
 }
