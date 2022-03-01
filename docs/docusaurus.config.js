@@ -13,6 +13,9 @@ module.exports = {
   organizationName: 'Invariant',
   projectName: 'Invariant docs',
   themeConfig: {
+    prism: {
+      additionalLanguages: ['rust']
+    },
     navbar: {
       title: 'Invariant',
       logo: {
