@@ -1212,6 +1212,7 @@ mod tests {
         let max_token_amount: u64 = (10u128.pow(64) - 1) as u64;
         // let max_sqrt_price_x2 = Price::new(4294967295999999999883584678173065);
         let max_sqrt_price = calculate_price_sqrt(MAX_TICK);
+        let sqrt_price_at_tick_before_max = calculate_price_sqrt(MAX_TICK - 3);
         let max_u64 = u64::max_value() as u128;
         let max_u128 = u128::max_value();
 
@@ -1279,46 +1280,56 @@ mod tests {
         // position range below current price
         // L (by x) = x * sqrt(pu) * sqrt(pc)  / (sqrt(pu) - sqrt(pc))
         // L is greatest for max token amount and in minimal price difference for the highest price
-        // {
-        //     let almost_max_sqrt_price = max_sqrt_price - Price::new(1);
+        {
+            let almost_max_sqrt_price = max_sqrt_price - Price::new(1);
 
-        //     let product = U256::from(max_sqrt_price.v)
-        //         .checked_mul(U256::from(almost_max_sqrt_price.v))
-        //         .unwrap()
-        //         .checked_mul(liquidity_denominator)
-        //         .unwrap()
-        //         .checked_div(price_denominator)
-        //         .unwrap();
-        //     let diff = U256::from(max_sqrt_price.v)
-        //         .checked_sub(U256::from(almost_max_sqrt_price.v))
-        //         .unwrap();
+            let product = U256::from(max_sqrt_price.v)
+                .checked_mul(U256::from(almost_max_sqrt_price.v))
+                .unwrap()
+                .checked_mul(liquidity_denominator)
+                .unwrap()
+                .checked_div(price_denominator)
+                .unwrap();
+            let diff = U256::from(max_sqrt_price.v)
+                .checked_sub(U256::from(almost_max_sqrt_price.v))
+                .unwrap();
 
-        //     // ~2^112 * 10^12 ~ 2^152
-        //     let multiplier = product.div(diff);
+            // ~2^112 * 10^12 ~ 2^152
+            let multiplier = product.div(diff);
 
-        //     // ~2^176 * 10^12 ~2^216
-        //     let max_liquidity = U256::from(max_token_amount)
-        //         .checked_mul(multiplier)
-        //         .unwrap();
+            // ~2^176 * 10^12 ~2^216
+            let max_liquidity = U256::from(max_token_amount)
+                .checked_mul(multiplier)
+                .unwrap();
 
-        //     println!("diff = {:?}", diff);
+            assert!(max_liquidity.gt(&U256::from(u128::MAX)));
+            assert!(max_liquidity.eq(&U256::from_str(
+                "C096E12F52D3AD459C1267BE28847279D8B8B01284A7E03FCA9E07"
+            )
+            .unwrap()));
 
-        //     assert!(max_liquidity.gt(&U256::from(u128::MAX)));
-        //     assert!(max_liquidity.eq(&U256::from_str(
-        //         "C096E12F52D3AD459C1267BE28847279D8B8B01284A7E03FCA9E07"
-        //     )
-        //     .unwrap()));
+            // calculate y based on liquidity
+            let current_lower_diff = almost_max_sqrt_price - sqrt_price_at_tick_before_max;
+            println!("current_lower_diff = {:?}", current_lower_diff);
+            let y = max_liquidity
+                .checked_div(liquidity_denominator)
+                .unwrap()
+                .checked_div(price_denominator)
+                .unwrap()
+                .checked_mul(U256::from(current_lower_diff.v))
+                .unwrap();
 
-        //     // calculate y based on liquidity
+            println!("y = {:?}", y);
+            // L * (sqrt(pc) - sqrt(pl))
 
-        //     // calculate get_delta_y => y > 2^64
-        //     // let y_token_amount = max_liquidity
-        //     //     .checked_mul(diff)
-        //     //     .unwrap()
-        //     //     .checked_div(price_denominator)
-        //     //     .unwrap()
-        //     //     .checked_div(liquidity_denominator)
-        //     //     .unwrap();
-        // }
+            // calculate get_delta_y => y > 2^64
+            // let y_token_amount = max_liquidity
+            //     .checked_mul(diff)
+            //     .unwrap()
+            //     .checked_div(price_denominator)
+            //     .unwrap()
+            //     .checked_div(liquidity_denominator)
+            //     .unwrap();
+        }
     }
 }
