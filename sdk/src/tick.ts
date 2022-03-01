@@ -29,7 +29,12 @@ export const getTickFromPrice = (
   }
 }
 
-const priceToTickInRange = (price: Decimal, low: number, high: number, step: number): number => {
+export const priceToTickInRange = (
+  price: Decimal,
+  low: number,
+  high: number,
+  step: number
+): number => {
   assert.ok(step !== 0)
 
   low = Math.floor(low / step)
