@@ -29,6 +29,12 @@ module.exports = {
       collapsed: true,
       items: ['invariant_sdk/todo']
     },
+    {
+      type: 'category',
+      label: 'Invariant Bonds',
+      // collapsed: true,
+      items: ['invariant_bonds/introduction', 'invariant_bonds/examples']
+    },
     'faq',
     {
       href: 'https://twitter.com/invariant_labs',
