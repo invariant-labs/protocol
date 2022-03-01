@@ -44,6 +44,7 @@ const main = async () => {
   }
 
   const poolData = await market.getPool(pair)
+  console.log('cti', poolData.currentTickIndex)
   console.log('starting simulation')
 
   const simProps: SimulateSwapInterface = {

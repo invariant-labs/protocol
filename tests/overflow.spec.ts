@@ -9,6 +9,8 @@ import { FeeTier, Tick } from '@invariant-labs/sdk/lib/market'
 import { fromFee, simulateSwap, SimulateSwapInterface } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { CreateTick, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
+import { FEE_TIER } from '@invariant-labs/sdk/lib/market'
+import { FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
 
 describe('swap', () => {
   const provider = Provider.local()
@@ -17,10 +19,7 @@ describe('swap', () => {
   const wallet = provider.wallet.payer as Keypair
   const mintAuthority = Keypair.generate()
   const admin = Keypair.generate()
-  const feeTier: FeeTier = {
-    fee: fromFee(new BN(600)),
-    tickSpacing: 10
-  }
+  const feeTier: FeeTier = FEE_TIERS[0]
   let market: Market
   let pair: Pair
   let tokenX: Token
@@ -56,21 +55,8 @@ describe('swap', () => {
 
   it('#swap() within a tick', async () => {
     // Deposit
-    const upperTick = 10000
-    const createTickVars: CreateTick = {
-      pair,
-      index: upperTick,
-      payer: admin.publicKey
-    }
-    await market.createTick(createTickVars, admin)
-
-    const lowerTick = -20000
-    const createTickVars2: CreateTick = {
-      pair,
-      index: lowerTick,
-      payer: admin.publicKey
-    }
-    await market.createTick(createTickVars2, admin)
+    const upperTick = 1
+    const lowerTick = -1
 
     const positionOwner = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
@@ -122,7 +108,7 @@ describe('swap', () => {
       byAmountIn: true,
       owner: owner.publicKey
     }
-    // await market.swap(swapVars, owner)
+    await market.swap(swapVars, owner)
 
     const ticksArray: Tick[] = await market.getClosestTicks(pair, Infinity)
     const ticks: Map<number, Tick> = new Map<number, Tick>()
@@ -133,28 +119,28 @@ describe('swap', () => {
       ticks.set(tick.index, tick)
     }
 
-    const simProps: SimulateSwapInterface = {
-      xToY: true,
-      byAmountIn: true,
-      swapAmount: new anchor.BN(1e10),
-      priceLimit: poolDataBefore.sqrtPrice,
-      slippage: { v: new anchor.BN(DENOMINATOR) },
-      ticks,
-      tickmap: await market.getTickmap(pair),
-      pool: poolDataBefore
-    }
+    // const simProps: SimulateSwapInterface = {
+    //   xToY: true,
+    //   byAmountIn: true,
+    //   swapAmount: new anchor.BN(1e10),
+    //   priceLimit: poolDataBefore.sqrtPrice,
+    //   slippage: { v: new anchor.BN(DENOMINATOR) },
+    //   ticks,
+    //   tickmap: await market.getTickmap(pair),
+    //   pool: poolDataBefore
+    // }
 
-    const result = simulateSwap(simProps)
-    console.log(poolDataBefore.liquidity.v.toString())
+    // const result = simulateSwap(simProps)
+    // console.log(poolDataBefore.liquidity.v.toString())
 
-    console.log('here', result.priceAfterSwap.toString())
+    // console.log('here', result.priceAfterSwap.toString())
 
-    console.log(result.amountPerTick.map(i => i.toString()))
+    // console.log(result.amountPerTick.map(i => i.toString()))
 
-    console.log(
-      result.accumulatedAmountIn.add(result.accumulatedFee).toString(),
-      result.accumulatedAmountOut.toString()
-    )
+    // console.log(
+    //   result.accumulatedAmountIn.add(result.accumulatedFee).toString(),
+    //   result.accumulatedAmountOut.toString()
+    // )
 
     // // Check pool
     // const poolData = await market.getPool(pair)
