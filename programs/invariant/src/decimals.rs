@@ -54,9 +54,9 @@ impl FeeGrowth {
 }
 
 impl Price {
-    pub fn big_div_values(nominator: U256, denominator: U256) -> TokenAmount {
-        TokenAmount::new(
-            nominator
+    pub fn big_div_values_to_token(nominator: U256, denominator: U256) -> Option<TokenAmount> {
+        Some(TokenAmount::new(
+            match nominator
                 .checked_mul(Self::one::<U256>())
                 .unwrap()
                 .checked_div(denominator)
@@ -64,13 +64,16 @@ impl Price {
                 .checked_div(Self::one::<U256>())
                 .unwrap()
                 .try_into()
-                .unwrap(),
-        )
+            {
+                Ok(v) => v,
+                Err(_) => return None,
+            },
+        ))
     }
 
-    pub fn big_div_values_up(nominator: U256, denominator: U256) -> TokenAmount {
-        TokenAmount::new({
-            nominator
+    pub fn big_div_values_to_token_up(nominator: U256, denominator: U256) -> Option<TokenAmount> {
+        Some(TokenAmount::new({
+            match nominator
                 .checked_mul(Self::one::<U256>())
                 .unwrap()
                 .checked_add(denominator.checked_sub(U256::from(1u32)).unwrap())
@@ -80,6 +83,23 @@ impl Price {
                 .checked_add(Self::almost_one::<U256>())
                 .unwrap()
                 .checked_div(Self::one::<U256>())
+                .unwrap()
+                .try_into()
+            {
+                Ok(v) => v,
+                Err(_) => return None,
+            }
+        }))
+    }
+
+    pub fn big_div_values_up(nominator: U256, denominator: U256) -> Price {
+        Price::new({
+            nominator
+                .checked_mul(Self::one::<U256>())
+                .unwrap()
+                .checked_add(denominator.checked_sub(U256::from(1u32)).unwrap())
+                .unwrap()
+                .checked_div(denominator)
                 .unwrap()
                 .try_into()
                 .unwrap()
