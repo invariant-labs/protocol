@@ -580,8 +580,8 @@ mod tests {
         // zero at zero liquidity
         {
             let result = get_delta_x(
-                Price::from_integer(1),
-                Price::from_integer(1),
+                Price::from_integer(1u8),
+                Price::from_integer(1u8),
                 Liquidity::new(0),
                 false,
             )
@@ -591,9 +591,9 @@ mod tests {
         // equal at equal liquidity
         {
             let result = get_delta_x(
-                Price::from_integer(1),
-                Price::from_integer(2),
-                Liquidity::from_integer(2),
+                Price::from_integer(1u8),
+                Price::from_integer(2u8),
+                Liquidity::from_integer(2u8),
                 false,
             )
             .unwrap();
@@ -612,7 +612,30 @@ mod tests {
             assert_eq!(result_down, TokenAmount(7010));
             assert_eq!(result_up, TokenAmount(7011));
         }
-        // TODO tests with returned None
+        // big
+        {
+            let sqrt_price_a = Price::from_integer(1u8);
+            let sqrt_price_b = Price::from_scale(5u8, 1);
+            let liquidity = Liquidity::from_integer(2u128.pow(64) - 1);
+
+            let result_down = get_delta_x(sqrt_price_a, sqrt_price_b, liquidity, false).unwrap();
+            let result_up = get_delta_x(sqrt_price_a, sqrt_price_b, liquidity, true).unwrap();
+
+            assert_eq!(result_down, TokenAmount::from_decimal(liquidity));
+            assert_eq!(result_up, TokenAmount::from_decimal(liquidity));
+        }
+        // overflow
+        {
+            let sqrt_price_a = Price::from_integer(1u8);
+            let sqrt_price_b = Price::from_scale(5u8, 1);
+            let liquidity = Liquidity::from_integer(2u128.pow(64));
+
+            let result_down = get_delta_x(sqrt_price_a, sqrt_price_b, liquidity, false);
+            let result_up = get_delta_x(sqrt_price_a, sqrt_price_b, liquidity, true);
+
+            assert!(result_down.is_none());
+            assert!(result_up.is_none());
+        }
     }
 
     #[test]
