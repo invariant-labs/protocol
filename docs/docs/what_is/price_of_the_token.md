@@ -27,6 +27,6 @@ $$
 \end{aligned}
 $$
 
-![Liquidity graph](/img/docs/math/liquidity_graph.png)
+![Liquidity graph](/img/docs/math/liquidity_graph.svg)
 
 More about it, you can learn from our [whitepaper](https://t.co/Ms1dYZPrZx)

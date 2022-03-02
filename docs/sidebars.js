@@ -19,6 +19,16 @@ module.exports = {
     },
     {
       type: 'category',
+      label: 'Tutorial',
+      collapsed: true,
+      items: [
+        'tutorial/how_to_connect_your_wallet',
+        'tutorial/how_to_swap',
+        'tutorial/how_to_add_remove_liquidity'
+      ]
+    },
+    {
+      type: 'category',
       label: 'Smart contract overview',
       collapsed: true,
       items: ['smart_contract/todo']
