@@ -636,6 +636,18 @@ mod tests {
             assert!(result_down.is_none());
             assert!(result_up.is_none());
         }
+        // huge liquidity
+        {
+            let sqrt_price_a = Price::from_integer(1u8);
+            let sqrt_price_b = Price::new(Price::one()) + Price::new(1000000);
+            let liquidity = Liquidity::from_integer(2u128.pow(80));
+
+            let result_down = get_delta_x(sqrt_price_a, sqrt_price_b, liquidity, false);
+            let result_up = get_delta_x(sqrt_price_a, sqrt_price_b, liquidity, true);
+
+            assert!(result_down.is_some());
+            assert!(result_up.is_some());
+        }
     }
 
     #[test]
@@ -675,7 +687,42 @@ mod tests {
             assert_eq!(result_down, TokenAmount(144669023));
             assert_eq!(result_up, TokenAmount(144669024));
         }
-        // TODO tests with return None
+        // big
+        {
+            let sqrt_price_a = Price::from_integer(1u8);
+            let sqrt_price_b = Price::from_integer(2u8);
+            let liquidity = Liquidity::from_integer(2u128.pow(64) - 1);
+
+            let result_down = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, false).unwrap();
+            let result_up = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, true).unwrap();
+
+            assert_eq!(result_down, TokenAmount::from_decimal(liquidity));
+            assert_eq!(result_up, TokenAmount::from_decimal(liquidity));
+        }
+        // overflow
+        {
+            let sqrt_price_a = Price::from_integer(1u8);
+            let sqrt_price_b = Price::from_integer(2u8);
+            let liquidity = Liquidity::from_integer(2u128.pow(64));
+
+            let result_down = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, false);
+            let result_up = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, true);
+
+            assert!(result_down.is_none());
+            assert!(result_up.is_none());
+        }
+        // huge liquidity
+        {
+            let sqrt_price_a = Price::from_integer(1u8);
+            let sqrt_price_b = Price::new(Price::one()) + Price::new(1000000);
+            let liquidity = Liquidity::from_integer(2u128.pow(80));
+
+            let result_down = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, false);
+            let result_up = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, true);
+
+            assert!(result_down.is_some());
+            assert!(result_up.is_some());
+        }
     }
 
     #[test]
