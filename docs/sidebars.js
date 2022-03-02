@@ -33,7 +33,7 @@ module.exports = {
       type: 'category',
       label: 'Invariant Bonds',
       // collapsed: true,
-      items: ['invariant_bonds/introduction', 'invariant_bonds/examples']
+      items: ['invariant_bonds/introduction', 'invariant_bonds/math', 'invariant_bonds/examples']
     },
     'faq',
     {

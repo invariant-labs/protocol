@@ -12,9 +12,13 @@ It results in a lower fee on trades by an order of magnitude. You can choose fro
 Furthermore, users benefit from increased virtual liquidity, which translates into smaller slippage on trades.
 Liquidity concentration enables much higher efficiency than traditional AMMs. In other words, producing the same amount of liquidity requires fewer tokens. Keeping liquidity close to the price can boost this effect even more.
 
+Invariant is fully-permissionless DEX and is designed to allow more capital efficiency and flexible transaction fees.
+
 ### Comparing Invariant to common exchanges
 
-Invariant is an auto market maker decentralized exchange, based on liquidity pools instead of an order book.
+Invariant is an AMM decentralized exchange, based on liquidity pools instead of an order book.
+
+AMMs (Automated Market Makers) are autonomous smart contracts deployed on a blockchain that make markets between different assets that live on that chain. Cryptocurrencies are aggregated in liquidity pools to facilitate this automated trading. They enable functioning in environments with restricted resources, such as public blockchain.
 
 ### Order book vs AMM
 

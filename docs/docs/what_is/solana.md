@@ -28,6 +28,5 @@ For more information, please see its official [documentation](https://docs.solan
 - The highest transactions per second rate. Using PoH allows Solana blockchain to currently handle over 50 000 transactions per second. It means that it is faster than Visa.
 - Fast confirmation with the average time of 0.4s.
 - Low transaction cost with the average fee per transaction of 0.00025$
-- Perpetual oracles updating, which pushes updates to the blockchain in a sub-seconds interval eliminating arbitrage.
-- No front running, meaning that each transaction has its timestamp, which disables the decision on the order, in which transactions get recorded onto the blockchain.
-- No sharding, meaning that there is no security risk being less vulnerable to consensus attacks.
+- Limited front running, meaning that each transaction has its timestamp, which disables the decision on the order, in which transactions get recorded onto the blockchain.
+- No sharding, meaning that there is greater composability due to fact that single transaction can be performed atomicity touching various protocol's state.

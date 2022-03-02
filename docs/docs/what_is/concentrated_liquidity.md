@@ -17,7 +17,7 @@ In Invariant we can allocate liquidity within a custom price range. It means tha
 
 Also our protocol allows to set price range on entire price space, ie. the $(0, \infty)$ integral. It means that user gives liquidity on every initialized tick (the concept about we will talk more in later part).
 
-With Invariant LPs mac concentrate their capital to smaller price intervals than $(0,\infty)$. A good example is pool of stablecoins. The liquidity outside the typical price range of a stablecoin pair is rarely touched. For example, an LP may choose to allocate capital solely to the $(0.99, 1.01)$ range. As a result, traders are offered deeper liquidity around the mid-price, and LPs earn more trading fees with their capital. We call liquidity concentrated to a finite interval a position. LPs may have many different positions per pool, creating individualized price curves that reflect the preferences of each LP.
+With Invariant LPs may concentrate their capital to smaller price intervals than $(0,\infty)$. A good example is pool of stablecoins. The liquidity outside the typical price range of a stablecoin pair is rarely touched. For example, an LP may choose to allocate capital solely to the $(0.99, 1.01)$ range. As a result, traders are offered deeper liquidity around the mid-price, and LPs earn more trading fees with their capital. We call liquidity concentrated to a finite interval a position. LPs may have many different positions per pool, creating individualized price curves that reflect the preferences of each LP.
 
 ### Active Liquidity
 
@@ -31,7 +31,7 @@ Importantly, LPs are free to create as many positions as they see fit, each with
 
 To achieve concentrated liquidity, the once continuous spectrum of price space has been partitioned with ticks.
 
-Ticks are the boundaries between discrete areas in price space. Ticks are spaced such that an increase or decrease of 1 tick represents a $0.1\%$ increase or decrease in price at any point in price space.
+Ticks are the boundaries between discrete areas in price space. Ticks are spaced such that an increase or decrease of 1 tick represents a $0.01\%$ increase or decrease in price at any point in price space.
 
 Ticks function as boundaries for liquidity positions. When a position is created, the provider must choose the lower and upper tick that will represent their position's borders.
 
