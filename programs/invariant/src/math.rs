@@ -100,12 +100,12 @@ pub fn compute_swap_step(
     let mut amount_out = TokenAmount(0);
 
     if by_amount_in {
-        let amount_after_fee = amount.big_mul(FixedPoint::from_integer(1) - fee);
+        let amount_after_fee = amount.big_mul(FixedPoint::from_integer(1u8) - fee);
 
         amount_in = if x_to_y {
-            get_delta_x(target_price_sqrt, current_price_sqrt, liquidity, true)
+            get_delta_x(target_price_sqrt, current_price_sqrt, liquidity, true).unwrap()
         } else {
-            get_delta_y(current_price_sqrt, target_price_sqrt, liquidity, true)
+            get_delta_y(current_price_sqrt, target_price_sqrt, liquidity, true).unwrap()
         };
 
         // if target price was hit it will be the next price
@@ -121,9 +121,9 @@ pub fn compute_swap_step(
         };
     } else {
         amount_out = if x_to_y {
-            get_delta_y(target_price_sqrt, current_price_sqrt, liquidity, false)
+            get_delta_y(target_price_sqrt, current_price_sqrt, liquidity, false).unwrap()
         } else {
-            get_delta_x(current_price_sqrt, target_price_sqrt, liquidity, false)
+            get_delta_x(current_price_sqrt, target_price_sqrt, liquidity, false).unwrap()
         };
 
         if amount >= amount_out {
@@ -138,17 +138,17 @@ pub fn compute_swap_step(
 
     if x_to_y {
         if not_max || !by_amount_in {
-            amount_in = get_delta_x(next_price_sqrt, current_price_sqrt, liquidity, true)
+            amount_in = get_delta_x(next_price_sqrt, current_price_sqrt, liquidity, true).unwrap()
         };
         if not_max || by_amount_in {
-            amount_out = get_delta_y(next_price_sqrt, current_price_sqrt, liquidity, false)
+            amount_out = get_delta_y(next_price_sqrt, current_price_sqrt, liquidity, false).unwrap()
         }
     } else {
         if not_max || !by_amount_in {
-            amount_in = get_delta_y(current_price_sqrt, next_price_sqrt, liquidity, true)
+            amount_in = get_delta_y(current_price_sqrt, next_price_sqrt, liquidity, true).unwrap()
         };
         if not_max || by_amount_in {
-            amount_out = get_delta_x(current_price_sqrt, next_price_sqrt, liquidity, false)
+            amount_out = get_delta_x(current_price_sqrt, next_price_sqrt, liquidity, false).unwrap()
         }
     }
 
@@ -177,7 +177,7 @@ pub fn get_delta_x(
     sqrt_price_b: Price,
     liquidity: Liquidity,
     up: bool,
-) -> TokenAmount {
+) -> Option<TokenAmount> {
     let delta_price = if sqrt_price_a > sqrt_price_b {
         sqrt_price_a - sqrt_price_b
     } else {
@@ -187,14 +187,14 @@ pub fn get_delta_x(
     // log(2,  2^32 * 10^24 * 2^64 * 10^12 ) = 212.5..
     let nominator = delta_price.big_mul_to_value(liquidity);
     match up {
-        true => TokenAmount::from_decimal_up(Price::big_div_values_up(
+        true => Price::big_div_values_to_token_up(
             nominator,
             sqrt_price_a.big_mul_to_value(sqrt_price_b),
-        )),
-        false => TokenAmount::from_decimal(Price::big_div_values(
+        ),
+        false => Price::big_div_values_to_token(
             nominator,
             sqrt_price_a.big_mul_to_value_up(sqrt_price_b),
-        )),
+        ),
     }
 }
 
@@ -204,16 +204,30 @@ pub fn get_delta_y(
     sqrt_price_b: Price,
     liquidity: Liquidity,
     up: bool,
-) -> TokenAmount {
+) -> Option<TokenAmount> {
     let delta_price = if sqrt_price_a > sqrt_price_b {
         sqrt_price_a - sqrt_price_b
     } else {
         sqrt_price_b - sqrt_price_a
     };
 
-    match up {
-        true => TokenAmount::from_decimal_up(delta_price.big_mul_up(liquidity)),
-        false => TokenAmount::from_decimal(delta_price.big_mul(liquidity)),
+    // I'm so astonished this compiled i'm leaving it like that
+    match match up {
+        true => delta_price
+            .big_mul_to_value_up(liquidity)
+            .checked_add(Price::almost_one())
+            .unwrap()
+            .checked_div(Price::one())
+            .unwrap()
+            .try_into(),
+        false => delta_price
+            .big_mul_to_value(liquidity)
+            .checked_div(Price::one())
+            .unwrap()
+            .try_into(),
+    } {
+        Ok(x) => Some(TokenAmount(x)),
+        Err(_) => None,
     }
 }
 
@@ -260,12 +274,20 @@ fn get_next_sqrt_price_x_up(
         return price_sqrt;
     };
 
-    let denominator = match add {
-        true => liquidity + Liquidity::from_decimal(price_sqrt.big_mul(amount)),
-        false => liquidity - Liquidity::from_decimal(price_sqrt.big_mul(amount)),
-    };
+    let big_liquidity = liquidity
+        .here::<U256>()
+        .checked_mul(Price::one())
+        .unwrap()
+        .checked_div(Liquidity::one())
+        .unwrap();
 
-    price_sqrt.big_mul_up(liquidity).big_div_up(denominator)
+    let denominator = match add {
+        true => big_liquidity.checked_add(price_sqrt.big_mul_to_value(amount)),
+        false => big_liquidity.checked_sub(price_sqrt.big_mul_to_value(amount)),
+    }
+    .unwrap();
+
+    Price::big_div_values_up(price_sqrt.big_mul_to_value_up(liquidity), denominator)
 }
 
 // price +- (amount / L),
@@ -277,14 +299,14 @@ fn get_next_sqrt_price_y_down(
 ) -> Price {
     if add {
         let quotient = Price::from_decimal(amount).big_div_by_number(
-            U256::from(liquidity.v)
+            U256::from(liquidity.get())
                 .checked_mul(U256::from(PRICE_LIQUIDITY_DENOMINATOR))
                 .unwrap(),
         );
         price_sqrt + quotient
     } else {
         let quotient = Price::from_decimal(amount).big_div_by_number_up(
-            U256::from(liquidity.v)
+            U256::from(liquidity.get())
                 .checked_mul(U256::from(PRICE_LIQUIDITY_DENOMINATOR))
                 .unwrap(),
         );
@@ -356,7 +378,8 @@ pub fn calculate_amount_delta(
             calculate_price_sqrt(upper_tick),
             liquidity_delta,
             liquidity_sign,
-        );
+        )
+        .unwrap();
     } else if pool.current_tick_index < upper_tick {
         // calculating price_sqrt of current_tick is not required - can by pass
         amount_x = get_delta_x(
@@ -364,13 +387,15 @@ pub fn calculate_amount_delta(
             calculate_price_sqrt(upper_tick),
             liquidity_delta,
             liquidity_sign,
-        );
+        )
+        .unwrap();
         amount_y = get_delta_y(
             calculate_price_sqrt(lower_tick),
             pool.sqrt_price,
             liquidity_delta,
             liquidity_sign,
-        );
+        )
+        .unwrap();
 
         pool.update_liquidity_safely(liquidity_delta, liquidity_sign)?;
     } else {
@@ -380,6 +405,7 @@ pub fn calculate_amount_delta(
             liquidity_delta,
             liquidity_sign,
         )
+        .unwrap()
     }
 
     Ok((amount_x, amount_y))
@@ -556,7 +582,8 @@ mod tests {
                 Price::from_integer(1),
                 Liquidity::new(0),
                 false,
-            );
+            )
+            .unwrap();
             assert_eq!(result, TokenAmount(0));
         }
         // equal at equal liquidity
@@ -566,7 +593,8 @@ mod tests {
                 Price::from_integer(2),
                 Liquidity::from_integer(2),
                 false,
-            );
+            )
+            .unwrap();
             assert_eq!(result, TokenAmount(1));
         }
         // complex
@@ -575,13 +603,14 @@ mod tests {
             let sqrt_price_b = Price::new(87__854_456_421_658_000000000000);
             let liquidity = Liquidity::new(983_983__249_092_300_399);
 
-            let result_down = get_delta_x(sqrt_price_a, sqrt_price_b, liquidity, false);
-            let result_up = get_delta_x(sqrt_price_a, sqrt_price_b, liquidity, true);
+            let result_down = get_delta_x(sqrt_price_a, sqrt_price_b, liquidity, false).unwrap();
+            let result_up = get_delta_x(sqrt_price_a, sqrt_price_b, liquidity, true).unwrap();
 
             // 7010.8199533090222620342346078676429792113623790285962379282493052
             assert_eq!(result_down, TokenAmount(7010));
             assert_eq!(result_up, TokenAmount(7011));
         }
+        // TODO tests with returned None
     }
 
     #[test]
@@ -593,7 +622,8 @@ mod tests {
                 Price::from_integer(1),
                 Liquidity::new(0),
                 false,
-            );
+            )
+            .unwrap();
             assert_eq!(result, TokenAmount(0));
         }
         // equal at equal liquidity
@@ -603,7 +633,8 @@ mod tests {
                 Price::from_integer(2),
                 Liquidity::from_integer(2),
                 false,
-            );
+            )
+            .unwrap();
             assert_eq!(result, TokenAmount(2));
         }
         // big numbers
@@ -612,13 +643,14 @@ mod tests {
             let sqrt_price_b = Price::new(87__854_456_421_658_000000000000);
             let liquidity = Liquidity::new(983_983__249_092_300_399);
 
-            let result_down = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, false);
-            let result_up = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, true);
+            let result_down = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, false).unwrap();
+            let result_up = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, true).unwrap();
 
             // 144669023.842518763627991585527476
             assert_eq!(result_down, TokenAmount(144669023));
             assert_eq!(result_up, TokenAmount(144669024));
         }
+        // TODO tests with return None
     }
 
     #[test]
@@ -739,8 +771,7 @@ mod tests {
             let liquidity = Liquidity::new(222_222222222222);
             let amount = TokenAmount(37);
 
-            // TODO validate me
-            // expected 7.490636704119834280183478
+            // expected 7.490636704119859529520682
             // real     7.49063670411985952952068173...
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
             assert_eq!(result, Price::new(7490636704119834280183478));

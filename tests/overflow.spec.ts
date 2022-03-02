@@ -87,7 +87,7 @@ describe('swap', () => {
     const owner = Keypair.generate()
     await connection.requestAirdrop(owner.publicKey, 1e9)
 
-    const amount = new BN(1000)
+    const amount = new BN(1e9)
     const accountX = await tokenX.createAccount(owner.publicKey)
     const accountY = await tokenY.createAccount(owner.publicKey)
     await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
