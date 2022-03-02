@@ -60,3 +60,15 @@ export const priceToTickInRange = (
 
   return low * step
 }
+
+export const alignTickToSpacing = (inputTick: number, tickSpacing: number): number => {
+  if (inputTick > 0) {
+    return inputTick - (inputTick % tickSpacing)
+  } else {
+    return inputTick - remEuklid(inputTick, tickSpacing)
+  }
+}
+
+const remEuklid = (a, b): number => {
+  return ((a % b) + b) % b
+}

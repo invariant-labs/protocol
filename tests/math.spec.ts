@@ -49,7 +49,7 @@ import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
 import { Keypair } from '@solana/web3.js'
 import { swapParameters } from './swap'
 import { LIQUIDITY_DENOMINATOR, toDecimal } from '@invariant-labs/sdk/lib/utils'
-import { getTickFromPrice, priceToTickInRange } from '@invariant-labs/sdk/src/tick'
+import { priceToTickInRange } from '@invariant-labs/sdk/src/tick'
 import { MIN_TICK } from '@invariant-labs/sdk'
 
 describe('Math', () => {
@@ -1557,7 +1557,6 @@ describe('Math', () => {
     })
     describe('get tick slightly below and above', () => {
       const maxSqrtPrice = calculatePriceSqrt(MAX_TICK)
-      console.log(maxSqrtPrice.v.toString)
       const minSqrtPrice = calculatePriceSqrt(MIN_TICK)
 
       const tickSpacing = 1
@@ -1565,10 +1564,10 @@ describe('Math', () => {
         const tick = priceToTickInRange(
           { v: maxSqrtPrice.v.subn(1) },
           -MAX_TICK,
-          MAX_TICK,
+          MAX_TICK + 1,
           tickSpacing
         )
-        //assert.equal(tick, MAX_TICK) TODO
+        assert.equal(tick, MAX_TICK - 1)
       })
       it('above', async () => {
         const tick = priceToTickInRange(
