@@ -278,9 +278,7 @@ fn get_next_sqrt_price_x_up(
 
     let big_liquidity = liquidity
         .here::<U256>()
-        .checked_mul(Price::one())
-        .unwrap()
-        .checked_div(Liquidity::one())
+        .checked_mul(U256::from(PRICE_LIQUIDITY_DENOMINATOR))
         .unwrap();
 
     let denominator = match add {
