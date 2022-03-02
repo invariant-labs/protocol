@@ -102,7 +102,7 @@ describe('swap', () => {
       xToY: true,
       amount: new BN(1e6),
       estimatedPriceAfterSwap: { v: new BN('999993589272131718667513') }, // ignore price impact using high slippage tolerance
-      slippage: toDecimal(100000, 2),
+      slippage: toDecimal(10, 2),
       accountX,
       accountY,
       byAmountIn: true,
