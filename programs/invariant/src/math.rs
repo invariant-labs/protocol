@@ -103,10 +103,11 @@ pub fn compute_swap_step(
         let amount_after_fee = amount.big_mul(FixedPoint::from_integer(1u8) - fee);
 
         amount_in = if x_to_y {
-            get_delta_x(target_price_sqrt, current_price_sqrt, liquidity, true).unwrap()
+            get_delta_x(target_price_sqrt, current_price_sqrt, liquidity, true)
         } else {
-            get_delta_y(current_price_sqrt, target_price_sqrt, liquidity, true).unwrap()
-        };
+            get_delta_y(current_price_sqrt, target_price_sqrt, liquidity, true)
+        }
+        .unwrap_or(TokenAmount(u64::MAX));
 
         // if target price was hit it will be the next price
         if amount_after_fee >= amount_in {
@@ -121,10 +122,11 @@ pub fn compute_swap_step(
         };
     } else {
         amount_out = if x_to_y {
-            get_delta_y(target_price_sqrt, current_price_sqrt, liquidity, false).unwrap()
+            get_delta_y(target_price_sqrt, current_price_sqrt, liquidity, false)
         } else {
-            get_delta_x(current_price_sqrt, target_price_sqrt, liquidity, false).unwrap()
-        };
+            get_delta_x(current_price_sqrt, target_price_sqrt, liquidity, false)
+        }
+        .unwrap_or(TokenAmount(u64::MAX));
 
         if amount >= amount_out {
             next_price_sqrt = target_price_sqrt
