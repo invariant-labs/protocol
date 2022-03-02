@@ -841,10 +841,10 @@ mod tests {
             let liquidity = Liquidity::new(222_222222222222);
             let amount = TokenAmount(37);
 
-            // expected 7.490636704119859529520682
+            // expected  7490636704119859529520682
             // real     7.49063670411985952952068173...
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
-            assert_eq!(result, Price::new(7490636704119834280183478));
+            assert_eq!(result, Price::new(7490636704119859529520682));
         }
     }
 
