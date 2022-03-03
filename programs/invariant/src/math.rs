@@ -444,6 +444,8 @@ mod tests {
 
     use std::{ops::Div, str::FromStr};
 
+    use crate::structs::TICK_LIMIT;
+
     use super::*;
 
     #[test]
@@ -1212,9 +1214,10 @@ mod tests {
         let liquidity_denominator = U256::from(1000000000000u128);
         let price_denominator = U256::from(1000000000000000000000000u128);
         let max_token_amount: u64 = (10u128.pow(64) - 1) as u64;
-        // let max_sqrt_price_x2 = Price::new(4294967295999999999883584678173065);
         let max_sqrt_price = calculate_price_sqrt(MAX_TICK);
-        let sqrt_price_at_tick_before_max = calculate_price_sqrt(MAX_TICK - 3);
+        let min_tick_spacing_reachable_max_price = (MAX_TICK + TICK_LIMIT - 1) / TICK_LIMIT; // MAX_TICK - 3
+        let almost_max_sqrt_price =
+            calculate_price_sqrt(MAX_TICK - min_tick_spacing_reachable_max_price);
         let max_u64 = u64::max_value() as u128;
         let max_u128 = u128::max_value();
 
@@ -1247,6 +1250,7 @@ mod tests {
 
             // delta x (x amount require to fill position)
             // impossible to fully fill position with max liquidity
+            // delta x ~ 2^65
             let price_product = lower_sqrt_price.big_mul(upper_sqrt_price);
             let delta_x = max_liquidity
                 .checked_mul(U256::from(min_price_diff_between_tick.v))
@@ -1264,37 +1268,45 @@ mod tests {
         // L is greatest for max token amount and in minimal price difference for the highest price
         // 2^128 > L_MAX > 2^64
         // 2^256 > L_MAX * ACCURACY > 2^128
-        // {
-        //     // 1.0001^(MAX_TICK - 5)
-        //     // let almost_max_sqrt_price_x2 = Price::new(4293893742052637352036752950259318);
-        //     // 1.0001^(MAX_TICK - 3)
-        //     let almost_max_sqrt_price = calculate_price_sqrt(MAX_TICK - 3);
+        {
+            let product = U256::from(max_sqrt_price.v)
+                .checked_mul(U256::from(almost_max_sqrt_price.v))
+                .unwrap()
+                .checked_mul(liquidity_denominator)
+                .unwrap()
+                .checked_div(price_denominator)
+                .unwrap();
+            let diff = U256::from(max_sqrt_price.v)
+                .checked_sub(U256::from(almost_max_sqrt_price.v))
+                .unwrap();
 
-        //     let product = U256::from(max_sqrt_price.v)
-        //         .checked_mul(U256::from(almost_max_sqrt_price.v))
-        //         .unwrap()
-        //         .checked_mul(liquidity_denominator)
-        //         .unwrap()
-        //         .checked_div(price_denominator)
-        //         .unwrap();
-        //     let diff = U256::from(max_sqrt_price.v)
-        //         .checked_sub(U256::from(almost_max_sqrt_price.v))
-        //         .unwrap();
+            //  ~2^29 * 10^12 ~ 2^69
+            let multiplier = product.checked_div(diff).unwrap();
 
-        //     //  ~2^29 * 10^12 ~ 2^69
-        //     let multiplier = product.div(diff);
+            // ~2^93 * 10^12 ~2^133
+            let max_liquidity = U256::from(max_token_amount)
+                .checked_mul(multiplier)
+                .unwrap();
 
-        //     // ~2^93 * 10^12 ~2^133
-        //     let max_liquidity = U256::from(max_token_amount)
-        //         .checked_mul(multiplier)
-        //         .unwrap();
+            assert!(max_liquidity.gt(&U256::from(u128::MAX)));
+            assert!(
+                max_liquidity.eq(&U256::from_str("17AF16DEB58131B1D350E9214A7ECE4E15").unwrap())
+            );
 
-        //     assert!(max_liquidity.gt(&U256::from(u128::MAX)));
-        //     assert!(
-        //         max_liquidity.eq(&U256::from_str("17AF16DEB58131B1D350E9214A7ECE4E15").unwrap())
-        //     );
-        // }
+            // delta y (y amount require to fill position)
+            // delta y ~ 2^90
+            // impossible to fully fill position with max liquidity
+            let delta_y = max_liquidity
+                .checked_mul(price_denominator)
+                .unwrap()
+                .checked_div(diff)
+                .unwrap()
+                .checked_div(liquidity_denominator)
+                .unwrap();
 
+            assert!(delta_y.gt(&U256::from(u64::MAX)));
+            assert_eq!(delta_y, U256::from(819937248758720934737797367u128));
+        }
         // position range below current price
         // L (by x) = x * sqrt(pu) * sqrt(pc)  / (sqrt(pu) - sqrt(pc))
         // L is greatest for max token amount and in minimal price difference for the highest price
