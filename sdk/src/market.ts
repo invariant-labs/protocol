@@ -181,6 +181,14 @@ export class Market {
       })
   }
 
+  public async onTickmapChange(tickmap: PublicKey, fn: (tickmap: Tickmap) => void) {
+    this.program.account.tickmap
+      .subscribe(tickmap, 'singleGossip') // REVIEW use recent commitment + allow overwrite via props
+      .on('change', (tickmapStructure: Tickmap) => {
+        fn(tickmapStructure)
+      })
+  }
+
   async getFeeTierAddress(feeTier: FeeTier) {
     return await getFeeTierAddress(feeTier, this.program.programId)
   }
