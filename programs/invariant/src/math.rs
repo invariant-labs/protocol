@@ -573,6 +573,7 @@ mod tests {
             };
             assert_eq!(result, expected_result)
         }
+        // TODO: test this case also for by_amount_out (it may not be possible)
         // if liquidity is high, small amount in should not push price
         {
             let current_price_sqrt = Price::from_scale(999500149965u128, 12);
@@ -698,6 +699,7 @@ mod tests {
             };
             assert_eq!(result, expected_result)
         }
+        // TODO: test with fee = 0
     }
 
     #[test]
