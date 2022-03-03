@@ -49,6 +49,8 @@ import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
 import { Keypair } from '@solana/web3.js'
 import { swapParameters } from './swap'
 import { LIQUIDITY_DENOMINATOR, toDecimal } from '@invariant-labs/sdk/lib/utils'
+import { priceToTickInRange } from '@invariant-labs/sdk/src/tick'
+import { MIN_TICK } from '@invariant-labs/sdk'
 
 describe('Math', () => {
   describe('Test sqrt price calculation', () => {
@@ -1428,6 +1430,210 @@ describe('Math', () => {
         xToY
       )
       assert.equal(isEnoughAmountToCross, true)
+    })
+  })
+  describe('test getTickFromPrice', () => {
+    const tickSpacing = 1
+    describe('around 0 tick', () => {
+      it('get tick at 1', async () => {
+        const sqrtPriceDecimal = { v: new BN(PRICE_DENOMINATOR) }
+        const tick = priceToTickInRange(sqrtPriceDecimal, MIN_TICK, MAX_TICK, tickSpacing)
+        assert.equal(tick, 0)
+      })
+      it('get tick slightly below 1', async () => {
+        const sqrtPriceDecimal = { v: new BN(PRICE_DENOMINATOR.subn(1)) }
+        const tick = priceToTickInRange(sqrtPriceDecimal, MIN_TICK, MAX_TICK, tickSpacing)
+        assert.equal(tick, -1)
+      })
+      it('get tick slightly above 1', async () => {
+        const sqrtPriceDecimal = { v: new BN(PRICE_DENOMINATOR.addn(1)) }
+        const tick = priceToTickInRange(sqrtPriceDecimal, MIN_TICK, MAX_TICK, tickSpacing)
+        assert.equal(tick, 0)
+      })
+    })
+    describe('around 1 tick', () => {
+      let sqrtPriceDecimal = calculatePriceSqrt(1)
+      const tickSpacing = 1
+      it('get tick at sqrt(1.0001)', async () => {
+        const tick = priceToTickInRange(sqrtPriceDecimal, MIN_TICK, MAX_TICK, tickSpacing)
+        assert.equal(tick, 1)
+      })
+      it('get tick slightly below sqrt(1.0001)', async () => {
+        const tick = priceToTickInRange(
+          { v: sqrtPriceDecimal.v.subn(1) },
+          MIN_TICK,
+          MAX_TICK,
+          tickSpacing
+        )
+        assert.equal(tick, 0)
+      })
+      it('get tick slightly above sqrt(1.0001)', async () => {
+        const tick = priceToTickInRange(
+          { v: sqrtPriceDecimal.v.addn(1) },
+          MIN_TICK,
+          MAX_TICK,
+          tickSpacing
+        )
+        assert.equal(tick, 1)
+      })
+    })
+    describe('around -1 tick', () => {
+      let sqrtPriceDecimal = calculatePriceSqrt(-1)
+      const tickSpacing = 1
+      it('get tick at sqrt(1.0001^(-1))', async () => {
+        const tick = priceToTickInRange(sqrtPriceDecimal, MIN_TICK, MAX_TICK, tickSpacing)
+        assert.equal(tick, -1)
+      })
+      it('get tick slightly below sqrt(1.0001^(-1))', async () => {
+        const tick = priceToTickInRange(
+          { v: sqrtPriceDecimal.v.subn(1) },
+          MIN_TICK,
+          MAX_TICK,
+          tickSpacing
+        )
+        assert.equal(tick, -2)
+      })
+      it('get tick slightly above sqrt(1.0001^(-1))', async () => {
+        const tick = priceToTickInRange(
+          { v: sqrtPriceDecimal.v.addn(1) },
+          MIN_TICK,
+          MAX_TICK,
+          tickSpacing
+        )
+        assert.equal(tick, -1)
+      })
+    })
+    describe('around max - 1 tick', () => {
+      let sqrtPriceDecimal = calculatePriceSqrt(MAX_TICK - 1)
+      const tickSpacing = 1
+      it('get tick at sqrt(1.0001^(MAX_TICK - 1))', async () => {
+        const tick = priceToTickInRange(sqrtPriceDecimal, MIN_TICK, MAX_TICK, tickSpacing)
+        assert.equal(tick, MAX_TICK - 1)
+      })
+      it('get tick slightly below sqrt(1.0001^(MAX_TICK - 1))', async () => {
+        const tick = priceToTickInRange(
+          { v: sqrtPriceDecimal.v.subn(1) },
+          MIN_TICK,
+          MAX_TICK,
+          tickSpacing
+        )
+        assert.equal(tick, MAX_TICK - 2)
+      })
+      it('get tick slightly above sqrt(1.0001^(MAX_TICK - 1))', async () => {
+        const tick = priceToTickInRange(
+          { v: sqrtPriceDecimal.v.addn(1) },
+          MIN_TICK,
+          MAX_TICK,
+          tickSpacing
+        )
+        assert.equal(tick, MAX_TICK - 1)
+      })
+    })
+    describe('around min + 1 tick', () => {
+      let sqrtPriceDecimal = calculatePriceSqrt(MIN_TICK + 1)
+      const tickSpacing = 1
+      it('get tick at sqrt(1.0001^(-MAX_TICK + 1))', async () => {
+        const tick = priceToTickInRange(sqrtPriceDecimal, MIN_TICK, MAX_TICK, tickSpacing)
+        assert.equal(tick, MIN_TICK + 1)
+      })
+      it('get tick slightly below sqrt(1.0001^(-MAX_TICK + 1))', async () => {
+        const tick = priceToTickInRange(
+          { v: sqrtPriceDecimal.v.subn(1) },
+          MIN_TICK,
+          MAX_TICK,
+          tickSpacing
+        )
+        assert.equal(tick, MIN_TICK)
+      })
+      it('get tick slightly above sqrt(1.0001^(-MAX_TICK + 1))', async () => {
+        const tick = priceToTickInRange(
+          { v: sqrtPriceDecimal.v.addn(1) },
+          MIN_TICK,
+          MAX_TICK,
+          tickSpacing
+        )
+        assert.equal(tick, MIN_TICK + 1)
+      })
+    })
+    describe('get tick slightly below and above', () => {
+      const maxSqrtPrice = calculatePriceSqrt(MAX_TICK)
+      const minSqrtPrice = calculatePriceSqrt(MIN_TICK)
+
+      const tickSpacing = 1
+      it('below', async () => {
+        const tick = priceToTickInRange(
+          { v: maxSqrtPrice.v.subn(1) },
+          -MAX_TICK,
+          MAX_TICK + 1,
+          tickSpacing
+        )
+        assert.equal(tick, MAX_TICK - 1)
+      })
+      it('above', async () => {
+        const tick = priceToTickInRange(
+          { v: minSqrtPrice.v.addn(1) },
+          -MAX_TICK,
+          MAX_TICK,
+          tickSpacing
+        )
+        assert.equal(tick, MIN_TICK)
+      })
+    })
+    describe('around 19_999 tick', () => {
+      const tickSpacing = 1
+      const expectedTick = 19_999
+      let sqrtPriceDecimal = calculatePriceSqrt(expectedTick)
+
+      it('get tick at sqrt(1.0001^19_999)', async () => {
+        const tick = priceToTickInRange(sqrtPriceDecimal, MIN_TICK, MAX_TICK, tickSpacing)
+        assert.equal(tick, expectedTick)
+      })
+      it('get tick slightly below sqrt(1.0001^19_999)', async () => {
+        const tick = priceToTickInRange(
+          { v: sqrtPriceDecimal.v.subn(1) },
+          MIN_TICK,
+          MAX_TICK,
+          tickSpacing
+        )
+        assert.equal(tick, expectedTick - 1)
+      })
+      it('get tick slightly above sqrt(1.0001^19_999)', async () => {
+        const tick = priceToTickInRange(
+          { v: sqrtPriceDecimal.v.addn(1) },
+          MIN_TICK,
+          MAX_TICK,
+          tickSpacing
+        )
+        assert.equal(tick, expectedTick)
+      })
+    })
+    describe('around -19_999 tick', () => {
+      const tickSpacing = 1
+      const expectedTick = -19_999
+      let sqrtPriceDecimal = calculatePriceSqrt(expectedTick)
+
+      it('get tick at sqrt(1.0001^-19_999)', async () => {
+        const tick = priceToTickInRange(sqrtPriceDecimal, MIN_TICK, MAX_TICK, tickSpacing)
+        assert.equal(tick, expectedTick)
+      })
+      it('get tick slightly below sqrt(1.0001^-19_999)', async () => {
+        const tick = priceToTickInRange(
+          { v: sqrtPriceDecimal.v.subn(1) },
+          MIN_TICK,
+          MAX_TICK,
+          tickSpacing
+        )
+        assert.equal(tick, expectedTick - 1)
+      })
+      it('get tick slightly above sqrt(1.0001^-19_999)', async () => {
+        const tick = priceToTickInRange(
+          { v: sqrtPriceDecimal.v.addn(1) },
+          MIN_TICK,
+          MAX_TICK,
+          tickSpacing
+        )
+        assert.equal(tick, expectedTick)
+      })
     })
   })
 })

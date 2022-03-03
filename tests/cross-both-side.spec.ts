@@ -272,42 +272,42 @@ describe('swap with cross both side', () => {
 
     // Add massive amount of liquidity to test extreme case of high accuracy
     // OVERFLOW HAPPENS
-    // const massiveLiquidityAmountX = new BN(10).pow(new BN(19))
-    // const massiveLiquidityAmountY = new BN(10).pow(new BN(19))
+    const massiveLiquidityAmountX = new BN(10).pow(new BN(19))
+    const massiveLiquidityAmountY = new BN(10).pow(new BN(19))
 
-    // await tokenX.mintTo(
-    //   userTokenXAccount,
-    //   mintAuthority.publicKey,
-    //   [mintAuthority],
-    //   tou64(massiveLiquidityAmountX)
-    // )
-    // await tokenY.mintTo(
-    //   userTokenYAccount,
-    //   mintAuthority.publicKey,
-    //   [mintAuthority],
-    //   tou64(massiveLiquidityAmountY)
-    // )
+    await tokenX.mintTo(
+      userTokenXAccount,
+      mintAuthority.publicKey,
+      [mintAuthority],
+      tou64(massiveLiquidityAmountX)
+    )
+    await tokenY.mintTo(
+      userTokenYAccount,
+      mintAuthority.publicKey,
+      [mintAuthority],
+      tou64(massiveLiquidityAmountY)
+    )
 
-    // const currentPrice = (await market.getPool(pair)).sqrtPrice
-    // const { liquidity: massiveLiquidityDelta } = getLiquidityByX(
-    //   massiveLiquidityAmountX,
-    //   -20,
-    //   0,
-    //   currentPrice,
-    //   false,
-    //   feeTier.tickSpacing
-    // )
+    const currentPrice = (await market.getPool(pair)).sqrtPrice
+    const { liquidity: massiveLiquidityDelta } = getLiquidityByX(
+      massiveLiquidityAmountX,
+      -20,
+      0,
+      currentPrice,
+      false,
+      feeTier.tickSpacing
+    )
 
-    // const massiveInitPositionMassive: InitPosition = {
-    //   pair,
-    //   owner: positionOwner.publicKey,
-    //   userTokenX: userTokenXAccount,
-    //   userTokenY: userTokenYAccount,
-    //   lowerTick: -20,
-    //   upperTick: 0,
-    //   liquidityDelta: massiveLiquidityDelta
-    // }
-    // await market.initPosition(massiveInitPositionMassive, positionOwner)
+    const massiveInitPositionMassive: InitPosition = {
+      pair,
+      owner: positionOwner.publicKey,
+      userTokenX: userTokenXAccount,
+      userTokenY: userTokenYAccount,
+      lowerTick: -20,
+      upperTick: 0,
+      liquidityDelta: massiveLiquidityDelta
+    }
+    await market.initPosition(massiveInitPositionMassive, positionOwner)
 
     // Crossing tick with descending price and by 1 token amount out (with massive liquidity ~1/2 liquidity)
     const swapCrossingDecreasingByAmountOutVars: Swap = {

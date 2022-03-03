@@ -29,7 +29,12 @@ export const getTickFromPrice = (
   }
 }
 
-const priceToTickInRange = (price: Decimal, low: number, high: number, step: number): number => {
+export const priceToTickInRange = (
+  price: Decimal,
+  low: number,
+  high: number,
+  step: number
+): number => {
   assert.ok(step !== 0)
 
   low = Math.floor(low / step)
@@ -54,4 +59,16 @@ const priceToTickInRange = (price: Decimal, low: number, high: number, step: num
   }
 
   return low * step
+}
+
+export const alignTickToSpacing = (inputTick: number, tickSpacing: number): number => {
+  if (inputTick > 0) {
+    return inputTick - (inputTick % tickSpacing)
+  } else {
+    return inputTick - remEuklid(inputTick, tickSpacing)
+  }
+}
+
+const remEuklid = (a, b): number => {
+  return ((a % b) + b) % b
 }
