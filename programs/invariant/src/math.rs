@@ -573,11 +573,10 @@ mod tests {
             };
             assert_eq!(result, expected_result)
         }
-
-        //if liquidity is high, small amount in should not push price
+        // if liquidity is high, small amount in should not push price
         {
-            let current_price_sqrt = Price::new(999500149965_000000000000);
-            let target_price_sqrt = Price::new(1999500149965_000000000000);
+            let current_price_sqrt = Price::from_scale(999500149965u128, 12);
+            let target_price_sqrt = Price::from_scale(1999500149965u128, 12);
             let liquidity = Liquidity::from_integer(100_000000000000_000000000000u128);
             let amount = TokenAmount(10);
             let by_amount_in = true;
@@ -599,10 +598,10 @@ mod tests {
             };
             assert_eq!(result, expected_result)
         }
-        // amount_in > u64 when liquidity > 2^64 (amount = 1)
+        // amount_in > u64 for swap to target price and when liquidity > 2^64
         {
-            let current_price_sqrt = Price::new(1_000000000000_000000000000);
-            let target_price_sqrt = Price::new(1_000050000000_000000000000);
+            let current_price_sqrt = Price::from_integer(1);
+            let target_price_sqrt = Price::from_scale(100005, 5); // 1.00005
             let liquidity = Liquidity::from_integer(368944000000_000000000000u128);
             let amount = TokenAmount(1);
             let by_amount_in = true;
@@ -624,10 +623,10 @@ mod tests {
             };
             assert_eq!(result, expected_result)
         }
-        // amount_out > u64 when liquidity > 2^64 (amount = 1)
+        // amount_out > u64 for swap to target price and when liquidity > 2^64
         {
-            let current_price_sqrt = Price::new(1_000000000000_000000000000);
-            let target_price_sqrt = Price::new(1_000050000000_000000000000);
+            let current_price_sqrt = Price::from_integer(1);
+            let target_price_sqrt = Price::from_scale(100005, 5); // 1.00005
             let liquidity = Liquidity::from_integer(368944000000_000000000000u128);
             let amount = TokenAmount(1);
             let by_amount_in = false;
@@ -649,12 +648,12 @@ mod tests {
             };
             assert_eq!(result, expected_result)
         }
-        // liquidity = 0 for by_amount_in true
+        // liquidity is zero and by amount_in should skip to target price
         {
-            let current_price_sqrt = Price::new(1_000000000000_000000000000);
-            let target_price_sqrt = Price::new(1_000050000000_000000000000);
+            let current_price_sqrt = Price::from_integer(1);
+            let target_price_sqrt = Price::from_scale(100005, 5); // 1.00005
             let liquidity = Liquidity::new(0);
-            let amount = TokenAmount(1);
+            let amount = TokenAmount(100000);
             let by_amount_in = true;
             let fee = FixedPoint::from_scale(6, 4); // 0.0006 -> 0.06%
 
@@ -674,12 +673,12 @@ mod tests {
             };
             assert_eq!(result, expected_result)
         }
-        // liquidity = 0 for by_amount_in false
+        // liquidity is zero and by amount_out should skip to target price
         {
-            let current_price_sqrt = Price::new(1_000000000000_000000000000);
-            let target_price_sqrt = Price::new(1_000050000000_000000000000);
+            let current_price_sqrt = Price::from_integer(1);
+            let target_price_sqrt = Price::from_scale(100005, 5); // 1.00005
             let liquidity = Liquidity::new(0);
-            let amount = TokenAmount(1);
+            let amount = TokenAmount(100000);
             let by_amount_in = false;
             let fee = FixedPoint::from_scale(6, 4); // 0.0006 -> 0.06%
 
