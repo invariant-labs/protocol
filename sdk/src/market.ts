@@ -181,6 +181,11 @@ export class Market {
       })
   }
 
+  public async unsubscribeTick(pair: Pair, index: number, fn: (tick: Tick) => void): Promise<void> {
+    const { tickAddress } = await this.getTickAddress(pair, index)
+    return await this.program.account.tick.unsubscribe(tickAddress)
+  }
+
   public async onTickmapChange(tickmap: PublicKey, fn: (tickmap: Tickmap) => void) {
     this.program.account.tickmap
       .subscribe(tickmap, 'singleGossip') // REVIEW use recent commitment + allow overwrite via props
