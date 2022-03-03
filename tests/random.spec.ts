@@ -73,7 +73,7 @@ describe('random', () => {
     const amount = new BN(1e9)
 
     const chunk = 200
-    const repeats = Infinity
+    const repeats = 4
 
     for (let i = 0; i < repeats; i++) {
       const swaps = new Array(chunk).fill(0).map(async (_, i) => {
