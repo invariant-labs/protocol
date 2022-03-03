@@ -110,6 +110,7 @@ export const tickToPosition = (tick: BN, tickSpacing: BN): TickPosition => {
 export const findTickmapChanges = (
   currentTickmap: number[],
   nextTickmap: number[],
+  tickSpacing: number = 1,
   offset: number = -TICK_LIMIT
 ): TickmapChange => {
   if (currentTickmap.length !== nextTickmap.length) {
@@ -126,7 +127,7 @@ export const findTickmapChanges = (
           const added = (nextByte & (1 << bit)) !== 0
           tickmapChanges = {
             ...tickmapChanges,
-            [i * 8 + bit + offset]: added ? 'added' : 'removed'
+            [(i * 8 + bit + offset) * tickSpacing]: added ? 'added' : 'removed'
           }
         }
       }

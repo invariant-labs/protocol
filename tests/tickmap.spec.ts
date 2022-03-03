@@ -143,7 +143,7 @@ describe('tickmap', () => {
       const currentTickmap = [0b0000_0000, 0b0000_1101]
       const nextTickmap = [0b0000_0011, 0b0110_1111]
       it('without offset', () => {
-        const tickmapChanges = findTickmapChanges(currentTickmap, nextTickmap, 0)
+        const tickmapChanges = findTickmapChanges(currentTickmap, nextTickmap, 1, 0)
         const expected: TickmapChange = {
           0: 'added',
           1: 'added',
@@ -153,14 +153,14 @@ describe('tickmap', () => {
         }
         assert.equal(JSON.stringify(tickmapChanges), JSON.stringify(expected))
       })
-      it('with default offset', () => {
-        const tickmapChangesWithOffset = findTickmapChanges(currentTickmap, nextTickmap)
+      it('with default offset and custom tick spacing', () => {
+        const tickmapChangesWithOffset = findTickmapChanges(currentTickmap, nextTickmap, 2)
         const expectedWithOffset: TickmapChange = {
-          '-100000': 'added',
-          '-99999': 'added',
-          '-99991': 'added',
-          '-99987': 'added',
-          '-99986': 'added'
+          '-200000': 'added',
+          '-199998': 'added',
+          '-199982': 'added',
+          '-199974': 'added',
+          '-199972': 'added'
         }
         assert.equal(JSON.stringify(tickmapChangesWithOffset), JSON.stringify(expectedWithOffset))
       })
@@ -169,7 +169,7 @@ describe('tickmap', () => {
       const currentTickmap = [0b0111_1011, 0b1110_1111]
       const nextTickmap = [0b0010_0010, 0b1000_1111]
       it('without offset', () => {
-        const tickmapChanges = findTickmapChanges(currentTickmap, nextTickmap, 0)
+        const tickmapChanges = findTickmapChanges(currentTickmap, nextTickmap, 1, 0)
         const expected: TickmapChange = {
           0: 'removed',
           3: 'removed',
@@ -180,15 +180,15 @@ describe('tickmap', () => {
         }
         assert.equal(JSON.stringify(tickmapChanges), JSON.stringify(expected))
       })
-      it('with default offset', () => {
-        const tickmapChangesWithOffset = findTickmapChanges(currentTickmap, nextTickmap)
+      it('with default offset and tick spacing', () => {
+        const tickmapChangesWithOffset = findTickmapChanges(currentTickmap, nextTickmap, 2)
         const expectedWithOffset: TickmapChange = {
-          '-100000': 'removed',
-          '-99997': 'removed',
-          '-99996': 'removed',
-          '-99994': 'removed',
-          '-99987': 'removed',
-          '-99986': 'removed'
+          '-200000': 'removed',
+          '-199994': 'removed',
+          '-199992': 'removed',
+          '-199988': 'removed',
+          '-199974': 'removed',
+          '-199972': 'removed'
         }
         assert.equal(JSON.stringify(tickmapChangesWithOffset), JSON.stringify(expectedWithOffset))
       })
