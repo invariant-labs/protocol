@@ -728,49 +728,45 @@ mod tests {
 
     #[test]
     fn test_calculate_price_sqrt() {
-        // {
-        //     let result = calculate_price_sqrt(0);
-        //     assert_eq!(result, Price::from_integer(1));
-        // }
-        // {
-        //     // // test every single tick, takes a while
-        //     // let mut prev = Decimal::new(u128::MAX.into());
-        //     // for i in (((-MAX_TICK / 2) + 1)..(MAX_TICK / 2)).rev() {
-        //     //     let result = calculate_price_sqrt(i * 2);
-        //     //     assert!(result != Decimal::new(0));
-        //     //     assert_eq!(result, Decimal::from_decimal(10001, 4).pow(i.into()));
-        //     //     assert!(result < prev);
-        //     //     prev = result;
-        //     // }
-        // }
-        // {
-        //     let price_sqrt = calculate_price_sqrt(20_000);
-        //     // expected 2.718145925979
-        //     // real     2.718145926825...
-        //     assert_eq!(price_sqrt, Price::from_scale(2718145925979u128, 12));
-        // }
-        // {
-        //     let price_sqrt = calculate_price_sqrt(200_000);
-        //     // expected 22015.455979766288
-        //     // real     22015.456048527954...
-        //     assert_eq!(price_sqrt, Price::from_scale(22015455979766288u128, 12));
-        // }
-        // {
-        //     let price_sqrt = calculate_price_sqrt(-20_000);
-        //     // expected 0.367897834491
-        //     // real     0.36789783437712...
-        //     assert_eq!(price_sqrt, Price::from_scale(367897834491u128, 12));
-        // }
-        // {
-        //     let price_sqrt = calculate_price_sqrt(-200_000);
-        //     // expected 0.000045422634
-        //     // real     0.00004542263388...
-        //     assert_eq!(price_sqrt, Price::from_scale(45422634u128, 12))
-        // }
-        // max
         {
-            let price_sqrt = calculate_price_sqrt(MAX_TICK + 5);
-            println!("price_sqrt = {:?}", price_sqrt);
+            let price_sqrt = calculate_price_sqrt(20_000);
+            // expected 2.718145925979
+            // real     2.718145926825...
+            assert_eq!(price_sqrt, Price::from_scale(2718145925979u128, 12));
+        }
+        {
+            let price_sqrt = calculate_price_sqrt(200_000);
+            // expected 22015.455979766288
+            // real     22015.456048527954...
+            assert_eq!(price_sqrt, Price::from_scale(22015455979766288u128, 12));
+        }
+        {
+            let price_sqrt = calculate_price_sqrt(-20_000);
+            // expected 0.367897834491
+            // real     0.36789783437712...
+            assert_eq!(price_sqrt, Price::from_scale(367897834491u128, 12));
+        }
+        {
+            let price_sqrt = calculate_price_sqrt(-200_000);
+            // expected 0.000045422634
+            // real     0.00004542263388...
+            assert_eq!(price_sqrt, Price::from_scale(45422634u128, 12))
+        }
+        {
+            let price_sqrt = calculate_price_sqrt(0);
+            assert_eq!(price_sqrt, Price::from_integer(1));
+        }
+        {
+            let price_sqrt = calculate_price_sqrt(MAX_TICK);
+            // expected 65535.383934512647
+            // real     65535.384161610681...
+            assert_eq!(price_sqrt, Price::from_scale(65535383934512647u128, 12))
+        }
+        {
+            let price_sqrt = calculate_price_sqrt(-MAX_TICK);
+            // expected 0.000015258932
+            // real     0.0000152589324...
+            assert_eq!(price_sqrt, Price::from_scale(15258932u128, 12))
         }
     }
 
