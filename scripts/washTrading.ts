@@ -1,3 +1,4 @@
+import * as fs from 'fs'
 import { Provider } from '@project-serum/anchor'
 import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
 import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
@@ -6,6 +7,8 @@ import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Market, Pair, tou64 } from '@invariant-labs/sdk/src'
 import { FEE_TIERS, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { Swap } from '@invariant-labs/sdk/src/market'
+import { BN } from '../sdk-staker/lib'
+import { U128MAX } from '@invariant-labs/sdk/lib/utils'
 
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
@@ -16,11 +19,17 @@ const provider = Provider.local(clusterApiUrl('devnet'), {
 })
 
 const connection = provider.connection
+const dirPath = './logs/washTrading'
 
 // @ts-expect-error
 const wallet = provider.wallet.payer as Keypair
 
 const main = async () => {
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true })
+  }
+  const filePath = `${dirPath}/washTrading-${Date.now()}`
+
   const market = await Market.build(Network.DEV, provider.wallet, connection)
 
   const pair = new Pair(
@@ -54,12 +63,31 @@ const main = async () => {
       accountY: accountY,
       amount: tou64(amount),
       byAmountIn: true,
-      estimatedPriceAfterSwap: pool.sqrtPrice,
+      estimatedPriceAfterSwap: side ? { v: new BN(1) } : { v: U128MAX },
       slippage: toDecimal(2, 2),
       pair,
       owner: MINTER.publicKey
     }
-    await market.swap(swapVars, MINTER)
+
+    try {
+      await market.swap(swapVars, MINTER)
+    } catch (err: any) {
+      const swapDetails = `swap details:\nxToY: ${
+        // trunk-ignore(eslint/@typescript-eslint/restrict-template-expressions)
+        swapVars.xToY
+      }\namount: ${swapVars.amount.toString()}\nestimatedPriceAfterSwap: ${swapVars.estimatedPriceAfterSwap.v.toString()}\n`
+      const poolDetails = `pool details:\ncurrentTickIndex: ${
+        pool.currentTickIndex
+      }\nliquidity: ${pool.liquidity.v.toString()}\nsqrtPrice: ${pool.sqrtPrice.v.toString()}\n`
+
+      fs.appendFileSync(filePath, swapDetails)
+      fs.appendFileSync(filePath, poolDetails)
+      // trunk-ignore(eslint/@typescript-eslint/restrict-template-expressions)
+      fs.appendFileSync(filePath, `error: ${err.toString()}`)
+      console.log('Finished unsuccessfully')
+      continue
+    }
+    console.log('Finished successfully')
   }
 }
 // trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
