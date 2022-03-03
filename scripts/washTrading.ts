@@ -42,18 +42,14 @@ const main = async () => {
   const accountX = await tokenX.createAccount(MINTER.publicKey)
   const accountY = await tokenY.createAccount(MINTER.publicKey)
 
+  await tokenX.mintTo(accountX, MINTER, [], tou64(1e18))
+  await tokenY.mintTo(accountY, MINTER, [], tou64(1e18))
+
   while (true) {
-    const amount = Math.floor(Math.random() * 1000000) + 1000000 // amount should be between 1000 and 2000
+    const start = Date.now()
 
     const side = Math.random() > 0.5
-
-    if (side) {
-      await tokenX.mintTo(accountX, MINTER, [], tou64(amount))
-    } else {
-      await tokenY.mintTo(accountY, MINTER, [], tou64(amount))
-    }
-
-    const pool = await market.getPool(pair)
+    const amount = 0 // To be estimated for certain prepared pool
 
     console.log(`swap ${side ? 'x -> y' : 'y -> x'}: ${amount}`)
 
@@ -72,22 +68,22 @@ const main = async () => {
     try {
       await market.swap(swapVars, MINTER)
     } catch (err: any) {
+      const pool = await market.getPool(pair)
       const swapDetails = `swap details:\nxToY: ${
         // trunk-ignore(eslint/@typescript-eslint/restrict-template-expressions)
         swapVars.xToY
-      }\namount: ${swapVars.amount.toString()}\nestimatedPriceAfterSwap: ${swapVars.estimatedPriceAfterSwap.v.toString()}\n`
+      }\namount: ${swapVars.amount.toString()}\n`
       const poolDetails = `pool details:\ncurrentTickIndex: ${
         pool.currentTickIndex
-      }\nliquidity: ${pool.liquidity.v.toString()}\nsqrtPrice: ${pool.sqrtPrice.v.toString()}\n`
+      }\nliquidity: ${pool.liquidity.v.toString()}\n`
 
       fs.appendFileSync(filePath, swapDetails)
       fs.appendFileSync(filePath, poolDetails)
       // trunk-ignore(eslint/@typescript-eslint/restrict-template-expressions)
       fs.appendFileSync(filePath, `error: ${err.toString()}`)
-      console.log('Finished unsuccessfully')
       continue
     }
-    console.log('Finished successfully')
+    console.log(`time: ${Date.now() - start}`)
   }
 }
 // trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
