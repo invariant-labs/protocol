@@ -1,6 +1,12 @@
 import { TICK_SEARCH_RANGE, TICK_LIMIT, MAX_TICK } from '@invariant-labs/sdk'
 import { Tickmap } from '@invariant-labs/sdk/lib/market'
-import { getNextTick, getPreviousTick, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
+import {
+  findTickmapChanges,
+  getNextTick,
+  getPreviousTick,
+  TickmapChange,
+  tickToPosition
+} from '@invariant-labs/sdk/src/tickmap'
 import { BN } from '@project-serum/anchor'
 import { assert } from 'chai'
 
@@ -131,5 +137,35 @@ describe('tickmap', () => {
 
       assert.ok(getPreviousTick(tickmap, TICK_LIMIT - 1, 1) === null)
     })
+  })
+  describe.only('findTickmapChanges', () => {
+    describe('added', async () => {
+      // 00000000 10110000 -> 11000000 11110110
+      const currentTickmap = [0, 13]
+      const nextTickmap = [3, 111]
+      it('added without offset', async () => {
+        const tickmapChanges = findTickmapChanges(currentTickmap, nextTickmap, 0)
+        const expected: TickmapChange = {
+          0: 'added',
+          1: 'added',
+          9: 'added',
+          13: 'added',
+          14: 'added'
+        }
+        assert.equal(JSON.stringify(tickmapChanges), JSON.stringify(expected))
+      })
+      it('added with offset', async () => {
+        const tickmapChangesWithOffset = findTickmapChanges(currentTickmap, nextTickmap)
+        const expectedWithOffset: TickmapChange = {
+          '-100000': 'added',
+          '-99999': 'added',
+          '-99991': 'added',
+          '-99987': 'added',
+          '-99986': 'added'
+        }
+        assert.equal(JSON.stringify(tickmapChangesWithOffset), JSON.stringify(expectedWithOffset))
+      })
+    })
+    describe('removed', async () => {})
   })
 })
