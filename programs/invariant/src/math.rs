@@ -1328,6 +1328,48 @@ mod tests {
             );
             assert_eq!(result, true);
         }
+        // zero amount
+        {
+            let max_liquidity = Liquidity::from_integer(340282366920938463463374607u128);
+            let zero_amount = TokenAmount(0);
+
+            let result_by_amount_out_x_to_y = is_enough_amount_to_push_price(
+                zero_amount,
+                current_price_sqrt,
+                max_liquidity,
+                fee,
+                false,
+                true,
+            );
+            let result_by_amount_out_y_to_x = is_enough_amount_to_push_price(
+                zero_amount,
+                current_price_sqrt,
+                max_liquidity,
+                fee,
+                false,
+                false,
+            );
+            let result_by_amount_in_x_to_y = is_enough_amount_to_push_price(
+                zero_amount,
+                current_price_sqrt,
+                max_liquidity,
+                fee,
+                true,
+                true,
+            );
+            let result_by_amount_in_y_to_x = is_enough_amount_to_push_price(
+                zero_amount,
+                current_price_sqrt,
+                max_liquidity,
+                fee,
+                true,
+                false,
+            );
+            assert_eq!(result_by_amount_out_x_to_y, false);
+            assert_eq!(result_by_amount_out_y_to_x, false);
+            assert_eq!(result_by_amount_in_x_to_y, false);
+            assert_eq!(result_by_amount_in_y_to_x, false);
+        }
         // should always be enough amount to cross tick when pool liquidity is zero
         {
             let no_liquidity = Decimal::new(0);
