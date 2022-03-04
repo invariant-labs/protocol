@@ -310,7 +310,6 @@ fn get_next_sqrt_price_y_down(
                 .checked_mul(U256::from(PRICE_LIQUIDITY_DENOMINATOR))
                 .unwrap(),
         );
-        assert!(!quotient.is_zero());
         price_sqrt - quotient
     }
 }
