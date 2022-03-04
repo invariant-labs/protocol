@@ -572,7 +572,48 @@ mod tests {
             };
             assert_eq!(result, expected_result)
         }
-        // TODO: case when price not changed
+        // by_amount_out and x_to_y edge cases
+        {
+            let target_price_sqrt = calculate_price_sqrt(-10);
+            let current_price_sqrt = target_price_sqrt + Price::from_integer(1);
+            let liquidity = Liquidity::from_integer(340282366920938463463374607u128);
+            let one_token = TokenAmount(1);
+            let zero_token = TokenAmount(0);
+            let by_amount_in = false;
+            let max_fee = FixedPoint::from_scale(9, 1);
+            let min_fee = FixedPoint::from_integer(0);
+
+            let one_token_result = compute_swap_step(
+                current_price_sqrt,
+                target_price_sqrt,
+                liquidity,
+                one_token,
+                by_amount_in,
+                max_fee,
+            );
+            let zero_token_result = compute_swap_step(
+                current_price_sqrt,
+                target_price_sqrt,
+                liquidity,
+                zero_token,
+                by_amount_in,
+                min_fee,
+            );
+            let expected_one_token_result = SwapResult {
+                next_price_sqrt: current_price_sqrt - Price::new(1),
+                amount_in: TokenAmount(86),
+                amount_out: TokenAmount(1),
+                fee_amount: TokenAmount(78),
+            };
+            let expected_zero_token_result = SwapResult {
+                next_price_sqrt: current_price_sqrt,
+                amount_in: TokenAmount(0),
+                amount_out: TokenAmount(0),
+                fee_amount: TokenAmount(0),
+            };
+            assert_eq!(one_token_result, expected_one_token_result);
+            assert_eq!(zero_token_result, expected_zero_token_result);
+        }
     }
 
     #[test]
