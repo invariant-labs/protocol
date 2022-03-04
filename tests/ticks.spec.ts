@@ -1,7 +1,6 @@
 import { assert } from 'chai'
-import { calculatePriceSqrt, MAX_TICK } from '@invariant-labs/sdk'
+import { calculatePriceSqrt, MAX_TICK, MIN_TICK } from '@invariant-labs/sdk'
 import { alignTickToSpacing, priceToTickInRange } from '@invariant-labs/sdk/src/tick'
-import { MIN_TICK } from '@invariant-labs/sdk'
 
 describe('Ticks test', () => {
   describe('test all positive ticks', () => {
@@ -9,7 +8,7 @@ describe('Ticks test', () => {
       const tickSpacing = 1
       for (let n = 0; n < MAX_TICK; n++) {
         const expectedTick = n
-        let sqrtPriceDecimal = calculatePriceSqrt(expectedTick)
+        const sqrtPriceDecimal = calculatePriceSqrt(expectedTick)
 
         const tickAtPrice = priceToTickInRange(sqrtPriceDecimal, MIN_TICK, MAX_TICK, tickSpacing)
         assert.equal(tickAtPrice, expectedTick)
@@ -37,7 +36,7 @@ describe('Ticks test', () => {
       const tickSpacing = 1
       for (let n = 0; n < MAX_TICK; n++) {
         const expectedTick = -n
-        let sqrtPriceDecimal = calculatePriceSqrt(expectedTick)
+        const sqrtPriceDecimal = calculatePriceSqrt(expectedTick)
 
         const tickAtPrice = priceToTickInRange(sqrtPriceDecimal, MIN_TICK, MAX_TICK, tickSpacing)
         assert.equal(tickAtPrice, expectedTick)
@@ -65,7 +64,7 @@ describe('Ticks test', () => {
       const tickSpacing = 3
       for (let n = 0; n < MAX_TICK - 1; n++) {
         const tick = n
-        let sqrtPriceDecimal = calculatePriceSqrt(tick)
+        const sqrtPriceDecimal = calculatePriceSqrt(tick)
 
         // get tick at sqrt(1.0001^(n))
         const expectedTick = alignTickToSpacing(tick, tickSpacing)
@@ -100,7 +99,7 @@ describe('Ticks test', () => {
       const tickSpacing = 4
       for (let n = 0; n < MAX_TICK; n++) {
         const tick = -n
-        let sqrtPriceDecimal = calculatePriceSqrt(tick)
+        const sqrtPriceDecimal = calculatePriceSqrt(tick)
 
         // get tick at sqrt(1.0001^(n))
         const expectedTick = alignTickToSpacing(tick, tickSpacing)

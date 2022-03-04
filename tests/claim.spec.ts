@@ -1,7 +1,7 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
-import { Network, Market, Pair, PRICE_DENOMINATOR, tou64 } from '@invariant-labs/sdk'
+import { Network, Market, Pair, tou64, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken, initEverything } from './testUtils'
 import { assert } from 'chai'
@@ -9,7 +9,6 @@ import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { ClaimFee, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
-import { LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('claim', () => {
   const provider = Provider.local()
