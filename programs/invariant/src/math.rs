@@ -573,7 +573,31 @@ mod tests {
             };
             assert_eq!(result, expected_result)
         }
-        // TODO: test this case also for by_amount_out (it may not be possible)
+        // empty swap step by amount out when price is at tick
+        {
+            let current_price_sqrt = Price::new(999500149965_000000000000);
+            let target_price_sqrt = Price::new(999500149965_000000000000);
+            let liquidity = Liquidity::new(20006000000000000000);
+            let amount = TokenAmount(1_000_000);
+            let by_amount_in = false;
+            let fee = FixedPoint::from_scale(6, 4); // 0.0006 -> 0.06%
+
+            let result = compute_swap_step(
+                current_price_sqrt,
+                target_price_sqrt,
+                liquidity,
+                amount,
+                by_amount_in,
+                fee,
+            );
+            let expected_result = SwapResult {
+                next_price_sqrt: current_price_sqrt,
+                amount_in: TokenAmount(0),
+                amount_out: TokenAmount(0),
+                fee_amount: TokenAmount(0),
+            };
+            assert_eq!(result, expected_result)
+        }
         // if liquidity is high, small amount in should not push price
         {
             let current_price_sqrt = Price::from_scale(999500149965u128, 12);
@@ -699,7 +723,31 @@ mod tests {
             };
             assert_eq!(result, expected_result)
         }
-        // TODO: test with fee = 0
+        // normal swap step but fee is set to 0
+        {
+            let current_price_sqrt = Price::from_scale(99995, 5); // 0.99995
+            let target_price_sqrt = Price::from_integer(1);
+            let liquidity = Liquidity::from_integer(50000000);
+            let amount = TokenAmount(1000);
+            let by_amount_in = true;
+            let fee = FixedPoint::new(0);
+
+            let result = compute_swap_step(
+                current_price_sqrt,
+                target_price_sqrt,
+                liquidity,
+                amount,
+                by_amount_in,
+                fee,
+            );
+            let expected_result = SwapResult {
+                next_price_sqrt: Price::from_scale(99997, 5),
+                amount_in: TokenAmount(1000),
+                amount_out: TokenAmount(1000),
+                fee_amount: TokenAmount(0),
+            };
+            assert_eq!(result, expected_result)
+        }
     }
 
     #[test]
