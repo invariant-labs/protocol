@@ -51,6 +51,7 @@ import { swapParameters } from './swap'
 import { LIQUIDITY_DENOMINATOR, toDecimal } from '@invariant-labs/sdk/lib/utils'
 import { priceToTickInRange } from '@invariant-labs/sdk/src/tick'
 import { MIN_TICK } from '@invariant-labs/sdk'
+import { connected } from 'process'
 
 describe('Math', () => {
   describe('Test sqrt price calculation', () => {
@@ -844,7 +845,7 @@ describe('Math', () => {
         const amount: BN = new BN('37')
 
         const result = getNextPriceXUp(price, liquidity, amount, false)
-        const expectedResult: Decimal = { v: new BN('7490636704119834280183478') }
+        const expectedResult: Decimal = { v: new BN('7490636704119859529520682') }
 
         assert.ok(result.v.eq(expectedResult.v))
       })

@@ -4,6 +4,7 @@ import { Decimal, Tick, Tickmap } from './market'
 import {
   DECIMAL,
   DENOMINATOR,
+  FEE_DENOMINATOR,
   getMaxTick,
   getMinTick,
   LIQUIDITY_DENOMINATOR,
@@ -68,9 +69,11 @@ export const calculatePriceSqrt = (tickIndex: number): Decimal => {
   if ((tick & 0x20000) !== 0) price = price.mul(new BN('701536086265529')).div(DENOMINATOR)
 
   if (tickIndex < 0) {
-    price = DENOMINATOR.mul(DENOMINATOR)
-      .div(price)
-      .mul(new BN(10).pow(new BN(PRICE_SCALE - DECIMAL)))
+    return {
+      v: DENOMINATOR.mul(DENOMINATOR)
+        .div(price)
+        .mul(new BN(10).pow(new BN(PRICE_SCALE - DECIMAL)))
+    }
   }
 
   return { v: price.mul(new BN(10).pow(new BN(PRICE_SCALE - DECIMAL))) }
@@ -167,7 +170,7 @@ export const calculateSwapStep = (
   if (byAmountIn && !nextPrice.v.eq(targetPrice.v)) {
     feeAmount = amount.sub(amountIn)
   } else {
-    feeAmount = fee.v.mul(amountIn).add(DENOMINATOR.subn(1)).div(DENOMINATOR)
+    feeAmount = amountIn.mul(fee.v).add(DENOMINATOR.subn(1)).div(DENOMINATOR)
   }
 
   return {
@@ -491,6 +494,7 @@ export const getLiquidityByXPrice = (
   if (currentSqrtPrice.v.lt(lowerSqrtPrice.v)) {
     const nominator = lowerSqrtPrice.v.mul(upperSqrtPrice.v).div(PRICE_DENOMINATOR)
     const denominator = upperSqrtPrice.v.sub(lowerSqrtPrice.v)
+    console.log(denominator.toString())
     const liquidity = x.mul(nominator).mul(LIQUIDITY_DENOMINATOR).div(denominator)
 
     return {
@@ -501,8 +505,10 @@ export const getLiquidityByXPrice = (
 
   const nominator = currentSqrtPrice.v.mul(upperSqrtPrice.v).div(PRICE_DENOMINATOR)
   const denominator = upperSqrtPrice.v.sub(currentSqrtPrice.v)
+  console.log(denominator.toString())
   const liquidity = x.mul(nominator).div(denominator).mul(LIQUIDITY_DENOMINATOR)
   const priceDiff = currentSqrtPrice.v.sub(lowerSqrtPrice.v)
+  console.log(priceDiff.toString())
   const y = calculateY(priceDiff, liquidity, roundingUp)
 
   return {
