@@ -118,13 +118,12 @@ export const findTickmapChanges = (
   }
   let tickmapChanges: TickmapChange = {}
 
-  currentTickmap.forEach((currentByte, i) => {
-    const nextByte = nextTickmap[i]
-    if (currentByte !== nextByte) {
-      const xor = currentByte ^ nextByte
+  for (let i = 0; i < currentTickmap.length; i++) {
+    if (currentTickmap[i] !== nextTickmap[i]) {
+      const xor = currentTickmap[i] ^ nextTickmap[i]
       for (let bit = 0; bit < 8; bit++) {
         if ((xor & (1 << bit)) !== 0) {
-          const added = (nextByte & (1 << bit)) !== 0
+          const added = (nextTickmap[i] & (1 << bit)) !== 0
           tickmapChanges = {
             ...tickmapChanges,
             [(i * 8 + bit + offset) * tickSpacing]: added ? 'added' : 'removed'
@@ -132,7 +131,6 @@ export const findTickmapChanges = (
         }
       }
     }
-  })
-
+  }
   return tickmapChanges
 }
