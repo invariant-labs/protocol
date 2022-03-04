@@ -4,7 +4,6 @@ import { Decimal, Tick, Tickmap } from './market'
 import {
   DECIMAL,
   DENOMINATOR,
-  FEE_DENOMINATOR,
   getMaxTick,
   getMinTick,
   LIQUIDITY_DENOMINATOR,
@@ -195,13 +194,9 @@ export const getDeltaX = (
   }
 
   const nominator: BN = liquidity.v.mul(deltaPrice.v).div(LIQUIDITY_DENOMINATOR)
-  const denominatorUp: BN = priceA.v.mul(priceB.v).div(PRICE_DENOMINATOR)
-  const denominatorDown: BN = priceA.v
-    .mul(priceB.v)
-    .add(PRICE_DENOMINATOR.subn(1))
-    .div(PRICE_DENOMINATOR)
 
   if (up) {
+    const denominatorUp: BN = priceA.v.mul(priceB.v).div(PRICE_DENOMINATOR)
     return nominator
       .mul(PRICE_DENOMINATOR)
       .add(denominatorUp.subn(1))
@@ -209,6 +204,10 @@ export const getDeltaX = (
       .add(PRICE_DENOMINATOR.subn(1))
       .div(PRICE_DENOMINATOR)
   } else {
+    const denominatorDown: BN = priceA.v
+      .mul(priceB.v)
+      .add(PRICE_DENOMINATOR.subn(1))
+      .div(PRICE_DENOMINATOR)
     return nominator.mul(PRICE_DENOMINATOR).div(denominatorDown).div(PRICE_DENOMINATOR)
   }
 }
@@ -494,7 +493,6 @@ export const getLiquidityByXPrice = (
   if (currentSqrtPrice.v.lt(lowerSqrtPrice.v)) {
     const nominator = lowerSqrtPrice.v.mul(upperSqrtPrice.v).div(PRICE_DENOMINATOR)
     const denominator = upperSqrtPrice.v.sub(lowerSqrtPrice.v)
-    console.log(denominator.toString())
     const liquidity = x.mul(nominator).mul(LIQUIDITY_DENOMINATOR).div(denominator)
 
     return {

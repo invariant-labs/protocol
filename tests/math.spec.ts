@@ -5,7 +5,8 @@ import {
   DENOMINATOR,
   TICK_LIMIT,
   TICK_SEARCH_RANGE,
-  MAX_TICK
+  MAX_TICK,
+  MIN_TICK
 } from '@invariant-labs/sdk'
 import {
   calculateSwapStep,
@@ -50,8 +51,6 @@ import { Keypair } from '@solana/web3.js'
 import { swapParameters } from './swap'
 import { LIQUIDITY_DENOMINATOR, toDecimal } from '@invariant-labs/sdk/lib/utils'
 import { priceToTickInRange } from '@invariant-labs/sdk/src/tick'
-import { MIN_TICK } from '@invariant-labs/sdk'
-import { connected } from 'process'
 
 describe('Math', () => {
   describe('Test sqrt price calculation', () => {
@@ -1453,7 +1452,7 @@ describe('Math', () => {
       })
     })
     describe('around 1 tick', () => {
-      let sqrtPriceDecimal = calculatePriceSqrt(1)
+      const sqrtPriceDecimal = calculatePriceSqrt(1)
       const tickSpacing = 1
       it('get tick at sqrt(1.0001)', async () => {
         const tick = priceToTickInRange(sqrtPriceDecimal, MIN_TICK, MAX_TICK, tickSpacing)
@@ -1479,7 +1478,7 @@ describe('Math', () => {
       })
     })
     describe('around -1 tick', () => {
-      let sqrtPriceDecimal = calculatePriceSqrt(-1)
+      const sqrtPriceDecimal = calculatePriceSqrt(-1)
       const tickSpacing = 1
       it('get tick at sqrt(1.0001^(-1))', async () => {
         const tick = priceToTickInRange(sqrtPriceDecimal, MIN_TICK, MAX_TICK, tickSpacing)
@@ -1505,7 +1504,7 @@ describe('Math', () => {
       })
     })
     describe('around max - 1 tick', () => {
-      let sqrtPriceDecimal = calculatePriceSqrt(MAX_TICK - 1)
+      const sqrtPriceDecimal = calculatePriceSqrt(MAX_TICK - 1)
       const tickSpacing = 1
       it('get tick at sqrt(1.0001^(MAX_TICK - 1))', async () => {
         const tick = priceToTickInRange(sqrtPriceDecimal, MIN_TICK, MAX_TICK, tickSpacing)
@@ -1531,7 +1530,7 @@ describe('Math', () => {
       })
     })
     describe('around min + 1 tick', () => {
-      let sqrtPriceDecimal = calculatePriceSqrt(MIN_TICK + 1)
+      const sqrtPriceDecimal = calculatePriceSqrt(MIN_TICK + 1)
       const tickSpacing = 1
       it('get tick at sqrt(1.0001^(-MAX_TICK + 1))', async () => {
         const tick = priceToTickInRange(sqrtPriceDecimal, MIN_TICK, MAX_TICK, tickSpacing)
@@ -1583,7 +1582,7 @@ describe('Math', () => {
     describe('around 19_999 tick', () => {
       const tickSpacing = 1
       const expectedTick = 19_999
-      let sqrtPriceDecimal = calculatePriceSqrt(expectedTick)
+      const sqrtPriceDecimal = calculatePriceSqrt(expectedTick)
 
       it('get tick at sqrt(1.0001^19_999)', async () => {
         const tick = priceToTickInRange(sqrtPriceDecimal, MIN_TICK, MAX_TICK, tickSpacing)
@@ -1611,7 +1610,7 @@ describe('Math', () => {
     describe('around -19_999 tick', () => {
       const tickSpacing = 1
       const expectedTick = -19_999
-      let sqrtPriceDecimal = calculatePriceSqrt(expectedTick)
+      const sqrtPriceDecimal = calculatePriceSqrt(expectedTick)
 
       it('get tick at sqrt(1.0001^-19_999)', async () => {
         const tick = priceToTickInRange(sqrtPriceDecimal, MIN_TICK, MAX_TICK, tickSpacing)
