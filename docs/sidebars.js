@@ -29,21 +29,34 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Smart contract overview',
-      collapsed: true,
-      items: ['smart_contract/todo']
-    },
-    {
-      type: 'category',
-      label: 'Invariant SDK',
-      collapsed: true,
-      items: ['invariant_sdk/todo']
-    },
-    {
-      type: 'category',
       label: 'Invariant Bonds',
       // collapsed: true,
-      items: ['invariant_bonds/introduction', 'invariant_bonds/math', 'invariant_bonds/examples']
+      items: ['invariant_bonds/introduction', 'invariant_bonds/math', 'invariant_bonds/example']
+    },
+    {
+      type: 'category',
+      label: 'Technical docs',
+      collapsed: true,
+      items: [
+        {
+          type: 'category',
+          label: 'Invariant',
+          collapsed: true,
+          items: ['technical_docs/invariant/todo']
+        },
+        {
+          type: 'category',
+          label: 'Staker',
+          collapsed: true,
+          items: ['technical_docs/staker/todo']
+        },
+        {
+          type: 'category',
+          label: 'Bonds',
+          collapsed: true,
+          items: ['technical_docs/bonds/todo']
+        }
+      ]
     },
     'faq',
     {
