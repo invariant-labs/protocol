@@ -11,7 +11,8 @@ import {
   DENOMINATOR,
   TICK_LIMIT,
   Network,
-  calculatePriceSqrt
+  calculatePriceSqrt,
+  PRICE_DENOMINATOR
 } from '@invariant-labs/sdk'
 import { Decimal, FeeTier } from '@invariant-labs/sdk/lib/market'
 import { assertThrowsAsync, fromFee } from '@invariant-labs/sdk/lib/utils'
@@ -91,7 +92,7 @@ describe('Liquidity gap', () => {
     assert.ok(createdPool.fee.v.eq(feeTier.fee))
     assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
     assert.ok(createdPool.liquidity.v.eqn(0))
-    assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR))
+    assert.ok(createdPool.sqrtPrice.v.eq(PRICE_DENOMINATOR))
     assert.ok(createdPool.currentTickIndex === 0)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))

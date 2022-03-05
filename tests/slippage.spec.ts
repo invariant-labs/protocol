@@ -2,7 +2,7 @@ import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assertThrowsAsync, createPoolWithLiquidity, createUserWithTokens } from './testUtils'
-import { Market, Network, sleep, DENOMINATOR } from '@invariant-labs/sdk'
+import { Market, Network, sleep, PRICE_DENOMINATOR, INVARIANT_ERRORS } from '@invariant-labs/sdk'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { Decimal, Swap } from '@invariant-labs/sdk/src/market'
 import { assert } from 'chai'
@@ -102,7 +102,7 @@ describe('slippage', () => {
       accountY: userAccountY,
       byAmountIn: true
     }
-    await assertThrowsAsync(market.swap(swapVars, owner))
+    await assertThrowsAsync(market.swap(swapVars, owner), INVARIANT_ERRORS.PRICE_LIMIT_REACHED)
   })
 
   it('#swap with target just below the limit', async () => {
@@ -126,7 +126,7 @@ describe('slippage', () => {
       accountY: userAccountY,
       byAmountIn: true
     }
-    await assertThrowsAsync(market.swap(swapVars, owner))
+    await assertThrowsAsync(market.swap(swapVars, owner), INVARIANT_ERRORS.PRICE_LIMIT_REACHED)
   })
 
   it('#swap with target on the other side of price', async () => {
@@ -137,7 +137,7 @@ describe('slippage', () => {
       mintAuthority
     )
 
-    const priceLimit = DENOMINATOR.muln(2).sub(expectedPrice)
+    const priceLimit = PRICE_DENOMINATOR.muln(2).sub(expectedPrice)
     const amount = new BN(1e8)
 
     const swapVars: Swap = {
@@ -151,7 +151,7 @@ describe('slippage', () => {
       accountY: userAccountY,
       byAmountIn: true
     }
-    await assertThrowsAsync(market.swap(swapVars, owner))
+    await assertThrowsAsync(market.swap(swapVars, owner), INVARIANT_ERRORS.PRICE_LIMIT_REACHED)
   })
 
   it.only('#swap actual slippage', async () => {
@@ -181,6 +181,6 @@ describe('slippage', () => {
     assert.equal((await market.getPool(pair)).sqrtPrice.v.toString(), expectedPrice.toString())
 
     await market.swap(swapVars, owner)
-    await assertThrowsAsync(market.swap(swapVars, owner))
+    await assertThrowsAsync(market.swap(swapVars, owner), INVARIANT_ERRORS.PRICE_LIMIT_REACHED)
   })
 })

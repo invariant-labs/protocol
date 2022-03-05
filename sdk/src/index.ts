@@ -6,7 +6,9 @@ import {
   signAndSend,
   sleep,
   INVARIANT_ERRORS,
-  ComputeUnitsInstruction
+  ComputeUnitsInstruction,
+  PRICE_DENOMINATOR,
+  LIQUIDITY_DENOMINATOR
 } from './utils'
 import {
   TICK_LIMIT,
@@ -19,6 +21,7 @@ import {
 import { PublicKey, Transaction } from '@solana/web3.js'
 import { Pair } from './pair'
 import { getMarketAddress, Network, MOCK_TOKENS } from './network'
+import { findTickmapChanges } from './tickmap'
 
 export {
   Market,
@@ -28,11 +31,14 @@ export {
   signAndSend,
   sleep,
   calculatePriceSqrt,
+  findTickmapChanges,
   fromInteger,
   tou64,
   SEED,
   INVARIANT_ERRORS,
   DENOMINATOR,
+  PRICE_DENOMINATOR,
+  LIQUIDITY_DENOMINATOR,
   TICK_LIMIT,
   MAX_TICK,
   MIN_TICK,

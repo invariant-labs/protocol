@@ -9,7 +9,7 @@ wallet = "~/.config/solana/id.json"
 members = ["programs/invariant", "programs/staker"]
 
 [programs.localnet]
-invariant = "6jtEY7kz17tLjKCNTybJBz8GbXSjwAiV5Ufjqsiyauys"
+invariant = "FFtYJgUdvZwJkjx4YCTV61ik8rUY3HAp4dMzNkvV76Nx"
 staker = "G5iMvLKhBKKscSMUazjiWKZXzacjL7oikJAm9FWRTvk"
 
 [scripts]

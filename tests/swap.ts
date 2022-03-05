@@ -1,5 +1,10 @@
 import { PoolData, Tick } from '@invariant-labs/sdk/lib/market'
-import { SimulateSwapInterface, toDecimal } from '@invariant-labs/sdk/lib/utils'
+import {
+  PRICE_DENOMINATOR,
+  toPercent,
+  PRICE_SCALE,
+  SimulateSwapInterface
+} from '@invariant-labs/sdk/lib/utils'
 import { BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 
@@ -12,7 +17,7 @@ const ticks: Map<number, Tick> = new Map([
       sign: true,
       liquidityChange: { v: new BN('1000000000000000000') },
       liquidityGross: { v: new BN('1000000000000000000') },
-      sqrtPrice: { v: new BN('999000549780') },
+      sqrtPrice: { v: new BN('999000549780' + '0'.repeat(PRICE_SCALE - 12)) },
       feeGrowthOutsideX: { v: new BN(0) },
       feeGrowthOutsideY: { v: new BN(0) },
       bump: 255
@@ -25,7 +30,7 @@ const poolData: PoolData = {
   tickSpacing: 10,
   liquidity: { v: new BN('1000000000000000000') },
   fee: { v: new BN('6000000000') },
-  sqrtPrice: { v: new BN('1000000000000') }
+  sqrtPrice: { v: PRICE_DENOMINATOR }
 }
 const bitmap: number[] = [
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -792,8 +797,8 @@ export const swapParameters: SimulateSwapInterface = {
   xToY: true,
   byAmountIn: true,
   swapAmount: new BN(1000),
-  priceLimit: { v: new BN(1000000000000) }, // ignore price impact using high slippage tolerance
-  slippage: toDecimal(1, 0),
+  priceLimit: { v: PRICE_DENOMINATOR }, // ignore price impact using high slippage tolerance
+  slippage: toPercent(1, 0),
   ticks: ticks,
   tickmap: { bitmap },
   pool: poolData

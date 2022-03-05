@@ -1,16 +1,15 @@
-use crate::decimal::Decimal;
 use crate::interfaces::take_tokens::TakeTokens;
 use crate::structs::pool::Pool;
 use crate::structs::position::Position;
 use crate::structs::position_list::PositionList;
 use crate::structs::tick::Tick;
-use crate::structs::FeeGrowth;
 use crate::structs::Tickmap;
 use crate::util::check_ticks;
 use crate::ErrorCode::*;
 use crate::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
+use decimals::*;
 
 use anchor_spl::token;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
@@ -115,7 +114,7 @@ impl<'info> TakeTokens<'info> for CreatePosition<'info> {
 }
 
 impl<'info> CreatePosition<'info> {
-    pub fn handler(&self, liquidity_delta: Decimal, bump: u8) -> ProgramResult {
+    pub fn handler(&self, liquidity_delta: Liquidity, bump: u8) -> ProgramResult {
         msg!("INVARIANT: CREATE POSITION");
 
         let mut position = self.position.load_init()?;
@@ -145,15 +144,15 @@ impl<'info> CreatePosition<'info> {
             owner: *self.owner.to_account_info().key,
             pool: *self.pool.to_account_info().key,
             id: position.id,
-            liquidity: Decimal::new(0),
+            liquidity: Liquidity::new(0),
             lower_tick_index: lower_tick.index,
             upper_tick_index: upper_tick.index,
-            fee_growth_inside_x: FeeGrowth::zero(),
-            fee_growth_inside_y: FeeGrowth::zero(),
-            seconds_per_liquidity_inside: Decimal::new(0),
+            fee_growth_inside_x: FeeGrowth::new(0),
+            fee_growth_inside_y: FeeGrowth::new(0),
+            seconds_per_liquidity_inside: FixedPoint::new(0),
             last_slot: slot,
-            tokens_owed_x: Decimal::new(0),
-            tokens_owed_y: Decimal::new(0),
+            tokens_owed_x: FixedPoint::new(0),
+            tokens_owed_y: FixedPoint::new(0),
             bump,
         };
 

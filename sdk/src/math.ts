@@ -1,7 +1,16 @@
 import { BN } from '@project-serum/anchor'
 import { assert } from 'chai'
 import { Decimal, Tick, Tickmap } from './market'
-import { DENOMINATOR, getMaxTick, getMinTick } from './utils'
+import {
+  DECIMAL,
+  DENOMINATOR,
+  getMaxTick,
+  getMinTick,
+  LIQUIDITY_DENOMINATOR,
+  LIQUIDITY_SCALE,
+  PRICE_DENOMINATOR,
+  PRICE_SCALE
+} from './utils'
 
 export const TICK_LIMIT = 100_000
 export const MAX_TICK = 221_818
@@ -59,10 +68,14 @@ export const calculatePriceSqrt = (tickIndex: number): Decimal => {
   if ((tick & 0x20000) !== 0) price = price.mul(new BN('701536086265529')).div(DENOMINATOR)
 
   if (tickIndex < 0) {
-    price = DENOMINATOR.mul(DENOMINATOR).div(price)
+    return {
+      v: DENOMINATOR.mul(DENOMINATOR)
+        .div(price)
+        .mul(new BN(10).pow(new BN(PRICE_SCALE - DECIMAL)))
+    }
   }
 
-  return { v: price }
+  return { v: price.mul(new BN(10).pow(new BN(PRICE_SCALE - DECIMAL))) }
 }
 
 export const sqrt = (num: BN): BN => {
@@ -156,7 +169,7 @@ export const calculateSwapStep = (
   if (byAmountIn && !nextPrice.v.eq(targetPrice.v)) {
     feeAmount = amount.sub(amountIn)
   } else {
-    feeAmount = fee.v.mul(amountIn).add(DENOMINATOR.subn(1)).div(DENOMINATOR)
+    feeAmount = amountIn.mul(fee.v).add(DENOMINATOR.subn(1)).div(DENOMINATOR)
   }
 
   return {
@@ -180,14 +193,22 @@ export const getDeltaX = (
     deltaPrice = { v: priceB.v.sub(priceA.v) }
   }
 
-  const nominator: Decimal = { v: liquidity.v.mul(deltaPrice.v).div(DENOMINATOR) }
+  const nominator: BN = liquidity.v.mul(deltaPrice.v).div(LIQUIDITY_DENOMINATOR)
 
   if (up) {
-    return nominator.v
-      .add(priceA.v.mul(priceB.v).div(DENOMINATOR).subn(1))
-      .div(priceA.v.mul(priceB.v).div(DENOMINATOR))
+    const denominatorUp: BN = priceA.v.mul(priceB.v).div(PRICE_DENOMINATOR)
+    return nominator
+      .mul(PRICE_DENOMINATOR)
+      .add(denominatorUp.subn(1))
+      .div(denominatorUp)
+      .add(PRICE_DENOMINATOR.subn(1))
+      .div(PRICE_DENOMINATOR)
   } else {
-    return nominator.v.div(priceA.v.mul(priceB.v).add(DENOMINATOR.subn(1)).div(DENOMINATOR))
+    const denominatorDown: BN = priceA.v
+      .mul(priceB.v)
+      .add(PRICE_DENOMINATOR.subn(1))
+      .div(PRICE_DENOMINATOR)
+    return nominator.mul(PRICE_DENOMINATOR).div(denominatorDown).div(PRICE_DENOMINATOR)
   }
 }
 
@@ -205,12 +226,14 @@ export const getDeltaY = (
   }
 
   if (up) {
-    return liquidity.v
-      .mul(deltaPrice.v)
-      .add(DENOMINATOR.mul(DENOMINATOR).subn(1))
-      .div(DENOMINATOR.mul(DENOMINATOR))
+    return deltaPrice.v
+      .mul(liquidity.v)
+      .add(LIQUIDITY_DENOMINATOR.subn(1))
+      .div(LIQUIDITY_DENOMINATOR)
+      .add(PRICE_DENOMINATOR.subn(1))
+      .div(PRICE_DENOMINATOR)
   } else {
-    return liquidity.v.mul(deltaPrice.v).div(DENOMINATOR.mul(DENOMINATOR))
+    return deltaPrice.v.mul(liquidity.v).div(LIQUIDITY_DENOMINATOR).div(PRICE_DENOMINATOR)
   }
 }
 
@@ -256,15 +279,23 @@ export const getNextPriceXUp = (
   if (amount.eqn(0)) {
     return price
   }
-  let denominator: Decimal = { v: new BN(0) }
+
+  const bigLiquidity: BN = liquidity.v.mul(new BN(10).pow(new BN(PRICE_SCALE - LIQUIDITY_SCALE)))
+  const priceMulAmount: BN = price.v.mul(amount)
+
+  let denominator: BN
   if (add) {
-    denominator = { v: liquidity.v.add(amount.mul(price.v)) }
+    denominator = bigLiquidity.add(priceMulAmount)
   } else {
-    denominator = { v: liquidity.v.sub(amount.mul(price.v)) }
+    denominator = bigLiquidity.sub(priceMulAmount)
   }
 
+  const nominator: BN = price.v
+    .mul(liquidity.v)
+    .add(LIQUIDITY_DENOMINATOR.subn(1))
+    .div(LIQUIDITY_DENOMINATOR)
   return {
-    v: liquidity.v.mul(price.v).add(denominator.v.subn(1)).div(denominator.v)
+    v: nominator.mul(PRICE_DENOMINATOR).add(denominator.subn(1)).div(denominator)
   }
 }
 
@@ -275,14 +306,24 @@ export const getNextPriceYDown = (
   amount: BN,
   add: boolean
 ): Decimal => {
+  let quotient: BN
+
   if (add) {
-    return { v: amount.mul(DENOMINATOR.mul(DENOMINATOR)).div(liquidity.v).add(price.v) }
-  } else {
-    const quotient: Decimal = {
-      v: amount.mul(DENOMINATOR.mul(DENOMINATOR)).add(liquidity.v.subn(1)).div(liquidity.v)
+    quotient = amount
+      .mul(PRICE_DENOMINATOR)
+      .mul(PRICE_DENOMINATOR)
+      .div(liquidity.v.mul(new BN(10).pow(new BN(PRICE_SCALE - LIQUIDITY_SCALE))))
+    return {
+      v: price.v.add(quotient)
     }
-    assert.isTrue(price.v.gt(quotient.v))
-    return { v: price.v.sub(quotient.v) }
+  } else {
+    quotient = amount
+      .mul(PRICE_DENOMINATOR)
+      .mul(PRICE_DENOMINATOR)
+      .add(liquidity.v.mul(new BN(10).pow(new BN(PRICE_SCALE - LIQUIDITY_SCALE))).subn(1))
+      .div(liquidity.v.mul(new BN(10).pow(new BN(PRICE_SCALE - LIQUIDITY_SCALE))))
+    assert.isTrue(price.v.gt(quotient))
+    return { v: price.v.sub(quotient) }
   }
 }
 
@@ -334,7 +375,7 @@ export const findClosestTicks = (
 }
 
 const mulUp = (a: BN, b: BN) => {
-  return a.mul(b).add(DENOMINATOR.subn(1)).div(DENOMINATOR)
+  return a.mul(b).add(PRICE_DENOMINATOR.subn(1)).div(PRICE_DENOMINATOR)
 }
 
 const divUp = (a: BN, b: BN) => {
@@ -342,20 +383,20 @@ const divUp = (a: BN, b: BN) => {
 }
 
 const calculateY = (priceDiff: BN, liquidity: BN, roundingUp: boolean) => {
-  const shiftedLiquidity = liquidity.div(DENOMINATOR)
+  const shiftedLiquidity = liquidity.div(LIQUIDITY_DENOMINATOR)
 
   if (roundingUp) {
     return mulUp(priceDiff, shiftedLiquidity)
   }
-  return priceDiff.mul(shiftedLiquidity).div(DENOMINATOR)
+  return priceDiff.mul(shiftedLiquidity).div(PRICE_DENOMINATOR)
 }
 
 const calculateX = (nominator: BN, denominator: BN, liquidity: BN, roundingUp: boolean) => {
   const common = liquidity.mul(nominator).div(denominator)
   if (roundingUp) {
-    return divUp(common, DENOMINATOR)
+    return divUp(common, LIQUIDITY_DENOMINATOR)
   }
-  return common.div(DENOMINATOR)
+  return common.div(LIQUIDITY_DENOMINATOR)
 }
 
 export const getX = (
@@ -378,10 +419,10 @@ export const getX = (
   if (currentSqrtPrice.gte(upperSqrtPrice)) {
     return new BN(0)
   } else if (currentSqrtPrice.lt(lowerSqrtPrice)) {
-    denominator = lowerSqrtPrice.mul(upperSqrtPrice).div(DENOMINATOR)
+    denominator = lowerSqrtPrice.mul(upperSqrtPrice).div(PRICE_DENOMINATOR)
     nominator = upperSqrtPrice.sub(lowerSqrtPrice)
   } else {
-    denominator = upperSqrtPrice.mul(currentSqrtPrice).div(DENOMINATOR)
+    denominator = upperSqrtPrice.mul(currentSqrtPrice).div(PRICE_DENOMINATOR)
     nominator = upperSqrtPrice.sub(currentSqrtPrice)
   }
 
@@ -411,7 +452,7 @@ export const getY = (
     difference = currentSqrtPrice.sub(lowerSqrtPrice)
   }
 
-  return liquidity.mul(difference).div(DENOMINATOR)
+  return liquidity.mul(difference).div(PRICE_DENOMINATOR)
 }
 
 export const getLiquidityByX = (
@@ -450,9 +491,9 @@ export const getLiquidityByXPrice = (
   }
 
   if (currentSqrtPrice.v.lt(lowerSqrtPrice.v)) {
-    const nominator = lowerSqrtPrice.v.mul(upperSqrtPrice.v).div(DENOMINATOR)
+    const nominator = lowerSqrtPrice.v.mul(upperSqrtPrice.v).div(PRICE_DENOMINATOR)
     const denominator = upperSqrtPrice.v.sub(lowerSqrtPrice.v)
-    const liquidity = x.mul(nominator).mul(DENOMINATOR).div(denominator)
+    const liquidity = x.mul(nominator).mul(LIQUIDITY_DENOMINATOR).div(denominator)
 
     return {
       liquidity: { v: liquidity },
@@ -460,10 +501,12 @@ export const getLiquidityByXPrice = (
     }
   }
 
-  const nominator = currentSqrtPrice.v.mul(upperSqrtPrice.v).div(DENOMINATOR)
+  const nominator = currentSqrtPrice.v.mul(upperSqrtPrice.v).div(PRICE_DENOMINATOR)
   const denominator = upperSqrtPrice.v.sub(currentSqrtPrice.v)
-  const liquidity = x.mul(nominator).div(denominator).mul(DENOMINATOR)
+  console.log(denominator.toString())
+  const liquidity = x.mul(nominator).div(denominator).mul(LIQUIDITY_DENOMINATOR)
   const priceDiff = currentSqrtPrice.v.sub(lowerSqrtPrice.v)
+  console.log(priceDiff.toString())
   const y = calculateY(priceDiff, liquidity, roundingUp)
 
   return {
@@ -506,7 +549,7 @@ export const getLiquidityByYPrice = (
 
   if (upperSqrtPrice.v.lte(currentSqrtPrice.v)) {
     const priceDiff = upperSqrtPrice.v.sub(lowerSqrtPrice.v)
-    const liquidity = y.mul(DENOMINATOR).mul(DENOMINATOR).div(priceDiff)
+    const liquidity = y.mul(LIQUIDITY_DENOMINATOR).mul(PRICE_DENOMINATOR).div(priceDiff)
 
     return {
       liquidity: { v: liquidity },
@@ -515,8 +558,8 @@ export const getLiquidityByYPrice = (
   }
 
   const priceDiff = currentSqrtPrice.v.sub(lowerSqrtPrice.v)
-  const liquidity = y.mul(DENOMINATOR).mul(DENOMINATOR).div(priceDiff)
-  const denominator = currentSqrtPrice.v.mul(upperSqrtPrice.v).div(DENOMINATOR)
+  const liquidity = y.mul(LIQUIDITY_DENOMINATOR).mul(PRICE_DENOMINATOR).div(priceDiff)
+  const denominator = currentSqrtPrice.v.mul(upperSqrtPrice.v).div(PRICE_DENOMINATOR)
   const nominator = upperSqrtPrice.v.sub(currentSqrtPrice.v)
   const x = calculateX(nominator, denominator, liquidity, roundingUp)
 

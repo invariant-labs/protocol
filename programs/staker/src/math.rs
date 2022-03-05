@@ -2,7 +2,7 @@ use crate::ErrorCode;
 use crate::Result;
 use std::convert::TryInto;
 
-use crate::decimal::{Decimal, Div, Mul, Sub};
+use crate::decimalss::{Decimal, Div, Mul, Sub};
 use std::cmp;
 
 pub fn calculate_reward(
