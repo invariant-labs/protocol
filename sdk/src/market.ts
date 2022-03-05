@@ -181,7 +181,7 @@ export class Market {
       })
   }
 
-  public async unsubscribeTick(pair: Pair, index: number, fn: (tick: Tick) => void): Promise<void> {
+  public async unsubscribeTick(pair: Pair, index: number): Promise<void> {
     const { tickAddress } = await this.getTickAddress(pair, index)
     return await this.program.account.tick.unsubscribe(tickAddress)
   }
