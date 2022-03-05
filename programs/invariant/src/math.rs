@@ -310,7 +310,6 @@ fn get_next_sqrt_price_y_down(
                 .checked_mul(U256::from(PRICE_LIQUIDITY_DENOMINATOR))
                 .unwrap(),
         );
-        assert!(!quotient.is_zero());
         price_sqrt - quotient
     }
 }
@@ -747,6 +746,72 @@ mod tests {
                 fee_amount: TokenAmount(0),
             };
             assert_eq!(result, expected_result)
+        }
+        // by_amount_out and x_to_y edge cases
+        {
+            let target_price_sqrt = calculate_price_sqrt(-10);
+            let current_price_sqrt = target_price_sqrt + Price::from_integer(1);
+            let liquidity = Liquidity::from_integer(340282366920938463463374607u128);
+            let one_token = TokenAmount(1);
+            let tokens_with_same_output = TokenAmount(85);
+            let zero_token = TokenAmount(0);
+            let by_amount_in = false;
+            let max_fee = FixedPoint::from_scale(9, 1);
+            let min_fee = FixedPoint::from_integer(0);
+
+            let one_token_result = compute_swap_step(
+                current_price_sqrt,
+                target_price_sqrt,
+                liquidity,
+                one_token,
+                by_amount_in,
+                max_fee,
+            );
+            let tokens_with_same_output_result = compute_swap_step(
+                current_price_sqrt,
+                target_price_sqrt,
+                liquidity,
+                tokens_with_same_output,
+                by_amount_in,
+                max_fee,
+            );
+            let zero_token_result = compute_swap_step(
+                current_price_sqrt,
+                target_price_sqrt,
+                liquidity,
+                zero_token,
+                by_amount_in,
+                min_fee,
+            );
+            /*
+                86x -> [1, 85]y
+                rounding due to price accuracy
+                it does not matter if you want 1 or 85 y tokens, will take you the same input amount
+            */
+            let expected_one_token_result = SwapResult {
+                next_price_sqrt: current_price_sqrt - Price::new(1),
+                amount_in: TokenAmount(86),
+                amount_out: TokenAmount(1),
+                fee_amount: TokenAmount(78),
+            };
+            let expected_tokens_with_same_output_result = SwapResult {
+                next_price_sqrt: current_price_sqrt - Price::new(1),
+                amount_in: TokenAmount(86),
+                amount_out: TokenAmount(85),
+                fee_amount: TokenAmount(78),
+            };
+            let expected_zero_token_result = SwapResult {
+                next_price_sqrt: current_price_sqrt,
+                amount_in: TokenAmount(0),
+                amount_out: TokenAmount(0),
+                fee_amount: TokenAmount(0),
+            };
+            assert_eq!(one_token_result, expected_one_token_result);
+            assert_eq!(
+                tokens_with_same_output_result,
+                expected_tokens_with_same_output_result
+            );
+            assert_eq!(zero_token_result, expected_zero_token_result);
         }
     }
 
@@ -1461,6 +1526,48 @@ mod tests {
                 x_to_y,
             );
             assert_eq!(result, true);
+        }
+        // zero amount
+        {
+            let max_liquidity = Liquidity::from_integer(340282366920938463463374607u128);
+            let zero_amount = TokenAmount(0);
+
+            let result_by_amount_out_x_to_y = is_enough_amount_to_push_price(
+                zero_amount,
+                current_price_sqrt,
+                max_liquidity,
+                fee,
+                false,
+                true,
+            );
+            let result_by_amount_out_y_to_x = is_enough_amount_to_push_price(
+                zero_amount,
+                current_price_sqrt,
+                max_liquidity,
+                fee,
+                false,
+                false,
+            );
+            let result_by_amount_in_x_to_y = is_enough_amount_to_push_price(
+                zero_amount,
+                current_price_sqrt,
+                max_liquidity,
+                fee,
+                true,
+                true,
+            );
+            let result_by_amount_in_y_to_x = is_enough_amount_to_push_price(
+                zero_amount,
+                current_price_sqrt,
+                max_liquidity,
+                fee,
+                true,
+                false,
+            );
+            assert_eq!(result_by_amount_out_x_to_y, false);
+            assert_eq!(result_by_amount_out_y_to_x, false);
+            assert_eq!(result_by_amount_in_x_to_y, false);
+            assert_eq!(result_by_amount_in_y_to_x, false);
         }
         // should always be enough amount to cross tick when pool liquidity is zero
         {
