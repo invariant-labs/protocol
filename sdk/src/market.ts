@@ -858,15 +858,15 @@ export class Market {
     }
 
     if (simulationResult.accumulatedAmountOut.eq(new BN(0))) {
-      throw new Error('Amount out is zero')
+      throw new Error(SwapErrors.ZeroAmount)
     }
 
     if (!sum.eq(amount)) {
-      throw new Error('Input amount and simulation amount sum are different')
+      throw new Error(SwapErrors.DifferentAmounts)
     }
 
     if (amountPerTick.length > MAX_IX) {
-      throw new Error('Instruction limit was exceeded')
+      throw new Error(SwapErrors.IxLimitExceeded)
     }
 
     const tx: Transaction = new Transaction()
@@ -1459,6 +1459,12 @@ export enum Errors {
   NoMoreTicks = '0x132 ', // 6
   TickNotFound = '0x133', // 7
   PriceLimitReached = '0x134' // 8
+}
+
+export enum SwapErrors {
+  ZeroAmount = 'Swap output is zero', // 0
+  DifferentAmounts = 'Input amount and simulation amount sum are different', // 1
+  IxLimitExceeded = 'Instruction limit was exceeded' // 2
 }
 
 export interface InitPosition {
