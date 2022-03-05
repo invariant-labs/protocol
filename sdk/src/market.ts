@@ -857,6 +857,10 @@ export class Market {
       sum = sum.add(value)
     }
 
+    if (simulationResult.accumulatedAmountOut.eq(new BN(0))) {
+      throw new Error('Amount out is zero')
+    }
+
     if (!sum.eq(amount)) {
       throw new Error('Input amount and simulation amount sum are different')
     }
