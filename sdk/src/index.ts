@@ -21,6 +21,7 @@ import {
 import { PublicKey, Transaction } from '@solana/web3.js'
 import { Pair } from './pair'
 import { getMarketAddress, Network, MOCK_TOKENS } from './network'
+import { findTickmapChanges } from './tickmap'
 
 export {
   Market,
@@ -30,6 +31,7 @@ export {
   signAndSend,
   sleep,
   calculatePriceSqrt,
+  findTickmapChanges,
   fromInteger,
   tou64,
   SEED,
