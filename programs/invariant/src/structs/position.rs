@@ -279,6 +279,7 @@ mod tests {
                 current_tick_index: 0,
                 fee_growth_global_x: FeeGrowth::from_integer(20),
                 fee_growth_global_y: FeeGrowth::from_integer(20),
+                tick_spacing: 1,
                 ..Default::default()
             };
             let mut upper_tick = Tick {

@@ -138,6 +138,8 @@ mod tests {
     #[test]
     fn test_update() {
         // TODO: make sure works fine
+        // TODO: test exceed max tick liquidity
+        let max_liquidity = Liquidity::new(u128::MAX);
         {
             let mut tick = Tick {
                 index: 0,
@@ -152,7 +154,8 @@ mod tests {
             let is_upper: bool = false;
             let is_deposit: bool = true;
 
-            tick.update(liquidity_delta, is_upper, is_deposit).unwrap();
+            tick.update(liquidity_delta, max_liquidity, is_upper, is_deposit)
+                .unwrap();
 
             assert_eq!(tick.sign, true);
             assert_eq!({ tick.liquidity_change }, Liquidity::from_integer(3));
@@ -174,7 +177,8 @@ mod tests {
             let is_upper: bool = true;
             let is_deposit: bool = true;
 
-            tick.update(liquidity_delta, is_upper, is_deposit).unwrap();
+            tick.update(liquidity_delta, max_liquidity, is_upper, is_deposit)
+                .unwrap();
 
             assert_eq!(tick.sign, true);
             assert_eq!({ tick.liquidity_change }, Liquidity::from_integer(2));
