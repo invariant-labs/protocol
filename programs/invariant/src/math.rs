@@ -4,6 +4,7 @@ use crate::decimals::*;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::structs::tickmap::MAX_TICK;
+use crate::structs::TICK_LIMIT;
 use crate::*;
 
 #[derive(PartialEq, Debug)]
@@ -464,10 +465,31 @@ pub fn is_enough_amount_to_push_price(
     current_price_sqrt.ne(&next_price_sqrt)
 }
 
+pub fn calculate_max_liquidity_per_tick(tick_spacing: u16) -> Liquidity {
+    const MAX_TICKS_LENGTH: u128 = 2 * TICK_LIMIT as u128;
+    const MAX_TICKS_AMOUNT: u128 = 2 * MAX_TICK as u128 + 1;
+    const MAX_GLOBAL_MAX_LIQUIDITY: u128 = u128::MAX;
+    const MAX_LIQUIDITY_TIGHT_SPACING: u128 = MAX_GLOBAL_MAX_LIQUIDITY / MAX_TICKS_LENGTH;
+
+    let max_ticks_amount = MAX_TICKS_AMOUNT
+        .checked_div(tick_spacing.try_into().unwrap())
+        .unwrap();
+
+    if MAX_TICKS_LENGTH < max_ticks_amount {
+        Liquidity::new(MAX_LIQUIDITY_TIGHT_SPACING)
+    } else {
+        Liquidity::new(
+            MAX_GLOBAL_MAX_LIQUIDITY
+                .checked_div(max_ticks_amount)
+                .unwrap(),
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
-    use std::{ops::Div, str::FromStr};
+    use std::str::FromStr;
 
     use crate::structs::TICK_LIMIT;
 
