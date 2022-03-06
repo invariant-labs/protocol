@@ -1609,6 +1609,33 @@ mod tests {
             assert_eq!(result, true);
         }
     }
+
+    #[test]
+    fn test_calculate_max_liquidity_per_tick() {
+        let max_liquidity_per_tick_limited_by_space =
+            Liquidity::new(1701411834604692317316873037158841u128);
+        // tick_spacing 1 [L_MAX / 200_000]
+        {
+            let max_l = calculate_max_liquidity_per_tick(1);
+            assert_eq!(max_l, max_liquidity_per_tick_limited_by_space);
+        };
+        // tick_spacing 2 [L_MAX / 200_000]
+        {
+            let max_l = calculate_max_liquidity_per_tick(2);
+            assert_eq!(max_l, max_liquidity_per_tick_limited_by_space);
+        }
+        // tick_spacing 3 [L_MAX / 147_879]
+        {
+            let max_l = calculate_max_liquidity_per_tick(3);
+            assert_eq!(max_l, Liquidity::new(2301086475570827930019641784376200));
+        }
+        // tick_spacing 100 [L_MAX / 4436]
+        {
+            let max_l = calculate_max_liquidity_per_tick(100);
+            assert_eq!(max_l, Liquidity::new(76709280189571339824926647302021688));
+        }
+    }
+
     #[test]
     fn test_max_liquidity_amount() {
         let liquidity_denominator = U256::from(1000000000000u128);
