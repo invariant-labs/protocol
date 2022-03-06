@@ -39,10 +39,13 @@ impl Position {
             pool.last_timestamp = current_timestamp;
         }
 
-        // update initialized tick
-        lower_tick.update(liquidity_delta, false, add)?;
+        // calculate dynamically limit allows easy modification
+        let max_liquidity_per_tick = calculate_max_liquidity_per_tick(pool.tick_spacing);
 
-        upper_tick.update(liquidity_delta, true, add)?;
+        // update initialized tick
+        lower_tick.update(liquidity_delta, max_liquidity_per_tick, false, add)?;
+
+        upper_tick.update(liquidity_delta, max_liquidity_per_tick, true, add)?;
 
         // update fee inside position
         let (fee_growth_inside_x, fee_growth_inside_y) = calculate_fee_growth_inside(

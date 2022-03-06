@@ -23,11 +23,15 @@ impl Tick {
     pub fn update(
         &mut self,
         liquidity_delta: Liquidity,
+        max_liquidity_per_tick: Liquidity,
         is_upper: bool,
         is_deposit: bool,
     ) -> Result<()> {
-        self.liquidity_gross =
-            self.calculate_new_liquidity_gross_safely(is_deposit, liquidity_delta)?;
+        self.liquidity_gross = self.calculate_new_liquidity_gross_safely(
+            is_deposit,
+            liquidity_delta,
+            max_liquidity_per_tick,
+        )?;
 
         self.update_liquidity_change(liquidity_delta, is_deposit ^ is_upper);
         Ok(())
@@ -50,16 +54,20 @@ impl Tick {
         self,
         sign: bool,
         liquidity_delta: Liquidity,
+        max_liquidity_per_tick: Liquidity,
     ) -> Result<Liquidity> {
         // validate in decrease liquidity case
         if !sign && { self.liquidity_gross } < liquidity_delta {
             return Err(ErrorCode::InvalidTickLiquidity.into());
         }
-
         let new_liquidity = match sign {
             true => self.liquidity_gross + liquidity_delta,
             false => self.liquidity_gross - liquidity_delta,
         };
+        // validate in increase liquidity case
+        if sign && new_liquidity >= max_liquidity_per_tick {
+            return Err(ErrorCode::InvalidTickLiquidity.into());
+        }
 
         Ok(new_liquidity)
     }
