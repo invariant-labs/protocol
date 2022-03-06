@@ -194,7 +194,7 @@ describe('Liquidity gap', () => {
     assert.ok(amountY.eq(expectedYAmountOut))
     assert.ok(reserveXDelta.eq(amount))
     assert.ok(reserveYDelta.eq(expectedYAmountOut))
-    assert.ok(poolData.feeGrowthGlobalX.v.eq(new BN('2399280215935219435')))
+    assert.equal(poolData.feeGrowthGlobalX.v.toString(), '2399280215935219434')
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
     assert.ok(poolData.feeProtocolTokenX.eqn(13))
     assert.ok(poolData.feeProtocolTokenY.eqn(0))
