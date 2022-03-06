@@ -174,4 +174,52 @@ pub mod tests {
             assert_eq!(u, expected + R(1));
         }
     }
+
+    #[test]
+    fn tests_mul_to_number() {
+        // basic
+        {
+            let a = Q::from_integer(1u8);
+            let b = Q::from_integer(2u8);
+            assert_eq!(a.big_mul_to_value(b), b.here());
+            assert_eq!(a.big_mul_to_value_up(b), b.here());
+        }
+        // overflowing
+        {
+            let a = Q::new(u16::MAX);
+            let b = Q::new(u16::MAX);
+            // real     4.294836225 × 10^8
+            // expected  429483622
+            assert_eq!(a.big_mul_to_value(b), U256::from(429483622u64));
+            assert_eq!(a.big_mul_to_value_up(b), U256::from(429483623u64));
+        }
+    }
+
+    #[test]
+    fn test_big_div_by_number() {
+        // basic
+        {
+            let a = Q::from_integer(4u8);
+            let b = Q::from_integer(2u8);
+            let big_type = U256::from(b.get());
+            assert_eq!(a.big_div_by_number(big_type), b);
+            assert_eq!(a.big_div_by_number_up(big_type), b);
+        }
+        // huge
+        {
+            let a = Q::new(u16::MAX);
+            let b = U256::from(u16::MAX as u64 * 10 + 1);
+            assert_eq!(a.big_div_by_number(b), Q::new(0));
+            assert_eq!(a.big_div_by_number_up(b), Q::new(1));
+        }
+        // random
+        {
+            let a = Q::new(63424);
+            let b = U256::from(157209);
+            // real     0.403437462..
+            // expected  4
+            assert_eq!(a.big_div_by_number(b), Q::new(4));
+            assert_eq!(a.big_div_by_number_up(b), Q::new(5));
+        }
+    }
 }
