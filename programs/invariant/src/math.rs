@@ -291,7 +291,7 @@ fn get_next_sqrt_price_x_up(
     Price::big_div_values_up(price_sqrt.big_mul_to_value_up(liquidity), denominator)
 }
 
-// price +- (amount / L),
+// price +- (amount / L)
 fn get_next_sqrt_price_y_down(
     price_sqrt: Price,
     liquidity: Liquidity,

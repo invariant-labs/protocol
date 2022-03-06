@@ -7,6 +7,7 @@ pub fn generate_others(characteristics: DecimalCharacteristics) -> proc_macro::T
     let DecimalCharacteristics {
         struct_name,
         underlying_type,
+        scale,
         ..
     } = characteristics;
 
@@ -19,8 +20,8 @@ pub fn generate_others(characteristics: DecimalCharacteristics) -> proc_macro::T
         where
             T::U: TryInto<#underlying_type>,
         {
-            fn mul_up(self, rhs: T) -> #struct_name {
-                #struct_name::new(
+            fn mul_up(self, rhs: T) -> Self {
+                Self::new(
                     self.get().checked_mul(
                         rhs.get()
                             .try_into()
@@ -32,8 +33,8 @@ pub fn generate_others(characteristics: DecimalCharacteristics) -> proc_macro::T
                 )
             }
 
-            fn div_up(self, rhs: T) -> #struct_name {
-                #struct_name::new(
+            fn div_up(self, rhs: T) -> Self {
+                Self::new(
                     self.get().checked_mul(T::one()).unwrap()
                     .checked_add(
                         rhs.get()
@@ -46,6 +47,22 @@ pub fn generate_others(characteristics: DecimalCharacteristics) -> proc_macro::T
                     ).unwrap()
                     .try_into().unwrap()
                 )
+            }
+
+        }
+
+        impl std::fmt::Display for #struct_name {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                if #scale > 0 {
+                    write!(
+                        f,
+                        "{}.{}",
+                        self.get().checked_div(Self::one()).unwrap(),
+                        self.get().checked_rem(Self::one()).unwrap()
+                    )
+                } else {
+                    write!(f, "{}", self.get())
+                }
             }
         }
 

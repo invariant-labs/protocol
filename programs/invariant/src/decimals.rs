@@ -45,7 +45,7 @@ pub struct TokenAmount(pub u64);
 
 impl FeeGrowth {
     pub fn from_fee(liquidity: Liquidity, fee: TokenAmount) -> Self {
-        Self::from_decimal(fee).big_div_up(liquidity)
+        Self::from_decimal(fee).big_div(liquidity)
     }
 
     pub fn to_fee(self, liquidity: Liquidity) -> FixedPoint {
@@ -129,7 +129,7 @@ pub mod tests {
     }
 
     #[test]
-    fn test_new() {
+    fn test_from_fee() {
         // One
         {
             let fee_growth = FeeGrowth::from_fee(Liquidity::from_integer(1), TokenAmount(1));
@@ -143,7 +143,9 @@ pub mod tests {
         // Little
         {
             let fee_growth = FeeGrowth::from_fee(Liquidity::from_integer(u64::MAX), TokenAmount(1));
-            assert_eq!(fee_growth, FeeGrowth::new(54211))
+            // real    5.42101086242752217003726400434970855712890625 × 10^-20
+            // expected 54210
+            assert_eq!(fee_growth, FeeGrowth::new(54210))
         }
         // Fairly big
         {
@@ -174,6 +176,21 @@ pub mod tests {
             let out = fee_growth.to_fee(liquidity_after);
             assert_eq!(out, FixedPoint::from_integer(1000))
         }
+        // huge liquidity
+        {
+            let amount = TokenAmount(100_000_000__000000);
+            let liquidity = Liquidity::from_integer(2u128.pow(77));
+
+            let fee_growth = FeeGrowth::from_fee(liquidity, amount);
+            // real    6.61744490042422139897126953655970282852649688720703125 × 10^-22
+            // expected 661744490042422
+            assert_eq!(fee_growth, FeeGrowth::new(661744490042422));
+
+            let out = fee_growth.to_fee(liquidity);
+            // real    9.9999999999999978859343891977453174784 × 10^25
+            // expected 99999999999999978859343891
+            assert_eq!(out, FixedPoint::new(99999999999999978859343891))
+        }
     }
 
     #[test]
@@ -181,7 +198,7 @@ pub mod tests {
         let liquidity = Liquidity::new(4_902_430_892__340393240932);
         let price: Price = Price::new(9833__489034_289032_430082_130832);
 
-        // real:         4.8208000421189053044075394913280570348844921615424 × 10^13
+        // real:          4.8208000421189053044075394913280570348844921615424 × 10^13
         // expected liq:   48208000421189053044075394
         // expected price: 48208000421189053044075394913280570348
 
