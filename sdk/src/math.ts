@@ -17,6 +17,8 @@ export const MAX_TICK = 221_818
 export const MIN_TICK = -MAX_TICK
 export const TICK_SEARCH_RANGE = 256
 
+export const U64_MAX = new BN('18446744073709551615')
+
 export interface SwapResult {
   nextPrice: Decimal
   amountIn: BN
@@ -122,9 +124,9 @@ export const calculateSwapStep = (
   if (byAmountIn) {
     const amountAfterFee: BN = fromInteger(1).v.sub(fee.v).mul(amount).div(DENOMINATOR)
     if (aToB) {
-      amountIn = getDeltaX(targetPrice, currentPrice, liquidity, true)
+      amountIn = getDeltaX(targetPrice, currentPrice, liquidity, true) ?? U64_MAX
     } else {
-      amountIn = getDeltaY(targetPrice, currentPrice, liquidity, true)
+      amountIn = getDeltaY(targetPrice, currentPrice, liquidity, true) ?? U64_MAX
     }
     if (amountAfterFee.gte(amountIn)) {
       nextPrice = targetPrice
@@ -133,9 +135,9 @@ export const calculateSwapStep = (
     }
   } else {
     if (aToB) {
-      amountOut = getDeltaY(targetPrice, currentPrice, liquidity, false)
+      amountOut = getDeltaY(targetPrice, currentPrice, liquidity, false) ?? U64_MAX
     } else {
-      amountOut = getDeltaX(currentPrice, targetPrice, liquidity, false)
+      amountOut = getDeltaX(currentPrice, targetPrice, liquidity, false) ?? U64_MAX
     }
     if (amount.gte(amountOut)) {
       nextPrice = targetPrice
@@ -162,6 +164,8 @@ export const calculateSwapStep = (
     }
   }
 
+  if (amountIn === null || amountOut === null) throw 'Amount would be greater than u64'
+
   if (!byAmountIn && amountOut.gt(amount)) {
     amountOut = amount
   }
@@ -185,7 +189,7 @@ export const getDeltaX = (
   priceB: Decimal,
   liquidity: Decimal,
   up: boolean
-): BN => {
+): BN | null => {
   let deltaPrice: Decimal
   if (priceA.v.gt(priceB.v)) {
     deltaPrice = { v: priceA.v.sub(priceB.v) }
@@ -197,18 +201,20 @@ export const getDeltaX = (
 
   if (up) {
     const denominatorUp: BN = priceA.v.mul(priceB.v).div(PRICE_DENOMINATOR)
-    return nominator
+    const result = nominator
       .mul(PRICE_DENOMINATOR)
       .add(denominatorUp.subn(1))
       .div(denominatorUp)
       .add(PRICE_DENOMINATOR.subn(1))
       .div(PRICE_DENOMINATOR)
+    return result.lte(U64_MAX) ? result : null
   } else {
     const denominatorDown: BN = priceA.v
       .mul(priceB.v)
       .add(PRICE_DENOMINATOR.subn(1))
       .div(PRICE_DENOMINATOR)
-    return nominator.mul(PRICE_DENOMINATOR).div(denominatorDown).div(PRICE_DENOMINATOR)
+    const result = nominator.mul(PRICE_DENOMINATOR).div(denominatorDown).div(PRICE_DENOMINATOR)
+    return result.lte(U64_MAX) ? result : null
   }
 }
 
@@ -217,7 +223,7 @@ export const getDeltaY = (
   priceB: Decimal,
   liquidity: Decimal,
   up: boolean
-): BN => {
+): BN | null => {
   let deltaPrice: Decimal
   if (priceA.v.gt(priceB.v)) {
     deltaPrice = { v: priceA.v.sub(priceB.v) }
@@ -226,14 +232,16 @@ export const getDeltaY = (
   }
 
   if (up) {
-    return deltaPrice.v
+    const result = deltaPrice.v
       .mul(liquidity.v)
       .add(LIQUIDITY_DENOMINATOR.subn(1))
       .div(LIQUIDITY_DENOMINATOR)
       .add(PRICE_DENOMINATOR.subn(1))
       .div(PRICE_DENOMINATOR)
+    return result.lte(U64_MAX) ? result : null
   } else {
-    return deltaPrice.v.mul(liquidity.v).div(LIQUIDITY_DENOMINATOR).div(PRICE_DENOMINATOR)
+    const result = deltaPrice.v.mul(liquidity.v).div(LIQUIDITY_DENOMINATOR).div(PRICE_DENOMINATOR)
+    return result.lte(U64_MAX) ? result : null
   }
 }
 
