@@ -18,7 +18,7 @@ import { struct, u32, u8 } from '@solana/buffer-layout'
 
 export const SEED = 'Invariant'
 export const DECIMAL = 12
-export const LIQUIDITY_SCALE = 12
+export const LIQUIDITY_SCALE = 6
 export const GROWTH_SCALE = 24
 export const PRICE_SCALE = 24
 export const FEE_DECIMAL = 5
@@ -502,20 +502,20 @@ export const calculateTokensOwed = ({
   if (feeGrowthInsideX.lt(position.feeGrowthInsideX.v)) {
     tokensOwedX = position.liquidity.v
       .mul(feeGrowthInsideX.add(U128MAX.sub(position.feeGrowthInsideX.v)))
-      .div(GROWTH_DENOMINATOR)
+      .div(new BN(10).pow(new BN(DECIMAL + LIQUIDITY_SCALE)))
   } else {
     tokensOwedX = position.liquidity.v
       .mul(feeGrowthInsideX.sub(position.feeGrowthInsideX.v))
-      .div(GROWTH_DENOMINATOR)
+      .div(new BN(10).pow(new BN(DECIMAL + LIQUIDITY_SCALE)))
   }
   if (feeGrowthInsideY.lt(position.feeGrowthInsideY.v)) {
     tokensOwedY = position.liquidity.v
       .mul(feeGrowthInsideY.add(U128MAX.sub(position.feeGrowthInsideY.v)))
-      .div(GROWTH_DENOMINATOR)
+      .div(new BN(10).pow(new BN(DECIMAL + LIQUIDITY_SCALE)))
   } else {
     tokensOwedY = position.liquidity.v
       .mul(feeGrowthInsideY.sub(position.feeGrowthInsideY.v))
-      .div(GROWTH_DENOMINATOR)
+      .div(new BN(10).pow(new BN(DECIMAL + LIQUIDITY_SCALE)))
   }
   const tokensOwedXTotal = position.tokensOwedX.v.add(tokensOwedX).div(DENOMINATOR)
   const tokensOwedYTotal = position.tokensOwedY.v.add(tokensOwedY).div(DENOMINATOR)
