@@ -83,8 +83,17 @@ impl Position {
         );
 
         // calculate accumulated fee
-        let tokens_owed_x = (fee_growth_inside_x - self.fee_growth_inside_x).to_fee(self.liquidity);
-        let tokens_owed_y = (fee_growth_inside_y - self.fee_growth_inside_y).to_fee(self.liquidity);
+        let tokens_owed_x = match fee_growth_inside_x.lt(&{ self.fee_growth_inside_x }) {
+            true => (fee_growth_inside_x + (FeeGrowth::new(u128::MAX) - self.fee_growth_inside_x))
+                .to_fee(self.liquidity),
+            false => (fee_growth_inside_x - self.fee_growth_inside_x).to_fee(self.liquidity),
+        };
+
+        let tokens_owed_y = match fee_growth_inside_y.lt(&{ self.fee_growth_inside_y }) {
+            true => (fee_growth_inside_y + (FeeGrowth::new(u128::MAX) - self.fee_growth_inside_y))
+                .to_fee(self.liquidity),
+            false => (fee_growth_inside_y - self.fee_growth_inside_y).to_fee(self.liquidity),
+        };
 
         self.liquidity = self.calculate_new_liquidity_safely(sign, liquidity_delta)?;
         self.fee_growth_inside_x = fee_growth_inside_x;
@@ -257,6 +266,42 @@ mod tests {
             assert_eq!({ position.fee_growth_inside_y }, FeeGrowth::from_integer(5));
             assert_eq!({ position.tokens_owed_x }, FixedPoint::from_integer(101));
             assert_eq!({ position.tokens_owed_y }, FixedPoint::from_integer(101));
+        }
+        // previous fee_growth_inside close to max and current close to 0
+        {
+            let mut position = Position {
+                liquidity: Liquidity::from_integer(1),
+                fee_growth_inside_x: FeeGrowth::new(u128::MAX) - FeeGrowth::from_integer(10),
+                fee_growth_inside_y: FeeGrowth::new(u128::MAX) - FeeGrowth::from_integer(10),
+                tokens_owed_x: FixedPoint::from_integer(100),
+                tokens_owed_y: FixedPoint::from_integer(100),
+                ..Default::default()
+            };
+            let sign = true;
+            let liquidity_delta = Liquidity::from_integer(1);
+            let fee_growth_inside_x = FeeGrowth::from_integer(10);
+            let fee_growth_inside_y = FeeGrowth::from_integer(10);
+
+            position
+                .update(
+                    sign,
+                    liquidity_delta,
+                    fee_growth_inside_x,
+                    fee_growth_inside_y,
+                )
+                .unwrap();
+
+            assert_eq!({ position.liquidity }, Liquidity::from_integer(2));
+            assert_eq!(
+                { position.fee_growth_inside_x },
+                FeeGrowth::from_integer(10)
+            );
+            assert_eq!(
+                { position.fee_growth_inside_y },
+                FeeGrowth::from_integer(10)
+            );
+            assert_eq!({ position.tokens_owed_x }, FixedPoint::from_integer(120));
+            assert_eq!({ position.tokens_owed_y }, FixedPoint::from_integer(120));
         }
     }
 
