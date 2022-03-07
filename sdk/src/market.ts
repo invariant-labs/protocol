@@ -596,7 +596,7 @@ export class Market {
     const transaction = new Transaction({
       feePayer: payerPubkey
     })
-      // .add(ComputeUnitsInstruction(300000, payerPubkey)) // UNCOMMENT ME WHEN 1.9 HITS
+      .add(ComputeUnitsInstruction(400000, payerPubkey)) // UNCOMMENT ME WHEN 1.9 HITS
       .add(
         SystemProgram.createAccount({
           fromPubkey: payerPubkey,
@@ -655,32 +655,35 @@ export class Market {
           }
         })
       )
-      .add(await this.createPositionListInstruction(payerPubkey))
-      .add(
-        this.program.instruction.createPosition(lowerTick, upperTick, liquidityDelta, {
-          accounts: {
-            state: this.stateAddress,
-            pool: poolAddress,
-            positionList: positionListAddress,
-            position: positionAddress,
-            tickmap: bitmapKeypair.publicKey,
-            owner: payerPubkey,
-            payer: payerPubkey,
-            lowerTick: tickAddress,
-            upperTick: tickAddressUpper,
-            tokenX: pair.tokenX,
-            tokenY: pair.tokenY,
-            accountX: userTokenX,
-            accountY: userTokenY,
-            reserveX: tokenXReserve.publicKey,
-            reserveY: tokenYReserve.publicKey,
-            programAuthority: this.programAuthority,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            rent: SYSVAR_RENT_PUBKEY,
-            systemProgram: SystemProgram.programId
-          }
-        })
-      )
+
+    if ((await this.connection.getAccountInfo(positionListAddress)) === null)
+      transaction.add(await this.createPositionListInstruction(payerPubkey))
+
+    transaction.add(
+      this.program.instruction.createPosition(lowerTick, upperTick, liquidityDelta, {
+        accounts: {
+          state: this.stateAddress,
+          pool: poolAddress,
+          positionList: positionListAddress,
+          position: positionAddress,
+          tickmap: bitmapKeypair.publicKey,
+          owner: payerPubkey,
+          payer: payerPubkey,
+          lowerTick: tickAddress,
+          upperTick: tickAddressUpper,
+          tokenX: pair.tokenX,
+          tokenY: pair.tokenY,
+          accountX: userTokenX,
+          accountY: userTokenY,
+          reserveX: tokenXReserve.publicKey,
+          reserveY: tokenYReserve.publicKey,
+          programAuthority: this.programAuthority,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          rent: SYSVAR_RENT_PUBKEY,
+          systemProgram: SystemProgram.programId
+        }
+      })
+    )
 
     return {
       transaction,
