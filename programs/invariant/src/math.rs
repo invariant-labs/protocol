@@ -1769,7 +1769,6 @@ mod tests {
 
         //     // calculate y based on liquidity
         //     let current_lower_diff = almost_max_sqrt_price - sqrt_price_at_tick_before_max;
-        //     println!("current_lower_diff = {:?}", current_lower_diff);
         //     let y = max_liquidity
         //         .checked_div(liquidity_denominator)
         //         .unwrap()
@@ -1778,7 +1777,6 @@ mod tests {
         //         .checked_mul(U256::from(current_lower_diff.v))
         //         .unwrap();
 
-        //     println!("y = {:?}", y);
         //     // L * (sqrt(pc) - sqrt(pl))
 
         //     // calculate get_delta_y => y > 2^64
