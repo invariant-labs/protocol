@@ -187,7 +187,7 @@ pub fn get_delta_x(
         sqrt_price_b - sqrt_price_a
     };
 
-    // log(2,  2^32 * 10^24 * 2^64 * 10^6 ) = 195
+    // log(2,  2^16 * 10^24 * 2^128 / 10^6 ) = 203.7
     let nominator = delta_price.big_mul_to_value(liquidity);
     match up {
         true => Price::big_div_values_to_token_up(
@@ -599,8 +599,7 @@ mod tests {
         {
             let current_price_sqrt = Price::new(999500149965_000000000000);
             let target_price_sqrt = Price::from_integer(1);
-            let liquidity = Liquidity::new(u128::MAX);
-            // let liquidity = calculate_max_liquidity_per_tick(10000);
+            let liquidity = Liquidity::new(u128::MAX / 1_000000);
             let amount = TokenAmount(1);
             let by_amount_in = false;
             let fee = FixedPoint::from_scale(6, 4); // 0.0006 -> 0.06%
@@ -613,7 +612,6 @@ mod tests {
                 by_amount_in,
                 fee,
             );
-            println!("{:?}", result);
             let expected_result = SwapResult {
                 next_price_sqrt: Price::new(999500149965_000000000001),
                 amount_in: TokenAmount(341),
