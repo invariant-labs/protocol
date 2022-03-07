@@ -322,6 +322,12 @@ pub fn calculate_fee_growth_inside(
     fee_growth_global_x: FeeGrowth,
     fee_growth_global_y: FeeGrowth,
 ) -> (FeeGrowth, FeeGrowth) {
+    msg!("tick_lower = {:?}", tick_lower);
+    msg!("tick_upper = {:?}", tick_upper);
+    msg!("tick_current = {:?}", tick_current);
+    msg!("fee_growth_global_x = {:?}", fee_growth_global_x);
+    msg!("fee_growth_global_y = {:?}", fee_growth_global_y);
+
     // determine position relative to current tick
     let current_above_lower = tick_current >= tick_lower.index;
     let current_below_upper = tick_current < tick_upper.index;
@@ -332,11 +338,13 @@ pub fn calculate_fee_growth_inside(
     } else {
         fee_growth_global_x.get() - tick_lower.fee_growth_outside_x.get()
     };
+    msg!("fee_growth_below_x = {:?}", fee_growth_below_x);
     let fee_growth_below_y = if current_above_lower {
         tick_lower.fee_growth_outside_y.get()
     } else {
         fee_growth_global_y.get() - tick_lower.fee_growth_outside_y.get()
     };
+    msg!("fee_growth_below_y = {:?}", fee_growth_below_y);
 
     // calculate fee growth above
     let fee_growth_above_x = if current_below_upper {
@@ -344,17 +352,21 @@ pub fn calculate_fee_growth_inside(
     } else {
         fee_growth_global_x.get() - tick_upper.fee_growth_outside_x.get()
     };
+    msg!("fee_growth_above_x = {:?}", fee_growth_above_x);
     let fee_growth_above_y = if current_below_upper {
         tick_upper.fee_growth_outside_y.get()
     } else {
         fee_growth_global_y.get() - tick_upper.fee_growth_outside_y.get()
     };
+    msg!("fee_growth_above_y = {:?}", fee_growth_above_y);
 
     // calculate fee growth inside
     let fee_growth_inside_x =
         FeeGrowth::new(fee_growth_global_x.get() - fee_growth_below_x - fee_growth_above_x);
+    msg!("fee_growth_inside_x = {:?}", fee_growth_inside_x);
     let fee_growth_inside_y =
         FeeGrowth::new(fee_growth_global_y.get() - fee_growth_below_y - fee_growth_above_y);
+    msg!("fee_growth_inside_y = {:?}", fee_growth_inside_y);
 
     (fee_growth_inside_x, fee_growth_inside_y)
 }

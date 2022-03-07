@@ -40,11 +40,14 @@ impl Position {
         }
 
         // update initialized tick
+        msg!("lower_tick update");
         lower_tick.update(liquidity_delta, false, add)?;
 
+        msg!("upper_tick update");
         upper_tick.update(liquidity_delta, true, add)?;
 
         // update fee inside position
+        msg!("calculate_fee_growth_inside");
         let (fee_growth_inside_x, fee_growth_inside_y) = calculate_fee_growth_inside(
             *lower_tick,
             *upper_tick,
@@ -52,15 +55,19 @@ impl Position {
             pool.fee_growth_global_x,
             pool.fee_growth_global_y,
         );
+        msg!("calculate_fee_growth_inside end");
 
+        msg!("position update");
         self.update(
             add,
             liquidity_delta,
             fee_growth_inside_x,
             fee_growth_inside_y,
         )?;
+        msg!("position update end");
 
         // calculate tokens amounts and update pool liquidity
+        msg!("calculate_amount_delta");
         calculate_amount_delta(
             pool,
             liquidity_delta,
@@ -81,16 +88,32 @@ impl Position {
             liquidity_delta.v != 0 || self.liquidity.v != 0,
             ErrorCode::EmptyPositionPokes
         );
+        msg!("self position = {:?}", self);
+        msg!("sign = {:?}", sign);
+        msg!("liquidity_delta = {:?}", liquidity_delta);
+        msg!("fee_growth_inside_x = {:?}", fee_growth_inside_x);
+        msg!("fee_growth_inside_y = {:?}", fee_growth_inside_y);
 
+        msg!(
+            "fee_growth_inside_x - self.fee_growth_inside_x = {:?}",
+            fee_growth_inside_x - self.fee_growth_inside_x
+        );
         // calculate accumulated fee
         let tokens_owed_x = (fee_growth_inside_x - self.fee_growth_inside_x).to_fee(self.liquidity);
+        msg!("tokens_owed_x = {:?}", tokens_owed_x);
         let tokens_owed_y = (fee_growth_inside_y - self.fee_growth_inside_y).to_fee(self.liquidity);
+        msg!("tokens_owed_y = {:?}", tokens_owed_y);
 
         self.liquidity = self.calculate_new_liquidity_safely(sign, liquidity_delta)?;
+        msg!("self.liquidity = {:?}", self.liquidity);
         self.fee_growth_inside_x = fee_growth_inside_x;
+        msg!("fee_growth_inside_x = {:?}", fee_growth_inside_x);
         self.fee_growth_inside_y = fee_growth_inside_y;
+        msg!("fee_growth_inside_y = {:?}", fee_growth_inside_y);
         self.tokens_owed_x = self.tokens_owed_x + tokens_owed_x;
+        msg!("tokens_owed_x = {:?}", tokens_owed_x);
         self.tokens_owed_y = self.tokens_owed_y + tokens_owed_y;
+        msg!("tokens_owed_y = {:?}", tokens_owed_y);
 
         Ok(())
     }
