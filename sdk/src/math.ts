@@ -149,18 +149,19 @@ export const calculateSwapStep = (
   const max = targetPrice.v.eq(nextPrice.v)
 
   if (aToB) {
+    // TODO: refactor "as BN" casting
     if (!(max && byAmountIn)) {
-      amountIn = getDeltaX(nextPrice, currentPrice, liquidity, true)
+      amountIn = getDeltaX(nextPrice, currentPrice, liquidity, true) as BN
     }
     if (!(max && !byAmountIn)) {
-      amountOut = getDeltaY(nextPrice, currentPrice, liquidity, false)
+      amountOut = getDeltaY(nextPrice, currentPrice, liquidity, false) as BN
     }
   } else {
     if (!(max && byAmountIn)) {
-      amountIn = getDeltaY(currentPrice, nextPrice, liquidity, true)
+      amountIn = getDeltaY(currentPrice, nextPrice, liquidity, true) as BN
     }
     if (!(max && !byAmountIn)) {
-      amountOut = getDeltaX(currentPrice, nextPrice, liquidity, false)
+      amountOut = getDeltaX(currentPrice, nextPrice, liquidity, false) as BN
     }
   }
 
