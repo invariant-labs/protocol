@@ -51,6 +51,7 @@ import { Keypair } from '@solana/web3.js'
 import { swapParameters } from './swap'
 import { LIQUIDITY_DENOMINATOR, toDecimal } from '@invariant-labs/sdk/lib/utils'
 import { priceToTickInRange } from '@invariant-labs/sdk/src/tick'
+import { U64_MAX } from '@invariant-labs/sdk/lib/math'
 
 describe('Math', () => {
   describe('Test sqrt price calculation', () => {
@@ -707,7 +708,7 @@ describe('Math', () => {
       const priceB: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('1')) }
       const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN('0')) }
 
-      const result = getDeltaX(priceA, priceB, liquidity, false)
+      const result = getDeltaX(priceA, priceB, liquidity, false) ?? U64_MAX
 
       const expectedResult = new BN('0')
       assert.ok(result.eq(expectedResult))
@@ -717,7 +718,7 @@ describe('Math', () => {
       const priceB: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('2')) }
       const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN('2')) }
 
-      const result = getDeltaX(priceA, priceB, liquidity, false)
+      const result = getDeltaX(priceA, priceB, liquidity, false) ?? U64_MAX
 
       const expectedResult = new BN('1')
       assert.ok(result.eq(expectedResult))
@@ -728,8 +729,8 @@ describe('Math', () => {
       const priceB: Decimal = { v: new BN('87854456421658000000000000') }
       const liquidity: Decimal = { v: new BN('983983249092') }
 
-      const resultDown = getDeltaX(priceA, priceB, liquidity, false)
-      const resultUp = getDeltaX(priceA, priceB, liquidity, true)
+      const resultDown = getDeltaX(priceA, priceB, liquidity, false) ?? U64_MAX
+      const resultUp = getDeltaX(priceA, priceB, liquidity, true) ?? U64_MAX
 
       const expectedResultDown = new BN(7010)
       const expectedResultUp = new BN(7011)
@@ -744,7 +745,7 @@ describe('Math', () => {
       const priceB: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('1')) }
       const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN('0')) }
 
-      const result = getDeltaY(priceA, priceB, liquidity, false)
+      const result = getDeltaY(priceA, priceB, liquidity, false) ?? U64_MAX
 
       const expectedResult = new BN('0')
       assert.ok(result.eq(expectedResult))
@@ -754,7 +755,7 @@ describe('Math', () => {
       const priceB: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('2')) }
       const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN('2')) }
 
-      const result = getDeltaY(priceA, priceB, liquidity, false)
+      const result = getDeltaY(priceA, priceB, liquidity, false) ?? U64_MAX
 
       const expectedResult = new BN('2')
       assert.ok(result.eq(expectedResult))
@@ -765,14 +766,38 @@ describe('Math', () => {
       const priceB: Decimal = { v: new BN('87854456421658000000000000') }
       const liquidity: Decimal = { v: new BN('983983249092') }
 
-      const resultDown = getDeltaY(priceA, priceB, liquidity, false)
-      const resultUp = getDeltaY(priceA, priceB, liquidity, true)
+      const resultDown = getDeltaY(priceA, priceB, liquidity, false) ?? U64_MAX
+      const resultUp = getDeltaY(priceA, priceB, liquidity, true) ?? U64_MAX
 
       const expectedResultDown = new BN(144669023)
       const expectedResultUp = new BN(144669024)
 
       assert.ok(resultDown.eq(expectedResultDown))
       assert.ok(resultUp.eq(expectedResultUp))
+    })
+
+    it('overflow', async () => {
+      const priceA: Decimal = { v: PRICE_DENOMINATOR }
+      const priceB: Decimal = { v: PRICE_DENOMINATOR.muln(2) }
+      const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN(2).pow(new BN(64))) }
+
+      const resultDown = getDeltaY(priceA, priceB, liquidity, false)
+      const resultUp = getDeltaY(priceA, priceB, liquidity, true)
+
+      assert.ok(resultDown === null)
+      assert.ok(resultUp === null)
+    })
+
+    it('huge liquidity', async () => {
+      const priceA: Decimal = { v: PRICE_DENOMINATOR }
+      const priceB: Decimal = { v: PRICE_DENOMINATOR.addn(1000000) }
+      const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN(2).pow(new BN(80))) }
+
+      const resultDown = getDeltaY(priceA, priceB, liquidity, false)
+      const resultUp = getDeltaY(priceA, priceB, liquidity, true)
+
+      assert.ok(resultDown !== null)
+      assert.ok(resultUp !== null)
     })
   })
   describe('test getNextPriceXUp', () => {
