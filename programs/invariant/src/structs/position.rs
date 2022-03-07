@@ -92,7 +92,9 @@ impl Position {
         self.liquidity = self.calculate_new_liquidity_safely(sign, liquidity_delta)?;
         self.fee_growth_inside_x = fee_growth_inside_x;
         self.fee_growth_inside_y = fee_growth_inside_y;
+        // trunk-ignore(clippy/assign_op_pattern)
         self.tokens_owed_x = self.tokens_owed_x + tokens_owed_x;
+        // trunk-ignore(clippy/assign_op_pattern)
         self.tokens_owed_y = self.tokens_owed_y + tokens_owed_y;
 
         Ok(())
