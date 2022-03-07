@@ -8,7 +8,7 @@ import { Market, Pair, tou64, LIQUIDITY_DENOMINATOR, Network } from '@invariant-
 import { FeeTier, InitPosition, Swap } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
-// TODO add to tests
+
 describe('compare', () => {
   const provider = Provider.local()
   const connection = provider.connection

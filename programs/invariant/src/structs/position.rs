@@ -101,7 +101,9 @@ impl Position {
         self.liquidity = self.calculate_new_liquidity_safely(sign, liquidity_delta)?;
         self.fee_growth_inside_x = fee_growth_inside_x;
         self.fee_growth_inside_y = fee_growth_inside_y;
+        // trunk-ignore(clippy/assign_op_pattern)
         self.tokens_owed_x = self.tokens_owed_x + tokens_owed_x;
+        // trunk-ignore(clippy/assign_op_pattern)
         self.tokens_owed_y = self.tokens_owed_y + tokens_owed_y;
 
         Ok(())
@@ -354,11 +356,6 @@ mod tests {
                     current_timestamp,
                 )
                 .unwrap();
-
-            // assert_eq!(
-            //     { position.tokens_owed_x },
-            //     (Decimal::from_integer(1234 - 5) + Decimal::new(1)) * Decimal::from_integer(123)
-            // ) // 151167000000000123 so close enough?
 
             assert_eq!(
                 { position.tokens_owed_x },

@@ -214,7 +214,6 @@ pub fn get_delta_y(
         sqrt_price_b - sqrt_price_a
     };
 
-    // I'm so astonished this compiled i'm leaving it like that
     match match up {
         true => delta_price
             .big_mul_to_value_up(liquidity)
@@ -1059,7 +1058,6 @@ mod tests {
 
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
 
-            // TODO will need more precision
             assert_eq!(
                 result,
                 Price::new(461538461538461538461539) // rounded up Decimal::from_integer(6).div(Decimal::from_integer(13))
@@ -1182,7 +1180,6 @@ mod tests {
             // real     2.999999999999833...
             assert_eq!(result, Price::new(2833333333333_333333333333));
         }
-        // TODO: test without integers
     }
 
     #[test]
@@ -1738,54 +1735,33 @@ mod tests {
         // position range below current price
         // L (by x) = x * sqrt(pu) * sqrt(pc)  / (sqrt(pu) - sqrt(pc))
         // L is greatest for max token amount and in minimal price difference for the highest price
-        // {
-        //     let almost_max_sqrt_price = max_sqrt_price - Price::new(1);
+        {
+            let almost_max_sqrt_price = max_sqrt_price - Price::new(1);
 
-        //     let product = U256::from(max_sqrt_price.v)
-        //         .checked_mul(U256::from(almost_max_sqrt_price.v))
-        //         .unwrap()
-        //         .checked_mul(liquidity_denominator)
-        //         .unwrap()
-        //         .checked_div(price_denominator)
-        //         .unwrap();
-        //     let diff = U256::from(max_sqrt_price.v)
-        //         .checked_sub(U256::from(almost_max_sqrt_price.v))
-        //         .unwrap();
+            let product = U256::from(max_sqrt_price.v)
+                .checked_mul(U256::from(almost_max_sqrt_price.v))
+                .unwrap()
+                .checked_mul(liquidity_denominator)
+                .unwrap()
+                .checked_div(price_denominator)
+                .unwrap();
+            let diff = U256::from(max_sqrt_price.v)
+                .checked_sub(U256::from(almost_max_sqrt_price.v))
+                .unwrap();
 
-        //     // ~2^112 * 10^12 ~ 2^152
-        //     let multiplier = product.div(diff);
+            // ~2^112 * 10^12 ~ 2^152
+            let multiplier = product.checked_div(diff).unwrap();
 
-        //     // ~2^176 * 10^12 ~2^216
-        //     let max_liquidity = U256::from(max_token_amount)
-        //         .checked_mul(multiplier)
-        //         .unwrap();
+            // ~2^176 * 10^12 ~2^216
+            let max_liquidity = U256::from(max_token_amount)
+                .checked_mul(multiplier)
+                .unwrap();
 
-        //     assert!(max_liquidity.gt(&U256::from(u128::MAX)));
-        //     assert!(max_liquidity.eq(&U256::from_str(
-        //         "C096E12F52D3AD459C1267BE28847279D8B8B01284A7E03FCA9E07"
-        //     )
-        //     .unwrap()));
-
-        //     // calculate y based on liquidity
-        //     let current_lower_diff = almost_max_sqrt_price - sqrt_price_at_tick_before_max;
-        //     let y = max_liquidity
-        //         .checked_div(liquidity_denominator)
-        //         .unwrap()
-        //         .checked_div(price_denominator)
-        //         .unwrap()
-        //         .checked_mul(U256::from(current_lower_diff.v))
-        //         .unwrap();
-
-        //     // L * (sqrt(pc) - sqrt(pl))
-
-        //     // calculate get_delta_y => y > 2^64
-        //     // let y_token_amount = max_liquidity
-        //     //     .checked_mul(diff)
-        //     //     .unwrap()
-        //     //     .checked_div(price_denominator)
-        //     //     .unwrap()
-        //     //     .checked_div(liquidity_denominator)
-        //     //     .unwrap();
-        // }
+            assert!(max_liquidity.gt(&U256::from(u128::MAX)));
+            assert!(max_liquidity.eq(&U256::from_str(
+                "C096E12F52D3AD459C1267BE28847279D8B8B01284A7E03FCA9E07"
+            )
+            .unwrap()));
+        }
     }
 }
