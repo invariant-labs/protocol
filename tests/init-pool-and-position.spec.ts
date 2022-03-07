@@ -20,6 +20,7 @@ describe('swap', () => {
     fee: fromFee(new BN(600)),
     tickSpacing: 10
   }
+
   let market: Market
   let pair: Pair
   let tokenX: Token
@@ -95,5 +96,29 @@ describe('swap', () => {
     assert.equal(position.liquidity.v.toString(), liquidity.toString())
     assert.isTrue(isInitialized(tickmap, lowerTick, pair.tickSpacing))
     assert.isTrue(isInitialized(tickmap, upperTick, pair.tickSpacing))
+
+    // create other pool on same account
+    const otherFeeTier: FeeTier = {
+      fee: fromFee(new BN(200)),
+      tickSpacing: 5
+    }
+    const otherPair = new Pair(tokenX.publicKey, tokenY.publicKey, otherFeeTier)
+    const createFeeTierVars: CreateFeeTier = {
+      feeTier: otherPair.feeTier,
+      admin: admin.publicKey
+    }
+    await market.createFeeTier(createFeeTierVars, admin)
+
+    const otherProps: InitPoolAndPosition = {
+      pair: otherPair,
+      owner: owner.publicKey,
+      userTokenX,
+      userTokenY,
+      lowerTick,
+      upperTick,
+      liquidityDelta: { v: liquidity },
+      initTick: pair.tickSpacing * 3
+    }
+    await market.initPoolAndPosition(otherProps, owner)
   })
 })
