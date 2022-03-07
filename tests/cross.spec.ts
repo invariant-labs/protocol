@@ -4,7 +4,7 @@ import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken, initEverything } from './testUtils'
-import { Market, Pair, tou64, DENOMINATOR, Network } from '@invariant-labs/sdk'
+import { Market, Pair, tou64, LIQUIDITY_DENOMINATOR, Network } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
@@ -74,7 +74,7 @@ describe('cross', () => {
     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
 
-    const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) }
+    const liquidityDelta = { v: new BN(1000000).mul(LIQUIDITY_DENOMINATOR) }
 
     // Deposit
     const upperTick = 10

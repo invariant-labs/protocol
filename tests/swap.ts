@@ -15,8 +15,8 @@ const ticks: Map<number, Tick> = new Map([
       pool: Keypair.generate().publicKey,
       index: -20,
       sign: true,
-      liquidityChange: { v: new BN('1000000000000000000') },
-      liquidityGross: { v: new BN('1000000000000000000') },
+      liquidityChange: { v: new BN('1000000000000') },
+      liquidityGross: { v: new BN('1000000000000') },
       sqrtPrice: { v: new BN('999000549780' + '0'.repeat(PRICE_SCALE - 12)) },
       feeGrowthOutsideX: { v: new BN(0) },
       feeGrowthOutsideY: { v: new BN(0) },
@@ -28,7 +28,7 @@ const ticks: Map<number, Tick> = new Map([
 const poolData: PoolData = {
   currentTickIndex: 0,
   tickSpacing: 10,
-  liquidity: { v: new BN('1000000000000000000') },
+  liquidity: { v: new BN('1000000000000') },
   fee: { v: new BN('6000000000') },
   sqrtPrice: { v: PRICE_DENOMINATOR }
 }

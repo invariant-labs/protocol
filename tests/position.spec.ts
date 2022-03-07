@@ -1,7 +1,14 @@
 import * as anchor from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
-import { Market, Pair, tou64, calculatePriceSqrt, fromInteger, Network } from '@invariant-labs/sdk'
+import {
+  Market,
+  Pair,
+  tou64,
+  calculatePriceSqrt,
+  LIQUIDITY_DENOMINATOR,
+  Network
+} from '@invariant-labs/sdk'
 import { Provider, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken, eqDecimal, initEverything } from './testUtils'
@@ -132,7 +139,7 @@ describe('position', () => {
       await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], xOwnerAmount)
       await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], yOwnerAmount)
 
-      const liquidityDelta = fromInteger(10_000)
+      const liquidityDelta = { v: LIQUIDITY_DENOMINATOR.muln(10_000) }
       const positionIndex = 0
 
       const initPositionVars: InitPosition = {
@@ -262,7 +269,7 @@ describe('position', () => {
       await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], xOwnerAmount)
       await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], yOwnerAmount)
 
-      const liquidityDelta = fromInteger(100)
+      const liquidityDelta = { v: LIQUIDITY_DENOMINATOR.muln(100) }
       const positionIndex = 1
       const reserveBalancesBefore = await market.getReserveBalances(pair, tokenX, tokenY)
 
@@ -391,7 +398,7 @@ describe('position', () => {
       await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], xOwnerAmount)
       await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], yOwnerAmount)
 
-      const liquidityDelta = fromInteger(10_000)
+      const liquidityDelta = { v: LIQUIDITY_DENOMINATOR.muln(10_000) }
       const positionIndex = 2
       const reserveBalancesBefore = await market.getReserveBalances(pair, tokenX, tokenY)
       const poolStateBefore = await market.getPool(pair)

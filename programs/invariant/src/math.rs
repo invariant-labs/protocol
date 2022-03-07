@@ -4,6 +4,7 @@ use crate::decimals::*;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::structs::tickmap::MAX_TICK;
+use crate::structs::TICK_LIMIT;
 use crate::*;
 
 #[derive(PartialEq, Debug)]
@@ -186,7 +187,7 @@ pub fn get_delta_x(
         sqrt_price_b - sqrt_price_a
     };
 
-    // log(2,  2^32 * 10^24 * 2^64 * 10^12 ) = 212.5..
+    // log(2,  2^16 * 10^24 * 2^128 / 10^6 ) = 203.7
     let nominator = delta_price.big_mul_to_value(liquidity);
     match up {
         true => Price::big_div_values_to_token_up(
@@ -464,10 +465,31 @@ pub fn is_enough_amount_to_push_price(
     current_price_sqrt.ne(&next_price_sqrt)
 }
 
+pub fn calculate_max_liquidity_per_tick(tick_spacing: u16) -> Liquidity {
+    const MAX_TICKS_LENGTH: u128 = 2 * TICK_LIMIT as u128;
+    const MAX_TICKS_AMOUNT: u128 = 2 * MAX_TICK as u128 + 1;
+    const MAX_GLOBAL_MAX_LIQUIDITY: u128 = u128::MAX;
+    const MAX_LIQUIDITY_TIGHT_SPACING: u128 = MAX_GLOBAL_MAX_LIQUIDITY / MAX_TICKS_LENGTH;
+
+    let max_ticks_amount = MAX_TICKS_AMOUNT
+        .checked_div(tick_spacing.try_into().unwrap())
+        .unwrap();
+
+    if MAX_TICKS_LENGTH < max_ticks_amount {
+        Liquidity::new(MAX_LIQUIDITY_TIGHT_SPACING)
+    } else {
+        Liquidity::new(
+            MAX_GLOBAL_MAX_LIQUIDITY
+                .checked_div(max_ticks_amount)
+                .unwrap(),
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
-    use std::{ops::Div, str::FromStr};
+    use std::str::FromStr;
 
     use crate::structs::TICK_LIMIT;
 
@@ -551,7 +573,8 @@ mod tests {
         {
             let current_price_sqrt = Price::new(999500149965_000000000000);
             let target_price_sqrt = Price::new(999500149965_000000000000);
-            let liquidity = Liquidity::new(20006000000000000000);
+
+            let liquidity = Liquidity::new(20006000_000000);
             let amount = TokenAmount(1_000_000);
             let by_amount_in = true;
             let fee = FixedPoint::from_scale(6, 4); // 0.0006 -> 0.06%
@@ -576,7 +599,7 @@ mod tests {
         {
             let current_price_sqrt = Price::new(999500149965_000000000000);
             let target_price_sqrt = Price::from_integer(1);
-            let liquidity = Liquidity::new(u128::MAX);
+            let liquidity = Liquidity::new(u128::MAX / 1_000000);
             let amount = TokenAmount(1);
             let by_amount_in = false;
             let fee = FixedPoint::from_scale(6, 4); // 0.0006 -> 0.06%
@@ -843,12 +866,12 @@ mod tests {
         {
             let sqrt_price_a = Price::new(234__878_324_943_782_000000000000);
             let sqrt_price_b = Price::new(87__854_456_421_658_000000000000);
-            let liquidity = Liquidity::new(983_983__249_092_300_399);
+            let liquidity = Liquidity::new(983_983__249_092);
 
             let result_down = get_delta_x(sqrt_price_a, sqrt_price_b, liquidity, false).unwrap();
             let result_up = get_delta_x(sqrt_price_a, sqrt_price_b, liquidity, true).unwrap();
 
-            // 7010.8199533090222620342346078676429792113623790285962379282493052
+            // 7010.8199533068819376891841727789301497024557314488455622925765280
             assert_eq!(result_down, TokenAmount(7010));
             assert_eq!(result_up, TokenAmount(7011));
         }
@@ -918,12 +941,12 @@ mod tests {
         {
             let sqrt_price_a = Price::new(234__878_324_943_782_000000000000);
             let sqrt_price_b = Price::new(87__854_456_421_658_000000000000);
-            let liquidity = Liquidity::new(983_983__249_092_300_399);
+            let liquidity = Liquidity::new(983_983__249_092);
 
             let result_down = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, false).unwrap();
             let result_up = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, true).unwrap();
 
-            // 144669023.842518763627991585527476
+            // 144669023.842474597804911408
             assert_eq!(result_down, TokenAmount(144669023));
             assert_eq!(result_up, TokenAmount(144669024));
         }
@@ -1076,13 +1099,14 @@ mod tests {
         }
         {
             let price_sqrt = Price::new(3_333333333333333333333333);
-            let liquidity = Liquidity::new(222_222222222222);
+            let liquidity = Liquidity::new(222_222222);
             let amount = TokenAmount(37);
 
-            // expected  7490636704119859529520682
-            // real     7.49063670411985952952068173...
+            // expected 7.490636713462104974072145
+            // real     7.4906367134621049740721443...
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
-            assert_eq!(result, Price::new(7490636704119859529520682));
+
+            assert_eq!(result, Price::new(7490636713462104974072145));
         }
     }
 
@@ -1587,6 +1611,33 @@ mod tests {
             assert_eq!(result, true);
         }
     }
+
+    #[test]
+    fn test_calculate_max_liquidity_per_tick() {
+        let max_liquidity_per_tick_limited_by_space =
+            Liquidity::new(1701411834604692317316873037158841u128);
+        // tick_spacing 1 [L_MAX / 200_000]
+        {
+            let max_l = calculate_max_liquidity_per_tick(1);
+            assert_eq!(max_l, max_liquidity_per_tick_limited_by_space);
+        };
+        // tick_spacing 2 [L_MAX / 200_000]
+        {
+            let max_l = calculate_max_liquidity_per_tick(2);
+            assert_eq!(max_l, max_liquidity_per_tick_limited_by_space);
+        }
+        // tick_spacing 3 [L_MAX / 147_879]
+        {
+            let max_l = calculate_max_liquidity_per_tick(3);
+            assert_eq!(max_l, Liquidity::new(2301086475570827930019641784376200));
+        }
+        // tick_spacing 100 [L_MAX / 4436]
+        {
+            let max_l = calculate_max_liquidity_per_tick(100);
+            assert_eq!(max_l, Liquidity::new(76709280189571339824926647302021688));
+        }
+    }
+
     #[test]
     fn test_max_liquidity_amount() {
         let liquidity_denominator = U256::from(1000000000000u128);
@@ -1718,7 +1769,6 @@ mod tests {
 
         //     // calculate y based on liquidity
         //     let current_lower_diff = almost_max_sqrt_price - sqrt_price_at_tick_before_max;
-        //     println!("current_lower_diff = {:?}", current_lower_diff);
         //     let y = max_liquidity
         //         .checked_div(liquidity_denominator)
         //         .unwrap()
@@ -1727,7 +1777,6 @@ mod tests {
         //         .checked_mul(U256::from(current_lower_diff.v))
         //         .unwrap();
 
-        //     println!("y = {:?}", y);
         //     // L * (sqrt(pc) - sqrt(pl))
 
         //     // calculate get_delta_y => y > 2^64

@@ -161,7 +161,7 @@ export const createPoolWithLiquidity = async (
   market: Market,
   connection: Connection,
   payer: Keypair,
-  liquidity: Decimal = { v: new BN(10).pow(new BN(22)) },
+  liquidity: Decimal = { v: new BN(10).pow(new BN(16)) },
   initialTick: number = 0,
   lowerTick: number = -1000,
   upperTick: number = 1000

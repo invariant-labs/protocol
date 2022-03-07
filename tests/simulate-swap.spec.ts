@@ -178,7 +178,6 @@ describe('swap', () => {
     const reserveYDelta = reserveYAfter.sub(reserveYBefore)
 
     assert.ok(amountX.eqn(7496))
-    console.log(amountY.toString())
     assert.ok(amountY.eqn(12477))
     assert.ok(reserveXDelta.eqn(2504))
     assert.ok(reserveYDelta.eqn(2477))

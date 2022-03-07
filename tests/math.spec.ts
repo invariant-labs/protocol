@@ -102,7 +102,7 @@ describe('Math', () => {
     })
     it('in current tick', async () => {
       // rust results:
-      const expectedL = { v: new BN('432392997000000000000') }
+      const expectedL = { v: new BN('432392997000000') }
       const expectedRoundUpY = new BN('434322')
       const expectedRoundDownY = new BN('434321')
 
@@ -129,7 +129,7 @@ describe('Math', () => {
     })
     it('above current tick', async () => {
       // rust results:
-      const expectedL = { v: new BN('13548826311623850731') }
+      const expectedL = { v: new BN('13548826311623') }
       const expectedY = new BN(0)
 
       const lowerTick = 150
@@ -164,7 +164,7 @@ describe('Math', () => {
 
     it('below current tick', async () => {
       // rust results:
-      const expectedL = { v: new BN('2789052279103923275993666') }
+      const expectedL = { v: new BN('2789052279103923275') }
 
       const lowerTick = -22000
       const upperTick = -21000
@@ -191,7 +191,7 @@ describe('Math', () => {
     })
     it('in current tick', async () => {
       // rust results:
-      const expectedL = { v: new BN('584945290554346935615679') }
+      const expectedL = { v: new BN('584945290554346935') }
       const expectedXRoundUp = new BN('77539808126')
       const expectedXRoundDown = new BN('77539808125')
 
@@ -428,7 +428,7 @@ describe('Math', () => {
       const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
       const x = getX(liquidity, upperSqrtPrice.v, currentSqrtPrice.v, lowerSqrtPrice.v)
-      assert.ok(x.eq(new BN(5972765607079)))
+      assert.ok(x.eq(new BN(5972765)))
     })
 
     it('lower < current < upper', async () => {
@@ -439,7 +439,7 @@ describe('Math', () => {
       const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
       const x = getX(liquidity, upperSqrtPrice.v, currentSqrtPrice.v, lowerSqrtPrice.v)
-      assert.ok(x.eq(new BN(3979852584359)))
+      assert.ok(x.eq(new BN(3979852)))
     })
 
     it('current > upper', async () => {
@@ -523,7 +523,7 @@ describe('Math', () => {
       const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
       const y = getY(liquidity, upperSqrtPrice.v, currentSqrtPrice.v, lowerSqrtPrice.v)
-      assert.ok(y.eq(new BN(2006911652000)))
+      assert.ok(y.eq(new BN(2006911)))
     })
 
     it('lowerSqrtPrice > currentSqrtPrice', async () => {
@@ -534,7 +534,7 @@ describe('Math', () => {
       const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
       const y = getY(liquidity, upperSqrtPrice.v, currentSqrtPrice.v, lowerSqrtPrice.v)
-      assert.ok(y.eq(new BN(6026760410000)))
+      assert.ok(y.eq(new BN(6026760)))
     })
 
     it('lowerSqrtPrice = 0', async () => {
@@ -726,7 +726,7 @@ describe('Math', () => {
     it('big numbers', async () => {
       const priceA: Decimal = { v: new BN('234878324943782000000000000') }
       const priceB: Decimal = { v: new BN('87854456421658000000000000') }
-      const liquidity: Decimal = { v: new BN('983983249092300399') }
+      const liquidity: Decimal = { v: new BN('983983249092') }
 
       const resultDown = getDeltaX(priceA, priceB, liquidity, false)
       const resultUp = getDeltaX(priceA, priceB, liquidity, true)
@@ -763,7 +763,7 @@ describe('Math', () => {
     it('big numbers', async () => {
       const priceA: Decimal = { v: new BN('234878324943782000000000000') }
       const priceB: Decimal = { v: new BN('87854456421658000000000000') }
-      const liquidity: Decimal = { v: new BN('983983249092300399') }
+      const liquidity: Decimal = { v: new BN('983983249092') }
 
       const resultDown = getDeltaY(priceA, priceB, liquidity, false)
       const resultUp = getDeltaY(priceA, priceB, liquidity, true)
@@ -840,11 +840,11 @@ describe('Math', () => {
       })
       it('3', async () => {
         const price: Decimal = { v: new BN('3333333333333' + '3'.repeat(PRICE_SCALE - 12)) }
-        const liquidity: Decimal = { v: new BN('222222222222222') }
+        const liquidity: Decimal = { v: new BN('222222222') }
         const amount: BN = new BN('37')
 
         const result = getNextPriceXUp(price, liquidity, amount, false)
-        const expectedResult: Decimal = { v: new BN('7490636704119859529520682') }
+        const expectedResult: Decimal = { v: new BN('7490636713462104974072145') }
 
         assert.ok(result.v.eq(expectedResult.v))
       })
@@ -1246,7 +1246,7 @@ describe('Math', () => {
     })
     it('fee should change', async () => {
       const positionData: PositionClaimData = {
-        liquidity: { v: new BN(1).mul(LIQUIDITY_DENOMINATOR) },
+        liquidity: { v: LIQUIDITY_DENOMINATOR },
         feeGrowthInsideX: { v: new BN(4).mul(GROWTH_DENOMINATOR) },
         feeGrowthInsideY: { v: new BN(4).mul(GROWTH_DENOMINATOR) },
         tokensOwedX: { v: new BN(100).mul(DENOMINATOR) },
@@ -1266,7 +1266,7 @@ describe('Math', () => {
   describe('test calculateClaimAmount', () => {
     it('Basic claim', async () => {
       const positionData: PositionClaimData = {
-        liquidity: { v: new BN(1).mul(DENOMINATOR) },
+        liquidity: { v: new BN(1).mul(LIQUIDITY_DENOMINATOR) },
         feeGrowthInsideX: { v: new BN(4).mul(GROWTH_DENOMINATOR) },
         feeGrowthInsideY: { v: new BN(4).mul(GROWTH_DENOMINATOR) },
         tokensOwedX: { v: new BN(100).mul(DENOMINATOR) },
@@ -1311,7 +1311,7 @@ describe('Math', () => {
     })
     it('External data', async () => {
       const positionData: PositionClaimData = {
-        liquidity: { v: new BN('01386cfed7bbff207000', 'hex') },
+        liquidity: { v: new BN('1479A26FE2A3C0', 'hex') },
         feeGrowthInsideX: { v: new BN('ffffffffffffffffffc8ee8de34d553d', 'hex') },
         feeGrowthInsideY: { v: new BN('ffffffffffffffffffd3fd7d514848b6', 'hex') },
         tokensOwedX: { v: new BN(0) },
@@ -1322,8 +1322,8 @@ describe('Math', () => {
         pool: Keypair.generate().publicKey,
         index: 21109,
         sign: true,
-        liquidityChange: { v: new BN('0b12b681a4aba5c5ff51d0', 'hex') },
-        liquidityGross: { v: new BN('0b12b681a4aba5c5ff51d0', 'hex') },
+        liquidityChange: { v: new BN('B9C6974437BF7F6B', 'hex') },
+        liquidityGross: { v: new BN('B9C6974437BF7F6B', 'hex') },
         sqrtPrice: { v: new BN('029cf3124f61', 'hex') },
         feeGrowthOutsideX: { v: new BN('0c4fee04dd2b3b8c', 'hex') },
         feeGrowthOutsideY: { v: new BN('01a99cb6b2bd6911e7', 'hex') },
@@ -1333,8 +1333,8 @@ describe('Math', () => {
         pool: Keypair.generate().publicKey,
         index: 21129,
         sign: false,
-        liquidityChange: { v: new BN('09fbe1e935b90af3ccf7d9', 'hex') },
-        liquidityGross: { v: new BN('0b9af0d9def1a2deea57d9', 'hex') },
+        liquidityChange: { v: new BN('A780979938ACD0B8', 'hex') },
+        liquidityGross: { v: new BN('C2B41DADE9987A38', 'hex') },
         sqrtPrice: { v: new BN('029d9e665157', 'hex') },
         feeGrowthOutsideX: { v: new BN('3b9f3a68b9c225', 'hex') },
         feeGrowthOutsideY: { v: new BN('2c0282aeb7b74a', 'hex') },

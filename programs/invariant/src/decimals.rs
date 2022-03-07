@@ -4,7 +4,7 @@ pub use decimal::*;
 
 use anchor_lang::prelude::*;
 
-pub const PRICE_LIQUIDITY_DENOMINATOR: u128 = 1_000000_000000u128;
+pub const PRICE_LIQUIDITY_DENOMINATOR: u128 = 1__0000_0000__0000_0000__00u128;
 
 #[decimal(24)]
 #[zero_copy]
@@ -13,7 +13,7 @@ pub struct Price {
     pub v: u128,
 }
 
-#[decimal(12)]
+#[decimal(6)]
 #[zero_copy]
 #[derive(
     Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord, AnchorSerialize, AnchorDeserialize,
@@ -114,7 +114,7 @@ pub mod tests {
     #[test]
     pub fn test_denominator() {
         assert_eq!(Price::from_integer(1).get(), 1_000000_000000_000000_000000);
-        assert_eq!(Liquidity::from_integer(1).get(), 1_000000_000000);
+        assert_eq!(Liquidity::from_integer(1).get(), 1_000000);
         assert_eq!(
             FeeGrowth::from_integer(1).get(),
             1_000000_000000_000000_000000
@@ -195,19 +195,18 @@ pub mod tests {
 
     #[test]
     fn test_decimal_ops() {
-        let liquidity = Liquidity::new(4_902_430_892__340393240932);
+        let liquidity = Liquidity::new(4_902_430_892__340393);
         let price: Price = Price::new(9833__489034_289032_430082_130832);
 
-        // real:          4.8208000421189053044075394913280570348844921615424 × 10^13
-        // expected liq:   48208000421189053044075394
-        // expected price: 48208000421189053044075394913280570348
+        // real:           4.8208000421189050674873214903955408904296976 × 10^13
+        // expected price: 4_8208000421189050674873214903955408904
+        // expected liq:   4_8208000421189050674
 
-        let expected = Liquidity::new(48208000421189053044075394);
-
+        let expected = Liquidity::new(48208000421189050674);
         assert_eq!(liquidity.big_mul(price), expected);
         assert_eq!(liquidity.big_mul_up(price), expected + Liquidity::new(1));
 
-        let expected_price = Price::new(48208000421189053044075394913280570348);
+        let expected_price = Price::new(48208000421189050674873214903955408904);
         assert_eq!(price.big_mul(liquidity), expected_price);
         assert_eq!(price.big_mul_up(liquidity), expected_price + Price::new(1));
     }

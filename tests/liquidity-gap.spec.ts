@@ -8,7 +8,7 @@ import {
   Market,
   Pair,
   tou64,
-  DENOMINATOR,
+  LIQUIDITY_DENOMINATOR,
   TICK_LIMIT,
   Network,
   calculatePriceSqrt,
@@ -128,7 +128,7 @@ describe('Liquidity gap', () => {
 
     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-    const liquidityDelta = { v: new BN(20006000).mul(DENOMINATOR) }
+    const liquidityDelta = { v: new BN(20006000).mul(LIQUIDITY_DENOMINATOR) }
 
     await market.createPositionList(positionOwner.publicKey, positionOwner)
 
@@ -231,7 +231,7 @@ describe('Liquidity gap', () => {
     }
     await market.createTick(createTickVars2, admin)
 
-    const liquidityDelta = { v: new BN(20008000).mul(DENOMINATOR) }
+    const liquidityDelta = { v: new BN(20008000).mul(LIQUIDITY_DENOMINATOR) }
     const initPositionAfterSwapVars: InitPosition = {
       pair,
       owner: positionOwner.publicKey,
