@@ -110,7 +110,6 @@ impl Position {
         id
     }
 
-    // TODO: add tests
     fn calculate_new_liquidity_safely(
         &mut self,
         sign: bool,

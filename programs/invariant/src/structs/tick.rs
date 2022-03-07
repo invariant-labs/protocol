@@ -137,8 +137,6 @@ mod tests {
 
     #[test]
     fn test_update() {
-        // TODO: make sure works fine
-        // TODO: test exceed max tick liquidity
         let max_liquidity = Liquidity::new(u128::MAX);
         {
             let mut tick = Tick {
@@ -185,6 +183,23 @@ mod tests {
             assert_eq!({ tick.liquidity_gross }, Liquidity::from_integer(8));
             assert_eq!({ tick.fee_growth_outside_x }, FeeGrowth::from_integer(13));
             assert_eq!({ tick.fee_growth_outside_y }, FeeGrowth::from_integer(11));
+        }
+        // exceed max tick liquidity
+        {
+            let mut tick = Tick {
+                // index: 5,
+                sign: true,
+                liquidity_change: Liquidity::from_integer(100_000),
+                liquidity_gross: Liquidity::from_integer(100_000),
+                fee_growth_outside_x: FeeGrowth::from_integer(1000),
+                fee_growth_outside_y: FeeGrowth::from_integer(1000),
+                ..Default::default()
+            };
+
+            let max_liquidity_per_tick = calculate_max_liquidity_per_tick(1);
+            let liquidity_delta = max_liquidity_per_tick + Liquidity::new(1);
+            let result = tick.update(liquidity_delta, max_liquidity_per_tick, false, true);
+            assert!(result.is_err());
         }
     }
 }
