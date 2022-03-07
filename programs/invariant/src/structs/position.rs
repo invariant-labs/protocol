@@ -310,11 +310,6 @@ mod tests {
                 )
                 .unwrap();
 
-            // assert_eq!(
-            //     { position.tokens_owed_x },
-            //     (Decimal::from_integer(1234 - 5) + Decimal::new(1)) * Decimal::from_integer(123)
-            // ) // 151167000000000123 so close enough?
-
             assert_eq!(
                 { position.tokens_owed_x },
                 FixedPoint::new(151167000000000000)

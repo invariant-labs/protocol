@@ -609,7 +609,6 @@ export const calculateFeeGrowthInside = (
   return [feeGrowthInsideX, feeGrowthInsideY]
 }
 
-// TODO: test this function
 export const isEnoughAmountToPushPrice = (
   amount: BN,
   currentPriceSqrt: Decimal,
