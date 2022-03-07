@@ -429,7 +429,7 @@ describe('Math', () => {
       const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
       const x = getX(liquidity, upperSqrtPrice.v, currentSqrtPrice.v, lowerSqrtPrice.v)
-      assert.ok(x.eq(new BN(5972765)))
+      assert.ok(x.eq(new BN(5)))
     })
 
     it('lower < current < upper', async () => {
@@ -440,7 +440,7 @@ describe('Math', () => {
       const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
       const x = getX(liquidity, upperSqrtPrice.v, currentSqrtPrice.v, lowerSqrtPrice.v)
-      assert.ok(x.eq(new BN(3979852)))
+      assert.ok(x.eq(new BN(3)))
     })
 
     it('current > upper', async () => {
@@ -524,7 +524,7 @@ describe('Math', () => {
       const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
       const y = getY(liquidity, upperSqrtPrice.v, currentSqrtPrice.v, lowerSqrtPrice.v)
-      assert.ok(y.eq(new BN(2006911)))
+      assert.ok(y.eq(new BN(2)))
     })
 
     it('lowerSqrtPrice > currentSqrtPrice', async () => {
@@ -535,7 +535,7 @@ describe('Math', () => {
       const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
       const y = getY(liquidity, upperSqrtPrice.v, currentSqrtPrice.v, lowerSqrtPrice.v)
-      assert.ok(y.eq(new BN(6026760)))
+      assert.ok(y.eq(new BN(6)))
     })
 
     it('lowerSqrtPrice = 0', async () => {
