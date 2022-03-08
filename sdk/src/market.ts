@@ -48,7 +48,7 @@ export class Market {
   public program: Program<Invariant>
   public stateAddress: PublicKey = PublicKey.default
   public programAuthority: PublicKey = PublicKey.default
-  public network
+  public network: Network
 
   private constructor(
     network: Network,
