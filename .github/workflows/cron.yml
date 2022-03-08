@@ -106,5 +106,5 @@ jobs:
         run: |
           git add ./data
           git commit -m "Snapshot of data done!"
-          git push
+          git push origin master
         working-directory: ./stats
