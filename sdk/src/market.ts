@@ -48,6 +48,7 @@ export class Market {
   public program: Program<Invariant>
   public stateAddress: PublicKey = PublicKey.default
   public programAuthority: PublicKey = PublicKey.default
+  public network: Network
 
   private constructor(
     network: Network,
@@ -60,6 +61,7 @@ export class Market {
     const programAddress = new PublicKey(getMarketAddress(network))
     const provider = new Provider(connection, wallet, Provider.defaultOptions())
 
+    this.network = network
     this.program = new Program(IDL, programAddress, provider)
   }
 
@@ -591,12 +593,20 @@ export class Market {
     const { tickAddress } = await this.getTickAddress(pair, lowerTick)
     const { tickAddress: tickAddressUpper } = await this.getTickAddress(pair, upperTick)
 
-    const { positionAddress } = await this.getPositionAddress(payerPubkey, 0)
+    const listExists = (await this.connection.getAccountInfo(positionListAddress)) !== null
+    const head = listExists ? (await this.getPositionList(payerPubkey)).head : 0
+
+    const { positionAddress } = await this.getPositionAddress(payerPubkey, head)
 
     const transaction = new Transaction({
       feePayer: payerPubkey
     })
-      // .add(ComputeUnitsInstruction(300000, payerPubkey)) // UNCOMMENT ME WHEN 1.9 HITS
+    if (this.network == Network.DEV || this.network == Network.LOCAL) {
+      // REMOVE ME WHEN 1.9 HITS MAINNET
+      transaction.add(ComputeUnitsInstruction(400000, payerPubkey))
+    }
+
+    transaction
       .add(
         SystemProgram.createAccount({
           fromPubkey: payerPubkey,
@@ -655,32 +665,33 @@ export class Market {
           }
         })
       )
-      .add(await this.createPositionListInstruction(payerPubkey))
-      .add(
-        this.program.instruction.createPosition(lowerTick, upperTick, liquidityDelta, {
-          accounts: {
-            state: this.stateAddress,
-            pool: poolAddress,
-            positionList: positionListAddress,
-            position: positionAddress,
-            tickmap: bitmapKeypair.publicKey,
-            owner: payerPubkey,
-            payer: payerPubkey,
-            lowerTick: tickAddress,
-            upperTick: tickAddressUpper,
-            tokenX: pair.tokenX,
-            tokenY: pair.tokenY,
-            accountX: userTokenX,
-            accountY: userTokenY,
-            reserveX: tokenXReserve.publicKey,
-            reserveY: tokenYReserve.publicKey,
-            programAuthority: this.programAuthority,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            rent: SYSVAR_RENT_PUBKEY,
-            systemProgram: SystemProgram.programId
-          }
-        })
-      )
+    if (!listExists) transaction.add(await this.createPositionListInstruction(payerPubkey))
+
+    transaction.add(
+      this.program.instruction.createPosition(lowerTick, upperTick, liquidityDelta, {
+        accounts: {
+          state: this.stateAddress,
+          pool: poolAddress,
+          positionList: positionListAddress,
+          position: positionAddress,
+          tickmap: bitmapKeypair.publicKey,
+          owner: payerPubkey,
+          payer: payerPubkey,
+          lowerTick: tickAddress,
+          upperTick: tickAddressUpper,
+          tokenX: pair.tokenX,
+          tokenY: pair.tokenY,
+          accountX: userTokenX,
+          accountY: userTokenY,
+          reserveX: tokenXReserve.publicKey,
+          reserveY: tokenYReserve.publicKey,
+          programAuthority: this.programAuthority,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          rent: SYSVAR_RENT_PUBKEY,
+          systemProgram: SystemProgram.programId
+        }
+      })
+    )
 
     return {
       transaction,
