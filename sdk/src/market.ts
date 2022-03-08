@@ -48,6 +48,7 @@ export class Market {
   public program: Program<Invariant>
   public stateAddress: PublicKey = PublicKey.default
   public programAuthority: PublicKey = PublicKey.default
+  public network
 
   private constructor(
     network: Network,
@@ -60,6 +61,7 @@ export class Market {
     const programAddress = new PublicKey(getMarketAddress(network))
     const provider = new Provider(connection, wallet, Provider.defaultOptions())
 
+    this.network = network
     this.program = new Program(IDL, programAddress, provider)
   }
 
@@ -599,7 +601,12 @@ export class Market {
     const transaction = new Transaction({
       feePayer: payerPubkey
     })
-      .add(ComputeUnitsInstruction(400000, payerPubkey)) // UNCOMMENT ME WHEN 1.9 HITS
+    if (this.network == Network.DEV || this.network == Network.LOCAL) {
+      // REMOVE ME WHEN 1.9 HITS MAINNET
+      transaction.add(ComputeUnitsInstruction(400000, payerPubkey))
+    }
+
+    transaction
       .add(
         SystemProgram.createAccount({
           fromPubkey: payerPubkey,
