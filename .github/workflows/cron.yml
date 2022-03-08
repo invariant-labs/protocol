@@ -48,22 +48,6 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          override: true
-      - name: install global mocha
-        run: |
-          export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
-          npm install -g mocha
-          npm install -g ts-mocha
-          npm install -g typescript
-          npm install -g @project-serum/anchor
-          ts-mocha -h
-      - name: install essential
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y pkg-config build-essential libudev-dev
       - name: install solana
         if: steps.cache-solana.outputs.cache-hit != 'true'
         run: |
@@ -75,25 +59,6 @@ jobs:
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           solana --version
           solana-keygen new
-      - name: install Anchor
-        if: steps.cache-anchor.outputs.cache-hit != 'true'
-        run: |
-          export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
-          cargo install --git https://github.com/project-serum/anchor --tag v${{ env.anchor_version }}  anchor-cli --locked
-      - name: build programs
-        run: |
-          export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
-          anchor build
-      - name: build amm sdk
-        run: |
-          npm install
-          npm install @solana/buffer-layout
-          npm run build
-        working-directory: ./sdk
-      - name: install
-        run: |
-          export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
-          npm install
       - name: do a snapshot
         run: |
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
