@@ -8,6 +8,7 @@ import { Market, Pair, tou64, Network } from '@invariant-labs/sdk'
 import { CreateFeeTier, FeeTier, InitPoolAndPosition } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { isInitialized } from '@invariant-labs/sdk/lib/math'
+import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('swap', () => {
   const provider = Provider.local()
@@ -84,7 +85,9 @@ describe('swap', () => {
       lowerTick,
       upperTick,
       liquidityDelta: { v: liquidity },
-      initTick: pair.tickSpacing * 3
+      initTick: pair.tickSpacing * 3,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
 
     await market.initPoolAndPosition(props, owner)
@@ -122,7 +125,9 @@ describe('swap', () => {
       lowerTick,
       upperTick,
       liquidityDelta: { v: liquidity },
-      initTick: pair.tickSpacing * 3
+      initTick: pair.tickSpacing * 3,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
 
     await market.initPoolAndPosition(props, owner)

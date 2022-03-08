@@ -139,7 +139,9 @@ describe('Liquidity gap', () => {
       userTokenY: userTokenYAccount,
       lowerTick,
       upperTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars, positionOwner)
 
@@ -239,7 +241,9 @@ describe('Liquidity gap', () => {
       userTokenY: userTokenYAccount,
       lowerTick: lowerTickAfterSwap,
       upperTick: upperTickAfterSwap,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: (await market.getPool(pair)).sqrtPrice,
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionAfterSwapVars, positionOwner)
     const nextSwapAmount = new BN(5000)

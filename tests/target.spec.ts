@@ -9,6 +9,7 @@ import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { CreateTick, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
+import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('target', () => {
   const provider = Provider.local()
@@ -89,7 +90,9 @@ describe('target', () => {
       userTokenY: userAccountY,
       lowerTick,
       upperTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars, owner)
 

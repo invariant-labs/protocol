@@ -131,11 +131,12 @@ describe('swap with cross both side', () => {
 
     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+    const { sqrtPrice } = await market.getPool(pair)
     const { liquidity: liquidityDelta } = getLiquidityByX(
       mintAmount.divn(10),
       lowerTick,
       upperTick,
-      { v: PRICE_DENOMINATOR },
+      sqrtPrice,
       false,
       feeTier.tickSpacing
     )
@@ -149,7 +150,9 @@ describe('swap with cross both side', () => {
       userTokenY: userTokenYAccount,
       lowerTick,
       upperTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: sqrtPrice,
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars, positionOwner)
 
@@ -160,7 +163,9 @@ describe('swap with cross both side', () => {
       userTokenY: userTokenYAccount,
       lowerTick: lastTick,
       upperTick: lowerTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: sqrtPrice,
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars2, positionOwner)
 
@@ -305,10 +310,12 @@ describe('swap with cross both side', () => {
       userTokenY: userTokenYAccount,
       lowerTick: -20,
       upperTick: 0,
-      liquidityDelta: massiveLiquidityDelta
+      liquidityDelta: massiveLiquidityDelta,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(massiveInitPositionMassive, positionOwner)
-
+    return
     // Crossing tick with descending price and by 1 token amount out (with massive liquidity ~1/2 liquidity)
     const swapCrossingDecreasingByAmountOutVars: Swap = {
       pair,

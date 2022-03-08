@@ -66,7 +66,9 @@ describe('random', () => {
       userTokenY: userAccountY,
       lowerTick,
       upperTick,
-      liquidityDelta: { v: liquidityDelta }
+      liquidityDelta: { v: liquidityDelta },
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars, owner)
 
