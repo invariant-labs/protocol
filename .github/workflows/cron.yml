@@ -101,3 +101,10 @@ jobs:
           npm install
           npm run snap
         working-directory: ./stats
+      - uses: actions/checkout@v1
+        name: push changes
+        run: |
+          git add ./data
+          git commit -m "Snapshot of data done!"
+          git push
+        working-directory: ./stats
