@@ -834,6 +834,31 @@ mod tests {
             );
             assert_eq!(zero_token_result, expected_zero_token_result);
         }
+        // swap with max tick spacing
+        {
+            let current_price_sqrt = Price::new(999500149965_000000000000);
+            let target_price_sqrt = Price::from_integer(1);
+            let liquidity = Liquidity::new(u128::MAX / 4500);
+            let amount = TokenAmount(1);
+            let by_amount_in = false;
+            let fee = FixedPoint::from_scale(6, 4); // 0.0006 -> 0.06%
+
+            let result = compute_swap_step(
+                current_price_sqrt,
+                target_price_sqrt,
+                liquidity,
+                amount,
+                by_amount_in,
+                fee,
+            );
+            let expected_result = SwapResult {
+                next_price_sqrt: Price::new(999500149965_000000000001),
+                amount_in: TokenAmount(75619),
+                amount_out: TokenAmount(1),
+                fee_amount: TokenAmount(46),
+            };
+            assert_eq!(result, expected_result)
+        }
     }
 
     #[test]
