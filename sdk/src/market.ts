@@ -591,7 +591,10 @@ export class Market {
     const { tickAddress } = await this.getTickAddress(pair, lowerTick)
     const { tickAddress: tickAddressUpper } = await this.getTickAddress(pair, upperTick)
 
-    const { positionAddress } = await this.getPositionAddress(payerPubkey, 0)
+    const listExists = (await this.connection.getAccountInfo(positionListAddress)) !== null
+    const head = listExists ? (await this.getPositionList(payerPubkey)).head : 0
+
+    const { positionAddress } = await this.getPositionAddress(payerPubkey, head)
 
     const transaction = new Transaction({
       feePayer: payerPubkey
@@ -655,9 +658,7 @@ export class Market {
           }
         })
       )
-
-    if ((await this.connection.getAccountInfo(positionListAddress)) === null)
-      transaction.add(await this.createPositionListInstruction(payerPubkey))
+    if (!listExists) transaction.add(await this.createPositionListInstruction(payerPubkey))
 
     transaction.add(
       this.program.instruction.createPosition(lowerTick, upperTick, liquidityDelta, {

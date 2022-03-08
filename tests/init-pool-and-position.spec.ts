@@ -25,6 +25,7 @@ describe('swap', () => {
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
+  const owner = Keypair.generate()
 
   beforeEach(async () => {
     market = await Market.build(
@@ -60,7 +61,6 @@ describe('swap', () => {
   })
 
   it('#init Pool and position in a single tx', async () => {
-    const owner = Keypair.generate()
     const [userTokenX, userTokenY] = await Promise.all([
       tokenX.createAccount(owner.publicKey),
       tokenY.createAccount(owner.publicKey),
@@ -99,7 +99,6 @@ describe('swap', () => {
   })
 
   it('#init second one on the same keypair', async () => {
-    const owner = Keypair.generate()
     const [userTokenX, userTokenY] = await Promise.all([
       tokenX.createAccount(owner.publicKey),
       tokenY.createAccount(owner.publicKey),
