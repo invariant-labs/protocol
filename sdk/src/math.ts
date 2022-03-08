@@ -408,7 +408,6 @@ const calculateX = (nominator: BN, denominator: BN, liquidity: BN, roundingUp: b
   return common.div(LIQUIDITY_DENOMINATOR)
 }
 
-// NOTICE: result is multiplied by liquidity denominator
 export const getX = (
   liquidity: BN,
   upperSqrtPrice: BN,
@@ -436,10 +435,9 @@ export const getX = (
     nominator = upperSqrtPrice.sub(currentSqrtPrice)
   }
 
-  return liquidity.mul(nominator).div(denominator)
+  return liquidity.mul(nominator).div(denominator).div(LIQUIDITY_DENOMINATOR)
 }
 
-// NOTICE: result is multiplied by liquidity denominator
 export const getY = (
   liquidity: BN,
   upperSqrtPrice: BN,
@@ -463,7 +461,7 @@ export const getY = (
     difference = currentSqrtPrice.sub(lowerSqrtPrice)
   }
 
-  return liquidity.mul(difference).div(PRICE_DENOMINATOR)
+  return liquidity.mul(difference).div(PRICE_DENOMINATOR).div(LIQUIDITY_DENOMINATOR)
 }
 
 export const getLiquidityByX = (
