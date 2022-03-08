@@ -26,7 +26,7 @@ describe('swap', () => {
   let tokenX: Token
   let tokenY: Token
 
-  before(async () => {
+  beforeEach(async () => {
     market = await Market.build(
       Network.LOCAL,
       provider.wallet,
@@ -96,21 +96,27 @@ describe('swap', () => {
     assert.equal(position.liquidity.v.toString(), liquidity.toString())
     assert.isTrue(isInitialized(tickmap, lowerTick, pair.tickSpacing))
     assert.isTrue(isInitialized(tickmap, upperTick, pair.tickSpacing))
+  })
 
-    // create other pool on same account
-    const otherFeeTier: FeeTier = {
-      fee: fromFee(new BN(200)),
-      tickSpacing: 5
-    }
-    const otherPair = new Pair(tokenX.publicKey, tokenY.publicKey, otherFeeTier)
-    const createFeeTierVars: CreateFeeTier = {
-      feeTier: otherPair.feeTier,
-      admin: admin.publicKey
-    }
-    await market.createFeeTier(createFeeTierVars, admin)
+  it('#init second one on the same keypair', async () => {
+    const owner = Keypair.generate()
+    const [userTokenX, userTokenY] = await Promise.all([
+      tokenX.createAccount(owner.publicKey),
+      tokenY.createAccount(owner.publicKey),
+      connection.requestAirdrop(owner.publicKey, 1e9)
+    ])
+    await Promise.all([
+      tokenX.mintTo(userTokenX, mintAuthority, [], tou64(1e9)),
+      tokenY.mintTo(userTokenY, mintAuthority, [], tou64(1e9))
+    ])
 
-    const otherProps: InitPoolAndPosition = {
-      pair: otherPair,
+    const lowerTick = pair.tickSpacing * 2
+    const upperTick = pair.tickSpacing * 4
+
+    const liquidity = new BN(1000)
+
+    const props: InitPoolAndPosition = {
+      pair,
       owner: owner.publicKey,
       userTokenX,
       userTokenY,
@@ -119,6 +125,15 @@ describe('swap', () => {
       liquidityDelta: { v: liquidity },
       initTick: pair.tickSpacing * 3
     }
-    await market.initPoolAndPosition(otherProps, owner)
+
+    await market.initPoolAndPosition(props, owner)
+    const pool = await market.getPool(pair)
+    const position = await market.getPosition(owner.publicKey, 0)
+    const tickmap = await market.getTickmap(pair)
+
+    assert.equal(pool.liquidity.v.toString(), liquidity.toString())
+    assert.equal(position.liquidity.v.toString(), liquidity.toString())
+    assert.isTrue(isInitialized(tickmap, lowerTick, pair.tickSpacing))
+    assert.isTrue(isInitialized(tickmap, upperTick, pair.tickSpacing))
   })
 })
