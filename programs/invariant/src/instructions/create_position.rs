@@ -114,7 +114,13 @@ impl<'info> TakeTokens<'info> for CreatePosition<'info> {
 }
 
 impl<'info> CreatePosition<'info> {
-    pub fn handler(&self, liquidity_delta: Liquidity, bump: u8) -> ProgramResult {
+    pub fn handler(
+        &self,
+        liquidity_delta: Liquidity,
+        slippage_limit_lower: Price,
+        slippage_limit_upper: Price,
+        bump: u8,
+    ) -> ProgramResult {
         msg!("INVARIANT: CREATE POSITION");
 
         let mut position = self.position.load_init()?;
@@ -125,6 +131,12 @@ impl<'info> CreatePosition<'info> {
         let current_timestamp = get_current_timestamp();
         let mut tickmap = self.tickmap.load_mut()?;
         let slot = get_current_slot();
+
+        // validate price
+        let price = pool.sqrt_price;
+        require!(price > slippage_limit_lower, PriceLimitReached);
+        require!(price < slippage_limit_upper, PriceLimitReached);
+
         // validate ticks
         check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
 
