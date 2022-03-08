@@ -134,8 +134,8 @@ impl<'info> CreatePosition<'info> {
 
         // validate price
         let price = pool.sqrt_price;
-        require!(price > slippage_limit_lower, PriceLimitReached);
-        require!(price < slippage_limit_upper, PriceLimitReached);
+        require!(price >= slippage_limit_lower, PriceLimitReached);
+        require!(price <= slippage_limit_upper, PriceLimitReached);
 
         // validate ticks
         check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;
