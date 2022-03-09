@@ -17,6 +17,7 @@ import {
   TransferPositionOwnership
 } from '@invariant-labs/sdk/src/market'
 import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
+import { calculatePriceSqrt } from '@invariant-labs/sdk'
 
 describe('Position list', () => {
   const provider = Provider.local()
@@ -131,7 +132,7 @@ describe('Position list', () => {
         lowerTick: ticksIndexes[0],
         upperTick: ticksIndexes[1],
         liquidityDelta: fromInteger(1),
-        knownPrice: { v: PRICE_DENOMINATOR },
+        knownPrice: calculatePriceSqrt(initTick),
         slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, positionOwner)
@@ -147,7 +148,7 @@ describe('Position list', () => {
         lowerTick: ticksIndexes[0],
         upperTick: ticksIndexes[2],
         liquidityDelta: fromInteger(1),
-        knownPrice: { v: PRICE_DENOMINATOR },
+        knownPrice: calculatePriceSqrt(initTick),
         slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars2, positionOwner)
@@ -160,7 +161,7 @@ describe('Position list', () => {
         lowerTick: ticksIndexes[1],
         upperTick: ticksIndexes[4],
         liquidityDelta: fromInteger(1),
-        knownPrice: { v: PRICE_DENOMINATOR },
+        knownPrice: calculatePriceSqrt(initTick),
         slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars3, positionOwner)
@@ -224,7 +225,7 @@ describe('Position list', () => {
         lowerTick: ticksIndexes[1],
         upperTick: ticksIndexes[2],
         liquidityDelta: fromInteger(1),
-        knownPrice: { v: PRICE_DENOMINATOR },
+        knownPrice: calculatePriceSqrt(initTick),
         slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, positionOwner)
@@ -259,7 +260,7 @@ describe('Position list', () => {
         lowerTick: ticksIndexes[0],
         upperTick: ticksIndexes[3],
         liquidityDelta: fromInteger(1),
-        knownPrice: { v: PRICE_DENOMINATOR },
+        knownPrice: calculatePriceSqrt(initTick),
         slippage: { v: new BN(0) }
       }
       const removePositionVars: RemovePosition = {
@@ -317,7 +318,7 @@ describe('Position list', () => {
         lowerTick: ticksIndexes[0],
         upperTick: ticksIndexes[1],
         liquidityDelta: fromInteger(1),
-        knownPrice: { v: PRICE_DENOMINATOR },
+        knownPrice: calculatePriceSqrt(initTick),
         slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, positionOwner)
@@ -349,7 +350,7 @@ describe('Position list', () => {
         lowerTick: ticksIndexes[0],
         upperTick: ticksIndexes[1],
         liquidityDelta: fromInteger(1),
-        knownPrice: { v: PRICE_DENOMINATOR },
+        knownPrice: calculatePriceSqrt(initTick),
         slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, positionOwner)
@@ -362,7 +363,7 @@ describe('Position list', () => {
         lowerTick: ticksIndexes[1],
         upperTick: ticksIndexes[2],
         liquidityDelta: fromInteger(1),
-        knownPrice: { v: PRICE_DENOMINATOR },
+        knownPrice: calculatePriceSqrt(initTick),
         slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars2, positionOwner)
@@ -375,7 +376,7 @@ describe('Position list', () => {
         lowerTick: ticksIndexes[1],
         upperTick: ticksIndexes[3],
         liquidityDelta: fromInteger(1),
-        knownPrice: { v: PRICE_DENOMINATOR },
+        knownPrice: calculatePriceSqrt(initTick),
         slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars3, positionOwner)

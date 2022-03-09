@@ -151,7 +151,7 @@ describe('position', () => {
         lowerTick,
         upperTick,
         liquidityDelta,
-        knownPrice: { v: PRICE_DENOMINATOR },
+        knownPrice: calculatePriceSqrt(initTick),
         slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, positionOwner)
@@ -284,7 +284,7 @@ describe('position', () => {
         lowerTick,
         upperTick,
         liquidityDelta,
-        knownPrice: { v: PRICE_DENOMINATOR },
+        knownPrice: calculatePriceSqrt(initTick),
         slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, positionOwner)
@@ -416,7 +416,7 @@ describe('position', () => {
         lowerTick,
         upperTick,
         liquidityDelta,
-        knownPrice: { v: PRICE_DENOMINATOR },
+        knownPrice: calculatePriceSqrt(initTick),
         slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, positionOwner)

@@ -24,6 +24,7 @@ import {
   Swap
 } from '@invariant-labs/sdk/src/market'
 import { getLiquidityByX } from '@invariant-labs/sdk/lib/math'
+import { DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('swap with cross both side', () => {
   const provider = Provider.local()
@@ -311,11 +312,11 @@ describe('swap with cross both side', () => {
       lowerTick: -20,
       upperTick: 0,
       liquidityDelta: massiveLiquidityDelta,
-      knownPrice: { v: PRICE_DENOMINATOR },
+      knownPrice: (await market.getPool(pair)).sqrtPrice,
       slippage: { v: new BN(0) }
     }
     await market.initPosition(massiveInitPositionMassive, positionOwner)
-    return
+
     // Crossing tick with descending price and by 1 token amount out (with massive liquidity ~1/2 liquidity)
     const swapCrossingDecreasingByAmountOutVars: Swap = {
       pair,
