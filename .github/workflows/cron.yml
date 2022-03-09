@@ -6,70 +6,43 @@ on:
 
 env:
   solana_version: 1.8.12
-  anchor_version: 0.20.1
 
 jobs:
   install:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/cache@v2
-        name: Cache Cargo registry + index
-        id: cache-anchor
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-          key: cargo-${{ runner.os }}-v0000-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions/cache@v2
-        name: Cache Solana Tool Suite
-        id: cache-solana
-        with:
-          path: |
-            ~/.cache/solana/
-            ~/.local/share/solana/
-          key: solana-${{ runner.os }}-v0000-${{ env.solana_version }}
-      - uses: actions/cache@v2
-        name: Cache target folder
-        id: cache-programs
-        with:
-          path: |
-            ./target
-          key: solana-${{ runner.os }}-v0000-${{ hashFiles('**/programs/**/*.rs') }}-${{ hashFiles('**/programs/**/*.toml') }}
-      - uses: actions/cache@v2
-        name: Cache Node Modules
-        id: cache-node-modules
-        with:
-          path: |
-            ~/.npm/
-            ./node_modules
-          key: npm-${{ runner.os }}-v0000-${{ hashFiles('**/package-lock.json') }}
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
-      - name: install solana
-        if: steps.cache-solana.outputs.cache-hit != 'true'
+      - name: setup solana
         run: |
           sh -c "$(curl -sSfL https://release.solana.com/v${{ env.solana_version }}/install)"
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
-          solana --version
-      - name: setup solana
-        run: |
-          export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
-          solana --version
           solana-keygen new
+      - uses: actions/checkout@v1
       - name: do a snapshot
         run: |
+          git config --global user.email adrianwojciak99@gmail.com
+          git config --global user.name awojciak
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           export ANCHOR_WALLET="/home/runner/.config/solana/id.json"
           npm install
           npm run snap
-        working-directory: ./stats
-      - uses: actions/checkout@v1
-      - name: push changes
-        run: |
           git add ./data
           git commit -m "Snapshot of data done!"
-          git push origin master
-        working-directory: ./stats
+        working-directory: stats
+      - name: GitHub Push
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Deploy to Vercel Action
+        uses: BetaHuhn/deploy-to-vercel-action@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_SCOPE: ${{ secrets.VERCEL_ORG_ID }}
+          ALIAS_DOMAINS: |
+            api.invariant.app
+          PRODUCTION: true
