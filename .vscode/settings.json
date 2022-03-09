@@ -21,6 +21,7 @@
     "positionlistv",
     "positionv",
     "Pubkey",
+    "repr",
     "seedv",
     "shln",
     "shrn",
