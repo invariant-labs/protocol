@@ -11,19 +11,19 @@ jobs:
   install:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v1
       - uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: '16'
       - name: setup solana
         run: |
           sh -c "$(curl -sSfL https://release.solana.com/v${{ env.solana_version }}/install)"
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           solana-keygen new
-      - uses: actions/checkout@v1
       - name: do a snapshot
         run: |
-          git config --global user.email adrianwojciak99@gmail.com
-          git config --global user.name awojciak
+          git config --global user.email testing@testing.com
+          git config --global user.name invariantStats
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           export ANCHOR_WALLET="/home/runner/.config/solana/id.json"
           npm install
@@ -35,15 +35,13 @@ jobs:
         uses: ad-m/github-push-action@v0.6.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Deploy to Vercel Action
-        uses: BetaHuhn/deploy-to-vercel-action@v1
+      - name: Deploy to Production
+        uses: amondnet/vercel-action@v20
+        id: deploy-vercel-production
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          VERCEL_SCOPE: ${{ secrets.VERCEL_ORG_ID }}
-          ALIAS_DOMAINS: |
-            api.invariant.app
-          PRODUCTION: true
-        working-directory: stats
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+          working-directory: ./stats
