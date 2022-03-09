@@ -46,3 +46,4 @@ jobs:
           ALIAS_DOMAINS: |
             api.invariant.app
           PRODUCTION: true
+        working-directory: stats
