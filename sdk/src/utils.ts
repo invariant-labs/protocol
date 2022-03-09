@@ -425,6 +425,10 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     }
   }
 
+  if (accumulatedAmountOut.isZero()) {
+    throw new Error('Amount out is zero')
+  }
+
   return {
     amountPerTick,
     accumulatedAmountIn,
