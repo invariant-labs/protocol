@@ -476,8 +476,8 @@ export class Market {
     const state = await this.getPool(pair)
     owner = owner ?? this.wallet.publicKey
 
-    const slippageLimitLower = calculatePriceAfterSlippage(knownPrice, slippage, true)
-    const slippageLimitUpper = calculatePriceAfterSlippage(knownPrice, slippage, false)
+    const slippageLimitLower = calculatePriceAfterSlippage(knownPrice, slippage, false)
+    const slippageLimitUpper = calculatePriceAfterSlippage(knownPrice, slippage, true)
 
     const upperTickIndex = upperTick !== Infinity ? upperTick : getMaxTick(pair.tickSpacing)
     const lowerTickIndex = lowerTick !== -Infinity ? lowerTick : getMinTick(pair.tickSpacing)
@@ -563,8 +563,11 @@ export class Market {
       positionInstruction = await this.initPositionInstruction(initPosition, false)
     }
 
-    if (!lowerExists && !upperExists && listExists) {
-      tx.add(ComputeUnitsInstruction(400000, payer))
+    if (this.network == Network.DEV || this.network == Network.LOCAL) {
+      // REMOVE ME WHEN 1.9 HITS MAINNET
+      if (!lowerExists && !upperExists && !listExists) {
+        tx.add(ComputeUnitsInstruction(300000, payer))
+      }
     }
     if (!lowerExists && lowerInstruction) {
       tx.add(lowerInstruction)
@@ -689,8 +692,8 @@ export class Market {
       )
     if (!listExists) transaction.add(await this.createPositionListInstruction(payerPubkey))
 
-    const slippageLimitLower = calculatePriceAfterSlippage(knownPrice, slippage, true)
-    const slippageLimitUpper = calculatePriceAfterSlippage(knownPrice, slippage, false)
+    const slippageLimitLower = calculatePriceAfterSlippage(knownPrice, slippage, false)
+    const slippageLimitUpper = calculatePriceAfterSlippage(knownPrice, slippage, true)
 
     transaction.add(
       this.program.instruction.createPosition(
