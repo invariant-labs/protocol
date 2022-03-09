@@ -22,7 +22,7 @@ jobs:
           solana-keygen new
       - name: do a snapshot
         run: |
-          git config --global user.email testing@testing.com
+          git config --global user.email stats@tinvariant.app
           git config --global user.name invariantStats
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           export ANCHOR_WALLET="/home/runner/.config/solana/id.json"
