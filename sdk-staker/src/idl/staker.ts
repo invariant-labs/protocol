@@ -232,6 +232,27 @@ export type Staker = {
           "type": "u8"
         }
       ]
+    },
+    {
+      "name": "removeStake",
+      "accounts": [
+        {
+          "name": "incentive",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userStake",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "founder",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
@@ -724,6 +745,27 @@ export const IDL: Staker = {
           "type": "u8"
         }
       ]
+    },
+    {
+      "name": "removeStake",
+      "accounts": [
+        {
+          "name": "incentive",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userStake",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "founder",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [
