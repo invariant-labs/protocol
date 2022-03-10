@@ -69,186 +69,22 @@ export type Staker = {
         {
           "name": "reward",
           "type": {
-            "defined": "Decimal"
+            "defined": "TokenAmount"
           }
         },
         {
           "name": "startTime",
-          "type": "u64"
+          "type": {
+            "defined": "Seconds"
+          }
         },
         {
           "name": "endTime",
-          "type": "u64"
+          "type": {
+            "defined": "Seconds"
+          }
         }
       ]
-    },
-    {
-      "name": "stake",
-      "accounts": [
-        {
-          "name": "userStake",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "position",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "incentive",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "invariant",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "index",
-          "type": "i32"
-        }
-      ]
-    },
-    {
-      "name": "withdraw",
-      "accounts": [
-        {
-          "name": "userStake",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "incentive",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "incentiveTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "position",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "ownerTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "stakerAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "index",
-          "type": "i32"
-        },
-        {
-          "name": "nonce",
-          "type": "u8"
-        }
-      ]
-    },
-    {
-      "name": "endIncentive",
-      "accounts": [
-        {
-          "name": "incentive",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "incentiveTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "founderTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "incentiveToken",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "stakerAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "founder",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "nonce",
-          "type": "u8"
-        }
-      ]
-    },
-    {
-      "name": "removeStake",
-      "accounts": [
-        {
-          "name": "incentive",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "userStake",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "founder",
-          "isMut": false,
-          "isSigner": true
-        }
-      ],
-      "args": []
     }
   ],
   "accounts": [
@@ -268,26 +104,32 @@ export type Staker = {
           {
             "name": "totalRewardUnclaimed",
             "type": {
-              "defined": "Decimal"
+              "defined": "TokenAmount"
             }
           },
           {
             "name": "totalSecondsClaimed",
             "type": {
-              "defined": "Decimal"
+              "defined": "Seconds"
             }
           },
           {
             "name": "startTime",
-            "type": "u64"
+            "type": {
+              "defined": "Seconds"
+            }
           },
           {
             "name": "endTime",
-            "type": "u64"
+            "type": {
+              "defined": "Seconds"
+            }
           },
           {
             "name": "endClaimTime",
-            "type": "u64"
+            "type": {
+              "defined": "Seconds"
+            }
           },
           {
             "name": "numOfStakes",
@@ -320,13 +162,13 @@ export type Staker = {
           {
             "name": "secondsPerLiquidityInitial",
             "type": {
-              "defined": "Decimal"
+              "defined": "SecondsPerLiquidity"
             }
           },
           {
             "name": "liquidity",
             "type": {
-              "defined": "Decimal"
+              "defined": "Liquidity"
             }
           },
           {
@@ -339,13 +181,49 @@ export type Staker = {
   ],
   "types": [
     {
-      "name": "Decimal",
+      "name": "Liquidity",
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "v",
             "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SecondsPerLiquidity",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokenAmount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Seconds",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "u64"
           }
         ]
       }
@@ -536,186 +414,22 @@ export const IDL: Staker = {
         {
           "name": "reward",
           "type": {
-            "defined": "Decimal"
+            "defined": "TokenAmount"
           }
         },
         {
           "name": "startTime",
-          "type": "u64"
+          "type": {
+            "defined": "Seconds"
+          }
         },
         {
           "name": "endTime",
-          "type": "u64"
+          "type": {
+            "defined": "Seconds"
+          }
         }
       ]
-    },
-    {
-      "name": "stake",
-      "accounts": [
-        {
-          "name": "userStake",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "position",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "incentive",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "invariant",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "index",
-          "type": "i32"
-        }
-      ]
-    },
-    {
-      "name": "withdraw",
-      "accounts": [
-        {
-          "name": "userStake",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "incentive",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "incentiveTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "position",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "ownerTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "stakerAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "index",
-          "type": "i32"
-        },
-        {
-          "name": "nonce",
-          "type": "u8"
-        }
-      ]
-    },
-    {
-      "name": "endIncentive",
-      "accounts": [
-        {
-          "name": "incentive",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "incentiveTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "founderTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "incentiveToken",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "stakerAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "founder",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "nonce",
-          "type": "u8"
-        }
-      ]
-    },
-    {
-      "name": "removeStake",
-      "accounts": [
-        {
-          "name": "incentive",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "userStake",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "founder",
-          "isMut": false,
-          "isSigner": true
-        }
-      ],
-      "args": []
     }
   ],
   "accounts": [
@@ -735,26 +449,32 @@ export const IDL: Staker = {
           {
             "name": "totalRewardUnclaimed",
             "type": {
-              "defined": "Decimal"
+              "defined": "TokenAmount"
             }
           },
           {
             "name": "totalSecondsClaimed",
             "type": {
-              "defined": "Decimal"
+              "defined": "Seconds"
             }
           },
           {
             "name": "startTime",
-            "type": "u64"
+            "type": {
+              "defined": "Seconds"
+            }
           },
           {
             "name": "endTime",
-            "type": "u64"
+            "type": {
+              "defined": "Seconds"
+            }
           },
           {
             "name": "endClaimTime",
-            "type": "u64"
+            "type": {
+              "defined": "Seconds"
+            }
           },
           {
             "name": "numOfStakes",
@@ -787,13 +507,13 @@ export const IDL: Staker = {
           {
             "name": "secondsPerLiquidityInitial",
             "type": {
-              "defined": "Decimal"
+              "defined": "SecondsPerLiquidity"
             }
           },
           {
             "name": "liquidity",
             "type": {
-              "defined": "Decimal"
+              "defined": "Liquidity"
             }
           },
           {
@@ -806,13 +526,49 @@ export const IDL: Staker = {
   ],
   "types": [
     {
-      "name": "Decimal",
+      "name": "Liquidity",
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "v",
             "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SecondsPerLiquidity",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokenAmount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Seconds",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "u64"
           }
         ]
       }

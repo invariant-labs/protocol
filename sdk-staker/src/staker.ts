@@ -60,86 +60,86 @@ export class Staker {
     return instance
   }
 
-  // frontend methods
-  public async createIncentive(createIncentive: CreateIncentive) {
-    const incentiveAccount = Keypair.generate()
-    const incentiveTokenAccount = Keypair.generate()
-    const incentive = incentiveAccount.publicKey
-    const incentiveToken = incentiveTokenAccount.publicKey
-    const createIx = await this.createIncentiveIx(
-      createIncentive,
-      incentiveAccount.publicKey,
-      incentiveTokenAccount.publicKey
-    )
-    const tx = new Transaction().add(createIx)
-    const stringTx = await this.signAndSend(tx, [incentiveAccount, incentiveTokenAccount])
+  // // frontend methods
+  // public async createIncentive(createIncentive: CreateIncentive) {
+  //   const incentiveAccount = Keypair.generate()
+  //   const incentiveTokenAccount = Keypair.generate()
+  //   const incentive = incentiveAccount.publicKey
+  //   const incentiveToken = incentiveTokenAccount.publicKey
+  //   const createIx = await this.createIncentiveIx(
+  //     createIncentive,
+  //     incentiveAccount.publicKey,
+  //     incentiveTokenAccount.publicKey
+  //   )
+  //   const tx = new Transaction().add(createIx)
+  //   const stringTx = await this.signAndSend(tx, [incentiveAccount, incentiveTokenAccount])
 
-    return { stringTx, incentive, incentiveToken }
-  }
+  //   return { stringTx, incentive, incentiveToken }
+  // }
 
-  public async createStake(
-    market: Market,
-    update: UpdateSecondsPerLiquidity,
-    createStake: CreateStake
-  ) {
-    const updateIx = await market.updateSecondsPerLiquidityInstruction(update)
-    const stakeIx = await this.createStakeIx(createStake)
-    const tx = new Transaction().add(updateIx).add(stakeIx)
-    const stringTx = await this.signAndSend(tx)
-    const [stake] = await this.getUserStakeAddressAndBump(
-      createStake.incentive,
-      createStake.pool,
-      createStake.id
-    )
+  // public async createStake(
+  //   market: Market,
+  //   update: UpdateSecondsPerLiquidity,
+  //   createStake: CreateStake
+  // ) {
+  //   const updateIx = await market.updateSecondsPerLiquidityInstruction(update)
+  //   const stakeIx = await this.createStakeIx(createStake)
+  //   const tx = new Transaction().add(updateIx).add(stakeIx)
+  //   const stringTx = await this.signAndSend(tx)
+  //   const [stake] = await this.getUserStakeAddressAndBump(
+  //     createStake.incentive,
+  //     createStake.pool,
+  //     createStake.id
+  //   )
 
-    return { stringTx, stake }
-  }
+  //   return { stringTx, stake }
+  // }
 
-  public async withdraw(market: Market, update: UpdateSecondsPerLiquidity, withdraw: Withdraw) {
-    const updateIx = await market.updateSecondsPerLiquidityInstruction(update)
-    const withdrawIx = await this.withdrawIx(withdraw)
-    const tx = new Transaction().add(updateIx).add(withdrawIx)
-    const stringTx = await this.signAndSend(tx)
+  // public async withdraw(market: Market, update: UpdateSecondsPerLiquidity, withdraw: Withdraw) {
+  //   const updateIx = await market.updateSecondsPerLiquidityInstruction(update)
+  //   const withdrawIx = await this.withdrawIx(withdraw)
+  //   const tx = new Transaction().add(updateIx).add(withdrawIx)
+  //   const stringTx = await this.signAndSend(tx)
 
-    return stringTx
-  }
+  //   return stringTx
+  // }
 
-  public async endIncentive(endIncentive: EndIncentive) {
-    const endIncentiveIx = await this.endIncentiveIx(endIncentive)
-    const tx = new Transaction().add(endIncentiveIx)
-    const stringTx = await this.signAndSend(tx)
+  // public async endIncentive(endIncentive: EndIncentive) {
+  //   const endIncentiveIx = await this.endIncentiveIx(endIncentive)
+  //   const tx = new Transaction().add(endIncentiveIx)
+  //   const stringTx = await this.signAndSend(tx)
 
-    return stringTx
-  }
+  //   return stringTx
+  // }
 
-  public async removeStake(pool: PublicKey, id: BN, incentive: PublicKey, founder: PublicKey) {
-    const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
+  // public async removeStake(pool: PublicKey, id: BN, incentive: PublicKey, founder: PublicKey) {
+  //   const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
 
-    const removeIx = await this.removeStakeIx(userStakeAddress, incentive, founder)
-    const tx = new Transaction().add(removeIx)
-    const stringTx = await this.signAndSend(tx)
+  //   const removeIx = await this.removeStakeIx(userStakeAddress, incentive, founder)
+  //   const tx = new Transaction().add(removeIx)
+  //   const stringTx = await this.signAndSend(tx)
 
-    return stringTx
-  }
+  //   return stringTx
+  // }
 
-  public async removeAllStakes(incentive: PublicKey, founder: PublicKey) {
-    const stakes = await this.getAllIncentiveStakes(incentive)
-    let tx = new Transaction()
-    let txs: Transaction[]
+  // public async removeAllStakes(incentive: PublicKey, founder: PublicKey) {
+  //   const stakes = await this.getAllIncentiveStakes(incentive)
+  //   let tx = new Transaction()
+  //   let txs: Transaction[]
 
-    // put max 18 Ix per Tx, sign and return array of tx hashes
-    for (let i = 0; i < stakes.length; i++) {
-      const removeIx = await this.removeStakeIx(stakes[i].publicKey, incentive, founder)
-      tx.add(removeIx)
-      // sign and send when max Ix or last stake
-      if ((i + 1) % 18 === 0 || i + 1 === stakes.length) {
-        txs.push(tx)
-        tx = new Transaction()
-      }
-    }
+  //   // put max 18 Ix per Tx, sign and return array of tx hashes
+  //   for (let i = 0; i < stakes.length; i++) {
+  //     const removeIx = await this.removeStakeIx(stakes[i].publicKey, incentive, founder)
+  //     tx.add(removeIx)
+  //     // sign and send when max Ix or last stake
+  //     if ((i + 1) % 18 === 0 || i + 1 === stakes.length) {
+  //       txs.push(tx)
+  //       tx = new Transaction()
+  //     }
+  //   }
 
-    return await this.signAndSendAll(txs)
-  }
+  //   return await this.signAndSendAll(txs)
+  // }
 
   // instructions
 
@@ -180,84 +180,84 @@ export class Staker {
     )
   }
 
-  public async createStakeIx({
-    pool,
-    id,
-    position,
-    incentive,
-    owner,
-    index,
-    invariant
-  }: CreateStake) {
-    const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
-    return this.program.instruction.stake(index, {
-      accounts: {
-        userStake: userStakeAddress,
-        position,
-        incentive,
-        owner,
-        systemProgram: SystemProgram.programId,
-        invariant,
-        rent: SYSVAR_RENT_PUBKEY
-      }
-    })
-  }
+  // public async createStakeIx({
+  //   pool,
+  //   id,
+  //   position,
+  //   incentive,
+  //   owner,
+  //   index,
+  //   invariant
+  // }: CreateStake) {
+  //   const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
+  //   return this.program.instruction.stake(index, {
+  //     accounts: {
+  //       userStake: userStakeAddress,
+  //       position,
+  //       incentive,
+  //       owner,
+  //       systemProgram: SystemProgram.programId,
+  //       invariant,
+  //       rent: SYSVAR_RENT_PUBKEY
+  //     }
+  //   })
+  // }
 
-  public async withdrawIx({
-    incentive,
-    pool,
-    id,
-    incentiveTokenAccount,
-    ownerTokenAcc,
-    position,
-    owner,
-    index
-  }: Withdraw) {
-    const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
+  // public async withdrawIx({
+  //   incentive,
+  //   pool,
+  //   id,
+  //   incentiveTokenAccount,
+  //   ownerTokenAcc,
+  //   position,
+  //   owner,
+  //   index
+  // }: Withdraw) {
+  //   const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
 
-    return this.program.instruction.withdraw(index, this.programAuthority.nonce, {
-      accounts: {
-        userStake: userStakeAddress,
-        incentive,
-        incentiveTokenAccount: incentiveTokenAccount,
-        ownerTokenAccount: ownerTokenAcc,
-        position,
-        stakerAuthority: this.programAuthority.authority,
-        owner,
-        tokenProgram: TOKEN_PROGRAM_ID
-      }
-    })
-  }
+  //   return this.program.instruction.withdraw(index, this.programAuthority.nonce, {
+  //     accounts: {
+  //       userStake: userStakeAddress,
+  //       incentive,
+  //       incentiveTokenAccount: incentiveTokenAccount,
+  //       ownerTokenAccount: ownerTokenAcc,
+  //       position,
+  //       stakerAuthority: this.programAuthority.authority,
+  //       owner,
+  //       tokenProgram: TOKEN_PROGRAM_ID
+  //     }
+  //   })
+  // }
 
-  public async endIncentiveIx({
-    incentive,
-    incentiveToken,
-    incentiveTokenAccount,
-    ownerTokenAccount,
-    founder
-  }: EndIncentive) {
-    return this.program.instruction.endIncentive(this.programAuthority.nonce, {
-      accounts: {
-        incentive,
-        incentiveToken,
-        incentiveTokenAccount: incentiveTokenAccount,
-        founderTokenAccount: ownerTokenAccount,
-        stakerAuthority: this.programAuthority.authority,
-        founder: founder,
-        tokenProgram: TOKEN_PROGRAM_ID
-      }
-    })
-  }
+  // public async endIncentiveIx({
+  //   incentive,
+  //   incentiveToken,
+  //   incentiveTokenAccount,
+  //   ownerTokenAccount,
+  //   founder
+  // }: EndIncentive) {
+  //   return this.program.instruction.endIncentive(this.programAuthority.nonce, {
+  //     accounts: {
+  //       incentive,
+  //       incentiveToken,
+  //       incentiveTokenAccount: incentiveTokenAccount,
+  //       founderTokenAccount: ownerTokenAccount,
+  //       stakerAuthority: this.programAuthority.authority,
+  //       founder: founder,
+  //       tokenProgram: TOKEN_PROGRAM_ID
+  //     }
+  //   })
+  // }
 
-  public async removeStakeIx(userStake: PublicKey, incentive: PublicKey, founder: PublicKey) {
-    return this.program.instruction.removeStake({
-      accounts: {
-        incentive,
-        userStake: userStake,
-        founder: founder
-      }
-    })
-  }
+  // public async removeStakeIx(userStake: PublicKey, incentive: PublicKey, founder: PublicKey) {
+  //   return this.program.instruction.removeStake({
+  //     accounts: {
+  //       incentive,
+  //       userStake: userStake,
+  //       founder: founder
+  //     }
+  //   })
+  // }
 
   // getters
   async getProgramAuthority() {
@@ -273,7 +273,7 @@ export class Staker {
   }
 
   public async getIncentive(incentivePubKey: PublicKey) {
-    return (await this.program.account.incentive.fetch(incentivePubKey)) as IncentiveStructure
+    return await this.program.account.incentive.fetch(incentivePubKey) //as IncentiveStructure
   }
 
   public async getUserStakeAddressAndBump(incentive: PublicKey, pool: PublicKey, id: BN) {
@@ -347,8 +347,8 @@ export interface ProgramAuthority {
 }
 export interface CreateIncentive {
   reward: Decimal
-  startTime: BN
-  endTime: BN
+  startTime: Decimal
+  endTime: Decimal
   pool: PublicKey
   founder: PublicKey
   incentiveToken: PublicKey
@@ -393,8 +393,8 @@ export interface EndIncentive {
 
 export interface IncentiveStructure {
   tokenAccount: PublicKey
-  totalRewardUnclaimed: Decimal
-  totalSecondsClaimed: Decimal
+  totalRewardUnclaimed: BN
+  totalSecondsClaimed: BN
   startTime: BN
   endTime: BN
   numOfStakes: BN
