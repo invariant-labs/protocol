@@ -180,28 +180,28 @@ export class Staker {
     )
   }
 
-  // public async createStakeIx({
-  //   pool,
-  //   id,
-  //   position,
-  //   incentive,
-  //   owner,
-  //   index,
-  //   invariant
-  // }: CreateStake) {
-  //   const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
-  //   return this.program.instruction.stake(index, {
-  //     accounts: {
-  //       userStake: userStakeAddress,
-  //       position,
-  //       incentive,
-  //       owner,
-  //       systemProgram: SystemProgram.programId,
-  //       invariant,
-  //       rent: SYSVAR_RENT_PUBKEY
-  //     }
-  //   })
-  // }
+  public async createStakeIx({
+    pool,
+    id,
+    position,
+    incentive,
+    owner,
+    index,
+    invariant
+  }: CreateStake) {
+    const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
+    return this.program.instruction.stake(index, {
+      accounts: {
+        userStake: userStakeAddress,
+        position,
+        incentive,
+        owner,
+        systemProgram: SystemProgram.programId,
+        invariant,
+        rent: SYSVAR_RENT_PUBKEY
+      }
+    })
+  }
 
   // public async withdrawIx({
   //   incentive,
