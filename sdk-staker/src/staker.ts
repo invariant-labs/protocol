@@ -203,31 +203,31 @@ export class Staker {
     })
   }
 
-  // public async withdrawIx({
-  //   incentive,
-  //   pool,
-  //   id,
-  //   incentiveTokenAccount,
-  //   ownerTokenAcc,
-  //   position,
-  //   owner,
-  //   index
-  // }: Withdraw) {
-  //   const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
+  public async withdrawIx({
+    incentive,
+    pool,
+    id,
+    incentiveTokenAccount,
+    ownerTokenAcc,
+    position,
+    owner,
+    index
+  }: Withdraw) {
+    const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
 
-  //   return this.program.instruction.withdraw(index, this.programAuthority.nonce, {
-  //     accounts: {
-  //       userStake: userStakeAddress,
-  //       incentive,
-  //       incentiveTokenAccount: incentiveTokenAccount,
-  //       ownerTokenAccount: ownerTokenAcc,
-  //       position,
-  //       stakerAuthority: this.programAuthority.authority,
-  //       owner,
-  //       tokenProgram: TOKEN_PROGRAM_ID
-  //     }
-  //   })
-  // }
+    return this.program.instruction.withdraw(index, this.programAuthority.nonce, {
+      accounts: {
+        userStake: userStakeAddress,
+        incentive,
+        incentiveTokenAccount: incentiveTokenAccount,
+        ownerTokenAccount: ownerTokenAcc,
+        position,
+        stakerAuthority: this.programAuthority.authority,
+        owner,
+        tokenProgram: TOKEN_PROGRAM_ID
+      }
+    })
+  }
 
   // public async endIncentiveIx({
   //   incentive,

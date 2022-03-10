@@ -3,7 +3,6 @@ use crate::ErrorCode;
 use crate::Result;
 use anchor_lang::prelude::*;
 use std::cmp;
-use std::convert::TryInto;
 
 pub fn calculate_reward(
     total_reward_unclaimed: TokenAmount,
@@ -58,7 +57,7 @@ mod tests {
         assert_eq!(result, TokenAmount::new(100));
         assert_eq!(seconds_inside, Seconds::new(10));
     }
-
+    // TODO fix rest od the tests
     // #[test]
     // fn test_calculate_reward_2() {
     //     let (seconds_inside, result) = calculate_reward(
