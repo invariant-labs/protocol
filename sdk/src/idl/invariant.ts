@@ -473,18 +473,6 @@ export type Invariant = {
           "type": {
             "defined": "Liquidity"
           }
-        },
-        {
-          "name": "slippageLimitLower",
-          "type": {
-            "defined": "Price"
-          }
-        },
-        {
-          "name": "slippageLimitUpper",
-          "type": {
-            "defined": "Price"
-          }
         }
       ]
     },
@@ -2005,18 +1993,6 @@ export const IDL: Invariant = {
           "name": "liquidityDelta",
           "type": {
             "defined": "Liquidity"
-          }
-        },
-        {
-          "name": "slippageLimitLower",
-          "type": {
-            "defined": "Price"
-          }
-        },
-        {
-          "name": "slippageLimitUpper",
-          "type": {
-            "defined": "Price"
           }
         }
       ]
