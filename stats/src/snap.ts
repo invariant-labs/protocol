@@ -1,7 +1,6 @@
-import { Network, Market, Pair } from '@invariant-labs/sdk'
-import * as anchor from '@project-serum/anchor'
+import { Network, Market, Pair, getMarketAddress } from '@invariant-labs/sdk'
 import { Provider } from '@project-serum/anchor'
-import { clusterApiUrl } from '@solana/web3.js'
+import { clusterApiUrl, PublicKey } from '@solana/web3.js'
 import fs from 'fs'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -24,7 +23,7 @@ export const createSnapshotForNetwork = async (network: Network) => {
     network,
     provider.wallet,
     connection,
-    anchor.workspace.Invariant.programId
+    new PublicKey(getMarketAddress(network))
   )
 
   const allPools = await market.getAllPools()
