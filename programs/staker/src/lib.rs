@@ -19,15 +19,15 @@ pub mod staker {
 
     use super::*;
 
-    // pub fn create_incentive(
-    //     ctx: Context<CreateIncentive>,
-    //     nonce: u8,
-    //     reward: TokenAmount,
-    //     start_time: Seconds,
-    //     end_time: Seconds,
-    // ) -> ProgramResult {
-    //     instructions::create_incentive::handler(ctx, nonce, reward, start_time, end_time)
-    // }
+    pub fn create_incentive(
+        ctx: Context<CreateIncentive>,
+        nonce: u8,
+        reward: TokenAmount,
+        start_time: Seconds,
+        end_time: Seconds,
+    ) -> ProgramResult {
+        instructions::create_incentive::handler(ctx, nonce, reward, start_time, end_time)
+    }
 
     // pub fn stake(ctx: Context<CreateUserStake>, _index: i32) -> ProgramResult {
     //     instructions::stake::handler(ctx)
