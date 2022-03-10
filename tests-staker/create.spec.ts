@@ -94,8 +94,8 @@ describe('Create incentive tests', () => {
     const seconds = new Date().valueOf() / 1000
     const currentTime = new BN(Math.floor(seconds))
     const reward: Decimal = { v: new BN(10) }
-    const startTime = currentTime.add(new BN(0))
-    const endTime = currentTime.add(new BN(31_000_000))
+    const startTime: Decimal = { v: currentTime.add(new BN(0)) }
+    const endTime: Decimal = { v: currentTime.add(new BN(31_000_000)) }
     const totalSecondsClaimed: Decimal = { v: new BN(0) }
 
     const createIncentiveVars: CreateIncentive = {
@@ -123,10 +123,10 @@ describe('Create incentive tests', () => {
     )
 
     const createdIncentive = await staker.getIncentive(incentiveAccount.publicKey)
-    assert.ok(eqDecimal(createdIncentive.totalRewardUnclaimed, reward))
+    assert.ok(createdIncentive.totalRewardUnclaimed.v.eq(reward.v))
     assert.ok(eqDecimal(createdIncentive.totalSecondsClaimed, totalSecondsClaimed))
-    assert.ok(createdIncentive.startTime.eq(startTime))
-    assert.ok(createdIncentive.endTime.eq(endTime))
+    assert.ok(createdIncentive.startTime.v.eq(startTime.v))
+    assert.ok(createdIncentive.endTime.v.eq(endTime.v))
     assert.ok(createdIncentive.pool.equals(pool))
   })
 
@@ -135,8 +135,8 @@ describe('Create incentive tests', () => {
     const seconds = new Date().valueOf() / 1000
     const currentTime = new BN(Math.floor(seconds))
     const reward: Decimal = { v: new BN(0) }
-    const startTime = currentTime.add(new BN(0))
-    const endTime = currentTime.add(new BN(31_000_000))
+    const startTime = { v: currentTime.add(new BN(0)) }
+    const endTime = { v: currentTime.add(new BN(31_000_000)) }
 
     const createIncentiveVars: CreateIncentive = {
       reward,
@@ -168,8 +168,8 @@ describe('Create incentive tests', () => {
     const seconds = new Date().valueOf() / 1000
     const currentTime = new BN(Math.floor(seconds))
     const reward: Decimal = { v: new BN(1000) }
-    const startTime = currentTime.add(new BN(-4000))
-    const endTime = currentTime.add(new BN(31_000_000))
+    const startTime = { v: currentTime.add(new BN(-4000)) }
+    const endTime = { v: currentTime.add(new BN(31_000_000)) }
 
     const createIncentiveVars: CreateIncentive = {
       reward,
@@ -200,8 +200,8 @@ describe('Create incentive tests', () => {
     const seconds = new Date().valueOf() / 1000
     const currentTime = new BN(Math.floor(seconds))
     const reward: Decimal = { v: new BN(1000) }
-    const startTime = currentTime.add(new BN(0))
-    const endTime = currentTime.add(new BN(32_000_000))
+    const startTime = { v: currentTime.add(new BN(0)) }
+    const endTime = { v: currentTime.add(new BN(32_000_000)) }
 
     const createIncentiveVars: CreateIncentive = {
       reward,
@@ -232,8 +232,8 @@ describe('Create incentive tests', () => {
     const seconds = new Date().valueOf() / 1000
     const currentTime = new BN(Math.floor(seconds))
     const reward: Decimal = { v: new BN(1000) }
-    const startTime = currentTime.add(new BN(0))
-    const endTime = currentTime.add(new BN(31_000_000))
+    const startTime = { v: currentTime.add(new BN(0)) }
+    const endTime = { v: currentTime.add(new BN(31_000_000)) }
 
     const createIncentiveVars: CreateIncentive = {
       reward,
