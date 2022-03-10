@@ -57,7 +57,7 @@ const simulateWithdrawal = (position: Position, pool: PoolStructure) => {
         calculatePriceSqrt(position.upperTickIndex),
         position.liquidity,
         false
-      ),
+      ) ?? new BN(0),
       new BN(0)
     ]
   } else if (pool.currentTickIndex < position.upperTickIndex) {
@@ -67,13 +67,13 @@ const simulateWithdrawal = (position: Position, pool: PoolStructure) => {
         calculatePriceSqrt(position.upperTickIndex),
         position.liquidity,
         false
-      ),
+      ) ?? new BN(0),
       getDeltaY(
         calculatePriceSqrt(position.lowerTickIndex),
         pool.sqrtPrice,
         position.liquidity,
         false
-      )
+      ) ?? new BN(0)
     ]
   } else {
     return [
@@ -83,7 +83,7 @@ const simulateWithdrawal = (position: Position, pool: PoolStructure) => {
         calculatePriceSqrt(position.upperTickIndex),
         position.liquidity,
         false
-      )
+      ) ?? new BN(0)
     ]
   }
 }

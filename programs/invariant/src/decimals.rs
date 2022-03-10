@@ -8,7 +8,9 @@ pub const PRICE_LIQUIDITY_DENOMINATOR: u128 = 1__0000_0000__0000_0000__00u128;
 
 #[decimal(24)]
 #[zero_copy]
-#[derive(Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(
+    Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord, AnchorSerialize, AnchorDeserialize,
+)]
 pub struct Price {
     pub v: u128,
 }

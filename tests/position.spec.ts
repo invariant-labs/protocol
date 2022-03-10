@@ -16,6 +16,7 @@ import { MAX_TICK, MIN_TICK } from '@invariant-labs/sdk/lib/math'
 import { fromFee, assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
 import { CreatePool, CreateTick, InitPosition } from '@invariant-labs/sdk/src/market'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
+import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('position', () => {
   const provider = Provider.local()
@@ -149,7 +150,9 @@ describe('position', () => {
         userTokenY: userTokenYAccount,
         lowerTick,
         upperTick,
-        liquidityDelta
+        liquidityDelta,
+        knownPrice: calculatePriceSqrt(initTick),
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, positionOwner)
 
@@ -280,7 +283,9 @@ describe('position', () => {
         userTokenY: userTokenYAccount,
         lowerTick,
         upperTick,
-        liquidityDelta
+        liquidityDelta,
+        knownPrice: calculatePriceSqrt(initTick),
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, positionOwner)
 
@@ -410,7 +415,9 @@ describe('position', () => {
         userTokenY: userTokenYAccount,
         lowerTick,
         upperTick,
-        liquidityDelta
+        liquidityDelta,
+        knownPrice: calculatePriceSqrt(initTick),
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, positionOwner)
 

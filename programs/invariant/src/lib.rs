@@ -75,9 +75,15 @@ pub mod invariant {
         _lower_tick_index: i32,
         _upper_tick_index: i32,
         liquidity_delta: Liquidity,
+        slippage_limit_lower: Price,
+        slippage_limit_upper: Price,
     ) -> ProgramResult {
-        ctx.accounts
-            .handler(liquidity_delta, *ctx.bumps.get("position").unwrap())
+        ctx.accounts.handler(
+            liquidity_delta,
+            slippage_limit_lower,
+            slippage_limit_upper,
+            *ctx.bumps.get("position").unwrap(),
+        )
     }
 
     pub fn remove_position(

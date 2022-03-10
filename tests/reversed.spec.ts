@@ -9,6 +9,7 @@ import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { CreateTick, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
+import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('reversed', () => {
   const provider = Provider.local()
@@ -90,7 +91,9 @@ describe('reversed', () => {
       userTokenY: userTokenYAccount,
       lowerTick,
       upperTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars, positionOwner)
 
@@ -101,7 +104,9 @@ describe('reversed', () => {
       userTokenY: userTokenYAccount,
       lowerTick: middleTick,
       upperTick: upperTick + 20,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars2, positionOwner)
 

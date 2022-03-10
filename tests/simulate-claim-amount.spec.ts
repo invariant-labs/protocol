@@ -9,6 +9,7 @@ import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { calculateClaimAmount, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { ClaimFee, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
+import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('claim', () => {
   const provider = Provider.local()
@@ -77,7 +78,9 @@ describe('claim', () => {
       userTokenY: userTokenYAccount,
       lowerTick,
       upperTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars, positionOwner)
 
