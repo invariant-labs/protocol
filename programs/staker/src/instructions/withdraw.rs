@@ -103,7 +103,7 @@ pub fn handler(ctx: Context<Withdraw>, _index: i32, nonce: u8) -> ProgramResult 
 
         let cpi_ctx = ctx.accounts.withdraw().with_signer(signer);
 
-        token::transfer(cpi_ctx, reward.v)?;
+        token::transfer(cpi_ctx, reward.get())?;
     }
 
     if current_time > { incentive.end_time } {

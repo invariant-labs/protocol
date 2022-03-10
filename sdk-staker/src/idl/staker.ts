@@ -186,6 +186,52 @@ export type Staker = {
           "type": "u8"
         }
       ]
+    },
+    {
+      "name": "endIncentive",
+      "accounts": [
+        {
+          "name": "incentive",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "incentiveTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "founderTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "incentiveToken",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "stakerAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "founder",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "nonce",
+          "type": "u8"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -627,6 +673,52 @@ export const IDL: Staker = {
           "name": "index",
           "type": "i32"
         },
+        {
+          "name": "nonce",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "endIncentive",
+      "accounts": [
+        {
+          "name": "incentive",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "incentiveTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "founderTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "incentiveToken",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "stakerAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "founder",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
         {
           "name": "nonce",
           "type": "u8"

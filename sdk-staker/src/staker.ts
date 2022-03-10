@@ -229,25 +229,25 @@ export class Staker {
     })
   }
 
-  // public async endIncentiveIx({
-  //   incentive,
-  //   incentiveToken,
-  //   incentiveTokenAccount,
-  //   ownerTokenAccount,
-  //   founder
-  // }: EndIncentive) {
-  //   return this.program.instruction.endIncentive(this.programAuthority.nonce, {
-  //     accounts: {
-  //       incentive,
-  //       incentiveToken,
-  //       incentiveTokenAccount: incentiveTokenAccount,
-  //       founderTokenAccount: ownerTokenAccount,
-  //       stakerAuthority: this.programAuthority.authority,
-  //       founder: founder,
-  //       tokenProgram: TOKEN_PROGRAM_ID
-  //     }
-  //   })
-  // }
+  public async endIncentiveIx({
+    incentive,
+    incentiveToken,
+    incentiveTokenAccount,
+    ownerTokenAccount,
+    founder
+  }: EndIncentive) {
+    return this.program.instruction.endIncentive(this.programAuthority.nonce, {
+      accounts: {
+        incentive,
+        incentiveToken,
+        incentiveTokenAccount: incentiveTokenAccount,
+        founderTokenAccount: ownerTokenAccount,
+        stakerAuthority: this.programAuthority.authority,
+        founder: founder,
+        tokenProgram: TOKEN_PROGRAM_ID
+      }
+    })
+  }
 
   // public async removeStakeIx(userStake: PublicKey, incentive: PublicKey, founder: PublicKey) {
   //   return this.program.instruction.removeStake({

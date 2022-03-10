@@ -37,9 +37,9 @@ pub mod staker {
         instructions::withdraw::handler(ctx, _index, nonce)
     }
 
-    // pub fn end_incentive(ctx: Context<ReturnFounds>, nonce: u8) -> ProgramResult {
-    //     instructions::end_incentive::handler(ctx, nonce)
-    // }
+    pub fn end_incentive(ctx: Context<ReturnFounds>, nonce: u8) -> ProgramResult {
+        instructions::end_incentive::handler(ctx, nonce)
+    }
 
     // pub fn remove_stake(ctx: Context<RemoveStake>) -> ProgramResult {
     //     instructions::remove_stake::handler(ctx)
