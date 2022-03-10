@@ -29,9 +29,9 @@ pub mod staker {
         instructions::create_incentive::handler(ctx, nonce, reward, start_time, end_time)
     }
 
-    // pub fn stake(ctx: Context<CreateUserStake>, _index: i32) -> ProgramResult {
-    //     instructions::stake::handler(ctx)
-    // }
+    pub fn stake(ctx: Context<CreateUserStake>, _index: i32) -> ProgramResult {
+        instructions::stake::handler(ctx)
+    }
 
     // pub fn withdraw(ctx: Context<Withdraw>, _index: i32, nonce: u8) -> ProgramResult {
     //     instructions::withdraw::handler(ctx, _index, nonce)
