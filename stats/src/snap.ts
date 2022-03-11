@@ -7,10 +7,20 @@ import DEVNET_DATA from '../data/devnet.json'
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config()
 
+export interface PoolSnapshot {
+  timestamp: number
+  volumeX: string
+  volumeY: string
+  liquidityX: string
+  liquidityY: string
+  feeX: string
+  feeY: string
+}
+
 export const createSnapshotForNetwork = async (network: Network) => {
   let provider: Provider
   let fileName: string
-  let snaps
+  let snaps: Record<string, PoolSnapshot[]>
 
   switch (network) {
     case Network.DEV:
