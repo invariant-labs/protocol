@@ -1,9 +1,6 @@
-use std::ops::{Div, Mul};
-
 use crate::decimals::*;
 use crate::math::calculate_price_sqrt;
 use crate::structs::MAX_TICK;
-use crate::uint::U256;
 
 const LOG_SCALE: u8 = 32;
 const LOG_DOUBLE_SCALE: u8 = 64;
@@ -18,10 +15,12 @@ const LOG2_ACCURACY: u64 = 1u64 << (31 - LOG2_MIN_BINARY_POSITION);
 const PRICE_DENOMINATOR: u128 = 1_000000_000000_000000_000000;
 
 fn price_to_x32(decimal: Price) -> u64 {
-    U256::from(decimal.v)
-        .mul(U256::from(LOG_ONE))
-        .div(U256::from(PRICE_DENOMINATOR))
-        .as_u64()
+    decimal
+        .v
+        .checked_mul(LOG_ONE)
+        .unwrap()
+        .checked_div(PRICE_DENOMINATOR)
+        .unwrap() as u64
 }
 
 fn align_tick_to_spacing(accurate_tick: i32, tick_spacing: i32) -> i32 {
