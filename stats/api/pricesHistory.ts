@@ -12,5 +12,21 @@ export default function (_req: VercelRequest, res: VercelResponse) {
     'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
   )
 
-  res.json(PRICES_DATA)
+  const weekData = Object.entries(PRICES_DATA).reduce((acc, [id, snaps]) => {
+    const weekPrices = {}
+
+    const now = Date.now()
+
+    Object.entries(snaps as Object).forEach(([time, price]) => {
+      if ((now - +time) / (1000 * 60 * 60 * 24) < 8) {
+        weekPrices[time] = price
+      }
+    })
+    return {
+      ...acc,
+      [id]: weekPrices
+    }
+  }, {})
+
+  res.json(weekData)
 }
