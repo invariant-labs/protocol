@@ -2,6 +2,7 @@ import { Network, Market, Pair, getMarketAddress } from '@invariant-labs/sdk'
 import { Provider } from '@project-serum/anchor'
 import { clusterApiUrl, PublicKey } from '@solana/web3.js'
 import fs from 'fs'
+import DEVNET_DATA from '../data/devnet.json'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config()
@@ -9,12 +10,14 @@ require('dotenv').config()
 export const createSnapshotForNetwork = async (network: Network) => {
   let provider: Provider
   let fileName: string
+  let snaps
 
   switch (network) {
     case Network.DEV:
     default:
       provider = Provider.local(clusterApiUrl('devnet'))
       fileName = './data/devnet.json'
+      snaps = DEVNET_DATA
   }
 
   const connection = provider.connection
@@ -53,31 +56,25 @@ export const createSnapshotForNetwork = async (network: Network) => {
     })
   )
 
-  fs.readFile(fileName, (err, data) => {
+  const now = Date.now()
+  const timestamp =
+    Math.floor(now / (1000 * 60 * 60 * 24)) * (1000 * 60 * 60 * 24) + 1000 * 60 * 60 * 12
+
+  poolsData.forEach(({ address, stats }) => {
+    if (!snaps[address]) {
+      snaps[address] = []
+    }
+
+    snaps[address].push({
+      timestamp,
+      ...stats
+    })
+  })
+
+  fs.writeFile(fileName, JSON.stringify(snaps), err => {
     if (err) {
       throw err
     }
-
-    const snaps = JSON.parse(data.toString())
-
-    const timestamp = Date.now()
-
-    poolsData.forEach(({ address, stats }) => {
-      if (!snaps[address]) {
-        snaps[address] = []
-      }
-
-      snaps[address].push({
-        timestamp,
-        ...stats
-      })
-    })
-
-    fs.writeFile(fileName, JSON.stringify(snaps), err => {
-      if (err) {
-        throw err
-      }
-    })
   })
 }
 

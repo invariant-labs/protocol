@@ -1,6 +1,7 @@
 import { TokenListProvider } from '@solana/spl-token-registry'
 import axios, { AxiosResponse } from 'axios'
 import fs from 'fs'
+import PRICES_DATA from '../data/prices.json'
 
 export interface CoingeckoApiPriceData {
   id: string
@@ -44,29 +45,25 @@ export const createSnapshotOfPrices = async () => {
 
   const prices = await getCoingeckoPricesData(ids)
 
-  fs.readFile('./data/prices.json', (err, data) => {
+  const snaps = PRICES_DATA
+
+  const now = Date.now()
+  const timestamp =
+    Math.floor(now / (1000 * 60 * 60 * 24)) * (1000 * 60 * 60 * 24) + 1000 * 60 * 60 * 12
+
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  prices.forEach(({ id, current_price }) => {
+    if (!snaps[id]) {
+      snaps[id] = {}
+    }
+
+    snaps[id][timestamp] = current_price ?? 0
+  })
+
+  fs.writeFile('./data/prices.json', JSON.stringify(snaps), err => {
     if (err) {
       throw err
     }
-
-    const snaps = JSON.parse(data.toString())
-
-    const timestamp = Date.now()
-
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    prices.forEach(({ id, current_price }) => {
-      if (!snaps[id]) {
-        snaps[id] = {}
-      }
-
-      snaps[id][timestamp] = current_price ?? 0
-    })
-
-    fs.writeFile('./data/prices.json', JSON.stringify(snaps), err => {
-      if (err) {
-        throw err
-      }
-    })
   })
 }
 
