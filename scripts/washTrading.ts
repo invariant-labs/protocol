@@ -34,8 +34,8 @@ const main = async () => {
 
   const pair = new Pair(
     new PublicKey(MOCK_TOKENS.USDC),
-    new PublicKey(MOCK_TOKENS.USDT),
-    FEE_TIERS[0]
+    new PublicKey(MOCK_TOKENS.BTC),
+    FEE_TIERS[1]
   )
   const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
   const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
@@ -49,7 +49,7 @@ const main = async () => {
     const start = Date.now()
 
     const side = Math.random() > 0.5
-    const amount = 0 // To be estimated for certain prepared pool
+    const amount = 1000 // To be estimated for certain prepared pool
 
     console.log(`swap ${side ? 'x -> y' : 'y -> x'}: ${amount}`)
 
