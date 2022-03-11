@@ -1,7 +1,14 @@
 import * as anchor from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
-import { Market, Pair, tou64, calculatePriceSqrt, fromInteger, Network } from '@invariant-labs/sdk'
+import {
+  Market,
+  Pair,
+  tou64,
+  calculatePriceSqrt,
+  LIQUIDITY_DENOMINATOR,
+  Network
+} from '@invariant-labs/sdk'
 import { Provider, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken, eqDecimal, initEverything } from './testUtils'
@@ -9,6 +16,7 @@ import { MAX_TICK, MIN_TICK } from '@invariant-labs/sdk/lib/math'
 import { fromFee, assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
 import { CreatePool, CreateTick, InitPosition } from '@invariant-labs/sdk/src/market'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
+import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('position', () => {
   const provider = Provider.local()
@@ -75,7 +83,6 @@ describe('position', () => {
     const positionList = await market.getPositionList(positionOwner.publicKey)
     assert.equal(positionList.head, 0)
   })
-  // TODO: checkout sqrt price everywhere
   describe('#initPosition above current tick', () => {
     // -22980
     // 0
@@ -133,7 +140,7 @@ describe('position', () => {
       await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], xOwnerAmount)
       await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], yOwnerAmount)
 
-      const liquidityDelta = fromInteger(10_000)
+      const liquidityDelta = { v: LIQUIDITY_DENOMINATOR.muln(10_000) }
       const positionIndex = 0
 
       const initPositionVars: InitPosition = {
@@ -143,7 +150,9 @@ describe('position', () => {
         userTokenY: userTokenYAccount,
         lowerTick,
         upperTick,
-        liquidityDelta
+        liquidityDelta,
+        knownPrice: calculatePriceSqrt(initTick),
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, positionOwner)
 
@@ -263,7 +272,7 @@ describe('position', () => {
       await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], xOwnerAmount)
       await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], yOwnerAmount)
 
-      const liquidityDelta = fromInteger(100)
+      const liquidityDelta = { v: LIQUIDITY_DENOMINATOR.muln(100) }
       const positionIndex = 1
       const reserveBalancesBefore = await market.getReserveBalances(pair, tokenX, tokenY)
 
@@ -274,7 +283,9 @@ describe('position', () => {
         userTokenY: userTokenYAccount,
         lowerTick,
         upperTick,
-        liquidityDelta
+        liquidityDelta,
+        knownPrice: calculatePriceSqrt(initTick),
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, positionOwner)
 
@@ -392,7 +403,7 @@ describe('position', () => {
       await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], xOwnerAmount)
       await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], yOwnerAmount)
 
-      const liquidityDelta = fromInteger(10_000)
+      const liquidityDelta = { v: LIQUIDITY_DENOMINATOR.muln(10_000) }
       const positionIndex = 2
       const reserveBalancesBefore = await market.getReserveBalances(pair, tokenX, tokenY)
       const poolStateBefore = await market.getPool(pair)
@@ -404,7 +415,9 @@ describe('position', () => {
         userTokenY: userTokenYAccount,
         lowerTick,
         upperTick,
-        liquidityDelta
+        liquidityDelta,
+        knownPrice: calculatePriceSqrt(initTick),
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, positionOwner)
 

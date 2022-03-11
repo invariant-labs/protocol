@@ -24,7 +24,6 @@ export class LedgerWalletProvider {
     this.pubKey = await getPublicKey(this.transport, this.solanaDerivationPath)
     this.transport.on('disconnect', this.onDisconnect)
     this.listAddresses = async walletCount => {
-      // TODO: read accounts from ledger
       return [this.pubKey]
     }
     return this

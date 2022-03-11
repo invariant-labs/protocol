@@ -1,4 +1,4 @@
-mod decimal;
+mod decimalss;
 mod errors;
 mod instructions;
 mod math;
@@ -8,7 +8,7 @@ mod util;
 
 use anchor_lang::prelude::*;
 
-use decimal::*;
+use decimalss::*;
 use errors::*;
 use instructions::*;
 

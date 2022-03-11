@@ -14,6 +14,7 @@ import { feeToTickSpacing, FEE_TIERS, generateTicksArray } from '@invariant-labs
 import BN from 'bn.js'
 import { Pair, tou64, TICK_LIMIT, calculatePriceSqrt } from '@invariant-labs/sdk'
 import { assert } from 'chai'
+import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {
@@ -161,7 +162,7 @@ export const createPoolWithLiquidity = async (
   market: Market,
   connection: Connection,
   payer: Keypair,
-  liquidity: Decimal = { v: new BN(10).pow(new BN(22)) },
+  liquidity: Decimal = { v: new BN(10).pow(new BN(16)) },
   initialTick: number = 0,
   lowerTick: number = -1000,
   upperTick: number = 1000
@@ -181,7 +182,9 @@ export const createPoolWithLiquidity = async (
     userTokenY: userAccountY,
     lowerTick,
     upperTick,
-    liquidityDelta: liquidity
+    liquidityDelta: liquidity,
+    knownPrice: calculatePriceSqrt(initialTick),
+    slippage: { v: new BN(0) }
   }
   await market.initPosition(initPositionVars, owner)
 
@@ -221,7 +224,9 @@ export const createPosition = async (
     userTokenY: ownerTokenYAccount,
     lowerTick,
     upperTick,
-    liquidityDelta: { v: liquidity }
+    liquidityDelta: { v: liquidity },
+    knownPrice: (await market.getPool(pair)).sqrtPrice,
+    slippage: { v: new BN(0) }
   }
   await market.initPosition(initPositionVars, owner)
 }

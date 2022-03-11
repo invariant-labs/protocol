@@ -1,4 +1,4 @@
-mod decimal;
+mod decimals;
 mod errors;
 mod instructions;
 mod interfaces;
@@ -12,7 +12,7 @@ mod util;
 use anchor_lang::prelude::*;
 use anchor_spl::token;
 
-use decimal::*;
+use crate::decimals::*;
 use errors::ErrorCode;
 use errors::*;
 use instructions::*;
@@ -22,7 +22,7 @@ use util::*;
 
 use instructions::claim_fee::ClaimFee;
 
-declare_id!("6jtEY7kz17tLjKCNTybJBz8GbXSjwAiV5Ufjqsiyauys");
+declare_id!("ESRPyq2GA57atfh3mpq59skfTka3tmd4euajAqkbsiMm");
 const SEED: &str = "Invariant";
 
 #[program]
@@ -74,10 +74,16 @@ pub mod invariant {
         ctx: Context<CreatePosition>,
         _lower_tick_index: i32,
         _upper_tick_index: i32,
-        liquidity_delta: Decimal,
+        liquidity_delta: Liquidity,
+        slippage_limit_lower: Price,
+        slippage_limit_upper: Price,
     ) -> ProgramResult {
-        ctx.accounts
-            .handler(liquidity_delta, *ctx.bumps.get("position").unwrap())
+        ctx.accounts.handler(
+            liquidity_delta,
+            slippage_limit_lower,
+            slippage_limit_upper,
+            *ctx.bumps.get("position").unwrap(),
+        )
     }
 
     pub fn remove_position(
@@ -124,7 +130,7 @@ pub mod invariant {
     #[access_control(receiver(&ctx.accounts.pool, &ctx.accounts.admin))]
     pub fn change_protocol_fee(
         ctx: Context<ChangeProtocolFee>,
-        protocol_fee: Decimal,
+        protocol_fee: FixedPoint,
     ) -> ProgramResult {
         ctx.accounts.handler(protocol_fee)
     }

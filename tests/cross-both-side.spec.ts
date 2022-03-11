@@ -8,7 +8,6 @@ import {
   Market,
   Pair,
   tou64,
-  DENOMINATOR,
   TICK_LIMIT,
   Network,
   INVARIANT_ERRORS,
@@ -16,7 +15,7 @@ import {
 } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { assertThrowsAsync, fromFee } from '@invariant-labs/sdk/lib/utils'
-import { toDecimal } from '@invariant-labs/sdk/src/utils'
+import { PRICE_DENOMINATOR, toDecimal } from '@invariant-labs/sdk/src/utils'
 import {
   CreateFeeTier,
   CreatePool,
@@ -25,6 +24,7 @@ import {
   Swap
 } from '@invariant-labs/sdk/src/market'
 import { getLiquidityByX } from '@invariant-labs/sdk/lib/math'
+import { DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('swap with cross both side', () => {
   const provider = Provider.local()
@@ -88,7 +88,7 @@ describe('swap with cross both side', () => {
     assert.ok(createdPool.fee.v.eq(feeTier.fee))
     assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
     assert.ok(createdPool.liquidity.v.eqn(0))
-    assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR))
+    assert.ok(createdPool.sqrtPrice.v.eq(PRICE_DENOMINATOR))
     assert.ok(createdPool.currentTickIndex === 0)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
@@ -132,11 +132,12 @@ describe('swap with cross both side', () => {
 
     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+    const { sqrtPrice } = await market.getPool(pair)
     const { liquidity: liquidityDelta } = getLiquidityByX(
       mintAmount.divn(10),
       lowerTick,
       upperTick,
-      { v: DENOMINATOR },
+      sqrtPrice,
       false,
       feeTier.tickSpacing
     )
@@ -150,7 +151,9 @@ describe('swap with cross both side', () => {
       userTokenY: userTokenYAccount,
       lowerTick,
       upperTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: sqrtPrice,
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars, positionOwner)
 
@@ -161,7 +164,9 @@ describe('swap with cross both side', () => {
       userTokenY: userTokenYAccount,
       lowerTick: lastTick,
       upperTick: lowerTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: sqrtPrice,
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars2, positionOwner)
 
@@ -272,6 +277,7 @@ describe('swap with cross both side', () => {
     // TODO: validate state
 
     // Add massive amount of liquidity to test extreme case of high accuracy
+    // OVERFLOW HAPPENS
     const massiveLiquidityAmountX = new BN(10).pow(new BN(19))
     const massiveLiquidityAmountY = new BN(10).pow(new BN(19))
 
@@ -290,7 +296,7 @@ describe('swap with cross both side', () => {
 
     const currentPrice = (await market.getPool(pair)).sqrtPrice
     const { liquidity: massiveLiquidityDelta } = getLiquidityByX(
-      massiveLiquidityAmountX.divn(10).muln(10),
+      massiveLiquidityAmountX,
       -20,
       0,
       currentPrice,
@@ -305,12 +311,14 @@ describe('swap with cross both side', () => {
       userTokenY: userTokenYAccount,
       lowerTick: -20,
       upperTick: 0,
-      liquidityDelta: massiveLiquidityDelta
+      liquidityDelta: massiveLiquidityDelta,
+      knownPrice: (await market.getPool(pair)).sqrtPrice,
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(massiveInitPositionMassive, positionOwner)
 
-    // Crossing tick with descending price and by 1 token amount out
-    const swapNotCrossingDecreasingByAmountOutVars: Swap = {
+    // Crossing tick with descending price and by 1 token amount out (with massive liquidity ~1/2 liquidity)
+    const swapCrossingDecreasingByAmountOutVars: Swap = {
       pair,
       xToY: true,
       amount: new BN(1),
@@ -321,7 +329,21 @@ describe('swap with cross both side', () => {
       byAmountIn: false,
       owner: owner.publicKey
     }
-    await market.swap(swapNotCrossingDecreasingByAmountOutVars, owner)
+    await market.swap(swapCrossingDecreasingByAmountOutVars, owner)
+
+    // Crossing tick with increasing price and by token amount in
+    const swapCrossingIncreasingByAmountInVars: Swap = {
+      pair,
+      xToY: false,
+      amount: new BN(2),
+      estimatedPriceAfterSwap: poolDataBefore.sqrtPrice, // ignore price impact using high slippage tolerance
+      slippage: toDecimal(1, 2),
+      accountX,
+      accountY,
+      byAmountIn: true,
+      owner: owner.publicKey
+    }
+    await market.swap(swapCrossingIncreasingByAmountInVars, owner)
 
     // TODO: validate state
   })

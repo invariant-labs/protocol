@@ -1,3 +1,4 @@
+import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 import { Network, Pair, Market } from '@invariant-labs/sdk'
 import { FeeTier, InitPosition } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
@@ -77,7 +78,9 @@ describe('whole-liquidity', () => {
       pair,
       userTokenX: positionOwner1AccountX,
       userTokenY: positionOwner1AccountY,
-      owner: positionOwner1.publicKey
+      owner: positionOwner1.publicKey,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars, positionOwner1)
 
@@ -88,7 +91,9 @@ describe('whole-liquidity', () => {
       pair,
       userTokenX: positionOwner1AccountX,
       userTokenY: positionOwner1AccountY,
-      owner: positionOwner1.publicKey
+      owner: positionOwner1.publicKey,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars2, positionOwner1)
 
@@ -99,7 +104,9 @@ describe('whole-liquidity', () => {
       pair,
       userTokenX: positionOwner2AccountX,
       userTokenY: positionOwner2AccountY,
-      owner: positionOwner2.publicKey
+      owner: positionOwner2.publicKey,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars3, positionOwner2)
 

@@ -8,10 +8,11 @@ import {
   Market,
   Pair,
   tou64,
-  DENOMINATOR,
+  LIQUIDITY_DENOMINATOR,
   TICK_LIMIT,
   Network,
-  calculatePriceSqrt
+  calculatePriceSqrt,
+  PRICE_DENOMINATOR
 } from '@invariant-labs/sdk'
 import { Decimal, FeeTier } from '@invariant-labs/sdk/lib/market'
 import { assertThrowsAsync, fromFee } from '@invariant-labs/sdk/lib/utils'
@@ -91,7 +92,7 @@ describe('Liquidity gap', () => {
     assert.ok(createdPool.fee.v.eq(feeTier.fee))
     assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
     assert.ok(createdPool.liquidity.v.eqn(0))
-    assert.ok(createdPool.sqrtPrice.v.eq(DENOMINATOR))
+    assert.ok(createdPool.sqrtPrice.v.eq(PRICE_DENOMINATOR))
     assert.ok(createdPool.currentTickIndex === 0)
     assert.ok(createdPool.feeGrowthGlobalX.v.eqn(0))
     assert.ok(createdPool.feeGrowthGlobalY.v.eqn(0))
@@ -127,7 +128,7 @@ describe('Liquidity gap', () => {
 
     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-    const liquidityDelta = { v: new BN(20006000).mul(DENOMINATOR) }
+    const liquidityDelta = { v: new BN(20006000).mul(LIQUIDITY_DENOMINATOR) }
 
     await market.createPositionList(positionOwner.publicKey, positionOwner)
 
@@ -138,7 +139,9 @@ describe('Liquidity gap', () => {
       userTokenY: userTokenYAccount,
       lowerTick,
       upperTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars, positionOwner)
 
@@ -193,7 +196,7 @@ describe('Liquidity gap', () => {
     assert.ok(amountY.eq(expectedYAmountOut))
     assert.ok(reserveXDelta.eq(amount))
     assert.ok(reserveYDelta.eq(expectedYAmountOut))
-    assert.ok(poolData.feeGrowthGlobalX.v.eq(new BN('2399280215935219435')))
+    assert.equal(poolData.feeGrowthGlobalX.v.toString(), '2399280215935219434')
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
     assert.ok(poolData.feeProtocolTokenX.eqn(13))
     assert.ok(poolData.feeProtocolTokenY.eqn(0))
@@ -230,7 +233,7 @@ describe('Liquidity gap', () => {
     }
     await market.createTick(createTickVars2, admin)
 
-    const liquidityDelta = { v: new BN(20008000).mul(DENOMINATOR) }
+    const liquidityDelta = { v: new BN(20008000).mul(LIQUIDITY_DENOMINATOR) }
     const initPositionAfterSwapVars: InitPosition = {
       pair,
       owner: positionOwner.publicKey,
@@ -238,7 +241,9 @@ describe('Liquidity gap', () => {
       userTokenY: userTokenYAccount,
       lowerTick: lowerTickAfterSwap,
       upperTick: upperTickAfterSwap,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: (await market.getPool(pair)).sqrtPrice,
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionAfterSwapVars, positionOwner)
     const nextSwapAmount = new BN(5000)

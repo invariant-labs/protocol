@@ -1,6 +1,12 @@
 import { TICK_SEARCH_RANGE, TICK_LIMIT, MAX_TICK } from '@invariant-labs/sdk'
 import { Tickmap } from '@invariant-labs/sdk/lib/market'
-import { getNextTick, getPreviousTick, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
+import {
+  findTickmapChanges,
+  getNextTick,
+  getPreviousTick,
+  TickmapChange,
+  tickToPosition
+} from '@invariant-labs/sdk/src/tickmap'
 import { BN } from '@project-serum/anchor'
 import { assert } from 'chai'
 
@@ -130,6 +136,90 @@ describe('tickmap', () => {
       tickmap.bitmap[byte] ^= 1 << bit
 
       assert.ok(getPreviousTick(tickmap, TICK_LIMIT - 1, 1) === null)
+    })
+  })
+  describe('findTickmapChanges', () => {
+    describe('added ticks', () => {
+      const currentTickmap = [0b0000_0000, 0b0000_1101]
+      const nextTickmap = [0b0000_0011, 0b0110_1111]
+      it('without offset', () => {
+        const tickmapChanges = findTickmapChanges(currentTickmap, nextTickmap, 1, 0)
+        const expected: TickmapChange = {
+          0: 'added',
+          1: 'added',
+          9: 'added',
+          13: 'added',
+          14: 'added'
+        }
+        assert.equal(JSON.stringify(tickmapChanges), JSON.stringify(expected))
+      })
+      it('with default offset and custom tick spacing', () => {
+        const tickmapChangesWithOffset = findTickmapChanges(currentTickmap, nextTickmap, 2)
+        const expectedWithOffset: TickmapChange = {
+          '-200000': 'added',
+          '-199998': 'added',
+          '-199982': 'added',
+          '-199974': 'added',
+          '-199972': 'added'
+        }
+        assert.equal(JSON.stringify(tickmapChangesWithOffset), JSON.stringify(expectedWithOffset))
+      })
+    })
+    describe('removed ticks', () => {
+      const currentTickmap = [0b0111_1011, 0b1110_1111]
+      const nextTickmap = [0b0010_0010, 0b1000_1111]
+      it('without offset', () => {
+        const tickmapChanges = findTickmapChanges(currentTickmap, nextTickmap, 1, 0)
+        const expected: TickmapChange = {
+          0: 'removed',
+          3: 'removed',
+          4: 'removed',
+          6: 'removed',
+          13: 'removed',
+          14: 'removed'
+        }
+        assert.equal(JSON.stringify(tickmapChanges), JSON.stringify(expected))
+      })
+      it('with default offset and tick spacing', () => {
+        const tickmapChangesWithOffset = findTickmapChanges(currentTickmap, nextTickmap, 2)
+        const expectedWithOffset: TickmapChange = {
+          '-200000': 'removed',
+          '-199994': 'removed',
+          '-199992': 'removed',
+          '-199988': 'removed',
+          '-199974': 'removed',
+          '-199972': 'removed'
+        }
+        assert.equal(JSON.stringify(tickmapChangesWithOffset), JSON.stringify(expectedWithOffset))
+      })
+    })
+    describe('both added and removed ticks', () => {
+      const currentTickmap = [0b1000_1010, 0b1011_1111]
+      const nextTickmap = [0b0001_1100, 0b0111_1111]
+      it('without offset', () => {
+        const tickmapChanges = findTickmapChanges(currentTickmap, nextTickmap, 1, 0)
+        const expected: TickmapChange = {
+          1: 'removed',
+          2: 'added',
+          4: 'added',
+          7: 'removed',
+          14: 'added',
+          15: 'removed'
+        }
+        assert.equal(JSON.stringify(tickmapChanges), JSON.stringify(expected))
+      })
+      it('with default offset and tick spacing', () => {
+        const tickmapChangesWithOffset = findTickmapChanges(currentTickmap, nextTickmap, 2)
+        const expectedWithOffset: TickmapChange = {
+          '-199998': 'removed',
+          '-199996': 'added',
+          '-199992': 'added',
+          '-199986': 'removed',
+          '-199972': 'added',
+          '-199970': 'removed'
+        }
+        assert.equal(JSON.stringify(tickmapChangesWithOffset), JSON.stringify(expectedWithOffset))
+      })
     })
   })
 })

@@ -1,4 +1,4 @@
-use crate::decimal::Decimal;
+use crate::decimals::*;
 use crate::interfaces::send_tokens::SendTokens;
 use crate::structs::pool::Pool;
 use crate::structs::position::Position;
@@ -151,11 +151,11 @@ impl<'info> RemovePosition<'info> {
                 current_timestamp,
             )?;
 
-            let amount_x = amount_x + removed_position.tokens_owed_x.to_token_floor();
-            let amount_y = amount_y + removed_position.tokens_owed_y.to_token_floor();
+            let amount_x = amount_x + TokenAmount::from_decimal(removed_position.tokens_owed_x);
+            let amount_y = amount_y + TokenAmount::from_decimal(removed_position.tokens_owed_y);
 
-            close_lower = { lower_tick.liquidity_gross } == Decimal::new(0);
-            close_upper = { upper_tick.liquidity_gross } == Decimal::new(0);
+            close_lower = lower_tick.liquidity_gross.is_zero();
+            close_upper = upper_tick.liquidity_gross.is_zero();
 
             (amount_x, amount_y)
         };
