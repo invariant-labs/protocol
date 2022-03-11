@@ -144,60 +144,60 @@ mod tests {
         // min sqrt price -> sqrt(1.0001)^MIN_TICK
         {
             let min_sqrt_price_decimal = calculate_price_sqrt(-MAX_TICK);
-            let min_sqrt_price_x64 = price_to_x32(min_sqrt_price_decimal);
+            let min_sqrt_price_x32 = price_to_x32(min_sqrt_price_decimal);
 
-            let expected_min_sqrt_price_x64 = 65536;
-            assert_eq!(min_sqrt_price_x64, expected_min_sqrt_price_x64);
+            let expected_min_sqrt_price_x32 = 65536;
+            assert_eq!(min_sqrt_price_x32, expected_min_sqrt_price_x32);
         }
         // max sqrt price -> sqrt(1.0001)^MAX_TICK
         {
             let max_sqrt_price_decimal = calculate_price_sqrt(MAX_TICK);
-            let max_sqrt_price_x64 = price_to_x32(max_sqrt_price_decimal);
+            let max_sqrt_price_x32 = price_to_x32(max_sqrt_price_decimal);
 
-            let expected_max_sqrt_price_x64 = 281472330729535;
-            assert_eq!(max_sqrt_price_x64, expected_max_sqrt_price_x64);
+            let expected_max_sqrt_price_x32 = 281472330729535;
+            assert_eq!(max_sqrt_price_x32, expected_max_sqrt_price_x32);
         }
     }
 
     #[test]
-    fn test_log2_x64() {
+    fn test_log2_x32() {
         // log2 of 1
         {
             let sqrt_price_decimal = Price::from_integer(1);
-            let sqrt_price_x64 = price_to_x32(sqrt_price_decimal);
-            let (sign, value) = log2_iterative_approximation_x32(sqrt_price_x64);
+            let sqrt_price_x32 = price_to_x32(sqrt_price_decimal);
+            let (sign, value) = log2_iterative_approximation_x32(sqrt_price_x32);
             assert_eq!(sign, true);
             assert_eq!(value, 0);
         }
         // log2 > 0 when x > 1
         {
             let sqrt_price_decimal = Price::from_integer(879);
-            let sqrt_price_x64 = price_to_x32(sqrt_price_decimal);
-            let (sign, value) = log2_iterative_approximation_x32(sqrt_price_x64);
+            let sqrt_price_x32 = price_to_x32(sqrt_price_decimal);
+            let (sign, value) = log2_iterative_approximation_x32(sqrt_price_x32);
             assert_eq!(sign, true);
             assert_eq!(value, 42003464192);
         }
         // log2 < 0 when x < 1
         {
             let sqrt_price_decimal = Price::from_scale(59, 4);
-            let sqrt_price_x64 = price_to_x32(sqrt_price_decimal);
-            let (sign, value) = log2_iterative_approximation_x32(sqrt_price_x64);
+            let sqrt_price_x32 = price_to_x32(sqrt_price_decimal);
+            let (sign, value) = log2_iterative_approximation_x32(sqrt_price_x32);
             assert_eq!(sign, false);
             assert_eq!(value, 31804489728);
         }
         // log2 of max sqrt price
         {
             let max_sqrt_price = calculate_price_sqrt(MAX_TICK);
-            let sqrt_price_x64 = price_to_x32(max_sqrt_price);
-            let (sign, value) = log2_iterative_approximation_x32(sqrt_price_x64);
+            let sqrt_price_x32 = price_to_x32(max_sqrt_price);
+            let (sign, value) = log2_iterative_approximation_x32(sqrt_price_x32);
             assert_eq!(sign, true);
             assert_eq!(value, 68719345664);
         }
         // log2 of min sqrt price
         {
             let min_sqrt_price = calculate_price_sqrt(-MAX_TICK);
-            let sqrt_price_x64 = price_to_x32(min_sqrt_price);
-            let (sign, value) = log2_iterative_approximation_x32(sqrt_price_x64);
+            let sqrt_price_x32 = price_to_x32(min_sqrt_price);
+            let (sign, value) = log2_iterative_approximation_x32(sqrt_price_x32);
             assert_eq!(sign, false);
             assert_eq!(value, 68719345664);
         }
@@ -205,8 +205,8 @@ mod tests {
         {
             let mut sqrt_price_decimal = calculate_price_sqrt(-19_999);
             sqrt_price_decimal = sqrt_price_decimal - Price::new(1);
-            let sqrt_price_x64 = price_to_x32(sqrt_price_decimal);
-            let (sign, value) = log2_iterative_approximation_x32(sqrt_price_x64);
+            let sqrt_price_x32 = price_to_x32(sqrt_price_decimal);
+            let (sign, value) = log2_iterative_approximation_x32(sqrt_price_x32);
             assert_eq!(sign, false);
             assert_eq!(value, 6195642368);
         }
@@ -214,8 +214,8 @@ mod tests {
         {
             let mut sqrt_price_decimal = calculate_price_sqrt(19_999);
             sqrt_price_decimal = sqrt_price_decimal - Price::new(1);
-            let sqrt_price_x64 = price_to_x32(sqrt_price_decimal);
-            let (sign, value) = log2_iterative_approximation_x32(sqrt_price_x64);
+            let sqrt_price_x32 = price_to_x32(sqrt_price_decimal);
+            let (sign, value) = log2_iterative_approximation_x32(sqrt_price_x32);
             assert_eq!(sign, true);
             assert_eq!(value, 6195642368);
         }
