@@ -4,7 +4,8 @@
   "description": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "snap": "ts-node ./src/snap.ts"
+    "snap": "ts-node ./src/snap.ts",
+    "cachePrices": "ts-node ./src/cachePrices.ts"
   },
   "author": "",
   "license": "ISC",
@@ -15,7 +16,9 @@
     "@solana/web3.js": "1.18.0",
     "@vercel/node": "^1.13.0",
     "dotenv": "^16.0.0",
-    "ts-node": "^10.5.0"
+    "ts-node": "^10.5.0",
+    "@solana/spl-token-registry": "^0.2.2821",
+    "axios": "^0.26.1"
   },
   "devDependencies": {
     "typescript": "^4.5.5"

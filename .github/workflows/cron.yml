@@ -28,6 +28,7 @@ jobs:
           export ANCHOR_WALLET="/home/runner/.config/solana/id.json"
           npm install
           npm run snap
+          npm run cachePrices
           git add ./data
           git commit -m "Snapshot of data done!"
         working-directory: stats
