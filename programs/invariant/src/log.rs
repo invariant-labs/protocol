@@ -2,11 +2,12 @@ use crate::decimals::*;
 use crate::math::calculate_price_sqrt;
 use crate::structs::MAX_TICK;
 
-const LOG_SCALE: u8 = 32;
-const LOG_DOUBLE_SCALE: u8 = 64;
-const LOG_ONE: u128 = 1 << LOG_SCALE;
-const LOG_HALF: u64 = (LOG_ONE >> 1) as u64;
-const LOG_DOUBLE: u128 = LOG_ONE << 1;
+const LOG2_SCALE: u8 = 32;
+const LOG2_DOUBLE_SCALE: u8 = 64;
+const LOG2_ONE: u128 = 1 << LOG2_SCALE;
+const LOG2_HALF: u64 = (LOG2_ONE >> 1) as u64;
+const LOG2_TWO: u128 = LOG2_ONE << 1;
+const LOG2_DOUBLE_ONE: u128 = 1 << LOG2_DOUBLE_SCALE;
 const LOG2_SQRT_10001: u64 = 309801;
 const LOG2_NEGATIVE_MAX_LOSE: u64 = 300000; // max accuracy in <-MAX_TICK, 0> domain
 const LOG2_MIN_BINARY_POSITION: i32 = 15; // accuracy = 2^(-15)
@@ -16,7 +17,7 @@ const PRICE_DENOMINATOR: u128 = 1_000000_000000_000000_000000;
 fn price_to_x32(decimal: Price) -> u64 {
     decimal
         .v
-        .checked_mul(LOG_ONE)
+        .checked_mul(LOG2_ONE)
         .unwrap()
         .checked_div(PRICE_DENOMINATOR)
         .unwrap() as u64
@@ -62,21 +63,21 @@ fn log2_floor_x32(mut sqrt_price_x32: u64) -> u64 {
 fn log2_iterative_approximation_x32(mut sqrt_price_x32: u64) -> (bool, u64) {
     let mut sign = true;
     // log2(x) = -log2(1/x), when x < 1
-    if (sqrt_price_x32 as u128) < LOG_ONE {
+    if (sqrt_price_x32 as u128) < LOG2_ONE {
         sign = false;
-        sqrt_price_x32 = ((1u128 << LOG_DOUBLE_SCALE) / (sqrt_price_x32 as u128 + 1)) as u64
+        sqrt_price_x32 = (LOG2_DOUBLE_ONE / (sqrt_price_x32 as u128 + 1)) as u64
     }
-    let log2_floor = log2_floor_x32(sqrt_price_x32 >> LOG_SCALE);
-    let mut result = log2_floor << LOG_SCALE;
+    let log2_floor = log2_floor_x32(sqrt_price_x32 >> LOG2_SCALE);
+    let mut result = log2_floor << LOG2_SCALE;
     let mut y: u128 = (sqrt_price_x32 as u128) >> log2_floor;
 
-    if y == LOG_ONE {
+    if y == LOG2_ONE {
         return (sign, result);
     };
-    let mut delta: u64 = LOG_HALF;
+    let mut delta: u64 = LOG2_HALF;
     while delta > LOG2_ACCURACY {
-        y = y * y / LOG_ONE;
-        if y >= LOG_DOUBLE {
+        y = y * y / LOG2_ONE;
+        if y >= LOG2_TWO {
             result |= delta;
             y >>= 1;
         }
