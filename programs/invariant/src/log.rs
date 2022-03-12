@@ -9,9 +9,8 @@ const LOG_HALF: u64 = (LOG_ONE >> 1) as u64;
 const LOG_DOUBLE: u128 = LOG_ONE << 1;
 const LOG2_SQRT_10001: u64 = 309801;
 const LOG2_NEGATIVE_MAX_LOSE: u64 = 300000; // max accuracy in <-MAX_TICK, 0> domain
-const LOG2_MIN_BINARY_POSITION: i32 = 15; // accuracy = 2^(-14)
+const LOG2_MIN_BINARY_POSITION: i32 = 15; // accuracy = 2^(-15)
 const LOG2_ACCURACY: u64 = 1u64 << (31 - LOG2_MIN_BINARY_POSITION);
-
 const PRICE_DENOMINATOR: u128 = 1_000000_000000_000000_000000;
 
 fn price_to_x32(decimal: Price) -> u64 {
@@ -62,7 +61,6 @@ fn log2_floor_x32(mut sqrt_price_x32: u64) -> u64 {
 
 fn log2_iterative_approximation_x32(mut sqrt_price_x32: u64) -> (bool, u64) {
     let mut sign = true;
-
     // log2(x) = -log2(1/x), when x < 1
     if (sqrt_price_x32 as u128) < LOG_ONE {
         sign = false;
