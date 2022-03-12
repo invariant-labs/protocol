@@ -1,6 +1,5 @@
 use crate::decimals::*;
 use crate::math::calculate_price_sqrt;
-use crate::structs::MAX_TICK;
 
 const LOG2_SCALE: u8 = 32;
 const LOG2_DOUBLE_SCALE: u8 = 64;
@@ -111,9 +110,6 @@ pub fn get_tick_at_sqrt_price(sqrt_price_decimal: Price, tick_spacing: u16) -> i
 
     let accurate_tick = match log2_sign {
         true => {
-            if farther_tick > MAX_TICK {
-                return nearer_tick;
-            }
             let farther_tick_sqrt_price_decimal = calculate_price_sqrt(farther_tick);
             match sqrt_price_decimal >= farther_tick_sqrt_price_decimal {
                 true => farther_tick_with_spacing,
@@ -136,6 +132,8 @@ pub fn get_tick_at_sqrt_price(sqrt_price_decimal: Price, tick_spacing: u16) -> i
 
 #[cfg(test)]
 mod tests {
+    use crate::structs::MAX_TICK;
+
     use super::*;
 
     #[test]
