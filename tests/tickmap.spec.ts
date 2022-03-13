@@ -156,11 +156,11 @@ describe('tickmap', () => {
       it('with default offset and custom tick spacing', () => {
         const tickmapChangesWithOffset = findTickmapChanges(currentTickmap, nextTickmap, 2)
         const expectedWithOffset: TickmapChange = {
-          '-200000': 'added',
-          '-199998': 'added',
-          '-199982': 'added',
-          '-199974': 'added',
-          '-199972': 'added'
+          '-88728': 'added',
+          '-88726': 'added',
+          '-88710': 'added',
+          '-88702': 'added',
+          '-88700': 'added'
         }
         assert.equal(JSON.stringify(tickmapChangesWithOffset), JSON.stringify(expectedWithOffset))
       })
@@ -183,12 +183,12 @@ describe('tickmap', () => {
       it('with default offset and tick spacing', () => {
         const tickmapChangesWithOffset = findTickmapChanges(currentTickmap, nextTickmap, 2)
         const expectedWithOffset: TickmapChange = {
-          '-200000': 'removed',
-          '-199994': 'removed',
-          '-199992': 'removed',
-          '-199988': 'removed',
-          '-199974': 'removed',
-          '-199972': 'removed'
+          '-88728': 'removed',
+          '-88722': 'removed',
+          '-88720': 'removed',
+          '-88716': 'removed',
+          '-88702': 'removed',
+          '-88700': 'removed'
         }
         assert.equal(JSON.stringify(tickmapChangesWithOffset), JSON.stringify(expectedWithOffset))
       })
@@ -211,12 +211,12 @@ describe('tickmap', () => {
       it('with default offset and tick spacing', () => {
         const tickmapChangesWithOffset = findTickmapChanges(currentTickmap, nextTickmap, 2)
         const expectedWithOffset: TickmapChange = {
-          '-199998': 'removed',
-          '-199996': 'added',
-          '-199992': 'added',
-          '-199986': 'removed',
-          '-199972': 'added',
-          '-199970': 'removed'
+          '-88726': 'removed',
+          '-88724': 'added',
+          '-88720': 'added',
+          '-88714': 'removed',
+          '-88700': 'added',
+          '-88698': 'removed'
         }
         assert.equal(JSON.stringify(tickmapChangesWithOffset), JSON.stringify(expectedWithOffset))
       })

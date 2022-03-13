@@ -12,7 +12,7 @@ import {
   PRICE_SCALE
 } from './utils'
 
-export const TICK_LIMIT = 100_000
+export const TICK_LIMIT = 44_364
 export const MAX_TICK = 221_818
 export const MIN_TICK = -MAX_TICK
 export const TICK_SEARCH_RANGE = 256
