@@ -1,20 +1,19 @@
 use anchor_lang::prelude::*;
 use std::convert::TryInto;
 
-pub const TICK_LIMIT: i32 = 100_000; // If you change it update length of array as well!
+pub const TICK_LIMIT: i32 = 44_364; // If you change it update length of array as well!
 pub const TICK_SEARCH_RANGE: i32 = 256;
-// const LEN_IN_BYTES: u64 = (TICK_LIMIT / 4) as u64; // Same as in struct but I get errors when i try to use const there
 pub const MAX_TICK: i32 = 221_818; // log(1.0001, sqrt(2^64-1))
 
 #[account(zero_copy)]
 #[repr(packed)]
 pub struct Tickmap {
-    pub bitmap: [u8; 25000], // Tick limit / 4
+    pub bitmap: [u8; 11091], // Tick limit / 4
 }
 
 impl Default for Tickmap {
     fn default() -> Self {
-        Tickmap { bitmap: [0; 25000] }
+        Tickmap { bitmap: [0; 11091] }
     }
 }
 
@@ -386,16 +385,16 @@ mod tests {
         }
         // Up to price limit
         {
-            let step = 4u16;
+            let step = 5u16;
             let result = get_search_limit(MAX_TICK - 22, step, true);
-            let expected = MAX_TICK - 2;
+            let expected = MAX_TICK - 3;
             assert_eq!(result, expected);
         }
         // At the price limit
         {
-            let step = 4u16;
-            let result = get_search_limit(MAX_TICK - 22, step, true);
-            let expected = MAX_TICK - 2;
+            let step = 5u16;
+            let result = get_search_limit(MAX_TICK - 3, step, true);
+            let expected = MAX_TICK - 3;
             assert_eq!(result, expected);
         }
     }
