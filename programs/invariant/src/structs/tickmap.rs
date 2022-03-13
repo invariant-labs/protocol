@@ -174,6 +174,31 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_price_limit() {
+        let map = Tickmap::default();
+
+        // tick spacing equals 5 is threshold from which entire price range is available
+        let tick_spacing = 5;
+        let max_absolute_tick = (MAX_TICK / tick_spacing as i32) * tick_spacing as i32;
+        let (max_tick_byte, max_tick_bit) = tick_to_position(max_absolute_tick, tick_spacing);
+        let (min_tick_byte, min_tick_bit) = tick_to_position(-max_absolute_tick, tick_spacing);
+        let min_index = 8 * min_tick_byte + min_tick_bit as usize;
+        let max_index = 8 * max_tick_byte + max_tick_bit as usize;
+        let max_tick = (max_index as i32 - TICK_LIMIT) * tick_spacing as i32;
+        let min_tick = (min_index as i32 - TICK_LIMIT) * tick_spacing as i32;
+
+        // 88728 indexes
+        assert_eq!(min_index, 1);
+        assert_eq!(max_index, 88727);
+        // <-221_815, 221_815>
+        assert_eq!(max_tick, 221_815);
+        assert_eq!(min_tick, -221_815);
+        // try to access price edges
+        map.get(max_absolute_tick, tick_spacing);
+        map.get(-max_absolute_tick, tick_spacing);
+    }
+
+    #[test]
     fn test_flip() {
         let mut map = Tickmap::default();
 
