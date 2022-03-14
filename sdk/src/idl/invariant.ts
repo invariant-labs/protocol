@@ -1301,7 +1301,7 @@ export type Invariant = {
             "type": {
               "array": [
                 "u8",
-                25000
+                11091
               ]
             }
           }
@@ -2834,7 +2834,7 @@ export const IDL: Invariant = {
             "type": {
               "array": [
                 "u8",
-                25000
+                11091
               ]
             }
           }
