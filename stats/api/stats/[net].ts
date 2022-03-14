@@ -1,5 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node'
 import DEVNET_DATA from '../../data/devnet.json'
+import MAINNET_DATA from '../../data/mainnet.json'
+
 export default function (req: VercelRequest, res: VercelResponse) {
   // @ts-expect-error
   res.setHeader('Access-Control-Allow-Credentials', true)
@@ -14,6 +16,10 @@ export default function (req: VercelRequest, res: VercelResponse) {
   const { net } = req.query
   if (net === 'devnet') {
     res.json(DEVNET_DATA)
+    return
+  }
+  if (net === 'mainnet') {
+    res.json(MAINNET_DATA)
     return
   }
   res.status(400).send('INVALID NETWORK')
