@@ -473,6 +473,18 @@ export type Invariant = {
           "type": {
             "defined": "Liquidity"
           }
+        },
+        {
+          "name": "slippageLimitLower",
+          "type": {
+            "defined": "Price"
+          }
+        },
+        {
+          "name": "slippageLimitUpper",
+          "type": {
+            "defined": "Price"
+          }
         }
       ]
     },
@@ -1289,7 +1301,7 @@ export type Invariant = {
             "type": {
               "array": [
                 "u8",
-                25000
+                11091
               ]
             }
           }
@@ -1994,6 +2006,18 @@ export const IDL: Invariant = {
           "type": {
             "defined": "Liquidity"
           }
+        },
+        {
+          "name": "slippageLimitLower",
+          "type": {
+            "defined": "Price"
+          }
+        },
+        {
+          "name": "slippageLimitUpper",
+          "type": {
+            "defined": "Price"
+          }
         }
       ]
     },
@@ -2810,7 +2834,7 @@ export const IDL: Invariant = {
             "type": {
               "array": [
                 "u8",
-                25000
+                11091
               ]
             }
           }

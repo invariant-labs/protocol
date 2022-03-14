@@ -22,12 +22,13 @@ jobs:
           solana-keygen new
       - name: do a snapshot
         run: |
-          git config --global user.email stats@tinvariant.app
+          git config --global user.email stats@invariant.app
           git config --global user.name invariantStats
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           export ANCHOR_WALLET="/home/runner/.config/solana/id.json"
           npm install
           npm run snap
+          npm run cachePrices
           git add ./data
           git commit -m "Snapshot of data done!"
         working-directory: stats

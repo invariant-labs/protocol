@@ -1,20 +1,19 @@
 use anchor_lang::prelude::*;
 use std::convert::TryInto;
 
-pub const TICK_LIMIT: i32 = 100_000; // If you change it update length of array as well!
+pub const TICK_LIMIT: i32 = 44_364; // If you change it update length of array as well!
 pub const TICK_SEARCH_RANGE: i32 = 256;
-// const LEN_IN_BYTES: u64 = (TICK_LIMIT / 4) as u64; // Same as in struct but I get errors when i try to use const there
 pub const MAX_TICK: i32 = 221_818; // log(1.0001, sqrt(2^64-1))
 
 #[account(zero_copy)]
 #[repr(packed)]
 pub struct Tickmap {
-    pub bitmap: [u8; 25000], // Tick limit / 4
+    pub bitmap: [u8; 11091], // Tick limit / 4
 }
 
 impl Default for Tickmap {
     fn default() -> Self {
-        Tickmap { bitmap: [0; 25000] }
+        Tickmap { bitmap: [0; 11091] }
     }
 }
 
@@ -173,6 +172,31 @@ impl Tickmap {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_price_limit() {
+        let map = Tickmap::default();
+
+        // tick spacing equals 5 is threshold from which entire price range is available
+        let tick_spacing = 5;
+        let max_absolute_tick = (MAX_TICK / tick_spacing as i32) * tick_spacing as i32;
+        let (max_tick_byte, max_tick_bit) = tick_to_position(max_absolute_tick, tick_spacing);
+        let (min_tick_byte, min_tick_bit) = tick_to_position(-max_absolute_tick, tick_spacing);
+        let min_index = 8 * min_tick_byte + min_tick_bit as usize;
+        let max_index = 8 * max_tick_byte + max_tick_bit as usize;
+        let max_tick = (max_index as i32 - TICK_LIMIT) * tick_spacing as i32;
+        let min_tick = (min_index as i32 - TICK_LIMIT) * tick_spacing as i32;
+
+        // 88728 indexes
+        assert_eq!(min_index, 1);
+        assert_eq!(max_index, 88727);
+        // <-221_815, 221_815>
+        assert_eq!(max_tick, 221_815);
+        assert_eq!(min_tick, -221_815);
+        // try to access price edges
+        map.get(max_absolute_tick, tick_spacing);
+        map.get(-max_absolute_tick, tick_spacing);
+    }
 
     #[test]
     fn test_flip() {
@@ -386,16 +410,16 @@ mod tests {
         }
         // Up to price limit
         {
-            let step = 4u16;
+            let step = 5u16;
             let result = get_search_limit(MAX_TICK - 22, step, true);
-            let expected = MAX_TICK - 2;
+            let expected = MAX_TICK - 3;
             assert_eq!(result, expected);
         }
         // At the price limit
         {
-            let step = 4u16;
-            let result = get_search_limit(MAX_TICK - 22, step, true);
-            let expected = MAX_TICK - 2;
+            let step = 5u16;
+            let result = get_search_limit(MAX_TICK - 3, step, true);
+            let expected = MAX_TICK - 3;
             assert_eq!(result, expected);
         }
     }
