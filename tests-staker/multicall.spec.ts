@@ -3,7 +3,7 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Market, Pair, DENOMINATOR, sleep } from '@invariant-labs/sdk'
 import { Network } from '../sdk-staker/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
-import { createToken, tou64, getTime, signAndSend } from './testUtils'
+import { createToken, tou64, getTime, signAndSend, almostEqual } from './testUtils'
 import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { fromInteger, toDecimal } from '../sdk-staker/lib/utils'
@@ -11,6 +11,7 @@ import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { InitPosition, Swap, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
 import { CreateIncentive, CreateStake, Withdraw, Decimal, Staker } from '../sdk-staker/src/staker'
+import { assert } from 'chai'
 
 describe('Multicall test', () => {
   const provider = Provider.local()
@@ -29,7 +30,7 @@ describe('Multicall test', () => {
   const firstLowerTick = -40
   const secondUpperTick = 10
   const secondLowerTick = -30
-  // const epsilon = new BN(10).pow(new BN(DECIMAL)).mul(new BN(2))
+  const epsilon = new BN(20)
   let staker: Staker
   let market: Market
   let pair: Pair
@@ -118,11 +119,12 @@ describe('Multicall test', () => {
 
   it('Multicall', async () => {
     const currentTime = getTime()
-    const startTime = currentTime.add(new BN(0))
-    const firstReward: Decimal = { v: new BN(200).mul(DENOMINATOR) }
-    const endTimeFirst = currentTime.add(new BN(100))
-    const secondReward: Decimal = { v: new BN(100).mul(DENOMINATOR) }
-    const endTimeSecond = currentTime.add(new BN(100000))
+    const startTime = { v: currentTime.add(new BN(0)) }
+    const firstReward: Decimal = { v: new BN(100000) }
+    const endTimeFirst = { v: currentTime.add(new BN(1000)) }
+    const secondReward: Decimal = { v: new BN(200000) }
+    const endTimeSecond = { v: currentTime.add(new BN(2000)) }
+
     const createIncentiveVars: CreateIncentive = {
       reward: firstReward,
       startTime,
@@ -233,7 +235,7 @@ describe('Multicall test', () => {
       userTokenY: secondUserTokenYAccount,
       lowerTick: secondLowerTick,
       upperTick: secondUpperTick,
-      liquidityDelta: fromInteger(2_000_000)
+      liquidityDelta: fromInteger(3_000_000)
     }
     await market.initPosition(initPositionVars2, secondPositionOwner)
     const index = 0
@@ -353,7 +355,8 @@ describe('Multicall test', () => {
       owner: trader.publicKey
     }
     await market.swap(swapVars, trader)
-    await sleep(10000)
+
+    await sleep(20000)
     // withdraw first case
     const firstWithdraw: Withdraw = {
       incentive: firstIncentiveAccount.publicKey,
@@ -363,7 +366,6 @@ describe('Multicall test', () => {
       owner: firstPositionOwner.publicKey,
       incentiveTokenAccount: firstIncentiveTokenAccount.publicKey,
       ownerTokenAcc: firstOwnerTokenAccount,
-      invariant,
       index,
       nonce
     }
@@ -372,8 +374,8 @@ describe('Multicall test', () => {
     const firstWithdrawTx = new Transaction().add(firstUpdateIx).add(firstWithdrawIx)
     await signAndSend(firstWithdrawTx, [firstPositionOwner], staker.connection)
 
-    // const balanceAfterFirst = (await incentiveToken.getAccountInfo(firstOwnerTokenAccount)).amount
-    // assert.ok(almostEqual(balanceAfterFirst, new BN('9333332000000'), epsilon))
+    const balanceAfterFirst = (await incentiveToken.getAccountInfo(firstOwnerTokenAccount)).amount
+    assert.ok(almostEqual(balanceAfterFirst, new BN('500'), epsilon))
 
     // withdraw second case
     const secondWithdraw: Withdraw = {
@@ -384,7 +386,6 @@ describe('Multicall test', () => {
       owner: secondPositionOwner.publicKey,
       incentiveTokenAccount: firstIncentiveTokenAccount.publicKey,
       ownerTokenAcc: secondOwnerTokenAccount,
-      invariant,
       index,
       nonce
     }
@@ -393,8 +394,8 @@ describe('Multicall test', () => {
     const secondWithdrawTx = new Transaction().add(secondUpdateIx).add(secondWithdrawIx)
     await signAndSend(secondWithdrawTx, [secondPositionOwner], staker.connection)
 
-    // const balanceAfterSecond = (await incentiveToken.getAccountInfo(secondOwnerTokenAccount)).amount
-    // assert.ok(almostEqual(balanceAfterSecond, new BN('17333332000000'), epsilon))
+    const balanceAfterSecond = (await incentiveToken.getAccountInfo(secondOwnerTokenAccount)).amount
+    assert.ok(almostEqual(balanceAfterSecond, new BN('1500'), epsilon))
     // withdraw third case
     const thirdWithdraw: Withdraw = {
       incentive: secondIncentiveAccount.publicKey,
@@ -404,7 +405,6 @@ describe('Multicall test', () => {
       owner: firstPositionOwner.publicKey,
       incentiveTokenAccount: secondIncentiveTokenAccount.publicKey,
       ownerTokenAcc: firstOwnerTokenAccount,
-      invariant,
       index,
       nonce
     }
@@ -413,8 +413,8 @@ describe('Multicall test', () => {
     const thirdWithdrawTx = new Transaction().add(firstUpdateIx).add(thirdWithdrawIx)
     await signAndSend(thirdWithdrawTx, [firstPositionOwner], staker.connection)
 
-    // const balanceAfterThird = (await incentiveToken.getAccountInfo(firstOwnerTokenAccount)).amount
-    // assert.ok(almostEqual(balanceAfterThird, new BN('9337665333000'), epsilon))
+    const balanceAfterThird = (await incentiveToken.getAccountInfo(firstOwnerTokenAccount)).amount
+    assert.ok(almostEqual(balanceAfterThird, new BN('1000'), epsilon))
     // withdraw fourth case
     const fourthWithdraw: Withdraw = {
       incentive: secondIncentiveAccount.publicKey,
@@ -424,7 +424,6 @@ describe('Multicall test', () => {
       owner: secondPositionOwner.publicKey,
       incentiveTokenAccount: secondIncentiveTokenAccount.publicKey,
       ownerTokenAcc: secondOwnerTokenAccount,
-      invariant,
       index,
       nonce
     }
@@ -433,7 +432,7 @@ describe('Multicall test', () => {
     const fourthWithdrawTx = new Transaction().add(secondUpdateIx).add(fourthWithdrawIx)
     await signAndSend(fourthWithdrawTx, [secondPositionOwner], staker.connection)
 
-    // const balanceAfterFourth = (await incentiveToken.getAccountInfo(secondOwnerTokenAccount)).amount
-    // assert.ok(almostEqual(balanceAfterFourth, new BN('17341998665999'), epsilon))
+    const balanceAfterFourth = (await incentiveToken.getAccountInfo(secondOwnerTokenAccount)).amount
+    assert.ok(almostEqual(balanceAfterFourth, new BN('3000'), epsilon))
   })
 })
