@@ -39,6 +39,7 @@ const POSITION_LIST_SEED = 'positionlistv1'
 const STATE_SEED = 'statev1'
 const MAX_IX = 8
 const TICKS_PER_IX = 2
+export const MAX_TICKS_CROSS = MAX_IX * TICKS_PER_IX
 export const FEE_TIER = 'feetierv1'
 export const DEFAULT_PUBLIC_KEY = new PublicKey(0)
 
@@ -907,7 +908,7 @@ export class Market {
       throw new Error('Input amount and simulation amount sum are different')
     }
 
-    if (amountPerTick.length > MAX_IX) {
+    if (amountPerTick.length > MAX_TICKS_CROSS) {
       throw new Error('Instruction limit was exceeded')
     }
 
