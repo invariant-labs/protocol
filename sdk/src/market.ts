@@ -38,7 +38,7 @@ const TICK_SEED = 'tickv1'
 const POSITION_LIST_SEED = 'positionlistv1'
 const STATE_SEED = 'statev1'
 const MAX_IX = 8
-const TICKS_PER_IX = 1
+const TICKS_PER_IX = 2
 export const FEE_TIER = 'feetierv1'
 export const DEFAULT_PUBLIC_KEY = new PublicKey(0)
 
@@ -914,36 +914,39 @@ export class Market {
     const tx: Transaction = new Transaction()
 
     // this is for solana 1.9
-    // const unitsIx = ComputeUnitsInstruction(COMPUTE_UNITS, owner)
+    // const unitsIx = ComputeUnitsInstruction(800000, owner)
     // tx.add(unitsIx)
 
     let amountIx: BN = new BN(0)
-    for (let i = 0; i < amountPerTick.length; i++) {
-      amountIx = amountIx.add(amountPerTick[i])
+    let ixCounter: number = 0
 
-      if (
-        ((i + 1) % TICKS_PER_IX === 0 || i === amountPerTick.length - 1) &&
-        !amountPerTick[i].eqn(0)
-      ) {
-        const swapIx = this.program.instruction.swap(xToY, amountIx, byAmountIn, priceLimit, {
-          remainingAccounts: ra,
-          accounts: {
-            state: this.stateAddress,
-            pool: poolAddress,
-            tickmap: pool.tickmap,
-            tokenX: pool.tokenX,
-            tokenY: pool.tokenY,
-            reserveX: pool.tokenXReserve,
-            reserveY: pool.tokenYReserve,
-            owner,
-            accountX,
-            accountY,
-            programAuthority: this.programAuthority,
-            tokenProgram: TOKEN_PROGRAM_ID
-          }
-        })
-        tx.add(swapIx)
-        amountIx = new BN(0)
+    for (let i = 0; i < amountPerTick.length; i++) {
+      if (!amountPerTick[i].eqn(0)) {
+        amountIx = amountIx.add(amountPerTick[i])
+        ixCounter++
+
+        if (ixCounter === TICKS_PER_IX || i === amountPerTick.length - 1) {
+          const swapIx = this.program.instruction.swap(xToY, amountIx, byAmountIn, priceLimit, {
+            remainingAccounts: ra,
+            accounts: {
+              state: this.stateAddress,
+              pool: poolAddress,
+              tickmap: pool.tickmap,
+              tokenX: pool.tokenX,
+              tokenY: pool.tokenY,
+              reserveX: pool.tokenXReserve,
+              reserveY: pool.tokenYReserve,
+              owner,
+              accountX,
+              accountY,
+              programAuthority: this.programAuthority,
+              tokenProgram: TOKEN_PROGRAM_ID
+            }
+          })
+          tx.add(swapIx)
+          amountIx = new BN(0)
+          ixCounter = 0
+        }
       }
     }
     return tx
