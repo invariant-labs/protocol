@@ -34,39 +34,40 @@ const main = async () => {
 
   const pair = new Pair(
     new PublicKey(MOCK_TOKENS.USDC),
-    new PublicKey(MOCK_TOKENS.BTC),
-    FEE_TIERS[1]
+    new PublicKey(MOCK_TOKENS.USDT),
+    FEE_TIERS[0]
   )
+  console.log((await market.getPool(pair)).sqrtPrice.v.toString())
   const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
   const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   const accountX = await tokenX.createAccount(MINTER.publicKey)
   const accountY = await tokenY.createAccount(MINTER.publicKey)
 
-  await tokenX.mintTo(accountX, MINTER, [], tou64(1e18))
-  await tokenY.mintTo(accountY, MINTER, [], tou64(1e18))
+  await tokenX.mintTo(accountX, MINTER, [], tou64(1e10))
+  await tokenY.mintTo(accountY, MINTER, [], tou64(1e10))
 
   while (true) {
     const start = Date.now()
 
     const side = Math.random() > 0.5
-    const amount = 1000 // To be estimated for certain prepared pool
+    const amount = 100000000 // To be estimated for certain prepared pool
 
     console.log(`swap ${side ? 'x -> y' : 'y -> x'}: ${amount}`)
-
+    const currentTickBefore = (await market.getPool(pair)).currentTickIndex
     const swapVars: Swap = {
       xToY: side,
       accountX: accountX,
       accountY: accountY,
       amount: tou64(amount),
       byAmountIn: true,
-      estimatedPriceAfterSwap: side ? { v: new BN(1) } : { v: U128MAX },
-      slippage: toDecimal(2, 2),
+      estimatedPriceAfterSwap: side ? { v: new BN(1) } : { v: U128MAX.subn(1) },
+      slippage: toDecimal(0, 2),
       pair,
       owner: MINTER.publicKey
     }
 
     try {
-      await market.swap(swapVars, MINTER)
+      await market.swapSplit(swapVars, MINTER)
     } catch (err: any) {
       const pool = await market.getPool(pair)
       const swapDetails = `swap details:\nxToY: ${
@@ -80,10 +81,14 @@ const main = async () => {
       fs.appendFileSync(filePath, swapDetails)
       fs.appendFileSync(filePath, poolDetails)
       // trunk-ignore(eslint/@typescript-eslint/restrict-template-expressions)
-      fs.appendFileSync(filePath, `error: ${err.toString()}`)
+      fs.appendFileSync(filePath, `error: ${err.toString()}\n\n`)
       continue
     }
-    console.log(`time: ${Date.now() - start}`)
+    const currentTickAfter = (await market.getPool(pair)).currentTickIndex
+    console.log(currentTickBefore !== currentTickAfter ? 'Tick crossed' : 'Tick not crossed')
+    console.log('currentTickBefore: ', currentTickBefore)
+    console.log('currentTickAfter: ', currentTickAfter)
+    console.log(`time: ${Date.now() - start}\n`)
   }
 }
 // trunk-ignore(eslint/@typescript-eslint/no-floating-promises)

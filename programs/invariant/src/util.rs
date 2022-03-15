@@ -52,6 +52,7 @@ pub fn get_closer_limit(
     } else {
         tickmap.next_initialized(current_tick, tick_spacing)
     };
+    msg!("closes_tick_index: {}", closes_tick_index.unwrap());
     match closes_tick_index {
         Some(index) => {
             let price = calculate_price_sqrt(index);
@@ -66,6 +67,7 @@ pub fn get_closer_limit(
         }
         None => {
             let index = get_search_limit(current_tick, tick_spacing, !x_to_y);
+            msg!("index in None: {}", index);
             let price = calculate_price_sqrt(index);
 
             require!(current_tick != index, LimitReached);

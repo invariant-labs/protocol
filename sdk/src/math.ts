@@ -165,7 +165,7 @@ export const calculateSwapStep = (
     }
   }
 
-  if (amountIn === null || amountOut === null) throw 'Amount would be greater than u64'
+  if (amountIn === null || amountOut === null) throw new Error('Amount would be greater than u64')
 
   if (!byAmountIn && amountOut.gt(amount)) {
     amountOut = amount

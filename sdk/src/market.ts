@@ -563,7 +563,7 @@ export class Market {
       positionInstruction = await this.initPositionInstruction(initPosition, false)
     }
 
-    if (this.network == Network.DEV || this.network == Network.LOCAL) {
+    if (this.network === Network.DEV || this.network === Network.LOCAL) {
       // REMOVE ME WHEN 1.9 HITS MAINNET
       if (!lowerExists && !upperExists && !listExists) {
         tx.add(ComputeUnitsInstruction(300000, payer))
@@ -626,7 +626,7 @@ export class Market {
     const transaction = new Transaction({
       feePayer: payerPubkey
     })
-    if (this.network == Network.DEV || this.network == Network.LOCAL) {
+    if (this.network === Network.DEV || this.network === Network.LOCAL) {
       // REMOVE ME WHEN 1.9 HITS MAINNET
       transaction.add(ComputeUnitsInstruction(400000, payerPubkey))
     }
@@ -778,6 +778,7 @@ export class Market {
       Infinity,
       xToY ? 'up' : 'down'
     )
+
     const remainingAccounts = await Promise.all(
       indexesInDirection.concat(indexesInReverse).map(async index => {
         const { tickAddress } = await this.getTickAddress(pair, index)
@@ -843,7 +844,7 @@ export class Market {
       Infinity,
       xToY ? 'down' : 'up'
     )
-
+    console.log('indexesInDirection: ', indexesInDirection.toString())
     const indexesInReverse = findClosestTicks(
       tickmap.bitmap,
       pool.currentTickIndex,
@@ -852,6 +853,7 @@ export class Market {
       Infinity,
       xToY ? 'up' : 'down'
     )
+    console.log('indexesInReverse: ', indexesInReverse.toString())
     const remainingAccounts = await Promise.all(
       indexesInDirection.concat(indexesInReverse).map(async index => {
         const { tickAddress } = await this.getTickAddress(pair, index)
