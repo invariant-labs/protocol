@@ -171,6 +171,7 @@ impl<'info> Swap<'info> {
             }
 
             // crossing tick
+            msg!("INVARIANT: CROSSING TICK");
             // trunk-ignore(clippy/unnecessary_unwrap)
             if result.next_price_sqrt == swap_limit && limiting_tick.is_some() {
                 let (tick_index, initialized) = limiting_tick.unwrap();

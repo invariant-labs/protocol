@@ -31,6 +31,7 @@
     "test:position-slippage": "anchor test --skip-build tests/position-slippage.spec.ts",
     "test:fee-tier": "anchor test --skip-build tests/fee-tier.spec.ts",
     "test:big-swap": "anchor test --skip-build tests/big-swap.spec.ts",
+    "test:tmp": "anchor test --skip-build tests/tmp.spec.ts",
     "test:init-both": "anchor test --skip-build tests/init-pool-and-position.spec.ts",
     "test:change-protocol-fee": "anchor test --skip-build tests/change-protocol-fee.spec.ts",
     "test:tickmap": "anchor test --skip-build tests/tickmap.spec.ts",
