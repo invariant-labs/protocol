@@ -24,11 +24,11 @@ const main = async () => {
   // const upper = -20
 
   const pool = await market.getPool(pair)
-  const ticks = await market.getAllTicks(pair)
-  for (let tick of ticks) {
-    console.log(tick.index, ' ', tick.liquidityGross.v.toString())
-  }
-  //console.log(pool.currentTickIndex)
+  // const ticks = await market.getAllTicks(pair)
+  // for (let tick of ticks) {
+  //   console.log(tick.index, ' ', tick.liquidityGross.v.toString())
+  // }
+  console.log(pool.currentTickIndex)
 
   const array = await Promise.all([
     market.getPool(pair)
@@ -38,7 +38,7 @@ const main = async () => {
     // market.getTick(pair, upper)
   ])
 
-  //console.log(array)
+  console.log(array)
 }
 // trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
 main()

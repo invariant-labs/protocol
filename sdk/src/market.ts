@@ -844,7 +844,7 @@ export class Market {
       Infinity,
       xToY ? 'down' : 'up'
     )
-    console.log('indexesInDirection: ', indexesInDirection.toString())
+
     const indexesInReverse = findClosestTicks(
       tickmap.bitmap,
       pool.currentTickIndex,
@@ -853,7 +853,7 @@ export class Market {
       Infinity,
       xToY ? 'up' : 'down'
     )
-    console.log('indexesInReverse: ', indexesInReverse.toString())
+
     const remainingAccounts = await Promise.all(
       indexesInDirection.concat(indexesInReverse).map(async index => {
         const { tickAddress } = await this.getTickAddress(pair, index)

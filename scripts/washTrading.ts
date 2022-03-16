@@ -9,6 +9,8 @@ import { FEE_TIERS, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { Swap } from '@invariant-labs/sdk/src/market'
 import { BN } from '../sdk-staker/lib'
 import { U128MAX } from '@invariant-labs/sdk/lib/utils'
+import { findClosestTicks, getDeltaX, getDeltaY } from '@invariant-labs/sdk/lib/math'
+import { calculatePriceSqrt } from '@invariant-labs/sdk'
 
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
@@ -37,22 +39,40 @@ const main = async () => {
     new PublicKey(MOCK_TOKENS.USDT),
     FEE_TIERS[0]
   )
-  console.log((await market.getPool(pair)).sqrtPrice.v.toString())
+
   const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
   const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   const accountX = await tokenX.createAccount(MINTER.publicKey)
   const accountY = await tokenY.createAccount(MINTER.publicKey)
 
-  await tokenX.mintTo(accountX, MINTER, [], tou64(1e10))
-  await tokenY.mintTo(accountY, MINTER, [], tou64(1e10))
+  await tokenX.mintTo(accountX, MINTER, [], tou64(1e15))
+  await tokenY.mintTo(accountY, MINTER, [], tou64(1e15))
+
+  const tickmap = await market.getTickmap(pair)
 
   while (true) {
     const start = Date.now()
 
     const side = Math.random() > 0.5
-    const amount = 100000000 // To be estimated for certain prepared pool
 
-    console.log(`swap ${side ? 'x -> y' : 'y -> x'}: ${amount}`)
+    const pool = await market.getPool(pair)
+    const indexesInDirection = findClosestTicks(
+      tickmap.bitmap,
+      pool.currentTickIndex,
+      pool.tickSpacing,
+      10,
+      Infinity,
+      'up'
+    )
+
+    const amount = side
+      ? getDeltaX(calculatePriceSqrt(indexesInDirection[0]), pool.sqrtPrice, pool.liquidity, true)
+      : getDeltaY(calculatePriceSqrt(indexesInDirection[0]), pool.sqrtPrice, pool.liquidity, true) // To be estimated for certain prepared pool
+    if (!amount) {
+      console.log('Amount to big')
+      continue
+    }
+    console.log(`swap ${side ? 'x -> y' : 'y -> x'}: ${amount.toString()}`)
     const currentTickBefore = (await market.getPool(pair)).currentTickIndex
     const swapVars: Swap = {
       xToY: side,
