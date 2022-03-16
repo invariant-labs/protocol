@@ -37,7 +37,7 @@ const POSITION_SEED = 'positionv1'
 const TICK_SEED = 'tickv1'
 const POSITION_LIST_SEED = 'positionlistv1'
 const STATE_SEED = 'statev1'
-const MAX_IX = 8
+const MAX_IX = 5
 const TICKS_PER_IX = 2
 export const MAX_TICKS_CROSS = MAX_IX * TICKS_PER_IX
 export const FEE_TIER = 'feetierv1'
@@ -840,7 +840,7 @@ export class Market {
       tickmap.bitmap,
       pool.currentTickIndex,
       pool.tickSpacing,
-      8,
+      MAX_TICKS_CROSS + 1,
       Infinity,
       xToY ? 'down' : 'up'
     )
@@ -853,6 +853,10 @@ export class Market {
       Infinity,
       xToY ? 'up' : 'down'
     )
+    console.log('indexesInDirection:')
+    console.log(indexesInDirection)
+    console.log('indexesInReverse:')
+    console.log(indexesInReverse)
     const remainingAccounts = await Promise.all(
       indexesInDirection.concat(indexesInReverse).map(async index => {
         const { tickAddress } = await this.getTickAddress(pair, index)
@@ -922,33 +926,34 @@ export class Market {
     let ixCounter: number = 0
 
     for (let i = 0; i < amountPerTick.length; i++) {
-      if (!amountPerTick[i].eqn(0)) {
-        amountIx = amountIx.add(amountPerTick[i])
-        ixCounter++
+      // UNCOMMENT IF YOU WANT TO EXCLUDE TICK CROSSING WITH ZERO AMOUNT
+      // if (!amountPerTick[i].eqn(0)) {
+      amountIx = amountIx.add(amountPerTick[i])
+      ixCounter++
 
-        if (ixCounter === TICKS_PER_IX || i === amountPerTick.length - 1) {
-          const swapIx = this.program.instruction.swap(xToY, amountIx, byAmountIn, priceLimit, {
-            remainingAccounts: ra,
-            accounts: {
-              state: this.stateAddress,
-              pool: poolAddress,
-              tickmap: pool.tickmap,
-              tokenX: pool.tokenX,
-              tokenY: pool.tokenY,
-              reserveX: pool.tokenXReserve,
-              reserveY: pool.tokenYReserve,
-              owner,
-              accountX,
-              accountY,
-              programAuthority: this.programAuthority,
-              tokenProgram: TOKEN_PROGRAM_ID
-            }
-          })
-          tx.add(swapIx)
-          amountIx = new BN(0)
-          ixCounter = 0
-        }
+      if (ixCounter === TICKS_PER_IX || i === amountPerTick.length - 1) {
+        const swapIx = this.program.instruction.swap(xToY, amountIx, byAmountIn, priceLimit, {
+          remainingAccounts: ra,
+          accounts: {
+            state: this.stateAddress,
+            pool: poolAddress,
+            tickmap: pool.tickmap,
+            tokenX: pool.tokenX,
+            tokenY: pool.tokenY,
+            reserveX: pool.tokenXReserve,
+            reserveY: pool.tokenYReserve,
+            owner,
+            accountX,
+            accountY,
+            programAuthority: this.programAuthority,
+            tokenProgram: TOKEN_PROGRAM_ID
+          }
+        })
+        tx.add(swapIx)
+        amountIx = new BN(0)
+        ixCounter = 0
       }
+      // }
     }
     return tx
   }
