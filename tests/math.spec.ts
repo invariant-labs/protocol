@@ -27,6 +27,7 @@ import {
 import {
   bigNumberToBuffer,
   calculateClaimAmount,
+  calculateConcentration,
   calculateFeeGrowthInside,
   calculateTokensOwed,
   CloserLimit,
@@ -1657,8 +1658,35 @@ describe('Math', () => {
           MAX_TICK,
           tickSpacing
         )
+
         assert.equal(tick, expectedTick)
       })
+    })
+  })
+  describe('test calculateConcentration', () => {
+    it('max', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const expectedResult = 1000.5500824959723
+
+      const result = calculateConcentration(tickSpacing, maxConcentration, 0)
+      assert.equal(result, expectedResult)
+    })
+    it('max -1', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const expectedResult = 909.6364545409625
+
+      const result = calculateConcentration(tickSpacing, maxConcentration, 1)
+      assert.equal(result, expectedResult)
+    })
+    it('n = 1000', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const expectedResult = 10.409899955715302
+
+      const result = calculateConcentration(tickSpacing, maxConcentration, 1000)
+      assert.equal(result, expectedResult)
     })
   })
 })

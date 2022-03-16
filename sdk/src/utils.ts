@@ -9,10 +9,10 @@ import {
   Transaction,
   TransactionInstruction
 } from '@solana/web3.js'
-import { calculatePriceSqrt, MAX_TICK, Pair, TICK_LIMIT, Market } from '.'
+import { calculatePriceSqrt, MAX_TICK, Pair, TICK_LIMIT, Market, MIN_TICK } from '.'
 import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap, Tick, PoolData } from './market'
 import { calculatePriceAfterSlippage, calculateSwapStep, isEnoughAmountToPushPrice } from './math'
-import { getTickFromPrice } from './tick'
+import { alignTickToSpacing, getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
 import { struct, u32, u8 } from '@solana/buffer-layout'
 
@@ -268,6 +268,52 @@ export const toDecimal = (x: number, decimals: number = 0): Decimal => {
 
 export const toDecimalWithDenominator = (x: number, denominator: BN, decimals: number = 0) => {
   return { v: denominator.muln(x).div(new BN(10).pow(new BN(decimals))) }
+}
+
+export const calculateConcentration = (
+  tickSpacing: number,
+  maxConcentration: number,
+  n: number
+) => {
+  return 1 / (1 - Math.pow(1.0001, (-tickSpacing * (maxConcentration + n)) / 4))
+}
+
+// export const getConcentrationArray = (tickSpacing: number, maxConcentration: number): number[] => {
+//   const maxTick = alignTickToSpacing(MAX_TICK, tickSpacing)
+//   //const minTick = alignTickToSpacing(MIN_TICK, tickSpacing)
+
+//   let concentrations: number[] = []
+//   let range = tickSpacing
+
+//   for (let i = 0; i <= range; i + tickSpacing) {
+//     let concentration = calculateConcentration(tickSpacing, maxConcentration, i)
+//     concentrations.push(concentration)
+//   }
+
+//   return concentrations
+// }
+
+// export const getPositionInitData = (tokenAmount: number, concentration: number): number => {
+//   const maxTick = alignTickToSpacing(MAX_TICK, tickSpacing)
+//   const minTick = alignTickToSpacing(MIN_TICK, tickSpacing)
+
+//   let num: number // temp
+
+//   return num
+// }
+
+export const getLiquidity = (
+  lowerTick: number,
+  upperTick: number,
+  tokenXAmount: number,
+  tokenYAmount: number
+): number => {
+  const maxTick = alignTickToSpacing(MAX_TICK, tickSpacing)
+  const minTick = alignTickToSpacing(MIN_TICK, tickSpacing)
+
+  let num: number // temp
+
+  return num
 }
 
 export const toPrice = (x: number, decimals: number = 0): Decimal => {
