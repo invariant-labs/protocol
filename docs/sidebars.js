@@ -31,31 +31,27 @@ module.exports = {
       type: 'category',
       label: 'Invariant Bonds',
       // collapsed: true,
-      items: ['invariant_bonds/introduction', 'invariant_bonds/math', 'invariant_bonds/example']
+      items: [
+        'invariant_bonds/introduction',
+        'invariant_bonds/math',
+        'invariant_bonds/bond_example'
+      ]
     },
     {
       type: 'category',
-      label: 'Technical docs',
+      label: 'Invariant Staker',
+      // collapsed: true,
+      items: ['invariant_staker/introduction', 'invariant_staker/staker_example']
+    },
+    {
+      type: 'category',
+      label: 'Technical side',
       collapsed: true,
       items: [
-        {
-          type: 'category',
-          label: 'Invariant',
-          collapsed: true,
-          items: ['technical_docs/invariant/todo']
-        },
-        {
-          type: 'category',
-          label: 'Staker',
-          collapsed: true,
-          items: ['technical_docs/staker/todo']
-        },
-        {
-          type: 'category',
-          label: 'Bonds',
-          collapsed: true,
-          items: ['technical_docs/bonds/todo']
-        }
+        'technical_side/introduction',
+        'technical_side/quick_start',
+        'technical_side/create_pool',
+        'technical_side/minting_position'
       ]
     },
     'faq',

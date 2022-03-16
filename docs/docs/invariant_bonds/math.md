@@ -8,13 +8,7 @@ The Bonds, are price mechanisms that tries to sell tokens at a predetermined rat
 Assume a Seller wishes to sell one token in exchange for a
 another one. BondSale is launched by the seller, who configures ﬁve variables:
 
-- `bond amount`,
-- `floor price`,
-- `sale time`,
-- `up bound`,
-- and `velocity`.
-
-|               |
+| Variable      | Description                                                                              |
 | ------------- | ---------------------------------------------------------------------------------------- |
 | `bond_amount` | The amount of tokens that the Seller wishes to sell. of token which Seller want to sale. |
 | `floor_price` | Minimal (and starting) price of a selling token.                                         |
