@@ -4,12 +4,10 @@ title: Concentrated Liquidity
 slug: /what_is/concentrated_liquidity
 ---
 
-It’s our main feature.  
-It enables maximum capital efficiency.  
-In common liquidity pools, liquidity is distributed along the whole price curve.  
+It’s our main feature and enables maximum capital efficiency. In common liquidity pools, liquidity is distributed along the whole price curve.
+
 Here, in Invariant, you can choose an exact price range. As a result, the whole amount invested will earn for you.  
-As a result, your capital can be even 4000x more efficient.  
-Sounds great, right?
+As a result, your capital can be even 40000x more efficient. Sounds great, right?
 
 ### Introduction
 
