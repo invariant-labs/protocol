@@ -60,6 +60,10 @@ pub fn generate_others(characteristics: DecimalCharacteristics) -> proc_macro::T
                         decimal_places /= 10;
                     }
 
+                    if non_zero_tail == Self::scale()  {
+                        non_zero_tail -= 1;
+                    }
+
                     write!(
                         f,
                         "{}.{}{}",
