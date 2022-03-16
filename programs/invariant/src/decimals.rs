@@ -47,7 +47,17 @@ pub struct TokenAmount(pub u64);
 
 impl FeeGrowth {
     pub fn from_fee(liquidity: Liquidity, fee: TokenAmount) -> Self {
-        Self::from_decimal(fee).big_div(liquidity)
+        FeeGrowth::new(
+            U256::from(fee.get())
+                .checked_mul(FeeGrowth::one())
+                .unwrap()
+                .checked_mul(Liquidity::one())
+                .unwrap()
+                .checked_div(liquidity.here())
+                .unwrap()
+                .try_into()
+                .unwrap(),
+        )
     }
 
     pub fn to_fee(self, liquidity: Liquidity) -> FixedPoint {
