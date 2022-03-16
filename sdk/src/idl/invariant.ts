@@ -471,7 +471,19 @@ export type Invariant = {
         {
           "name": "liquidityDelta",
           "type": {
-            "defined": "Decimal"
+            "defined": "Liquidity"
+          }
+        },
+        {
+          "name": "slippageLimitLower",
+          "type": {
+            "defined": "Price"
+          }
+        },
+        {
+          "name": "slippageLimitUpper",
+          "type": {
+            "defined": "Price"
           }
         }
       ]
@@ -888,7 +900,7 @@ export type Invariant = {
         {
           "name": "protocolFee",
           "type": {
-            "defined": "Decimal"
+            "defined": "FixedPoint"
           }
         }
       ]
@@ -944,7 +956,7 @@ export type Invariant = {
           {
             "name": "fee",
             "type": {
-              "defined": "Decimal"
+              "defined": "FixedPoint"
             }
           },
           {
@@ -1021,25 +1033,25 @@ export type Invariant = {
           {
             "name": "fee",
             "type": {
-              "defined": "Decimal"
+              "defined": "FixedPoint"
             }
           },
           {
             "name": "protocolFee",
             "type": {
-              "defined": "Decimal"
+              "defined": "FixedPoint"
             }
           },
           {
             "name": "liquidity",
             "type": {
-              "defined": "Decimal"
+              "defined": "Liquidity"
             }
           },
           {
             "name": "sqrtPrice",
             "type": {
-              "defined": "Decimal"
+              "defined": "Price"
             }
           },
           {
@@ -1073,7 +1085,7 @@ export type Invariant = {
           {
             "name": "secondsPerLiquidityGlobal",
             "type": {
-              "defined": "Decimal"
+              "defined": "FixedPoint"
             }
           },
           {
@@ -1123,7 +1135,7 @@ export type Invariant = {
           {
             "name": "liquidity",
             "type": {
-              "defined": "Decimal"
+              "defined": "Liquidity"
             }
           },
           {
@@ -1149,7 +1161,7 @@ export type Invariant = {
           {
             "name": "secondsPerLiquidityInside",
             "type": {
-              "defined": "Decimal"
+              "defined": "FixedPoint"
             }
           },
           {
@@ -1159,13 +1171,13 @@ export type Invariant = {
           {
             "name": "tokensOwedX",
             "type": {
-              "defined": "Decimal"
+              "defined": "FixedPoint"
             }
           },
           {
             "name": "tokensOwedY",
             "type": {
-              "defined": "Decimal"
+              "defined": "FixedPoint"
             }
           },
           {
@@ -1235,19 +1247,19 @@ export type Invariant = {
           {
             "name": "liquidityChange",
             "type": {
-              "defined": "Decimal"
+              "defined": "Liquidity"
             }
           },
           {
             "name": "liquidityGross",
             "type": {
-              "defined": "Decimal"
+              "defined": "Liquidity"
             }
           },
           {
             "name": "sqrtPrice",
             "type": {
-              "defined": "Decimal"
+              "defined": "Price"
             }
           },
           {
@@ -1265,7 +1277,7 @@ export type Invariant = {
           {
             "name": "secondsPerLiquidityOutside",
             "type": {
-              "defined": "Decimal"
+              "defined": "FixedPoint"
             }
           },
           {
@@ -1289,7 +1301,7 @@ export type Invariant = {
             "type": {
               "array": [
                 "u8",
-                25000
+                11091
               ]
             }
           }
@@ -1299,7 +1311,19 @@ export type Invariant = {
   ],
   "types": [
     {
-      "name": "Decimal",
+      "name": "Price",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Liquidity",
       "type": {
         "kind": "struct",
         "fields": [
@@ -1323,6 +1347,18 @@ export type Invariant = {
       }
     },
     {
+      "name": "FixedPoint",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
       "name": "Record",
       "type": {
         "kind": "struct",
@@ -1334,7 +1370,7 @@ export type Invariant = {
           {
             "name": "price",
             "type": {
-              "defined": "Decimal"
+              "defined": "Price"
             }
           }
         ]
@@ -1968,7 +2004,19 @@ export const IDL: Invariant = {
         {
           "name": "liquidityDelta",
           "type": {
-            "defined": "Decimal"
+            "defined": "Liquidity"
+          }
+        },
+        {
+          "name": "slippageLimitLower",
+          "type": {
+            "defined": "Price"
+          }
+        },
+        {
+          "name": "slippageLimitUpper",
+          "type": {
+            "defined": "Price"
           }
         }
       ]
@@ -2385,7 +2433,7 @@ export const IDL: Invariant = {
         {
           "name": "protocolFee",
           "type": {
-            "defined": "Decimal"
+            "defined": "FixedPoint"
           }
         }
       ]
@@ -2441,7 +2489,7 @@ export const IDL: Invariant = {
           {
             "name": "fee",
             "type": {
-              "defined": "Decimal"
+              "defined": "FixedPoint"
             }
           },
           {
@@ -2518,25 +2566,25 @@ export const IDL: Invariant = {
           {
             "name": "fee",
             "type": {
-              "defined": "Decimal"
+              "defined": "FixedPoint"
             }
           },
           {
             "name": "protocolFee",
             "type": {
-              "defined": "Decimal"
+              "defined": "FixedPoint"
             }
           },
           {
             "name": "liquidity",
             "type": {
-              "defined": "Decimal"
+              "defined": "Liquidity"
             }
           },
           {
             "name": "sqrtPrice",
             "type": {
-              "defined": "Decimal"
+              "defined": "Price"
             }
           },
           {
@@ -2570,7 +2618,7 @@ export const IDL: Invariant = {
           {
             "name": "secondsPerLiquidityGlobal",
             "type": {
-              "defined": "Decimal"
+              "defined": "FixedPoint"
             }
           },
           {
@@ -2620,7 +2668,7 @@ export const IDL: Invariant = {
           {
             "name": "liquidity",
             "type": {
-              "defined": "Decimal"
+              "defined": "Liquidity"
             }
           },
           {
@@ -2646,7 +2694,7 @@ export const IDL: Invariant = {
           {
             "name": "secondsPerLiquidityInside",
             "type": {
-              "defined": "Decimal"
+              "defined": "FixedPoint"
             }
           },
           {
@@ -2656,13 +2704,13 @@ export const IDL: Invariant = {
           {
             "name": "tokensOwedX",
             "type": {
-              "defined": "Decimal"
+              "defined": "FixedPoint"
             }
           },
           {
             "name": "tokensOwedY",
             "type": {
-              "defined": "Decimal"
+              "defined": "FixedPoint"
             }
           },
           {
@@ -2732,19 +2780,19 @@ export const IDL: Invariant = {
           {
             "name": "liquidityChange",
             "type": {
-              "defined": "Decimal"
+              "defined": "Liquidity"
             }
           },
           {
             "name": "liquidityGross",
             "type": {
-              "defined": "Decimal"
+              "defined": "Liquidity"
             }
           },
           {
             "name": "sqrtPrice",
             "type": {
-              "defined": "Decimal"
+              "defined": "Price"
             }
           },
           {
@@ -2762,7 +2810,7 @@ export const IDL: Invariant = {
           {
             "name": "secondsPerLiquidityOutside",
             "type": {
-              "defined": "Decimal"
+              "defined": "FixedPoint"
             }
           },
           {
@@ -2786,7 +2834,7 @@ export const IDL: Invariant = {
             "type": {
               "array": [
                 "u8",
-                25000
+                11091
               ]
             }
           }
@@ -2796,7 +2844,19 @@ export const IDL: Invariant = {
   ],
   "types": [
     {
-      "name": "Decimal",
+      "name": "Price",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Liquidity",
       "type": {
         "kind": "struct",
         "fields": [
@@ -2820,6 +2880,18 @@ export const IDL: Invariant = {
       }
     },
     {
+      "name": "FixedPoint",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
       "name": "Record",
       "type": {
         "kind": "struct",
@@ -2831,7 +2903,7 @@ export const IDL: Invariant = {
           {
             "name": "price",
             "type": {
-              "defined": "Decimal"
+              "defined": "Price"
             }
           }
         ]
