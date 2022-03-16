@@ -142,7 +142,6 @@ impl<'info> Swap<'info> {
                 pool.tick_spacing,
                 &tickmap,
             )?;
-            msg!("limiting_tick_index: {}", limiting_tick.unwrap().0);
 
             let result = compute_swap_step(
                 pool.sqrt_price,
