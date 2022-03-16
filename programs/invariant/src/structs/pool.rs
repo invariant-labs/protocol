@@ -1,8 +1,6 @@
-use crate::decimal::Decimal;
 use crate::*;
 use anchor_lang::prelude::*;
-
-use super::{FeeGrowth, TokenAmount};
+use decimals::*;
 
 #[account(zero_copy)]
 #[repr(packed)]
@@ -14,17 +12,17 @@ pub struct Pool {
     pub token_y_reserve: Pubkey,
     pub position_iterator: u128,
     pub tick_spacing: u16,
-    pub fee: Decimal,
-    pub protocol_fee: Decimal,
-    pub liquidity: Decimal,
-    pub sqrt_price: Decimal,
+    pub fee: FixedPoint,
+    pub protocol_fee: FixedPoint,
+    pub liquidity: Liquidity,
+    pub sqrt_price: Price,
     pub current_tick_index: i32, // nearest tick below the current price
     pub tickmap: Pubkey,
     pub fee_growth_global_x: FeeGrowth,
     pub fee_growth_global_y: FeeGrowth,
     pub fee_protocol_token_x: u64, // should be changed to TokenAmount when Armani implements tuple structs
     pub fee_protocol_token_y: u64,
-    pub seconds_per_liquidity_global: Decimal,
+    pub seconds_per_liquidity_global: FixedPoint,
     pub start_timestamp: u64,
     pub last_timestamp: u64,
     pub fee_receiver: Pubkey,
@@ -34,8 +32,9 @@ pub struct Pool {
 }
 
 impl Pool {
+    #[allow(unaligned_references)]
     pub fn add_fee(&mut self, amount: TokenAmount, in_x: bool) {
-        let protocol_fee = amount.big_mul(self.protocol_fee).to_token_ceil();
+        let protocol_fee = TokenAmount::from_decimal_up(amount.big_mul_up(self.protocol_fee));
         let pool_fee = amount - protocol_fee;
 
         if pool_fee.is_zero() || self.liquidity.is_zero() {
@@ -54,7 +53,7 @@ impl Pool {
         }
     }
 
-    pub fn update_liquidity_safely(&mut self, liquidity_delta: Decimal, add: bool) -> Result<()> {
+    pub fn update_liquidity_safely(&mut self, liquidity_delta: Liquidity, add: bool) -> Result<()> {
         // validate in decrease liquidity case
         if !add && { self.liquidity } < liquidity_delta {
             return Err(ErrorCode::InvalidPoolLiquidity.into());
@@ -70,7 +69,7 @@ impl Pool {
 
     pub fn update_seconds_per_liquidity_global(&mut self, current_timestamp: u64) {
         self.seconds_per_liquidity_global = self.seconds_per_liquidity_global
-            + (Decimal::from_integer((current_timestamp - self.last_timestamp) as u128)
+            + (FixedPoint::from_integer((current_timestamp - self.last_timestamp) as u128)
                 / self.liquidity);
 
         self.last_timestamp = current_timestamp;
@@ -91,10 +90,10 @@ mod tests {
         // Invalid pool liquidity
         {
             let mut pool = Pool {
-                liquidity: Decimal::new(0),
+                liquidity: Liquidity::new(0),
                 ..Default::default()
             };
-            let liquidity_delta = Decimal::one();
+            let liquidity_delta = Liquidity::from_integer(1);
             let add = false;
 
             let result = pool.update_liquidity_safely(liquidity_delta, add);
@@ -104,28 +103,44 @@ mod tests {
         // adding liquidity
         {
             let mut pool = Pool {
-                liquidity: Decimal::one(),
+                liquidity: Liquidity::from_integer(1),
                 ..Default::default()
             };
-            let liquidity_delta: Decimal = Decimal::from_integer(2);
-            let add: bool = true;
+            let liquidity_delta = Liquidity::from_integer(2);
+            let add = true;
 
             pool.update_liquidity_safely(liquidity_delta, add).unwrap();
 
-            assert_eq!({ pool.liquidity }, Decimal::from_integer(3));
+            assert_eq!({ pool.liquidity }, Liquidity::from_integer(3));
         }
         // subtracting liquidity
         {
             let mut pool = Pool {
-                liquidity: Decimal::from_integer(3),
+                liquidity: Liquidity::from_integer(3),
                 ..Default::default()
             };
-            let liquidity_delta: Decimal = Decimal::from_integer(2);
-            let add: bool = false;
+            let liquidity_delta = Liquidity::from_integer(2);
+            let add = false;
 
             pool.update_liquidity_safely(liquidity_delta, add).unwrap();
 
-            assert_eq!({ pool.liquidity }, Decimal::one());
+            assert_eq!({ pool.liquidity }, Liquidity::from_integer(1));
         }
+    }
+
+    #[test]
+    fn test_add_fee() {
+        let mut pool = Pool {
+            protocol_fee: FixedPoint::from_scale(2, 1),
+            liquidity: Liquidity::from_integer(10),
+            ..Default::default()
+        };
+        let amount = TokenAmount::from_integer(6);
+        let in_x = true;
+
+        pool.add_fee(amount, in_x);
+
+        assert_eq!({ pool.fee_growth_global_x }, FeeGrowth::from_scale(4, 1));
+        assert_eq!({ pool.fee_protocol_token_x }, 2);
     }
 }
