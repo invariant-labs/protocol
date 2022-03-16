@@ -9,7 +9,7 @@ import { FEE_TIERS, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { Swap } from '@invariant-labs/sdk/src/market'
 import { BN } from '../sdk-staker/lib'
 import { U128MAX } from '@invariant-labs/sdk/lib/utils'
-import { findClosestTicks, getDeltaX, getDeltaY } from '@invariant-labs/sdk/lib/math'
+import { getDeltaX, getDeltaY } from '@invariant-labs/sdk/lib/math'
 import { calculatePriceSqrt } from '@invariant-labs/sdk'
 
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
@@ -48,26 +48,26 @@ const main = async () => {
   await tokenX.mintTo(accountX, MINTER, [], tou64(1e15))
   await tokenY.mintTo(accountY, MINTER, [], tou64(1e15))
 
-  const tickmap = await market.getTickmap(pair)
-
   while (true) {
     const start = Date.now()
 
     const side = Math.random() > 0.5
 
     const pool = await market.getPool(pair)
-    const indexesInDirection = findClosestTicks(
-      tickmap.bitmap,
-      pool.currentTickIndex,
-      pool.tickSpacing,
-      10,
-      Infinity,
-      'up'
-    )
 
     const amount = side
-      ? getDeltaX(calculatePriceSqrt(indexesInDirection[0]), pool.sqrtPrice, pool.liquidity, true)
-      : getDeltaY(calculatePriceSqrt(indexesInDirection[0]), pool.sqrtPrice, pool.liquidity, true) // To be estimated for certain prepared pool
+      ? getDeltaX(
+          calculatePriceSqrt(pool.currentTickIndex + pair.tickSpacing),
+          pool.sqrtPrice,
+          pool.liquidity,
+          true
+        )
+      : getDeltaY(
+          calculatePriceSqrt(pool.currentTickIndex + pair.tickSpacing),
+          pool.sqrtPrice,
+          pool.liquidity,
+          true
+        ) // To be estimated for certain prepared pool
     if (!amount) {
       console.log('Amount to big')
       continue
@@ -87,7 +87,7 @@ const main = async () => {
     }
 
     try {
-      await market.swapSplit(swapVars, MINTER)
+      await market.swap(swapVars, MINTER)
     } catch (err: any) {
       const pool = await market.getPool(pair)
       const swapDetails = `swap details:\nxToY: ${
