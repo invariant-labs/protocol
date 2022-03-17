@@ -1,8 +1,6 @@
+use crate::decimals::*;
+use crate::structs::{Pool, State};
 use crate::ErrorCode::*;
-use crate::{
-    decimal::Decimal,
-    structs::{Pool, State},
-};
 use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
 
@@ -26,9 +24,9 @@ pub struct ChangeProtocolFee<'info> {
 }
 
 impl<'info> ChangeProtocolFee<'info> {
-    pub fn handler(&self, protocol_fee: Decimal) -> ProgramResult {
+    pub fn handler(&self, protocol_fee: FixedPoint) -> ProgramResult {
         require!(
-            protocol_fee.ge(&Decimal::new(0)) && protocol_fee.le(&Decimal::from_integer(1)),
+            protocol_fee <= FixedPoint::from_integer(1),
             InvalidProtocolFee
         );
         let pool = &mut self.pool.load_mut()?;

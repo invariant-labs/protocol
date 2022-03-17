@@ -4,11 +4,12 @@ import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken, initEverything } from './testUtils'
-import { Market, Pair, tou64, DENOMINATOR, Network } from '@invariant-labs/sdk'
+import { Market, Pair, tou64, LIQUIDITY_DENOMINATOR, Network } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { CreateTick, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
+import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('swap', () => {
   const provider = Provider.local()
@@ -80,7 +81,7 @@ describe('swap', () => {
 
     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-    const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) }
+    const liquidityDelta = { v: new BN(1000000).mul(LIQUIDITY_DENOMINATOR) }
 
     await market.createPositionList(positionOwner.publicKey, positionOwner)
 
@@ -91,7 +92,9 @@ describe('swap', () => {
       userTokenY: userTokenYAccount,
       lowerTick,
       upperTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: (await market.getPool(pair)).sqrtPrice,
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars, positionOwner)
 
@@ -143,7 +146,7 @@ describe('swap', () => {
     assert.ok(reserveXDelta.eq(amount))
     assert.ok(reserveYDelta.eq(amount.subn(7)))
     // assert.ok(poolData.feeGrowthGlobalX.v.eqn(5400000)) // 0.6 % of amount - protocol fee
-    assert.ok(poolData.feeGrowthGlobalX.v.eq(new BN('4000000000000000000'))) // close enough?
+    assert.equal(poolData.feeGrowthGlobalX.v.toString(), '4000000000000000000')
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
     assert.ok(poolData.feeProtocolTokenX.eqn(2))
     assert.ok(poolData.feeProtocolTokenY.eqn(0))

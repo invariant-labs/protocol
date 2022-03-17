@@ -22,6 +22,8 @@ const main = async () => {
   await createBtcRenDoge(market)
   await createUsdcBtc(market)
   await createUsdcRenDoge(market)
+  await createUsdcUsdt(market)
+  await createWsolUsdc(market)
 }
 
 const createUsdcBtc = async (market: Market) => {
@@ -44,13 +46,13 @@ const createUsdcRenDoge = async (market: Market) => {
   const renDoge = new PublicKey(MOCK_TOKENS.REN_DOGE)
   const usdc = new PublicKey(MOCK_TOKENS.USDC)
 
-  for (const i of [3]) {
+  for (const i of [1, 2, 3]) {
     const pair = new Pair(renDoge, usdc, FEE_TIERS[i])
 
     const createPoolVars: CreatePool = {
       pair,
       payer: wallet,
-      initTick: 65000
+      initTick: 65010
     }
     await market.createPool(createPoolVars)
   }
@@ -66,6 +68,36 @@ const createBtcRenDoge = async (market: Market) => {
       pair,
       payer: wallet,
       initTick: 171600
+    }
+    await market.createPool(createPoolVars)
+  }
+}
+
+const createUsdcUsdt = async (market: Market) => {
+  const usdt = new PublicKey(MOCK_TOKENS.USDT)
+  const usdc = new PublicKey(MOCK_TOKENS.USDC)
+
+  for (const i of [0, 1]) {
+    const pair = new Pair(usdc, usdt, FEE_TIERS[i])
+    const createPoolVars: CreatePool = {
+      pair,
+      payer: wallet,
+      initTick: 0
+    }
+    await market.createPool(createPoolVars)
+  }
+}
+
+const createWsolUsdc = async (market: Market) => {
+  const wsol = new PublicKey(MOCK_TOKENS.WSOL)
+  const usdc = new PublicKey(MOCK_TOKENS.USDC)
+
+  for (const i of [0, 1, 2]) {
+    const pair = new Pair(usdc, wsol, FEE_TIERS[i])
+    const createPoolVars: CreatePool = {
+      pair,
+      payer: wallet,
+      initTick: 24000
     }
     await market.createPool(createPoolVars)
   }

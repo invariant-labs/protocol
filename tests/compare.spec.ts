@@ -4,11 +4,12 @@ import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken, initEverything } from './testUtils'
-import { Market, Pair, tou64, DENOMINATOR, Network } from '@invariant-labs/sdk'
+import { Market, Pair, tou64, LIQUIDITY_DENOMINATOR, Network } from '@invariant-labs/sdk'
 import { FeeTier, InitPosition, Swap } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
-// TODO add to tests
+import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
+
 describe('compare', () => {
   const provider = Provider.local()
   const connection = provider.connection
@@ -74,7 +75,7 @@ describe('compare', () => {
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
     await tokenZ.mintTo(userTokenZAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
     await tokenW.mintTo(userTokenWAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-    const liquidityDelta = { v: new BN(2000000).mul(DENOMINATOR) }
+    const liquidityDelta = { v: new BN(2000000).mul(LIQUIDITY_DENOMINATOR) }
     const lowerTick: number = -50
     const upperTick: number = 50
     await market.createPositionList(positionOwner.publicKey, positionOwner)
@@ -87,7 +88,9 @@ describe('compare', () => {
       userTokenY: userTokenYAccount,
       lowerTick,
       upperTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars, positionOwner)
 
@@ -99,7 +102,9 @@ describe('compare', () => {
       userTokenY: userTokenWAccount,
       lowerTick,
       upperTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars2, positionOwner)
 

@@ -1,11 +1,11 @@
+use crate::decimals::*;
 use crate::math::calculate_price_sqrt;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::structs::tickmap::Tickmap;
-use crate::structs::FeeGrowth;
 use crate::util::check_tick;
+use crate::util::get_current_timestamp;
 use crate::ErrorCode::*;
-use crate::{decimal::Decimal, util::get_current_timestamp};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::Mint;
@@ -56,16 +56,16 @@ impl<'info> CreateTick<'info> {
             pool: self.pool.key(),
             index,
             sign: true,
-            liquidity_change: Decimal::new(0),
-            liquidity_gross: Decimal::new(0),
+            liquidity_change: Liquidity::new(0),
+            liquidity_gross: Liquidity::new(0),
             sqrt_price: calculate_price_sqrt(index),
             fee_growth_outside_x: match below_current_tick {
                 true => pool.fee_growth_global_x,
-                false => FeeGrowth::zero(),
+                false => FeeGrowth::new(0),
             },
             fee_growth_outside_y: match below_current_tick {
                 true => pool.fee_growth_global_y,
-                false => FeeGrowth::zero(),
+                false => FeeGrowth::new(0),
             },
             seconds_outside: match below_current_tick {
                 true => (current_timestamp.checked_sub(pool.start_timestamp).unwrap()),
@@ -73,7 +73,7 @@ impl<'info> CreateTick<'info> {
             },
             seconds_per_liquidity_outside: match below_current_tick {
                 true => pool.seconds_per_liquidity_global,
-                false => Decimal::new(0),
+                false => FixedPoint::new(0),
             },
             bump,
         };
