@@ -10,8 +10,24 @@ import {
   TransactionInstruction
 } from '@solana/web3.js'
 import { calculatePriceSqrt, MAX_TICK, Pair, TICK_LIMIT, Market, MIN_TICK } from '.'
-import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap, Tick, PoolData } from './market'
-import { calculatePriceAfterSlippage, calculateSwapStep, isEnoughAmountToPushPrice } from './math'
+import {
+  Decimal,
+  FeeTier,
+  FEE_TIER,
+  PoolStructure,
+  Tickmap,
+  Tick,
+  PoolData,
+  Errors,
+  PositionInitData
+} from './market'
+import {
+  calculatePriceAfterSlippage,
+  calculateSwapStep,
+  getLiquidityByX,
+  getLiquidityByY,
+  isEnoughAmountToPushPrice
+} from './math'
 import { alignTickToSpacing, getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
 import { struct, u32, u8 } from '@solana/buffer-layout'
@@ -319,45 +335,54 @@ export const getConcentrationArray = (
     concentration--
   }
   const maxTick = alignTickToSpacing(MAX_TICK, tickSpacing)
-
+  if ((maxConcentration / 2) * tickSpacing > maxTick - Math.abs(currentTick)) {
+    throw new Error(Errors.RangeLimitReached)
+  }
   const limitIndex =
     (maxTick - Math.abs(currentTick) - (maxConcentration / 2) * tickSpacing) / tickSpacing
 
   return concentrations.slice(0, limitIndex)
 }
 
-// export const getPositionInitData = (
-//   tokenAmount: number,
-//   tickSpacing: number,
-//   concentration: number,
-//   maxConcentration: number,
-//   currentTick: number
-// ): number => {
-//   const maxTick = alignTickToSpacing(MAX_TICK, tickSpacing)
-//   const minTick = alignTickToSpacing(MIN_TICK, tickSpacing)
+export const getPositionInitData = (
+  tokenAmount: BN,
+  tickSpacing: number,
+  concentration: number,
+  maxConcentration: number,
+  currentTick: number,
+  currentPriceSqrt: Decimal,
+  roundingUp: boolean,
+  byAmountX: boolean
+): PositionInitData => {
+  let liquidity: Decimal
+  let amountX: BN
+  let amountY: BN
+  const tickDelta = calculateTickDelta(tickSpacing, maxConcentration, concentration)
+  const lowerTick = currentTick - tickDelta * tickSpacing
+  const upperTick = currentTick + tickDelta * tickSpacing
 
-//   const tickDelta = calculateTickDelta(tickSpacing, maxConcentration, concentration)
-//   const lowerTick = currentTick - tickDelta * tickSpacing
-//   const upperTick = currentTick + tickDelta * tickSpacing
+  if (byAmountX) {
+    const result = getLiquidityByX(tokenAmount, lowerTick, upperTick, currentPriceSqrt, roundingUp)
+    liquidity = result.liquidity
+    amountX = tokenAmount
+    amountY = result.y
+  } else {
+    const result = getLiquidityByY(tokenAmount, lowerTick, upperTick, currentPriceSqrt, roundingUp)
 
-//   let num: number // temp
+    liquidity = result.liquidity
+    amountX = result.x
+    amountY = tokenAmount
+  }
+  const positionData: PositionInitData = {
+    lowerTick,
+    upperTick,
+    liquidity,
+    amountX: amountX,
+    amountY: amountY
+  }
 
-//   return num
-// }
-
-// export const getLiquidity = (
-//   lowerTick: number,
-//   upperTick: number,
-//   tokenXAmount: number,
-//   tokenYAmount: number
-// ): number => {
-//   const maxTick = alignTickToSpacing(MAX_TICK, tickSpacing)
-//   const minTick = alignTickToSpacing(MIN_TICK, tickSpacing)
-
-//   let num: number // temp
-
-//   return num
-// }
+  return positionData
+}
 
 export const toPrice = (x: number, decimals: number = 0): Decimal => {
   return toDecimalWithDenominator(x, PRICE_DENOMINATOR, decimals)

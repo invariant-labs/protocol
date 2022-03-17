@@ -1500,7 +1500,8 @@ export enum Errors {
   InvalidTickInterval = '0x131', // 5
   NoMoreTicks = '0x132 ', // 6
   TickNotFound = '0x133', // 7
-  PriceLimitReached = '0x134' // 8
+  PriceLimitReached = '0x134', // 8
+  RangeLimitReached = '0x135' // 9
 }
 
 export interface InitPosition {
@@ -1604,4 +1605,12 @@ export interface ChangeFeeReceiver {
   pair: Pair
   admin?: PublicKey
   feeReceiver: PublicKey
+}
+
+export interface PositionInitData {
+  lowerTick: number
+  upperTick: number
+  liquidity: Decimal
+  amountX: BN
+  amountY: BN
 }
