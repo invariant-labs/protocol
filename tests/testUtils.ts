@@ -104,7 +104,8 @@ export const createTokensAndPool = async (
   const promiseResults = await Promise.all([
     createToken(connection, payer, mintAuthority),
     createToken(connection, payer, mintAuthority),
-    connection.requestAirdrop(mintAuthority.publicKey, 1e9)
+    connection.requestAirdrop(mintAuthority.publicKey, 1e9),
+    connection.requestAirdrop(payer.publicKey, 1e9)
   ])
 
   const pair = new Pair(promiseResults[0].publicKey, promiseResults[1].publicKey, feeTier)
