@@ -1722,14 +1722,29 @@ describe('Math', () => {
   })
 
   describe('test calculateConcentration', () => {
-    it('max concentration', async () => {
+    it('high current tick ', async () => {
       const tickSpacing = 4
       const maxConcentration = 10
-      const concentration = 1000.5348136431164
       const expectedResult = 11
 
       const result = getConcentrationArray(tickSpacing, maxConcentration, 221752)
 
+      assert.equal(result.length, expectedResult)
+    })
+    it('middle current tick ', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const expectedResult = 124
+
+      const result = getConcentrationArray(tickSpacing, maxConcentration, 221300)
+      assert.equal(result.length, expectedResult)
+    })
+    it('low current tick ', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const expectedResult = 137
+
+      const result = getConcentrationArray(tickSpacing, maxConcentration, 0)
       assert.equal(result.length, expectedResult)
     })
   })
