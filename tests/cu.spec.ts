@@ -1,18 +1,15 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
-import { assert } from 'chai'
-import { createToken, createTokensAndPool, initEverything } from './testUtils'
-import { Market, Pair, tou64, LIQUIDITY_DENOMINATOR, Network } from '@invariant-labs/sdk'
+import { assertThrowsAsync, createToken, createTokensAndPool, initEverything } from './testUtils'
+import { Market, Pair, tou64, Network } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { feeToTickSpacing, fromFee, getMaxTick } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
-import { CreateTick, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
-import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
+import { InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 import { getLiquidityByX } from '@invariant-labs/sdk/lib/math'
 
-describe('swap', () => {
+describe('Compute units', () => {
   const provider = Provider.local()
   const connection = provider.connection
   // @ts-expect-error
@@ -116,6 +113,6 @@ describe('swap', () => {
       byAmountIn: false,
       owner: owner.publicKey
     }
-    await market.swap(swapVars, owner)
+    await assertThrowsAsync(market.swap(swapVars, owner))
   })
 })
