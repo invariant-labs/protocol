@@ -34,6 +34,7 @@ import {
   CloserLimit,
   FeeGrowthInside,
   getCloserLimit,
+  getConcentrationArray,
   GROWTH_DENOMINATOR,
   PositionClaimData,
   PRICE_DENOMINATOR,
@@ -1717,6 +1718,19 @@ describe('Math', () => {
 
       const result = calculateTickDelta(tickSpacing, maxConcentration, concentration)
       assert.equal(result, expectedResult)
+    })
+  })
+
+  describe('test calculateConcentration', () => {
+    it('max concentration', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const concentration = 1000.5348136431164
+      const expectedResult = 11
+
+      const result = getConcentrationArray(tickSpacing, maxConcentration, 221752)
+
+      assert.equal(result.length, expectedResult)
     })
   })
 })
