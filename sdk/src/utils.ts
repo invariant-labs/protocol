@@ -15,6 +15,7 @@ import { calculatePriceAfterSlippage, calculateSwapStep, isEnoughAmountToPushPri
 import { alignTickToSpacing, getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
 import { struct, u32, u8 } from '@solana/buffer-layout'
+import { lstat } from 'fs'
 
 export const SEED = 'Invariant'
 export const DECIMAL = 12
@@ -294,15 +295,23 @@ export const calculateTickDelta = (
 }
 
 export const getConcentrationArray = (tickSpacing: number, maxConcentration: number): number[] => {
-  const maxTick = alignTickToSpacing(MAX_TICK, tickSpacing)
-  //const minTick = alignTickToSpacing(MIN_TICK, tickSpacing)
-
   let concentrations: number[] = []
-  let range = tickSpacing
+  let counter = 0
+  let concentration = 0
+  let lastConcentration = calculateConcentration(tickSpacing, maxConcentration, counter) + 1
+  let concentrationDelta = 1
 
-  for (let i = 0; i <= range; i + tickSpacing) {
-    let concentration = calculateConcentration(tickSpacing, maxConcentration, i)
+  while (concentrationDelta >= 1) {
+    concentration = calculateConcentration(tickSpacing, maxConcentration, counter)
     concentrations.push(concentration)
+    concentrationDelta = lastConcentration - concentration
+    lastConcentration = concentration
+    counter++
+  }
+  concentration = Math.ceil(concentrations[concentrations.length - 1])
+  while (concentration > 1) {
+    concentrations.push(concentration)
+    concentration--
   }
 
   return concentrations
