@@ -29,6 +29,7 @@ export const GROWTH_DENOMINATOR = new BN(10).pow(new BN(GROWTH_SCALE))
 export const FEE_OFFSET = new BN(10).pow(new BN(DECIMAL - FEE_DECIMAL))
 export const FEE_DENOMINATOR = 10 ** FEE_DECIMAL
 export const U128MAX = new BN('340282366920938463463374607431768211455')
+export const CONCENTRATION_FACTOR = 1.00001526069123
 
 export enum ERRORS {
   SIGNATURE = 'Error: Signature verification failed',
@@ -275,7 +276,8 @@ export const calculateConcentration = (
   maxConcentration: number,
   n: number
 ) => {
-  return 1 / (1 - Math.pow(1.0001, (-tickSpacing * (maxConcentration + n)) / 4))
+  const concentration = 1 / (1 - Math.pow(1.0001, (-tickSpacing * (maxConcentration + 2 * n)) / 4))
+  return concentration / CONCENTRATION_FACTOR
 }
 
 export const calculateTickDelta = (
@@ -284,13 +286,11 @@ export const calculateTickDelta = (
   concentration: number
 ) => {
   const base = Math.pow(1.0001, -(tickSpacing / 4))
-  const logArg = (1 - 1 / concentration) / Math.pow(1.0001, (-tickSpacing * maxConcentration) / 4)
-  console.log(base)
-  console.log(logArg)
+  const logArg =
+    (1 - 1 / (concentration * CONCENTRATION_FACTOR)) /
+    Math.pow(1.0001, (-tickSpacing * maxConcentration) / 4)
 
-  console.log(Math.log(base))
-  console.log(Math.log(logArg))
-  return Math.log(logArg) / Math.log(base)
+  return Math.ceil(Math.log(logArg) / Math.log(base) / 2)
 }
 
 export const getConcentrationArray = (tickSpacing: number, maxConcentration: number): number[] => {
