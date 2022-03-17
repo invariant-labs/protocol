@@ -1665,18 +1665,18 @@ describe('Math', () => {
     })
   })
   describe('test calculateConcentration', () => {
-    it('max', async () => {
+    it('max concentration', async () => {
       const tickSpacing = 4
       const maxConcentration = 10
-      const expectedResult = 1000.5500824959723
+      const expectedResult = 1000.5348136431164
 
       const result = calculateConcentration(tickSpacing, maxConcentration, 0)
       assert.equal(result, expectedResult)
     })
-    it('max -1', async () => {
+    it('max concentration -1', async () => {
       const tickSpacing = 4
       const maxConcentration = 10
-      const expectedResult = 909.6364545409625
+      const expectedResult = 833.8623739844425
 
       const result = calculateConcentration(tickSpacing, maxConcentration, 1)
       assert.equal(result, expectedResult)
@@ -1684,31 +1684,38 @@ describe('Math', () => {
     it('n = 1000', async () => {
       const tickSpacing = 4
       const maxConcentration = 10
-      const expectedResult = 10.409899955715302
+      const expectedResult = 5.492027214522115
 
       const result = calculateConcentration(tickSpacing, maxConcentration, 1000)
       assert.equal(result, expectedResult)
     })
   })
   describe('test calculateConcentration', () => {
-    it('max', async () => {
+    it('max concentration', async () => {
       const tickSpacing = 4
       const maxConcentration = 10
-      const concentration = 909.6364545409625
-      const expectedResult = 1000.5500824959723
+      const concentration = 1000.5348136431164
+      const expectedResult = 0
 
       const result = calculateTickDelta(tickSpacing, maxConcentration, concentration)
-      console.log(result)
       assert.equal(result, expectedResult)
     })
-    it('max', async () => {
+    it('max concentration -1', async () => {
       const tickSpacing = 4
       const maxConcentration = 10
-      const concentration = 10.409899955715302
-      const expectedResult = 1000.5500824959723
+      const concentration = 833.8623739844425
+      const expectedResult = 1
 
       const result = calculateTickDelta(tickSpacing, maxConcentration, concentration)
-      console.log(result)
+      assert.equal(result, expectedResult)
+    })
+    it('n = 1000', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const concentration = 5.492027214522115
+      const expectedResult = 1000
+
+      const result = calculateTickDelta(tickSpacing, maxConcentration, concentration)
       assert.equal(result, expectedResult)
     })
   })
