@@ -294,7 +294,11 @@ export const calculateTickDelta = (
   return Math.ceil(Math.log(logArg) / Math.log(base) / 2)
 }
 
-export const getConcentrationArray = (tickSpacing: number, maxConcentration: number): number[] => {
+export const getConcentrationArray = (
+  tickSpacing: number,
+  maxConcentration: number,
+  currentTick: number
+): number[] => {
   let concentrations: number[] = []
   let counter = 0
   let concentration = 0
@@ -309,17 +313,32 @@ export const getConcentrationArray = (tickSpacing: number, maxConcentration: num
     counter++
   }
   concentration = Math.ceil(concentrations[concentrations.length - 1])
+
   while (concentration > 1) {
     concentrations.push(concentration)
     concentration--
   }
+  const maxTick = alignTickToSpacing(MAX_TICK, tickSpacing)
 
-  return concentrations
+  const limitIndex =
+    (maxTick - Math.abs(currentTick) - (maxConcentration / 2) * tickSpacing) / tickSpacing
+
+  return concentrations.slice(0, limitIndex)
 }
 
-// export const getPositionInitData = (tokenAmount: number, concentration: number): number => {
+// export const getPositionInitData = (
+//   tokenAmount: number,
+//   tickSpacing: number,
+//   concentration: number,
+//   maxConcentration: number,
+//   currentTick: number
+// ): number => {
 //   const maxTick = alignTickToSpacing(MAX_TICK, tickSpacing)
 //   const minTick = alignTickToSpacing(MIN_TICK, tickSpacing)
+
+//   const tickDelta = calculateTickDelta(tickSpacing, maxConcentration, concentration)
+//   const lowerTick = currentTick - tickDelta * tickSpacing
+//   const upperTick = currentTick + tickDelta * tickSpacing
 
 //   let num: number // temp
 
