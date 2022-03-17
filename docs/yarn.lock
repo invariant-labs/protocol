@@ -1473,7 +1473,7 @@
     "@docusaurus/types" "2.0.0-beta.ff31de0ff"
     "tslib" "^2.1.0"
 
-"@docusaurus/theme-search-algolia@^2.0.0-beta.9", "@docusaurus/theme-search-algolia@2.0.0-beta.ff31de0ff":
+"@docusaurus/theme-search-algolia@2.0.0-beta.ff31de0ff":
   "integrity" "sha512-eTtObHogSlC+FGMhR7f5LAt3q3S8UCsJ3x0OMCnZM8AF6NS7aMJX26T4isyDv1j6xY3quUJiortFLyZ65Is78g=="
   "resolved" "https://registry.npmjs.org/@docusaurus/theme-search-algolia/-/theme-search-algolia-2.0.0-beta.ff31de0ff.tgz"
   "version" "2.0.0-beta.ff31de0ff"

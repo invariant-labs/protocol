@@ -52,3 +52,7 @@ since the start of the bonds and `buy_amount` is how much trader wants to buy.
 Locally, in `trade_time`, the price chart looks like this:
 
 ![Bond locally](/img/docs/math/bond_locally.png)
+
+$$
+\frac{\partial \operatorname{token\_price}}{\partial \operatorname{time}} =-\operatorname{velocity\cdotp up\_bound\cdotp floor\_price\cdot \frac{1}{sale\_time}}
+$$
