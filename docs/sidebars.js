@@ -41,7 +41,7 @@ module.exports = {
       type: 'category',
       label: 'Invariant Staker',
       // collapsed: true,
-      items: ['invariant_staker/introduction', 'invariant_staker/staker_example']
+      items: ['invariant_staker/introduction', 'invariant_staker/calculation']
     },
     {
       type: 'category',
