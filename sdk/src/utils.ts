@@ -278,20 +278,35 @@ export const calculateConcentration = (
   return 1 / (1 - Math.pow(1.0001, (-tickSpacing * (maxConcentration + n)) / 4))
 }
 
-// export const getConcentrationArray = (tickSpacing: number, maxConcentration: number): number[] => {
-//   const maxTick = alignTickToSpacing(MAX_TICK, tickSpacing)
-//   //const minTick = alignTickToSpacing(MIN_TICK, tickSpacing)
+export const calculateTickDelta = (
+  tickSpacing: number,
+  maxConcentration: number,
+  concentration: number
+) => {
+  const base = Math.pow(1.0001, -(tickSpacing / 4))
+  const logArg = (1 - 1 / concentration) / Math.pow(1.0001, (-tickSpacing * maxConcentration) / 4)
+  console.log(base)
+  console.log(logArg)
 
-//   let concentrations: number[] = []
-//   let range = tickSpacing
+  console.log(Math.log(base))
+  console.log(Math.log(logArg))
+  return Math.log(logArg) / Math.log(base)
+}
 
-//   for (let i = 0; i <= range; i + tickSpacing) {
-//     let concentration = calculateConcentration(tickSpacing, maxConcentration, i)
-//     concentrations.push(concentration)
-//   }
+export const getConcentrationArray = (tickSpacing: number, maxConcentration: number): number[] => {
+  const maxTick = alignTickToSpacing(MAX_TICK, tickSpacing)
+  //const minTick = alignTickToSpacing(MIN_TICK, tickSpacing)
 
-//   return concentrations
-// }
+  let concentrations: number[] = []
+  let range = tickSpacing
+
+  for (let i = 0; i <= range; i + tickSpacing) {
+    let concentration = calculateConcentration(tickSpacing, maxConcentration, i)
+    concentrations.push(concentration)
+  }
+
+  return concentrations
+}
 
 // export const getPositionInitData = (tokenAmount: number, concentration: number): number => {
 //   const maxTick = alignTickToSpacing(MAX_TICK, tickSpacing)
@@ -302,19 +317,19 @@ export const calculateConcentration = (
 //   return num
 // }
 
-export const getLiquidity = (
-  lowerTick: number,
-  upperTick: number,
-  tokenXAmount: number,
-  tokenYAmount: number
-): number => {
-  const maxTick = alignTickToSpacing(MAX_TICK, tickSpacing)
-  const minTick = alignTickToSpacing(MIN_TICK, tickSpacing)
+// export const getLiquidity = (
+//   lowerTick: number,
+//   upperTick: number,
+//   tokenXAmount: number,
+//   tokenYAmount: number
+// ): number => {
+//   const maxTick = alignTickToSpacing(MAX_TICK, tickSpacing)
+//   const minTick = alignTickToSpacing(MIN_TICK, tickSpacing)
 
-  let num: number // temp
+//   let num: number // temp
 
-  return num
-}
+//   return num
+// }
 
 export const toPrice = (x: number, decimals: number = 0): Decimal => {
   return toDecimalWithDenominator(x, PRICE_DENOMINATOR, decimals)

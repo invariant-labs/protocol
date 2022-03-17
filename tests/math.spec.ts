@@ -29,6 +29,7 @@ import {
   calculateClaimAmount,
   calculateConcentration,
   calculateFeeGrowthInside,
+  calculateTickDelta,
   calculateTokensOwed,
   CloserLimit,
   FeeGrowthInside,
@@ -1686,6 +1687,28 @@ describe('Math', () => {
       const expectedResult = 10.409899955715302
 
       const result = calculateConcentration(tickSpacing, maxConcentration, 1000)
+      assert.equal(result, expectedResult)
+    })
+  })
+  describe('test calculateConcentration', () => {
+    it('max', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const concentration = 909.6364545409625
+      const expectedResult = 1000.5500824959723
+
+      const result = calculateTickDelta(tickSpacing, maxConcentration, concentration)
+      console.log(result)
+      assert.equal(result, expectedResult)
+    })
+    it('max', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const concentration = 10.409899955715302
+      const expectedResult = 1000.5500824959723
+
+      const result = calculateTickDelta(tickSpacing, maxConcentration, concentration)
+      console.log(result)
       assert.equal(result, expectedResult)
     })
   })
