@@ -1691,7 +1691,7 @@ describe('Math', () => {
       assert.equal(result, expectedResult)
     })
   })
-  describe('test calculateConcentration', () => {
+  describe('test test calculateTickDelta', () => {
     it('max concentration', async () => {
       const tickSpacing = 4
       const maxConcentration = 10
@@ -1721,7 +1721,7 @@ describe('Math', () => {
     })
   })
 
-  describe('test calculateConcentration', () => {
+  describe('test getConcentrationArray', () => {
     it('high current tick ', async () => {
       const tickSpacing = 4
       const maxConcentration = 10

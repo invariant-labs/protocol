@@ -288,41 +288,37 @@ export const toDecimalWithDenominator = (x: number, denominator: BN, decimals: n
   return { v: denominator.muln(x).div(new BN(10).pow(new BN(decimals))) }
 }
 
-export const calculateConcentration = (
-  tickSpacing: number,
-  maxConcentration: number,
-  n: number
-) => {
-  const concentration = 1 / (1 - Math.pow(1.0001, (-tickSpacing * (maxConcentration + 2 * n)) / 4))
+export const calculateConcentration = (tickSpacing: number, minimumRange: number, n: number) => {
+  const concentration = 1 / (1 - Math.pow(1.0001, (-tickSpacing * (minimumRange + 2 * n)) / 4))
   return concentration / CONCENTRATION_FACTOR
 }
 
 export const calculateTickDelta = (
   tickSpacing: number,
-  maxConcentration: number,
+  minimumRange: number,
   concentration: number
 ) => {
   const base = Math.pow(1.0001, -(tickSpacing / 4))
   const logArg =
     (1 - 1 / (concentration * CONCENTRATION_FACTOR)) /
-    Math.pow(1.0001, (-tickSpacing * maxConcentration) / 4)
+    Math.pow(1.0001, (-tickSpacing * minimumRange) / 4)
 
   return Math.ceil(Math.log(logArg) / Math.log(base) / 2)
 }
 
 export const getConcentrationArray = (
   tickSpacing: number,
-  maxConcentration: number,
+  minimumRange: number,
   currentTick: number
 ): number[] => {
   let concentrations: number[] = []
   let counter = 0
   let concentration = 0
-  let lastConcentration = calculateConcentration(tickSpacing, maxConcentration, counter) + 1
+  let lastConcentration = calculateConcentration(tickSpacing, minimumRange, counter) + 1
   let concentrationDelta = 1
 
   while (concentrationDelta >= 1) {
-    concentration = calculateConcentration(tickSpacing, maxConcentration, counter)
+    concentration = calculateConcentration(tickSpacing, minimumRange, counter)
     concentrations.push(concentration)
     concentrationDelta = lastConcentration - concentration
     lastConcentration = concentration
@@ -335,11 +331,11 @@ export const getConcentrationArray = (
     concentration--
   }
   const maxTick = alignTickToSpacing(MAX_TICK, tickSpacing)
-  if ((maxConcentration / 2) * tickSpacing > maxTick - Math.abs(currentTick)) {
+  if ((minimumRange / 2) * tickSpacing > maxTick - Math.abs(currentTick)) {
     throw new Error(Errors.RangeLimitReached)
   }
   const limitIndex =
-    (maxTick - Math.abs(currentTick) - (maxConcentration / 2) * tickSpacing) / tickSpacing
+    (maxTick - Math.abs(currentTick) - (minimumRange / 2) * tickSpacing) / tickSpacing
 
   return concentrations.slice(0, limitIndex)
 }
@@ -348,7 +344,7 @@ export const getPositionInitData = (
   tokenAmount: BN,
   tickSpacing: number,
   concentration: number,
-  maxConcentration: number,
+  minimumRange: number,
   currentTick: number,
   currentPriceSqrt: Decimal,
   roundingUp: boolean,
@@ -357,7 +353,7 @@ export const getPositionInitData = (
   let liquidity: Decimal
   let amountX: BN
   let amountY: BN
-  const tickDelta = calculateTickDelta(tickSpacing, maxConcentration, concentration)
+  const tickDelta = calculateTickDelta(tickSpacing, minimumRange, concentration)
   const lowerTick = currentTick - tickDelta * tickSpacing
   const upperTick = currentTick + tickDelta * tickSpacing
 
