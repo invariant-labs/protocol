@@ -94,6 +94,15 @@ pub fn compute_swap_step(
     by_amount_in: bool,
     fee: FixedPoint,
 ) -> SwapResult {
+    if liquidity.is_zero() {
+        return SwapResult {
+            next_price_sqrt: target_price_sqrt,
+            amount_in: TokenAmount(0),
+            amount_out: TokenAmount(0),
+            fee_amount: TokenAmount(0),
+        };
+    }
+
     let x_to_y = current_price_sqrt >= target_price_sqrt;
 
     let next_price_sqrt;

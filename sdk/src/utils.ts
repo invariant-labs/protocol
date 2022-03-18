@@ -413,9 +413,16 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     // add amount to array if tick was initialized otherwise accumulate amount for next iteration
     accumulatedAmount = accumulatedAmount.add(amountDiff)
     // trunk-ignore(eslint/@typescript-eslint/prefer-optional-chain)
-    if ((limitingTick !== null && limitingTick.initialized) || remainingAmount.eqn(0)) {
+    const isTickInitialized = limitingTick !== null && limitingTick.initialized
+
+    if (isTickInitialized || remainingAmount.eqn(0)) {
       amountPerTick.push(accumulatedAmount)
       accumulatedAmount = new BN(0)
+    }
+
+    // in the future this can be replaced by counter
+    if (!isTickInitialized && liquidity.v.eqn(0)) {
+      throw new Error('Too large liquidity gap')
     }
 
     if (currentTickIndex === previousTickIndex && !remainingAmount.eqn(0)) {
