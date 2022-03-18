@@ -6,11 +6,12 @@ cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [workspace]
-members = ["programs/invariant", "programs/staker"]
+members = ["programs/invariant", "programs/staker", "programs/exerciser"]
 
 [programs.localnet]
 invariant = "9aiirQKPZ2peE9QrXYmsbTtR7wSDJi2HkQdHuaMpTpei"
 staker = "G5iMvLKhBKKscSMUazjiWKZXzacjL7oikJAm9FWRTvk"
+exerciser = "3nQy5Qmg52C5KPfigHs4xvwXWUV9mmGUuUuMxWyvL8EK"
 
 [scripts]
 test = "ts-mocha -p ./tsconfig.json -t 1000000"
