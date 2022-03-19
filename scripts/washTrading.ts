@@ -94,20 +94,24 @@ const main = async () => {
       swapLimit,
       pool.liquidity,
       new BN(U64_MAX.subn(10)),
-      true,
+      false,
       pool.fee
     )
-    const amount = result.amountIn.add(result.feeAmount).addn(10)
+    const amount = result.amountIn.add(result.feeAmount).addn(1)
 
-    swapLogs.push(`swap ${xToY ? 'x -> y' : 'y -> x'}: ${formatLiquidity({ v: amount })}`)
+    swapLogs.push(
+      `swap ${xToY ? 'x -> y' : 'y -> x'}: ${formatLiquidity({
+        v: amount
+      })}+`
+    )
     const currentTickBefore = pool.currentTickIndex
 
     const swapVars: Swap = {
       xToY,
       accountX,
       accountY,
-      amount,
-      byAmountIn: true,
+      amount: result.amountOut.addn(1),
+      byAmountIn: false,
       estimatedPriceAfterSwap: xToY ? { v: new BN(1) } : { v: U128MAX.subn(1) },
       slippage: toDecimal(0),
       pair,
