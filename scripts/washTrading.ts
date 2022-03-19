@@ -60,7 +60,7 @@ const main = async () => {
 
     let randomXtoY = Math.random() > 0.5
 
-    const washTradingLimit = 100 * pair.tickSpacing
+    const washTradingLimit = 10000 * pair.tickSpacing
 
     const reverseDirection = randomXtoY
       ? pool.currentTickIndex < -washTradingLimit
@@ -77,9 +77,6 @@ const main = async () => {
     }
 
     const { swapLimit, limitingTick } = getCloserLimit(closerLimit)
-
-    // console.log('swapLimit: ', swapLimit.v.toString())
-    // console.log('pool.sqrtPrice: ', pool.sqrtPrice.v.toString())
     const swapLogs: string[] = []
 
     swapLogs.push(`Ticks: ${pool.currentTickIndex} -> ${limitingTick?.index} at ${name}`)
@@ -102,7 +99,7 @@ const main = async () => {
     swapLogs.push(
       `swap ${xToY ? 'x -> y' : 'y -> x'}: ${formatLiquidity({
         v: amount
-      })}+`
+      })}+ -> ${formatLiquidity({ v: result.amountOut })}`
     )
     const currentTickBefore = pool.currentTickIndex
 
