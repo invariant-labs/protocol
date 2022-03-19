@@ -41,6 +41,22 @@ const pairs: [Pair, string][] = [
     new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.USDT), FEE_TIERS[1]),
     'USDC-USDT 1'
   ]
+  // [
+  //   new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.MSOL), FEE_TIERS[1]),
+  //   'USDC-WSOL 1'
+  // ],
+  // [
+  //   new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.MSOL), FEE_TIERS[2]),
+  //   'USDC-WSOL 2'
+  // ]
+  // [
+  //   new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.BTC), FEE_TIERS[2]),
+  //   'USDC-BTC 2'
+  // ],
+  // [
+  //   new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.BTC), FEE_TIERS[3]),
+  //   'USDC-BTC 3'
+  // ]
 ]
 
 const main = async () => {
@@ -130,7 +146,7 @@ const main = async () => {
         swapLogs.push(`Error: ${err.toString()}\n`)
         swapLogs.push('\n\n')
 
-        console.log(`error: ${err.toString()}`)
+        console.log(`error: ${err.toString()}\n`)
         fs.appendFileSync(filePath, swapLogs.join('\n'))
       }
       continue
