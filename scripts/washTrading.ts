@@ -99,7 +99,7 @@ const main = async () => {
     swapLogs.push(
       `swap ${xToY ? 'x -> y' : 'y -> x'}: ${formatLiquidity({
         v: amount
-      })}+ -> ${formatLiquidity({ v: result.amountOut })}`
+      })}+ -> ${formatLiquidity({ v: result.amountOut.addn(1) })}`
     )
     const currentTickBefore = pool.currentTickIndex
 
