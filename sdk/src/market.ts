@@ -965,7 +965,7 @@ export class Market {
   async swapSplit(swap: Swap, signer: Keypair) {
     const tx = await this.swapTransactionSplit(swap)
 
-    await signAndSend(tx, [signer], this.connection)
+    return await signAndSend(tx, [signer], this.connection)
   }
 
   async getReserveBalances(pair: Pair, tokenX: Token, tokenY: Token) {
