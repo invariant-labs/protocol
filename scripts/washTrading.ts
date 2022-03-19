@@ -127,7 +127,7 @@ const main = async () => {
       } else {
         swapLogs.unshift(`Swap error of ${name} at ${new Date(Date.now()).toISOString()}`)
         swapLogs.push(`Price after error: ${formatPrice((await market.getPool(pair)).sqrtPrice)}`)
-        swapLogs.push(`Error: ${err.toString()}'n`)
+        swapLogs.push(`Error: ${err.toString()}\n`)
         swapLogs.push('\n\n')
 
         console.log(`error: ${err.toString()}`)
