@@ -52,7 +52,7 @@ export const formatLiquidity = (price: Decimal) => {
 }
 
 export const isRPCError = (err: any) => {
-  const timeoutError = err.toString().match(/Transaction was not confirmed in/)
+  const timeoutError = err.toString().match(/Error: Transaction was not confirmed in 30./)
   const blockhashError = err.toString().match(/failed to get recent blockhash/)
   return timeoutError !== null || blockhashError !== null
 }

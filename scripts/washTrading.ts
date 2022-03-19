@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import { Provider } from '@project-serum/anchor'
-import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
+import { clusterApiUrl, Connection, Keypair, PublicKey } from '@solana/web3.js'
 import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
 import { MINTER } from './minter'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
@@ -8,22 +8,12 @@ import { Market, Pair, tou64 } from '@invariant-labs/sdk/src'
 import { FEE_TIERS, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { Swap } from '@invariant-labs/sdk/src/market'
 import { BN } from '../sdk-staker/lib'
-import {
-  CloserLimit,
-  getCloserLimit,
-  simulateSwap,
-  SimulateSwapInterface,
-  U128MAX
-} from '@invariant-labs/sdk/lib/utils'
-import {
-  calculatePriceAfterSlippage,
-  calculateSwapStep,
-  findClosestTicks,
-  U64_MAX
-} from '@invariant-labs/sdk/lib/math'
-import { calculatePriceSqrt } from '@invariant-labs/sdk'
-import { getTickFromPrice } from '@invariant-labs/sdk/src/tick'
-import { Tick } from '@invariant-labs/sdk/lib/market'
+import { CloserLimit, getCloserLimit, U128MAX } from '@invariant-labs/sdk/lib/utils'
+import { calculateSwapStep, getDeltaX, getDeltaY, U64_MAX } from '@invariant-labs/sdk/src/math'
+import { findClosestTicks } from '@invariant-labs/sdk/src/math'
+import { formatLiquidity, formatPrice, handleMint, isRPCError } from './utils'
+import { sleep } from '@invariant-labs/sdk'
+import { PoolStructure } from '@invariant-labs/sdk/lib/market'
 
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
@@ -33,56 +23,71 @@ const provider = Provider.local(clusterApiUrl('devnet'), {
   skipPreflight: true
 })
 
-const connection = provider.connection
-const dirPath = './logs/washTrading'
+const connection = new Connection('https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899', {
+  wsEndpoint: 'wss://psytrbhymqlkfrhudd.dev.genesysgo.net:8900',
+  commitment: 'confirmed'
+})
+const dirPath = './scripts/logs/washTrading'
 
 // @ts-expect-error
 const wallet = provider.wallet.payer as Keypair
+
+const pairs: [Pair, string][] = [
+  [
+    new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.USDT), FEE_TIERS[0]),
+    'USDC-USDT 0'
+  ],
+  [
+    new Pair(new PublicKey(MOCK_TOKENS.USDC), new PublicKey(MOCK_TOKENS.USDT), FEE_TIERS[1]),
+    'USDC-USDT 1'
+  ]
+]
 
 const main = async () => {
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true })
   }
-  const filePath = `${dirPath}/washTrading-${Date.now()}`
+  const filePath = `${dirPath}/washTrading-${new Date(Date.now()).toISOString()}`
 
   const market = await Market.build(Network.DEV, provider.wallet, connection)
 
-  const pair = new Pair(
-    new PublicKey(MOCK_TOKENS.USDC),
-    new PublicKey(MOCK_TOKENS.USDT),
-    FEE_TIERS[0]
-  )
-
-  const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-  const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
-  const accountX = await tokenX.createAccount(MINTER.publicKey)
-  const accountY = await tokenY.createAccount(MINTER.publicKey)
-
-  await tokenX.mintTo(accountX, MINTER, [], tou64(1e13))
-  await tokenY.mintTo(accountY, MINTER, [], tou64(1e13))
-
-  const tickmap = await market.getTickmap(pair)
-
   while (true) {
-    const start = Date.now()
-
-    const side = false
+    const [pair, name] = pairs[Math.floor(Math.random() * pairs.length)]
+    const { accountX, accountY } = await handleMint(connection, pair, new BN(1e14), MINTER)
 
     const pool = await market.getPool(pair)
+    const tickmap = await market.getTickmap(pair)
+
+    let randomXtoY = Math.random() > 0.5
+
+    const washTradingLimit = 100 * pair.tickSpacing
+
+    const reverseDirection = randomXtoY
+      ? pool.currentTickIndex < -washTradingLimit
+      : pool.currentTickIndex > washTradingLimit
+
+    const xToY = reverseDirection ? !randomXtoY : randomXtoY
 
     const closerLimit: CloserLimit = {
-      sqrtPriceLimit: side ? { v: new BN(1) } : { v: U128MAX.subn(1) },
-      xToY: side,
+      sqrtPriceLimit: xToY ? { v: new BN(1) } : { v: U128MAX.subn(1) },
+      xToY,
       currentTick: pool.currentTickIndex,
       tickSpacing: pool.tickSpacing,
-      tickmap: tickmap
+      tickmap
     }
-    console.log('liquidity: ', pool.liquidity.v.toString())
 
     const { swapLimit, limitingTick } = getCloserLimit(closerLimit)
 
-    console.log('swapLimit: ', swapLimit.v.toString())
-    console.log('pool.sqrtPrice: ', pool.sqrtPrice.v.toString())
+    // console.log('swapLimit: ', swapLimit.v.toString())
+    // console.log('pool.sqrtPrice: ', pool.sqrtPrice.v.toString())
+    const swapLogs: string[] = []
+
+    swapLogs.push(`Ticks: ${pool.currentTickIndex} -> ${limitingTick?.index} at ${name}`)
+    swapLogs.push(
+      `Price: ${formatPrice(pool.sqrtPrice)} -> ${formatPrice(
+        swapLimit
+      )}, Liquidity: ${formatLiquidity(pool.liquidity)}`
+    )
 
     const result = calculateSwapStep(
       pool.sqrtPrice,
@@ -92,76 +97,53 @@ const main = async () => {
       true,
       pool.fee
     )
+    const amount = result.amountIn.add(result.feeAmount).addn(10)
 
-    console.log(swapLimit.v.eq(result.nextPrice.v))
-    console.log('limitingTick: ', limitingTick?.index)
-    console.log('currentTick: ', pool.currentTickIndex)
-    console.log(
-      `swap ${side ? 'x -> y' : 'y -> x'}: ${result.amountIn.add(result.feeAmount).toString()}`
-    )
-    const currentTickBefore = (await market.getPool(pair)).currentTickIndex
+    swapLogs.push(`swap ${xToY ? 'x -> y' : 'y -> x'}: ${formatLiquidity({ v: amount })}`)
+    const currentTickBefore = pool.currentTickIndex
 
-    // const ticksArray: Tick[] = await market.getClosestTicks(pair, Infinity)
-    // const ticks: Map<number, Tick> = new Map<number, Tick>()
-
-    // for (const tick of ticksArray) {
-    //   ticks.set(tick.index, tick)
-    // }
-
-    // const vars: SimulateSwapInterface = {
-    //   xToY: side,
-    //   byAmountIn: true,
-    //   swapAmount: result.amountIn.add(result.feeAmount).addn(100),
-    //   priceLimit: side ? { v: new BN(1) } : { v: U128MAX.subn(1) },
-    //   slippage: toDecimal(0, 2),
-    //   ticks,
-    //   pool,
-    //   tickmap
-    // }
-
-    // const simulate = simulateSwap(vars)
     const swapVars: Swap = {
-      xToY: side,
-      accountX: accountX,
-      accountY: accountY,
-      amount: result.amountIn.add(result.feeAmount).addn(100),
+      xToY,
+      accountX,
+      accountY,
+      amount,
       byAmountIn: true,
-      estimatedPriceAfterSwap: side ? { v: new BN(1) } : { v: U128MAX.subn(1) },
-      slippage: toDecimal(0, 2),
+      estimatedPriceAfterSwap: xToY ? { v: new BN(1) } : { v: U128MAX.subn(1) },
+      slippage: toDecimal(0),
       pair,
       owner: MINTER.publicKey
     }
 
-    // const result = getTickFromPrice(
-    //   pool.currentTickIndex,
-    //   pool.tickSpacing,
-    //   { v: simulateSwap(vars).priceAfterSwap },
-    //   side
-    // )
+    swapLogs.forEach(log => console.log(log))
 
     try {
-      await market.swapSplit(swapVars, MINTER)
+      const tx = await market.swapSplit(swapVars, MINTER)
+      console.log('success: ', tx)
     } catch (err: any) {
-      const pool = await market.getPool(pair)
-      const swapDetails = `swap details:\nxToY: ${
-        // trunk-ignore(eslint/@typescript-eslint/restrict-template-expressions)
-        swapVars.xToY
-      }\namount: ${swapVars.amount.toString()}\n`
-      const poolDetails = `pool details:\ncurrentTickIndex: ${
-        pool.currentTickIndex
-      }\nliquidity: ${pool.liquidity.v.toString()}\n`
+      if (isRPCError(err)) {
+        console.log(`error: ${err.toString()}`)
+        console.log('RPC error, continuing...\n')
+      } else {
+        swapLogs.unshift(`Swap error of ${name} at ${new Date(Date.now()).toISOString()}`)
+        swapLogs.push(`Price after error: ${formatPrice((await market.getPool(pair)).sqrtPrice)}`)
+        swapLogs.push(`Error: ${err.toString()}'n`)
+        swapLogs.push('\n\n')
 
-      fs.appendFileSync(filePath, swapDetails)
-      fs.appendFileSync(filePath, poolDetails)
-      // trunk-ignore(eslint/@typescript-eslint/restrict-template-expressions)
-      fs.appendFileSync(filePath, `error: ${err.toString()}\n\n`)
+        console.log(`error: ${err.toString()}`)
+        fs.appendFileSync(filePath, swapLogs.join('\n'))
+      }
       continue
     }
-    const currentTickAfter = (await market.getPool(pair)).currentTickIndex
-    console.log(currentTickBefore !== currentTickAfter ? 'Tick crossed' : 'Tick not crossed')
-    console.log('currentTickBefore: ', currentTickBefore)
-    console.log('currentTickAfter: ', currentTickAfter)
-    console.log(`time: ${Date.now() - start}\n`)
+
+    let poolAfter: PoolStructure | undefined = undefined
+    do {
+      if (poolAfter != undefined) console.log('skip')
+      await sleep(500)
+      poolAfter = await market.getPool(pair)
+    } while (poolAfter.sqrtPrice.v.eq(pool.sqrtPrice.v))
+
+    const currentTickAfter = poolAfter.currentTickIndex
+    console.log(`Tick ${currentTickBefore !== currentTickAfter ? 'crossed' : 'not crossed'}\n`)
   }
 }
 // trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
