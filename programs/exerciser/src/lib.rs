@@ -14,8 +14,8 @@ pub mod staker {
 
     use super::*;
 
-    pub fn create_pool(ctx: Context<CreatePool>) -> ProgramResult {
-        instructions::create_pool::handler(ctx)
+    pub fn create_pool(ctx: Context<CreatePool>, amount_in: u64, ratio: u64) -> ProgramResult {
+        ctx.accounts.handler(amount_in, ratio)
     }
 
     pub fn redeem(ctx: Context<Redeem>, _index: i32, nonce: u8) -> ProgramResult {

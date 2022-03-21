@@ -1,3 +1,3 @@
-pub mod incentive;
+pub mod pool;
 
-pub use incentive::*;
+pub use pool::*;
