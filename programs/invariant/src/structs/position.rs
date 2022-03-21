@@ -106,7 +106,7 @@ impl Position {
 
     pub fn initialized_id(&mut self, pool: &mut Pool) {
         self.id = pool.position_iterator;
-        pool.position_iterator += 1;
+        pool.position_iterator = pool.position_iterator.checked_add(1).unwrap();
     }
 
     // for future use
