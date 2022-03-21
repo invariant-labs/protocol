@@ -105,7 +105,7 @@ createSnapshotForNetwork(Network.DEV).then(
 
 createSnapshotForNetwork(Network.MAIN).then(
   () => {
-    console.log('Devnet snapshot done!')
+    console.log('Mainnet snapshot done!')
   },
   err => {
     console.log(err)
