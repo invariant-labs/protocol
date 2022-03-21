@@ -83,8 +83,12 @@ pub fn get_closer_limit(
 }
 
 pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
-    tick.fee_growth_outside_x = pool.fee_growth_global_x - tick.fee_growth_outside_x;
-    tick.fee_growth_outside_y = pool.fee_growth_global_y - tick.fee_growth_outside_y;
+    tick.fee_growth_outside_x = pool
+        .fee_growth_global_x
+        .unchecked_sub(tick.fee_growth_outside_x);
+    pool.fee_growth_global_y = pool
+        .fee_growth_global_y
+        .unchecked_sub(tick.fee_growth_outside_y);
 
     let current_timestamp = get_current_timestamp();
     let seconds_passed: u64 = current_timestamp.checked_sub(pool.start_timestamp).unwrap();
