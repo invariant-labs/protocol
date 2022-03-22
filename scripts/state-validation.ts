@@ -17,9 +17,12 @@ import { Tick } from '@invariant-labs/sdk/lib/market'
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
-const provider = Provider.local(clusterApiUrl('devnet'), {
-  skipPreflight: true
-})
+const provider = Provider.local(
+  'https://solana--mainnet.datahub.figment.io/apikey/182e93d87a1f1d335c9d74d6c7371388',
+  {
+    skipPreflight: true
+  }
+)
 
 const connection = provider.connection
 
@@ -89,7 +92,7 @@ const simulateWithdrawal = (position: Position, pool: PoolStructure) => {
 }
 
 const main = async () => {
-  const market = await Market.build(Network.DEV, provider.wallet, connection)
+  const market = await Market.build(Network.MAIN, provider.wallet, connection)
 
   const pools = await fetchAllPools(market)
 
@@ -104,6 +107,13 @@ const main = async () => {
     const pair = new Pair(pool.tokenX, pool.tokenY, {
       fee: pool.fee.v
     })
+
+    if (
+      !pair.tokenX.equals(new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')) ||
+      !pair.tokenY.equals(new PublicKey('So11111111111111111111111111111111111111112'))
+    )
+      continue
+
     const expectedAddress = await pair.getAddress(market.program.programId)
 
     assert.equal(expectedAddress.toString(), poolAccount.publicKey.toString())

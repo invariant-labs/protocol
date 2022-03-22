@@ -86,7 +86,7 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
     tick.fee_growth_outside_x = pool
         .fee_growth_global_x
         .unchecked_sub(tick.fee_growth_outside_x);
-    pool.fee_growth_global_y = pool
+    tick.fee_growth_outside_y = pool
         .fee_growth_global_y
         .unchecked_sub(tick.fee_growth_outside_y);
 
