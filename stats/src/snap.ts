@@ -25,7 +25,7 @@ export const createSnapshotForNetwork = async (network: Network) => {
 
   switch (network) {
     case Network.MAIN:
-      provider = Provider.local(clusterApiUrl('mainnet-beta'))
+      provider = Provider.local('https://solana-api.projectserum.com')
       fileName = './data/mainnet.json'
       snaps = MAINNET_DATA
       break
