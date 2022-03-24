@@ -61,7 +61,7 @@ export const createToken = async (
 
 // do not compare bump
 export const positionEquals = (a: Position, b: Position) => {
-  return positionWithoutOwnerEquals(a, b) && a.owner === b.owner
+  return positionWithoutOwnerEquals(a, b) && a.owner.equals(b.owner)
 }
 
 export const positionWithoutOwnerEquals = (a: Position, b: Position) => {

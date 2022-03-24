@@ -16,7 +16,6 @@ import {
   RemovePosition,
   TransferPositionOwnership
 } from '@invariant-labs/sdk/src/market'
-import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 import { calculatePriceSqrt } from '@invariant-labs/sdk'
 
 describe('Position list', () => {
@@ -423,10 +422,10 @@ describe('Position list', () => {
       const firstPositionAfter = await market.getPosition(positionOwner.publicKey, transferredIndex)
 
       // move last position
-      positionEquals(lastPositionBefore, firstPositionAfter)
+      assert.ok(positionEquals(lastPositionBefore, firstPositionAfter))
 
       // equals fields of transferred position
-      positionWithoutOwnerEquals(removedPosition, recipientPosition)
+      assert.ok(positionWithoutOwnerEquals(removedPosition, recipientPosition))
       assert.ok(recipientPosition.owner.equals(positionRecipient.publicKey))
 
       // positions length
@@ -462,10 +461,10 @@ describe('Position list', () => {
       )
 
       // move last position
-      positionEquals(lastPositionBefore, middlePositionAfter)
+      assert.ok(positionEquals(lastPositionBefore, middlePositionAfter))
 
       // equals fields of transferred position
-      positionWithoutOwnerEquals(removedPosition, recipientPosition)
+      assert.ok(positionWithoutOwnerEquals(removedPosition, recipientPosition))
       assert.ok(recipientPosition.owner.equals(positionRecipient.publicKey))
 
       // positions length
@@ -493,7 +492,7 @@ describe('Position list', () => {
       )
 
       // equals fields of transferred position
-      positionWithoutOwnerEquals(removedPosition, recipientPosition)
+      assert.ok(positionWithoutOwnerEquals(removedPosition, recipientPosition))
       assert.ok(recipientPosition.owner.equals(positionRecipient.publicKey))
 
       // positions length
@@ -520,7 +519,7 @@ describe('Position list', () => {
       )
 
       // equals fields of transferred position
-      positionWithoutOwnerEquals(removedPosition, recipientPosition)
+      assert.ok(positionWithoutOwnerEquals(removedPosition, recipientPosition))
       assert.ok(recipientPosition.owner.equals(positionRecipient.publicKey))
 
       // positions length
@@ -556,10 +555,10 @@ describe('Position list', () => {
       )
 
       // move last position
-      positionEquals(lastPositionBefore, firstPositionAfter)
+      assert.ok(positionEquals(lastPositionBefore, firstPositionAfter))
 
       // equals fields of transferred position
-      positionWithoutOwnerEquals(removedPosition, ownerNewPosition)
+      assert.ok(positionWithoutOwnerEquals(removedPosition, ownerNewPosition))
       assert.ok(ownerNewPosition.owner.equals(positionOwner.publicKey))
 
       // positions length
