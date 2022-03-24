@@ -25,6 +25,8 @@ export const getCoingeckoPricesData = async (ids: string[]): Promise<CoingeckoAp
   )
 }
 
+const idsToAppend = ['lido-staked-sol']
+
 export const createSnapshotOfPrices = async () => {
   const ids: string[] = await new TokenListProvider().resolve().then(tokens => {
     const tokenList = tokens
@@ -40,7 +42,7 @@ export const createSnapshotOfPrices = async () => {
       }
     })
 
-    return [...new Set(idsList)]
+    return [...new Set(idsList), ...idsToAppend]
   })
 
   const prices = await getCoingeckoPricesData(ids)
