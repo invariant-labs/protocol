@@ -114,6 +114,15 @@ export const calculateSwapStep = (
   byAmountIn: boolean,
   fee: Decimal
 ): SwapResult => {
+  if (liquidity.v.eqn(0)) {
+    return {
+      nextPrice: targetPrice,
+      amountIn: new BN(0),
+      amountOut: new BN(0),
+      feeAmount: new BN(0)
+    }
+  }
+
   const aToB = currentPrice.v.gte(targetPrice.v)
 
   let nextPrice: Decimal = { v: new BN(0) }

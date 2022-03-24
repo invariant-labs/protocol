@@ -1,0 +1,18 @@
+Swap error of USDC-USDT 0 at 2022-03-20T22:26:53.914Z
+Ticks: -84 -> -83 at USDC-USDT 0
+Price: 0.995858805976887680312922 -> 0.995858805978000000000000, Liquidity: 899022117128.159108
+swap y -> x: 0.000004+ -> 0.000002
+Price after error: 0.995958391832924331860879
+Error: Error: tick crossed but not passed to simulation
+
+
+
+Swap error of USDC-USDT 1 at 2022-03-20T22:45:54.753Z
+Ticks: -85 -> -85 at USDC-USDT 1
+Price: 0.995962743146304066289289 -> 0.995759230055000000000000, Liquidity: 8043669011631.664436
+swap x -> y: 1651.452941+ -> 1636.991946
+Price after error: 0.996348208369122689155289
+Error: Error: Raw transaction 2AG3GZex3N3eJnqhjM6XpmiGbkoiWrFHKZagbQgD9JLToy3AXyHc6HJByRVE1pv9z9gPZMA5trvnpmyKWRxehhc4 failed ({"err":{"InstructionError":[0,{"Custom":6007}]}})
+
+
+

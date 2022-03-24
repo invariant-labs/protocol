@@ -44,11 +44,11 @@ impl Pool {
 
         if in_x {
             // trunk-ignore(clippy/unaligned_references)
-            self.fee_growth_global_x += fee_growth;
+            self.fee_growth_global_x = self.fee_growth_global_x.unchecked_add(fee_growth);
             self.fee_protocol_token_x += protocol_fee.0;
         } else {
             // trunk-ignore(clippy/unaligned_references)
-            self.fee_growth_global_y += fee_growth;
+            self.fee_growth_global_y = self.fee_growth_global_y.unchecked_add(fee_growth);
             self.fee_protocol_token_y += protocol_fee.0;
         }
     }

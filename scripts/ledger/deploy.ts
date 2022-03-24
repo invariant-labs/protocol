@@ -1,6 +1,6 @@
-import { MOCK_TOKENS, Network, Pair } from '@invariant-labs/sdk'
-import { FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
+import { Network } from '@invariant-labs/sdk'
 import { CreateFeeTier, Market } from '@invariant-labs/sdk/src/market'
+import { FEE_TIERS } from '@invariant-labs/sdk/src/utils'
 import { Provider } from '@project-serum/anchor'
 import { clusterApiUrl, PublicKey } from '@solana/web3.js'
 import { LedgerWalletProvider } from '../walletProvider/ledger'
@@ -32,7 +32,7 @@ const main = async () => {
 
   const createStateTx = await market.createStateTransaction(ledgerWallet.publicKey)
   await signAndSendLedger(createStateTx, connection, ledgerWallet)
-  //   await createStandardFeeTiers(market, ledgerWallet)
+  await createStandardFeeTiers(market, ledgerWallet)
 }
 
 // trunk-ignore(eslint/@typescript-eslint/no-floating-promises)

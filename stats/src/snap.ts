@@ -3,6 +3,7 @@ import { Provider } from '@project-serum/anchor'
 import { clusterApiUrl, PublicKey } from '@solana/web3.js'
 import fs from 'fs'
 import DEVNET_DATA from '../data/devnet.json'
+import MAINNET_DATA from '../data/mainnet.json'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config()
@@ -23,6 +24,11 @@ export const createSnapshotForNetwork = async (network: Network) => {
   let snaps: Record<string, PoolSnapshot[]>
 
   switch (network) {
+    case Network.MAIN:
+      provider = Provider.local('https://solana-api.projectserum.com')
+      fileName = './data/mainnet.json'
+      snaps = MAINNET_DATA
+      break
     case Network.DEV:
     default:
       provider = Provider.local(clusterApiUrl('devnet'))
@@ -91,6 +97,15 @@ export const createSnapshotForNetwork = async (network: Network) => {
 createSnapshotForNetwork(Network.DEV).then(
   () => {
     console.log('Devnet snapshot done!')
+  },
+  err => {
+    console.log(err)
+  }
+)
+
+createSnapshotForNetwork(Network.MAIN).then(
+  () => {
+    console.log('Mainnet snapshot done!')
   },
   err => {
     console.log(err)
