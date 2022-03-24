@@ -3,7 +3,7 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Market, Pair } from '@invariant-labs/sdk'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import { CreateIncentive, Decimal, Staker } from '../sdk-staker/src/staker'
+import { CreateIncentive, Decimal, Staker } from '../staker-sdk/src/staker'
 import {
   eqDecimal,
   createToken,
@@ -16,7 +16,7 @@ import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { Token } from '@solana/spl-token'
-import { Network } from '../sdk-staker/lib'
+import { Network } from '../staker-sdk/lib'
 
 describe('Create incentive tests', () => {
   const provider = Provider.local()
