@@ -354,7 +354,7 @@ export const getPositionInitData = (
   let amountX: BN
   let amountY: BN
   const tickDelta = calculateTickDelta(tickSpacing, minimumRange, concentration)
-  const lowerTick = currentTick - tickDelta * tickSpacing + minimumRange / 2
+  const lowerTick = currentTick - tickDelta * tickSpacing - minimumRange / 2
   const upperTick = currentTick + tickDelta * tickSpacing + minimumRange / 2
 
   if (byAmountX) {
