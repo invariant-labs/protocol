@@ -108,12 +108,6 @@ const main = async () => {
       fee: pool.fee.v
     })
 
-    if (
-      !pair.tokenX.equals(new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')) ||
-      !pair.tokenY.equals(new PublicKey('So11111111111111111111111111111111111111112'))
-    )
-      continue
-
     const expectedAddress = await pair.getAddress(market.program.programId)
 
     assert.equal(expectedAddress.toString(), poolAccount.publicKey.toString())
