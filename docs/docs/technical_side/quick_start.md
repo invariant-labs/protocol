@@ -26,7 +26,7 @@ import { Market, Pair } from '@invariant-labs/sdk'
 
 | Endpoint |                  Program ID                  |
 | -------- | :------------------------------------------: |
-| Devnet   | ESRPyq2GA57atfh3mpq59skfTka3tmd4euajAqkbsiMm |
-| Mainnet  |                    :soon:                    |
+| Devnet   | 9aiirQKPZ2peE9QrXYmsbTtR7wSDJi2HkQdHuaMpTpei |
+| Mainnet  | 48XDC18nH5FLq8kKfE6MJK2hcPFD7xsJQc4dSAgQWNAi |
 
 Data structures are an exact mapping, with the only changes being type and case. Methods called by a user have a corresponding method, that creates instructions, adds them to transaction, signs, and sends it. All methods (including ones used only by admin) have corresponding methods that return just the instruction.
