@@ -57,6 +57,6 @@ pub fn handler(ctx: Context<CreateUserStake>) -> ProgramResult {
     };
     incentive.num_of_stakes += 1;
     let liquidity = user_stake.liquidity;
-    require!(liquidity > Liquidity::from_integer(0), ZeroLiquidity);
+    require!(!liquidity.is_zero(), ZeroLiquidity);
     Ok(())
 }
