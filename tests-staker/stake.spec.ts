@@ -1,10 +1,10 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
-import { Market, Pair, DENOMINATOR } from '@invariant-labs/sdk'
-import { Network } from '../sdk-staker/src'
+import { Market, Pair, DENOMINATOR, PRICE_DENOMINATOR } from '@invariant-labs/sdk'
+import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import { Decimal, Staker, CreateStake, CreateIncentive } from '../sdk-staker/src/staker'
+import { Decimal, Staker, CreateStake, CreateIncentive } from '../staker-sdk/src/staker'
 import { createToken, tou64, signAndSend, eqDecimal } from './testUtils'
 import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
@@ -102,8 +102,8 @@ describe('Stake tests', () => {
     const seconds = new Date().valueOf() / 1000
     const currentTime = new BN(Math.floor(seconds))
     const reward: Decimal = { v: new BN(10) }
-    const startTime = currentTime.add(new BN(0))
-    const endTime = currentTime.add(new BN(31_000_000))
+    const startTime = { v: currentTime.add(new BN(0)) }
+    const endTime = { v: currentTime.add(new BN(31_000_000)) }
 
     const createIncentiveVars: CreateIncentive = {
       reward,
@@ -151,7 +151,9 @@ describe('Stake tests', () => {
       userTokenY: userTokenYAccount,
       lowerTick,
       upperTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars, positionOwner)
 

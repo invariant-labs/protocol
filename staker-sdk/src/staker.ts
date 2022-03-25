@@ -273,7 +273,7 @@ export class Staker {
   }
 
   public async getIncentive(incentivePubKey: PublicKey) {
-    return (await this.program.account.incentive.fetch(incentivePubKey)) as IncentiveStructure
+    return await this.program.account.incentive.fetch(incentivePubKey) //as IncentiveStructure
   }
 
   public async getUserStakeAddressAndBump(incentive: PublicKey, pool: PublicKey, id: BN) {
@@ -347,8 +347,8 @@ export interface ProgramAuthority {
 }
 export interface CreateIncentive {
   reward: Decimal
-  startTime: BN
-  endTime: BN
+  startTime: Decimal
+  endTime: Decimal
   pool: PublicKey
   founder: PublicKey
   incentiveToken: PublicKey
@@ -393,8 +393,8 @@ export interface EndIncentive {
 
 export interface IncentiveStructure {
   tokenAccount: PublicKey
-  totalRewardUnclaimed: Decimal
-  totalSecondsClaimed: Decimal
+  totalRewardUnclaimed: BN
+  totalSecondsClaimed: BN
   startTime: BN
   endTime: BN
   numOfStakes: BN

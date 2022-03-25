@@ -8,7 +8,7 @@ import { Market, Pair } from '@invariant-labs/sdk/src'
 import { FEE_TIERS, simulateSwap, SimulateSwapInterface } from '@invariant-labs/sdk/src/utils'
 import { Tick } from '@invariant-labs/sdk/src/market'
 import { DENOMINATOR } from '@invariant-labs/sdk'
-import { BN } from '../sdk-staker/lib'
+import { BN } from '../staker-sdk/lib'
 import { Swap } from '@invariant-labs/sdk/lib/market'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 

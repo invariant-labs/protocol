@@ -9,7 +9,6 @@ import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { CreateTick, InitPosition, RemovePosition, Swap } from '@invariant-labs/sdk/src/market'
-import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('withdraw', () => {
   const provider = Provider.local()
@@ -92,9 +91,7 @@ describe('withdraw', () => {
       userTokenY: userTokenYAccount,
       lowerTick,
       upperTick,
-      liquidityDelta,
-      knownPrice: { v: PRICE_DENOMINATOR },
-      slippage: { v: new BN(0) }
+      liquidityDelta
     }
     await market.initPosition(initPositionVars, positionOwner)
 

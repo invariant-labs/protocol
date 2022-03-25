@@ -1,6 +1,5 @@
-use crate::decimalss::*;
+use crate::decimals::*;
 use crate::structs::*;
-use crate::util::get_current_timestamp;
 use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
@@ -65,19 +64,21 @@ impl<'info> DepositToken<'info> for CreateIncentive<'info> {
 pub fn handler(
     ctx: Context<CreateIncentive>,
     nonce: u8,
-    reward: Decimal,
-    start_time: u64,
-    end_time: u64,
+    reward: TokenAmount,
+    start_time: Seconds,
+    end_time: Seconds,
 ) -> ProgramResult {
     msg!("CREATE INCENTIVE");
-    require!(reward != Decimal::new(0), ZeroAmount);
-    let current_time = get_current_timestamp();
+    require!((reward) != TokenAmount::new(0), ZeroAmount);
 
     require!(
-        (start_time + MAX_TIME_BEFORE_START) >= current_time,
+        (start_time + Seconds::new(MAX_TIME_BEFORE_START)) >= Seconds::now(),
         StartInPast
     );
-    require!((current_time + MAX_DURATION) >= end_time, TooLongDuration);
+    require!(
+        (Seconds::now() + Seconds::new(MAX_DURATION)) >= end_time,
+        TooLongDuration
+    );
     let incentive = &mut ctx.accounts.incentive.load_init()?;
 
     **incentive = Incentive {
@@ -85,18 +86,18 @@ pub fn handler(
         pool: *ctx.accounts.pool.to_account_info().key,
         token_account: *ctx.accounts.incentive_token_account.to_account_info().key,
         total_reward_unclaimed: reward,
-        total_seconds_claimed: Decimal::from_integer(0),
+        total_seconds_claimed: Seconds::new(0),
         num_of_stakes: 0,
         start_time,
         end_time,
-        end_claim_time: end_time + WEEK,
+        end_claim_time: end_time + Seconds::new(WEEK),
         nonce,
     };
 
     //send tokens to incentive
     let cpi_ctx = ctx.accounts.deposit();
 
-    token::transfer(cpi_ctx, reward.to_u64())?;
+    token::transfer(cpi_ctx, reward.get())?;
 
     Ok(())
 }
