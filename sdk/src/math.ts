@@ -12,7 +12,7 @@ import {
   PRICE_SCALE
 } from './utils'
 
-export const TICK_LIMIT = 100_000
+export const TICK_LIMIT = 44_364
 export const MAX_TICK = 221_818
 export const MIN_TICK = -MAX_TICK
 export const TICK_SEARCH_RANGE = 256
@@ -114,6 +114,15 @@ export const calculateSwapStep = (
   byAmountIn: boolean,
   fee: Decimal
 ): SwapResult => {
+  if (liquidity.v.eqn(0)) {
+    return {
+      nextPrice: targetPrice,
+      amountIn: new BN(0),
+      amountOut: new BN(0),
+      feeAmount: new BN(0)
+    }
+  }
+
   const aToB = currentPrice.v.gte(targetPrice.v)
 
   let nextPrice: Decimal = { v: new BN(0) }
@@ -165,7 +174,7 @@ export const calculateSwapStep = (
     }
   }
 
-  if (amountIn === null || amountOut === null) throw 'Amount would be greater than u64'
+  if (amountIn === null || amountOut === null) throw new Error('Amount would be greater than u64')
 
   if (!byAmountIn && amountOut.gt(amount)) {
     amountOut = amount

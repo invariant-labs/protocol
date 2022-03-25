@@ -7,7 +7,6 @@ pub fn generate_others(characteristics: DecimalCharacteristics) -> proc_macro::T
     let DecimalCharacteristics {
         struct_name,
         underlying_type,
-        scale,
         ..
     } = characteristics;
 
@@ -48,16 +47,28 @@ pub fn generate_others(characteristics: DecimalCharacteristics) -> proc_macro::T
                     .try_into().unwrap()
                 )
             }
-
         }
 
         impl std::fmt::Display for #struct_name {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                if #scale > 0 {
+                if Self::scale() > 0 {
+                    let mut decimal_places = self.get().checked_rem(Self::one()).unwrap();
+                    let mut non_zero_tail = 0;
+
+                    while decimal_places > 0 {
+                        non_zero_tail += 1;
+                        decimal_places /= 10;
+                    }
+
+                    if non_zero_tail == Self::scale()  {
+                        non_zero_tail -= 1;
+                    }
+
                     write!(
                         f,
-                        "{}.{}",
+                        "{}.{}{}",
                         self.get().checked_div(Self::one()).unwrap(),
+                        "0".repeat((Self::scale() - non_zero_tail).into()),
                         self.get().checked_rem(Self::one()).unwrap()
                     )
                 } else {

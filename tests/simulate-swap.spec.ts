@@ -119,7 +119,9 @@ describe('swap', () => {
         userTokenY: userTokenYAccount,
         lowerTick: i,
         upperTick: i + 10,
-        liquidityDelta: liquidityDelta
+        liquidityDelta: liquidityDelta,
+        knownPrice: { v: PRICE_DENOMINATOR },
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, positionOwner)
     }

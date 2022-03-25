@@ -9,6 +9,7 @@ import { createToken, initEverything } from './testUtils'
 import { assert } from 'chai'
 import { assertThrowsAsync, INVARIANT_ERRORS, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { CreateTick, InitPosition, Swap, WithdrawProtocolFee } from '@invariant-labs/sdk/src/market'
+import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('protocol-fee', () => {
   const provider = Provider.local()
@@ -94,7 +95,9 @@ describe('protocol-fee', () => {
       userTokenY: userTokenYAccount,
       lowerTick,
       upperTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars, positionOwner)
 

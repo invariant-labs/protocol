@@ -34,6 +34,7 @@
     "tickmap",
     "tickv",
     "tweetnacl",
+    "uppest",
     "WSOL"
   ],
   "editor.formatOnSave": true,

@@ -27,11 +27,14 @@ import {
 import {
   bigNumberToBuffer,
   calculateClaimAmount,
+  calculateConcentration,
   calculateFeeGrowthInside,
+  calculateTickDelta,
   calculateTokensOwed,
   CloserLimit,
   FeeGrowthInside,
   getCloserLimit,
+  getConcentrationArray,
   GROWTH_DENOMINATOR,
   PositionClaimData,
   PRICE_DENOMINATOR,
@@ -991,15 +994,15 @@ describe('Math', () => {
       assert.ok(limit.eq(expected))
     })
     it('Up to price limit', async () => {
-      const step = new BN(4)
+      const step = new BN(5)
       const limit = getSearchLimit(new BN(MAX_TICK - 22), step, true)
-      const expected = new BN(MAX_TICK - 2)
+      const expected = new BN(MAX_TICK - 3)
       assert.ok(limit.eq(expected))
     })
     it('At the price limit', async () => {
-      const step = new BN(4)
-      const limit = getSearchLimit(new BN(MAX_TICK - 2), step, true)
-      const expected = new BN(MAX_TICK - 2)
+      const step = new BN(5)
+      const limit = getSearchLimit(new BN(MAX_TICK - 3), step, true)
+      const expected = new BN(MAX_TICK - 3)
       assert.ok(limit.eq(expected))
     })
   })
@@ -1657,8 +1660,92 @@ describe('Math', () => {
           MAX_TICK,
           tickSpacing
         )
+
         assert.equal(tick, expectedTick)
       })
+    })
+  })
+  describe('test calculateConcentration', () => {
+    it('max concentration', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const expectedResult = 1000.5348136431164
+
+      const result = calculateConcentration(tickSpacing, maxConcentration, 0)
+      assert.equal(result, expectedResult)
+    })
+    it('max concentration -1', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const expectedResult = 833.8623739844425
+
+      const result = calculateConcentration(tickSpacing, maxConcentration, 1)
+      assert.equal(result, expectedResult)
+    })
+    it('n = 1000', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const expectedResult = 5.492027214522115
+
+      const result = calculateConcentration(tickSpacing, maxConcentration, 1000)
+      assert.equal(result, expectedResult)
+    })
+  })
+  describe('test test calculateTickDelta', () => {
+    it('max concentration', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const concentration = 1000.5348136431164
+      const expectedResult = 0
+
+      const result = calculateTickDelta(tickSpacing, maxConcentration, concentration)
+      assert.equal(result, expectedResult)
+    })
+    it('max concentration -1', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const concentration = 833.8623739844425
+      const expectedResult = 1
+
+      const result = calculateTickDelta(tickSpacing, maxConcentration, concentration)
+      assert.equal(result, expectedResult)
+    })
+    it('n = 1000', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const concentration = 5.492027214522115
+      const expectedResult = 1000
+
+      const result = calculateTickDelta(tickSpacing, maxConcentration, concentration)
+      assert.equal(result, expectedResult)
+    })
+  })
+
+  describe('test getConcentrationArray', () => {
+    it('high current tick ', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const expectedResult = 11
+
+      const result = getConcentrationArray(tickSpacing, maxConcentration, 221752)
+
+      assert.equal(result.length, expectedResult)
+    })
+    it('middle current tick ', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const expectedResult = 124
+
+      const result = getConcentrationArray(tickSpacing, maxConcentration, 221300)
+      assert.equal(result.length, expectedResult)
+    })
+    it('low current tick ', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const expectedResult = 137
+
+      const result = getConcentrationArray(tickSpacing, maxConcentration, 0)
+      assert.equal(result.length, expectedResult)
     })
   })
 })

@@ -16,6 +16,7 @@ import {
   RemovePosition,
   TransferPositionOwnership
 } from '@invariant-labs/sdk/src/market'
+import { calculatePriceSqrt } from '@invariant-labs/sdk'
 
 describe('Position list', () => {
   const provider = Provider.local()
@@ -129,7 +130,9 @@ describe('Position list', () => {
         userTokenY: userTokenYAccount,
         lowerTick: ticksIndexes[0],
         upperTick: ticksIndexes[1],
-        liquidityDelta: fromInteger(1)
+        liquidityDelta: fromInteger(1),
+        knownPrice: calculatePriceSqrt(initTick),
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, positionOwner)
 
@@ -143,7 +146,9 @@ describe('Position list', () => {
         userTokenY: userTokenYAccount,
         lowerTick: ticksIndexes[0],
         upperTick: ticksIndexes[2],
-        liquidityDelta: fromInteger(1)
+        liquidityDelta: fromInteger(1),
+        knownPrice: calculatePriceSqrt(initTick),
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars2, positionOwner)
 
@@ -154,7 +159,9 @@ describe('Position list', () => {
         userTokenY: userTokenYAccount,
         lowerTick: ticksIndexes[1],
         upperTick: ticksIndexes[4],
-        liquidityDelta: fromInteger(1)
+        liquidityDelta: fromInteger(1),
+        knownPrice: calculatePriceSqrt(initTick),
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars3, positionOwner)
     })
@@ -216,7 +223,9 @@ describe('Position list', () => {
         userTokenY: userTokenYAccount,
         lowerTick: ticksIndexes[1],
         upperTick: ticksIndexes[2],
-        liquidityDelta: fromInteger(1)
+        liquidityDelta: fromInteger(1),
+        knownPrice: calculatePriceSqrt(initTick),
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, positionOwner)
       const positionListAfter = await market.getPositionList(positionOwner.publicKey)
@@ -249,7 +258,9 @@ describe('Position list', () => {
         userTokenY: userTokenYAccount,
         lowerTick: ticksIndexes[0],
         upperTick: ticksIndexes[3],
-        liquidityDelta: fromInteger(1)
+        liquidityDelta: fromInteger(1),
+        knownPrice: calculatePriceSqrt(initTick),
+        slippage: { v: new BN(0) }
       }
       const removePositionVars: RemovePosition = {
         pair,
@@ -305,7 +316,9 @@ describe('Position list', () => {
         userTokenY: userTokenYAccount,
         lowerTick: ticksIndexes[0],
         upperTick: ticksIndexes[1],
-        liquidityDelta: fromInteger(1)
+        liquidityDelta: fromInteger(1),
+        knownPrice: calculatePriceSqrt(initTick),
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, positionOwner)
 
@@ -335,7 +348,9 @@ describe('Position list', () => {
         userTokenY: userTokenYAccount,
         lowerTick: ticksIndexes[0],
         upperTick: ticksIndexes[1],
-        liquidityDelta: fromInteger(1)
+        liquidityDelta: fromInteger(1),
+        knownPrice: calculatePriceSqrt(initTick),
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, positionOwner)
 
@@ -346,7 +361,9 @@ describe('Position list', () => {
         userTokenY: userTokenYAccount,
         lowerTick: ticksIndexes[1],
         upperTick: ticksIndexes[2],
-        liquidityDelta: fromInteger(1)
+        liquidityDelta: fromInteger(1),
+        knownPrice: calculatePriceSqrt(initTick),
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars2, positionOwner)
 
@@ -357,7 +374,9 @@ describe('Position list', () => {
         userTokenY: userTokenYAccount,
         lowerTick: ticksIndexes[1],
         upperTick: ticksIndexes[3],
-        liquidityDelta: fromInteger(1)
+        liquidityDelta: fromInteger(1),
+        knownPrice: calculatePriceSqrt(initTick),
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars3, positionOwner)
     })
@@ -403,10 +422,10 @@ describe('Position list', () => {
       const firstPositionAfter = await market.getPosition(positionOwner.publicKey, transferredIndex)
 
       // move last position
-      positionEquals(lastPositionBefore, firstPositionAfter)
+      assert.ok(positionEquals(lastPositionBefore, firstPositionAfter))
 
       // equals fields of transferred position
-      positionWithoutOwnerEquals(removedPosition, recipientPosition)
+      assert.ok(positionWithoutOwnerEquals(removedPosition, recipientPosition))
       assert.ok(recipientPosition.owner.equals(positionRecipient.publicKey))
 
       // positions length
@@ -442,10 +461,10 @@ describe('Position list', () => {
       )
 
       // move last position
-      positionEquals(lastPositionBefore, middlePositionAfter)
+      assert.ok(positionEquals(lastPositionBefore, middlePositionAfter))
 
       // equals fields of transferred position
-      positionWithoutOwnerEquals(removedPosition, recipientPosition)
+      assert.ok(positionWithoutOwnerEquals(removedPosition, recipientPosition))
       assert.ok(recipientPosition.owner.equals(positionRecipient.publicKey))
 
       // positions length
@@ -473,7 +492,7 @@ describe('Position list', () => {
       )
 
       // equals fields of transferred position
-      positionWithoutOwnerEquals(removedPosition, recipientPosition)
+      assert.ok(positionWithoutOwnerEquals(removedPosition, recipientPosition))
       assert.ok(recipientPosition.owner.equals(positionRecipient.publicKey))
 
       // positions length
@@ -500,7 +519,7 @@ describe('Position list', () => {
       )
 
       // equals fields of transferred position
-      positionWithoutOwnerEquals(removedPosition, recipientPosition)
+      assert.ok(positionWithoutOwnerEquals(removedPosition, recipientPosition))
       assert.ok(recipientPosition.owner.equals(positionRecipient.publicKey))
 
       // positions length
@@ -536,10 +555,10 @@ describe('Position list', () => {
       )
 
       // move last position
-      positionEquals(lastPositionBefore, firstPositionAfter)
+      assert.ok(positionEquals(lastPositionBefore, firstPositionAfter))
 
       // equals fields of transferred position
-      positionWithoutOwnerEquals(removedPosition, ownerNewPosition)
+      assert.ok(positionWithoutOwnerEquals(removedPosition, ownerNewPosition))
       assert.ok(ownerNewPosition.owner.equals(positionOwner.publicKey))
 
       // positions length

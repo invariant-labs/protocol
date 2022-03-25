@@ -22,7 +22,7 @@ use util::*;
 
 use instructions::claim_fee::ClaimFee;
 
-declare_id!("ESRPyq2GA57atfh3mpq59skfTka3tmd4euajAqkbsiMm");
+declare_id!("HyaB3W9q6XdA5xwpU4XnSZV94htfmbmqJXZcEbRaJutt");
 const SEED: &str = "Invariant";
 
 #[program]
@@ -75,9 +75,15 @@ pub mod invariant {
         _lower_tick_index: i32,
         _upper_tick_index: i32,
         liquidity_delta: Liquidity,
+        slippage_limit_lower: Price,
+        slippage_limit_upper: Price,
     ) -> ProgramResult {
-        ctx.accounts
-            .handler(liquidity_delta, *ctx.bumps.get("position").unwrap())
+        ctx.accounts.handler(
+            liquidity_delta,
+            slippage_limit_lower,
+            slippage_limit_upper,
+            *ctx.bumps.get("position").unwrap(),
+        )
     }
 
     pub fn remove_position(

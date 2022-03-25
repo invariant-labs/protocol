@@ -94,6 +94,15 @@ pub fn compute_swap_step(
     by_amount_in: bool,
     fee: FixedPoint,
 ) -> SwapResult {
+    if liquidity.is_zero() {
+        return SwapResult {
+            next_price_sqrt: target_price_sqrt,
+            amount_in: TokenAmount(0),
+            amount_out: TokenAmount(0),
+            fee_amount: TokenAmount(0),
+        };
+    }
+
     let x_to_y = current_price_sqrt >= target_price_sqrt;
 
     let next_price_sqrt;
@@ -328,33 +337,35 @@ pub fn calculate_fee_growth_inside(
 
     // calculate fee growth below
     let fee_growth_below_x = if current_above_lower {
-        tick_lower.fee_growth_outside_x.get()
+        tick_lower.fee_growth_outside_x
     } else {
-        fee_growth_global_x.get() - tick_lower.fee_growth_outside_x.get()
+        fee_growth_global_x.unchecked_sub(tick_lower.fee_growth_outside_x)
     };
     let fee_growth_below_y = if current_above_lower {
-        tick_lower.fee_growth_outside_y.get()
+        tick_lower.fee_growth_outside_y
     } else {
-        fee_growth_global_y.get() - tick_lower.fee_growth_outside_y.get()
+        fee_growth_global_y.unchecked_sub(tick_lower.fee_growth_outside_y)
     };
 
     // calculate fee growth above
     let fee_growth_above_x = if current_below_upper {
-        tick_upper.fee_growth_outside_x.get()
+        tick_upper.fee_growth_outside_x
     } else {
-        fee_growth_global_x.get() - tick_upper.fee_growth_outside_x.get()
+        fee_growth_global_x.unchecked_sub(tick_upper.fee_growth_outside_x)
     };
     let fee_growth_above_y = if current_below_upper {
-        tick_upper.fee_growth_outside_y.get()
+        tick_upper.fee_growth_outside_y
     } else {
-        fee_growth_global_y.get() - tick_upper.fee_growth_outside_y.get()
+        fee_growth_global_y.unchecked_sub(tick_upper.fee_growth_outside_y)
     };
 
     // calculate fee growth inside
-    let fee_growth_inside_x =
-        FeeGrowth::new(fee_growth_global_x.get() - fee_growth_below_x - fee_growth_above_x);
-    let fee_growth_inside_y =
-        FeeGrowth::new(fee_growth_global_y.get() - fee_growth_below_y - fee_growth_above_y);
+    let fee_growth_inside_x = fee_growth_global_x
+        .unchecked_sub(fee_growth_below_x)
+        .unchecked_sub(fee_growth_above_x);
+    let fee_growth_inside_y = fee_growth_global_y
+        .unchecked_sub(fee_growth_below_y)
+        .unchecked_sub(fee_growth_above_y);
 
     (fee_growth_inside_x, fee_growth_inside_y)
 }
@@ -464,21 +475,21 @@ pub fn is_enough_amount_to_push_price(
 }
 
 pub fn calculate_max_liquidity_per_tick(tick_spacing: u16) -> Liquidity {
-    const MAX_TICKS_LENGTH: u128 = 2 * TICK_LIMIT as u128;
-    const MAX_TICKS_AMOUNT: u128 = 2 * MAX_TICK as u128 + 1;
-    const MAX_GLOBAL_MAX_LIQUIDITY: u128 = u128::MAX;
-    const MAX_LIQUIDITY_TIGHT_SPACING: u128 = MAX_GLOBAL_MAX_LIQUIDITY / MAX_TICKS_LENGTH;
+    const MAX_TICKS_AMOUNT_MEMORY_LIMITED: u128 = 2 * TICK_LIMIT as u128;
+    const MAX_TICKS_AMOUNT_PRICE_LIMITED: u128 = 2 * MAX_TICK as u128 + 1;
+    const MAX_GLOBAL_LIQUIDITY: u128 = u128::MAX;
+    const MAX_LIQUIDITY_SIZE_LIMITED: u128 = MAX_GLOBAL_LIQUIDITY / MAX_TICKS_AMOUNT_MEMORY_LIMITED;
 
-    let max_ticks_amount = MAX_TICKS_AMOUNT
+    let ticks_amount_spacing_limited = MAX_TICKS_AMOUNT_PRICE_LIMITED
         .checked_div(tick_spacing.try_into().unwrap())
         .unwrap();
 
-    if MAX_TICKS_LENGTH < max_ticks_amount {
-        Liquidity::new(MAX_LIQUIDITY_TIGHT_SPACING)
+    if MAX_TICKS_AMOUNT_MEMORY_LIMITED < ticks_amount_spacing_limited {
+        Liquidity::new(MAX_LIQUIDITY_SIZE_LIMITED)
     } else {
         Liquidity::new(
-            MAX_GLOBAL_MAX_LIQUIDITY
-                .checked_div(max_ticks_amount)
+            MAX_GLOBAL_LIQUIDITY
+                .checked_div(ticks_amount_spacing_limited)
                 .unwrap(),
         )
     }
@@ -1611,21 +1622,21 @@ mod tests {
     #[test]
     fn test_calculate_max_liquidity_per_tick() {
         let max_liquidity_per_tick_limited_by_space =
-            Liquidity::new(1701411834604692317316873037158841u128);
-        // tick_spacing 1 [L_MAX / 200_000]
+            Liquidity::new(3835118191787693439087713094308090u128);
+        // tick_spacing 1 [L_MAX / 88_728]
         {
             let max_l = calculate_max_liquidity_per_tick(1);
             assert_eq!(max_l, max_liquidity_per_tick_limited_by_space);
         };
-        // tick_spacing 2 [L_MAX / 200_000]
+        // tick_spacing 2 [L_MAX / 88_728]
         {
             let max_l = calculate_max_liquidity_per_tick(2);
             assert_eq!(max_l, max_liquidity_per_tick_limited_by_space);
         }
-        // tick_spacing 3 [L_MAX / 147_879]
+        // tick_spacing 5 [L_MAX / 88_727]
         {
-            let max_l = calculate_max_liquidity_per_tick(3);
-            assert_eq!(max_l, Liquidity::new(2301086475570827930019641784376200));
+            let max_l = calculate_max_liquidity_per_tick(5);
+            assert_eq!(max_l, Liquidity::new(3835161415588698631345301964810804));
         }
         // tick_spacing 100 [L_MAX / 4436]
         {
@@ -1636,11 +1647,11 @@ mod tests {
 
     #[test]
     fn test_max_liquidity_amount() {
-        let liquidity_denominator = U256::from(1000000000000u128);
-        let price_denominator = U256::from(1000000000000000000000000u128);
+        let liquidity_denominator = U256::from(Liquidity::from_integer(1).get());
+        let price_denominator = U256::from(Price::from_integer(1).get());
         let max_token_amount: u64 = (10u128.pow(64) - 1) as u64;
         let max_sqrt_price = calculate_price_sqrt(MAX_TICK);
-        let min_tick_spacing_reachable_max_price = (MAX_TICK + TICK_LIMIT - 1) / TICK_LIMIT; // MAX_TICK - 3
+        let min_tick_spacing_reachable_max_price = (MAX_TICK + TICK_LIMIT - 1) / TICK_LIMIT; // 5
         let almost_max_sqrt_price =
             calculate_price_sqrt(MAX_TICK - min_tick_spacing_reachable_max_price);
         let max_u64 = u64::max_value() as u128;
@@ -1656,8 +1667,8 @@ mod tests {
             let lower_sqrt_price = calculate_price_sqrt(-1);
             let min_price_diff_between_tick = upper_sqrt_price - lower_sqrt_price;
 
-            // MAX_LIQUIDITY = ~ 2^79 * 10^12 ~ 2^119
-            let max_liquidity = U256::from(max_y.0)
+            // MAX_LIQUIDITY = ~2^79 * 10^6 = ~2^99
+            let max_liquidity = U256::from(max_y.get())
                 .checked_mul(liquidity_denominator)
                 .unwrap()
                 .checked_mul(price_denominator)
@@ -1668,10 +1679,7 @@ mod tests {
             assert!(max_liquidity.as_u128().gt(&max_u64));
             assert!(max_liquidity.as_u128().lt(&max_u128));
 
-            assert_eq!(
-                368962546285911549948015102172360883u128,
-                max_liquidity.as_u128()
-            );
+            assert_eq!(368962546285911549948015102172u128, max_liquidity.as_u128());
 
             // delta x (x amount require to fill position)
             // impossible to fully fill position with max liquidity
@@ -1705,21 +1713,22 @@ mod tests {
                 .checked_sub(U256::from(almost_max_sqrt_price.v))
                 .unwrap();
 
-            //  ~2^29 * 10^12 ~ 2^69
+            //  ~2^29 * 10^6 = ~ 2^49
             let multiplier = product.checked_div(diff).unwrap();
 
-            // ~2^93 * 10^12 ~2^133
+            // ~2^93 * 10^6 = ~2^113
             let max_liquidity = U256::from(max_token_amount)
                 .checked_mul(multiplier)
                 .unwrap();
 
-            assert!(max_liquidity.gt(&U256::from(u128::MAX)));
-            assert!(
-                max_liquidity.eq(&U256::from_str("17AF16DEB58131B1D350E9214A7ECE4E15").unwrap())
+            assert!(max_liquidity.lt(&U256::from(u128::MAX)));
+            assert_eq!(
+                max_liquidity,
+                U256::from(4835295146534425838005632517460130u128)
             );
 
             // delta y (y amount require to fill position)
-            // delta y ~ 2^90
+            // delta y ~ 2^88
             // impossible to fully fill position with max liquidity
             let delta_y = max_liquidity
                 .checked_mul(price_denominator)
@@ -1730,7 +1739,7 @@ mod tests {
                 .unwrap();
 
             assert!(delta_y.gt(&U256::from(u64::MAX)));
-            assert_eq!(delta_y, U256::from(819937248758720934737797367u128));
+            assert_eq!(delta_y, U256::from(295177416098739345480985970u128));
         }
         // position range below current price
         // L (by x) = x * sqrt(pu) * sqrt(pc)  / (sqrt(pu) - sqrt(pc))
@@ -1749,19 +1758,17 @@ mod tests {
                 .checked_sub(U256::from(almost_max_sqrt_price.v))
                 .unwrap();
 
-            // ~2^112 * 10^12 ~ 2^152
+            // ~2^112 * 10^6 = ~2^131
             let multiplier = product.checked_div(diff).unwrap();
 
-            // ~2^176 * 10^12 ~2^216
+            // ~2^176 * 10^6 = ~2^196
             let max_liquidity = U256::from(max_token_amount)
                 .checked_mul(multiplier)
                 .unwrap();
 
             assert!(max_liquidity.gt(&U256::from(u128::MAX)));
-            assert!(max_liquidity.eq(&U256::from_str(
-                "C096E12F52D3AD459C1267BE28847279D8B8B01284A7E03FCA9E07"
-            )
-            .unwrap()));
+            assert!(max_liquidity
+                .eq(&U256::from_str("C9F1D0F9A36142B8E4CBC87BC4509E926142668A984E1EB3F").unwrap()));
         }
     }
 }

@@ -8,7 +8,9 @@ pub const PRICE_LIQUIDITY_DENOMINATOR: u128 = 1__0000_0000__0000_0000__00u128;
 
 #[decimal(24)]
 #[zero_copy]
-#[derive(Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(
+    Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord, AnchorSerialize, AnchorDeserialize,
+)]
 pub struct Price {
     pub v: u128,
 }
@@ -44,8 +46,26 @@ pub struct FixedPoint {
 pub struct TokenAmount(pub u64);
 
 impl FeeGrowth {
+    pub fn unchecked_add(self, other: FeeGrowth) -> FeeGrowth {
+        FeeGrowth::new(self.get() + other.get())
+    }
+
+    pub fn unchecked_sub(self, other: FeeGrowth) -> FeeGrowth {
+        FeeGrowth::new(self.get() - other.get())
+    }
+
     pub fn from_fee(liquidity: Liquidity, fee: TokenAmount) -> Self {
-        Self::from_decimal(fee).big_div(liquidity)
+        FeeGrowth::new(
+            U256::from(fee.get())
+                .checked_mul(FeeGrowth::one())
+                .unwrap()
+                .checked_mul(Liquidity::one())
+                .unwrap()
+                .checked_div(liquidity.here())
+                .unwrap()
+                .try_into()
+                .unwrap(),
+        )
     }
 
     pub fn to_fee(self, liquidity: Liquidity) -> FixedPoint {

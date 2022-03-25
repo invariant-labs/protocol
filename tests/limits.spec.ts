@@ -84,7 +84,9 @@ describe('limits', () => {
       userTokenY: userAccountY,
       lowerTick,
       upperTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars, owner)
 
@@ -128,7 +130,9 @@ describe('limits', () => {
         userTokenY: userAccountY,
         lowerTick,
         upperTick,
-        liquidityDelta
+        liquidityDelta,
+        knownPrice: { v: PRICE_DENOMINATOR },
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, owner)
 
@@ -179,7 +183,9 @@ describe('limits', () => {
         userTokenY: userAccountY,
         lowerTick,
         upperTick,
-        liquidityDelta
+        liquidityDelta,
+        knownPrice: { v: PRICE_DENOMINATOR },
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, owner)
 
@@ -240,7 +246,9 @@ describe('limits', () => {
         userTokenY: userAccountY,
         lowerTick,
         upperTick,
-        liquidityDelta
+        liquidityDelta,
+        knownPrice: { v: PRICE_DENOMINATOR },
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, owner)
 
@@ -343,7 +351,9 @@ describe('limits', () => {
         userTokenY: userAccountY,
         lowerTick: 0,
         upperTick: Infinity,
-        liquidityDelta
+        liquidityDelta,
+        knownPrice: { v: PRICE_DENOMINATOR },
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, owner)
 
