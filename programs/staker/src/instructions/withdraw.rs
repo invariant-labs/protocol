@@ -82,7 +82,7 @@ pub fn handler(ctx: Context<Withdraw>, _index: i32, nonce: u8) -> ProgramResult 
         require!(reward_unclaimed != TokenAmount::new(0), ZeroAmount);
 
         let (seconds_inside, reward) = calculate_reward(
-            incentive.total_reward_unclaimed,
+            reward_unclaimed,
             incentive.total_seconds_claimed,
             incentive.start_time,
             incentive.end_time,
@@ -93,8 +93,8 @@ pub fn handler(ctx: Context<Withdraw>, _index: i32, nonce: u8) -> ProgramResult 
         )
         .unwrap();
 
-        incentive.total_seconds_claimed = incentive.total_seconds_claimed - seconds_inside;
-        incentive.total_reward_unclaimed = incentive.total_reward_unclaimed - reward;
+        incentive.total_seconds_claimed = incentive.total_seconds_claimed + seconds_inside;
+        incentive.total_reward_unclaimed = reward_unclaimed - reward;
         user_stake.seconds_per_liquidity_initial = SecondsPerLiquidity::from_integer(0);
         user_stake.liquidity = Liquidity::from_integer(0);
 
