@@ -1,7 +1,6 @@
-use crate::decimal::*;
+use crate::decimals::*;
 use crate::structs::*;
 use crate::util::get_current_slot;
-use crate::util::get_current_timestamp;
 
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
@@ -38,9 +37,8 @@ pub struct CreateUserStake<'info> {
 pub fn handler(ctx: Context<CreateUserStake>) -> ProgramResult {
     msg!("STAKE");
     let mut incentive = ctx.accounts.incentive.load_mut()?;
-    let current_time = get_current_timestamp();
-    require!(current_time >= incentive.start_time, NotStarted);
-    require!(current_time < incentive.end_time, Ended);
+    require!(Seconds::now() >= { incentive.start_time }, NotStarted);
+    require!(Seconds::now() < { incentive.end_time }, Ended);
 
     let user_stake = &mut ctx.accounts.user_stake.load_init()?;
     let position = ctx.accounts.position.load()?;
@@ -57,6 +55,6 @@ pub fn handler(ctx: Context<CreateUserStake>) -> ProgramResult {
     };
     incentive.num_of_stakes += 1;
     let liquidity = user_stake.liquidity;
-    require!(liquidity > Decimal::from_integer(0), ZeroLiquidity);
+    require!(!liquidity.is_zero(), ZeroLiquidity);
     Ok(())
 }

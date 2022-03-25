@@ -1,0 +1,27 @@
+{
+  "name": "stats",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "snap": "ts-node ./src/snap.ts",
+    "cachePrices": "ts-node ./src/cachePrices.ts",
+    "all": "npm run snap && npm run cachePrices"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@invariant-labs/sdk": "0.8.0",
+    "@project-serum/anchor": "0.21.0",
+    "@solana/spl-token": "0.1.6",
+    "@solana/web3.js": "1.31.0",
+    "@vercel/node": "^1.13.0",
+    "dotenv": "^16.0.0",
+    "ts-node": "^10.5.0",
+    "@solana/spl-token-registry": "^0.2.2821",
+    "axios": "^0.26.1"
+  },
+  "devDependencies": {
+    "typescript": "^4.5.5"
+  }
+}

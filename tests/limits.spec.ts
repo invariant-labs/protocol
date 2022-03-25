@@ -2,21 +2,14 @@ import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 import { createTokensAndPool, createUserWithTokens } from './testUtils'
-import {
-  Market,
-  DENOMINATOR,
-  Network,
-  sleep,
-  calculatePriceSqrt,
-  INVARIANT_ERRORS
-} from '@invariant-labs/sdk'
+import { Market, Network, sleep, calculatePriceSqrt, INVARIANT_ERRORS } from '@invariant-labs/sdk'
 import { assertThrowsAsync, getMaxTick, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { Decimal, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 import { getLiquidityByX, getLiquidityByY } from '@invariant-labs/sdk/src/math'
 import { beforeEach } from 'mocha'
 import { assert } from 'chai'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
+import { feeToTickSpacing, FEE_TIERS, PRICE_DENOMINATOR } from '@invariant-labs/sdk/lib/utils'
 import { Pair } from '@invariant-labs/sdk/lib/pair'
 
 describe('limits', () => {
@@ -31,7 +24,7 @@ describe('limits', () => {
   let tokenY: Token
   let pair: Pair
   let mintAuthority: Keypair
-  const assumedTargetPrice: Decimal = { v: new BN(DENOMINATOR) }
+  const assumedTargetPrice: Decimal = { v: new BN(PRICE_DENOMINATOR) }
 
   before(async () => {
     market = await Market.build(
@@ -71,14 +64,14 @@ describe('limits', () => {
       mintAmount,
       lowerTick,
       upperTick,
-      { v: DENOMINATOR },
+      { v: PRICE_DENOMINATOR },
       false
     ).liquidity
     const liquidityByX = getLiquidityByX(
       mintAmount,
       lowerTick,
       upperTick,
-      { v: DENOMINATOR },
+      { v: PRICE_DENOMINATOR },
       false
     ).liquidity
     // calculation of liquidity might not be exactly equal on both tokens so taking smaller one
@@ -91,7 +84,9 @@ describe('limits', () => {
       userTokenY: userAccountY,
       lowerTick,
       upperTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars, owner)
 
@@ -124,7 +119,7 @@ describe('limits', () => {
         mintAmount,
         lowerTick,
         upperTick,
-        { v: DENOMINATOR },
+        { v: PRICE_DENOMINATOR },
         true
       ).liquidity
 
@@ -135,7 +130,9 @@ describe('limits', () => {
         userTokenY: userAccountY,
         lowerTick,
         upperTick,
-        liquidityDelta
+        liquidityDelta,
+        knownPrice: { v: PRICE_DENOMINATOR },
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, owner)
 
@@ -175,7 +172,7 @@ describe('limits', () => {
         mintAmount,
         lowerTick,
         upperTick,
-        { v: DENOMINATOR },
+        { v: PRICE_DENOMINATOR },
         true
       ).liquidity
 
@@ -186,7 +183,9 @@ describe('limits', () => {
         userTokenY: userAccountY,
         lowerTick,
         upperTick,
-        liquidityDelta
+        liquidityDelta,
+        knownPrice: { v: PRICE_DENOMINATOR },
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, owner)
 
@@ -227,14 +226,14 @@ describe('limits', () => {
         posAmount,
         lowerTick,
         upperTick,
-        { v: DENOMINATOR },
+        { v: PRICE_DENOMINATOR },
         false
       ).liquidity
       const liquidityByX = getLiquidityByY(
         posAmount,
         lowerTick,
         upperTick,
-        { v: DENOMINATOR },
+        { v: PRICE_DENOMINATOR },
         false
       ).liquidity
       // calculation of liquidity might not be exactly equal on both tokens so taking smaller one
@@ -247,7 +246,9 @@ describe('limits', () => {
         userTokenY: userAccountY,
         lowerTick,
         upperTick,
-        liquidityDelta
+        liquidityDelta,
+        knownPrice: { v: PRICE_DENOMINATOR },
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, owner)
 
@@ -350,7 +351,9 @@ describe('limits', () => {
         userTokenY: userAccountY,
         lowerTick: 0,
         upperTick: Infinity,
-        liquidityDelta
+        liquidityDelta,
+        knownPrice: { v: PRICE_DENOMINATOR },
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, owner)
 

@@ -1,3 +1,4 @@
+use crate::decimals::*;
 use crate::interfaces::send_tokens::SendTokens;
 use crate::interfaces::take_tokens::TakeTokens;
 use crate::log::get_tick_at_sqrt_price;
@@ -8,7 +9,6 @@ use crate::structs::tickmap::Tickmap;
 use crate::util::get_closer_limit;
 use crate::ErrorCode::*;
 use crate::*;
-use crate::{decimal::Decimal, structs::TokenAmount};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
@@ -117,7 +117,7 @@ impl<'info> Swap<'info> {
         msg!("INVARIANT: SWAP");
         require!(amount != 0, ZeroAmount);
 
-        let sqrt_price_limit = Decimal::new(sqrt_price_limit);
+        let sqrt_price_limit = Price::new(sqrt_price_limit);
         let mut pool = ctx.accounts.pool.load_mut()?;
         let tickmap = ctx.accounts.tickmap.load()?;
         let state = ctx.accounts.state.load()?;
@@ -153,17 +153,17 @@ impl<'info> Swap<'info> {
             );
             // make remaining amount smaller
             if by_amount_in {
-                remaining_amount = remaining_amount - result.amount_in - result.fee_amount;
+                remaining_amount -= result.amount_in + result.fee_amount;
             } else {
-                remaining_amount = remaining_amount - result.amount_out;
+                remaining_amount -= result.amount_out;
             }
 
             pool.add_fee(result.fee_amount, x_to_y);
 
             pool.sqrt_price = result.next_price_sqrt;
 
-            total_amount_in = total_amount_in + result.amount_in + result.fee_amount;
-            total_amount_out = total_amount_out + result.amount_out;
+            total_amount_in += result.amount_in + result.fee_amount;
+            total_amount_out += result.amount_out;
 
             // Fail if price would go over swap limit
             if { pool.sqrt_price } == sqrt_price_limit && !remaining_amount.is_zero() {
@@ -180,6 +180,7 @@ impl<'info> Swap<'info> {
                     result.next_price_sqrt,
                     pool.liquidity,
                     pool.fee,
+                    by_amount_in,
                     x_to_y,
                 );
 
@@ -207,10 +208,13 @@ impl<'info> Swap<'info> {
 
                     // crossing tick
                     if !x_to_y || is_enough_amount_to_cross {
+                        msg!("INVARIANT: CROSSING TICK {} ", { tick.index });
                         cross_tick(&mut tick, &mut pool)?;
-                    } else {
-                        // TODO: decide what to do with this amount
-                        total_amount_in = total_amount_in + remaining_amount;
+                    } else if !remaining_amount.is_zero() {
+                        if by_amount_in {
+                            pool.add_fee(remaining_amount, x_to_y);
+                            total_amount_in += remaining_amount;
+                        }
                         remaining_amount = TokenAmount(0);
                     }
                 }

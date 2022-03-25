@@ -1,6 +1,6 @@
-import { MOCK_TOKENS, Network, Pair } from '@invariant-labs/sdk'
-import { FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
+import { Network } from '@invariant-labs/sdk'
 import { CreateFeeTier, Market } from '@invariant-labs/sdk/src/market'
+import { FEE_TIERS } from '@invariant-labs/sdk/src/utils'
 import { Provider } from '@project-serum/anchor'
 import { clusterApiUrl, PublicKey } from '@solana/web3.js'
 import { LedgerWalletProvider } from '../walletProvider/ledger'
@@ -25,31 +25,14 @@ const createStandardFeeTiers = async (market: Market, ledgerWallet: LedgerWallet
   }
 }
 
-const createUsdcUsdt = async (market: Market, ledgerWallet: LedgerWalletProvider) => {
-  for (const i of [0, 1, 2]) {
-    const pair = new Pair(
-      new PublicKey(MOCK_TOKENS.USDC),
-      new PublicKey(MOCK_TOKENS.USDT),
-      FEE_TIERS[i]
-    )
-
-    market.createPoolTx({ pair, payer: ledgerWallet.publicKey, initTick: 0 })
-    //   const createPoolVars: CreatePool = {
-    //     pair,
-    //     payer: ledgerWallet.publicKey,
-    //   }
-    //   await market.createPool(createPoolVars)
-  }
-}
-
 const main = async () => {
   const ledgerWallet = await getLedgerWallet()
   console.log(`ledger public key: ${ledgerWallet.publicKey}`)
   const market = await Market.build(Network.DEV, provider.wallet, connection)
 
-//   const createStateTx = await market.createStateTransaction(ledgerWallet.publicKey)
-//   await signAndSendLedger(createStateTx, connection, ledgerWallet)
-//   await createStandardFeeTiers(market, ledgerWallet)
+  const createStateTx = await market.createStateTransaction(ledgerWallet.publicKey)
+  await signAndSendLedger(createStateTx, connection, ledgerWallet)
+  await createStandardFeeTiers(market, ledgerWallet)
 }
 
 // trunk-ignore(eslint/@typescript-eslint/no-floating-promises)

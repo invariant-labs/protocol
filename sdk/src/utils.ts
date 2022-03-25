@@ -9,22 +9,44 @@ import {
   Transaction,
   TransactionInstruction
 } from '@solana/web3.js'
-import { calculatePriceSqrt, MAX_TICK, Pair, TICK_LIMIT, Market } from '.'
-import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap, Tick, PoolData } from './market'
-import { calculatePriceAfterSlippage, calculateSwapStep, isEnoughAmountToPushPrice } from './math'
-import { getTickFromPrice } from './tick'
+import { calculatePriceSqrt, MAX_TICK, Pair, TICK_LIMIT, Market, MIN_TICK } from '.'
+import {
+  Decimal,
+  FeeTier,
+  FEE_TIER,
+  PoolStructure,
+  Tickmap,
+  Tick,
+  PoolData,
+  Errors,
+  PositionInitData
+} from './market'
+import {
+  calculatePriceAfterSlippage,
+  calculateSwapStep,
+  getLiquidityByX,
+  getLiquidityByY,
+  isEnoughAmountToPushPrice
+} from './math'
+import { alignTickToSpacing, getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
 import { struct, u32, u8 } from '@solana/buffer-layout'
+import { lstat } from 'fs'
 
 export const SEED = 'Invariant'
 export const DECIMAL = 12
+export const LIQUIDITY_SCALE = 6
 export const GROWTH_SCALE = 24
+export const PRICE_SCALE = 24
 export const FEE_DECIMAL = 5
 export const DENOMINATOR = new BN(10).pow(new BN(DECIMAL))
+export const LIQUIDITY_DENOMINATOR = new BN(10).pow(new BN(LIQUIDITY_SCALE))
+export const PRICE_DENOMINATOR = new BN(10).pow(new BN(PRICE_SCALE))
 export const GROWTH_DENOMINATOR = new BN(10).pow(new BN(GROWTH_SCALE))
 export const FEE_OFFSET = new BN(10).pow(new BN(DECIMAL - FEE_DECIMAL))
 export const FEE_DENOMINATOR = 10 ** FEE_DECIMAL
 export const U128MAX = new BN('340282366920938463463374607431768211455')
+export const CONCENTRATION_FACTOR = 1.00001526069123
 
 export enum ERRORS {
   SIGNATURE = 'Error: Signature verification failed',
@@ -262,6 +284,110 @@ export const toDecimal = (x: number, decimals: number = 0): Decimal => {
   return { v: DENOMINATOR.muln(x).div(new BN(10).pow(new BN(decimals))) }
 }
 
+export const toDecimalWithDenominator = (x: number, denominator: BN, decimals: number = 0) => {
+  return { v: denominator.muln(x).div(new BN(10).pow(new BN(decimals))) }
+}
+
+export const calculateConcentration = (tickSpacing: number, minimumRange: number, n: number) => {
+  const concentration = 1 / (1 - Math.pow(1.0001, (-tickSpacing * (minimumRange + 2 * n)) / 4))
+  return concentration / CONCENTRATION_FACTOR
+}
+
+export const calculateTickDelta = (
+  tickSpacing: number,
+  minimumRange: number,
+  concentration: number
+) => {
+  const base = Math.pow(1.0001, -(tickSpacing / 4))
+  const logArg =
+    (1 - 1 / (concentration * CONCENTRATION_FACTOR)) /
+    Math.pow(1.0001, (-tickSpacing * minimumRange) / 4)
+
+  return Math.ceil(Math.log(logArg) / Math.log(base) / 2)
+}
+
+export const getConcentrationArray = (
+  tickSpacing: number,
+  minimumRange: number,
+  currentTick: number
+): number[] => {
+  let concentrations: number[] = []
+  let counter = 0
+  let concentration = 0
+  let lastConcentration = calculateConcentration(tickSpacing, minimumRange, counter) + 1
+  let concentrationDelta = 1
+
+  while (concentrationDelta >= 1) {
+    concentration = calculateConcentration(tickSpacing, minimumRange, counter)
+    concentrations.push(concentration)
+    concentrationDelta = lastConcentration - concentration
+    lastConcentration = concentration
+    counter++
+  }
+  concentration = Math.ceil(concentrations[concentrations.length - 1])
+
+  while (concentration > 1) {
+    concentrations.push(concentration)
+    concentration--
+  }
+  const maxTick = alignTickToSpacing(MAX_TICK, tickSpacing)
+  if ((minimumRange / 2) * tickSpacing > maxTick - Math.abs(currentTick)) {
+    throw new Error(Errors.RangeLimitReached)
+  }
+  const limitIndex =
+    (maxTick - Math.abs(currentTick) - (minimumRange / 2) * tickSpacing) / tickSpacing
+
+  return concentrations.slice(0, limitIndex)
+}
+
+export const getPositionInitData = (
+  tokenAmount: BN,
+  tickSpacing: number,
+  concentration: number,
+  minimumRange: number,
+  currentTick: number,
+  currentPriceSqrt: Decimal,
+  roundingUp: boolean,
+  byAmountX: boolean
+): PositionInitData => {
+  let liquidity: Decimal
+  let amountX: BN
+  let amountY: BN
+  const tickDelta = calculateTickDelta(tickSpacing, minimumRange, concentration)
+  const lowerTick = currentTick - (tickDelta + minimumRange / 2) * tickSpacing
+  const upperTick = currentTick + (tickDelta + minimumRange / 2) * tickSpacing
+
+  if (byAmountX) {
+    const result = getLiquidityByX(tokenAmount, lowerTick, upperTick, currentPriceSqrt, roundingUp)
+    liquidity = result.liquidity
+    amountX = tokenAmount
+    amountY = result.y
+  } else {
+    const result = getLiquidityByY(tokenAmount, lowerTick, upperTick, currentPriceSqrt, roundingUp)
+
+    liquidity = result.liquidity
+    amountX = result.x
+    amountY = tokenAmount
+  }
+  const positionData: PositionInitData = {
+    lowerTick,
+    upperTick,
+    liquidity,
+    amountX: amountX,
+    amountY: amountY
+  }
+
+  return positionData
+}
+
+export const toPrice = (x: number, decimals: number = 0): Decimal => {
+  return toDecimalWithDenominator(x, PRICE_DENOMINATOR, decimals)
+}
+
+export const toPercent = (x: number, decimals: number = 0): Decimal => {
+  return toDecimalWithDenominator(x, DENOMINATOR, decimals)
+}
+
 export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
   const { sqrtPriceLimit, xToY, currentTick, tickSpacing, tickmap } = closerLimit
   let index: number | null
@@ -347,7 +473,6 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     remainingAmount = remainingAmount.sub(amountDiff)
     sqrtPrice = result.nextPrice
 
-    // here
     if (sqrtPrice.v.eq(priceLimitAfterSlippage.v) && remainingAmount.gt(new BN(0))) {
       throw new Error('Price would cross swap limit')
     }
@@ -362,6 +487,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
         result.nextPrice,
         pool.liquidity,
         pool.fee,
+        byAmountIn,
         xToY
       )
 
@@ -378,8 +504,10 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
           } else {
             liquidity = { v: liquidity.v.sub(tick.liquidityChange.v) }
           }
-        } else {
-          accumulatedAmountIn = accumulatedAmountIn.add(remainingAmount)
+        } else if (!remainingAmount.eqn(0)) {
+          if (byAmountIn) {
+            accumulatedAmountIn = accumulatedAmountIn.add(remainingAmount)
+          }
           remainingAmount = new BN(0)
         }
       }
@@ -395,9 +523,16 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     // add amount to array if tick was initialized otherwise accumulate amount for next iteration
     accumulatedAmount = accumulatedAmount.add(amountDiff)
     // trunk-ignore(eslint/@typescript-eslint/prefer-optional-chain)
-    if ((limitingTick !== null && limitingTick.initialized) || remainingAmount.eqn(0)) {
+    const isTickInitialized = limitingTick !== null && limitingTick.initialized
+
+    if (isTickInitialized || remainingAmount.eqn(0)) {
       amountPerTick.push(accumulatedAmount)
       accumulatedAmount = new BN(0)
+    }
+
+    // in the future this can be replaced by counter
+    if (!isTickInitialized && liquidity.v.eqn(0)) {
+      throw new Error('Too large liquidity gap')
     }
 
     if (currentTickIndex === previousTickIndex && !remainingAmount.eqn(0)) {
@@ -405,6 +540,10 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     } else {
       previousTickIndex = currentTickIndex
     }
+  }
+
+  if (accumulatedAmountOut.isZero()) {
+    throw new Error('Amount out is zero')
   }
 
   return {
@@ -484,20 +623,20 @@ export const calculateTokensOwed = ({
   if (feeGrowthInsideX.lt(position.feeGrowthInsideX.v)) {
     tokensOwedX = position.liquidity.v
       .mul(feeGrowthInsideX.add(U128MAX.sub(position.feeGrowthInsideX.v)))
-      .div(GROWTH_DENOMINATOR)
+      .div(new BN(10).pow(new BN(DECIMAL + LIQUIDITY_SCALE)))
   } else {
     tokensOwedX = position.liquidity.v
       .mul(feeGrowthInsideX.sub(position.feeGrowthInsideX.v))
-      .div(GROWTH_DENOMINATOR)
+      .div(new BN(10).pow(new BN(DECIMAL + LIQUIDITY_SCALE)))
   }
   if (feeGrowthInsideY.lt(position.feeGrowthInsideY.v)) {
     tokensOwedY = position.liquidity.v
       .mul(feeGrowthInsideY.add(U128MAX.sub(position.feeGrowthInsideY.v)))
-      .div(GROWTH_DENOMINATOR)
+      .div(new BN(10).pow(new BN(DECIMAL + LIQUIDITY_SCALE)))
   } else {
     tokensOwedY = position.liquidity.v
       .mul(feeGrowthInsideY.sub(position.feeGrowthInsideY.v))
-      .div(GROWTH_DENOMINATOR)
+      .div(new BN(10).pow(new BN(DECIMAL + LIQUIDITY_SCALE)))
   }
   const tokensOwedXTotal = position.tokensOwedX.v.add(tokensOwedX).div(DENOMINATOR)
   const tokensOwedYTotal = position.tokensOwedY.v.add(tokensOwedY).div(DENOMINATOR)

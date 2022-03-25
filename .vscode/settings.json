@@ -5,6 +5,7 @@
     "Cand",
     "devnet",
     "divn",
+    "Euklid",
     "feetier",
     "feetierv",
     "initializable",
@@ -20,6 +21,7 @@
     "positionlistv",
     "positionv",
     "Pubkey",
+    "repr",
     "seedv",
     "shln",
     "shrn",
@@ -32,6 +34,7 @@
     "tickmap",
     "tickv",
     "tweetnacl",
+    "uppest",
     "WSOL"
   ],
   "editor.formatOnSave": true,

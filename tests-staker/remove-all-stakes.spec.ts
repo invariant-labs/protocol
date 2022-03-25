@@ -1,10 +1,10 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Market, Pair, sleep } from '@invariant-labs/sdk/src'
-import { Network } from '../sdk-staker/src'
+import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import { CreateIncentive, Decimal, Staker } from '../sdk-staker/src/staker'
+import { CreateIncentive, Decimal, Staker } from '../staker-sdk/src/staker'
 import {
   createToken,
   tou64,

@@ -4,11 +4,12 @@ import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken, createUserWithTokens, initEverything } from './testUtils'
-import { Market, Pair, tou64, DENOMINATOR, Network } from '@invariant-labs/sdk'
+import { Market, Pair, tou64, Network, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { CreateTick, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
+import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('target', () => {
   const provider = Provider.local()
@@ -80,7 +81,7 @@ describe('target', () => {
       mintAuthority,
       mintAmount
     )
-    const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) }
+    const liquidityDelta = { v: new BN(1000000).mul(LIQUIDITY_DENOMINATOR) }
 
     const initPositionVars: InitPosition = {
       pair,
@@ -89,7 +90,9 @@ describe('target', () => {
       userTokenY: userAccountY,
       lowerTick,
       upperTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars, owner)
 

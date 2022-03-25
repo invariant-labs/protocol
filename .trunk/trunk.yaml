@@ -13,5 +13,5 @@ lint:
     - linters: [ALL]
       paths:
         - sdk/src/idl/**
-        - sdk-staker/src/idl/**
+        - staker-sdk/src/idl/**
         - .eslintrc.js
