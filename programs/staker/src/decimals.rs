@@ -40,3 +40,9 @@ pub struct TokenAmount {
 pub struct Seconds {
     pub v: u64,
 }
+
+impl Seconds {
+    pub fn now() -> Self {
+        Seconds::new(Clock::get().unwrap().unix_timestamp.try_into().unwrap())
+    }
+}

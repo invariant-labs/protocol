@@ -60,7 +60,6 @@ pub fn handler(ctx: Context<Withdraw>, _index: i32, nonce: u8) -> ProgramResult 
     msg!("WITHDRAW");
 
     let mut incentive = ctx.accounts.incentive.load_mut()?;
-    let current_time = Seconds::new(get_current_timestamp());
     {
         let user_stake = &mut ctx.accounts.user_stake.load_mut()?;
         let position = ctx.accounts.position.load()?;
@@ -89,7 +88,7 @@ pub fn handler(ctx: Context<Withdraw>, _index: i32, nonce: u8) -> ProgramResult 
             user_stake.liquidity,
             user_stake.seconds_per_liquidity_initial,
             seconds_per_liquidity_inside,
-            current_time,
+            Seconds::now(),
         )
         .unwrap();
 
@@ -106,7 +105,7 @@ pub fn handler(ctx: Context<Withdraw>, _index: i32, nonce: u8) -> ProgramResult 
         token::transfer(cpi_ctx, reward.get())?;
     }
 
-    if current_time > { incentive.end_time } {
+    if Seconds::now() > { incentive.end_time } {
         close(
             ctx.accounts.user_stake.to_account_info(),
             ctx.accounts.owner.to_account_info(),

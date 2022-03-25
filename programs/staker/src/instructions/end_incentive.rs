@@ -1,7 +1,6 @@
 use crate::decimals::*;
 use crate::structs::*;
 use crate::util;
-use crate::util::get_current_timestamp;
 use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, TokenAccount, Transfer};
@@ -47,8 +46,7 @@ impl<'info> ReturnFounds<'info> {
 pub fn handler(ctx: Context<ReturnFounds>, nonce: u8) -> ProgramResult {
     {
         let incentive = ctx.accounts.incentive.load()?;
-        let current_time = Seconds::new(get_current_timestamp());
-        require!(current_time > { incentive.end_claim_time }, TooEarly);
+        require!(Seconds::now() > { incentive.end_claim_time }, TooEarly);
         require!(incentive.num_of_stakes == 0, StakeExist);
         let remaining_reward = incentive.total_reward_unclaimed;
 

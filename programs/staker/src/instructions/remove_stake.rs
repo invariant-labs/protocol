@@ -1,6 +1,5 @@
 use crate::decimals::*;
 use crate::structs::{Incentive, UserStake};
-use crate::util::get_current_timestamp;
 use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
 
@@ -18,8 +17,7 @@ pub struct RemoveStake<'info> {
 
 pub fn handler(ctx: Context<RemoveStake>) -> ProgramResult {
     let mut incentive = ctx.accounts.incentive.load_mut()?;
-    let current_time = Seconds::new(get_current_timestamp());
-    require!(current_time > { incentive.end_claim_time }, TooEarly);
+    require!(Seconds::now() > { incentive.end_claim_time }, TooEarly);
     require!(incentive.num_of_stakes != 0, NoStakes);
 
     // decrease number of stakes by 1

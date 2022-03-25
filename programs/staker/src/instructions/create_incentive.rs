@@ -1,6 +1,5 @@
 use crate::decimals::*;
 use crate::structs::*;
-use crate::util::get_current_timestamp;
 use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
@@ -71,14 +70,13 @@ pub fn handler(
 ) -> ProgramResult {
     msg!("CREATE INCENTIVE");
     require!((reward) != TokenAmount::new(0), ZeroAmount);
-    let current_time = Seconds::new(get_current_timestamp());
 
     require!(
-        (start_time + Seconds::new(MAX_TIME_BEFORE_START)) >= current_time,
+        (start_time + Seconds::new(MAX_TIME_BEFORE_START)) >= Seconds::now(),
         StartInPast
     );
     require!(
-        (current_time + Seconds::new(MAX_DURATION)) >= end_time,
+        (Seconds::now() + Seconds::new(MAX_DURATION)) >= end_time,
         TooLongDuration
     );
     let incentive = &mut ctx.accounts.incentive.load_init()?;
