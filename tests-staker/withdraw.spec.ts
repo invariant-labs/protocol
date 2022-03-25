@@ -1,6 +1,6 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
-import { Market, Pair, DENOMINATOR, sleep } from '@invariant-labs/sdk'
+import { Market, Pair, DENOMINATOR, sleep, PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { createToken, tou64, getTime, signAndSend, almostEqual } from './testUtils'
@@ -155,7 +155,9 @@ describe('Withdraw tests', () => {
       userTokenY: userTokenYAccount,
       lowerTick,
       upperTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars, positionOwner)
 

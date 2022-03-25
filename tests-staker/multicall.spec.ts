@@ -1,6 +1,6 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
-import { Market, Pair, DENOMINATOR, sleep } from '@invariant-labs/sdk'
+import { Market, Pair, DENOMINATOR, sleep, PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { createToken, tou64, getTime, signAndSend, almostEqual } from './testUtils'
@@ -207,7 +207,9 @@ describe('Multicall test', () => {
       userTokenY: firstUserTokenYAccount,
       lowerTick: firstLowerTick,
       upperTick: firstUpperTick,
-      liquidityDelta: fromInteger(1_000_000)
+      liquidityDelta: fromInteger(1_000_000),
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars, firstPositionOwner)
     // create second position
@@ -235,7 +237,9 @@ describe('Multicall test', () => {
       userTokenY: secondUserTokenYAccount,
       lowerTick: secondLowerTick,
       upperTick: secondUpperTick,
-      liquidityDelta: fromInteger(3_000_000)
+      liquidityDelta: fromInteger(3_000_000),
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars2, secondPositionOwner)
     const index = 0
