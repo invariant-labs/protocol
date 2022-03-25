@@ -93,8 +93,8 @@ pub fn handler(ctx: Context<Withdraw>, _index: i32, nonce: u8) -> ProgramResult 
         )
         .unwrap();
 
-        incentive.total_seconds_claimed = incentive.total_seconds_claimed.add(seconds_inside);
-        incentive.total_reward_unclaimed = incentive.total_reward_unclaimed.sub(reward);
+        incentive.total_seconds_claimed = incentive.total_seconds_claimed - seconds_inside;
+        incentive.total_reward_unclaimed = incentive.total_reward_unclaimed - reward;
         user_stake.seconds_per_liquidity_initial = SecondsPerLiquidity::from_integer(0);
         user_stake.liquidity = Liquidity::from_integer(0);
 

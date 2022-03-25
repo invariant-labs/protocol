@@ -19,16 +19,13 @@ pub fn calculate_reward(
     }
 
     let seconds_inside = Seconds::from_decimal(
-        (seconds_per_liquidity_inside.sub(seconds_per_liquidity_inside_initial)).mul(liquidity),
+        (seconds_per_liquidity_inside - seconds_per_liquidity_inside_initial) * liquidity,
     );
 
-    let total_seconds_unclaimed = cmp::max(end_time, current_time)
-        .sub(start_time)
-        .sub(total_seconds_claimed);
+    let total_seconds_unclaimed =
+        cmp::max(end_time, current_time) - start_time - total_seconds_claimed;
 
-    let result = total_reward_unclaimed
-        .mul(seconds_inside)
-        .div(total_seconds_unclaimed);
+    let result = total_reward_unclaimed * seconds_inside / total_seconds_unclaimed;
     return Ok((seconds_inside, result));
 }
 
