@@ -11,7 +11,7 @@ use invariant::structs::Position;
 #[instruction(index: u32)]
 pub struct CreateUserStake<'info> {
     #[account(init,
-        seeds = [b"staker", incentive.to_account_info().key.as_ref(), position.load()?.pool.as_ref(), &position.load()?.id.to_le_bytes() ],
+        seeds = [b"staker", incentive.key().as_ref(), position.load()?.pool.as_ref(), &position.load()?.id.to_le_bytes() ],
         payer = owner,
         bump)]
     pub user_stake: AccountLoader<'info, UserStake>,
@@ -47,9 +47,9 @@ pub fn handler(ctx: Context<CreateUserStake>) -> ProgramResult {
     require!(slot == update_slot, SlotsAreNotEqual);
 
     **user_stake = UserStake {
-        position: *ctx.accounts.position.to_account_info().key,
+        position: ctx.accounts.position.key(),
         liquidity: Decimal::new(position.liquidity.v),
-        incentive: *ctx.accounts.incentive.to_account_info().key,
+        incentive: ctx.accounts.incentive.key(),
         bump: *ctx.bumps.get("user_stake").unwrap(),
         seconds_per_liquidity_initial: Decimal::new(position.seconds_per_liquidity_inside.v),
     };

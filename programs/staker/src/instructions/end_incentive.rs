@@ -11,12 +11,12 @@ use util::STAKER_SEED;
 pub struct ReturnFounds<'info> {
     #[account(mut,
         close = founder,
-        constraint = &incentive.load()?.founder == founder.to_account_info().key @ InvalidFounder
+        constraint = incentive.load()?.founder == founder.key() @ InvalidFounder
     )]
     pub incentive: AccountLoader<'info, Incentive>,
     #[account(mut,
-        constraint = &incentive_token_account.owner == staker_authority.to_account_info().key @ InvalidTokenAccount,
-        constraint = &incentive.load()?.token_account == incentive_token_account.to_account_info().key @ InvalidTokenAccount,
+        constraint = incentive_token_account.owner == staker_authority.key() @ InvalidTokenAccount,
+        constraint = incentive.load()?.token_account == incentive_token_account.key() @ InvalidTokenAccount,
         constraint = incentive_token_account.mint == incentive_token.key() @ InvalidMint
     )]
     pub incentive_token_account: Account<'info, TokenAccount>,

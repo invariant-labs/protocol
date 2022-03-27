@@ -5,11 +5,11 @@ use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct RemoveStake<'info> {
-    #[account(mut, constraint = &incentive.load()?.founder == founder.to_account_info().key @ InvalidFounder)]
+    #[account(mut, constraint = incentive.load()?.founder == founder.key() @ InvalidFounder)]
     pub incentive: AccountLoader<'info, Incentive>,
     #[account(mut,
         close = founder,
-        constraint = &user_stake.load()?.incentive == incentive.to_account_info().key @ InvalidStake
+        constraint = user_stake.load()?.incentive == incentive.key() @ InvalidStake
     )]
     pub user_stake: AccountLoader<'info, UserStake>,
     pub founder: Signer<'info>,
