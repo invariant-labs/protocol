@@ -5,12 +5,14 @@ import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
 import { Decimal, Staker, CreateStake, CreateIncentive } from '../staker-sdk/src/staker'
-import { createToken, tou64, signAndSend, eqDecimal } from './testUtils'
+import { createToken, tou64, signAndSend, eqDecimal, assertThrowsAsync } from './testUtils'
 import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { fromFee } from '@invariant-labs/sdk/lib/utils'
+import { fromFee, toPercent } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { InitPosition, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
+import { FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
+import { calculatePriceSqrt } from '@invariant-labs/sdk'
 
 describe('Stake tests', () => {
   const provider = Provider.local()
@@ -33,6 +35,8 @@ describe('Stake tests', () => {
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
+  let userTokenXAccount: PublicKey
+  let userTokenYAccount: PublicKey
 
   before(async () => {
     // create staker
@@ -133,8 +137,8 @@ describe('Stake tests', () => {
     const upperTick = 10
     const lowerTick = -20
 
-    const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
-    const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
+    userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
+    userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
     const mintAmount = tou64(new BN(10).pow(new BN(10)))
 
     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
@@ -201,5 +205,69 @@ describe('Stake tests', () => {
       eqDecimal(stake.secondsPerLiquidityInitial, positionStructAfter.secondsPerLiquidityInside)
     )
     assert.ok(eqDecimal(stake.liquidity, liquidity))
+  })
+  it('Pass position from other pool to incentive should fail', async () => {
+    const feeTier = FEE_TIERS[0]
+    const lowerTick = -10
+    const upperTick = 10
+    const secondPair = new Pair(tokenX.publicKey, tokenY.publicKey, feeTier)
+    await market.createFeeTier(
+      {
+        feeTier: feeTier,
+        admin: admin.publicKey
+      },
+      admin
+    )
+    await market.createPool({
+      pair: secondPair,
+      payer: positionOwner
+    })
+
+    const newPositionIndex = (await market.getPositionList(positionOwner.publicKey)).head
+
+    await market.initPosition(
+      {
+        pair: secondPair,
+        knownPrice: calculatePriceSqrt(0),
+        liquidityDelta: { v: new BN(1) },
+        lowerTick,
+        upperTick,
+        userTokenX: userTokenXAccount,
+        userTokenY: userTokenYAccount,
+        slippage: { v: DENOMINATOR },
+        owner: positionOwner.publicKey
+      },
+      positionOwner
+    )
+
+    const { positionAddress } = await market.getPositionAddress(
+      positionOwner.publicKey,
+      newPositionIndex
+    )
+    const position = await market.getPosition(positionOwner.publicKey, newPositionIndex)
+
+    const [poolAddress] = await secondPair.getAddressAndBump(anchor.workspace.Invariant.programId)
+    const update: UpdateSecondsPerLiquidity = {
+      pair: secondPair,
+      owner: positionOwner.publicKey,
+      lowerTickIndex: lowerTick,
+      upperTickIndex: upperTick,
+      index: newPositionIndex
+    }
+    const createStake: CreateStake = {
+      pool: poolAddress,
+      id: position.id,
+      index: newPositionIndex,
+      position: positionAddress,
+      incentive: incentiveAccount.publicKey,
+      owner: positionOwner.publicKey,
+      invariant: anchor.workspace.Invariant.programId
+    }
+
+    const updateIx = await market.updateSecondsPerLiquidityInstruction(update)
+    const stakeIx = await staker.createStakeIx(createStake)
+    const tx = new Transaction().add(updateIx).add(stakeIx)
+
+    await assertThrowsAsync(signAndSend(tx, [positionOwner], staker.connection))
   })
 })
