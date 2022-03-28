@@ -1,12 +1,12 @@
 ---
-title: Creating a Pool
+title: Pool
 
-slug: /sdk/create_pool
+slug: /technical_side/pool
 ---
 
 ### Structure of Pool
 
-The date structure is defined as:
+Each pool has following structure:
 
 ```rust
 pub struct Pool {
@@ -61,14 +61,3 @@ pub struct Pool {
 | oracle_address               | Pubkey     | The contract address                                                                  |
 | oracle_initialized           | bool       | True or False                                                                         |
 | bump                         | u8         | seed used to ensure the generated address doesn't collide with any other existing one |
-
-### Pool Creation
-
-```rust
-pub fn create_pool(ctx: Context<CreatePool>, init_tick: i32) -> ProgramResult {
-        ctx.accounts
-            .handler(init_tick, *ctx.bumps.get("pool").unwrap())
-    }
-```
-
-The `init_tick` is just the initial tick of the Pool. For stable pair initial tick should be near to 0.

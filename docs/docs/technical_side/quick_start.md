@@ -1,7 +1,7 @@
 ---
 title: Quick start
 
-slug: /sdk/quick_start
+slug: /technical_side/quick_start
 ---
 
 ### Setting Up

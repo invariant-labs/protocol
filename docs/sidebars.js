@@ -50,8 +50,10 @@ module.exports = {
       items: [
         'technical_side/introduction',
         'technical_side/quick_start',
-        'technical_side/create_pool',
-        'technical_side/minting_position'
+        'technical_side/pool',
+        'technical_side/minting_position',
+        'technical_side/swap',
+        'technical_side/withdraw'
       ]
     },
     'faq',

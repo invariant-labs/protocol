@@ -1,7 +1,7 @@
 ---
 title: Invariant SDK
 
-slug: /sdk/introduction
+slug: /technical_side/introduction
 ---
 
 **Invariant** consists of two main parts: smart contract and SDK. Both of them are in a single public repository on our [Github](https://github.com/invariant-labs).
