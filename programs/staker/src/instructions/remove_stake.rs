@@ -21,7 +21,7 @@ pub fn handler(ctx: Context<RemoveStake>) -> ProgramResult {
     require!(incentive.num_of_stakes != 0, NoStakes);
 
     // decrease number of stakes by 1
-    incentive.num_of_stakes -= 1;
+    incentive.num_of_stakes -= 1; // overflow
 
     Ok(())
 }

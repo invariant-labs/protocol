@@ -37,7 +37,7 @@ pub struct Withdraw<'info> {
     )]
     pub owner_token_account: Account<'info, TokenAccount>,
     #[account(seeds = [b"staker".as_ref()], bump = nonce)]
-    pub staker_authority: AccountInfo<'info>, // validate with state
+    pub staker_authority: AccountInfo<'info>,
     pub owner: AccountInfo<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
@@ -112,7 +112,7 @@ pub fn handler(ctx: Context<Withdraw>, _index: i32, nonce: u8) -> ProgramResult 
         )
         .unwrap();
 
-        incentive.num_of_stakes -= 1;
+        incentive.num_of_stakes -= 1; // check overflow
     }
 
     Ok(())
