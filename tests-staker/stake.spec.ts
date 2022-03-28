@@ -13,6 +13,7 @@ import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { InitPosition, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
 import { FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
 import { calculatePriceSqrt } from '@invariant-labs/sdk'
+import { STAKER_ERRORS } from '../staker-sdk/src/utils'
 
 describe('Stake tests', () => {
   const provider = Provider.local()
@@ -268,6 +269,9 @@ describe('Stake tests', () => {
     const stakeIx = await staker.createStakeIx(createStake)
     const tx = new Transaction().add(updateIx).add(stakeIx)
 
-    await assertThrowsAsync(signAndSend(tx, [positionOwner], staker.connection))
+    await assertThrowsAsync(
+      signAndSend(tx, [positionOwner], staker.connection),
+      STAKER_ERRORS.DIFFERENT_INCENTIVE_POOL
+    )
   })
 })

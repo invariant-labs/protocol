@@ -1,6 +1,7 @@
 use crate::decimals::*;
 use crate::structs::*;
 use crate::util::get_current_slot;
+use crate::ErrorCode::*;
 
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
@@ -24,7 +25,7 @@ pub struct CreateUserStake<'info> {
     )]
     pub position: AccountLoader<'info, Position>,
     #[account(mut,
-        constraint = incentive.load()?.pool == position.load()?.pool
+        constraint = incentive.load()?.pool == position.load()?.pool @ DifferentIncentivePool
     )]
     pub incentive: AccountLoader<'info, Incentive>,
     #[account(mut)]

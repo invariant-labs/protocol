@@ -12,6 +12,11 @@ export enum ERRORS {
   ALLOWANCE = 'custom program error: 0x1',
   NO_SIGNERS = 'Error: No signers'
 }
+
+export enum STAKER_ERRORS {
+  DIFFERENT_INCENTIVE_POOL = '0x1786'
+}
+
 export interface Decimal {
   v: BN
 }
