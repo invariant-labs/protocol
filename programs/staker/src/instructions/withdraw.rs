@@ -106,13 +106,14 @@ pub fn handler(ctx: Context<Withdraw>, _index: i32, nonce: u8) -> ProgramResult 
     }
 
     if Seconds::now() > { incentive.end_time } {
+        require!(incentive.num_of_stakes > 0, NoStakes);
         close(
             ctx.accounts.user_stake.to_account_info(),
             ctx.accounts.owner.to_account_info(),
         )
         .unwrap();
 
-        incentive.num_of_stakes -= 1; // check overflow
+        incentive.num_of_stakes -= 1;
     }
 
     Ok(())

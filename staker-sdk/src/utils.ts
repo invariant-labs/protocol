@@ -14,6 +14,10 @@ export enum ERRORS {
 }
 
 export enum STAKER_ERRORS {
+  ZERO_AMOUNT = '0x1773',
+  START_IN_PAST = '0x1775',
+  TO_LONG_DURATION = '0x1774',
+  ENDED = '0x1776',
   DIFFERENT_INCENTIVE_POOL = '0x1786'
 }
 
