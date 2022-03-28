@@ -23,7 +23,9 @@ pub struct CreateUserStake<'info> {
         seeds::program = invariant::ID
     )]
     pub position: AccountLoader<'info, Position>,
-    #[account(mut)]
+    #[account(mut,
+        constraint = incentive.load()?.pool == position.load()?.pool
+    )]
     pub incentive: AccountLoader<'info, Incentive>,
     #[account(mut)]
     pub owner: Signer<'info>,
@@ -48,12 +50,12 @@ pub fn handler(ctx: Context<CreateUserStake>) -> ProgramResult {
 
     **user_stake = UserStake {
         position: ctx.accounts.position.key(),
-        liquidity: Decimal::new(position.liquidity.v),
+        liquidity: Decimal::new(position.liquidity.v), // why decimal instead of Liquidity type
         incentive: ctx.accounts.incentive.key(),
         bump: *ctx.bumps.get("user_stake").unwrap(),
-        seconds_per_liquidity_initial: Decimal::new(position.seconds_per_liquidity_inside.v),
+        seconds_per_liquidity_initial: Decimal::new(position.seconds_per_liquidity_inside.v), // why decimal instead of SecondsPerLiquidity type
     };
-    incentive.num_of_stakes += 1;
+    incentive.num_of_stakes += 1; // check overflow
     let liquidity = user_stake.liquidity;
     require!(!liquidity.is_zero(), ZeroLiquidity);
     Ok(())
