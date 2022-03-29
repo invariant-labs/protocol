@@ -6,7 +6,7 @@ import { calculateClaimAmount } from '@invariant-labs/sdk/src/utils'
 import { parseLiquidityOnTicks } from '@invariant-labs/sdk/lib/utils'
 import { bs58 } from '@project-serum/anchor/dist/cjs/utils/bytes'
 import { PoolStructure, Position } from '@invariant-labs/sdk/src/market'
-import { BN } from '../sdk-staker/lib'
+import { BN } from '../staker-sdk/lib'
 import { assert } from 'chai'
 import { getDeltaX } from '@invariant-labs/sdk/lib/math'
 import { calculatePriceSqrt } from '@invariant-labs/sdk'
@@ -107,12 +107,6 @@ const main = async () => {
     const pair = new Pair(pool.tokenX, pool.tokenY, {
       fee: pool.fee.v
     })
-
-    if (
-      !pair.tokenX.equals(new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')) ||
-      !pair.tokenY.equals(new PublicKey('So11111111111111111111111111111111111111112'))
-    )
-      continue
 
     const expectedAddress = await pair.getAddress(market.program.programId)
 

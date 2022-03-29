@@ -1,5 +1,5 @@
 import * as anchor from '@project-serum/anchor'
-import { Decimal, Staker, CreateStake } from '../sdk-staker/src/staker'
+import { Decimal, Staker, CreateStake } from '../staker-sdk/src/staker'
 import {
   ConfirmOptions,
   Connection,

@@ -1,16 +1,17 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
-import { Market, Pair, DENOMINATOR, sleep } from '@invariant-labs/sdk'
-import { Network } from '../sdk-staker/src'
+import { Market, Pair, DENOMINATOR, sleep, PRICE_DENOMINATOR } from '@invariant-labs/sdk'
+import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
-import { createToken, tou64, getTime, signAndSend } from './testUtils'
+import { createToken, tou64, getTime, signAndSend, almostEqual } from './testUtils'
 import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { toDecimal } from '../sdk-staker/lib/utils'
+import { toDecimal } from '../staker-sdk/lib/utils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { InitPosition, Swap, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
-import { CreateIncentive, CreateStake, Withdraw, Decimal, Staker } from '../sdk-staker/src/staker'
+import { CreateIncentive, CreateStake, Withdraw, Decimal, Staker } from '../staker-sdk/src/staker'
+import { assert } from 'chai'
 
 describe('Withdraw tests', () => {
   const provider = Provider.local()
@@ -22,7 +23,7 @@ describe('Withdraw tests', () => {
   const positionOwner = Keypair.generate()
   const founderAccount = Keypair.generate()
   const admin = Keypair.generate()
-  // const epsilon = new BN(10).pow(new BN(DECIMAL)).mul(new BN(2))
+  const epsilon = new BN(20)
   let nonce: number
   let staker: Staker
   let market: Market
@@ -104,9 +105,9 @@ describe('Withdraw tests', () => {
     // create incentive
 
     const currentTime = getTime()
-    const reward: Decimal = { v: new BN(1000).mul(DENOMINATOR) }
-    const startTime = currentTime.add(new BN(0))
-    const endTime = currentTime.add(new BN(1000))
+    const reward: Decimal = { v: new BN(1000) }
+    const startTime = { v: currentTime.add(new BN(0)) }
+    const endTime = { v: currentTime.add(new BN(20)) }
 
     const createIncentiveVars: CreateIncentive = {
       reward,
@@ -154,9 +155,9 @@ describe('Withdraw tests', () => {
       userTokenY: userTokenYAccount,
       lowerTick,
       upperTick,
-      slippage: { v: new BN(0) },
-      knownPrice: (await market.getPool(pair)).sqrtPrice,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars, positionOwner)
 
@@ -243,7 +244,8 @@ describe('Withdraw tests', () => {
     const withdrawTx = new Transaction().add(updateIx).add(withdrawIx)
     await signAndSend(withdrawTx, [positionOwner], staker.connection)
 
-    // const balanceAfter = (await incentiveToken.getAccountInfo(ownerTokenAcc)).amount
-    // assert.ok(almostEqual(balanceAfter, new BN('12000000'), epsilon))
+    // should be around half of reward
+    const balanceAfter = (await incentiveToken.getAccountInfo(ownerTokenAcc)).amount
+    assert.ok(almostEqual(balanceAfter, new BN('500'), epsilon))
   })
 })
