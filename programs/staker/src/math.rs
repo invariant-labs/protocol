@@ -53,7 +53,7 @@ mod tests {
     #[test]
     fn test_calculate_reward_2() {
         let (seconds_inside, result) = calculate_reward(
-            TokenAmount::from_integer(1000),
+            TokenAmount::new(1000),
             Seconds::new(0),
             Seconds::new(0),
             Seconds::new(100),

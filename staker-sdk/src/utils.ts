@@ -2,6 +2,7 @@ import { BN } from '@project-serum/anchor'
 
 export const DECIMAL = 12
 export const DENOMINATOR = new BN(10).pow(new BN(DECIMAL))
+export const LIQUIDITY_DENOMINATOR = new BN(10).pow(new BN(6))
 
 // hex code must be at the end of message
 export enum ERRORS {
@@ -24,4 +25,40 @@ export const STAKER_SEED = Buffer.from('staker')
 
 export const fromInteger = (integer: number): { v: BN } => {
   return { v: new BN(integer).mul(DENOMINATOR) }
+}
+
+export const calculateReward = ({
+  totalRewardUnclaimed,
+  totalSecondsClaimed,
+  startTime,
+  endTime,
+  liquidity,
+  secondsPerLiquidityInsideInitial,
+  secondsPerLiquidityInside,
+  currentTime
+}: CalculateReward) => {
+  if (currentTime.v.lte(startTime.v)) {
+    throw Error("The incentive didn't start yet!")
+  }
+  const secondsInside = secondsPerLiquidityInside.v
+    .sub(secondsPerLiquidityInsideInitial.v)
+    .mul(liquidity.v.mul(new BN(10).pow(new BN(6))))
+    .div(DENOMINATOR)
+  const totalSecondsUnclaimed = new BN(Math.max(endTime.v.toNumber(), currentTime.v.toNumber()))
+    .sub(startTime.v)
+    .sub(totalSecondsClaimed.v)
+  const result = totalRewardUnclaimed.v.mul(secondsInside).div(totalSecondsUnclaimed)
+
+  return { secondsInside, result }
+}
+
+export interface CalculateReward {
+  totalRewardUnclaimed: Decimal
+  totalSecondsClaimed: Decimal
+  startTime: Decimal
+  endTime: Decimal
+  liquidity: Decimal
+  secondsPerLiquidityInsideInitial: Decimal
+  secondsPerLiquidityInside: Decimal
+  currentTime: Decimal
 }
