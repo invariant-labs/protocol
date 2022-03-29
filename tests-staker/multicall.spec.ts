@@ -205,6 +205,8 @@ describe('Multicall test', () => {
       userTokenY: firstUserTokenYAccount,
       lowerTick: firstLowerTick,
       upperTick: firstUpperTick,
+      slippage: { v: new BN(0) },
+      knownPrice: (await market.getPool(pair)).sqrtPrice,
       liquidityDelta: fromInteger(1_000_000)
     }
     await market.initPosition(initPositionVars, firstPositionOwner)
@@ -233,6 +235,8 @@ describe('Multicall test', () => {
       userTokenY: secondUserTokenYAccount,
       lowerTick: secondLowerTick,
       upperTick: secondUpperTick,
+      slippage: { v: new BN(0) },
+      knownPrice: (await market.getPool(pair)).sqrtPrice,
       liquidityDelta: fromInteger(2_000_000)
     }
     await market.initPosition(initPositionVars2, secondPositionOwner)
@@ -363,7 +367,6 @@ describe('Multicall test', () => {
       owner: firstPositionOwner.publicKey,
       incentiveTokenAccount: firstIncentiveTokenAccount.publicKey,
       ownerTokenAcc: firstOwnerTokenAccount,
-      invariant,
       index,
       nonce
     }
@@ -384,7 +387,6 @@ describe('Multicall test', () => {
       owner: secondPositionOwner.publicKey,
       incentiveTokenAccount: firstIncentiveTokenAccount.publicKey,
       ownerTokenAcc: secondOwnerTokenAccount,
-      invariant,
       index,
       nonce
     }
@@ -404,7 +406,6 @@ describe('Multicall test', () => {
       owner: firstPositionOwner.publicKey,
       incentiveTokenAccount: secondIncentiveTokenAccount.publicKey,
       ownerTokenAcc: firstOwnerTokenAccount,
-      invariant,
       index,
       nonce
     }
@@ -424,7 +425,6 @@ describe('Multicall test', () => {
       owner: secondPositionOwner.publicKey,
       incentiveTokenAccount: secondIncentiveTokenAccount.publicKey,
       ownerTokenAcc: secondOwnerTokenAccount,
-      invariant,
       index,
       nonce
     }

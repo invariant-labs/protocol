@@ -154,6 +154,8 @@ describe('Withdraw tests', () => {
       userTokenY: userTokenYAccount,
       lowerTick,
       upperTick,
+      slippage: { v: new BN(0) },
+      knownPrice: (await market.getPool(pair)).sqrtPrice,
       liquidityDelta
     }
     await market.initPosition(initPositionVars, positionOwner)
@@ -233,7 +235,6 @@ describe('Withdraw tests', () => {
       owner: positionOwner.publicKey,
       incentiveTokenAccount: incentiveTokenAccount.publicKey,
       ownerTokenAcc: ownerTokenAcc,
-      invariant,
       index,
       nonce
     }

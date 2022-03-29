@@ -168,6 +168,8 @@ describe('Remove Stake tests', () => {
       userTokenY: userTokenYAccount,
       lowerTick,
       upperTick,
+      slippage: { v: new BN(0) },
+      knownPrice: (await market.getPool(pair)).sqrtPrice,
       liquidityDelta
     }
     await market.initPosition(initPositionVars, positionOwner)

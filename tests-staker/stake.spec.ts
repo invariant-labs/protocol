@@ -143,6 +143,7 @@ describe('Stake tests', () => {
     const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) }
 
     await market.createPositionList(positionOwner.publicKey, positionOwner)
+    const poolData = await market.getPool(pair)
 
     const initPositionVars: InitPosition = {
       pair,
@@ -151,6 +152,8 @@ describe('Stake tests', () => {
       userTokenY: userTokenYAccount,
       lowerTick,
       upperTick,
+      slippage: { v: new BN(0) },
+      knownPrice: poolData.sqrtPrice,
       liquidityDelta
     }
     await market.initPosition(initPositionVars, positionOwner)
