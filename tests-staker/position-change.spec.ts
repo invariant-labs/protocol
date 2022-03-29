@@ -280,7 +280,6 @@ describe('Withdraw tests', () => {
 
     // should be around half of reward
     const balanceAfter = (await incentiveToken.getAccountInfo(positionRecipientTokenAccount)).amount
-    console.log(balanceAfter.toString())
     assert.ok(almostEqual(balanceAfter, new BN('500'), epsilon))
   })
 })
