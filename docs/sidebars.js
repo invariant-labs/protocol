@@ -24,7 +24,8 @@ module.exports = {
       items: [
         'tutorial/how_to_connect_your_wallet',
         'tutorial/how_to_swap',
-        'tutorial/how_to_add_remove_liquidity'
+        'tutorial/how_to_add_remove_liquidity',
+        'tutorial/uniform_concentration'
       ]
     },
     {
