@@ -91,6 +91,8 @@ describe('withdraw', () => {
       userTokenY: userTokenYAccount,
       lowerTick,
       upperTick,
+      knownPrice: (await market.getPool(pair)).sqrtPrice,
+      slippage: { v: new BN(0) },
       liquidityDelta
     }
     await market.initPosition(initPositionVars, positionOwner)
