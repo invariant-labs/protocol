@@ -1,7 +1,7 @@
 import { TokenListProvider } from '@solana/spl-token-registry'
 import axios, { AxiosResponse } from 'axios'
 import fs from 'fs'
-import PRICES_DATA from '../data/prices.json'
+import PRICES_DATA from '../data/common/prices.json'
 
 export interface CoingeckoApiPriceData {
   id: string
@@ -62,7 +62,7 @@ export const createSnapshotOfPrices = async () => {
     snaps[id][timestamp] = current_price ?? 0
   })
 
-  fs.writeFile('./data/prices.json', JSON.stringify(snaps), err => {
+  fs.writeFile('./data/common/prices.json', JSON.stringify(snaps), err => {
     if (err) {
       throw err
     }
