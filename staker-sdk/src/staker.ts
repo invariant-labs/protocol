@@ -259,6 +259,10 @@ export class Staker {
     })
   }
 
+  public async getAllIncentives() {
+    return (await this.program.account.incentive.all([])).map(({ account }) => account) // as IncentiveStructure
+  }
+
   // getters
   async getProgramAuthority() {
     const [authority, nonce] = await PublicKey.findProgramAddress(
@@ -392,13 +396,16 @@ export interface EndIncentive {
 }
 
 export interface IncentiveStructure {
+  founder: PublicKey
   tokenAccount: PublicKey
   totalRewardUnclaimed: BN
   totalSecondsClaimed: BN
   startTime: BN
   endTime: BN
-  numOfStakes: BN
+  endClaimTime: BN
+  numOfStakes: number
   pool: PublicKey
+  nonce: number
 }
 
 export interface Decimal {

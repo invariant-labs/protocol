@@ -42,7 +42,7 @@ export const calculateReward = ({
   }
   const secondsInside = secondsPerLiquidityInside.v
     .sub(secondsPerLiquidityInsideInitial.v)
-    .mul(liquidity.v.mul(new BN(10).pow(new BN(6))))
+    .mul(liquidity.v.mul(LIQUIDITY_DENOMINATOR))
     .div(DENOMINATOR)
   const totalSecondsUnclaimed = new BN(Math.max(endTime.v.toNumber(), currentTime.v.toNumber()))
     .sub(startTime.v)
