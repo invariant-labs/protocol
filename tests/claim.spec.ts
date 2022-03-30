@@ -122,13 +122,17 @@ describe('claim', () => {
     const reserveXDelta = reservesAfterSwap.x.sub(reservesBeforeSwap.x)
     const reserveYDelta = reservesBeforeSwap.y.sub(reservesAfterSwap.y)
 
+    // fee tokens           0.006 * 1000 = 6
+    // protocol fee tokens  ceil(6 * 0.01) = cei(0.06) = 1
+    // pool fee tokens      6 - 1 = 5
+    // fee growth global    5/1000000 = 5 * 10^-6
     assert.ok(amountX.eqn(0))
     assert.ok(amountY.eq(amount.subn(7)))
     assert.ok(reserveXDelta.eq(amount))
     assert.ok(reserveYDelta.eq(amount.subn(7)))
-    assert.ok(poolDataAfter.feeGrowthGlobalX.v.eq(new BN('4000000000000000000')))
+    assert.ok(poolDataAfter.feeGrowthGlobalX.v.eq(new BN('5000000000000000000')))
     assert.ok(poolDataAfter.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(poolDataAfter.feeProtocolTokenX.eqn(2))
+    assert.ok(poolDataAfter.feeProtocolTokenX.eqn(1))
     assert.ok(poolDataAfter.feeProtocolTokenY.eqn(0))
 
     const reservesBeforeClaim = await market.getReserveBalances(pair, tokenX, tokenY)
@@ -145,9 +149,9 @@ describe('claim', () => {
     const userTokenXAccountAfterClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
     const positionAfterClaim = await market.getPosition(positionOwner.publicKey, 0)
     const reservesAfterClaim = await market.getReserveBalances(pair, tokenX, tokenY)
-    const expectedTokensClaimed = 4
+    const expectedTokensClaimed = 5
 
-    assert.ok(reservesBeforeClaim.x.subn(4).eq(reservesAfterClaim.x))
+    assert.ok(reservesBeforeClaim.x.subn(expectedTokensClaimed).eq(reservesAfterClaim.x))
     assert.ok(positionAfterClaim.tokensOwedX.v.eqn(0))
     assert.ok(positionAfterClaim.feeGrowthInsideX.v.eq(poolDataAfter.feeGrowthGlobalX.v))
     assert.ok(

@@ -141,16 +141,16 @@ describe('swap', () => {
     const reserveYDelta = reserveYBefore.sub(reserveYAfter)
 
     // fee tokens           0.006 * 1000 = 6
-    // protocol fee tokens  ceil(6 * 0.2) = cei(1.2) = 2
-    // pool fee tokens      6 - 2 = 4
-    // fee growth global    4/1000000 = 4 * 10^-6
+    // protocol fee tokens  ceil(6 * 0.01) = cei(0.06) = 1
+    // pool fee tokens      6 - 1 = 5
+    // fee growth global    5/1000000 = 5 * 10^-6
     assert.ok(amountX.eqn(0))
     assert.ok(amountY.eq(amount.subn(7)))
     assert.ok(reserveXDelta.eq(amount))
     assert.ok(reserveYDelta.eq(amount.subn(7)))
-    assert.equal(poolData.feeGrowthGlobalX.v.toString(), '4000000000000000000')
+    assert.equal(poolData.feeGrowthGlobalX.v.toString(), '5000000000000000000')
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(poolData.feeProtocolTokenX.eqn(2))
+    assert.ok(poolData.feeProtocolTokenX.eqn(1))
     assert.ok(poolData.feeProtocolTokenY.eqn(0))
 
     assert.equal(poolData.currentTickIndex, -20)

@@ -7,7 +7,7 @@ import { createToken, tou64, getTime, signAndSend, almostEqual } from './testUti
 import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { toDecimal } from '../staker-sdk/lib/utils'
-import { DECIMAL, fromFee } from '@invariant-labs/sdk/lib/utils'
+import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { InitPosition, Swap, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
 import { CreateIncentive, CreateStake, Withdraw, Decimal, Staker } from '../staker-sdk/src/staker'
@@ -23,7 +23,7 @@ describe('Withdraw tests', () => {
   const positionOwner = Keypair.generate()
   const founderAccount = Keypair.generate()
   const admin = Keypair.generate()
-  const epsilon = new BN(20)
+  const epsilon = new BN(21)
   let nonce: number
   let staker: Staker
   let market: Market
