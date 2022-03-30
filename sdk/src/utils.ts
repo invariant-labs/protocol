@@ -689,7 +689,7 @@ export const bigNumberToBuffer = (n: BN, size: 16 | 32 | 64 | 128 | 256) => {
 
 export const getMaxTick = (tickSpacing: number) => {
   const limitedByPrice = MAX_TICK - (MAX_TICK % tickSpacing)
-  const limitedByTickmap = TICK_LIMIT * tickSpacing
+  const limitedByTickmap = TICK_LIMIT * tickSpacing - tickSpacing
   return Math.min(limitedByPrice, limitedByTickmap)
 }
 

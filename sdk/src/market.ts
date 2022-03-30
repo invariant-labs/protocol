@@ -528,6 +528,9 @@ export class Market {
     const { pair, lowerTick, upperTick } = initPosition
     const payer = initPosition.owner ?? this.wallet.publicKey
 
+    const upperTickIndex = upperTick !== Infinity ? upperTick : getMaxTick(pair.tickSpacing)
+    const lowerTickIndex = lowerTick !== -Infinity ? lowerTick : getMinTick(pair.tickSpacing)
+
     // undefined - tmp solution
     let lowerInstruction: TransactionInstruction | undefined
     let upperInstruction: TransactionInstruction | undefined
@@ -537,18 +540,18 @@ export class Market {
 
     let lowerExists = true
     try {
-      await this.getTick(pair, lowerTick)
+      await this.getTick(pair, lowerTickIndex)
     } catch (e) {
       lowerExists = false
-      lowerInstruction = await this.createTickInstruction({ pair, index: lowerTick, payer })
+      lowerInstruction = await this.createTickInstruction({ pair, index: lowerTickIndex, payer })
     }
 
     let upperExists = true
     try {
-      await this.getTick(pair, upperTick)
+      await this.getTick(pair, upperTickIndex)
     } catch (e) {
       upperExists = false
-      upperInstruction = await this.createTickInstruction({ pair, index: upperTick, payer })
+      upperInstruction = await this.createTickInstruction({ pair, index: upperTickIndex, payer })
     }
 
     const { positionListAddress } = await this.getPositionListAddress(payer)
@@ -565,8 +568,11 @@ export class Market {
 
     if (this.network === Network.DEV || this.network === Network.LOCAL) {
       // REMOVE ME WHEN 1.9 HITS MAINNET
-      if (!lowerExists && !upperExists && !listExists) {
-        tx.add(ComputeUnitsInstruction(300000, payer))
+
+      const amount =
+        (2 + (lowerExists ? 0 : 1) + (upperExists ? 0 : 1) + (listExists ? 0 : 1)) * 1e5
+      if (amount > 2e5) {
+        tx.add(ComputeUnitsInstruction(amount, payer))
       }
     }
     if (!lowerExists && lowerInstruction) {
