@@ -27,8 +27,9 @@ jobs:
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           export ANCHOR_WALLET="/home/runner/.config/solana/id.json"
           npm install
-          npm run all
-          npm run allV2
+          npm run cachePrices
+          npm run snap
+          npm run snapV2
           git add ./data
           git commit -m "Snapshot of data done!"
         working-directory: stats
