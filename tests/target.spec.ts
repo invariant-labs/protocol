@@ -143,9 +143,13 @@ describe('target', () => {
     assert.ok(reserveXDelta.eq(amount.addn(9)))
     assert.ok(reserveYDelta.eq(amount))
 
-    assert.equal(poolData.feeGrowthGlobalX.v.toString(), '5000000000000000000') // 0.6 % of amount - protocol fee
+    // fee tokens           0.006 * 1002 = ceil(6.012) = 7
+    // protocol fee tokens  ceil(7 * 0.01) = cei(0.07) = 1
+    // pool fee tokens      7 - 1 = 6
+    // fee growth global    6/1000000 = 6 * 10^-6
+    assert.equal(poolData.feeGrowthGlobalX.v.toString(), '6000000000000000000') // 0.6 % of amount - protocol fee
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(poolData.feeProtocolTokenX.eqn(2))
+    assert.ok(poolData.feeProtocolTokenX.eqn(1))
     assert.ok(poolData.feeProtocolTokenY.eqn(0))
   })
 })

@@ -1,6 +1,5 @@
 use anchor_lang::__private::ErrorCode;
 use anchor_lang::__private::CLOSED_ACCOUNT_DISCRIMINATOR;
-use std::convert::TryInto;
 use std::io::Write;
 
 use anchor_lang::prelude::*;

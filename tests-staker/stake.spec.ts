@@ -143,6 +143,7 @@ describe('Stake tests', () => {
     const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) }
 
     await market.createPositionList(positionOwner.publicKey, positionOwner)
+    const poolData = await market.getPool(pair)
 
     const initPositionVars: InitPosition = {
       pair,
