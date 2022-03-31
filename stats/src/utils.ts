@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import { DECIMAL } from '@invariant-labs/sdk/lib/utils'
 import { BN } from '@project-serum/anchor'
 import { TokenListProvider } from '@solana/spl-token-registry'
 import axios, { AxiosResponse } from 'axios'
 
 export interface SnapshotValueData {
-  tokenBN: string
-  usdValue: number
+  tokenBNFromBeginning: string
+  usdValue24: number
 }
 
 export interface PoolSnapshot {
@@ -53,6 +54,19 @@ export const printBN = (amount: BN, decimals: number): string => {
   }
 }
 
+export const printBNtoBN = (amount: string, decimals: number): BN => {
+  const balanceString = amount.split('.')
+  if (balanceString.length !== 2) {
+    return new BN(balanceString[0] + '0'.repeat(decimals))
+  }
+  if (balanceString[1].length <= decimals) {
+    return new BN(
+      balanceString[0] + balanceString[1] + '0'.repeat(decimals - balanceString[1].length)
+    )
+  }
+  return new BN(0)
+}
+
 const idsToAppend = ['lido-staked-sol']
 
 export interface TokenData {
@@ -92,4 +106,16 @@ export const getTokensPrices = async (idsList: string[]): Promise<Record<string,
   })
 
   return snaps
+}
+
+export const getUsdValue24 = (total: BN, decimals: number, price: number, lastTotal: BN) => {
+  const bnPrice = printBNtoBN(price.toFixed(DECIMAL), DECIMAL)
+
+  return +printBN(
+    total
+      .sub(lastTotal)
+      .mul(bnPrice)
+      .div(new BN(10 ** DECIMAL)),
+    decimals
+  )
 }
