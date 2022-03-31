@@ -53,6 +53,7 @@ module.exports = {
         'technical_side/quick_start',
         'technical_side/pool',
         'technical_side/minting_position',
+        'technical_side/position_list',
         'technical_side/swap',
         'technical_side/withdraw'
       ]
