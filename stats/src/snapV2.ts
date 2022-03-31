@@ -171,7 +171,7 @@ export const createSnapshotForNetwork = async (network: Network) => {
 
 createSnapshotForNetwork(Network.DEV).then(
   () => {
-    console.log('Devnet snapshot done!')
+    console.log('Devnet v2 snapshot done!')
   },
   err => {
     console.log(err)
@@ -180,7 +180,7 @@ createSnapshotForNetwork(Network.DEV).then(
 
 createSnapshotForNetwork(Network.MAIN).then(
   () => {
-    console.log('Mainnet snapshot done!')
+    console.log('Mainnet v2 snapshot done!')
   },
   err => {
     console.log(err)

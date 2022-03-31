@@ -18,7 +18,7 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config()
 
-export const createSnapshotForNetwork = async (network: Network) => {
+export const convertForNetwork = async (network: Network) => {
   let provider: Provider
   let fileName: string
   let snapsV1: Record<string, PoolSnapshotV1[]>
@@ -152,18 +152,18 @@ export const createSnapshotForNetwork = async (network: Network) => {
   })
 }
 
-createSnapshotForNetwork(Network.DEV).then(
+convertForNetwork(Network.DEV).then(
   () => {
-    console.log('Devnet snapshot done!')
+    console.log('Devnet snapshots converted!')
   },
   err => {
     console.log(err)
   }
 )
 
-createSnapshotForNetwork(Network.MAIN).then(
+convertForNetwork(Network.MAIN).then(
   () => {
-    console.log('Mainnet snapshot done!')
+    console.log('Mainnet snapshots converted!')
   },
   err => {
     console.log(err)
