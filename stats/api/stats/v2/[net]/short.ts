@@ -30,11 +30,10 @@ export default function (req: VercelRequest, res: VercelResponse) {
   }
 
   Object.values(snaps).forEach(poolSnaps => {
-    poolSnaps.forEach(snap => {
-      volume24 += snap.volumeX.usdValue24 + snap.volumeY.usdValue24
-      tvl += snap.liquidityX.usdValue24 + snap.liquidityY.usdValue24
-      fees24 += snap.feeX.usdValue24 + snap.feeY.usdValue24
-    })
+    const snap = poolSnaps[poolSnaps.length - 1]
+    volume24 += snap.volumeX.usdValue24 + snap.volumeY.usdValue24
+    tvl += snap.liquidityX.usdValue24 + snap.liquidityY.usdValue24
+    fees24 += snap.feeX.usdValue24 + snap.feeY.usdValue24
   })
   res.json({
     volume24,
