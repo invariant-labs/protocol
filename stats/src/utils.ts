@@ -78,11 +78,14 @@ export const printBNtoBN = (amount: string, decimals: number): BN => {
   return new BN(0)
 }
 
-const idsToAppend = ['lido-staked-sol']
-
 export interface TokenData {
   coingeckoId?: string
   decimals: number
+}
+
+const coingeckoIdOverwrites = {
+  '9vMJfxuKxXBoEa7rM12mYLMwTacLMLDJqHozw96WQL8i': 'terrausd',
+  '7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj': 'lido-staked-sol'
 }
 
 export const getTokensData = async (): Promise<Record<string, TokenData>> => {
@@ -98,7 +101,8 @@ export const getTokensData = async (): Promise<Record<string, TokenData>> => {
   tokenList.forEach(token => {
     tokensObj[token.address.toString()] = {
       decimals: token.decimals,
-      coingeckoId: token.extensions?.coingeckoId
+      coingeckoId:
+        coingeckoIdOverwrites?.[token.address.toString()] ?? token.extensions?.coingeckoId
     }
   })
 
@@ -106,9 +110,7 @@ export const getTokensData = async (): Promise<Record<string, TokenData>> => {
 }
 
 export const getTokensPrices = async (idsList: string[]): Promise<Record<string, number>> => {
-  const ids: string[] = [...idsList, ...idsToAppend]
-
-  const prices = await getCoingeckoPricesData(ids)
+  const prices = await getCoingeckoPricesData(idsList)
 
   const snaps = {}
 
