@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import { MOCK_TOKENS } from '@invariant-labs/sdk'
 import { DECIMAL } from '@invariant-labs/sdk/lib/utils'
 import { BN } from '@project-serum/anchor'
 import { TokenListProvider } from '@solana/spl-token-registry'
@@ -7,6 +8,16 @@ import axios, { AxiosResponse } from 'axios'
 export interface SnapshotValueData {
   tokenBNFromBeginning: string
   usdValue24: number
+}
+
+export interface PoolSnapshotV1 {
+  timestamp: number
+  volumeX: string
+  volumeY: string
+  liquidityX: string
+  liquidityY: string
+  feeX: string
+  feeY: string
 }
 
 export interface PoolSnapshot {
@@ -118,4 +129,31 @@ export const getUsdValue24 = (total: BN, decimals: number, price: number, lastTo
       .div(new BN(10 ** DECIMAL)),
     decimals
   )
+}
+
+export const devnetTokensData = {
+  [MOCK_TOKENS.USDC]: {
+    decimals: 6,
+    coingeckoId: 'usd-coin'
+  },
+  [MOCK_TOKENS.USDT]: {
+    decimals: 6,
+    coingeckoId: 'thether'
+  },
+  [MOCK_TOKENS.SOL]: {
+    decimals: 9,
+    coingeckoId: 'solana'
+  },
+  [MOCK_TOKENS.MSOL]: {
+    decimals: 9,
+    coingeckoId: 'msol'
+  },
+  [MOCK_TOKENS.BTC]: {
+    decimals: 6,
+    coingeckoId: 'bitcoin'
+  },
+  [MOCK_TOKENS.REN_DOGE]: {
+    decimals: 8,
+    coingeckoId: 'rendoge'
+  }
 }

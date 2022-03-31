@@ -4,7 +4,14 @@ import { PublicKey } from '@solana/web3.js'
 import fs from 'fs'
 import DEVNET_DATA from '../data/v2/devnet.json'
 import MAINNET_DATA from '../data/v2/mainnet.json'
-import { getTokensData, getTokensPrices, getUsdValue24, PoolSnapshot, TokenData } from './utils'
+import {
+  devnetTokensData,
+  getTokensData,
+  getTokensPrices,
+  getUsdValue24,
+  PoolSnapshot,
+  TokenData
+} from './utils'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config()
@@ -31,7 +38,7 @@ export const createSnapshotForNetwork = async (network: Network) => {
       )
       fileName = './data/v2/devnet.json'
       snaps = DEVNET_DATA
-      tokensData = {}
+      tokensData = devnetTokensData
   }
 
   const idsList: string[] = []
