@@ -7,8 +7,7 @@
     "snap": "ts-node ./src/snap.ts",
     "snapV2": "ts-node ./src/snapV2.ts",
     "cachePrices": "ts-node ./src/cachePrices.ts",
-    "all": "npm run snap && npm run cachePrices",
-    "allV2": "npm run cachePrices && npm run snapV2"
+    "all": "npm run snap && npm run cachePrices"
   },
   "author": "",
   "license": "ISC",
