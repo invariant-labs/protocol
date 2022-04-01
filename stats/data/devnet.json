@@ -80,6 +80,15 @@
       "liquidityY": "11239849385",
       "feeX": "401015",
       "feeY": "197510"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "14010200000",
+      "volumeY": "1975100000",
+      "liquidityX": "32111298234",
+      "liquidityY": "11549337243",
+      "feeX": "1401020",
+      "feeY": "197510"
     }
   ],
   "84GSk7hjwaUwX5wxmvnHiTtSnffPYP7dnmoP6ZJ5TnSR": [
@@ -163,6 +172,15 @@
       "liquidityY": "98741228952",
       "feeX": "362245500",
       "feeY": "168041430"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "724491000000",
+      "volumeY": "336184860000",
+      "liquidityX": "78254157629",
+      "liquidityY": "98843177951",
+      "feeX": "362245500",
+      "feeY": "168092430"
     }
   ],
   "9z35ptatPpnzzfzCXB5k7aJ6jxg4Qyno5xXVMLC7oHAW": [
@@ -240,6 +258,15 @@
     },
     {
       "timestamp": 1648728000000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "13316",
+      "liquidityY": "15531",
+      "feeX": "0",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648814400000,
       "volumeX": "0",
       "volumeY": "0",
       "liquidityX": "13316",
@@ -329,6 +356,15 @@
       "liquidityY": "157884630536",
       "feeX": "50",
       "feeY": "1235781980"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "16666",
+      "volumeY": "458627326666",
+      "liquidityX": "2518",
+      "liquidityY": "204444530536",
+      "feeX": "50",
+      "feeY": "1375881980"
     }
   ],
   "7Qm14zJHs8RVFjyWvauw945Usygjv3v3kP5nGrq8Hbij": [
@@ -406,6 +442,15 @@
     },
     {
       "timestamp": 1648728000000,
+      "volumeX": "100000000",
+      "volumeY": "0",
+      "liquidityX": "1101699997",
+      "liquidityY": "902447467",
+      "feeX": "300000",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648814400000,
       "volumeX": "100000000",
       "volumeY": "0",
       "liquidityX": "1101699997",
@@ -495,6 +540,15 @@
       "liquidityY": "3590850200",
       "feeX": "173640",
       "feeY": "264650"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "1836400000",
+      "volumeY": "3646550000",
+      "liquidityX": "707628272",
+      "liquidityY": "4490715411",
+      "feeX": "183640",
+      "feeY": "364655"
     }
   ],
   "EKYai7Zh1qPtRtkkYJcCvdEPo2fXj3bfuTGoNUSJ4Z1m": [
@@ -572,6 +626,15 @@
     },
     {
       "timestamp": 1648728000000,
+      "volumeX": "1666",
+      "volumeY": "0",
+      "liquidityX": "1996",
+      "liquidityY": "219",
+      "feeX": "5",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648814400000,
       "volumeX": "1666",
       "volumeY": "0",
       "liquidityX": "1996",
@@ -661,6 +724,15 @@
       "liquidityY": "0",
       "feeX": "175",
       "feeY": "14423050"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "17500",
+      "volumeY": "1442305000",
+      "liquidityX": "14387",
+      "liquidityY": "0",
+      "feeX": "175",
+      "feeY": "14423050"
     }
   ],
   "HZwUnXYy27TUWQucuuSM8dYJxxCgUMgfDf83vZNz7CKe": [
@@ -738,6 +810,15 @@
     },
     {
       "timestamp": 1648728000000,
+      "volumeX": "21000000",
+      "volumeY": "30993270000",
+      "liquidityX": "10324911",
+      "liquidityY": "33635187198",
+      "feeX": "10500",
+      "feeY": "15496635"
+    },
+    {
+      "timestamp": 1648814400000,
       "volumeX": "21000000",
       "volumeY": "30993270000",
       "liquidityX": "10324911",
@@ -827,6 +908,15 @@
       "liquidityY": "151049418246",
       "feeX": "8628550",
       "feeY": "616822740"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "2876183333",
+      "volumeY": "205607580000",
+      "liquidityX": "4884050006",
+      "liquidityY": "151049418246",
+      "feeX": "8628550",
+      "feeY": "616822740"
     }
   ],
   "74nxLDML7sZeFjeqLteu89kGxC18ZRdsSHsMP9q5BALP": [
@@ -910,6 +1000,15 @@
       "liquidityY": "16662240279",
       "feeX": "1201815",
       "feeY": "892105"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "12018150000",
+      "volumeY": "13921050000",
+      "liquidityX": "11847499631",
+      "liquidityY": "21661740278",
+      "feeX": "1201815",
+      "feeY": "1392105"
     }
   ],
   "C7QuXVtEF3dm1ocF5nsigfPqRXkdH2oNr5683gs8SacC": [
@@ -993,6 +1092,15 @@
       "liquidityY": "13971501046",
       "feeX": "165",
       "feeY": "3398455"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "330000",
+      "volumeY": "7896920000",
+      "liquidityX": "642183",
+      "liquidityY": "15095951053",
+      "feeX": "165",
+      "feeY": "3948460"
     }
   ],
   "7cRPNt4EMSwvmwSrm379JhyG7s49CuCbCfnARzGykkzx": [
@@ -1074,6 +1182,15 @@
       "volumeY": "0",
       "liquidityX": "56824",
       "liquidityY": "251914",
+      "feeX": "0",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "59323",
+      "liquidityY": "254933",
       "feeX": "0",
       "feeY": "0"
     }
@@ -1159,6 +1276,15 @@
       "liquidityY": "41554378055",
       "feeX": "59292370",
       "feeY": "55414110"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "592973700000",
+      "volumeY": "554141100000",
+      "liquidityX": "70934458294",
+      "liquidityY": "41504727244",
+      "feeX": "59297370",
+      "feeY": "55414110"
     }
   ],
   "hLZNVV8EbeLCjkXCxfBePjAcuPSwCryWtiStoV7E4cU": [
@@ -1236,6 +1362,15 @@
     },
     {
       "timestamp": 1648728000000,
+      "volumeX": "3154670000",
+      "volumeY": "2482610000",
+      "liquidityX": "1664906155",
+      "liquidityY": "705748648",
+      "feeX": "3154670",
+      "feeY": "2482610"
+    },
+    {
+      "timestamp": 1648814400000,
       "volumeX": "3154670000",
       "volumeY": "2482610000",
       "liquidityX": "1664906155",
@@ -1325,6 +1460,15 @@
       "liquidityY": "1793979669",
       "feeX": "0",
       "feeY": "10000000"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "0",
+      "volumeY": "1000000000",
+      "liquidityX": "55596297",
+      "liquidityY": "1793979669",
+      "feeX": "0",
+      "feeY": "10000000"
     }
   ],
   "CqVgxaQprGDZkBnAFNxKnwgaB5929CT1nSFxYjgUJz4H": [
@@ -1402,6 +1546,15 @@
     },
     {
       "timestamp": 1648728000000,
+      "volumeX": "71000000",
+      "volumeY": "8000000000",
+      "liquidityX": "128876157",
+      "liquidityY": "7476199768",
+      "feeX": "71000",
+      "feeY": "8000000"
+    },
+    {
+      "timestamp": 1648814400000,
       "volumeX": "71000000",
       "volumeY": "8000000000",
       "liquidityX": "128876157",
@@ -1491,6 +1644,15 @@
       "liquidityY": "50012500",
       "feeX": "0",
       "feeY": "0"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "35780315",
+      "liquidityY": "50012500",
+      "feeX": "0",
+      "feeY": "0"
     }
   ],
   "4ervEtFsXtxBJCshqaXbHBbv7xWz4XsSp6ptDPEJRq53": [
@@ -1568,6 +1730,15 @@
     },
     {
       "timestamp": 1648728000000,
+      "volumeX": "20000000",
+      "volumeY": "77040000",
+      "liquidityX": "0",
+      "liquidityY": "0",
+      "feeX": "20000",
+      "feeY": "77040"
+    },
+    {
+      "timestamp": 1648814400000,
       "volumeX": "20000000",
       "volumeY": "77040000",
       "liquidityX": "0",
@@ -1657,6 +1828,15 @@
       "liquidityY": "51749867",
       "feeX": "5000000",
       "feeY": "500000"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "500000000",
+      "volumeY": "50000000",
+      "liquidityX": "27047913",
+      "liquidityY": "51749867",
+      "feeX": "5000000",
+      "feeY": "500000"
     }
   ],
   "Ee7EsMJ6bYN99FKVTc9SEpX9HucyHg4AGuQpRuP9Ac4c": [
@@ -1734,6 +1914,15 @@
     },
     {
       "timestamp": 1648728000000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "0",
+      "liquidityY": "0",
+      "feeX": "0",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648814400000,
       "volumeX": "0",
       "volumeY": "0",
       "liquidityX": "0",
@@ -1823,6 +2012,15 @@
       "liquidityY": "0",
       "feeX": "0",
       "feeY": "0"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "0",
+      "liquidityY": "0",
+      "feeX": "0",
+      "feeY": "0"
     }
   ],
   "FKh586sYqro7RsTYsr7Wwc6b95bdkWCLEDKRc8fmBruh": [
@@ -1900,6 +2098,15 @@
     },
     {
       "timestamp": 1648728000000,
+      "volumeX": "0",
+      "volumeY": "14000000",
+      "liquidityX": "530",
+      "liquidityY": "24932786",
+      "feeX": "0",
+      "feeY": "42000"
+    },
+    {
+      "timestamp": 1648814400000,
       "volumeX": "0",
       "volumeY": "14000000",
       "liquidityX": "530",
@@ -1989,6 +2196,15 @@
       "liquidityY": "657689303",
       "feeX": "2470000",
       "feeY": "4594335"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "247000000",
+      "volumeY": "459433500",
+      "liquidityX": "12821835",
+      "liquidityY": "657689303",
+      "feeX": "2470000",
+      "feeY": "4594335"
     }
   ],
   "F8fj2myqZcw5CZy8yaNZDJXS2rzB7FL79maFBJM16WPu": [
@@ -2072,6 +2288,15 @@
       "liquidityY": "1013267830",
       "feeX": "335780",
       "feeY": "338600"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "3357800000",
+      "volumeY": "3416050000",
+      "liquidityX": "3531984512",
+      "liquidityY": "2714241352",
+      "feeX": "335780",
+      "feeY": "341605"
     }
   ],
   "GBEo8NoJAg5woWXXWXKT5xaWVUmxsqYgLkvyLkFDEgzY": [
@@ -2149,6 +2374,15 @@
     },
     {
       "timestamp": 1648728000000,
+      "volumeX": "1187001666",
+      "volumeY": "1018328333",
+      "liquidityX": "1199816452",
+      "liquidityY": "865650504",
+      "feeX": "3561005",
+      "feeY": "3054985"
+    },
+    {
+      "timestamp": 1648814400000,
       "volumeX": "1187001666",
       "volumeY": "1018328333",
       "liquidityX": "1199816452",
@@ -2238,6 +2472,15 @@
       "liquidityY": "0",
       "feeX": "0",
       "feeY": "50"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "0",
+      "volumeY": "100000",
+      "liquidityX": "0",
+      "liquidityY": "0",
+      "feeX": "0",
+      "feeY": "50"
     }
   ],
   "ymuFCM1UFr6AMmtHTHKbjm6GzmAaRVAFsGVwqWEhArj": [
@@ -2321,6 +2564,15 @@
       "liquidityY": "32022205541",
       "feeX": "56890",
       "feeY": "44999010"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "123780000",
+      "volumeY": "139998050000",
+      "liquidityX": "18762435",
+      "liquidityY": "85164345562",
+      "feeX": "61890",
+      "feeY": "69999025"
     }
   ],
   "6W6iaKmdBNqyFrXmJqB5yrebr3KowYDs4F9Nide4ARYL": [
@@ -2398,6 +2650,15 @@
     },
     {
       "timestamp": 1648728000000,
+      "volumeX": "0",
+      "volumeY": "1473420000",
+      "liquidityX": "616239459",
+      "liquidityY": "2345127604",
+      "feeX": "0",
+      "feeY": "736710"
+    },
+    {
+      "timestamp": 1648814400000,
       "volumeX": "0",
       "volumeY": "1473420000",
       "liquidityX": "616239459",
@@ -2487,6 +2748,15 @@
       "liquidityY": "8425099608",
       "feeX": "269620",
       "feeY": "1482465"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "2816200000",
+      "volumeY": "26903350000",
+      "liquidityX": "1819663056",
+      "liquidityY": "19185635018",
+      "feeX": "281620",
+      "feeY": "2690335"
     }
   ],
   "HUmPDU5amyLXjpZJGwMf6YAa6W9LW2srJjcrSM3FXgUA": [
@@ -2564,6 +2834,15 @@
     },
     {
       "timestamp": 1648728000000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "12359",
+      "liquidityY": "9154",
+      "feeX": "0",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648814400000,
       "volumeX": "0",
       "volumeY": "0",
       "liquidityX": "12359",
@@ -2653,6 +2932,15 @@
       "liquidityY": "947406034",
       "feeX": "2395240970",
       "feeY": "28108640"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "259524097000",
+      "volumeY": "2810864000",
+      "liquidityX": "123074553501",
+      "liquidityY": "700096214",
+      "feeX": "2595240970",
+      "feeY": "28108640"
     }
   ],
   "7SaJ5xEHTtWrFoJcNrNkJKb4pHJSDoMtzvcyHXJuhZRf": [
@@ -2736,6 +3024,15 @@
       "liquidityY": "346965091165",
       "feeX": "170",
       "feeY": "43390"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "235000",
+      "volumeY": "43390000",
+      "liquidityX": "719982",
+      "liquidityY": "344182979402",
+      "feeX": "235",
+      "feeY": "43390"
     }
   ],
   "2Ag3cXASMvi9aNTc3iPT2R31zVxQXeawhsx4Ukf2xTeH": [
@@ -2813,6 +3110,15 @@
     },
     {
       "timestamp": 1648728000000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "15024247",
+      "liquidityY": "9999999999",
+      "feeX": "0",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648814400000,
       "volumeX": "0",
       "volumeY": "0",
       "liquidityX": "15024247",
@@ -2902,6 +3208,15 @@
       "liquidityY": "99456467",
       "feeX": "199945",
       "feeY": "69550"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "399890000",
+      "volumeY": "145100000",
+      "liquidityX": "576863188",
+      "liquidityY": "135453467",
+      "feeX": "199945",
+      "feeY": "72550"
     }
   ],
   "CrMFwYDc3j4d9f9dogyDTx97raJJpAupntzVXm2bL8hH": [
@@ -2985,6 +3300,15 @@
       "liquidityY": "232859123827",
       "feeX": "778135",
       "feeY": "420010"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "7781350000",
+      "volumeY": "14200150000",
+      "liquidityX": "14311318927",
+      "liquidityY": "254666697672",
+      "feeX": "778135",
+      "feeY": "1420015"
     }
   ],
   "45t3M59UDEkeADxyGq1tJxwoUPQ5kUxeuLsusYBFkBah": [
@@ -3068,6 +3392,15 @@
       "liquidityY": "50322057263",
       "feeX": "5802020",
       "feeY": "60568015"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "11604040000",
+      "volumeY": "121136030000",
+      "liquidityX": "6795885654",
+      "liquidityY": "48973618963",
+      "feeX": "5802020",
+      "feeY": "60568015"
     }
   ],
   "As83NX9BsHUx5RBuRWGWzByzXsSEoThVzcTpHrNkvUFt": [
@@ -3145,6 +3478,15 @@
     },
     {
       "timestamp": 1648728000000,
+      "volumeX": "0",
+      "volumeY": "2998000",
+      "liquidityX": "0",
+      "liquidityY": "3061178",
+      "feeX": "0",
+      "feeY": "29980"
+    },
+    {
+      "timestamp": 1648814400000,
       "volumeX": "0",
       "volumeY": "2998000",
       "liquidityX": "0",
@@ -3234,6 +3576,15 @@
       "liquidityY": "5571466660",
       "feeX": "84185",
       "feeY": "288520"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "841850000",
+      "volumeY": "2885200000",
+      "liquidityX": "1450964627",
+      "liquidityY": "5571466660",
+      "feeX": "84185",
+      "feeY": "288520"
     }
   ],
   "Di5eqFCEonm8ABWfZph4fermaFbtrU5Jj2mrYdkKM1pT": [
@@ -3311,6 +3662,15 @@
     },
     {
       "timestamp": 1648728000000,
+      "volumeX": "20760000",
+      "volumeY": "100000000",
+      "liquidityX": "1066627015",
+      "liquidityY": "1266137501",
+      "feeX": "62280",
+      "feeY": "300000"
+    },
+    {
+      "timestamp": 1648814400000,
       "volumeX": "20760000",
       "volumeY": "100000000",
       "liquidityX": "1066627015",
@@ -3400,6 +3760,15 @@
       "liquidityY": "503053964",
       "feeX": "13000",
       "feeY": "20000"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "180000000",
+      "volumeY": "200000000",
+      "liquidityX": "708813251",
+      "liquidityY": "809244807",
+      "feeX": "18000",
+      "feeY": "20000"
     }
   ],
   "ENDCh3U3BPg1Jw3pRKu9Vb4dUeRSFqqR5DAXhZZYpEgR": [
@@ -3477,6 +3846,15 @@
     },
     {
       "timestamp": 1648728000000,
+      "volumeX": "31874607500",
+      "volumeY": "10634696000",
+      "liquidityX": "10252653861",
+      "liquidityY": "11082440101",
+      "feeX": "318746075",
+      "feeY": "106346960"
+    },
+    {
+      "timestamp": 1648814400000,
       "volumeX": "31874607500",
       "volumeY": "10634696000",
       "liquidityX": "10252653861",
@@ -3566,6 +3944,15 @@
       "liquidityY": "109100214370",
       "feeX": "30",
       "feeY": "1465727165"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "3000",
+      "volumeY": "146572716500",
+      "liquidityX": "128",
+      "liquidityY": "109100214370",
+      "feeX": "30",
+      "feeY": "1465727165"
     }
   ],
   "4WeKjRD14BGktxENsyE6hf8SBmmxY4F56V7TEMPrQ6nR": [
@@ -3643,6 +4030,15 @@
     },
     {
       "timestamp": 1648728000000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "0",
+      "liquidityY": "0",
+      "feeX": "0",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648814400000,
       "volumeX": "0",
       "volumeY": "0",
       "liquidityX": "0",
@@ -3732,6 +4128,15 @@
       "liquidityY": "257044632",
       "feeX": "1010925",
       "feeY": "1000000"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "101092500",
+      "volumeY": "100000000",
+      "liquidityX": "261378075",
+      "liquidityY": "257044632",
+      "feeX": "1010925",
+      "feeY": "1000000"
     }
   ],
   "9gGUAz4psCE2t3NFr8p64hgvXAcQGADtLmrNDTKMJPpC": [
@@ -3809,6 +4214,15 @@
     },
     {
       "timestamp": 1648728000000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "13228",
+      "liquidityY": "31247",
+      "feeX": "0",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648814400000,
       "volumeX": "0",
       "volumeY": "0",
       "liquidityX": "13228",
@@ -3898,6 +4312,15 @@
       "liquidityY": "0",
       "feeX": "0",
       "feeY": "0"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "0",
+      "liquidityY": "0",
+      "feeX": "0",
+      "feeY": "0"
     }
   ],
   "AAaXsTU7hWFUY6UPTm2MfK8esLrh2P17M2e9kHSPwRMZ": [
@@ -3981,6 +4404,15 @@
       "liquidityY": "422394914",
       "feeX": "19864050",
       "feeY": "14000000"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "1986405000",
+      "volumeY": "1400000000",
+      "liquidityX": "1594347105",
+      "liquidityY": "422394914",
+      "feeX": "19864050",
+      "feeY": "14000000"
     }
   ],
   "33AiuucYaKGbCoSNBAuzdKCHZ5Svv7GS9DiZcVWbmygd": [
@@ -4028,6 +4460,15 @@
       "liquidityY": "1977507544",
       "feeX": "22500",
       "feeY": "96800"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "228000000",
+      "volumeY": "968000000",
+      "liquidityX": "1895278834",
+      "liquidityY": "3771984876",
+      "feeX": "22800",
+      "feeY": "96800"
     }
   ],
   "BbuK8MkcZSJxx7VtRXB8Up8CqeURv3FRHzdzavPyKr1H": [
@@ -4042,6 +4483,15 @@
     },
     {
       "timestamp": 1648728000000,
+      "volumeX": "10000000",
+      "volumeY": "2000000",
+      "liquidityX": "57998840",
+      "liquidityY": "42001799",
+      "feeX": "1000",
+      "feeY": "200"
+    },
+    {
+      "timestamp": 1648814400000,
       "volumeX": "10000000",
       "volumeY": "2000000",
       "liquidityX": "57998840",
@@ -4068,6 +4518,15 @@
       "liquidityY": "14999999999",
       "feeX": "0",
       "feeY": "0"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "0",
+      "liquidityY": "14999999999",
+      "feeX": "0",
+      "feeY": "0"
     }
   ],
   "93b5xNohGF24cbbGn7pw4QUKGLcrXdBVGw8gRsxTNcUx": [
@@ -4088,6 +4547,15 @@
       "liquidityY": "9999999",
       "feeX": "0",
       "feeY": "0"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "9999999",
+      "liquidityY": "9999999",
+      "feeX": "0",
+      "feeY": "0"
     }
   ],
   "GYXWHy8iakBiffXh6NinMnxkuJkmNrMPry6zCPQdeaJ2": [
@@ -4099,6 +4567,26 @@
       "liquidityY": "46000954",
       "feeX": "10000",
       "feeY": "5000000"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "20000000",
+      "volumeY": "10000000000",
+      "liquidityX": "21514423",
+      "liquidityY": "46000954",
+      "feeX": "10000",
+      "feeY": "5000000"
+    }
+  ],
+  "GAd62dWPW36cxUPndsPwB52x1xjeRcJMuZ2SNdZTMzDR": [
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "8442",
+      "liquidityY": "98911785323",
+      "feeX": "0",
+      "feeY": "0"
     }
   ]
 }
