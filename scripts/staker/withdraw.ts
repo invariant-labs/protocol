@@ -27,8 +27,6 @@ const INCENTIVE: PublicKey = new PublicKey('0')
 const INCENTIVE_TOKEN: PublicKey = new PublicKey('0')
 const POSITION_INDEX = 0
 
-const DEFINED: boolean = false
-
 const main = async () => {
   const staker = await Staker.build(Network.DEV, provider.wallet, connection)
   const market = await Market.build(Network.DEV, provider.wallet, connection)
@@ -58,9 +56,7 @@ const main = async () => {
     index: POSITION_INDEX
   }
 
-  if (DEFINED) {
-    await staker.withdraw(market, update, withdraw)
-  }
+  await staker.withdraw(market, update, withdraw)
 }
 
 // trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
