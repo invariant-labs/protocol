@@ -417,6 +417,15 @@ export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
   }
 }
 
+enum SimulationErrors {
+  WrongLimit = 'Price limit is on the wrong side of price',
+  PriceLimitReached = 'Price would cross swap limit',
+  TickNotFound = 'tick crossed but not passed to simulation',
+  NoGainSwap = 'Amount out is zero',
+  TooLargeGap = 'Too large liquidity gap',
+  LimitReached = 'At the end of price range'
+}
+
 export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationResult => {
   const { xToY, byAmountIn, swapAmount, slippage, ticks, tickmap, priceLimit, pool } =
     swapParameters
@@ -428,13 +437,15 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
   let accumulatedAmountIn: BN = new BN(0)
   let accumulatedFee: BN = new BN(0)
   const priceLimitAfterSlippage = calculatePriceAfterSlippage(priceLimit, slippage, !xToY)
+
+  // Sanity check, should never throw
   if (xToY) {
     if (sqrtPrice.v.lt(priceLimitAfterSlippage.v)) {
-      throw new Error('Price limit is on the wrong side of price')
+      throw new Error(SimulationErrors.WrongLimit)
     }
   } else {
     if (sqrtPrice.v.gt(priceLimitAfterSlippage.v)) {
-      throw new Error('Price limit is on the wrong side of price')
+      throw new Error(SimulationErrors.WrongLimit)
     }
   }
   let remainingAmount: BN = swapAmount
@@ -474,7 +485,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     sqrtPrice = result.nextPrice
 
     if (sqrtPrice.v.eq(priceLimitAfterSlippage.v) && remainingAmount.gt(new BN(0))) {
-      throw new Error('Price would cross swap limit')
+      throw new Error(SimulationErrors.PriceLimitReached)
     }
 
     // crossing tick
@@ -493,8 +504,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
 
       // cross
       if (initialized) {
-        if (!ticks.has(tickIndex)) throw new Error('tick crossed but not passed to simulation')
-
+        if (!ticks.has(tickIndex)) throw new Error(SimulationErrors.TickNotFound)
         const tick = ticks.get(tickIndex) as Tick
 
         if (!xToY || isEnoughAmountToCross) {
@@ -532,18 +542,18 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
 
     // in the future this can be replaced by counter
     if (!isTickInitialized && liquidity.v.eqn(0)) {
-      throw new Error('Too large liquidity gap')
+      throw new Error(SimulationErrors.TooLargeGap)
     }
 
     if (currentTickIndex === previousTickIndex && !remainingAmount.eqn(0)) {
-      throw new Error('At the end of price range')
+      throw new Error(SimulationErrors.LimitReached)
     } else {
       previousTickIndex = currentTickIndex
     }
   }
 
   if (accumulatedAmountOut.isZero()) {
-    throw new Error('Amount out is zero')
+    throw new Error(SimulationErrors.NoGainSwap)
   }
 
   return {
