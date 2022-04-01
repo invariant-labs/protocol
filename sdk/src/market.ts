@@ -565,8 +565,8 @@ export class Market {
 
     if (this.network === Network.DEV || this.network === Network.LOCAL) {
       // REMOVE ME WHEN 1.9 HITS MAINNET
-      if (!lowerExists && !upperExists && !listExists) {
-        tx.add(ComputeUnitsInstruction(300000, payer))
+      if (!lowerExists || !upperExists || !listExists) {
+        tx.add(ComputeUnitsInstruction(500000, payer))
       }
     }
     if (!lowerExists && lowerInstruction) {
