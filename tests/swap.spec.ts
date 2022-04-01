@@ -89,8 +89,8 @@ describe('swap', () => {
       owner: positionOwner.publicKey,
       userTokenX: userTokenXAccount,
       userTokenY: userTokenYAccount,
-      lowerTick,
-      upperTick,
+      lowerTick: -Infinity,
+      upperTick: Infinity,
       liquidityDelta,
       knownPrice: (await market.getPool(pair)).sqrtPrice,
       slippage: { v: new BN(0) }
