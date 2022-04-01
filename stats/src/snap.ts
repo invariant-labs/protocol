@@ -1,6 +1,6 @@
 import { Network, Market, Pair, getMarketAddress } from '@invariant-labs/sdk'
 import { Provider } from '@project-serum/anchor'
-import { clusterApiUrl, PublicKey } from '@solana/web3.js'
+import { PublicKey } from '@solana/web3.js'
 import fs from 'fs'
 import DEVNET_DATA from '../data/devnet.json'
 import MAINNET_DATA from '../data/mainnet.json'
@@ -25,13 +25,17 @@ export const createSnapshotForNetwork = async (network: Network) => {
 
   switch (network) {
     case Network.MAIN:
-      provider = Provider.local('https://solana-api.projectserum.com')
+      provider = Provider.local(
+        'https://solana--mainnet.datahub.figment.io/apikey/182e93d87a1f1d335c9d74d6c7371388'
+      )
       fileName = './data/mainnet.json'
       snaps = MAINNET_DATA
       break
     case Network.DEV:
     default:
-      provider = Provider.local(clusterApiUrl('devnet'))
+      provider = Provider.local(
+        'https://solana--devnet.datahub.figment.io/apikey/182e93d87a1f1d335c9d74d6c7371388'
+      )
       fileName = './data/devnet.json'
       snaps = DEVNET_DATA
   }
