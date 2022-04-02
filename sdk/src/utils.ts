@@ -9,7 +9,7 @@ import {
   Transaction,
   TransactionInstruction
 } from '@solana/web3.js'
-import { calculatePriceSqrt, MAX_TICK, Pair, TICK_LIMIT, Market, MIN_TICK } from '.'
+import { calculatePriceSqrt, MAX_TICK, Pair, TICK_LIMIT, Market } from '.'
 import {
   Decimal,
   FeeTier,
@@ -31,7 +31,6 @@ import {
 import { alignTickToSpacing, getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
 import { struct, u32, u8 } from '@solana/buffer-layout'
-import { lstat } from 'fs'
 
 export const SEED = 'Invariant'
 export const DECIMAL = 12
@@ -417,7 +416,7 @@ export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
   }
 }
 
-enum SimulationErrors {
+export enum SimulationErrors {
   WrongLimit = 'Price limit is on the wrong side of price',
   PriceLimitReached = 'Price would cross swap limit',
   TickNotFound = 'tick crossed but not passed to simulation',
@@ -504,7 +503,9 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
 
       // cross
       if (initialized) {
-        if (!ticks.has(tickIndex)) throw new Error(SimulationErrors.TickNotFound)
+        if (!ticks.has(tickIndex)) {
+          throw new Error(SimulationErrors.TickNotFound)
+        }
         const tick = ticks.get(tickIndex) as Tick
 
         if (!xToY || isEnoughAmountToCross) {
