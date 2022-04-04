@@ -1,14 +1,28 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
-import { Market, Pair, DENOMINATOR, sleep, PRICE_DENOMINATOR } from '@invariant-labs/sdk'
+import {
+  Market,
+  Pair,
+  DENOMINATOR,
+  sleep,
+  PRICE_DENOMINATOR,
+  INVARIANT_ERRORS
+} from '@invariant-labs/sdk'
 import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
-import { createToken, tou64, getTime, signAndSend, almostEqual } from './testUtils'
+import {
+  createToken,
+  tou64,
+  getTime,
+  signAndSend,
+  almostEqual,
+  assertThrowsAsync
+} from './testUtils'
 import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { toDecimal } from '../staker-sdk/lib/utils'
+import { STAKER_ERRORS, toDecimal } from '../staker-sdk/lib/utils'
 import { DECIMAL, fromFee } from '@invariant-labs/sdk/lib/utils'
-import { FeeTier } from '@invariant-labs/sdk/lib/market'
+import { FeeTier, RemovePosition } from '@invariant-labs/sdk/lib/market'
 import { InitPosition, Swap, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
 import { CreateIncentive, CreateStake, Withdraw, Decimal, Staker } from '../staker-sdk/src/staker'
 import { assert } from 'chai'
@@ -21,6 +35,8 @@ describe('Withdraw tests', () => {
   const mintAuthority = Keypair.generate()
   const incentiveAccount = Keypair.generate()
   const secondsIncentiveAccount = Keypair.generate()
+  const thirdIncentiveAccount = Keypair.generate()
+  const IncentiveAccount = Keypair.generate()
   const positionOwner = Keypair.generate()
   const founderAccount = Keypair.generate()
   const admin = Keypair.generate()
@@ -53,7 +69,8 @@ describe('Withdraw tests', () => {
       connection.requestAirdrop(mintAuthority.publicKey, 1e9),
       connection.requestAirdrop(positionOwner.publicKey, 1e9),
       connection.requestAirdrop(incentiveAccount.publicKey, 10e9),
-      connection.requestAirdrop(secondsIncentiveAccount.publicKey, 10e9)
+      connection.requestAirdrop(secondsIncentiveAccount.publicKey, 10e9),
+      connection.requestAirdrop(thirdIncentiveAccount.publicKey, 10e9)
     ])
 
     // create token
@@ -103,154 +120,327 @@ describe('Withdraw tests', () => {
     pool = await pair.getAddress(anchor.workspace.Invariant.programId)
   })
 
-  it('Withdraw', async () => {
-    // create incentive
+  // it('Withdraw', async () => {
+  //   // create incentive
 
-    const currentTime = getTime()
-    const reward: Decimal = { v: new BN(1000) }
-    const startTime = { v: currentTime.add(new BN(0)) }
-    const endTime = { v: currentTime.add(new BN(20)) }
+  //   const currentTime = getTime()
+  //   const reward: Decimal = { v: new BN(1000) }
+  //   const startTime = { v: currentTime.add(new BN(0)) }
+  //   const endTime = { v: currentTime.add(new BN(20)) }
 
-    const createIncentiveVars: CreateIncentive = {
-      reward,
-      startTime,
-      endTime,
-      pool,
-      founder: founderAccount.publicKey,
-      incentiveToken: incentiveToken.publicKey,
-      founderTokenAccount: founderTokenAccount,
-      invariant
-    }
-    const createTx = new Transaction().add(
-      await staker.createIncentiveIx(
-        createIncentiveVars,
-        incentiveAccount.publicKey,
-        incentiveTokenAccount.publicKey
-      )
-    )
+  //   const createIncentiveVars: CreateIncentive = {
+  //     reward,
+  //     startTime,
+  //     endTime,
+  //     pool,
+  //     founder: founderAccount.publicKey,
+  //     incentiveToken: incentiveToken.publicKey,
+  //     founderTokenAccount: founderTokenAccount,
+  //     invariant
+  //   }
+  //   const createTx = new Transaction().add(
+  //     await staker.createIncentiveIx(
+  //       createIncentiveVars,
+  //       incentiveAccount.publicKey,
+  //       incentiveTokenAccount.publicKey
+  //     )
+  //   )
 
-    await signAndSend(
-      createTx,
-      [founderAccount, incentiveAccount, incentiveTokenAccount],
-      staker.connection
-    )
-    // create position
-    await connection.requestAirdrop(positionOwner.publicKey, 1e9)
-    const upperTick = 10
-    const lowerTick = -30
+  //   await signAndSend(
+  //     createTx,
+  //     [founderAccount, incentiveAccount, incentiveTokenAccount],
+  //     staker.connection
+  //   )
+  //   // create position
+  //   await connection.requestAirdrop(positionOwner.publicKey, 1e9)
+  //   const upperTick = 10
+  //   const lowerTick = -30
 
-    const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
-    const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
-    const mintAmount = tou64(new BN(10).pow(new BN(10)))
+  //   const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
+  //   const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
+  //   const mintAmount = tou64(new BN(10).pow(new BN(10)))
 
-    await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-    await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+  //   await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+  //   await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
 
-    const liquidityDelta = { v: new BN(2000000).mul(DENOMINATOR) }
+  //   const liquidityDelta = { v: new BN(2000000).mul(DENOMINATOR) }
 
-    await market.createPositionList(positionOwner.publicKey, positionOwner)
+  //   await market.createPositionList(positionOwner.publicKey, positionOwner)
 
-    const initPositionVars: InitPosition = {
-      pair,
-      owner: positionOwner.publicKey,
-      userTokenX: userTokenXAccount,
-      userTokenY: userTokenYAccount,
-      lowerTick,
-      upperTick,
-      liquidityDelta,
-      knownPrice: { v: PRICE_DENOMINATOR },
-      slippage: { v: new BN(0) }
-    }
-    await market.initPosition(initPositionVars, positionOwner)
+  //   const initPositionVars: InitPosition = {
+  //     pair,
+  //     owner: positionOwner.publicKey,
+  //     userTokenX: userTokenXAccount,
+  //     userTokenY: userTokenYAccount,
+  //     lowerTick,
+  //     upperTick,
+  //     liquidityDelta,
+  //     knownPrice: { v: PRICE_DENOMINATOR },
+  //     slippage: { v: new BN(0) }
+  //   }
+  //   await market.initPosition(initPositionVars, positionOwner)
 
-    const index = 0
+  //   const index = 0
 
-    const { positionAddress: position } = await market.getPositionAddress(
-      positionOwner.publicKey,
-      index
-    )
-    // wait for some seconds per liquidity
-    await sleep(10000)
+  //   const { positionAddress: position } = await market.getPositionAddress(
+  //     positionOwner.publicKey,
+  //     index
+  //   )
+  //   // wait for some seconds per liquidity
+  //   await sleep(10000)
 
-    const positionStructBefore = await market.getPosition(positionOwner.publicKey, index)
-    const poolAddress = positionStructBefore.pool
-    const positionId = positionStructBefore.id
+  //   const positionStructBefore = await market.getPosition(positionOwner.publicKey, index)
+  //   const poolAddress = positionStructBefore.pool
+  //   const positionId = positionStructBefore.id
 
-    // stake
-    const update: UpdateSecondsPerLiquidity = {
-      pair,
-      owner: positionOwner.publicKey,
-      lowerTickIndex: lowerTick,
-      upperTickIndex: upperTick,
-      index
-    }
-    const createStake: CreateStake = {
-      pool: poolAddress,
-      id: positionId,
-      index,
-      position,
-      incentive: incentiveAccount.publicKey,
-      owner: positionOwner.publicKey,
-      invariant: anchor.workspace.Invariant.programId
-    }
+  //   // stake
+  //   const update: UpdateSecondsPerLiquidity = {
+  //     pair,
+  //     owner: positionOwner.publicKey,
+  //     lowerTickIndex: lowerTick,
+  //     upperTickIndex: upperTick,
+  //     index
+  //   }
+  //   const createStake: CreateStake = {
+  //     pool: poolAddress,
+  //     id: positionId,
+  //     index,
+  //     position,
+  //     incentive: incentiveAccount.publicKey,
+  //     owner: positionOwner.publicKey,
+  //     invariant: anchor.workspace.Invariant.programId
+  //   }
 
-    const updateIx = await market.updateSecondsPerLiquidityInstruction(update)
-    const stakeIx = await staker.createStakeIx(createStake)
-    const tx = new Transaction().add(updateIx).add(stakeIx)
+  //   const updateIx = await market.updateSecondsPerLiquidityInstruction(update)
+  //   const stakeIx = await staker.createStakeIx(createStake)
+  //   const tx = new Transaction().add(updateIx).add(stakeIx)
 
-    await signAndSend(tx, [positionOwner], staker.connection)
+  //   await signAndSend(tx, [positionOwner], staker.connection)
 
-    // Create owner
-    const trader = Keypair.generate()
-    await connection.requestAirdrop(trader.publicKey, 1e9)
-    const amount = new BN(1000)
+  //   // Create owner
+  //   const trader = Keypair.generate()
+  //   await connection.requestAirdrop(trader.publicKey, 1e9)
+  //   const amount = new BN(1000)
 
-    const accountX = await tokenX.createAccount(trader.publicKey)
-    const accountY = await tokenY.createAccount(trader.publicKey)
+  //   const accountX = await tokenX.createAccount(trader.publicKey)
+  //   const accountY = await tokenY.createAccount(trader.publicKey)
 
-    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
+  //   await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
 
-    // Swap
-    const poolDataBefore = await market.getPool(pair)
+  //   // Swap
+  //   const poolDataBefore = await market.getPool(pair)
 
-    const swapVars: Swap = {
-      pair,
-      xToY: true,
-      amount,
-      estimatedPriceAfterSwap: poolDataBefore.sqrtPrice, // ignore price impact using high slippage tolerance
-      slippage: toDecimal(1, 2),
-      accountX,
-      accountY,
-      byAmountIn: true,
-      owner: trader.publicKey
-    }
+  //   const swapVars: Swap = {
+  //     pair,
+  //     xToY: true,
+  //     amount,
+  //     estimatedPriceAfterSwap: poolDataBefore.sqrtPrice, // ignore price impact using high slippage tolerance
+  //     slippage: toDecimal(1, 2),
+  //     accountX,
+  //     accountY,
+  //     byAmountIn: true,
+  //     owner: trader.publicKey
+  //   }
 
-    await market.swap(swapVars, trader)
+  //   await market.swap(swapVars, trader)
 
-    await sleep(10000)
+  //   await sleep(10000)
 
-    // withdraw
-    const withdraw: Withdraw = {
-      incentive: incentiveAccount.publicKey,
-      pool: poolAddress,
-      id: positionId,
-      position,
-      owner: positionOwner.publicKey,
-      incentiveTokenAccount: incentiveTokenAccount.publicKey,
-      ownerTokenAcc: ownerTokenAcc,
-      index,
-      nonce
-    }
+  //   // withdraw
+  //   const withdraw: Withdraw = {
+  //     incentive: incentiveAccount.publicKey,
+  //     pool: poolAddress,
+  //     id: positionId,
+  //     position,
+  //     owner: positionOwner.publicKey,
+  //     incentiveTokenAccount: incentiveTokenAccount.publicKey,
+  //     ownerTokenAcc: ownerTokenAcc,
+  //     index,
+  //     nonce
+  //   }
 
-    const withdrawIx = await staker.withdrawIx(withdraw)
-    const withdrawTx = new Transaction().add(updateIx).add(withdrawIx)
-    await signAndSend(withdrawTx, [positionOwner], staker.connection)
+  //   const withdrawIx = await staker.withdrawIx(withdraw)
+  //   const withdrawTx = new Transaction().add(updateIx).add(withdrawIx)
+  //   await signAndSend(withdrawTx, [positionOwner], staker.connection)
 
-    // should be around half of reward
-    const balanceAfter = (await incentiveToken.getAccountInfo(ownerTokenAcc)).amount
-    assert.ok(almostEqual(balanceAfter, new BN('500'), epsilon))
-  })
-  it('Withdraw ', async () => {
+  //   // should be around half of reward
+  //   const balanceAfter = (await incentiveToken.getAccountInfo(ownerTokenAcc)).amount
+  //   assert.ok(almostEqual(balanceAfter, new BN('500'), epsilon))
+  // })
+  // it('Withdraw - remove position', async () => {
+  //   const founderAccount = Keypair.generate()
+  //   const positionOwner = Keypair.generate()
+
+  //   await Promise.all([
+  //     connection.requestAirdrop(founderAccount.publicKey, 1e9),
+  //     connection.requestAirdrop(positionOwner.publicKey, 1e9)
+  //   ])
+
+  //   // create taken acc for founder and staker
+  //   founderTokenAccount = await incentiveToken.createAccount(founderAccount.publicKey)
+  //   incentiveTokenAccount = Keypair.generate()
+  //   ownerTokenAcc = await incentiveToken.createAccount(positionOwner.publicKey)
+
+  //   // mint to founder acc
+  //   await incentiveToken.mintTo(founderTokenAccount, wallet, [], tou64(new anchor.BN(5000 * 1e12)))
+
+  //   // create incentive
+
+  //   const currentTime = getTime()
+  //   const reward: Decimal = { v: new BN(1000) }
+  //   const startTime = { v: currentTime.add(new BN(0)) }
+  //   const endTime = { v: currentTime.add(new BN(20)) }
+
+  //   const createIncentiveVars: CreateIncentive = {
+  //     reward,
+  //     startTime,
+  //     endTime,
+  //     pool,
+  //     founder: founderAccount.publicKey,
+  //     incentiveToken: incentiveToken.publicKey,
+  //     founderTokenAccount: founderTokenAccount,
+  //     invariant
+  //   }
+  //   const createTx = new Transaction().add(
+  //     await staker.createIncentiveIx(
+  //       createIncentiveVars,
+  //       secondsIncentiveAccount.publicKey,
+  //       incentiveTokenAccount.publicKey
+  //     )
+  //   )
+
+  //   await signAndSend(
+  //     createTx,
+  //     [founderAccount, secondsIncentiveAccount, incentiveTokenAccount],
+  //     staker.connection
+  //   )
+  //   // create position
+  //   await connection.requestAirdrop(positionOwner.publicKey, 1e9)
+  //   const upperTick = 10
+  //   const lowerTick = -30
+
+  //   const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
+  //   const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
+  //   const mintAmount = tou64(new BN(10).pow(new BN(10)))
+
+  //   await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+  //   await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+
+  //   const liquidityDelta = { v: new BN(2000000).mul(DENOMINATOR) }
+
+  //   await market.createPositionList(positionOwner.publicKey, positionOwner)
+
+  //   const initPositionVars: InitPosition = {
+  //     pair,
+  //     owner: positionOwner.publicKey,
+  //     userTokenX: userTokenXAccount,
+  //     userTokenY: userTokenYAccount,
+  //     lowerTick,
+  //     upperTick,
+  //     liquidityDelta,
+  //     knownPrice: { v: PRICE_DENOMINATOR },
+  //     slippage: toDecimal(1, 3)
+  //   }
+  //   await market.initPosition(initPositionVars, positionOwner)
+
+  //   const index = 0
+
+  //   const { positionAddress: position } = await market.getPositionAddress(
+  //     positionOwner.publicKey,
+  //     index
+  //   )
+  //   // wait for some seconds per liquidity
+  //   await sleep(10000)
+
+  //   const positionStructBefore = await market.getPosition(positionOwner.publicKey, index)
+  //   const poolAddress = positionStructBefore.pool
+  //   const positionId = positionStructBefore.id
+
+  //   // stake
+  //   const update: UpdateSecondsPerLiquidity = {
+  //     pair,
+  //     owner: positionOwner.publicKey,
+  //     lowerTickIndex: lowerTick,
+  //     upperTickIndex: upperTick,
+  //     index
+  //   }
+  //   const createStake: CreateStake = {
+  //     pool: poolAddress,
+  //     id: positionId,
+  //     index,
+  //     position,
+  //     incentive: secondsIncentiveAccount.publicKey,
+  //     owner: positionOwner.publicKey,
+  //     invariant: anchor.workspace.Invariant.programId
+  //   }
+
+  //   const updateIx = await market.updateSecondsPerLiquidityInstruction(update)
+  //   const stakeIx = await staker.createStakeIx(createStake)
+  //   const tx = new Transaction().add(updateIx).add(stakeIx)
+
+  //   await signAndSend(tx, [positionOwner], staker.connection)
+
+  //   // Create owner
+  //   const trader = Keypair.generate()
+  //   await connection.requestAirdrop(trader.publicKey, 1e9)
+  //   const amount = new BN(1000)
+
+  //   const accountX = await tokenX.createAccount(trader.publicKey)
+  //   const accountY = await tokenY.createAccount(trader.publicKey)
+
+  //   await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
+
+  //   // Swap
+  //   const poolDataBefore = await market.getPool(pair)
+
+  //   const swapVars: Swap = {
+  //     pair,
+  //     xToY: true,
+  //     amount,
+  //     estimatedPriceAfterSwap: poolDataBefore.sqrtPrice, // ignore price impact using high slippage tolerance
+  //     slippage: toDecimal(1, 2),
+  //     accountX,
+  //     accountY,
+  //     byAmountIn: true,
+  //     owner: trader.publicKey
+  //   }
+
+  //   await market.swap(swapVars, trader)
+
+  //   await sleep(10000)
+
+  //   // Remove position
+  //   const removePositionVars: RemovePosition = {
+  //     pair,
+  //     owner: positionOwner.publicKey,
+  //     index: 0,
+  //     userTokenX: userTokenXAccount,
+  //     userTokenY: userTokenYAccount
+  //   }
+  //   await market.removePosition(removePositionVars, positionOwner)
+
+  //   // withdraw
+  //   const withdraw: Withdraw = {
+  //     incentive: secondsIncentiveAccount.publicKey,
+  //     pool: poolAddress,
+  //     id: positionId,
+  //     position,
+  //     owner: positionOwner.publicKey,
+  //     incentiveTokenAccount: incentiveTokenAccount.publicKey,
+  //     ownerTokenAcc: ownerTokenAcc,
+  //     index,
+  //     nonce
+  //   }
+
+  //   const withdrawIx = await staker.withdrawIx(withdraw)
+  //   const withdrawTx = new Transaction().add(updateIx).add(withdrawIx)
+
+  //   await assertThrowsAsync(
+  //     signAndSend(withdrawTx, [positionOwner], staker.connection),
+  //     STAKER_ERRORS.POSITION_DOES_NOT_EXIST
+  //   )
+  // })
+  it('Withdraw - move position index', async () => {
     const founderAccount = Keypair.generate()
     const positionOwner = Keypair.generate()
 
@@ -272,7 +462,7 @@ describe('Withdraw tests', () => {
     const currentTime = getTime()
     const reward: Decimal = { v: new BN(1000) }
     const startTime = { v: currentTime.add(new BN(0)) }
-    const endTime = { v: currentTime.add(new BN(20)) }
+    const endTime = { v: currentTime.add(new BN(200)) }
 
     const createIncentiveVars: CreateIncentive = {
       reward,
@@ -287,20 +477,20 @@ describe('Withdraw tests', () => {
     const createTx = new Transaction().add(
       await staker.createIncentiveIx(
         createIncentiveVars,
-        secondsIncentiveAccount.publicKey,
+        thirdIncentiveAccount.publicKey,
         incentiveTokenAccount.publicKey
       )
     )
 
     await signAndSend(
       createTx,
-      [founderAccount, secondsIncentiveAccount, incentiveTokenAccount],
+      [founderAccount, thirdIncentiveAccount, incentiveTokenAccount],
       staker.connection
     )
     // create position
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
-    const upperTick = 10
-    const lowerTick = -30
+    const upperTick = 20
+    const lowerTick = -40
 
     const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
     const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
@@ -313,7 +503,22 @@ describe('Withdraw tests', () => {
 
     await market.createPositionList(positionOwner.publicKey, positionOwner)
 
+    // create first position
     const initPositionVars: InitPosition = {
+      pair,
+      owner: positionOwner.publicKey,
+      userTokenX: userTokenXAccount,
+      userTokenY: userTokenYAccount,
+      lowerTick: -30,
+      upperTick: 10,
+      liquidityDelta,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: toDecimal(1, 3)
+    }
+    await market.initPosition(initPositionVars, positionOwner)
+
+    // create second position
+    const initPositionVars2: InitPosition = {
       pair,
       owner: positionOwner.publicKey,
       userTokenX: userTokenXAccount,
@@ -324,18 +529,23 @@ describe('Withdraw tests', () => {
       knownPrice: { v: PRICE_DENOMINATOR },
       slippage: toDecimal(1, 3)
     }
-    await market.initPosition(initPositionVars, positionOwner)
+    await market.initPosition(initPositionVars2, positionOwner)
 
-    const index = 0
+    const firstPositionIndex = 0
+    const secondPositionIndex = 1
 
     const { positionAddress: position } = await market.getPositionAddress(
       positionOwner.publicKey,
-      index
+      secondPositionIndex
     )
+
     // wait for some seconds per liquidity
     await sleep(10000)
 
-    const positionStructBefore = await market.getPosition(positionOwner.publicKey, index)
+    const positionStructBefore = await market.getPosition(
+      positionOwner.publicKey,
+      secondPositionIndex
+    )
     const poolAddress = positionStructBefore.pool
     const positionId = positionStructBefore.id
 
@@ -345,14 +555,14 @@ describe('Withdraw tests', () => {
       owner: positionOwner.publicKey,
       lowerTickIndex: lowerTick,
       upperTickIndex: upperTick,
-      index
+      index: secondPositionIndex
     }
     const createStake: CreateStake = {
       pool: poolAddress,
       id: positionId,
-      index,
+      index: secondPositionIndex,
       position,
-      incentive: secondsIncentiveAccount.publicKey,
+      incentive: thirdIncentiveAccount.publicKey,
       owner: positionOwner.publicKey,
       invariant: anchor.workspace.Invariant.programId
     }
@@ -392,25 +602,49 @@ describe('Withdraw tests', () => {
 
     await sleep(10000)
 
-    // // withdraw
-    // const withdraw: Withdraw = {
-    //   incentive: secondsIncentiveAccount.publicKey,
-    //   pool: poolAddress,
-    //   id: positionId,
-    //   position,
-    //   owner: positionOwner.publicKey,
-    //   incentiveTokenAccount: incentiveTokenAccount.publicKey,
-    //   ownerTokenAcc: ownerTokenAcc,
-    //   index,
-    //   nonce
-    // }
+    // Remove first position
+    const removePositionVars: RemovePosition = {
+      pair,
+      owner: positionOwner.publicKey,
+      index: firstPositionIndex,
+      userTokenX: userTokenXAccount,
+      userTokenY: userTokenYAccount
+    }
+    await market.removePosition(removePositionVars, positionOwner)
 
-    // const withdrawIx = await staker.withdrawIx(withdraw)
-    // const withdrawTx = new Transaction().add(updateIx).add(withdrawIx)
-    // await signAndSend(withdrawTx, [positionOwner], staker.connection)
+    // get second position data, now it should be at index 0
+    const { positionAddress: secondPositionAddress } = await market.getPositionAddress(
+      positionOwner.publicKey,
+      0
+    )
 
-    // // should be around half of reward
-    // const balanceAfter = (await incentiveToken.getAccountInfo(ownerTokenAcc)).amount
-    // assert.ok(almostEqual(balanceAfter, new BN('500'), epsilon))
+    const secondPosition = await market.getPosition(positionOwner.publicKey, 0)
+
+    // withdraw
+    const withdraw: Withdraw = {
+      incentive: thirdIncentiveAccount.publicKey,
+      pool: poolAddress,
+      id: secondPosition.id,
+      position: secondPositionAddress,
+      owner: positionOwner.publicKey,
+      incentiveTokenAccount: incentiveTokenAccount.publicKey,
+      ownerTokenAcc: ownerTokenAcc,
+      index: firstPositionIndex,
+      nonce
+    }
+
+    // update after
+    const updateAfter: UpdateSecondsPerLiquidity = {
+      pair,
+      owner: positionOwner.publicKey,
+      lowerTickIndex: lowerTick,
+      upperTickIndex: upperTick,
+      index: firstPositionIndex
+    }
+    const updateAfterIx = await market.updateSecondsPerLiquidityInstruction(updateAfter)
+
+    const withdrawIx = await staker.withdrawIx(withdraw)
+    const withdrawTx = new Transaction().add(updateAfterIx).add(withdrawIx)
+    await signAndSend(withdrawTx, [positionOwner], staker.connection)
   })
 })
