@@ -58,4 +58,6 @@ pub struct Pool {
 | start_timestamp              | u64        | Time of initialization.                                                               |
 | last_timestamp               | u64        | Last update.                                                                          |
 | fee_receiver                 | Pubkey     | Address of creator of the pool.                                                       |
+| oracle_address               | Pubkey     | Address                                                                               |
+| oracle_initialized           | bool       | Is oracle set for Pool.                                                               |
 | bump                         | u8         | Deed used to ensure the generated address doesn't collide with any other existing one |
