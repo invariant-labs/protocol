@@ -38,26 +38,24 @@ pub struct Pool {
 
 | Name                         | Type       | Description                                                                           |
 | ---------------------------- | ---------- | ------------------------------------------------------------------------------------- |
-| token_x                      | Pubkey     | The contract address of token_x.                                                      |
-| token_y                      | Pubkey     | The contract address of token_y.                                                      |
-| token_x_reserve              | Pubkey     | The contract address of either token_x or token_y.                                    |
-| token_y_reserve              | Pubkey     | The contract address of the other token.                                              |
-| position_iterator            | u128       | Index of each position i current pool.                                                |
+| token_x                      | Pubkey     | Address of token_x.                                                                   |
+| token_y                      | Pubkey     | Address of token_y.                                                                   |
+| token_x_reserve              | Pubkey     | Account of token_x controlled by Authority.                                           |
+| token_y_reserve              | Pubkey     | Account of token_y controlled by Authority                                            |
+| position_iterator            | u128       | Unique ID of each position in current pool.                                           |
 | tick_spacing                 | u16        | The spacing between usable ticks                                                      |
-| fee                          | FixedPoint | The fee collected upon every swap in the pool.                                        |
-| protocol_fee                 | FixedPoint | The protocol fee collected upon every swap in the pool.                               |
-| liquidity                    | Liquidity  | Square root of liquidity in current pool                                              |
+| fee                          | FixedPoint | Percentage The fee collected upon every swap in the pool.                             |
+| protocol_fee                 | FixedPoint | Percentage The protocol fee collected upon every swap in the pool.                    |
+| liquidity                    | Liquidity  | Liquidity in current pool                                                             |
 | sqrt_price                   | Price      | Square root of current price.                                                         |
-| current_tick_index           | i32        | nearest tick below the current price                                                  |
-| tickmap                      | Pubkey     | The contract address of the tick map.                                                 |
-| fee_growth_global_x          | FeeGrowth  | Used to track how many fees were accumulated in terms of token_x.                     |
-| fee_growth_global_y          | FeeGrowth  | Used to track how many fees were accumulated in terms of token_x.                     |
-| fee_protocol_token_x         | u64        | Protocol fee in token_x.                                                              |
-| fee_protocol_token_y         | u64        | Protocol fee in token_y.                                                              |
+| current_tick_index           | i32        | The nearest tick below the current price                                              |
+| tickmap                      | Pubkey     | Address of the tick map.                                                              |
+| fee_growth_global_x          | FeeGrowth  | Amount of fees accumulated in token_x in per one unit of Liquidity.                   |
+| fee_growth_global_y          | FeeGrowth  | Amount of fees accumulated in token_x in per one unit of Liquidity.                   |
+| fee_protocol_token_x         | u64        | Amount of protocol fees accumulated in token_x in per one unit of Liquidity.          |
+| fee_protocol_token_y         | u64        | Amount of protocol fees accumulated in token_x in per one unit of Liquidity.          |
 | seconds_per_liquidity_global | FixedPoint | Cumulative seconds per liquidity-in-range value.                                      |
 | start_timestamp              | u64        | Time of initialization.                                                               |
 | last_timestamp               | u64        | Last update.                                                                          |
-| fee_receiver                 | Pubkey     | The contract address of creator of the pool.                                          |
-| oracle_address               | Pubkey     | The contract address                                                                  |
-| oracle_initialized           | bool       | True or False                                                                         |
-| bump                         | u8         | seed used to ensure the generated address doesn't collide with any other existing one |
+| fee_receiver                 | Pubkey     | Address of creator of the pool.                                                       |
+| bump                         | u8         | Deed used to ensure the generated address doesn't collide with any other existing one |
