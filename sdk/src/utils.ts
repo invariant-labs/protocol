@@ -447,7 +447,10 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
       throw new Error(SimulationErrors.WrongLimit)
     }
   }
+
   let remainingAmount: BN = swapAmount
+  let shouldThrowTooLargeGap = false
+
   while (!remainingAmount.lte(new BN(0))) {
     // find closest initialized tick
     const closerLimit: CloserLimit = {
@@ -543,7 +546,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
 
     // in the future this can be replaced by counter
     if (!isTickInitialized && liquidity.v.eqn(0)) {
-      throw new Error(SimulationErrors.TooLargeGap)
+      shouldThrowTooLargeGap = true
     }
 
     if (currentTickIndex === previousTickIndex && !remainingAmount.eqn(0)) {
@@ -551,6 +554,10 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     } else {
       previousTickIndex = currentTickIndex
     }
+  }
+
+  if (shouldThrowTooLargeGap) {
+    throw new Error(SimulationErrors.TooLargeGap)
   }
 
   if (accumulatedAmountOut.isZero()) {
