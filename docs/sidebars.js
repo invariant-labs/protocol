@@ -59,6 +59,7 @@ module.exports = {
       ]
     },
     'faq',
+    'resources',
     {
       href: 'https://twitter.com/invariant_labs',
       label: 'Twitter',
