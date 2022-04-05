@@ -11,6 +11,14 @@
     {
       "source": "/stats/:net",
       "destination": "/api/stats/:net"
+    },
+    {
+      "source": "/stats/v2/:net/short",
+      "destination": "/api/stats/v2/:net/short"
+    },
+    {
+      "source": "/stats/v2/:net/full",
+      "destination": "/api/stats/v2/:net/full"
     }
   ]
 }

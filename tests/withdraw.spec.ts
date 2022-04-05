@@ -91,6 +91,8 @@ describe('withdraw', () => {
       userTokenY: userTokenYAccount,
       lowerTick,
       upperTick,
+      knownPrice: (await market.getPool(pair)).sqrtPrice,
+      slippage: { v: new BN(0) },
       liquidityDelta
     }
     await market.initPosition(initPositionVars, positionOwner)
@@ -137,14 +139,18 @@ describe('withdraw', () => {
     const reserveXDelta = reservesAfter.x.sub(reservesBefore.x)
     const reserveYDelta = reservesBefore.y.sub(reservesAfter.y)
 
+    // fee tokens           0.006 * 1000 = 6
+    // protocol fee tokens  ceil(6 * 0.01) = cei(0.06) = 1
+    // pool fee tokens      6 - 1 = 5
+    // fee growth global    5/1000000 = 5 * 10^-6
     assert.ok(amountX.eqn(0))
     assert.ok(amountY.eq(amount.subn(7)))
     assert.ok(reserveXDelta.eq(amount))
     assert.ok(reserveYDelta.eq(amount.subn(7)))
 
-    assert.ok(poolData.feeGrowthGlobalX.v.eq(new BN('4000000000000000000')))
+    assert.ok(poolData.feeGrowthGlobalX.v.eq(new BN('5000000000000000000')))
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(poolData.feeProtocolTokenX.eqn(2))
+    assert.ok(poolData.feeProtocolTokenX.eqn(1))
     assert.ok(poolData.feeProtocolTokenY.eqn(0))
 
     // Remove position
@@ -167,13 +173,14 @@ describe('withdraw', () => {
     const reservesAfterRemove = await market.getReserveBalances(pair, tokenX, tokenY)
     const expectedWithdrawnX = new BN(1493)
     const expectedWithdrawnY = new BN(6)
-    const expectedFeeX = new BN(4)
+    const expectedFeeX = new BN(5)
 
     assert.ok(
       reservesBeforeRemove.x.sub(reservesAfterRemove.x).eq(expectedWithdrawnX.add(expectedFeeX))
     )
     assert.ok(reservesBeforeRemove.y.sub(reservesAfterRemove.y).eq(expectedWithdrawnY))
 
+    // validate ticks
     await assertThrowsAsync(market.getTick(pair, upperTick))
     await assertThrowsAsync(market.getTick(pair, lowerTick))
 

@@ -128,10 +128,11 @@ describe('big-swap', () => {
     const poolAfterSwaps = await market.getPool(pair)
     const { feeX, feeY } = await market.getGlobalFee(pair)
     const { volumeX, volumeY } = await market.getVolume(pair)
-    assert.ok(feeX.eq(new BN(156655385)))
-    assert.ok(feeY.eq(new BN(168147430)))
-    assert.ok(volumeX.eq(new BN(26109230833)))
-    assert.ok(volumeY.eq(new BN(28024571666)))
+
+    assert.ok(feeX.eq(new BN(156655500)))
+    assert.ok(feeY.eq(new BN(168147600)))
+    assert.ok(volumeX.eq(new BN(26109250000)))
+    assert.ok(volumeY.eq(new BN(28024600000)))
     for (let i = -40; i < 50; i += 10) {
       let lowerTick
       try {
@@ -272,10 +273,10 @@ describe('big-swap', () => {
     const { feeX: feeX2, feeY: feeY2 } = await market.getGlobalFee(pair)
     const { volumeX: volumeX2, volumeY: volumeY2 } = await market.getVolume(pair)
 
-    assert.ok(feeX2.eq(new BN(168682560)))
-    assert.ok(feeY2.eq(new BN(186276575)))
-    assert.ok(volumeX2.eq(new BN(28113760000)))
-    assert.ok(volumeY2.eq(new BN(31046095833)))
+    assert.ok(feeX2.eq(new BN(168682700)))
+    assert.ok(feeY2.eq(new BN(186276900)))
+    assert.ok(volumeX2.eq(new BN(28113783333)))
+    assert.ok(volumeY2.eq(new BN(31046150000)))
 
     for (let i = -40; i < 50; i += 10) {
       let lowerTick

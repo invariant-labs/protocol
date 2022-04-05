@@ -192,13 +192,17 @@ describe('Liquidity gap', () => {
     const reserveYDelta = reserveYBefore.sub(reserveYAfter)
     const expectedYAmountOut = new BN(9999)
 
+    // fee tokens           0.006 * 10067 = ceil(60.402) = 61
+    // protocol fee tokens  ceil(61 * 0.01) = cei(0.61) = 1
+    // pool fee tokens      61 - 1 = 60
+    // fee growth global    60/20006000 = 2.9991002699190242927 * 10^-6
     assert.ok(amountX.eqn(0))
     assert.ok(amountY.eq(expectedYAmountOut))
     assert.ok(reserveXDelta.eq(amount))
     assert.ok(reserveYDelta.eq(expectedYAmountOut))
-    assert.equal(poolData.feeGrowthGlobalX.v.toString(), '2399280215935219434')
+    assert.equal(poolData.feeGrowthGlobalX.v.toString(), '2999100269919024292')
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(poolData.feeProtocolTokenX.eqn(13))
+    assert.ok(poolData.feeProtocolTokenX.eqn(1))
     assert.ok(poolData.feeProtocolTokenY.eqn(0))
   })
   it('no liquidity swap should fail', async () => {
