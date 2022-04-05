@@ -25,7 +25,7 @@ pub fn calculate_reward(
         cmp::max(end_time, current_time) - start_time - total_seconds_claimed;
 
     let result = total_reward_unclaimed * seconds_inside / total_seconds_unclaimed;
-    return Ok((seconds_inside, result));
+    Ok((seconds_inside, result))
 }
 
 #[cfg(test)]

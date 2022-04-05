@@ -1,30 +1,31 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
-import { Market, Pair, DENOMINATOR, PRICE_DENOMINATOR } from '@invariant-labs/sdk'
+import { Market, Pair, sleep, PRICE_DENOMINATOR, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
 import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
-import { assert } from 'chai'
-import { Decimal, Staker, CreateStake, CreateIncentive } from '../staker-sdk/src/staker'
-import { createToken, tou64, signAndSend, eqDecimal, assertThrowsAsync } from './testUtils'
+import { createToken, tou64, getTime, signAndSend, almostEqual } from './testUtils'
 import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { toDecimal } from '../staker-sdk/lib/utils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { FeeTier } from '@invariant-labs/sdk/lib/market'
-import { InitPosition, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
-import { FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
-import { calculatePriceSqrt } from '@invariant-labs/sdk'
-import { STAKER_ERRORS } from '../staker-sdk/src/utils'
+import { FeeTier, TransferPositionOwnership } from '@invariant-labs/sdk/lib/market'
+import { InitPosition, Swap, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
+import { CreateIncentive, CreateStake, Withdraw, Decimal, Staker } from '../staker-sdk/src/staker'
+import { assert } from 'chai'
 
-describe('Stake tests', () => {
+describe('Withdraw with transfer position ownership', () => {
   const provider = Provider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Account
   const mintAuthority = Keypair.generate()
   const incentiveAccount = Keypair.generate()
-  const founderAccount = Keypair.generate()
   const positionOwner = Keypair.generate()
+  const founderAccount = Keypair.generate()
+  const positionRecipient = Keypair.generate()
   const admin = Keypair.generate()
+  const epsilon = new BN(50)
+  let nonce: number
   let staker: Staker
   let market: Market
   let pool: PublicKey
@@ -32,12 +33,11 @@ describe('Stake tests', () => {
   let incentiveToken: Token
   let founderTokenAccount: PublicKey
   let incentiveTokenAccount: Keypair
+  let positionRecipientTokenAccount: PublicKey
   let amount: BN
   let pair: Pair
   let tokenX: Token
   let tokenY: Token
-  let userTokenXAccount: PublicKey
-  let userTokenYAccount: PublicKey
 
   before(async () => {
     // create staker
@@ -63,13 +63,13 @@ describe('Stake tests', () => {
     // create taken acc for founder and staker
     founderTokenAccount = await incentiveToken.createAccount(founderAccount.publicKey)
     incentiveTokenAccount = Keypair.generate()
+    positionRecipientTokenAccount = await incentiveToken.createAccount(positionRecipient.publicKey)
 
     // mint to founder acc
-    amount = new anchor.BN(100 * 1e6)
+    amount = new anchor.BN(5000 * 1e12)
     await incentiveToken.mintTo(founderTokenAccount, wallet, [], tou64(amount))
 
     // create invariant and pool
-
     market = await Market.build(
       0,
       provider.wallet,
@@ -102,13 +102,12 @@ describe('Stake tests', () => {
     pool = await pair.getAddress(anchor.workspace.Invariant.programId)
   })
 
-  it('Stake', async () => {
+  it('Withdraw', async () => {
     // create incentive
-    const seconds = new Date().valueOf() / 1000
-    const currentTime = new BN(Math.floor(seconds))
-    const reward: Decimal = { v: new BN(10) }
+    const currentTime = getTime()
+    const reward: Decimal = { v: new BN(1000) }
     const startTime = { v: currentTime.add(new BN(0)) }
-    const endTime = { v: currentTime.add(new BN(31_000_000)) }
+    const endTime = { v: currentTime.add(new BN(20)) }
 
     const createIncentiveVars: CreateIncentive = {
       reward,
@@ -127,28 +126,27 @@ describe('Stake tests', () => {
         incentiveTokenAccount.publicKey
       )
     )
+
     await signAndSend(
       createTx,
       [founderAccount, incentiveAccount, incentiveTokenAccount],
       staker.connection
     )
-
     // create position
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
     const upperTick = 10
-    const lowerTick = -20
+    const lowerTick = -30
 
-    userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
-    userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
+    const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
+    const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
     const mintAmount = tou64(new BN(10).pow(new BN(10)))
 
     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
 
-    const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) }
+    const liquidityDelta = { v: new BN(2000000000000).mul(LIQUIDITY_DENOMINATOR) }
 
     await market.createPositionList(positionOwner.publicKey, positionOwner)
-    const poolData = await market.getPool(pair)
 
     const initPositionVars: InitPosition = {
       pair,
@@ -169,6 +167,9 @@ describe('Stake tests', () => {
       positionOwner.publicKey,
       index
     )
+    // wait for some seconds per liquidity
+    await sleep(10000)
+
     const positionStructBefore = await market.getPosition(positionOwner.publicKey, index)
     const poolAddress = positionStructBefore.pool
     const positionId = positionStructBefore.id
@@ -197,81 +198,83 @@ describe('Stake tests', () => {
 
     await signAndSend(tx, [positionOwner], staker.connection)
 
-    const stake = await staker.getStake(incentiveAccount.publicKey, poolAddress, positionId)
-    const positionStructAfter = await market.getPosition(positionOwner.publicKey, index)
-    const liquidity: Decimal = { v: new BN(liquidityDelta.v) }
+    //change ownership
 
-    assert.ok(stake.incentive.equals(incentiveAccount.publicKey))
-    assert.ok(
-      eqDecimal(stake.secondsPerLiquidityInitial, positionStructAfter.secondsPerLiquidityInside)
-    )
-    assert.ok(eqDecimal(stake.liquidity, liquidity))
-  })
-  it('Pass position from other pool to incentive should fail', async () => {
-    const feeTier = FEE_TIERS[0]
-    const lowerTick = -10
-    const upperTick = 10
-    const secondPair = new Pair(tokenX.publicKey, tokenY.publicKey, feeTier)
-    await market.createFeeTier(
-      {
-        feeTier: feeTier,
-        admin: admin.publicKey
-      },
-      admin
-    )
-    await market.createPool({
-      pair: secondPair,
-      payer: positionOwner
-    })
+    // prepare recipient
+    await connection.requestAirdrop(positionRecipient.publicKey, 1e9)
+    await sleep(2000)
+    await market.createPositionList(positionRecipient.publicKey, positionRecipient)
 
-    const newPositionIndex = (await market.getPositionList(positionOwner.publicKey)).head
-
-    await market.initPosition(
-      {
-        pair: secondPair,
-        knownPrice: calculatePriceSqrt(0),
-        liquidityDelta: { v: new BN(1) },
-        lowerTick,
-        upperTick,
-        userTokenX: userTokenXAccount,
-        userTokenY: userTokenYAccount,
-        slippage: { v: DENOMINATOR },
-        owner: positionOwner.publicKey
-      },
-      positionOwner
-    )
-
-    const { positionAddress } = await market.getPositionAddress(
-      positionOwner.publicKey,
-      newPositionIndex
-    )
-    const position = await market.getPosition(positionOwner.publicKey, newPositionIndex)
-
-    const [poolAddress] = await secondPair.getAddressAndBump(anchor.workspace.Invariant.programId)
-    const update: UpdateSecondsPerLiquidity = {
-      pair: secondPair,
+    const transferPositionOwnershipVars: TransferPositionOwnership = {
+      index: index,
       owner: positionOwner.publicKey,
+      recipient: positionRecipient.publicKey
+    }
+    await market.transferPositionOwnership(transferPositionOwnershipVars, positionOwner)
+
+    const recipientPosition = await market.getPosition(positionRecipient.publicKey, 0)
+    const recipientPositionId = recipientPosition.id
+
+    const { positionAddress: recipientPositionAddress } = await market.getPositionAddress(
+      positionRecipient.publicKey,
+      index
+    )
+
+    // Create trader
+    const trader = Keypair.generate()
+    await connection.requestAirdrop(trader.publicKey, 1e9)
+    const amount = new BN(1000)
+
+    const accountX = await tokenX.createAccount(trader.publicKey)
+    const accountY = await tokenY.createAccount(trader.publicKey)
+
+    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
+
+    //Swap
+    const poolDataBefore = await market.getPool(pair)
+
+    const swapVars: Swap = {
+      pair,
+      xToY: true,
+      amount,
+      estimatedPriceAfterSwap: poolDataBefore.sqrtPrice, // ignore price impact using high slippage tolerance
+      slippage: toDecimal(1, 2),
+      accountX,
+      accountY,
+      byAmountIn: true,
+      owner: trader.publicKey
+    }
+
+    await market.swap(swapVars, trader)
+
+    await sleep(10000)
+
+    const updateRecipient: UpdateSecondsPerLiquidity = {
+      pair,
+      owner: positionRecipient.publicKey,
       lowerTickIndex: lowerTick,
       upperTickIndex: upperTick,
-      index: newPositionIndex
+      index
     }
-    const createStake: CreateStake = {
-      pool: poolAddress,
-      id: position.id,
-      index: newPositionIndex,
-      position: positionAddress,
+    // withdraw
+    const withdraw: Withdraw = {
       incentive: incentiveAccount.publicKey,
-      owner: positionOwner.publicKey,
-      invariant: anchor.workspace.Invariant.programId
+      pool: poolAddress,
+      id: recipientPositionId,
+      position: recipientPositionAddress,
+      owner: positionRecipient.publicKey,
+      incentiveTokenAccount: incentiveTokenAccount.publicKey,
+      ownerTokenAcc: positionRecipientTokenAccount,
+      index,
+      nonce
     }
+    const updateRecipientIx = await market.updateSecondsPerLiquidityInstruction(updateRecipient)
+    const withdrawIx = await staker.withdrawIx(withdraw)
+    const withdrawTx = new Transaction().add(updateRecipientIx).add(withdrawIx)
+    await signAndSend(withdrawTx, [positionRecipient], staker.connection)
 
-    const updateIx = await market.updateSecondsPerLiquidityInstruction(update)
-    const stakeIx = await staker.createStakeIx(createStake)
-    const tx = new Transaction().add(updateIx).add(stakeIx)
-
-    await assertThrowsAsync(
-      signAndSend(tx, [positionOwner], staker.connection),
-      STAKER_ERRORS.DIFFERENT_INCENTIVE_POOL
-    )
+    // should be around half of reward
+    const balanceAfter = (await incentiveToken.getAccountInfo(positionRecipientTokenAccount)).amount
+    assert.ok(almostEqual(balanceAfter, new BN('500'), epsilon))
   })
 })

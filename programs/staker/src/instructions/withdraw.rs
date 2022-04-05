@@ -11,16 +11,16 @@ use invariant::structs::Position;
 #[instruction(index: u32, nonce: u8)]
 pub struct Withdraw<'info> {
     #[account(mut,
-        seeds = [b"staker", incentive.to_account_info().key.as_ref(), position.load()?.pool.as_ref(), &position.load()?.id.to_le_bytes()],
+        seeds = [b"staker", incentive.key().as_ref(), position.load()?.pool.as_ref(), &position.load()?.id.to_le_bytes()],
         bump = user_stake.load()?.bump,
     )]
     pub user_stake: AccountLoader<'info, UserStake>,
     #[account(mut,
-        constraint = &user_stake.load()?.incentive == incentive.to_account_info().key @ InvalidIncentive
+        constraint = user_stake.load()?.incentive == incentive.key() @ InvalidIncentive
     )]
     pub incentive: AccountLoader<'info, Incentive>,
     #[account(mut,
-        constraint = &incentive_token_account.owner == staker_authority.to_account_info().key @ InvalidTokenAccount
+        constraint = incentive_token_account.owner == staker_authority.key() @ InvalidTokenAccount
     )]
     pub incentive_token_account: Account<'info, TokenAccount>,
     #[account(
@@ -32,12 +32,12 @@ pub struct Withdraw<'info> {
     )]
     pub position: AccountLoader<'info, Position>,
     #[account(mut,
-        constraint = owner_token_account.to_account_info().key != incentive_token_account.to_account_info().key @ InvalidTokenAccount,
+        constraint = owner_token_account.key() != incentive_token_account.key() @ InvalidTokenAccount,
         constraint = owner_token_account.owner == position.load()?.owner @ InvalidOwner
     )]
     pub owner_token_account: Account<'info, TokenAccount>,
     #[account(seeds = [b"staker".as_ref()], bump = nonce)]
-    pub staker_authority: AccountInfo<'info>, // validate with state
+    pub staker_authority: AccountInfo<'info>,
     pub owner: AccountInfo<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
@@ -106,6 +106,7 @@ pub fn handler(ctx: Context<Withdraw>, _index: i32, nonce: u8) -> ProgramResult 
     }
 
     if Seconds::now() > { incentive.end_time } {
+        require!(incentive.num_of_stakes > 0, NoStakes);
         close(
             ctx.accounts.user_stake.to_account_info(),
             ctx.accounts.owner.to_account_info(),
