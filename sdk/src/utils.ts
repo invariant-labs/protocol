@@ -556,7 +556,9 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     }
   }
 
-  if (shouldThrowTooLargeGap) throw new Error(SimulationErrors.TooLargeGap)
+  if (shouldThrowTooLargeGap) {
+    throw new Error(SimulationErrors.TooLargeGap)
+  }
 
   if (accumulatedAmountOut.isZero()) {
     throw new Error(SimulationErrors.NoGainSwap)
