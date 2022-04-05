@@ -1,19 +1,19 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
-import { Market, Pair, DENOMINATOR, sleep, PRICE_DENOMINATOR } from '@invariant-labs/sdk'
+import { Market, Pair, sleep, PRICE_DENOMINATOR, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
 import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { createToken, tou64, getTime, signAndSend, almostEqual } from './testUtils'
 import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { toDecimal } from '../staker-sdk/lib/utils'
-import { DECIMAL, fromFee } from '@invariant-labs/sdk/lib/utils'
+import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier, TransferPositionOwnership } from '@invariant-labs/sdk/lib/market'
 import { InitPosition, Swap, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
 import { CreateIncentive, CreateStake, Withdraw, Decimal, Staker } from '../staker-sdk/src/staker'
 import { assert } from 'chai'
 
-describe('Withdraw tests', () => {
+describe('Withdraw with transfer position ownership', () => {
   const provider = Provider.local()
   const connection = provider.connection
   // @ts-expect-error
@@ -33,7 +33,6 @@ describe('Withdraw tests', () => {
   let incentiveToken: Token
   let founderTokenAccount: PublicKey
   let incentiveTokenAccount: Keypair
-  let ownerTokenAcc: PublicKey
   let positionRecipientTokenAccount: PublicKey
   let amount: BN
   let pair: Pair
@@ -64,7 +63,6 @@ describe('Withdraw tests', () => {
     // create taken acc for founder and staker
     founderTokenAccount = await incentiveToken.createAccount(founderAccount.publicKey)
     incentiveTokenAccount = Keypair.generate()
-    ownerTokenAcc = await incentiveToken.createAccount(positionOwner.publicKey)
     positionRecipientTokenAccount = await incentiveToken.createAccount(positionRecipient.publicKey)
 
     // mint to founder acc
@@ -106,7 +104,6 @@ describe('Withdraw tests', () => {
 
   it('Withdraw', async () => {
     // create incentive
-
     const currentTime = getTime()
     const reward: Decimal = { v: new BN(1000) }
     const startTime = { v: currentTime.add(new BN(0)) }
@@ -147,7 +144,7 @@ describe('Withdraw tests', () => {
     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
 
-    const liquidityDelta = { v: new BN(2000000).mul(DENOMINATOR) }
+    const liquidityDelta = { v: new BN(2000000000000).mul(LIQUIDITY_DENOMINATOR) }
 
     await market.createPositionList(positionOwner.publicKey, positionOwner)
 
@@ -220,7 +217,7 @@ describe('Withdraw tests', () => {
 
     const { positionAddress: recipientPositionAddress } = await market.getPositionAddress(
       positionRecipient.publicKey,
-      0
+      index
     )
 
     // Create trader
@@ -251,8 +248,6 @@ describe('Withdraw tests', () => {
     await market.swap(swapVars, trader)
 
     await sleep(10000)
-    // console.log(positionId.toString())
-    // console.log(recipientPositionId.toString())
 
     const updateRecipient: UpdateSecondsPerLiquidity = {
       pair,

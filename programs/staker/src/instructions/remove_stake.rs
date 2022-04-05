@@ -3,10 +3,6 @@ use crate::structs::{Incentive, UserStake};
 use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
 
-// Staker should be tested when position is reallocated (changing it address)
-// remove position, and stake position is the last one
-// transfer_position_ownership
-
 #[derive(Accounts)]
 pub struct RemoveStake<'info> {
     #[account(mut, constraint = incentive.load()?.founder == founder.key() @ InvalidFounder)]
