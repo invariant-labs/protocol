@@ -16,6 +16,7 @@ import {
 } from '@solana/web3.js'
 import { STAKER_SEED } from './utils'
 import { bs58 } from '@project-serum/anchor/dist/cjs/utils/bytes'
+import console from 'console'
 
 export class Staker {
   public connection: Connection
@@ -185,6 +186,7 @@ export class Staker {
     invariant
   }: CreateStake) {
     const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
+    console.log('user stake ', userStakeAddress.toString())
     return this.program.instruction.stake(index, {
       accounts: {
         userStake: userStakeAddress,

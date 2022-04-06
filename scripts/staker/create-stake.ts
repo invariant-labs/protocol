@@ -1,16 +1,11 @@
-import { Staker, Network } from '../../sdk-staker/src'
-import { Provider } from '@project-serum/anchor'
+import { Staker, Network } from '../../staker-sdk/src'
+import { Provider, Wallet } from '@project-serum/anchor'
 import { clusterApiUrl, PublicKey } from '@solana/web3.js'
-import { BN } from '../../sdk-staker/lib'
-import {
-  FeeTier,
-  Market,
-  PoolStructure,
-  UpdateSecondsPerLiquidity
-} from '@invariant-labs/sdk/src/market'
-import { CreateStake } from '../../sdk-staker/lib/staker'
-import { getMarketAddress, Pair } from '@invariant-labs/sdk'
+import { Market, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
+import { CreateStake } from '../../staker-sdk/lib/staker'
+import { getMarketAddress, Pair, MOCK_TOKENS } from '@invariant-labs/sdk'
 import { FEE_TIERS } from '@invariant-labs/sdk/src/utils'
+import { MINTER } from '../minter'
 
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
@@ -19,23 +14,28 @@ const provider = Provider.local(clusterApiUrl('devnet'), {
   skipPreflight: true
 })
 const connection = provider.connection
+const wallet = new Wallet(MINTER)
 
 // DEFINE ALL THESE VARS BEFORE EXECUTION
-const OWNER: PublicKey = new PublicKey('0')
-const INCENTIVE: PublicKey = new PublicKey('0')
-const TOKEN_X: PublicKey = new PublicKey('0')
-const TOKEN_Y: PublicKey = new PublicKey('0')
+const OWNER: PublicKey = MINTER.publicKey
+const INCENTIVE: PublicKey = new PublicKey('5ukyf8VQwvE3gJznGorUvPBoFgrisQe9dui8LFWCc9U5')
+const TOKEN_X: PublicKey = new PublicKey(MOCK_TOKENS.USDC)
+const TOKEN_Y: PublicKey = new PublicKey(MOCK_TOKENS.SOL)
 const POSITION_INDEX = 0
+const POSITION = new PublicKey('9bbq51zmVnS7XitBzs8xJwtje1QL9iDqy5zes6FvTYJG')
 
 const main = async () => {
-  const staker = await Staker.build(Network.DEV, provider.wallet, connection)
-  const market = await Market.build(Network.DEV, provider.wallet, connection)
-  const position = await market.getPosition(OWNER, POSITION_INDEX)
-  //const pool = (await market.program.account.pool.fetch(POOL)) as PoolStructure
+  const staker = await Staker.build(Network.DEV, wallet, connection)
+  const market = await Market.build(Network.DEV, wallet, connection)
+
   const feeTier = FEE_TIERS[0]
   const pair = new Pair(TOKEN_X, TOKEN_Y, feeTier)
-  const [poolAddress] = await pair.getAddressAndBump(market.program.programId)
+  const [poolAddress] = await pair.getAddressAndBump(new PublicKey(getMarketAddress(Network.DEV)))
+  console.log('pool address', poolAddress.toString())
   const pool = await market.getPool(pair)
+  const position = await market.getPosition(MINTER.publicKey, 0)
+  const positionAddress = await market.getPositionAddress(MINTER.publicKey, 0)
+  console.log('position', positionAddress.positionAddress.toString())
 
   const update: UpdateSecondsPerLiquidity = {
     pair,
@@ -48,10 +48,10 @@ const main = async () => {
     pool: poolAddress,
     id: position.id,
     index: POSITION_INDEX,
-    position: market.getPositionAddress(OWNER, POSITION_INDEX),
+    position: POSITION,
     incentive: INCENTIVE,
     owner: OWNER,
-    invariant: new PublicKey(getMarketAddress(Network.DEV))
+    invariant: new PublicKey('9aiirQKPZ2peE9QrXYmsbTtR7wSDJi2HkQdHuaMpTpei')
   }
 
   await staker.createStake(market, update, createStake)
