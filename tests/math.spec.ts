@@ -22,7 +22,8 @@ import {
   SwapResult,
   calculatePriceAfterSlippage,
   findClosestTicks,
-  isEnoughAmountToPushPrice
+  isEnoughAmountToPushPrice,
+  calculatePriceImpact
 } from '@invariant-labs/sdk/src/math'
 import {
   bigNumberToBuffer,
@@ -1381,6 +1382,24 @@ describe('Math', () => {
       const [tokensOwedXTotal, tokensOwedYTotal] = calculateClaimAmount(claim)
       assert.ok(tokensOwedXTotal.eq(new BN(5105)))
       assert.ok(tokensOwedYTotal.eq(new BN(176750)))
+    })
+  })
+  describe('test calculatePriceImpact', () => {
+    it('increasing price', () => {
+      // price change       120 -> 599
+      // real price impact  399.1(6)%
+      const startingSqrtPrice = new BN('10954451150103322269139395')
+      const endingSqrtPrice = new BN('24474476501040834315678144')
+      const priceImpact = calculatePriceImpact(startingSqrtPrice, endingSqrtPrice)
+      assert.ok(priceImpact.eq(new BN('3991666666666')))
+    })
+    it('decreasing price', () => {
+      // price change       0.367-> 1.0001^(-221818)
+      // real price impact  99.9999999365... %
+      const startingSqrtPrice = new BN('605805249234438377196232')
+      const endingSqrtPrice = new BN('15258932449895975601')
+      const priceImpact = calculatePriceImpact(startingSqrtPrice, endingSqrtPrice)
+      assert.ok(priceImpact.eq(new BN('999999999366')))
     })
   })
   describe('test simulateSwap', () => {
