@@ -661,7 +661,7 @@ export const calculatePriceImpact = (startingSqrtPrice: BN, endingSqrtPrice: BN)
   }
 }
 
-export const minReceivedTokensByAmountIn = (
+export const calculateMinReceivedTokensByAmountIn = (
   targetSqrtPrice: BN,
   xToY: boolean,
   amountIn: BN,
