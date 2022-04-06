@@ -1,4 +1,4 @@
-import { Network } from './network'
+import { getStakerAddress, Network } from './network'
 import { Staker as StakerIdl, IDL } from './idl/staker'
 import { BN, Program, Provider } from '@project-serum/anchor'
 import { IWallet } from '.'
@@ -18,43 +18,38 @@ import { STAKER_SEED } from './utils'
 import { bs58 } from '@project-serum/anchor/dist/cjs/utils/bytes'
 
 export class Staker {
-  connection: Connection
-  network: Network
-  wallet: IWallet
-  private readonly programId: PublicKey
-  private readonly program: Program<StakerIdl>
-  private programAuthority: ProgramAuthority
-  opts?: ConfirmOptions
+  public connection: Connection
+  public network: Network
+  public wallet: IWallet
+  public programId: PublicKey
+  public program: Program<StakerIdl>
+  public programAuthority: ProgramAuthority
+  public opts?: ConfirmOptions
 
   private constructor(
     connection: Connection,
     network: Network,
     wallet: IWallet,
-    programId?: PublicKey,
     opts?: ConfirmOptions
   ) {
     this.connection = connection
-    this.network = network
     this.wallet = wallet
     this.opts = opts
+    this.programAuthority = { authority: PublicKey.default, nonce: 0 }
+    this.programId = PublicKey.default
     const provider = new Provider(connection, wallet, opts ?? Provider.defaultOptions())
-    switch (network) {
-      case Network.LOCAL:
-        this.programId = programId
-        this.program = new Program(IDL, this.programId, provider)
-        break
-      default:
-        throw new Error('Not supported')
-    }
+    const programAddress = new PublicKey(getStakerAddress(network))
+
+    this.network = network
+    this.program = new Program(IDL, programAddress, provider)
   }
 
   public static async build(
     network: Network,
     wallet: IWallet,
-    connection: Connection,
-    programId?: PublicKey
+    connection: Connection
   ): Promise<Staker> {
-    const instance = new Staker(connection, network, wallet, programId)
+    const instance = new Staker(connection, network, wallet)
     instance.programAuthority = await instance.getProgramAuthority()
 
     return instance
@@ -125,7 +120,7 @@ export class Staker {
   public async removeAllStakes(incentive: PublicKey, founder: PublicKey) {
     const stakes = await this.getAllIncentiveStakes(incentive)
     let tx = new Transaction()
-    let txs: Transaction[]
+    let txs: Transaction[] = []
 
     // put max 18 Ix per Tx, sign and return array of tx hashes
     for (let i = 0; i < stakes.length; i++) {
@@ -299,6 +294,10 @@ export class Staker {
     ])
   }
 
+  public async getAllIncentive() {
+    return await this.program.account.incentive.all()
+  }
+
   private async signAndSend(tx: Transaction, signers?: Keypair[], opts?: ConfirmOptions) {
     const blockhash = await this.connection.getRecentBlockhash(
       this.opts?.commitment || Provider.defaultOptions().commitment
@@ -360,7 +359,7 @@ export interface CreateStake {
   id: BN
   position: PublicKey
   incentive: PublicKey
-  owner?: PublicKey
+  owner: PublicKey
   index: number
   invariant: PublicKey
 }
@@ -378,7 +377,7 @@ export interface Withdraw {
   incentiveTokenAccount: PublicKey
   ownerTokenAcc: PublicKey
   position: PublicKey
-  owner?: PublicKey
+  owner: PublicKey
   index: number
 }
 
