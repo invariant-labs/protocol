@@ -23,7 +23,8 @@ import {
   calculatePriceAfterSlippage,
   findClosestTicks,
   isEnoughAmountToPushPrice,
-  calculatePriceImpact
+  calculatePriceImpact,
+  minReceivedTokensByAmountIn
 } from '@invariant-labs/sdk/src/math'
 import {
   bigNumberToBuffer,
@@ -1400,6 +1401,46 @@ describe('Math', () => {
       const endingSqrtPrice = new BN('15258932449895975601')
       const priceImpact = calculatePriceImpact(startingSqrtPrice, endingSqrtPrice)
       assert.ok(priceImpact.eq(new BN('999999999366')))
+    })
+  })
+  describe('test minReceivedTokensByAmountIn', () => {
+    describe('x to y', () => {
+      const xToY = true
+      const fee = new BN(DENOMINATOR).divn(10000) // 0.01%
+
+      it('price > 1', () => {
+        const targetPrice = new BN('12' + '0'.repeat(PRICE_SCALE - 1))
+        const targetSqrtPrice = sqrt(targetPrice.mul(PRICE_DENOMINATOR))
+        const amountIn = new BN(999)
+        const minReceivedTokens = minReceivedTokensByAmountIn(targetSqrtPrice, xToY, amountIn, fee)
+        assert.ok(minReceivedTokens.eq(new BN(1197)))
+      })
+      it('price < 1', () => {
+        const targetPrice = new BN('94' + '0'.repeat(PRICE_SCALE - 5))
+        const targetSqrtPrice = sqrt(targetPrice.mul(PRICE_DENOMINATOR))
+        const amountIn = new BN(1200000000)
+        const minReceivedTokens = minReceivedTokensByAmountIn(targetSqrtPrice, xToY, amountIn, fee)
+        assert.ok(minReceivedTokens.eq(new BN(1127886)))
+      })
+    })
+    describe('y to x', () => {
+      const xToY = false
+      const fee = new BN(DENOMINATOR).divn(2000) // 0.05%
+
+      it('price > 1', () => {
+        const targetPrice = new BN('99' + '0'.repeat(PRICE_SCALE - 1))
+        const targetSqrtPrice = sqrt(targetPrice.mul(PRICE_DENOMINATOR))
+        const amountIn = new BN(20000)
+        const minReceivedTokens = minReceivedTokensByAmountIn(targetSqrtPrice, xToY, amountIn, fee)
+        assert.ok(minReceivedTokens.eq(new BN(2018)))
+      })
+      it('price < 1', () => {
+        const targetPrice = new BN('17' + '0'.repeat(PRICE_SCALE - 6))
+        const targetSqrtPrice = sqrt(targetPrice.mul(PRICE_DENOMINATOR))
+        const amountIn = new BN(4000)
+        const minReceivedTokens = minReceivedTokensByAmountIn(targetSqrtPrice, xToY, amountIn, fee)
+        assert.ok(minReceivedTokens.eq(new BN(235176469)))
+      })
     })
   })
   describe('test simulateSwap', () => {
