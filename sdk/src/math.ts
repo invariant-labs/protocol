@@ -660,3 +660,18 @@ export const calculatePriceImpact = (startingSqrtPrice: BN, endingSqrtPrice: BN)
     return DENOMINATOR.sub(priceQuotient)
   }
 }
+
+export const minReceivedTokensByAmountIn = (
+  targetPrice: BN,
+  xToY: boolean,
+  amountIn: BN,
+  fee: BN
+) => {
+  let amountOut: BN
+  if (xToY) {
+    amountOut = amountIn.mul(targetPrice).div(PRICE_DENOMINATOR)
+  } else {
+    amountOut = amountIn.mul(PRICE_DENOMINATOR).div(targetPrice)
+  }
+  return DENOMINATOR.sub(fee).mul(amountOut).div(DENOMINATOR)
+}
