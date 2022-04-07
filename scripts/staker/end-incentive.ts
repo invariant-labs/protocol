@@ -18,7 +18,6 @@ const FOUNDER_TOKEN_ACCOUNT: PublicKey = new PublicKey(
 )
 const INCENTIVE: PublicKey = new PublicKey('12GvxJpZ8ZLCwbafEWg5s15Ys5iFqhH4vdaw31HYQv5Q')
 const INCENTIVE_TOKEN: PublicKey = new PublicKey(MOCK_TOKENS.USDC)
-
 const INCENTIVE_TOKEN_ACCOUNT: PublicKey = new PublicKey(
   'FvgniRRatzmcjLqFsRk9BvPhYBQq2gs4AjoX6Dxtx5tp'
 )

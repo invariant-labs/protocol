@@ -18,24 +18,22 @@ const wallet = new Wallet(MINTER)
 
 // DEFINE ALL THESE VARS BEFORE EXECUTION
 const OWNER: PublicKey = MINTER.publicKey
-const INCENTIVE: PublicKey = new PublicKey('9X2p99zymwWpuJb7giF5rmbBLJAv5eDNA2zorpFEyJ4G')
+const INCENTIVE: PublicKey = new PublicKey('8Bhd6me9j6AS9N6f6BxRZkgsY9nBaEBzq2maoraTw91m')
 const TOKEN_X: PublicKey = new PublicKey(MOCK_TOKENS.USDC)
 const TOKEN_Y: PublicKey = new PublicKey(MOCK_TOKENS.SOL)
 const POSITION_INDEX = 0
 const POSITION = new PublicKey('9bbq51zmVnS7XitBzs8xJwtje1QL9iDqy5zes6FvTYJG')
+const INVARIANT = new PublicKey('9aiirQKPZ2peE9QrXYmsbTtR7wSDJi2HkQdHuaMpTpei')
+const FEE_TIER = FEE_TIERS[0]
 
 const main = async () => {
   const staker = await Staker.build(Network.DEV, wallet, connection)
   const market = await Market.build(Network.DEV, wallet, connection)
 
-  const feeTier = FEE_TIERS[0]
-  const pair = new Pair(TOKEN_X, TOKEN_Y, feeTier)
+  const pair = new Pair(TOKEN_X, TOKEN_Y, FEE_TIER)
   const [poolAddress] = await pair.getAddressAndBump(new PublicKey(getMarketAddress(Network.DEV)))
-  console.log('pool address', poolAddress.toString())
   const pool = await market.getPool(pair)
-  const position = await market.getPosition(MINTER.publicKey, 0)
-  const positionAddress = await market.getPositionAddress(MINTER.publicKey, 0)
-  console.log('position', positionAddress.positionAddress.toString())
+  const position = await market.getPosition(OWNER, POSITION_INDEX)
 
   const update: UpdateSecondsPerLiquidity = {
     pair,
@@ -51,7 +49,7 @@ const main = async () => {
     position: POSITION,
     incentive: INCENTIVE,
     owner: OWNER,
-    invariant: new PublicKey('9aiirQKPZ2peE9QrXYmsbTtR7wSDJi2HkQdHuaMpTpei')
+    invariant: INVARIANT
   }
 
   await staker.createStake(market, update, createStake)

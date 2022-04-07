@@ -19,12 +19,12 @@ const OWNER: PublicKey = MINTER.publicKey
 const FOUNDER: PublicKey = MINTER.publicKey
 const INCENTIVE: PublicKey = new PublicKey('9X2p99zymwWpuJb7giF5rmbBLJAv5eDNA2zorpFEyJ4G')
 const POSITION_INDEX = 0
+const FEE_TIER = FEE_TIERS[0]
 
 const main = async () => {
   const staker = await Staker.build(Network.DEV, wallet, connection)
   const market = await Market.build(Network.DEV, wallet, connection)
-  const feeTier = FEE_TIERS[0]
-  const pair = new Pair(TOKEN_X, TOKEN_Y, feeTier)
+  const pair = new Pair(TOKEN_X, TOKEN_Y, FEE_TIER)
   const [poolAddress] = await pair.getAddressAndBump(new PublicKey(getMarketAddress(Network.DEV)))
   const position = await market.getPosition(OWNER, POSITION_INDEX)
 
