@@ -648,3 +648,31 @@ export const isEnoughAmountToPushPrice = (
 
   return !currentPriceSqrt.v.eq(nextSqrtPrice.v)
 }
+
+export const calculatePriceImpact = (startingSqrtPrice: BN, endingSqrtPrice: BN): BN => {
+  const startingPrice = startingSqrtPrice.mul(startingSqrtPrice).div(PRICE_DENOMINATOR)
+  const endingPrice = endingSqrtPrice.mul(endingSqrtPrice).div(PRICE_DENOMINATOR)
+  const priceQuotient = endingPrice.mul(DENOMINATOR).div(startingPrice)
+
+  if (endingPrice.gte(startingSqrtPrice)) {
+    return priceQuotient.sub(DENOMINATOR)
+  } else {
+    return DENOMINATOR.sub(priceQuotient)
+  }
+}
+
+export const calculateMinReceivedTokensByAmountIn = (
+  targetSqrtPrice: BN,
+  xToY: boolean,
+  amountIn: BN,
+  fee: BN
+) => {
+  const targetPrice = targetSqrtPrice.mul(targetSqrtPrice).div(PRICE_DENOMINATOR)
+  let amountOut: BN
+  if (xToY) {
+    amountOut = amountIn.mul(targetPrice).div(PRICE_DENOMINATOR)
+  } else {
+    amountOut = amountIn.mul(PRICE_DENOMINATOR).div(targetPrice)
+  }
+  return DENOMINATOR.sub(fee).mul(amountOut).div(DENOMINATOR)
+}

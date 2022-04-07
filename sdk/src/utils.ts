@@ -22,7 +22,9 @@ import {
   PositionInitData
 } from './market'
 import {
+  calculateMinReceivedTokensByAmountIn,
   calculatePriceAfterSlippage,
+  calculatePriceImpact,
   calculateSwapStep,
   getLiquidityByX,
   getLiquidityByY,
@@ -114,6 +116,8 @@ export interface SimulationResult {
   accumulatedAmountIn: BN
   accumulatedAmountOut: BN
   accumulatedFee: BN
+  minReceived: BN
+  priceImpact: BN
   priceAfterSwap: BN
 }
 
@@ -429,6 +433,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
   const { xToY, byAmountIn, swapAmount, slippage, ticks, tickmap, priceLimit, pool } =
     swapParameters
   let { currentTickIndex, tickSpacing, liquidity, sqrtPrice, fee } = pool
+  const startingSqrtPrice = sqrtPrice.v
   let previousTickIndex = MAX_TICK + 1
   const amountPerTick: BN[] = []
   let accumulatedAmount: BN = new BN(0)
@@ -564,12 +569,34 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     throw new Error(SimulationErrors.NoGainSwap)
   }
 
+  const priceAfterSwap: BN = sqrtPrice.v
+  const priceImpact = calculatePriceImpact(startingSqrtPrice, priceAfterSwap)
+
+  let minReceived: BN
+  if (byAmountIn) {
+    const endingPriceAfterSlippage = calculatePriceAfterSlippage(
+      { v: priceAfterSwap },
+      slippage,
+      !xToY
+    ).v
+    minReceived = calculateMinReceivedTokensByAmountIn(
+      endingPriceAfterSlippage,
+      xToY,
+      accumulatedAmountIn,
+      pool.fee.v
+    )
+  } else {
+    minReceived = accumulatedAmountOut
+  }
+
   return {
     amountPerTick,
     accumulatedAmountIn,
     accumulatedAmountOut,
     accumulatedFee,
-    priceAfterSwap: sqrtPrice.v
+    priceAfterSwap,
+    priceImpact,
+    minReceived
   }
 }
 
