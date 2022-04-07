@@ -120,7 +120,7 @@ export class Staker {
   public async removeAllStakes(incentive: PublicKey, founder: PublicKey) {
     const stakes = await this.getAllIncentiveStakes(incentive)
     let tx = new Transaction()
-    let txs: Transaction[] = []
+    const txs: Transaction[] = []
 
     // put max 18 Ix per Tx, sign and return array of tx hashes
     for (let i = 0; i < stakes.length; i++) {
