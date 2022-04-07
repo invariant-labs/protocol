@@ -24,7 +24,7 @@ export class Staker {
   public wallet: IWallet
   public programId: PublicKey
   public program: Program<StakerIdl>
-  public programAuthority: ProgramAuthority
+  public programAuthority: ProgramAuthority = { authority: PublicKey.default, nonce: 0 }
   public opts?: ConfirmOptions
 
   private constructor(
@@ -36,8 +36,7 @@ export class Staker {
     this.connection = connection
     this.wallet = wallet
     this.opts = opts
-    this.programAuthority = { authority: PublicKey.default, nonce: 0 }
-    this.programId = PublicKey.default
+    this.programId = new PublicKey(getStakerAddress(network))
     const provider = new Provider(connection, wallet, opts ?? Provider.defaultOptions())
     const programAddress = new PublicKey(getStakerAddress(network))
 
@@ -187,6 +186,8 @@ export class Staker {
   }: CreateStake) {
     const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
     console.log('user stake ', userStakeAddress.toString())
+    console.log('program id', this.programId.toString())
+
     return this.program.instruction.stake(index, {
       accounts: {
         userStake: userStakeAddress,
