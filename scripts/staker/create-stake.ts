@@ -18,7 +18,7 @@ const wallet = new Wallet(MINTER)
 
 // DEFINE ALL THESE VARS BEFORE EXECUTION
 const OWNER: PublicKey = MINTER.publicKey
-const INCENTIVE: PublicKey = new PublicKey('5ukyf8VQwvE3gJznGorUvPBoFgrisQe9dui8LFWCc9U5')
+const INCENTIVE: PublicKey = new PublicKey('9X2p99zymwWpuJb7giF5rmbBLJAv5eDNA2zorpFEyJ4G')
 const TOKEN_X: PublicKey = new PublicKey(MOCK_TOKENS.USDC)
 const TOKEN_Y: PublicKey = new PublicKey(MOCK_TOKENS.SOL)
 const POSITION_INDEX = 0
