@@ -22,7 +22,6 @@ const INCENTIVE: PublicKey = new PublicKey('8Bhd6me9j6AS9N6f6BxRZkgsY9nBaEBzq2ma
 const TOKEN_X: PublicKey = new PublicKey(MOCK_TOKENS.USDC)
 const TOKEN_Y: PublicKey = new PublicKey(MOCK_TOKENS.SOL)
 const POSITION_INDEX = 0
-const POSITION = new PublicKey('9bbq51zmVnS7XitBzs8xJwtje1QL9iDqy5zes6FvTYJG')
 const INVARIANT = new PublicKey('9aiirQKPZ2peE9QrXYmsbTtR7wSDJi2HkQdHuaMpTpei')
 const FEE_TIER = FEE_TIERS[0]
 
@@ -33,6 +32,7 @@ const main = async () => {
   const pair = new Pair(TOKEN_X, TOKEN_Y, FEE_TIER)
   const [poolAddress] = await pair.getAddressAndBump(new PublicKey(getMarketAddress(Network.DEV)))
   const pool = await market.getPool(pair)
+  const { positionAddress } = await market.getPositionAddress(OWNER, POSITION_INDEX)
   const position = await market.getPosition(OWNER, POSITION_INDEX)
 
   const update: UpdateSecondsPerLiquidity = {
@@ -46,7 +46,7 @@ const main = async () => {
     pool: poolAddress,
     id: position.id,
     index: POSITION_INDEX,
-    position: POSITION,
+    position: positionAddress,
     incentive: INCENTIVE,
     owner: OWNER,
     invariant: INVARIANT

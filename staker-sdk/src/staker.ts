@@ -16,7 +16,6 @@ import {
 } from '@solana/web3.js'
 import { STAKER_SEED } from './utils'
 import { bs58 } from '@project-serum/anchor/dist/cjs/utils/bytes'
-import console from 'console'
 
 export class Staker {
   public connection: Connection
