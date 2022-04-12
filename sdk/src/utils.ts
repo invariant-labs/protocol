@@ -112,6 +112,7 @@ export interface SimulateSwapInterface {
 }
 
 export interface SimulationResult {
+  status: SimulationStatus
   amountPerTick: BN[]
   accumulatedAmountIn: BN
   accumulatedAmountOut: BN
@@ -420,7 +421,8 @@ export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
   }
 }
 
-export enum SimulationErrors {
+export enum SimulationStatus {
+  Ok,
   WrongLimit = 'Price limit is on the wrong side of price',
   PriceLimitReached = 'Price would cross swap limit',
   TickNotFound = 'tick crossed but not passed to simulation',
@@ -445,16 +447,16 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
   // Sanity check, should never throw
   if (xToY) {
     if (sqrtPrice.v.lt(priceLimitAfterSlippage.v)) {
-      throw new Error(SimulationErrors.WrongLimit)
+      throw new Error(SimulationStatus.WrongLimit)
     }
   } else {
     if (sqrtPrice.v.gt(priceLimitAfterSlippage.v)) {
-      throw new Error(SimulationErrors.WrongLimit)
+      throw new Error(SimulationStatus.WrongLimit)
     }
   }
 
   let remainingAmount: BN = swapAmount
-  let shouldThrowTooLargeGap = false
+  let status = SimulationStatus.Ok
 
   while (!remainingAmount.lte(new BN(0))) {
     // find closest initialized tick
@@ -492,7 +494,9 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     sqrtPrice = result.nextPrice
 
     if (sqrtPrice.v.eq(priceLimitAfterSlippage.v) && remainingAmount.gt(new BN(0))) {
-      throw new Error(SimulationErrors.PriceLimitReached)
+      // throw new Error(SimulationErrors.PriceLimitReached)
+      status = SimulationStatus.PriceLimitReached
+      break
     }
 
     // crossing tick
@@ -512,7 +516,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
       // cross
       if (initialized) {
         if (!ticks.has(tickIndex)) {
-          throw new Error(SimulationErrors.TickNotFound)
+          throw new Error(SimulationStatus.TickNotFound)
         }
         const tick = ticks.get(tickIndex) as Tick
 
@@ -551,22 +555,23 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
 
     // in the future this can be replaced by counter
     if (!isTickInitialized && liquidity.v.eqn(0)) {
-      shouldThrowTooLargeGap = true
+      // throw new Error(SimulationErrors.TooLargeGap)
+      status = SimulationStatus.TooLargeGap
+      break
     }
 
     if (currentTickIndex === previousTickIndex && !remainingAmount.eqn(0)) {
-      throw new Error(SimulationErrors.LimitReached)
+      // throw new Error(SimulationErrors.LimitReached)
+      status = SimulationStatus.LimitReached
+      break
     } else {
       previousTickIndex = currentTickIndex
     }
   }
 
-  if (shouldThrowTooLargeGap) {
-    throw new Error(SimulationErrors.TooLargeGap)
-  }
-
   if (accumulatedAmountOut.isZero()) {
-    throw new Error(SimulationErrors.NoGainSwap)
+    // throw new Error(SimulationErrors.NoGainSwap)
+    status = SimulationStatus.NoGainSwap
   }
 
   const priceAfterSwap: BN = sqrtPrice.v
@@ -590,6 +595,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
   }
 
   return {
+    status,
     amountPerTick,
     accumulatedAmountIn,
     accumulatedAmountOut,
