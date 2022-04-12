@@ -340,7 +340,6 @@ export const getNextPriceYDown = (
       .mul(PRICE_DENOMINATOR)
       .add(liquidity.v.mul(new BN(10).pow(new BN(PRICE_SCALE - LIQUIDITY_SCALE))).subn(1))
       .div(liquidity.v.mul(new BN(10).pow(new BN(PRICE_SCALE - LIQUIDITY_SCALE))))
-    assert.isTrue(price.v.gt(quotient))
     return { v: price.v.sub(quotient) }
   }
 }
