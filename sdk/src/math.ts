@@ -650,15 +650,15 @@ export const isEnoughAmountToPushPrice = (
 }
 
 export const calculatePriceImpact = (startingSqrtPrice: BN, endingSqrtPrice: BN): BN => {
-  const startingPrice = startingSqrtPrice.mul(startingSqrtPrice).div(PRICE_DENOMINATOR)
-  const endingPrice = endingSqrtPrice.mul(endingSqrtPrice).div(PRICE_DENOMINATOR)
-  const priceQuotient = endingPrice.mul(DENOMINATOR).div(startingPrice)
-
-  if (endingPrice.gte(startingSqrtPrice)) {
-    return priceQuotient.sub(DENOMINATOR)
+  const startingPrice = startingSqrtPrice.mul(startingSqrtPrice)
+  const endingPrice = endingSqrtPrice.mul(endingSqrtPrice)
+  let priceQuotient
+  if (endingPrice.gte(startingPrice)) {
+    priceQuotient = DENOMINATOR.mul(startingPrice).div(endingPrice)
   } else {
-    return DENOMINATOR.sub(priceQuotient)
+    priceQuotient = DENOMINATOR.mul(endingPrice).div(startingPrice)
   }
+  return DENOMINATOR.sub(priceQuotient)
 }
 
 export const calculateMinReceivedTokensByAmountIn = (
@@ -667,12 +667,12 @@ export const calculateMinReceivedTokensByAmountIn = (
   amountIn: BN,
   fee: BN
 ) => {
-  const targetPrice = targetSqrtPrice.mul(targetSqrtPrice).div(PRICE_DENOMINATOR)
+  const targetPrice = targetSqrtPrice.mul(targetSqrtPrice)
   let amountOut: BN
   if (xToY) {
-    amountOut = amountIn.mul(targetPrice).div(PRICE_DENOMINATOR)
+    amountOut = amountIn.mul(targetPrice).div(PRICE_DENOMINATOR).div(PRICE_DENOMINATOR)
   } else {
-    amountOut = amountIn.mul(PRICE_DENOMINATOR).div(targetPrice)
+    amountOut = amountIn.mul(PRICE_DENOMINATOR).mul(PRICE_DENOMINATOR).div(targetPrice)
   }
   return DENOMINATOR.sub(fee).mul(amountOut).div(DENOMINATOR)
 }
