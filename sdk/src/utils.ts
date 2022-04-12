@@ -569,7 +569,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     }
   }
 
-  if (accumulatedAmountOut.isZero()) {
+  if (accumulatedAmountOut.isZero() && status === SimulationStatus.Ok) {
     // throw new Error(SimulationErrors.NoGainSwap)
     status = SimulationStatus.NoGainSwap
   }
