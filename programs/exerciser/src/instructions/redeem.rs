@@ -14,7 +14,7 @@ pub struct Redeem<'info> {
     pub token_program: AccountInfo<'info>,
 }
 
-// impl<'info> Withdraw<'info> {
+// impl<'info> Redeem<'info> {
 //     fn withdraw(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
 //         CpiContext::new(
 //             self.token_program.to_account_info(),
