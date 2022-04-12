@@ -1388,11 +1388,11 @@ describe('Math', () => {
   describe('test calculatePriceImpact', () => {
     it('increasing price', () => {
       // price change       120 -> 599
-      // real price impact  399.1(6)%
+      // real price impact  79.96661101836...%
       const startingSqrtPrice = new BN('10954451150103322269139395')
       const endingSqrtPrice = new BN('24474476501040834315678144')
       const priceImpact = calculatePriceImpact(startingSqrtPrice, endingSqrtPrice)
-      assert.ok(priceImpact.eq(new BN('3991666666666')))
+      assert.ok(priceImpact.eq(new BN('799666110184')))
     })
     it('decreasing price', () => {
       // price change       0.367-> 1.0001^(-221818)
