@@ -557,7 +557,6 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     if (!isTickInitialized && liquidity.v.eqn(0)) {
       // throw new Error(SimulationErrors.TooLargeGap)
       status = SimulationStatus.TooLargeGap
-      break
     }
 
     if (currentTickIndex === previousTickIndex && !remainingAmount.eqn(0)) {
