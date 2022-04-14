@@ -5,10 +5,11 @@ import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
 import { assertThrowsAsync, createToken, initEverything } from './testUtils'
 import { Market, Pair, tou64, LIQUIDITY_DENOMINATOR, Network } from '@invariant-labs/sdk'
-import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { Decimal, FeeTier } from '@invariant-labs/sdk/lib/market'
-import { CreateTick, InitPosition } from '@invariant-labs/sdk/src/market'
+import { fromFee, toDecimal } from '@invariant-labs/sdk/lib/utils'
+import { Decimal, FeeTier, RemovePosition } from '@invariant-labs/sdk/lib/market'
+import { CreateTick, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 import { signAndSend } from '@invariant-labs/sdk'
+import { INVARIANT_ERRORS } from '@invariant-labs/sdk'
 
 describe('withdraw', () => {
   const provider = Provider.local()
@@ -136,7 +137,7 @@ describe('withdraw', () => {
       positionOwner
     )
 
-    // add liquidity to incorrect tick
+    // add liquidity between incorrect tick to increase funds that hypothetically may be stolen
     const initPositionVars: InitPosition = {
       knownPrice: pool.sqrtPrice,
       lowerTick: incorrectLowerTickIndex,
@@ -159,6 +160,7 @@ describe('withdraw', () => {
       incorrectUpperTickIndex
     )
 
+    // remove position ix with incorrect ticks
     const removePositionIx = market.program.instruction.removePosition(
       removedPositionIndex,
       incorrectLowerTickIndex,
@@ -187,95 +189,98 @@ describe('withdraw', () => {
     )
 
     const removePositionTx = new Transaction().add(removePositionIx)
-    await assertThrowsAsync(signAndSend(removePositionTx, [positionOwner], market.connection))
+    await assertThrowsAsync(
+      signAndSend(removePositionTx, [positionOwner], market.connection),
+      INVARIANT_ERRORS.WRONG_TICK
+    )
   })
-  // it('#withdraw', async () => {
-  //   // Create owner
-  //   const owner = Keypair.generate()
-  //   await connection.requestAirdrop(owner.publicKey, 1e9)
-  //   const amount = new BN(1000)
+  it('#withdraw', async () => {
+    // Create owner
+    const owner = Keypair.generate()
+    await connection.requestAirdrop(owner.publicKey, 1e9)
+    const amount = new BN(1000)
 
-  //   const accountX = await tokenX.createAccount(owner.publicKey)
-  //   const accountY = await tokenY.createAccount(owner.publicKey)
+    const accountX = await tokenX.createAccount(owner.publicKey)
+    const accountY = await tokenY.createAccount(owner.publicKey)
 
-  //   await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
+    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
 
-  //   // Swap
-  //   const poolDataBefore = await market.getPool(pair)
-  //   const reservesBefore = await market.getReserveBalances(pair, tokenX, tokenY)
+    // Swap
+    const poolDataBefore = await market.getPool(pair)
+    const reservesBefore = await market.getReserveBalances(pair, tokenX, tokenY)
 
-  //   const swapVars: Swap = {
-  //     pair,
-  //     xToY: true,
-  //     owner: owner.publicKey,
-  //     amount,
-  //     estimatedPriceAfterSwap: poolDataBefore.sqrtPrice, // ignore price impact using high slippage tolerance
-  //     slippage: toDecimal(1, 2),
-  //     accountX,
-  //     accountY,
-  //     byAmountIn: true
-  //   }
-  //   await market.swap(swapVars, owner)
+    const swapVars: Swap = {
+      pair,
+      xToY: true,
+      owner: owner.publicKey,
+      amount,
+      estimatedPriceAfterSwap: poolDataBefore.sqrtPrice, // ignore price impact using high slippage tolerance
+      slippage: toDecimal(1, 2),
+      accountX,
+      accountY,
+      byAmountIn: true
+    }
+    await market.swap(swapVars, owner)
 
-  //   // Check pool
-  //   const poolData = await market.getPool(pair)
-  //   assert.ok(poolData.liquidity.v.eq(poolDataBefore.liquidity.v))
-  //   assert.equal(poolData.currentTickIndex, lowerTick)
-  //   assert.ok(poolData.sqrtPrice.v.lt(poolDataBefore.sqrtPrice.v))
+    // Check pool
+    const poolData = await market.getPool(pair)
+    assert.ok(poolData.liquidity.v.eq(poolDataBefore.liquidity.v))
+    assert.equal(poolData.currentTickIndex, -10)
+    assert.ok(poolData.sqrtPrice.v.lt(poolDataBefore.sqrtPrice.v))
 
-  //   // Check amounts and fees
-  //   const amountX = (await tokenX.getAccountInfo(accountX)).amount
-  //   const amountY = (await tokenY.getAccountInfo(accountY)).amount
-  //   const reservesAfter = await market.getReserveBalances(pair, tokenX, tokenY)
-  //   const reserveXDelta = reservesAfter.x.sub(reservesBefore.x)
-  //   const reserveYDelta = reservesBefore.y.sub(reservesAfter.y)
+    // Check amounts and fees
+    const amountX = (await tokenX.getAccountInfo(accountX)).amount
+    const amountY = (await tokenY.getAccountInfo(accountY)).amount
+    const reservesAfter = await market.getReserveBalances(pair, tokenX, tokenY)
+    const reserveXDelta = reservesAfter.x.sub(reservesBefore.x)
+    const reserveYDelta = reservesBefore.y.sub(reservesAfter.y)
 
-  //   // fee tokens           0.006 * 1000 = 6
-  //   // protocol fee tokens  ceil(6 * 0.01) = cei(0.06) = 1
-  //   // pool fee tokens      6 - 1 = 5
-  //   // fee growth global    5/1000000 = 5 * 10^-6
-  //   assert.ok(amountX.eqn(0))
-  //   assert.ok(amountY.eq(amount.subn(7)))
-  //   assert.ok(reserveXDelta.eq(amount))
-  //   assert.ok(reserveYDelta.eq(amount.subn(7)))
+    // fee tokens           0.006 * 1000 = 6
+    // protocol fee tokens  ceil(6 * 0.01) = cei(0.06) = 1
+    // pool fee tokens      6 - 1 = 5
+    // fee growth global    5/1000001000000000000 ~ 4.9999950000049 * 10^-18
+    assert.ok(amountX.eqn(0))
+    assert.ok(amountY.eq(amount.subn(7)))
+    assert.ok(reserveXDelta.eq(amount))
+    assert.ok(reserveYDelta.eq(amount.subn(7)))
 
-  //   assert.ok(poolData.feeGrowthGlobalX.v.eq(new BN('5000000000000000000')))
-  //   assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
-  //   assert.ok(poolData.feeProtocolTokenX.eqn(1))
-  //   assert.ok(poolData.feeProtocolTokenY.eqn(0))
+    assert.ok(poolData.feeGrowthGlobalX.v.eq(new BN('4999995000004')))
+    assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
+    assert.ok(poolData.feeProtocolTokenX.eqn(1))
+    assert.ok(poolData.feeProtocolTokenY.eqn(0))
 
-  //   // Remove position
-  //   const reservesBeforeRemove = await market.getReserveBalances(pair, tokenX, tokenY)
+    // Remove position
+    const reservesBeforeRemove = await market.getReserveBalances(pair, tokenX, tokenY)
 
-  //   const removePositionVars: RemovePosition = {
-  //     pair,
-  //     owner: positionOwner.publicKey,
-  //     index: 0,
-  //     userTokenX: userTokenXAccount,
-  //     userTokenY: userTokenYAccount
-  //   }
-  //   await market.removePosition(removePositionVars, positionOwner)
+    const removePositionVars: RemovePosition = {
+      pair,
+      owner: positionOwner.publicKey,
+      index: 0,
+      userTokenX: userTokenXAccount,
+      userTokenY: userTokenYAccount
+    }
+    await market.removePosition(removePositionVars, positionOwner)
 
-  //   // Check position after remove
-  //   const positionList = await market.getPositionList(positionOwner.publicKey)
-  //   assert.equal(positionList.head, 0)
+    // Check position after remove
+    const positionList = await market.getPositionList(positionOwner.publicKey)
+    assert.equal(positionList.head, 1)
 
-  //   // Check amounts tokens
-  //   const reservesAfterRemove = await market.getReserveBalances(pair, tokenX, tokenY)
-  //   const expectedWithdrawnX = new BN(1493)
-  //   const expectedWithdrawnY = new BN(6)
-  //   const expectedFeeX = new BN(5)
+    // Check amounts tokens
+    const reservesAfterRemove = await market.getReserveBalances(pair, tokenX, tokenY)
+    const expectedWithdrawnX = new BN(499)
+    const expectedWithdrawnY = new BN(999)
+    const expectedFeeX = new BN(0)
 
-  //   assert.ok(
-  //     reservesBeforeRemove.x.sub(reservesAfterRemove.x).eq(expectedWithdrawnX.add(expectedFeeX))
-  //   )
-  //   assert.ok(reservesBeforeRemove.y.sub(reservesAfterRemove.y).eq(expectedWithdrawnY))
+    assert.ok(
+      reservesBeforeRemove.x.sub(reservesAfterRemove.x).eq(expectedWithdrawnX.add(expectedFeeX))
+    )
+    assert.ok(reservesBeforeRemove.y.sub(reservesAfterRemove.y).eq(expectedWithdrawnY))
 
-  //   // validate ticks
-  //   await assertThrowsAsync(market.getTick(pair, upperTick))
-  //   await assertThrowsAsync(market.getTick(pair, lowerTick))
+    // validate ticks
+    await assertThrowsAsync(market.getTick(pair, upperTick))
+    await assertThrowsAsync(market.getTick(pair, lowerTick))
 
-  //   assert.isFalse(await market.isInitialized(pair, lowerTick))
-  //   assert.isFalse(await market.isInitialized(pair, upperTick))
-  // })
+    assert.isFalse(await market.isInitialized(pair, lowerTick))
+    assert.isFalse(await market.isInitialized(pair, upperTick))
+  })
 })
