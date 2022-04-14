@@ -49,12 +49,14 @@ pub struct RemovePosition<'info> {
     pub tickmap: AccountLoader<'info, Tickmap>,
     #[account(mut,
         seeds = [b"tickv1", pool.key().as_ref(), &lower_tick_index.to_le_bytes()],
-        bump = lower_tick.load()?.bump
+        bump = lower_tick.load()?.bump,
+        constraint = lower_tick_index == removed_position.load()?.lower_tick_index @ WrongTick
     )]
     pub lower_tick: AccountLoader<'info, Tick>,
     #[account(mut,
         seeds = [b"tickv1", pool.key().as_ref(), &upper_tick_index.to_le_bytes()],
-        bump = upper_tick.load()?.bump
+        bump = upper_tick.load()?.bump,
+        constraint = upper_tick_index == removed_position.load()?.upper_tick_index @ WrongTick
     )]
     pub upper_tick: AccountLoader<'info, Tick>,
     #[account(mut)]
