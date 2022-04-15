@@ -124,9 +124,17 @@ impl<'info> Swap<'info> {
 
         // limit is on the right side of price
         if x_to_y {
-            require!({ pool.sqrt_price } > sqrt_price_limit, WrongLimit);
+            require!(
+                { pool.sqrt_price } > sqrt_price_limit
+                    && sqrt_price_limit <= Price::new(MAX_SQRT_PRICE),
+                WrongLimit
+            );
         } else {
-            require!({ pool.sqrt_price } < sqrt_price_limit, WrongLimit);
+            require!(
+                { pool.sqrt_price } < sqrt_price_limit
+                    && sqrt_price_limit >= Price::new(MIN_SQRT_PRICE),
+                WrongLimit
+            );
         }
 
         let mut remaining_amount = TokenAmount(amount);

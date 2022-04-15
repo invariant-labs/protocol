@@ -7,6 +7,9 @@ use crate::structs::tickmap::MAX_TICK;
 use crate::structs::TICK_LIMIT;
 use crate::*;
 
+pub const MAX_SQRT_PRICE: u128 = 65535383934512647000000000000;
+pub const MIN_SQRT_PRICE: u128 = 15258932000000000000;
+
 #[derive(PartialEq, Debug)]
 pub struct SwapResult {
     pub next_price_sqrt: Price,
