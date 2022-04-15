@@ -1045,6 +1045,15 @@ mod tests {
     }
 
     #[test]
+    fn test() {
+        let min_sqrt_price = calculate_price_sqrt(-MAX_TICK);
+        let max_sqrt_price = calculate_price_sqrt(MAX_TICK);
+
+        assert_eq!(min_sqrt_price, Price::new(MIN_SQRT_PRICE));
+        assert_eq!(max_sqrt_price, Price::new(MAX_SQRT_PRICE));
+    }
+
+    #[test]
     fn test_get_next_sqrt_price_x_up() {
         // Add
         {
