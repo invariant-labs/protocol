@@ -1,15 +1,23 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
-import { Keypair } from '@solana/web3.js'
-import { Network, Market, Pair, tou64, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
+import { Keypair, Transaction } from '@solana/web3.js'
+import {
+  Network,
+  Market,
+  Pair,
+  tou64,
+  LIQUIDITY_DENOMINATOR,
+  INVARIANT_ERRORS
+} from '@invariant-labs/sdk'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { createToken, initEverything } from './testUtils'
+import { assertThrowsAsync, createToken, initEverything } from './testUtils'
 import { assert } from 'chai'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { ClaimFee, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
+import { signAndSend } from '@invariant-labs/sdk'
 
 describe('claim', () => {
   const provider = Provider.local()
@@ -134,6 +142,67 @@ describe('claim', () => {
     assert.ok(poolDataAfter.feeGrowthGlobalY.v.eqn(0))
     assert.ok(poolDataAfter.feeProtocolTokenX.eqn(1))
     assert.ok(poolDataAfter.feeProtocolTokenY.eqn(0))
+
+    // claim with incorrect ticks should failed
+    const incorrectLowerTickIndex = initPositionVars.lowerTick - 50
+    const incorrectUpperTickIndex = initPositionVars.upperTick + 50
+
+    // create incorrect tick indexes
+    await market.createTick(
+      {
+        index: incorrectLowerTickIndex,
+        pair,
+        payer: positionOwner.publicKey
+      },
+      positionOwner
+    )
+    await market.createTick(
+      {
+        index: incorrectUpperTickIndex,
+        pair,
+        payer: positionOwner.publicKey
+      },
+      positionOwner
+    )
+
+    const { tickAddress: incorrectLowerTickAddress } = await market.getTickAddress(
+      pair,
+      incorrectLowerTickIndex
+    )
+    const { tickAddress: incorrectUpperTickAddress } = await market.getTickAddress(
+      pair,
+      incorrectUpperTickIndex
+    )
+    const { positionAddress } = await market.getPositionAddress(positionOwner.publicKey, 0)
+
+    const incorrectClaimFeeIx = await market.program.instruction.claimFee(
+      0,
+      incorrectLowerTickIndex,
+      incorrectUpperTickIndex,
+      {
+        accounts: {
+          state: market.stateAddress,
+          pool: await pair.getAddress(market.program.programId),
+          position: positionAddress,
+          lowerTick: incorrectLowerTickAddress,
+          upperTick: incorrectUpperTickAddress,
+          owner: positionOwner.publicKey,
+          tokenX: pair.tokenX,
+          tokenY: pair.tokenY,
+          accountX: userTokenXAccount,
+          accountY: userTokenYAccount,
+          reserveX: poolDataAfter.tokenXReserve,
+          reserveY: poolDataAfter.tokenYReserve,
+          programAuthority: market.programAuthority,
+          tokenProgram: TOKEN_PROGRAM_ID
+        }
+      }
+    )
+    const incorrectClaimFeeTx = new Transaction().add(incorrectClaimFeeIx)
+    await assertThrowsAsync(
+      signAndSend(incorrectClaimFeeTx, [positionOwner], market.connection),
+      INVARIANT_ERRORS.WRONG_TICK
+    )
 
     const reservesBeforeClaim = await market.getReserveBalances(pair, tokenX, tokenY)
     const userTokenXAccountBeforeClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount

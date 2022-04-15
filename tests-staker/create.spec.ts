@@ -39,12 +39,7 @@ describe('Create incentive tests', () => {
   beforeEach(async () => {
     // create staker instance
 
-    staker = await Staker.build(
-      Network.LOCAL,
-      provider.wallet,
-      connection,
-      anchor.workspace.Staker.programId
-    )
+    staker = await Staker.build(Network.LOCAL, provider.wallet, connection)
 
     // create token
     incentiveToken = await createToken(connection, wallet, wallet)
