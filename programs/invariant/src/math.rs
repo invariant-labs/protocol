@@ -1045,7 +1045,7 @@ mod tests {
     }
 
     #[test]
-    fn test() {
+    fn edge_prices_regression_test() {
         let min_sqrt_price = calculate_price_sqrt(-MAX_TICK);
         let max_sqrt_price = calculate_price_sqrt(MAX_TICK);
 
