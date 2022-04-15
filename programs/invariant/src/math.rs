@@ -7,6 +7,9 @@ use crate::structs::tickmap::MAX_TICK;
 use crate::structs::TICK_LIMIT;
 use crate::*;
 
+pub const MAX_SQRT_PRICE: u128 = 65535383934512647000000000000;
+pub const MIN_SQRT_PRICE: u128 = 15258932000000000000;
+
 #[derive(PartialEq, Debug)]
 pub struct SwapResult {
     pub next_price_sqrt: Price,
@@ -1039,6 +1042,15 @@ mod tests {
             // real     0.0000152589324...
             assert_eq!(price_sqrt, Price::from_scale(15258932u128, 12))
         }
+    }
+
+    #[test]
+    fn edge_prices_regression_test() {
+        let min_sqrt_price = calculate_price_sqrt(-MAX_TICK);
+        let max_sqrt_price = calculate_price_sqrt(MAX_TICK);
+
+        assert_eq!(min_sqrt_price, Price::new(MIN_SQRT_PRICE));
+        assert_eq!(max_sqrt_price, Price::new(MAX_SQRT_PRICE));
     }
 
     #[test]
