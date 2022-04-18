@@ -455,7 +455,8 @@ pub fn calculate_seconds_per_liquidity_inside(
     };
 
     pool.seconds_per_liquidity_global
-        .unchecked_sub(seconds_per_liquidity_below.unchecked_sub(seconds_per_liquidity_above))
+        .unchecked_sub(seconds_per_liquidity_below)
+        .unchecked_sub(seconds_per_liquidity_above)
 }
 
 pub fn is_enough_amount_to_push_price(
@@ -1461,7 +1462,7 @@ mod tests {
 
         let current_timestamp = 100;
         pool.update_seconds_per_liquidity_global(current_timestamp);
-        assert_eq!(pool.seconds_per_liquidity_global.v, 100000000000);
+        assert_eq!(pool.seconds_per_liquidity_global.get(), 100000000000);
     }
     #[test]
     fn test_calculate_seconds_per_liquidity_inside() {
@@ -1492,7 +1493,7 @@ mod tests {
                 &mut pool,
                 current_timestamp,
             );
-            assert_eq!(seconds_per_liquidity_inside.v, 981900000);
+            assert_eq!(seconds_per_liquidity_inside.get(), 981900000);
         }
 
         {
@@ -1503,7 +1504,7 @@ mod tests {
                 &mut pool,
                 current_timestamp,
             );
-            assert_eq!(seconds_per_liquidity_inside.v, 94957300000);
+            assert_eq!(seconds_per_liquidity_inside.get(), 94957300000);
         }
 
         {
@@ -1516,7 +1517,7 @@ mod tests {
                 &mut pool,
                 current_timestamp,
             );
-            assert_eq!(seconds_per_liquidity_inside.v, 1000000110);
+            assert_eq!(seconds_per_liquidity_inside.get(), 1000000110);
         }
     }
     #[test]

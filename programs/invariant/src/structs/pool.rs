@@ -68,9 +68,10 @@ impl Pool {
     }
 
     pub fn update_seconds_per_liquidity_global(&mut self, current_timestamp: u64) {
-        self.seconds_per_liquidity_global = self.seconds_per_liquidity_global
-            + (FixedPoint::from_integer((current_timestamp - self.last_timestamp) as u128)
-                / self.liquidity);
+        self.seconds_per_liquidity_global = self.seconds_per_liquidity_global.unchecked_add(
+            (FixedPoint::from_integer((current_timestamp - self.last_timestamp) as u128)
+                / self.liquidity),
+        );
 
         self.last_timestamp = current_timestamp;
     }
