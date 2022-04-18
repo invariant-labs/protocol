@@ -443,16 +443,19 @@ pub fn calculate_seconds_per_liquidity_inside(
     let seconds_per_liquidity_below = if current_above_lower {
         tick_lower.seconds_per_liquidity_outside
     } else {
-        pool.seconds_per_liquidity_global - tick_lower.seconds_per_liquidity_outside
+        pool.seconds_per_liquidity_global
+            .unchecked_sub(tick_lower.seconds_per_liquidity_outside)
     };
 
     let seconds_per_liquidity_above = if current_below_upper {
         tick_upper.seconds_per_liquidity_outside
     } else {
-        pool.seconds_per_liquidity_global - tick_upper.seconds_per_liquidity_outside
+        pool.seconds_per_liquidity_global
+            .unchecked_sub(tick_upper.seconds_per_liquidity_outside)
     };
 
-    pool.seconds_per_liquidity_global - seconds_per_liquidity_below - seconds_per_liquidity_above
+    pool.seconds_per_liquidity_global
+        .unchecked_sub(seconds_per_liquidity_below.unchecked_sub(seconds_per_liquidity_above))
 }
 
 pub fn is_enough_amount_to_push_price(
