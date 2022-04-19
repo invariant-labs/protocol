@@ -81,7 +81,8 @@ impl Tickmap {
         let limit = get_search_limit(tick, tick_spacing, true);
 
         // add 1 to not check current tick
-        let (mut byte, mut bit) = tick_to_position(tick + tick_spacing as i32, tick_spacing);
+        let (mut byte, mut bit) =
+            tick_to_position(tick.checked_add(tick_spacing as i32).unwrap(), tick_spacing);
         let (limiting_byte, limiting_bit) = tick_to_position(limit, tick_spacing);
 
         while byte < limiting_byte || (byte == limiting_byte && bit <= limiting_bit) {
