@@ -1527,6 +1527,11 @@ export type Invariant = {
       "code": 6029,
       "name": "InvalidListOwner",
       "msg": "Recipient list address and owner list address should be different"
+    },
+    {
+      "code": 6030,
+      "name": "InvalidTickSpacing",
+      "msg": "Invalid tick spacing"
     }
   ]
 };
@@ -3060,6 +3065,11 @@ export const IDL: Invariant = {
       "code": 6029,
       "name": "InvalidListOwner",
       "msg": "Recipient list address and owner list address should be different"
+    },
+    {
+      "code": 6030,
+      "name": "InvalidTickSpacing",
+      "msg": "Invalid tick spacing"
     }
   ]
 };
