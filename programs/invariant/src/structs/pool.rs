@@ -78,6 +78,8 @@ impl Pool {
             + (FixedPoint::from_integer(
                 (current_timestamp.checked_sub(self.last_timestamp).unwrap()) as u128,
             ) / self.liquidity);
+
+        self.last_timestamp = current_timestamp;
     }
 
     pub fn set_oracle(&mut self, address: Pubkey) {
