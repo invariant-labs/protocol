@@ -76,4 +76,15 @@ describe('change-fee-receiver', () => {
     }
     await assertThrowsAsync(market.changeFeeReceiver(changeFeeReceiverVars, wallet))
   })
+  it('#changeFeeReceiver() return to admin', async () => {
+    const changeFeeReceiverVars: ChangeFeeReceiver = {
+      pair,
+      feeReceiver: admin.publicKey,
+      admin: admin.publicKey
+    }
+    await market.changeFeeReceiver(changeFeeReceiverVars, admin)
+
+    const pool = await market.getPool(pair)
+    assert.ok(pool.feeReceiver.equals(admin.publicKey))
+  })
 })
