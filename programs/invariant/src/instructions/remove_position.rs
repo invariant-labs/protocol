@@ -214,6 +214,8 @@ impl<'info> RemovePosition<'info> {
             };
 
             *last_position = Default::default();
+        } else {
+            **removed_position = Default::default();
         }
 
         let signer: &[&[&[u8]]] = get_signer!(state.nonce);
