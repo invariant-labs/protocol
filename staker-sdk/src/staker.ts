@@ -270,7 +270,7 @@ export class Staker {
   }
 
   public async getIncentive(incentivePubKey: PublicKey) {
-    return await this.program.account.incentive.fetch(incentivePubKey) as IncentiveStructure
+    return (await this.program.account.incentive.fetch(incentivePubKey)) as IncentiveStructure
   }
 
   public async getUserStakeAddressAndBump(incentive: PublicKey, pool: PublicKey, id: BN) {
@@ -297,7 +297,9 @@ export class Staker {
   }
 
   public async getAllIncentive() {
-    return (await this.program.account.incentive.all()).map(i => i.account) as IncentiveStructure[]
+    return (await this.program.account.incentive.all()).map(i => {
+      return { ...i.account, publicKey: i.publicKey }
+    }) as Incentive[]
   }
 
   private async signAndSend(tx: Transaction, signers?: Keypair[], opts?: ConfirmOptions) {
@@ -400,6 +402,10 @@ export interface IncentiveStructure {
   endClaimTime: Decimal
   numOfStakes: BN
   pool: PublicKey
+}
+
+export interface Incentive extends IncentiveStructure {
+  publicKey: PublicKey
 }
 
 export interface Decimal {
