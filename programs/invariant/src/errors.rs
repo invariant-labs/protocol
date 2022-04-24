@@ -62,4 +62,6 @@ pub enum ErrorCode {
     InvalidTickmapOwner = 28, // 178c
     #[msg("Recipient list address and owner list address should be different")]
     InvalidListOwner = 29, // 178d
+    #[msg("Invalid tick spacing")]
+    InvalidTickSpacing = 30, // 178e
 }

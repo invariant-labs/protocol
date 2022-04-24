@@ -69,7 +69,18 @@ impl FeeGrowth {
     }
 
     pub fn to_fee(self, liquidity: Liquidity) -> FixedPoint {
-        FixedPoint::from_decimal(self.big_mul(liquidity))
+        FixedPoint::new(
+            U256::try_from(self.get())
+                .unwrap()
+                .checked_mul(liquidity.here())
+                .unwrap()
+                .checked_div(U256::from(10).pow(U256::from(
+                    FeeGrowth::scale() + Liquidity::scale() - FixedPoint::scale(),
+                )))
+                .unwrap()
+                .try_into()
+                .unwrap_or_else(|_| panic!("value too big to parse in `FeeGrowth::to_fee`")),
+        )
     }
 }
 
@@ -220,6 +231,21 @@ pub mod tests {
             // real    9.9999999999999978859343891977453174784 × 10^25
             // expected 99999999999999978859343891
             assert_eq!(out, FixedPoint::new(99999999999999978859343891))
+        }
+        // overflowing `big_mul`
+        {
+            let amount = TokenAmount(600000000000000000);
+            let liquidity = Liquidity::from_integer(10000000000000000000u128);
+
+            let fee_growth = FeeGrowth::from_fee(liquidity, amount);
+            // real     0.06
+            // expected 0.06
+            assert_eq!(fee_growth, FeeGrowth::new(60000000000000000000000));
+
+            let out = fee_growth.to_fee(liquidity);
+            // real     600000000000000000
+            // expected 99999999999999978859343891
+            assert_eq!(out, FixedPoint::from_integer(1) * amount)
         }
     }
 

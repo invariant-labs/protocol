@@ -81,7 +81,7 @@ impl<'info> TransferPositionOwnership<'info> {
 
         // when removed position is not the last one
         if owner_list.head != index {
-            let last_position = self.last_position.load_mut()?;
+            let mut last_position = self.last_position.load_mut()?;
 
             **removed_position = Position {
                 owner: last_position.owner,
@@ -98,6 +98,9 @@ impl<'info> TransferPositionOwnership<'info> {
                 last_slot: last_position.last_slot,
                 bump: removed_position.bump, // stay with the same bump
             };
+            *last_position = Default::default();
+        } else {
+            **removed_position = Default::default();
         }
 
         Ok(())

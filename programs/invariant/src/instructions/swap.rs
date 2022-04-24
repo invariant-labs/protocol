@@ -228,7 +228,7 @@ impl<'info> Swap<'info> {
                 }
                 // set tick to limit (below if price is going down, because current tick should always be below price)
                 pool.current_tick_index = if x_to_y && is_enough_amount_to_cross {
-                    tick_index - pool.tick_spacing as i32
+                    tick_index.checked_sub(pool.tick_spacing as i32).unwrap()
                 } else {
                     tick_index
                 };

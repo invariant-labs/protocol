@@ -85,7 +85,8 @@ export enum INVARIANT_ERRORS {
   INVALID_MINT = '0x178a',
   INVALID_TICKMAP = '0x178b',
   INVALID_TICKMAP_OWNER = '0x178c',
-  INVALID_LIST_OWNER = '0x178d'
+  INVALID_LIST_OWNER = '0x178d',
+  INVALID_TICK_SPACING = '0x178e'
 }
 
 export interface SimulateSwapPrice {
