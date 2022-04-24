@@ -324,10 +324,6 @@ export type Staker = {
             "type": "publicKey"
           },
           {
-            "name": "position",
-            "type": "publicKey"
-          },
-          {
             "name": "secondsPerLiquidityInitial",
             "type": {
               "defined": "SecondsPerLiquidity"
@@ -507,6 +503,11 @@ export type Staker = {
       "code": 6021,
       "name": "InvalidMint",
       "msg": "Provided token account mint is different than expected mint token"
+    },
+    {
+      "code": 6022,
+      "name": "DifferentIncentivePool",
+      "msg": "Incentive pool is different from stake pool"
     }
   ]
 };
@@ -837,10 +838,6 @@ export const IDL: Staker = {
             "type": "publicKey"
           },
           {
-            "name": "position",
-            "type": "publicKey"
-          },
-          {
             "name": "secondsPerLiquidityInitial",
             "type": {
               "defined": "SecondsPerLiquidity"
@@ -1020,6 +1017,11 @@ export const IDL: Staker = {
       "code": 6021,
       "name": "InvalidMint",
       "msg": "Provided token account mint is different than expected mint token"
+    },
+    {
+      "code": 6022,
+      "name": "DifferentIncentivePool",
+      "msg": "Incentive pool is different from stake pool"
     }
   ]
 };

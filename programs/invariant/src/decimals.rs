@@ -84,6 +84,16 @@ impl FeeGrowth {
     }
 }
 
+impl FixedPoint {
+    pub fn unchecked_add(self, other: FixedPoint) -> FixedPoint {
+        FixedPoint::new(self.get() + other.get())
+    }
+
+    pub fn unchecked_sub(self, other: FixedPoint) -> FixedPoint {
+        FixedPoint::new(self.get() - other.get())
+    }
+}
+
 impl Price {
     pub fn big_div_values_to_token(nominator: U256, denominator: U256) -> Option<TokenAmount> {
         Some(TokenAmount::new(
