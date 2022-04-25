@@ -798,7 +798,7 @@ export const swapParameters: SimulateSwapInterface = {
   byAmountIn: true,
   swapAmount: new BN(1000),
   priceLimit: { v: PRICE_DENOMINATOR }, // ignore price impact using high slippage tolerance
-  slippage: toPercent(1, 0),
+  slippage: toPercent(1, 1),
   ticks: ticks,
   tickmap: { bitmap },
   pool: poolData

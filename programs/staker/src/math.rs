@@ -1,7 +1,6 @@
 use crate::decimals::*;
 use crate::ErrorCode;
 use crate::Result;
-use anchor_lang::prelude::*;
 use std::cmp;
 
 pub fn calculate_reward(
@@ -26,7 +25,7 @@ pub fn calculate_reward(
         cmp::max(end_time, current_time) - start_time - total_seconds_claimed;
 
     let result = total_reward_unclaimed * seconds_inside / total_seconds_unclaimed;
-    return Ok((seconds_inside, result));
+    Ok((seconds_inside, result))
 }
 
 #[cfg(test)]

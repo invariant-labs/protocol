@@ -45,11 +45,17 @@ impl Pool {
         if in_x {
             // trunk-ignore(clippy/unaligned_references)
             self.fee_growth_global_x = self.fee_growth_global_x.unchecked_add(fee_growth);
-            self.fee_protocol_token_x += protocol_fee.0;
+            self.fee_protocol_token_x = self
+                .fee_protocol_token_x
+                .checked_add(protocol_fee.0)
+                .unwrap();
         } else {
             // trunk-ignore(clippy/unaligned_references)
             self.fee_growth_global_y = self.fee_growth_global_y.unchecked_add(fee_growth);
-            self.fee_protocol_token_y += protocol_fee.0;
+            self.fee_protocol_token_y = self
+                .fee_protocol_token_y
+                .checked_add(protocol_fee.0)
+                .unwrap();
         }
     }
 
@@ -68,9 +74,10 @@ impl Pool {
     }
 
     pub fn update_seconds_per_liquidity_global(&mut self, current_timestamp: u64) {
-        self.seconds_per_liquidity_global = self.seconds_per_liquidity_global
-            + (FixedPoint::from_integer((current_timestamp - self.last_timestamp) as u128)
-                / self.liquidity);
+        self.seconds_per_liquidity_global = self.seconds_per_liquidity_global.unchecked_add(
+            FixedPoint::from_integer(current_timestamp.checked_sub(self.last_timestamp).unwrap())
+                / self.liquidity,
+        );
 
         self.last_timestamp = current_timestamp;
     }

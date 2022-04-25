@@ -1,6 +1,7 @@
 use crate::decimals::*;
 use crate::structs::*;
 use crate::util::get_current_slot;
+use crate::ErrorCode::*;
 
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
@@ -11,7 +12,7 @@ use invariant::structs::Position;
 #[instruction(index: u32)]
 pub struct CreateUserStake<'info> {
     #[account(init,
-        seeds = [b"staker", incentive.to_account_info().key.as_ref(), position.load()?.pool.as_ref(), &position.load()?.id.to_le_bytes() ],
+        seeds = [b"staker", incentive.key().as_ref(), position.load()?.pool.as_ref(), &position.load()?.id.to_le_bytes() ],
         payer = owner,
         bump)]
     pub user_stake: AccountLoader<'info, UserStake>,
@@ -23,7 +24,9 @@ pub struct CreateUserStake<'info> {
         seeds::program = invariant::ID
     )]
     pub position: AccountLoader<'info, Position>,
-    #[account(mut)]
+    #[account(mut,
+        constraint = incentive.load()?.pool == position.load()?.pool @ DifferentIncentivePool
+    )]
     pub incentive: AccountLoader<'info, Incentive>,
     #[account(mut)]
     pub owner: Signer<'info>,
@@ -39,6 +42,7 @@ pub fn handler(ctx: Context<CreateUserStake>) -> ProgramResult {
     let mut incentive = ctx.accounts.incentive.load_mut()?;
     require!(Seconds::now() >= { incentive.start_time }, NotStarted);
     require!(Seconds::now() < { incentive.end_time }, Ended);
+    require!(incentive.num_of_stakes < u64::MAX, NoStakes);
 
     let user_stake = &mut ctx.accounts.user_stake.load_init()?;
     let position = ctx.accounts.position.load()?;
@@ -47,11 +51,12 @@ pub fn handler(ctx: Context<CreateUserStake>) -> ProgramResult {
     require!(slot == update_slot, SlotsAreNotEqual);
 
     **user_stake = UserStake {
-        position: *ctx.accounts.position.to_account_info().key,
-        liquidity: Decimal::new(position.liquidity.v),
-        incentive: *ctx.accounts.incentive.to_account_info().key,
+        liquidity: Liquidity::new(position.liquidity.v),
+        incentive: ctx.accounts.incentive.key(),
         bump: *ctx.bumps.get("user_stake").unwrap(),
-        seconds_per_liquidity_initial: Decimal::new(position.seconds_per_liquidity_inside.v),
+        seconds_per_liquidity_initial: SecondsPerLiquidity::new(
+            position.seconds_per_liquidity_inside.v,
+        ),
     };
     incentive.num_of_stakes += 1;
     let liquidity = user_stake.liquidity;

@@ -24,9 +24,9 @@ pub struct CreateIncentive<'info> {
     )]
     pub incentive_token_account: Account<'info, TokenAccount>,
     #[account(mut,
-        constraint = founder_token_account.to_account_info().key != incentive_token_account.to_account_info().key @ InvalidTokenAccount,
+        constraint = founder_token_account.key() != incentive_token_account.key() @ InvalidTokenAccount,
         constraint = founder_token_account.mint == incentive_token.key() @ InvalidMint,
-        constraint = &founder_token_account.owner == founder.to_account_info().key @ InvalidOwner
+        constraint = founder_token_account.owner == founder.key() @ InvalidOwner
     )]
     pub founder_token_account: Account<'info, TokenAccount>,
     pub pool: AccountLoader<'info, Pool>,
@@ -82,9 +82,9 @@ pub fn handler(
     let incentive = &mut ctx.accounts.incentive.load_init()?;
 
     **incentive = Incentive {
-        founder: *ctx.accounts.founder.to_account_info().key,
-        pool: *ctx.accounts.pool.to_account_info().key,
-        token_account: *ctx.accounts.incentive_token_account.to_account_info().key,
+        founder: ctx.accounts.founder.key(),
+        pool: ctx.accounts.pool.key(),
+        token_account: ctx.accounts.incentive_token_account.key(),
         total_reward_unclaimed: reward,
         total_seconds_claimed: Seconds::new(0),
         num_of_stakes: 0,

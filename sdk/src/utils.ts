@@ -9,7 +9,7 @@ import {
   Transaction,
   TransactionInstruction
 } from '@solana/web3.js'
-import { calculatePriceSqrt, MAX_TICK, Pair, TICK_LIMIT, Market, MIN_TICK } from '.'
+import { calculatePriceSqrt, MAX_TICK, Pair, TICK_LIMIT, Market } from '.'
 import {
   Decimal,
   FeeTier,
@@ -22,7 +22,9 @@ import {
   PositionInitData
 } from './market'
 import {
+  calculateMinReceivedTokensByAmountIn,
   calculatePriceAfterSlippage,
+  calculatePriceImpact,
   calculateSwapStep,
   getLiquidityByX,
   getLiquidityByY,
@@ -31,7 +33,6 @@ import {
 import { alignTickToSpacing, getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
 import { struct, u32, u8 } from '@solana/buffer-layout'
-import { lstat } from 'fs'
 
 export const SEED = 'Invariant'
 export const DECIMAL = 12
@@ -84,7 +85,8 @@ export enum INVARIANT_ERRORS {
   INVALID_MINT = '0x178a',
   INVALID_TICKMAP = '0x178b',
   INVALID_TICKMAP_OWNER = '0x178c',
-  INVALID_LIST_OWNER = '0x178d'
+  INVALID_LIST_OWNER = '0x178d',
+  INVALID_TICK_SPACING = '0x178e'
 }
 
 export interface SimulateSwapPrice {
@@ -111,10 +113,13 @@ export interface SimulateSwapInterface {
 }
 
 export interface SimulationResult {
+  status: SimulationStatus
   amountPerTick: BN[]
   accumulatedAmountIn: BN
   accumulatedAmountOut: BN
   accumulatedFee: BN
+  minReceived: BN
+  priceImpact: BN
   priceAfterSwap: BN
 }
 
@@ -417,10 +422,21 @@ export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
   }
 }
 
+export enum SimulationStatus {
+  Ok,
+  WrongLimit = 'Price limit is on the wrong side of price',
+  PriceLimitReached = 'Price would cross swap limit',
+  TickNotFound = 'tick crossed but not passed to simulation',
+  NoGainSwap = 'Amount out is zero',
+  TooLargeGap = 'Too large liquidity gap',
+  LimitReached = 'At the end of price range'
+}
+
 export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationResult => {
   const { xToY, byAmountIn, swapAmount, slippage, ticks, tickmap, priceLimit, pool } =
     swapParameters
   let { currentTickIndex, tickSpacing, liquidity, sqrtPrice, fee } = pool
+  const startingSqrtPrice = sqrtPrice.v
   let previousTickIndex = MAX_TICK + 1
   const amountPerTick: BN[] = []
   let accumulatedAmount: BN = new BN(0)
@@ -428,16 +444,21 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
   let accumulatedAmountIn: BN = new BN(0)
   let accumulatedFee: BN = new BN(0)
   const priceLimitAfterSlippage = calculatePriceAfterSlippage(priceLimit, slippage, !xToY)
+
+  // Sanity check, should never throw
   if (xToY) {
     if (sqrtPrice.v.lt(priceLimitAfterSlippage.v)) {
-      throw new Error('Price limit is on the wrong side of price')
+      throw new Error(SimulationStatus.WrongLimit)
     }
   } else {
     if (sqrtPrice.v.gt(priceLimitAfterSlippage.v)) {
-      throw new Error('Price limit is on the wrong side of price')
+      throw new Error(SimulationStatus.WrongLimit)
     }
   }
+
   let remainingAmount: BN = swapAmount
+  let status = SimulationStatus.Ok
+
   while (!remainingAmount.lte(new BN(0))) {
     // find closest initialized tick
     const closerLimit: CloserLimit = {
@@ -474,7 +495,9 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     sqrtPrice = result.nextPrice
 
     if (sqrtPrice.v.eq(priceLimitAfterSlippage.v) && remainingAmount.gt(new BN(0))) {
-      throw new Error('Price would cross swap limit')
+      // throw new Error(SimulationErrors.PriceLimitReached)
+      status = SimulationStatus.PriceLimitReached
+      break
     }
 
     // crossing tick
@@ -493,8 +516,9 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
 
       // cross
       if (initialized) {
-        if (!ticks.has(tickIndex)) throw new Error('tick crossed but not passed to simulation')
-
+        if (!ticks.has(tickIndex)) {
+          throw new Error(SimulationStatus.TickNotFound)
+        }
         const tick = ticks.get(tickIndex) as Tick
 
         if (!xToY || isEnoughAmountToCross) {
@@ -532,26 +556,54 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
 
     // in the future this can be replaced by counter
     if (!isTickInitialized && liquidity.v.eqn(0)) {
-      throw new Error('Too large liquidity gap')
+      // throw new Error(SimulationErrors.TooLargeGap)
+      status = SimulationStatus.TooLargeGap
+      break
     }
 
     if (currentTickIndex === previousTickIndex && !remainingAmount.eqn(0)) {
-      throw new Error('At the end of price range')
+      // throw new Error(SimulationErrors.LimitReached)
+      status = SimulationStatus.LimitReached
+      break
     } else {
       previousTickIndex = currentTickIndex
     }
   }
 
-  if (accumulatedAmountOut.isZero()) {
-    throw new Error('Amount out is zero')
+  if (accumulatedAmountOut.isZero() && status === SimulationStatus.Ok) {
+    // throw new Error(SimulationErrors.NoGainSwap)
+    status = SimulationStatus.NoGainSwap
+  }
+
+  const priceAfterSwap: BN = sqrtPrice.v
+  const priceImpact = calculatePriceImpact(startingSqrtPrice, priceAfterSwap)
+
+  let minReceived: BN
+  if (byAmountIn) {
+    const endingPriceAfterSlippage = calculatePriceAfterSlippage(
+      { v: priceAfterSwap },
+      slippage,
+      !xToY
+    ).v
+    minReceived = calculateMinReceivedTokensByAmountIn(
+      endingPriceAfterSlippage,
+      xToY,
+      accumulatedAmountIn,
+      pool.fee.v
+    )
+  } else {
+    minReceived = accumulatedAmountOut
   }
 
   return {
+    status,
     amountPerTick,
     accumulatedAmountIn,
     accumulatedAmountOut,
     accumulatedFee,
-    priceAfterSwap: sqrtPrice.v
+    priceAfterSwap,
+    priceImpact,
+    minReceived
   }
 }
 
@@ -689,7 +741,7 @@ export const bigNumberToBuffer = (n: BN, size: 16 | 32 | 64 | 128 | 256) => {
 
 export const getMaxTick = (tickSpacing: number) => {
   const limitedByPrice = MAX_TICK - (MAX_TICK % tickSpacing)
-  const limitedByTickmap = TICK_LIMIT * tickSpacing
+  const limitedByTickmap = TICK_LIMIT * tickSpacing - tickSpacing
   return Math.min(limitedByPrice, limitedByTickmap)
 }
 

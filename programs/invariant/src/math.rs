@@ -7,6 +7,9 @@ use crate::structs::tickmap::MAX_TICK;
 use crate::structs::TICK_LIMIT;
 use crate::*;
 
+pub const MAX_SQRT_PRICE: u128 = 65535383934512647000000000000;
+pub const MIN_SQRT_PRICE: u128 = 15258932000000000000;
+
 #[derive(PartialEq, Debug)]
 pub struct SwapResult {
     pub next_price_sqrt: Price,
@@ -440,16 +443,20 @@ pub fn calculate_seconds_per_liquidity_inside(
     let seconds_per_liquidity_below = if current_above_lower {
         tick_lower.seconds_per_liquidity_outside
     } else {
-        pool.seconds_per_liquidity_global - tick_lower.seconds_per_liquidity_outside
+        pool.seconds_per_liquidity_global
+            .unchecked_sub(tick_lower.seconds_per_liquidity_outside)
     };
 
     let seconds_per_liquidity_above = if current_below_upper {
         tick_upper.seconds_per_liquidity_outside
     } else {
-        pool.seconds_per_liquidity_global - tick_upper.seconds_per_liquidity_outside
+        pool.seconds_per_liquidity_global
+            .unchecked_sub(tick_upper.seconds_per_liquidity_outside)
     };
 
-    pool.seconds_per_liquidity_global - seconds_per_liquidity_below - seconds_per_liquidity_above
+    pool.seconds_per_liquidity_global
+        .unchecked_sub(seconds_per_liquidity_below)
+        .unchecked_sub(seconds_per_liquidity_above)
 }
 
 pub fn is_enough_amount_to_push_price(
@@ -1042,6 +1049,15 @@ mod tests {
     }
 
     #[test]
+    fn edge_prices_regression_test() {
+        let min_sqrt_price = calculate_price_sqrt(-MAX_TICK);
+        let max_sqrt_price = calculate_price_sqrt(MAX_TICK);
+
+        assert_eq!(min_sqrt_price, Price::new(MIN_SQRT_PRICE));
+        assert_eq!(max_sqrt_price, Price::new(MAX_SQRT_PRICE));
+    }
+
+    #[test]
     fn test_get_next_sqrt_price_x_up() {
         // Add
         {
@@ -1446,7 +1462,7 @@ mod tests {
 
         let current_timestamp = 100;
         pool.update_seconds_per_liquidity_global(current_timestamp);
-        assert_eq!(pool.seconds_per_liquidity_global.v, 100000000000);
+        assert_eq!(pool.seconds_per_liquidity_global.get(), 100000000000);
     }
     #[test]
     fn test_calculate_seconds_per_liquidity_inside() {
@@ -1477,7 +1493,7 @@ mod tests {
                 &mut pool,
                 current_timestamp,
             );
-            assert_eq!(seconds_per_liquidity_inside.v, 981900000);
+            assert_eq!(seconds_per_liquidity_inside.get(), 981900000);
         }
 
         {
@@ -1488,7 +1504,7 @@ mod tests {
                 &mut pool,
                 current_timestamp,
             );
-            assert_eq!(seconds_per_liquidity_inside.v, 94957300000);
+            assert_eq!(seconds_per_liquidity_inside.get(), 94957300000);
         }
 
         {
@@ -1501,7 +1517,7 @@ mod tests {
                 &mut pool,
                 current_timestamp,
             );
-            assert_eq!(seconds_per_liquidity_inside.v, 1000000110);
+            assert_eq!(seconds_per_liquidity_inside.get(), 1000000110);
         }
     }
     #[test]

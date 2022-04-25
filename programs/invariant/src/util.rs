@@ -30,10 +30,10 @@ pub fn check_tick(tick_index: i32, tick_spacing: u16) -> Result<()> {
 
     let tickmap_index = tick_index.checked_div(tick_spacing.into()).unwrap();
 
-    require!(tickmap_index > (-TICK_LIMIT), InvalidTickIndex);
-    require!(tickmap_index < TICK_LIMIT - 1, InvalidTickIndex);
-    require!(tick_index > (-MAX_TICK), InvalidTickIndex);
-    require!(tick_index < MAX_TICK, InvalidTickIndex);
+    require!(tickmap_index >= (-TICK_LIMIT), InvalidTickIndex);
+    require!(tickmap_index < TICK_LIMIT, InvalidTickIndex);
+    require!(tick_index >= (-MAX_TICK), InvalidTickIndex);
+    require!(tick_index <= MAX_TICK, InvalidTickIndex);
 
     Ok(())
 }
@@ -100,8 +100,9 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
     } else {
         pool.last_timestamp = current_timestamp;
     }
-    tick.seconds_per_liquidity_outside =
-        pool.seconds_per_liquidity_global - tick.seconds_per_liquidity_outside;
+    tick.seconds_per_liquidity_outside = pool
+        .seconds_per_liquidity_global
+        .unchecked_sub(tick.seconds_per_liquidity_outside);
 
     // When going to higher tick net_liquidity should be added and for going lower subtracted
     if (pool.current_tick_index >= tick.index) ^ tick.sign {

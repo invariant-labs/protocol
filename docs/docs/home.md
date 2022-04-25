@@ -14,4 +14,4 @@ Because liquidity is more efficient on Invariant, it stands to reason that trade
 
 Liquidity concentration enables much higher efficiency than traditional AMMs. In other words, producing the same amount of liquidity requires fewer tokens. Keeping liquidity close to the price can amplify this effect even more.
 
-![Invariant logo](https://pbs.twimg.com/media/FGQkDBjXsAIEh53?format=jpg&name=large)
+![Invariant logo](/img/docs/invariant.png)

@@ -5,8 +5,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "snap": "ts-node ./src/snap.ts",
+    "snapV2": "ts-node ./src/snapV2.ts",
     "cachePrices": "ts-node ./src/cachePrices.ts",
-    "all": "npm run snap && npm run cachePrices"
+    "convertToV2": "ts-node ./src/convertV1SnapsToV2.ts"
   },
   "author": "",
   "license": "ISC",

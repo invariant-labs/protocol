@@ -13,6 +13,7 @@ pub struct Liquidity {
     pub v: u128,
 }
 
+// Why SecondsPerLiquidity has 12 decimal?
 #[decimal(12)]
 #[zero_copy]
 #[derive(

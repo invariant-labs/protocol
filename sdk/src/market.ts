@@ -26,7 +26,8 @@ import {
   SEED,
   simulateSwap,
   SimulateSwapInterface,
-  SimulationResult
+  SimulationResult,
+  SimulationStatus
 } from './utils'
 import { Invariant, IDL } from './idl/invariant'
 import { ComputeUnitsInstruction, DENOMINATOR, IWallet, Pair, signAndSend } from '.'
@@ -525,8 +526,11 @@ export class Market {
   }
 
   async initPositionTx(initPosition: InitPosition) {
-    const { pair, lowerTick, upperTick } = initPosition
+    const { pair, lowerTick: lowerIndex, upperTick: upperIndex } = initPosition
     const payer = initPosition.owner ?? this.wallet.publicKey
+
+    const lowerTick = lowerIndex == -Infinity ? getMinTick(pair.tickSpacing) : lowerIndex
+    const upperTick = upperIndex == Infinity ? getMaxTick(pair.tickSpacing) : upperIndex
 
     // undefined - tmp solution
     let lowerInstruction: TransactionInstruction | undefined
@@ -565,8 +569,8 @@ export class Market {
 
     if (this.network === Network.DEV || this.network === Network.LOCAL) {
       // REMOVE ME WHEN 1.9 HITS MAINNET
-      if (!lowerExists && !upperExists && !listExists) {
-        tx.add(ComputeUnitsInstruction(300000, payer))
+      if (!lowerExists || !upperExists || !listExists) {
+        tx.add(ComputeUnitsInstruction(400000, payer))
       }
     }
     if (!lowerExists && lowerInstruction) {
@@ -899,6 +903,10 @@ export class Market {
     }
 
     const simulationResult: SimulationResult = simulateSwap(swapParameters)
+    if (simulationResult.status !== SimulationStatus.Ok) {
+      throw new Error(simulationResult.status)
+    }
+
     const amountPerTick: BN[] = simulationResult.amountPerTick
     let sum: BN = new BN(0)
     for (const value of amountPerTick) {
