@@ -13,5 +13,4 @@ At first glance, Invariant may appear to be another exchange, complete with liqu
 Because liquidity is more efficient on Invariant, it stands to reason that trades will benefit from it. It results in a lower fee on trades by an order of magnitude. You can choose from 0.01 percent, 0.05 percent, 0.1 percent, 0.3 percent, and 1 percent fee levels. Furthermore, users benefit from increased virtual liquidity, which results in less slippage on trades.
 
 Liquidity concentration enables much higher efficiency than traditional AMMs. In other words, producing the same amount of liquidity requires fewer tokens. Keeping liquidity close to the price can amplify this effect even more.
-
-![Invariant logo](https://pbs.twimg.com/media/FGQkDBjXsAIEh53?format=jpg&name=large)
+![Invariant logo](/img/docs/invariant.png)
