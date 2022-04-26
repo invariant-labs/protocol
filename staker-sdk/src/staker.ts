@@ -256,10 +256,6 @@ export class Staker {
     })
   }
 
-  public async getAllIncentives() {
-    return await this.program.account.incentive.all([])
-  }
-
   // getters
   async getProgramAuthority() {
     const [authority, nonce] = await PublicKey.findProgramAddress(
