@@ -257,7 +257,7 @@ export class Staker {
   }
 
   public async getAllIncentives() {
-    return (await this.program.account.incentive.all([])).map(({ account }) => account) // as IncentiveStructure
+    return await this.program.account.incentive.all([])
   }
 
   // getters

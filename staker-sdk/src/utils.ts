@@ -46,28 +46,29 @@ export const calculateReward = ({
   secondsPerLiquidityInside,
   currentTime
 }: CalculateReward) => {
-  if (currentTime.v.lte(startTime.v)) {
+  if (currentTime.lte(startTime)) {
     throw Error("The incentive didn't start yet!")
   }
   const secondsInside = secondsPerLiquidityInside.v
     .sub(secondsPerLiquidityInsideInitial.v)
-    .mul(liquidity.v.mul(LIQUIDITY_DENOMINATOR))
+    .mul(liquidity.v)
+    .div(LIQUIDITY_DENOMINATOR)
     .div(DENOMINATOR)
-  const totalSecondsUnclaimed = new BN(Math.max(endTime.v.toNumber(), currentTime.v.toNumber()))
-    .sub(startTime.v)
-    .sub(totalSecondsClaimed.v)
-  const result = totalRewardUnclaimed.v.mul(secondsInside).div(totalSecondsUnclaimed)
+  const totalSecondsUnclaimed = new BN(Math.max(endTime.toNumber(), currentTime.toNumber()))
+    .sub(startTime)
+    .sub(totalSecondsClaimed)
+  const result = totalRewardUnclaimed.mul(secondsInside).div(totalSecondsUnclaimed)
 
   return { secondsInside, result }
 }
 
 export interface CalculateReward {
-  totalRewardUnclaimed: Decimal
-  totalSecondsClaimed: Decimal
-  startTime: Decimal
-  endTime: Decimal
+  totalRewardUnclaimed: BN
+  totalSecondsClaimed: BN
+  startTime: BN
+  endTime: BN
   liquidity: Decimal
   secondsPerLiquidityInsideInitial: Decimal
   secondsPerLiquidityInside: Decimal
-  currentTime: Decimal
+  currentTime: BN
 }

@@ -1,7 +1,7 @@
 {
   "scripts": {
     "test:invariant-all": "npm run test:swap && npm run test:cross && npm run test:cross-both-side && npm run test:liquidity-gap && npm run test:reversed && npm run test:position && npm run test:math && npm run test:withdraw && npm run test:position-list && npm run test:claim && npm run test:protocol-fee && npm run test:target && npm run test:slippage && npm run test:position-slippage && npm run test:fee-tier && npm run test:simulate-swap && npm run test:simulate-claim-amount && npm run test:oracle && npm run test:limits && npm run test:big-swap && npm run test:compare && npm run test:tickmap && npm run test:change-fee-receiver && npm run test:random && npm run test:change-protocol-fee && npm run test:whole-liquidity && npm run test:cu",
-    "test:staker-all": "npm run test:create && npm run test:stake && npm run test:withdraw-staker && npm run test:multicall && npm run test:position-change",
+    "test:staker-all": "npm run test:create && npm run test:stake && npm run test:withdraw-staker && npm run test:multicall && npm run test:position-change && npm run test:reward",
     "test:all": "npm run test:invariant-all && npm run test:staker-all",
     "test:swap": "anchor test --skip-build tests/swap.spec.ts",
     "test:cross-both-side": "anchor test --skip-build tests/cross-both-side.spec.ts",
@@ -20,6 +20,7 @@
     "test:simulate-claim-amount": "anchor test --skip-build tests/simulate-claim-amount.spec.ts",
     "test:limits": "anchor test --skip-build tests/limits.spec.ts",
     "test:random": "anchor test --skip-build tests/random.spec.ts",
+    "test:reward": "anchor test --skip-build tests-staker/reward.spec.ts",
     "test:create": "anchor test --skip-build tests-staker/create.spec.ts",
     "test:stake": "anchor test --skip-build tests-staker/stake.spec.ts",
     "test:withdraw-staker": "anchor test --skip-build tests-staker/withdraw.spec.ts",

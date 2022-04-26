@@ -1,163 +1,174 @@
-import { BN, Provider } from '@project-serum/anchor'
-import { assert, expect } from 'chai'
-import {
-  calculateReward,
-  DENOMINATOR,
-  LIQUIDITY_DENOMINATOR,
-  CalculateReward
-} from '../staker-sdk/src/utils'
-import * as anchor from '@project-serum/anchor'
-import { Market, Pair } from '@invariant-labs/sdk'
-import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
-import { CreateIncentive, Decimal, Staker } from '../staker-sdk/src/staker'
-import { createToken, tou64, signAndSend, getTime } from './testUtils'
-import { createToken as createTkn, initEverything } from '../tests/testUtils'
-import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { FeeTier } from '@invariant-labs/sdk/lib/market'
-import { Token } from '@solana/spl-token'
-import { Network } from '../staker-sdk/lib'
-describe('Calculate Reward tests', () => {
-  const provider = Provider.local()
-  const connection = provider.connection
-  //@ts-expect-error
-  const wallet = provider.wallet.payer as Account
-  const mintAuthority = Keypair.generate()
-  const founderAccount = Keypair.generate()
-  const admin = Keypair.generate()
-  let market: Market
-  let staker: Staker
-  let pool: PublicKey
-  let invariant: PublicKey
-  let incentiveToken: Token
-  let founderTokenAccount: PublicKey
-  let incentiveTokenAccount: Keypair
-  let amount: BN
-  let pair: Pair
+import { BN } from '@project-serum/anchor'
+import { assert } from 'chai'
+import { calculateReward, CalculateReward } from '../staker-sdk/src/utils'
 
-  beforeEach(async () => {
-    staker = await Staker.build(
-      Network.LOCAL,
-      provider.wallet,
-      connection,
-      anchor.workspace.Staker.programId
-    )
-
-    // create incentive token and add airdrop
-    incentiveToken = await createToken(connection, wallet, wallet)
-    await connection.requestAirdrop(founderAccount.publicKey, 10e9)
-
-    founderTokenAccount = await incentiveToken.createAccount(founderAccount.publicKey)
-    incentiveTokenAccount = Keypair.generate()
-
-    amount = new anchor.BN(100 * 1e6)
-    await incentiveToken.mintTo(founderTokenAccount, wallet, [], tou64(amount))
-
-    // create market
-    market = await Market.build(
-      0,
-      provider.wallet,
-      connection,
-      anchor.workspace.Invariant.programId
-    )
-
-    const tokens = await Promise.all([
-      createTkn(connection, wallet, mintAuthority),
-      createTkn(connection, wallet, mintAuthority),
-      connection.requestAirdrop(admin.publicKey, 1e9)
-    ])
-
-    // create pool
-    const feeTier: FeeTier = {
-      fee: fromFee(new BN(600)),
-      tickSpacing: 10
+describe('reward tests', () => {
+  it('case 1', async () => {
+    const data: CalculateReward = {
+      totalRewardUnclaimed: new BN(1_000_000),
+      totalSecondsClaimed: new BN(0),
+      startTime: new BN(1637002223),
+      endTime: new BN(1640002223),
+      liquidity: { v: new BN(1_000_000).mul(new BN(10).pow(new BN(6))) },
+      secondsPerLiquidityInsideInitial: { v: new BN(4_000_000) },
+      secondsPerLiquidityInside: { v: new BN(10_000_000) },
+      currentTime: new BN(1637002232)
     }
-
-    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-    invariant = anchor.workspace.Invariant.programId
-
-    // create Incentive
+    const result = calculateReward(data)
+    assert.ok(result.result.eq(new BN(2)))
+    assert.ok(result.secondsInside.eq(new BN(6)))
   })
-
-  it('#init()', async () => {
-    await initEverything(market, [pair], admin)
-    pool = await pair.getAddress(anchor.workspace.Invariant.programId)
-    const incentiveAccount = Keypair.generate()
-    const currentTime = new BN(getTime())
-    const reward: Decimal = { v: new BN(10) }
-    const startTimeCreate: Decimal = { v: currentTime.add(new BN(0)) }
-    const endTimeCreate: Decimal = { v: currentTime.add(new BN(31_000_000)) }
-
-    const createIncentiveVars: CreateIncentive = {
-      reward,
-      startTime: startTimeCreate,
-      endTime: endTimeCreate,
-      pool,
-      founder: founderAccount.publicKey,
-      incentiveToken: incentiveToken.publicKey,
-      founderTokenAccount: founderTokenAccount,
-      invariant
+  it('case 2', async () => {
+    const data: CalculateReward = {
+      totalRewardUnclaimed: new BN(1_000),
+      totalSecondsClaimed: new BN(0),
+      startTime: new BN(0),
+      endTime: new BN(100),
+      liquidity: { v: new BN(2_000_000).mul(new BN(10).pow(new BN(6))) },
+      secondsPerLiquidityInsideInitial: { v: new BN(10_000_000) },
+      secondsPerLiquidityInside: { v: new BN(35_000_000) },
+      currentTime: new BN(50)
     }
-
-    const tx = new Transaction().add(
-      await staker.createIncentiveIx(
-        createIncentiveVars,
-        incentiveAccount.publicKey,
-        incentiveTokenAccount.publicKey
-      )
-    )
-
-    await signAndSend(
-      tx,
-      [founderAccount, incentiveAccount, incentiveTokenAccount],
-      staker.connection
-    )
+    const result = calculateReward(data)
+    assert.ok(result.result.eq(new BN(500)))
+    assert.ok(result.secondsInside.eq(new BN(50)))
   })
-
-  it('check amount', async () => {
-    const totalRewardUnclaimed: Decimal = { v: new BN(1000000) }
-    const totalSecondsClaimed: Decimal = { v: new BN(0) }
-    const startTime: Decimal = { v: getTime().add(new BN(1)) }
-    const endTime: Decimal = { v: getTime().add(new BN(3000001)) }
-    const liquidity: Decimal = { v: new BN(1000000).mul(LIQUIDITY_DENOMINATOR) }
-    const secondsPerLiquidityInsideInitial: Decimal = { v: new BN(4000000).mul(DENOMINATOR) }
-    const secondsPerLiquidityInside: Decimal = { v: new BN(10000000).mul(DENOMINATOR) }
-
-    const rewardVars: CalculateReward = {
-      totalRewardUnclaimed,
-      totalSecondsClaimed,
-      startTime,
-      endTime,
-      liquidity,
-      secondsPerLiquidityInsideInitial,
-      secondsPerLiquidityInside,
-      currentTime: { v: getTime().add(new BN(9)) }
+  it('case 3', async () => {
+    const data: CalculateReward = {
+      totalRewardUnclaimed: new BN(1_000),
+      totalSecondsClaimed: new BN(0),
+      startTime: new BN(100),
+      endTime: new BN(200),
+      liquidity: { v: new BN(10).mul(new BN(10).pow(new BN(6))) },
+      secondsPerLiquidityInsideInitial: { v: new BN(0).mul(new BN(10).pow(new BN(12))) },
+      secondsPerLiquidityInside: { v: new BN(2).mul(new BN(10).pow(new BN(12))) },
+      currentTime: new BN(120)
     }
-
-    const { result, secondsInside } = await calculateReward(rewardVars)
-    console.log(result.toString())
-    console.log(secondsInside.toString())
+    const result = calculateReward(data)
+    assert.ok(result.result.eq(new BN(200)))
+    assert.ok(result.secondsInside.eq(new BN(20)))
   })
-  it('check time error', async () => {
-    const seconds = new Date().valueOf() / 1000
-    const totalRewardUnclaimed: Decimal = { v: new BN(1000000) }
-    const totalSecondsClaimed: Decimal = { v: new BN(0) }
-    const startTime: Decimal = { v: new BN(Math.floor(seconds + 1)) }
-    const endTime: Decimal = { v: new BN(Math.floor(seconds + 3000001)) }
-    const liquidity: Decimal = { v: new BN(1000000).mul(LIQUIDITY_DENOMINATOR) }
-    const secondsPerLiquidityInsideInitial: Decimal = { v: new BN(4000000).mul(DENOMINATOR) }
-    const secondsPerLiquidityInside: Decimal = { v: new BN(10000000).mul(DENOMINATOR) }
-
-    const rewardVars: CalculateReward = {
-      totalRewardUnclaimed,
-      totalSecondsClaimed,
-      startTime,
-      endTime,
-      liquidity,
-      secondsPerLiquidityInsideInitial,
-      secondsPerLiquidityInside,
-      currentTime: { v: getTime() }
+  it('case 4', async () => {
+    const data: CalculateReward = {
+      totalRewardUnclaimed: new BN(1_000),
+      totalSecondsClaimed: new BN(0),
+      startTime: new BN(100),
+      endTime: new BN(200),
+      liquidity: { v: new BN(100).mul(new BN(10).pow(new BN(6))) },
+      secondsPerLiquidityInsideInitial: { v: new BN(0).mul(new BN(10).pow(new BN(12))) },
+      secondsPerLiquidityInside: { v: new BN(1).mul(new BN(10).pow(new BN(12))) },
+      currentTime: new BN(300)
     }
-
-    assert.ifError("Error: The indasdascentive didn't start yet!")
+    const result = calculateReward(data)
+    assert.ok(result.result.eq(new BN(500)))
+    assert.ok(result.secondsInside.eq(new BN(100)))
+  })
+  it('case 5', async () => {
+    const data: CalculateReward = {
+      totalRewardUnclaimed: new BN(1_000),
+      totalSecondsClaimed: new BN(0),
+      startTime: new BN(100),
+      endTime: new BN(200),
+      liquidity: { v: new BN(100).mul(new BN(10).pow(new BN(6))) },
+      secondsPerLiquidityInsideInitial: { v: new BN(0).mul(new BN(10).pow(new BN(12))) },
+      secondsPerLiquidityInside: { v: new BN(1).mul(new BN(10).pow(new BN(12))) },
+      currentTime: new BN(201)
+    }
+    const result = calculateReward(data)
+    assert.ok(result.result.eq(new BN(990)))
+    assert.ok(result.secondsInside.eq(new BN(100)))
+  })
+  it('case 6', async () => {
+    const data: CalculateReward = {
+      totalRewardUnclaimed: new BN(1_000),
+      totalSecondsClaimed: new BN(10),
+      startTime: new BN(100),
+      endTime: new BN(200),
+      liquidity: { v: new BN(5).mul(new BN(10).pow(new BN(6))) },
+      secondsPerLiquidityInsideInitial: { v: new BN(0).mul(new BN(10).pow(new BN(12))) },
+      secondsPerLiquidityInside: { v: new BN(2).mul(new BN(10).pow(new BN(12))) },
+      currentTime: new BN(120)
+    }
+    const result = calculateReward(data)
+    assert.ok(result.result.eq(new BN(111)))
+    assert.ok(result.secondsInside.eq(new BN(10)))
+  })
+  it('case 7', async () => {
+    const data: CalculateReward = {
+      totalRewardUnclaimed: new BN(0),
+      totalSecondsClaimed: new BN(0),
+      startTime: new BN(100),
+      endTime: new BN(200),
+      liquidity: { v: new BN(5).mul(new BN(10).pow(new BN(6))) },
+      secondsPerLiquidityInsideInitial: { v: new BN(0).mul(new BN(10).pow(new BN(12))) },
+      secondsPerLiquidityInside: { v: new BN(2).mul(new BN(10).pow(new BN(12))) },
+      currentTime: new BN(120)
+    }
+    const result = calculateReward(data)
+    assert.ok(result.result.eq(new BN(0)))
+    assert.ok(result.secondsInside.eq(new BN(10)))
+  })
+  it('case 8', async () => {
+    const data: CalculateReward = {
+      totalRewardUnclaimed: new BN(1_000),
+      totalSecondsClaimed: new BN(0),
+      startTime: new BN(100),
+      endTime: new BN(200),
+      liquidity: { v: new BN(5).mul(new BN(10).pow(new BN(6))) },
+      secondsPerLiquidityInsideInitial: { v: new BN(2).mul(new BN(10).pow(new BN(12))) },
+      secondsPerLiquidityInside: { v: new BN(2).mul(new BN(10).pow(new BN(12))) },
+      currentTime: new BN(120)
+    }
+    const result = calculateReward(data)
+    assert.ok(result.result.eq(new BN(0)))
+    assert.ok(result.secondsInside.eq(new BN(0)))
+  })
+  it('case 9', async () => {
+    const data: CalculateReward = {
+      totalRewardUnclaimed: new BN(1_000),
+      totalSecondsClaimed: new BN(0),
+      startTime: new BN(100),
+      endTime: new BN(200),
+      liquidity: { v: new BN(100).mul(new BN(0).pow(new BN(6))) },
+      secondsPerLiquidityInsideInitial: { v: new BN(0).mul(new BN(10).pow(new BN(12))) },
+      secondsPerLiquidityInside: { v: new BN(2).mul(new BN(10).pow(new BN(12))) },
+      currentTime: new BN(120)
+    }
+    const result = calculateReward(data)
+    assert.ok(result.result.eq(new BN(0)))
+    assert.ok(result.secondsInside.eq(new BN(0)))
+  })
+  it('case 10', async () => {
+    try {
+      const data: CalculateReward = {
+        totalRewardUnclaimed: new BN(1_000),
+        totalSecondsClaimed: new BN(0),
+        startTime: new BN(100),
+        endTime: new BN(200),
+        liquidity: { v: new BN(5).mul(new BN(10).pow(new BN(6))) },
+        secondsPerLiquidityInsideInitial: { v: new BN(0).mul(new BN(10).pow(new BN(12))) },
+        secondsPerLiquidityInside: { v: new BN(2).mul(new BN(10).pow(new BN(12))) },
+        currentTime: new BN(99)
+      }
+      const result = calculateReward(data)
+      assert.isTrue(false)
+    } catch (err) {
+      assert.isTrue(true)
+    }
+  })
+  it('case 11', async () => {
+    const data: CalculateReward = {
+      totalRewardUnclaimed: new BN(100_000),
+      totalSecondsClaimed: new BN(0),
+      startTime: new BN(1637002223),
+      endTime: new BN(1640002223),
+      liquidity: { v: new BN(1_000_000).mul(new BN(10).pow(new BN(6))) },
+      secondsPerLiquidityInsideInitial: { v: new BN(4_000_000) },
+      secondsPerLiquidityInside: { v: new BN(10_000_000) },
+      currentTime: new BN(1637002232)
+    }
+    const result = calculateReward(data)
+    assert.ok(result.result.eq(new BN(0)))
+    assert.ok(result.secondsInside.eq(new BN(6)))
   })
 })
