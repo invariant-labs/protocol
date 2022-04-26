@@ -14,7 +14,7 @@ import {
   Keypair,
   sendAndConfirmRawTransaction
 } from '@solana/web3.js'
-import { STAKER_SEED } from './utils'
+import { STAKER_SEED, DECIMAL, DENOMINATOR } from './utils'
 import { bs58 } from '@project-serum/anchor/dist/cjs/utils/bytes'
 
 export class Staker {
@@ -394,6 +394,7 @@ export interface EndIncentive {
 }
 
 export interface IncentiveStructure {
+  founder: PublicKey
   tokenAccount: PublicKey
   totalRewardUnclaimed: Decimal
   totalSecondsClaimed: Decimal
@@ -402,6 +403,7 @@ export interface IncentiveStructure {
   endClaimTime: Decimal
   numOfStakes: BN
   pool: PublicKey
+  nonce: number
 }
 
 export interface Incentive extends IncentiveStructure {
