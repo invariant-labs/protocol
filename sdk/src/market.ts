@@ -529,8 +529,8 @@ export class Market {
     const { pair, lowerTick: lowerIndex, upperTick: upperIndex } = initPosition
     const payer = initPosition.owner ?? this.wallet.publicKey
 
-    const lowerTick = lowerIndex == -Infinity ? getMinTick(pair.tickSpacing) : lowerIndex
-    const upperTick = upperIndex == Infinity ? getMaxTick(pair.tickSpacing) : upperIndex
+    const lowerTick = lowerIndex === -Infinity ? getMinTick(pair.tickSpacing) : lowerIndex
+    const upperTick = upperIndex === Infinity ? getMaxTick(pair.tickSpacing) : upperIndex
 
     // undefined - tmp solution
     let lowerInstruction: TransactionInstruction | undefined
@@ -1294,8 +1294,7 @@ export class Market {
         tokenX: pair.tokenX,
         tokenY: pair.tokenY,
         admin: adminPubkey,
-        feeReceiver: feeReceiver,
-        programAuthority: this.programAuthority
+        feeReceiver: feeReceiver
       }
     })
   }
