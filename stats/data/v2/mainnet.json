@@ -269,6 +269,51 @@
       "liquidityY": { "tokenBNFromBeginning": "1305162084", "usdValue24": 141.649240976 },
       "feeX": { "tokenBNFromBeginning": "2553000", "usdValue24": 0.003498 },
       "feeY": { "tokenBNFromBeginning": "18409800", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650628800000,
+      "volumeX": { "tokenBNFromBeginning": "5122200000", "usdValue24": 16.177757 },
+      "volumeY": { "tokenBNFromBeginning": "37249600000", "usdValue24": 43.7353 },
+      "liquidityX": { "tokenBNFromBeginning": "216244795", "usdValue24": 215.94789 },
+      "liquidityY": { "tokenBNFromBeginning": "1581807243", "usdValue24": 160.885614685 },
+      "feeX": { "tokenBNFromBeginning": "2561100", "usdValue24": 0.008088 },
+      "feeY": { "tokenBNFromBeginning": "18624800", "usdValue24": 0.02186765 }
+    },
+    {
+      "timestamp": 1650715200000,
+      "volumeX": { "tokenBNFromBeginning": "5194600000", "usdValue24": 72.5448 },
+      "volumeY": { "tokenBNFromBeginning": "38083000000", "usdValue24": 84.823452 },
+      "liquidityX": { "tokenBNFromBeginning": "203994109", "usdValue24": 204.402097 },
+      "liquidityY": { "tokenBNFromBeginning": "1703396390", "usdValue24": 173.371684574 },
+      "feeX": { "tokenBNFromBeginning": "2597300", "usdValue24": 0.036272 },
+      "feeY": { "tokenBNFromBeginning": "19041500", "usdValue24": 0.042411726 }
+    },
+    {
+      "timestamp": 1650801600000,
+      "volumeX": { "tokenBNFromBeginning": "5194600000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "38083000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "203994109", "usdValue24": 203.994109 },
+      "liquidityY": { "tokenBNFromBeginning": "1703396390", "usdValue24": 171.855661787 },
+      "feeX": { "tokenBNFromBeginning": "2597300", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "19041500", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650888000000,
+      "volumeX": { "tokenBNFromBeginning": "5194600000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "38083000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "203994109", "usdValue24": 203.785831 },
+      "liquidityY": { "tokenBNFromBeginning": "1703396390", "usdValue24": 165.416823432 },
+      "feeX": { "tokenBNFromBeginning": "2597300", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "19041500", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650974400000,
+      "volumeX": { "tokenBNFromBeginning": "5198000000", "usdValue24": 3.392744 },
+      "volumeY": { "tokenBNFromBeginning": "38083000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "207145119", "usdValue24": 206.703071 },
+      "liquidityY": { "tokenBNFromBeginning": "1672058776", "usdValue24": 165.818068815 },
+      "feeX": { "tokenBNFromBeginning": "2599000", "usdValue24": 0.001696 },
+      "feeY": { "tokenBNFromBeginning": "19041500", "usdValue24": 0 }
     }
   ],
   "4FkGNJMvKFk9PFwn8TBtk1ShUKege6D5Au87ezwLWiqk": [
@@ -541,6 +586,51 @@
       "liquidityY": { "tokenBNFromBeginning": "60705867", "usdValue24": 60.688262 },
       "feeX": { "tokenBNFromBeginning": "10300", "usdValue24": 0 },
       "feeY": { "tokenBNFromBeginning": "1400", "usdValue24": 0.001399 }
+    },
+    {
+      "timestamp": 1650628800000,
+      "volumeX": { "tokenBNFromBeginning": "103000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "14000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "46174801", "usdValue24": 46.220975 },
+      "liquidityY": { "tokenBNFromBeginning": "60705867", "usdValue24": 60.622517 },
+      "feeX": { "tokenBNFromBeginning": "10300", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "1400", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650715200000,
+      "volumeX": { "tokenBNFromBeginning": "110000000", "usdValue24": 6.992209 },
+      "volumeY": { "tokenBNFromBeginning": "14000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "52184187", "usdValue24": 52.126105 },
+      "liquidityY": { "tokenBNFromBeginning": "54691671", "usdValue24": 54.801054 },
+      "feeX": { "tokenBNFromBeginning": "11000", "usdValue24": 0.000699 },
+      "feeY": { "tokenBNFromBeginning": "1400", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650801600000,
+      "volumeX": { "tokenBNFromBeginning": "110000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "14000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "52184187", "usdValue24": 52.236371 },
+      "liquidityY": { "tokenBNFromBeginning": "54691671", "usdValue24": 54.691671 },
+      "feeX": { "tokenBNFromBeginning": "11000", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "1400", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650888000000,
+      "volumeX": { "tokenBNFromBeginning": "110000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "14000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "52184187", "usdValue24": 52.172915 },
+      "liquidityY": { "tokenBNFromBeginning": "54691671", "usdValue24": 54.63583 },
+      "feeX": { "tokenBNFromBeginning": "11000", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "1400", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650974400000,
+      "volumeX": { "tokenBNFromBeginning": "110000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "14000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "52184187", "usdValue24": 52.169992 },
+      "liquidityY": { "tokenBNFromBeginning": "54691671", "usdValue24": 54.574958 },
+      "feeX": { "tokenBNFromBeginning": "11000", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "1400", "usdValue24": 0 }
     }
   ],
   "DzCbrMZXNG3XpXuufhBp233LJXvV8Xq1C3q4ksrtbCPP": [
@@ -813,6 +903,51 @@
       "liquidityY": { "tokenBNFromBeginning": "128488761", "usdValue24": 128.451499 },
       "feeX": { "tokenBNFromBeginning": "9200", "usdValue24": 0 },
       "feeY": { "tokenBNFromBeginning": "130800", "usdValue24": 0.012296 }
+    },
+    {
+      "timestamp": 1650628800000,
+      "volumeX": { "tokenBNFromBeginning": "22400000", "usdValue24": 120.2356 },
+      "volumeY": { "tokenBNFromBeginning": "272600000", "usdValue24": 10.984897 },
+      "liquidityX": { "tokenBNFromBeginning": "4089206", "usdValue24": 122.91703423 },
+      "liquidityY": { "tokenBNFromBeginning": "49304792", "usdValue24": 49.237096 },
+      "feeX": { "tokenBNFromBeginning": "11200", "usdValue24": 0.0601178 },
+      "feeY": { "tokenBNFromBeginning": "136300", "usdValue24": 0.005492 }
+    },
+    {
+      "timestamp": 1650715200000,
+      "volumeX": { "tokenBNFromBeginning": "22800000", "usdValue24": 11.87604 },
+      "volumeY": { "tokenBNFromBeginning": "272600000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "4271478", "usdValue24": 126.82060896 },
+      "liquidityY": { "tokenBNFromBeginning": "43823737", "usdValue24": 43.911384 },
+      "feeX": { "tokenBNFromBeginning": "11400", "usdValue24": 0.00593802 },
+      "feeY": { "tokenBNFromBeginning": "136300", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650801600000,
+      "volumeX": { "tokenBNFromBeginning": "22800000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "272600000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "4271678", "usdValue24": 125.52453953 },
+      "liquidityY": { "tokenBNFromBeginning": "43817764", "usdValue24": 43.817764 },
+      "feeX": { "tokenBNFromBeginning": "11400", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "136300", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650888000000,
+      "volumeX": { "tokenBNFromBeginning": "23200000", "usdValue24": 11.46856 },
+      "volumeY": { "tokenBNFromBeginning": "272600000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "4643447", "usdValue24": 133.13412631 },
+      "liquidityY": { "tokenBNFromBeginning": "32948736", "usdValue24": 32.915095 },
+      "feeX": { "tokenBNFromBeginning": "11600", "usdValue24": 0.00573428 },
+      "feeY": { "tokenBNFromBeginning": "136300", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650974400000,
+      "volumeX": { "tokenBNFromBeginning": "23600000", "usdValue24": 11.85052 },
+      "volumeY": { "tokenBNFromBeginning": "291400000", "usdValue24": 18.75988 },
+      "liquidityX": { "tokenBNFromBeginning": "4257454", "usdValue24": 126.13260944 },
+      "liquidityY": { "tokenBNFromBeginning": "44242907", "usdValue24": 44.148492 },
+      "feeX": { "tokenBNFromBeginning": "11800", "usdValue24": 0.00592526 },
+      "feeY": { "tokenBNFromBeginning": "145700", "usdValue24": 0.009379 }
     }
   ],
   "GmBMZ8BNeNR6mRFqu2ZaFvpxvGPXmc9Aa4a1GWFaxWMv": [
@@ -1085,6 +1220,51 @@
       "liquidityY": { "tokenBNFromBeginning": "200549948", "usdValue24": 200.491788 },
       "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
       "feeY": { "tokenBNFromBeginning": "10100", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650628800000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "101000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "499495", "usdValue24": 0.500493 },
+      "liquidityY": { "tokenBNFromBeginning": "200549948", "usdValue24": 200.274592 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "10100", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650715200000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "101000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "499495", "usdValue24": 0.501492 },
+      "liquidityY": { "tokenBNFromBeginning": "200549948", "usdValue24": 200.951047 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "10100", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650801600000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "101000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "499495", "usdValue24": 0.500493 },
+      "liquidityY": { "tokenBNFromBeginning": "200549948", "usdValue24": 200.549948 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "10100", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650888000000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "101000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "499495", "usdValue24": 0.500493 },
+      "liquidityY": { "tokenBNFromBeginning": "200549948", "usdValue24": 200.345186 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "10100", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650974400000,
+      "volumeX": { "tokenBNFromBeginning": "72000000", "usdValue24": 72.144 },
+      "volumeY": { "tokenBNFromBeginning": "148000000", "usdValue24": 46.899702 },
+      "liquidityX": { "tokenBNFromBeginning": "23620893", "usdValue24": 23.668134 },
+      "liquidityY": { "tokenBNFromBeginning": "177408097", "usdValue24": 177.029508 },
+      "feeX": { "tokenBNFromBeginning": "7200", "usdValue24": 0.007214 },
+      "feeY": { "tokenBNFromBeginning": "14800", "usdValue24": 0.004689 }
     }
   ],
   "5dX3tkVDmbHBWMCQMerAHTmd9wsRvmtKLoQt6qv9fHy7": [
@@ -1357,6 +1537,51 @@
       "liquidityY": { "tokenBNFromBeginning": "9715559014", "usdValue24": 9725.274573 },
       "feeX": { "tokenBNFromBeginning": "5856200", "usdValue24": 0 },
       "feeY": { "tokenBNFromBeginning": "6321300", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650628800000,
+      "volumeX": { "tokenBNFromBeginning": "59122000000", "usdValue24": 559.23112 },
+      "volumeY": { "tokenBNFromBeginning": "63213000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "19221587996", "usdValue24": 19195.196755 },
+      "liquidityY": { "tokenBNFromBeginning": "9156359757", "usdValue24": 9152.761307 },
+      "feeX": { "tokenBNFromBeginning": "5912200", "usdValue24": 0.055923 },
+      "feeY": { "tokenBNFromBeginning": "6321300", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650715200000,
+      "volumeX": { "tokenBNFromBeginning": "59122000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "64727000000", "usdValue24": 1515.514 },
+      "liquidityX": { "tokenBNFromBeginning": "17710787965", "usdValue24": 17746.20954 },
+      "liquidityY": { "tokenBNFromBeginning": "10667034407", "usdValue24": 10677.701441 },
+      "feeX": { "tokenBNFromBeginning": "5912200", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "6472700", "usdValue24": 0.151551 }
+    },
+    {
+      "timestamp": 1650801600000,
+      "volumeX": { "tokenBNFromBeginning": "62079000000", "usdValue24": 2957 },
+      "volumeY": { "tokenBNFromBeginning": "71087000000", "usdValue24": 6366.36 },
+      "liquidityX": { "tokenBNFromBeginning": "14306561830", "usdValue24": 14306.56183 },
+      "liquidityY": { "tokenBNFromBeginning": "14071285462", "usdValue24": 14085.356747 },
+      "feeX": { "tokenBNFromBeginning": "6207900", "usdValue24": 0.2957 },
+      "feeY": { "tokenBNFromBeginning": "7108700", "usdValue24": 0.636636 }
+    },
+    {
+      "timestamp": 1650888000000,
+      "volumeX": { "tokenBNFromBeginning": "66934000000", "usdValue24": 4850.043045 },
+      "volumeY": { "tokenBNFromBeginning": "71087000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "19152464621", "usdValue24": 19132.909954 },
+      "liquidityY": { "tokenBNFromBeginning": "9225475441", "usdValue24": 9234.700916 },
+      "feeX": { "tokenBNFromBeginning": "6693400", "usdValue24": 0.485004 },
+      "feeY": { "tokenBNFromBeginning": "7108700", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650974400000,
+      "volumeX": { "tokenBNFromBeginning": "68164000000", "usdValue24": 1227.37518 },
+      "volumeY": { "tokenBNFromBeginning": "72092000000", "usdValue24": 1006.005 },
+      "liquidityX": { "tokenBNFromBeginning": "19377649765", "usdValue24": 19336.29786 },
+      "liquidityY": { "tokenBNFromBeginning": "9000336135", "usdValue24": 9009.336471 },
+      "feeX": { "tokenBNFromBeginning": "6816400", "usdValue24": 0.122737 },
+      "feeY": { "tokenBNFromBeginning": "7209200", "usdValue24": 0.1006 }
     }
   ],
   "EWZW9aJmY2LX6ZyV5RU8waHWKF1aGaxzbuBuRQp6G4j": [
@@ -1629,6 +1854,51 @@
       "liquidityY": { "tokenBNFromBeginning": "44976364", "usdValue24": 44.96332 },
       "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
       "feeY": { "tokenBNFromBeginning": "46500", "usdValue24": 0.003498 }
+    },
+    {
+      "timestamp": 1650628800000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "93000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "1943", "usdValue24": 78.637096 },
+      "liquidityY": { "tokenBNFromBeginning": "22507347", "usdValue24": 22.476444 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "46500", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650715200000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "93000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "1943", "usdValue24": 77.343058 },
+      "liquidityY": { "tokenBNFromBeginning": "22507347", "usdValue24": 22.552361 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "46500", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650801600000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "93000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "1943", "usdValue24": 76.929199 },
+      "liquidityY": { "tokenBNFromBeginning": "22507347", "usdValue24": 22.507347 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "46500", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650888000000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "93000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "2300", "usdValue24": 89.5413 },
+      "liquidityY": { "tokenBNFromBeginning": "8448282", "usdValue24": 8.439656 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "46500", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650974400000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "108800000", "usdValue24": 15.766282 },
+      "liquidityX": { "tokenBNFromBeginning": "1904", "usdValue24": 76.270432 },
+      "liquidityY": { "tokenBNFromBeginning": "24072802", "usdValue24": 24.02143 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "54400", "usdValue24": 0.007883 }
     }
   ],
   "5yKHz86cvHocaQnxv4mPJjftA4w7BbJzQQr5rG9miyZ3": [
@@ -1899,6 +2169,51 @@
       "volumeY": { "tokenBNFromBeginning": "171600000", "usdValue24": 0 },
       "liquidityX": { "tokenBNFromBeginning": "9487221", "usdValue24": 9.484469 },
       "liquidityY": { "tokenBNFromBeginning": "860983", "usdValue24": 0.09723081 },
+      "feeX": { "tokenBNFromBeginning": "12300", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "85800", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650628800000,
+      "volumeX": { "tokenBNFromBeginning": "24600000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "171600000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "9487221", "usdValue24": 9.474195 },
+      "liquidityY": { "tokenBNFromBeginning": "860983", "usdValue24": 0.091384735 },
+      "feeX": { "tokenBNFromBeginning": "12300", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "85800", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650715200000,
+      "volumeX": { "tokenBNFromBeginning": "24600000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "171600000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "9487209", "usdValue24": 9.506183 },
+      "liquidityY": { "tokenBNFromBeginning": "861101", "usdValue24": 0.091130318 },
+      "feeX": { "tokenBNFromBeginning": "12300", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "85800", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650801600000,
+      "volumeX": { "tokenBNFromBeginning": "24600000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "171600000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "9487209", "usdValue24": 9.487209 },
+      "liquidityY": { "tokenBNFromBeginning": "861101", "usdValue24": 0.090691157 },
+      "feeX": { "tokenBNFromBeginning": "12300", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "85800", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650888000000,
+      "volumeX": { "tokenBNFromBeginning": "24600000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "171600000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "9487209", "usdValue24": 9.477522 },
+      "liquidityY": { "tokenBNFromBeginning": "861101", "usdValue24": 0.087160643 },
+      "feeX": { "tokenBNFromBeginning": "12300", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "85800", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650974400000,
+      "volumeX": { "tokenBNFromBeginning": "24600000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "171600000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "9487209", "usdValue24": 9.466963 },
+      "liquidityY": { "tokenBNFromBeginning": "861101", "usdValue24": 0.089253118 },
       "feeX": { "tokenBNFromBeginning": "12300", "usdValue24": 0 },
       "feeY": { "tokenBNFromBeginning": "85800", "usdValue24": 0 }
     }
@@ -2173,6 +2488,51 @@
       "liquidityY": { "tokenBNFromBeginning": "3003787719", "usdValue24": 339.217747106 },
       "feeX": { "tokenBNFromBeginning": "1097800", "usdValue24": 0 },
       "feeY": { "tokenBNFromBeginning": "1100200", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650628800000,
+      "volumeX": { "tokenBNFromBeginning": "10978000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "11002000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "3224743545", "usdValue24": 339.662237594 },
+      "liquidityY": { "tokenBNFromBeginning": "3003787719", "usdValue24": 318.822028494 },
+      "feeX": { "tokenBNFromBeginning": "1097800", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "1100200", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650715200000,
+      "volumeX": { "tokenBNFromBeginning": "11079000000", "usdValue24": 10.63126 },
+      "volumeY": { "tokenBNFromBeginning": "11102000000", "usdValue24": 10.583 },
+      "liquidityX": { "tokenBNFromBeginning": "3224743545", "usdValue24": 339.436505546 },
+      "liquidityY": { "tokenBNFromBeginning": "3003787719", "usdValue24": 317.890854301 },
+      "feeX": { "tokenBNFromBeginning": "1107900", "usdValue24": 0.001063126 },
+      "feeY": { "tokenBNFromBeginning": "1110200", "usdValue24": 0.0010583 }
+    },
+    {
+      "timestamp": 1650801600000,
+      "volumeX": { "tokenBNFromBeginning": "11079000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "11102000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "3224733478", "usdValue24": 337.307121798 },
+      "liquidityY": { "tokenBNFromBeginning": "3003797709", "usdValue24": 316.359974711 },
+      "feeX": { "tokenBNFromBeginning": "1107900", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "1110200", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650888000000,
+      "volumeX": { "tokenBNFromBeginning": "11079000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "11102000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "3224733478", "usdValue24": 324.279198547 },
+      "liquidityY": { "tokenBNFromBeginning": "3003797709", "usdValue24": 304.044404104 },
+      "feeX": { "tokenBNFromBeginning": "1107900", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "1110200", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650974400000,
+      "volumeX": { "tokenBNFromBeginning": "11079000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "11102000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "3224733478", "usdValue24": 331.954064225 },
+      "liquidityY": { "tokenBNFromBeginning": "3003797709", "usdValue24": 311.343632537 },
+      "feeX": { "tokenBNFromBeginning": "1107900", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "1110200", "usdValue24": 0 }
     }
   ],
   "2keDsfcMY6hLvfrmzDAfnMSudMqYczPVcb8MSkK59P9r": [
@@ -2445,6 +2805,51 @@
       "liquidityY": { "tokenBNFromBeginning": "108469579", "usdValue24": 108.438122 },
       "feeX": { "tokenBNFromBeginning": "1048600", "usdValue24": 0 },
       "feeY": { "tokenBNFromBeginning": "161800", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650628800000,
+      "volumeX": { "tokenBNFromBeginning": "2245600000", "usdValue24": 15.630972 },
+      "volumeY": { "tokenBNFromBeginning": "328800000", "usdValue24": 5.19286 },
+      "liquidityX": { "tokenBNFromBeginning": "100337214", "usdValue24": 10.56851875 },
+      "liquidityY": { "tokenBNFromBeginning": "97862112", "usdValue24": 97.727747 },
+      "feeX": { "tokenBNFromBeginning": "1122800", "usdValue24": 0.007815486 },
+      "feeY": { "tokenBNFromBeginning": "164400", "usdValue24": 0.002596 }
+    },
+    {
+      "timestamp": 1650715200000,
+      "volumeX": { "tokenBNFromBeginning": "2399200000", "usdValue24": 16.167936 },
+      "volumeY": { "tokenBNFromBeginning": "344400000", "usdValue24": 15.6312 },
+      "liquidityX": { "tokenBNFromBeginning": "106562358", "usdValue24": 11.216753803 },
+      "liquidityY": { "tokenBNFromBeginning": "97209510", "usdValue24": 97.403929 },
+      "feeX": { "tokenBNFromBeginning": "1199600", "usdValue24": 0.008083968 },
+      "feeY": { "tokenBNFromBeginning": "169600", "usdValue24": 0.00521 }
+    },
+    {
+      "timestamp": 1650801600000,
+      "volumeX": { "tokenBNFromBeginning": "2451600000", "usdValue24": 5.48104 },
+      "volumeY": { "tokenBNFromBeginning": "349800000", "usdValue24": 5.4 },
+      "liquidityX": { "tokenBNFromBeginning": "109074762", "usdValue24": 11.409220105 },
+      "liquidityY": { "tokenBNFromBeginning": "96946309", "usdValue24": 96.946309 },
+      "feeX": { "tokenBNFromBeginning": "1225800", "usdValue24": 0.00274052 },
+      "feeY": { "tokenBNFromBeginning": "174900", "usdValue24": 0.0053 }
+    },
+    {
+      "timestamp": 1650888000000,
+      "volumeX": { "tokenBNFromBeginning": "2877800000", "usdValue24": 42.858672 },
+      "volumeY": { "tokenBNFromBeginning": "360200000", "usdValue24": 10.389381 },
+      "liquidityX": { "tokenBNFromBeginning": "433645077", "usdValue24": 43.607348943 },
+      "liquidityY": { "tokenBNFromBeginning": "63804677", "usdValue24": 63.739532 },
+      "feeX": { "tokenBNFromBeginning": "1438900", "usdValue24": 0.021429336 },
+      "feeY": { "tokenBNFromBeginning": "180100", "usdValue24": 0.005194 }
+    },
+    {
+      "timestamp": 1650974400000,
+      "volumeX": { "tokenBNFromBeginning": "2930800000", "usdValue24": 5.45582 },
+      "volumeY": { "tokenBNFromBeginning": "392200000", "usdValue24": 31.931712 },
+      "liquidityX": { "tokenBNFromBeginning": "179045448", "usdValue24": 18.430938417 },
+      "liquidityY": { "tokenBNFromBeginning": "89658079", "usdValue24": 89.466748 },
+      "feeX": { "tokenBNFromBeginning": "1465400", "usdValue24": 0.00272791 },
+      "feeY": { "tokenBNFromBeginning": "196100", "usdValue24": 0.015965 }
     }
   ],
   "B2Mq1fpJ2bZYxxtF4yz6nNvLJLaYzM3zQsHcs2oDqk3z": [
@@ -2715,6 +3120,51 @@
       "volumeY": { "tokenBNFromBeginning": "193000000", "usdValue24": 0 },
       "liquidityX": { "tokenBNFromBeginning": "202137287", "usdValue24": 22.683846347 },
       "liquidityY": { "tokenBNFromBeginning": "84120300", "usdValue24": 9.129576159 },
+      "feeX": { "tokenBNFromBeginning": "17500", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "19300", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650628800000,
+      "volumeX": { "tokenBNFromBeginning": "175000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "193000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "202137287", "usdValue24": 21.291120439 },
+      "liquidityY": { "tokenBNFromBeginning": "84120300", "usdValue24": 8.555875713 },
+      "feeX": { "tokenBNFromBeginning": "17500", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "19300", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650715200000,
+      "volumeX": { "tokenBNFromBeginning": "175000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "193000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "202137287", "usdValue24": 21.276970829 },
+      "liquidityY": { "tokenBNFromBeginning": "84120300", "usdValue24": 8.561764134 },
+      "feeX": { "tokenBNFromBeginning": "17500", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "19300", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650801600000,
+      "volumeX": { "tokenBNFromBeginning": "175000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "193000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "202137287", "usdValue24": 21.14356022 },
+      "liquidityY": { "tokenBNFromBeginning": "84120300", "usdValue24": 8.486897067 },
+      "feeX": { "tokenBNFromBeginning": "17500", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "19300", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650888000000,
+      "volumeX": { "tokenBNFromBeginning": "175000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "193000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "202137287", "usdValue24": 20.32692558 },
+      "liquidityY": { "tokenBNFromBeginning": "84120300", "usdValue24": 8.168922333 },
+      "feeX": { "tokenBNFromBeginning": "17500", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "19300", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650974400000,
+      "volumeX": { "tokenBNFromBeginning": "175000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "193000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "202137287", "usdValue24": 20.808012323 },
+      "liquidityY": { "tokenBNFromBeginning": "84120300", "usdValue24": 8.342210151 },
       "feeX": { "tokenBNFromBeginning": "17500", "usdValue24": 0 },
       "feeY": { "tokenBNFromBeginning": "19300", "usdValue24": 0 }
     }
@@ -2989,6 +3439,51 @@
       "liquidityY": { "tokenBNFromBeginning": "299999037", "usdValue24": 33.878891248 },
       "feeX": { "tokenBNFromBeginning": "1000", "usdValue24": 0 },
       "feeY": { "tokenBNFromBeginning": "1000", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650628800000,
+      "volumeX": { "tokenBNFromBeginning": "10000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "10000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "81780301", "usdValue24": 8.317874414 },
+      "liquidityY": { "tokenBNFromBeginning": "299999037", "usdValue24": 31.841897787 },
+      "feeX": { "tokenBNFromBeginning": "1000", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "1000", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650715200000,
+      "volumeX": { "tokenBNFromBeginning": "10000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "10000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "81780301", "usdValue24": 8.323599035 },
+      "liquidityY": { "tokenBNFromBeginning": "299999037", "usdValue24": 31.748898085 },
+      "feeX": { "tokenBNFromBeginning": "1000", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "1000", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650801600000,
+      "volumeX": { "tokenBNFromBeginning": "10000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "10000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "81780301", "usdValue24": 8.250814567 },
+      "liquidityY": { "tokenBNFromBeginning": "299999037", "usdValue24": 31.595898576 },
+      "feeX": { "tokenBNFromBeginning": "1000", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "1000", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650888000000,
+      "volumeX": { "tokenBNFromBeginning": "10000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "10000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "81780301", "usdValue24": 7.94168503 },
+      "liquidityY": { "tokenBNFromBeginning": "299999037", "usdValue24": 30.365902525 },
+      "feeX": { "tokenBNFromBeginning": "1000", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "1000", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650974400000,
+      "volumeX": { "tokenBNFromBeginning": "10000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "10000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "81780301", "usdValue24": 8.11015245 },
+      "liquidityY": { "tokenBNFromBeginning": "299999037", "usdValue24": 31.094900185 },
+      "feeX": { "tokenBNFromBeginning": "1000", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "1000", "usdValue24": 0 }
     }
   ],
   "2SgUGxYDczrB6wUzXHPJH65pNhWkEzNMEx3km4xTYUTC": [
@@ -3234,6 +3729,51 @@
       "liquidityY": { "tokenBNFromBeginning": "577653794", "usdValue24": 62.692766262 },
       "feeX": { "tokenBNFromBeginning": "24700", "usdValue24": 0 },
       "feeY": { "tokenBNFromBeginning": "161800", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650628800000,
+      "volumeX": { "tokenBNFromBeginning": "247000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "1618000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "14530593", "usdValue24": 14.510642 },
+      "liquidityY": { "tokenBNFromBeginning": "577653794", "usdValue24": 58.753167387 },
+      "feeX": { "tokenBNFromBeginning": "24700", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "161800", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650715200000,
+      "volumeX": { "tokenBNFromBeginning": "247000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "1618000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "39632895", "usdValue24": 39.71216 },
+      "liquidityY": { "tokenBNFromBeginning": "790198527", "usdValue24": 80.426406078 },
+      "feeX": { "tokenBNFromBeginning": "24700", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "161800", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650801600000,
+      "volumeX": { "tokenBNFromBeginning": "272000000", "usdValue24": 25 },
+      "volumeY": { "tokenBNFromBeginning": "1618000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "62980558", "usdValue24": 62.980558 },
+      "liquidityY": { "tokenBNFromBeginning": "592876924", "usdValue24": 59.815352862 },
+      "feeX": { "tokenBNFromBeginning": "27200", "usdValue24": 0.0025 },
+      "feeY": { "tokenBNFromBeginning": "161800", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650888000000,
+      "volumeX": { "tokenBNFromBeginning": "272000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "1618000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "62980558", "usdValue24": 62.916254 },
+      "liquidityY": { "tokenBNFromBeginning": "592876924", "usdValue24": 57.574278089 },
+      "feeX": { "tokenBNFromBeginning": "27200", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "161800", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650974400000,
+      "volumeX": { "tokenBNFromBeginning": "272000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "1618000000", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "63080557", "usdValue24": 62.945943 },
+      "liquidityY": { "tokenBNFromBeginning": "593726185", "usdValue24": 58.879825766 },
+      "feeX": { "tokenBNFromBeginning": "27200", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "161800", "usdValue24": 0 }
     }
   ],
   "C7BLPzc1vzLL3Tm5udXELnHDRXeXkdd5f1oMKP8rwUNv": [
@@ -3443,6 +3983,51 @@
       "liquidityY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
       "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
       "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650628800000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650715200000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650801600000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650888000000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650974400000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
     }
   ],
   "9fY5jLin2yYMK9Eee5diWzJRZqLaYgEUupUNsKVYAMhi": [
@@ -3643,6 +4228,51 @@
       "liquidityY": { "tokenBNFromBeginning": "83183840", "usdValue24": 83.159716 },
       "feeX": { "tokenBNFromBeginning": "200", "usdValue24": 0 },
       "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650628800000,
+      "volumeX": { "tokenBNFromBeginning": "2000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "85661608", "usdValue24": 85.543994 },
+      "liquidityY": { "tokenBNFromBeginning": "83183840", "usdValue24": 83.069628 },
+      "feeX": { "tokenBNFromBeginning": "200", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650715200000,
+      "volumeX": { "tokenBNFromBeginning": "2000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "85661608", "usdValue24": 85.832931 },
+      "liquidityY": { "tokenBNFromBeginning": "83183840", "usdValue24": 83.350207 },
+      "feeX": { "tokenBNFromBeginning": "200", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650801600000,
+      "volumeX": { "tokenBNFromBeginning": "84000000", "usdValue24": 82 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "166665283", "usdValue24": 166.665283 },
+      "liquidityY": { "tokenBNFromBeginning": "2242336", "usdValue24": 2.242336 },
+      "feeX": { "tokenBNFromBeginning": "8400", "usdValue24": 0.0082 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650888000000,
+      "volumeX": { "tokenBNFromBeginning": "84000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "166665283", "usdValue24": 166.495117 },
+      "liquidityY": { "tokenBNFromBeginning": "2242336", "usdValue24": 2.240046 },
+      "feeX": { "tokenBNFromBeginning": "8400", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650974400000,
+      "volumeX": { "tokenBNFromBeginning": "84000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "166665283", "usdValue24": 166.309619 },
+      "liquidityY": { "tokenBNFromBeginning": "2242336", "usdValue24": 2.23755 },
+      "feeX": { "tokenBNFromBeginning": "8400", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
     }
   ],
   "AXSXYioiHGFvQ1XF4zCvXjnVAcMY68WQ4RH5r5nAdah5": [
@@ -3834,6 +4464,51 @@
       "liquidityY": { "tokenBNFromBeginning": "100174", "usdValue24": 0 },
       "feeX": { "tokenBNFromBeginning": "100", "usdValue24": 0 },
       "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650628800000,
+      "volumeX": { "tokenBNFromBeginning": "200000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "299949", "usdValue24": 0.000011156 },
+      "liquidityY": { "tokenBNFromBeginning": "100174", "usdValue24": 0 },
+      "feeX": { "tokenBNFromBeginning": "100", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650715200000,
+      "volumeX": { "tokenBNFromBeginning": "200000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "299949", "usdValue24": 0.000017723 },
+      "liquidityY": { "tokenBNFromBeginning": "100174", "usdValue24": 0 },
+      "feeX": { "tokenBNFromBeginning": "100", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650801600000,
+      "volumeX": { "tokenBNFromBeginning": "200000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "299949", "usdValue24": 0.000019131 },
+      "liquidityY": { "tokenBNFromBeginning": "100174", "usdValue24": 0 },
+      "feeX": { "tokenBNFromBeginning": "100", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650888000000,
+      "volumeX": { "tokenBNFromBeginning": "200000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "299949", "usdValue24": 0.000017878 },
+      "liquidityY": { "tokenBNFromBeginning": "100174", "usdValue24": 0 },
+      "feeX": { "tokenBNFromBeginning": "100", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650974400000,
+      "volumeX": { "tokenBNFromBeginning": "200000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "299949", "usdValue24": 0.000018874 },
+      "liquidityY": { "tokenBNFromBeginning": "100174", "usdValue24": 0 },
+      "feeX": { "tokenBNFromBeginning": "100", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
     }
   ],
   "HYCzZYupXUyamfTQWNkULW1EFcNPCTA5urnEXCFXkLRh": [
@@ -4016,6 +4691,51 @@
       "liquidityY": { "tokenBNFromBeginning": "1491627", "usdValue24": 1.499085 },
       "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
       "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650628800000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "1491627", "usdValue24": 1.489578 },
+      "liquidityY": { "tokenBNFromBeginning": "1491627", "usdValue24": 1.49461 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650715200000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "1491627", "usdValue24": 1.49461 },
+      "liquidityY": { "tokenBNFromBeginning": "1491627", "usdValue24": 1.497593 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650801600000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "1491627", "usdValue24": 1.491627 },
+      "liquidityY": { "tokenBNFromBeginning": "1491627", "usdValue24": 1.49461 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650888000000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "1491627", "usdValue24": 1.490104 },
+      "liquidityY": { "tokenBNFromBeginning": "1491627", "usdValue24": 1.49461 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650974400000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "1491627", "usdValue24": 1.488443 },
+      "liquidityY": { "tokenBNFromBeginning": "1491627", "usdValue24": 1.49461 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
     }
   ],
   "A5U2LbZhwc6GFZtYft6MtbGHFhYyZ1pzCRQkz7D2b2YS": [
@@ -4171,6 +4891,51 @@
       "liquidityY": { "tokenBNFromBeginning": "1330703", "usdValue24": 1.332033 },
       "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
       "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650628800000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "1330702", "usdValue24": 1.332032 },
+      "liquidityY": { "tokenBNFromBeginning": "1330703", "usdValue24": 1.33018 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650715200000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "1330702", "usdValue24": 1.32922 },
+      "liquidityY": { "tokenBNFromBeginning": "1330703", "usdValue24": 1.332033 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650801600000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "1330702", "usdValue24": 1.332032 },
+      "liquidityY": { "tokenBNFromBeginning": "1330703", "usdValue24": 1.332033 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650888000000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "1330702", "usdValue24": 1.330414 },
+      "liquidityY": { "tokenBNFromBeginning": "1330703", "usdValue24": 1.332033 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650974400000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "1330702", "usdValue24": 1.33034 },
+      "liquidityY": { "tokenBNFromBeginning": "1330703", "usdValue24": 1.332033 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
     }
   ],
   "FejEVPJBH5TEbgcpupNuRyiMRoeaCQwPvtVU6w3i2xRc": [
@@ -4217,6 +4982,51 @@
       "liquidityX": { "tokenBNFromBeginning": "658461345", "usdValue24": 658.270391 },
       "liquidityY": { "tokenBNFromBeginning": "658461346", "usdValue24": 0 },
       "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650628800000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "658461345", "usdValue24": 657.557277 },
+      "liquidityY": { "tokenBNFromBeginning": "658461346", "usdValue24": 0 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650715200000,
+      "volumeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "658461345", "usdValue24": 659.778267 },
+      "liquidityY": { "tokenBNFromBeginning": "658461346", "usdValue24": 0 },
+      "feeX": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650801600000,
+      "volumeX": { "tokenBNFromBeginning": "610000000", "usdValue24": 610 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "1265622771", "usdValue24": 1265.622771 },
+      "liquidityY": { "tokenBNFromBeginning": "52694536", "usdValue24": 0 },
+      "feeX": { "tokenBNFromBeginning": "61000", "usdValue24": 0.061 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650888000000,
+      "volumeX": { "tokenBNFromBeginning": "610000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "1265622771", "usdValue24": 1264.33057 },
+      "liquidityY": { "tokenBNFromBeginning": "52694536", "usdValue24": 0 },
+      "feeX": { "tokenBNFromBeginning": "61000", "usdValue24": 0 },
+      "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
+    },
+    {
+      "timestamp": 1650974400000,
+      "volumeX": { "tokenBNFromBeginning": "610000000", "usdValue24": 0 },
+      "volumeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 },
+      "liquidityX": { "tokenBNFromBeginning": "1265622771", "usdValue24": 1262.921932 },
+      "liquidityY": { "tokenBNFromBeginning": "52694536", "usdValue24": 0 },
+      "feeX": { "tokenBNFromBeginning": "61000", "usdValue24": 0 },
       "feeY": { "tokenBNFromBeginning": "0", "usdValue24": 0 }
     }
   ]
