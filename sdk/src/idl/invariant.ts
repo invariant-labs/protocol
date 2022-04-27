@@ -937,11 +937,6 @@ export type Invariant = {
           "name": "feeReceiver",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "programAuthority",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": []
@@ -2473,11 +2468,6 @@ export const IDL: Invariant = {
         },
         {
           "name": "feeReceiver",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "programAuthority",
           "isMut": false,
           "isSigner": false
         }
