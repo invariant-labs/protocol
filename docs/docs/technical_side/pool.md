@@ -61,3 +61,17 @@ pub struct Pool {
 | oracle_address               | Pubkey     | Address of oracle records.                                                                                                                                                                                    |
 | oracle_initialized           | bool       | Is oracle set for Pool.                                                                                                                                                                                       |
 | bump                         | u8         | Seed used to ensure the generated address doesn't collide with any other existing one.                                                                                                                        |
+
+Using above props there could be created Pool with different method mentioned in [introduction](/docs/technical_side/introduction.md):
+
+```ts
+  createPoolTx(props:createPoolVars)
+
+  createPool(props: createPoolVars)
+```
+
+```ts
+  initPoolAndPositionTx(props, signer: PublicKey)
+
+  initPoolAndPosition(props: InitPoolAndPosition, signer: PublicKey)
+```
