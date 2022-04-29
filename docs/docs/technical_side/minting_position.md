@@ -59,14 +59,19 @@ To remove a position, declare props as follows:
 const removePositionVars: RemovePosition = {
   pair: Pair,
   owner: PublicKey,
-  publicKey,
-  index, //index of position for specific pool
+  index: number, //index of position for specific pool
   userTokenX: userTokenXAccount,
   userTokenY: userTokenYAccount
 }
 ```
 
-then make use of function
+To fetch list of all your positions and and get index of specific position use function.
+
+```ts
+getPositionList(owner: PublicKey)
+```
+
+After that make use of function
 
 ```ts
 await market.removePosition(removePositionVars, positionOwner)
