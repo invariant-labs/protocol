@@ -31,6 +31,20 @@ Pair is a two-token structure with a corresponding fee tier.
 pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
 ```
 
+To get and choose suitable `feeTier`, see `FEE_TIER` constant, i.e.
+
+```ts
+const FEE_TIERS: FeeTier[] = [
+  { fee: fromFee(new BN(10)) },
+  { fee: fromFee(new BN(50)) },
+  { fee: fromFee(new BN(100)) },
+  { fee: fromFee(new BN(300)) },
+  { fee: fromFee(new BN(1000)) }
+]
+```
+
+This fee tiers correspond to percentages: 0.01%, 0.05%, 0.1%, 0.3%, 1%.
+
 Following that declaration, call to initialize Pool and Position.
 
 ```ts
