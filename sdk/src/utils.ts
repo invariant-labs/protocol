@@ -172,8 +172,8 @@ export interface CloserLimitResult {
 
 export const ComputeUnitsInstruction = (units: number, wallet: PublicKey) => {
   const program = new PublicKey('ComputeBudget111111111111111111111111111111')
-  const params = { instruction: 0, units: units }
-  const layout = struct([u8('instruction') as any, u32('units')])
+  const params = { instruction: 0, units: units, additional_fee: 0 }
+  const layout = struct([u8('instruction') as any, u32('units'), u32('additional_fee')])
   const data = Buffer.alloc(layout.span)
   layout.encode(params, data)
   const keys = [{ pubkey: wallet, isSigner: false, isWritable: false }]
