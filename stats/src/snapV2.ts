@@ -24,18 +24,14 @@ export const createSnapshotForNetwork = async (network: Network) => {
 
   switch (network) {
     case Network.MAIN:
-      provider = Provider.local(
-        'https://solana--mainnet.datahub.figment.io/apikey/182e93d87a1f1d335c9d74d6c7371388'
-      )
+      provider = Provider.local('https://ssc-dao.genesysgo.net')
       fileName = './data/v2/mainnet.json'
       snaps = MAINNET_DATA
       tokensData = await getTokensData()
       break
     case Network.DEV:
     default:
-      provider = Provider.local(
-        'https://solana--devnet.datahub.figment.io/apikey/182e93d87a1f1d335c9d74d6c7371388'
-      )
+      provider = Provider.local('https://api.devnet.solana.com')
       fileName = './data/v2/devnet.json'
       snaps = DEVNET_DATA
       tokensData = devnetTokensData
