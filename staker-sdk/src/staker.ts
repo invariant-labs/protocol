@@ -14,7 +14,7 @@ import {
   Keypair,
   sendAndConfirmRawTransaction
 } from '@solana/web3.js'
-import { STAKER_SEED, DECIMAL, DENOMINATOR } from './utils'
+import { STAKER_SEED } from './utils'
 import { bs58 } from '@project-serum/anchor/dist/cjs/utils/bytes'
 
 export class Staker {
@@ -278,7 +278,7 @@ export class Staker {
     const idBuf = Buffer.alloc(16)
     idBuf.writeBigUInt64LE(BigInt(id.toString()))
     return await PublicKey.findProgramAddress(
-      [STAKER_SEED, incentive.toBuffer(), pubBuf, idBuf],
+      [Buffer.from(STAKER_SEED), incentive.toBuffer(), pubBuf, idBuf],
       this.programId
     )
   }
