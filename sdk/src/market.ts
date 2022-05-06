@@ -1477,6 +1477,7 @@ export interface Tick {
   sqrtPrice: Decimal
   feeGrowthOutsideX: Decimal
   feeGrowthOutsideY: Decimal
+  secondsPerLiquidityOutside: Decimal
   bump: number
 }
 

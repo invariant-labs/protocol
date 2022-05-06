@@ -1276,10 +1276,6 @@ export type Invariant = {
             }
           },
           {
-            "name": "secondsOutside",
-            "type": "u64"
-          },
-          {
             "name": "bump",
             "type": "u8"
           }
@@ -2807,10 +2803,6 @@ export const IDL: Invariant = {
             "type": {
               "defined": "FixedPoint"
             }
-          },
-          {
-            "name": "secondsOutside",
-            "type": "u64"
           },
           {
             "name": "bump",
