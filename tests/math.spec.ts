@@ -1112,6 +1112,7 @@ describe('Math', () => {
       sqrtPrice: { v: new BN(0) },
       feeGrowthOutsideX: { v: new BN(0) },
       feeGrowthOutsideY: { v: new BN(0) },
+      secondsPerLiquidityOutside: { v: new BN(0) },
       bump: 0
     }
     const upperTick: Tick = {
@@ -1123,6 +1124,8 @@ describe('Math', () => {
       sqrtPrice: { v: new BN(0) },
       feeGrowthOutsideX: { v: new BN(0) },
       feeGrowthOutsideY: { v: new BN(0) },
+      secondsPerLiquidityOutside: { v: new BN(0) },
+
       bump: 0
     }
 
@@ -1312,6 +1315,8 @@ describe('Math', () => {
         sqrtPrice: { v: new BN(0) },
         feeGrowthOutsideX: { v: new BN(0) },
         feeGrowthOutsideY: { v: new BN(0) },
+        secondsPerLiquidityOutside: { v: new BN(0) },
+
         bump: 0
       }
       const upperTick: Tick = {
@@ -1323,6 +1328,8 @@ describe('Math', () => {
         sqrtPrice: { v: new BN(0) },
         feeGrowthOutsideX: { v: new BN(0) },
         feeGrowthOutsideY: { v: new BN(0) },
+        secondsPerLiquidityOutside: { v: new BN(0) },
+
         bump: 0
       }
 
@@ -1357,6 +1364,8 @@ describe('Math', () => {
         sqrtPrice: { v: new BN('029cf3124f61', 'hex') },
         feeGrowthOutsideX: { v: new BN('0c4fee04dd2b3b8c', 'hex') },
         feeGrowthOutsideY: { v: new BN('01a99cb6b2bd6911e7', 'hex') },
+        secondsPerLiquidityOutside: { v: new BN(0) },
+
         bump: 0
       }
       const upperTick: Tick = {
@@ -1368,6 +1377,8 @@ describe('Math', () => {
         sqrtPrice: { v: new BN('029d9e665157', 'hex') },
         feeGrowthOutsideX: { v: new BN('3b9f3a68b9c225', 'hex') },
         feeGrowthOutsideY: { v: new BN('2c0282aeb7b74a', 'hex') },
+        secondsPerLiquidityOutside: { v: new BN(0) },
+
         bump: 0
       }
 
