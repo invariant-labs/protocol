@@ -35,7 +35,6 @@ const main = async () => {
   const pair = new Pair(TOKEN_X, TOKEN_Y, FEE_TIER)
   const staker = await Staker.build(Network.DEV, wallet, connection)
   const [poolAddress] = await pair.getAddressAndBump(new PublicKey(getMarketAddress(Network.DEV)))
-  console.log('poolAddress', poolAddress.toString())
 
   const incentiveParams: CreateIncentive = {
     reward: REWARD,
