@@ -1125,7 +1125,6 @@ describe('Math', () => {
       feeGrowthOutsideX: { v: new BN(0) },
       feeGrowthOutsideY: { v: new BN(0) },
       secondsPerLiquidityOutside: { v: new BN(0) },
-
       bump: 0
     }
 
