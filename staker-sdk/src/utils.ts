@@ -67,7 +67,8 @@ export const calculateReward = ({
 export const calculateSecondsPerLiquidityInside = ({
   tickLower,
   tickUpper,
-  pool
+  pool,
+  currentTimestamp
 }: SecondsPerLiquidityInside) => {
   const currentAboveLower = pool.currentTickIndex >= tickLower.index
   const currentBelowUpper = pool.currentTickIndex < tickUpper.index
@@ -76,8 +77,6 @@ export const calculateSecondsPerLiquidityInside = ({
   let secondsPerLiquidityInside: BN
   let secondsPerLiquidityGlobal: BN
 
-  //TODO implement overflows
-  const currentTimestamp = new BN(new Date().valueOf() / 1000)
   secondsPerLiquidityGlobal = pool.secondsPerLiquidityGlobal.v.add(
     currentTimestamp
       .sub(pool.lastTimestamp)
@@ -87,7 +86,7 @@ export const calculateSecondsPerLiquidityInside = ({
   )
   //in case of overflow
   if (secondsPerLiquidityGlobal > U128MAX) {
-    secondsPerLiquidityGlobal = secondsPerLiquidityGlobal.sub(U128MAX)
+    secondsPerLiquidityGlobal = secondsPerLiquidityGlobal.sub(U128MAX).addn(1)
   }
   if (currentAboveLower) {
     secondsPerLiquidityBelow = tickLower.secondsPerLiquidityOutside.v
@@ -135,6 +134,7 @@ export interface SecondsPerLiquidityInside {
   tickLower: Tick
   tickUpper: Tick
   pool: PoolStructure
+  currentTimestamp: BN
 }
 export interface CalculateReward {
   totalRewardUnclaimed: BN
