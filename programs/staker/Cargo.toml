@@ -16,6 +16,7 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
+decimal = { path = "../invariant/decimal" }
 anchor-lang = "0.21.0"
 anchor-spl = "0.21.0"
 integer-sqrt = "0.1.5"

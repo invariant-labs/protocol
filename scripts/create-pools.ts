@@ -46,13 +46,13 @@ const createUsdcRenDoge = async (market: Market) => {
   const renDoge = new PublicKey(MOCK_TOKENS.REN_DOGE)
   const usdc = new PublicKey(MOCK_TOKENS.USDC)
 
-  for (const i of [1, 2]) {
+  for (const i of [1, 2, 3]) {
     const pair = new Pair(renDoge, usdc, FEE_TIERS[i])
 
     const createPoolVars: CreatePool = {
       pair,
       payer: wallet,
-      initTick: 65000
+      initTick: 65010
     }
     await market.createPool(createPoolVars)
   }

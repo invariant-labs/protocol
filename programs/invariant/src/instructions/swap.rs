@@ -124,9 +124,17 @@ impl<'info> Swap<'info> {
 
         // limit is on the right side of price
         if x_to_y {
-            require!({ pool.sqrt_price } > sqrt_price_limit, WrongLimit);
+            require!(
+                { pool.sqrt_price } > sqrt_price_limit
+                    && sqrt_price_limit <= Price::new(MAX_SQRT_PRICE),
+                WrongLimit
+            );
         } else {
-            require!({ pool.sqrt_price } < sqrt_price_limit, WrongLimit);
+            require!(
+                { pool.sqrt_price } < sqrt_price_limit
+                    && sqrt_price_limit >= Price::new(MIN_SQRT_PRICE),
+                WrongLimit
+            );
         }
 
         let mut remaining_amount = TokenAmount(amount);
@@ -208,6 +216,7 @@ impl<'info> Swap<'info> {
 
                     // crossing tick
                     if !x_to_y || is_enough_amount_to_cross {
+                        msg!("INVARIANT: CROSSING TICK {} ", { tick.index });
                         cross_tick(&mut tick, &mut pool)?;
                     } else if !remaining_amount.is_zero() {
                         if by_amount_in {
@@ -219,7 +228,7 @@ impl<'info> Swap<'info> {
                 }
                 // set tick to limit (below if price is going down, because current tick should always be below price)
                 pool.current_tick_index = if x_to_y && is_enough_amount_to_cross {
-                    tick_index - pool.tick_spacing as i32
+                    tick_index.checked_sub(pool.tick_spacing as i32).unwrap()
                 } else {
                     tick_index
                 };

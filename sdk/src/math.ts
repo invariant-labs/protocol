@@ -12,10 +12,12 @@ import {
   PRICE_SCALE
 } from './utils'
 
-export const TICK_LIMIT = 100_000
+export const TICK_LIMIT = 44_364
 export const MAX_TICK = 221_818
 export const MIN_TICK = -MAX_TICK
 export const TICK_SEARCH_RANGE = 256
+
+export const U64_MAX = new BN('18446744073709551615')
 
 export interface SwapResult {
   nextPrice: Decimal
@@ -112,6 +114,15 @@ export const calculateSwapStep = (
   byAmountIn: boolean,
   fee: Decimal
 ): SwapResult => {
+  if (liquidity.v.eqn(0)) {
+    return {
+      nextPrice: targetPrice,
+      amountIn: new BN(0),
+      amountOut: new BN(0),
+      feeAmount: new BN(0)
+    }
+  }
+
   const aToB = currentPrice.v.gte(targetPrice.v)
 
   let nextPrice: Decimal = { v: new BN(0) }
@@ -122,9 +133,9 @@ export const calculateSwapStep = (
   if (byAmountIn) {
     const amountAfterFee: BN = fromInteger(1).v.sub(fee.v).mul(amount).div(DENOMINATOR)
     if (aToB) {
-      amountIn = getDeltaX(targetPrice, currentPrice, liquidity, true)
+      amountIn = getDeltaX(targetPrice, currentPrice, liquidity, true) ?? U64_MAX
     } else {
-      amountIn = getDeltaY(targetPrice, currentPrice, liquidity, true)
+      amountIn = getDeltaY(targetPrice, currentPrice, liquidity, true) ?? U64_MAX
     }
     if (amountAfterFee.gte(amountIn)) {
       nextPrice = targetPrice
@@ -133,9 +144,9 @@ export const calculateSwapStep = (
     }
   } else {
     if (aToB) {
-      amountOut = getDeltaY(targetPrice, currentPrice, liquidity, false)
+      amountOut = getDeltaY(targetPrice, currentPrice, liquidity, false) ?? U64_MAX
     } else {
-      amountOut = getDeltaX(currentPrice, targetPrice, liquidity, false)
+      amountOut = getDeltaX(currentPrice, targetPrice, liquidity, false) ?? U64_MAX
     }
     if (amount.gte(amountOut)) {
       nextPrice = targetPrice
@@ -147,20 +158,23 @@ export const calculateSwapStep = (
   const max = targetPrice.v.eq(nextPrice.v)
 
   if (aToB) {
+    // TODO: refactor "as BN" casting
     if (!(max && byAmountIn)) {
-      amountIn = getDeltaX(nextPrice, currentPrice, liquidity, true)
+      amountIn = getDeltaX(nextPrice, currentPrice, liquidity, true) as BN
     }
     if (!(max && !byAmountIn)) {
-      amountOut = getDeltaY(nextPrice, currentPrice, liquidity, false)
+      amountOut = getDeltaY(nextPrice, currentPrice, liquidity, false) as BN
     }
   } else {
     if (!(max && byAmountIn)) {
-      amountIn = getDeltaY(currentPrice, nextPrice, liquidity, true)
+      amountIn = getDeltaY(currentPrice, nextPrice, liquidity, true) as BN
     }
     if (!(max && !byAmountIn)) {
-      amountOut = getDeltaX(currentPrice, nextPrice, liquidity, false)
+      amountOut = getDeltaX(currentPrice, nextPrice, liquidity, false) as BN
     }
   }
+
+  if (amountIn === null || amountOut === null) throw new Error('Amount would be greater than u64')
 
   if (!byAmountIn && amountOut.gt(amount)) {
     amountOut = amount
@@ -185,7 +199,7 @@ export const getDeltaX = (
   priceB: Decimal,
   liquidity: Decimal,
   up: boolean
-): BN => {
+): BN | null => {
   let deltaPrice: Decimal
   if (priceA.v.gt(priceB.v)) {
     deltaPrice = { v: priceA.v.sub(priceB.v) }
@@ -197,18 +211,20 @@ export const getDeltaX = (
 
   if (up) {
     const denominatorUp: BN = priceA.v.mul(priceB.v).div(PRICE_DENOMINATOR)
-    return nominator
+    const result = nominator
       .mul(PRICE_DENOMINATOR)
       .add(denominatorUp.subn(1))
       .div(denominatorUp)
       .add(PRICE_DENOMINATOR.subn(1))
       .div(PRICE_DENOMINATOR)
+    return result.lte(U64_MAX) ? result : null
   } else {
     const denominatorDown: BN = priceA.v
       .mul(priceB.v)
       .add(PRICE_DENOMINATOR.subn(1))
       .div(PRICE_DENOMINATOR)
-    return nominator.mul(PRICE_DENOMINATOR).div(denominatorDown).div(PRICE_DENOMINATOR)
+    const result = nominator.mul(PRICE_DENOMINATOR).div(denominatorDown).div(PRICE_DENOMINATOR)
+    return result.lte(U64_MAX) ? result : null
   }
 }
 
@@ -217,7 +233,7 @@ export const getDeltaY = (
   priceB: Decimal,
   liquidity: Decimal,
   up: boolean
-): BN => {
+): BN | null => {
   let deltaPrice: Decimal
   if (priceA.v.gt(priceB.v)) {
     deltaPrice = { v: priceA.v.sub(priceB.v) }
@@ -226,14 +242,16 @@ export const getDeltaY = (
   }
 
   if (up) {
-    return deltaPrice.v
+    const result = deltaPrice.v
       .mul(liquidity.v)
       .add(LIQUIDITY_DENOMINATOR.subn(1))
       .div(LIQUIDITY_DENOMINATOR)
       .add(PRICE_DENOMINATOR.subn(1))
       .div(PRICE_DENOMINATOR)
+    return result.lte(U64_MAX) ? result : null
   } else {
-    return deltaPrice.v.mul(liquidity.v).div(LIQUIDITY_DENOMINATOR).div(PRICE_DENOMINATOR)
+    const result = deltaPrice.v.mul(liquidity.v).div(LIQUIDITY_DENOMINATOR).div(PRICE_DENOMINATOR)
+    return result.lte(U64_MAX) ? result : null
   }
 }
 
@@ -322,7 +340,6 @@ export const getNextPriceYDown = (
       .mul(PRICE_DENOMINATOR)
       .add(liquidity.v.mul(new BN(10).pow(new BN(PRICE_SCALE - LIQUIDITY_SCALE))).subn(1))
       .div(liquidity.v.mul(new BN(10).pow(new BN(PRICE_SCALE - LIQUIDITY_SCALE))))
-    assert.isTrue(price.v.gt(quotient))
     return { v: price.v.sub(quotient) }
   }
 }
@@ -399,7 +416,6 @@ const calculateX = (nominator: BN, denominator: BN, liquidity: BN, roundingUp: b
   return common.div(LIQUIDITY_DENOMINATOR)
 }
 
-// NOTICE: result is multiplied by liquidity denominator
 export const getX = (
   liquidity: BN,
   upperSqrtPrice: BN,
@@ -427,10 +443,9 @@ export const getX = (
     nominator = upperSqrtPrice.sub(currentSqrtPrice)
   }
 
-  return liquidity.mul(nominator).div(denominator)
+  return liquidity.mul(nominator).div(denominator).div(LIQUIDITY_DENOMINATOR)
 }
 
-// NOTICE: result is multiplied by liquidity denominator
 export const getY = (
   liquidity: BN,
   upperSqrtPrice: BN,
@@ -454,7 +469,7 @@ export const getY = (
     difference = currentSqrtPrice.sub(lowerSqrtPrice)
   }
 
-  return liquidity.mul(difference).div(PRICE_DENOMINATOR)
+  return liquidity.mul(difference).div(PRICE_DENOMINATOR).div(LIQUIDITY_DENOMINATOR)
 }
 
 export const getLiquidityByX = (
@@ -631,4 +646,32 @@ export const isEnoughAmountToPushPrice = (
   }
 
   return !currentPriceSqrt.v.eq(nextSqrtPrice.v)
+}
+
+export const calculatePriceImpact = (startingSqrtPrice: BN, endingSqrtPrice: BN): BN => {
+  const startingPrice = startingSqrtPrice.mul(startingSqrtPrice)
+  const endingPrice = endingSqrtPrice.mul(endingSqrtPrice)
+  let priceQuotient
+  if (endingPrice.gte(startingPrice)) {
+    priceQuotient = DENOMINATOR.mul(startingPrice).div(endingPrice)
+  } else {
+    priceQuotient = DENOMINATOR.mul(endingPrice).div(startingPrice)
+  }
+  return DENOMINATOR.sub(priceQuotient)
+}
+
+export const calculateMinReceivedTokensByAmountIn = (
+  targetSqrtPrice: BN,
+  xToY: boolean,
+  amountIn: BN,
+  fee: BN
+) => {
+  const targetPrice = targetSqrtPrice.mul(targetSqrtPrice)
+  let amountOut: BN
+  if (xToY) {
+    amountOut = amountIn.mul(targetPrice).div(PRICE_DENOMINATOR).div(PRICE_DENOMINATOR)
+  } else {
+    amountOut = amountIn.mul(PRICE_DENOMINATOR).mul(PRICE_DENOMINATOR).div(targetPrice)
+  }
+  return DENOMINATOR.sub(fee).mul(amountOut).div(DENOMINATOR)
 }

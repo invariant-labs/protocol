@@ -1,14 +1,17 @@
 export enum Network {
   LOCAL,
-  DEV
+  DEV,
+  MAIN
 }
 
 export const getMarketAddress = (network: Network) => {
   switch (network) {
     case Network.LOCAL:
-      return 'FFtYJgUdvZwJkjx4YCTV61ik8rUY3HAp4dMzNkvV76Nx'
+      return 'HyaB3W9q6XdA5xwpU4XnSZV94htfmbmqJXZcEbRaJutt'
     case Network.DEV:
-      return 'FFtYJgUdvZwJkjx4YCTV61ik8rUY3HAp4dMzNkvV76Nx'
+      return '9aiirQKPZ2peE9QrXYmsbTtR7wSDJi2HkQdHuaMpTpei'
+    case Network.MAIN:
+      return 'HyaB3W9q6XdA5xwpU4XnSZV94htfmbmqJXZcEbRaJutt'
     default:
       throw new Error('Unknown network')
   }
@@ -22,4 +25,14 @@ export const MOCK_TOKENS = {
   WSOL: 'So11111111111111111111111111111111111111112',
   BTC: '4gGKgUYvGkCT62Cu1zfPspuR7VPNPYrigXFmF9KTPji8',
   REN_DOGE: 'ArjgPxuQgaGXU16XSdBPDsCit7nxjAKR5Gvtvb2oFZUZ'
+}
+
+export const MAINNET_TOKENS = {
+  USDC: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+  USDT: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
+  UST: '9vMJfxuKxXBoEa7rM12mYLMwTacLMLDJqHozw96WQL8i',
+  UXD: '7kbnvuGBxxj8AG9qp8Scn56muWGaRaFqxg1FsRp3PaFT',
+  ETH: '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs', //wormhole
+  WSOL: 'So11111111111111111111111111111111111111112',
+  BTC: '9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E' //sollet
 }

@@ -1,10 +1,10 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Market, Pair, sleep } from '@invariant-labs/sdk'
-import { Network } from '../sdk-staker/src'
+import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import { CreateIncentive, Decimal, EndIncentive, Staker } from '../sdk-staker/src/staker'
+import { CreateIncentive, Decimal, EndIncentive, Staker } from '../staker-sdk/src/staker'
 import { assertThrowsAsync, createToken, signAndSend, tou64 } from './testUtils'
 import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
@@ -130,7 +130,7 @@ describe('End incentive tests', () => {
       incentive: incentiveAccount.publicKey,
       incentiveTokenAccount: incentiveTokenAccount.publicKey,
       incentiveToken: incentiveToken.publicKey,
-      ownerTokenAccount: founderTokenAccount,
+      founderTokenAccount: founderTokenAccount,
       founder: founderAccount.publicKey
     }
     const endIncentiveIx = await staker.endIncentiveIx(endIncentive)

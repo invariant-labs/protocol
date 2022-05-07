@@ -14,6 +14,7 @@ import { feeToTickSpacing, FEE_TIERS, generateTicksArray } from '@invariant-labs
 import BN from 'bn.js'
 import { Pair, tou64, TICK_LIMIT, calculatePriceSqrt } from '@invariant-labs/sdk'
 import { assert } from 'chai'
+import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {
@@ -60,7 +61,7 @@ export const createToken = async (
 
 // do not compare bump
 export const positionEquals = (a: Position, b: Position) => {
-  return positionWithoutOwnerEquals(a, b) && a.owner === b.owner
+  return positionWithoutOwnerEquals(a, b) && a.owner.equals(b.owner)
 }
 
 export const positionWithoutOwnerEquals = (a: Position, b: Position) => {
@@ -103,7 +104,8 @@ export const createTokensAndPool = async (
   const promiseResults = await Promise.all([
     createToken(connection, payer, mintAuthority),
     createToken(connection, payer, mintAuthority),
-    connection.requestAirdrop(mintAuthority.publicKey, 1e9)
+    connection.requestAirdrop(mintAuthority.publicKey, 1e9),
+    connection.requestAirdrop(payer.publicKey, 1e9)
   ])
 
   const pair = new Pair(promiseResults[0].publicKey, promiseResults[1].publicKey, feeTier)
@@ -181,7 +183,9 @@ export const createPoolWithLiquidity = async (
     userTokenY: userAccountY,
     lowerTick,
     upperTick,
-    liquidityDelta: liquidity
+    liquidityDelta: liquidity,
+    knownPrice: calculatePriceSqrt(initialTick),
+    slippage: { v: new BN(0) }
   }
   await market.initPosition(initPositionVars, owner)
 
@@ -221,7 +225,9 @@ export const createPosition = async (
     userTokenY: ownerTokenYAccount,
     lowerTick,
     upperTick,
-    liquidityDelta: { v: liquidity }
+    liquidityDelta: { v: liquidity },
+    knownPrice: (await market.getPool(pair)).sqrtPrice,
+    slippage: { v: new BN(0) }
   }
   await market.initPosition(initPositionVars, owner)
 }

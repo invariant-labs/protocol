@@ -8,6 +8,7 @@ import { Market, Pair, tou64, LIQUIDITY_DENOMINATOR, Network } from '@invariant-
 import { FeeTier, InitPosition, Swap } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
+import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('compare', () => {
   const provider = Provider.local()
@@ -87,7 +88,9 @@ describe('compare', () => {
       userTokenY: userTokenYAccount,
       lowerTick,
       upperTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars, positionOwner)
 
@@ -99,7 +102,9 @@ describe('compare', () => {
       userTokenY: userTokenWAccount,
       lowerTick,
       upperTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars2, positionOwner)
 

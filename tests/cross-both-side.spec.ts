@@ -24,6 +24,7 @@ import {
   Swap
 } from '@invariant-labs/sdk/src/market'
 import { getLiquidityByX } from '@invariant-labs/sdk/lib/math'
+import { DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('swap with cross both side', () => {
   const provider = Provider.local()
@@ -131,11 +132,12 @@ describe('swap with cross both side', () => {
 
     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+    const { sqrtPrice } = await market.getPool(pair)
     const { liquidity: liquidityDelta } = getLiquidityByX(
       mintAmount.divn(10),
       lowerTick,
       upperTick,
-      { v: PRICE_DENOMINATOR },
+      sqrtPrice,
       false,
       feeTier.tickSpacing
     )
@@ -149,7 +151,9 @@ describe('swap with cross both side', () => {
       userTokenY: userTokenYAccount,
       lowerTick,
       upperTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: sqrtPrice,
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars, positionOwner)
 
@@ -160,7 +164,9 @@ describe('swap with cross both side', () => {
       userTokenY: userTokenYAccount,
       lowerTick: lastTick,
       upperTick: lowerTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: sqrtPrice,
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars2, positionOwner)
 
@@ -305,7 +311,9 @@ describe('swap with cross both side', () => {
       userTokenY: userTokenYAccount,
       lowerTick: -20,
       upperTick: 0,
-      liquidityDelta: massiveLiquidityDelta
+      liquidityDelta: massiveLiquidityDelta,
+      knownPrice: (await market.getPool(pair)).sqrtPrice,
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(massiveInitPositionMassive, positionOwner)
 

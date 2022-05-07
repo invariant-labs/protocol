@@ -30,10 +30,10 @@ pub fn check_tick(tick_index: i32, tick_spacing: u16) -> Result<()> {
 
     let tickmap_index = tick_index.checked_div(tick_spacing.into()).unwrap();
 
-    require!(tickmap_index > (-TICK_LIMIT), InvalidTickIndex);
-    require!(tickmap_index < TICK_LIMIT - 1, InvalidTickIndex);
-    require!(tick_index > (-MAX_TICK), InvalidTickIndex);
-    require!(tick_index < MAX_TICK, InvalidTickIndex);
+    require!(tickmap_index >= (-TICK_LIMIT), InvalidTickIndex);
+    require!(tickmap_index < TICK_LIMIT, InvalidTickIndex);
+    require!(tick_index >= (-MAX_TICK), InvalidTickIndex);
+    require!(tick_index <= MAX_TICK, InvalidTickIndex);
 
     Ok(())
 }
@@ -52,6 +52,7 @@ pub fn get_closer_limit(
     } else {
         tickmap.next_initialized(current_tick, tick_spacing)
     };
+
     match closes_tick_index {
         Some(index) => {
             let price = calculate_price_sqrt(index);
@@ -83,8 +84,12 @@ pub fn get_closer_limit(
 }
 
 pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
-    tick.fee_growth_outside_x = pool.fee_growth_global_x - tick.fee_growth_outside_x;
-    tick.fee_growth_outside_y = pool.fee_growth_global_y - tick.fee_growth_outside_y;
+    tick.fee_growth_outside_x = pool
+        .fee_growth_global_x
+        .unchecked_sub(tick.fee_growth_outside_x);
+    tick.fee_growth_outside_y = pool
+        .fee_growth_global_y
+        .unchecked_sub(tick.fee_growth_outside_y);
 
     let current_timestamp = get_current_timestamp();
     let seconds_passed: u64 = current_timestamp.checked_sub(pool.start_timestamp).unwrap();
@@ -95,8 +100,9 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
     } else {
         pool.last_timestamp = current_timestamp;
     }
-    tick.seconds_per_liquidity_outside =
-        pool.seconds_per_liquidity_global - tick.seconds_per_liquidity_outside;
+    tick.seconds_per_liquidity_outside = pool
+        .seconds_per_liquidity_global
+        .unchecked_sub(tick.seconds_per_liquidity_outside);
 
     // When going to higher tick net_liquidity should be added and for going lower subtracted
     if (pool.current_tick_index >= tick.index) ^ tick.sign {

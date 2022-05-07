@@ -9,6 +9,7 @@ import { createToken, initEverything } from './testUtils'
 import { assert } from 'chai'
 import { assertThrowsAsync, INVARIANT_ERRORS, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { CreateTick, InitPosition, Swap, WithdrawProtocolFee } from '@invariant-labs/sdk/src/market'
+import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('protocol-fee', () => {
   const provider = Provider.local()
@@ -94,7 +95,9 @@ describe('protocol-fee', () => {
       userTokenY: userTokenYAccount,
       lowerTick,
       upperTick,
-      liquidityDelta
+      liquidityDelta,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: { v: new BN(0) }
     }
     await market.initPosition(initPositionVars, positionOwner)
 
@@ -136,18 +139,24 @@ describe('protocol-fee', () => {
     const reservesAfterSwap = await market.getReserveBalances(pair, tokenX, tokenY)
     const reserveXDelta = reservesAfterSwap.x.sub(reservesBeforeSwap.x)
     const reserveYDelta = reservesBeforeSwap.y.sub(reservesAfterSwap.y)
+    const expectedProtocolFeeX = 1
 
+    // fee tokens           0.006 * 1000 = 6
+    // protocol fee tokens  ceil(6 * 0.01) = cei(0.06) = 1
+    // pool fee tokens      6 - 1 = 5
+    // fee growth global    5/1000000 = 5 * 10^-6
     assert.ok(amountX.eqn(0))
     assert.ok(amountY.eq(amount.subn(7)))
     assert.ok(reserveXDelta.eq(amount))
     assert.ok(reserveYDelta.eq(amount.subn(7)))
-    assert.equal(poolDataAfter.feeGrowthGlobalX.v.toString(), '4000000000000000000')
+    assert.equal(poolDataAfter.feeGrowthGlobalX.v.toString(), '5000000000000000000')
     assert.ok(poolDataAfter.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(poolDataAfter.feeProtocolTokenX.eqn(2))
+    assert.ok(poolDataAfter.feeProtocolTokenX.eqn(expectedProtocolFeeX))
     assert.ok(poolDataAfter.feeProtocolTokenY.eqn(0))
   })
 
   it('Admin #withdrawProtocolFee()', async () => {
+    const expectedProtocolFeeX = 1
     const adminAccountX = await tokenX.createAccount(admin.publicKey)
     const adminAccountY = await tokenY.createAccount(admin.publicKey)
     await tokenX.mintTo(adminAccountX, mintAuthority.publicKey, [mintAuthority], 1e9)
@@ -168,8 +177,14 @@ describe('protocol-fee', () => {
     const reservesAfterClaim = await market.getReserveBalances(pair, tokenX, tokenY)
 
     const poolData = await market.getPool(pair)
-    assert.equal(reservesBeforeClaim.x.toNumber(), reservesAfterClaim.x.toNumber() + 2)
-    assert.equal(adminAccountXAfterClaim.toNumber(), adminAccountXBeforeClaim.toNumber() + 2)
+    assert.equal(
+      reservesBeforeClaim.x.toNumber(),
+      reservesAfterClaim.x.toNumber() + expectedProtocolFeeX
+    )
+    assert.equal(
+      adminAccountXAfterClaim.toNumber(),
+      adminAccountXBeforeClaim.toNumber() + expectedProtocolFeeX
+    )
     assert.equal(poolData.feeProtocolTokenX.toNumber(), 0)
     assert.equal(poolData.feeProtocolTokenY.toNumber(), 0)
   })

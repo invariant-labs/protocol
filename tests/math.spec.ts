@@ -22,16 +22,21 @@ import {
   SwapResult,
   calculatePriceAfterSlippage,
   findClosestTicks,
-  isEnoughAmountToPushPrice
+  isEnoughAmountToPushPrice,
+  calculatePriceImpact,
+  calculateMinReceivedTokensByAmountIn
 } from '@invariant-labs/sdk/src/math'
 import {
   bigNumberToBuffer,
   calculateClaimAmount,
+  calculateConcentration,
   calculateFeeGrowthInside,
+  calculateTickDelta,
   calculateTokensOwed,
   CloserLimit,
   FeeGrowthInside,
   getCloserLimit,
+  getConcentrationArray,
   GROWTH_DENOMINATOR,
   PositionClaimData,
   PRICE_DENOMINATOR,
@@ -51,6 +56,7 @@ import { Keypair } from '@solana/web3.js'
 import { swapParameters } from './swap'
 import { LIQUIDITY_DENOMINATOR, toDecimal } from '@invariant-labs/sdk/lib/utils'
 import { priceToTickInRange } from '@invariant-labs/sdk/src/tick'
+import { U64_MAX } from '@invariant-labs/sdk/lib/math'
 
 describe('Math', () => {
   describe('Test sqrt price calculation', () => {
@@ -428,7 +434,7 @@ describe('Math', () => {
       const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
       const x = getX(liquidity, upperSqrtPrice.v, currentSqrtPrice.v, lowerSqrtPrice.v)
-      assert.ok(x.eq(new BN(5972765)))
+      assert.ok(x.eq(new BN(5)))
     })
 
     it('lower < current < upper', async () => {
@@ -439,7 +445,7 @@ describe('Math', () => {
       const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
       const x = getX(liquidity, upperSqrtPrice.v, currentSqrtPrice.v, lowerSqrtPrice.v)
-      assert.ok(x.eq(new BN(3979852)))
+      assert.ok(x.eq(new BN(3)))
     })
 
     it('current > upper', async () => {
@@ -523,7 +529,7 @@ describe('Math', () => {
       const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
       const y = getY(liquidity, upperSqrtPrice.v, currentSqrtPrice.v, lowerSqrtPrice.v)
-      assert.ok(y.eq(new BN(2006911)))
+      assert.ok(y.eq(new BN(2)))
     })
 
     it('lowerSqrtPrice > currentSqrtPrice', async () => {
@@ -534,7 +540,7 @@ describe('Math', () => {
       const currentSqrtPrice = calculatePriceSqrt(currentTick)
 
       const y = getY(liquidity, upperSqrtPrice.v, currentSqrtPrice.v, lowerSqrtPrice.v)
-      assert.ok(y.eq(new BN(6026760)))
+      assert.ok(y.eq(new BN(6)))
     })
 
     it('lowerSqrtPrice = 0', async () => {
@@ -707,7 +713,7 @@ describe('Math', () => {
       const priceB: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('1')) }
       const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN('0')) }
 
-      const result = getDeltaX(priceA, priceB, liquidity, false)
+      const result = getDeltaX(priceA, priceB, liquidity, false) ?? U64_MAX
 
       const expectedResult = new BN('0')
       assert.ok(result.eq(expectedResult))
@@ -717,7 +723,7 @@ describe('Math', () => {
       const priceB: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('2')) }
       const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN('2')) }
 
-      const result = getDeltaX(priceA, priceB, liquidity, false)
+      const result = getDeltaX(priceA, priceB, liquidity, false) ?? U64_MAX
 
       const expectedResult = new BN('1')
       assert.ok(result.eq(expectedResult))
@@ -728,8 +734,8 @@ describe('Math', () => {
       const priceB: Decimal = { v: new BN('87854456421658000000000000') }
       const liquidity: Decimal = { v: new BN('983983249092') }
 
-      const resultDown = getDeltaX(priceA, priceB, liquidity, false)
-      const resultUp = getDeltaX(priceA, priceB, liquidity, true)
+      const resultDown = getDeltaX(priceA, priceB, liquidity, false) ?? U64_MAX
+      const resultUp = getDeltaX(priceA, priceB, liquidity, true) ?? U64_MAX
 
       const expectedResultDown = new BN(7010)
       const expectedResultUp = new BN(7011)
@@ -744,7 +750,7 @@ describe('Math', () => {
       const priceB: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('1')) }
       const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN('0')) }
 
-      const result = getDeltaY(priceA, priceB, liquidity, false)
+      const result = getDeltaY(priceA, priceB, liquidity, false) ?? U64_MAX
 
       const expectedResult = new BN('0')
       assert.ok(result.eq(expectedResult))
@@ -754,7 +760,7 @@ describe('Math', () => {
       const priceB: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('2')) }
       const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN('2')) }
 
-      const result = getDeltaY(priceA, priceB, liquidity, false)
+      const result = getDeltaY(priceA, priceB, liquidity, false) ?? U64_MAX
 
       const expectedResult = new BN('2')
       assert.ok(result.eq(expectedResult))
@@ -765,14 +771,38 @@ describe('Math', () => {
       const priceB: Decimal = { v: new BN('87854456421658000000000000') }
       const liquidity: Decimal = { v: new BN('983983249092') }
 
-      const resultDown = getDeltaY(priceA, priceB, liquidity, false)
-      const resultUp = getDeltaY(priceA, priceB, liquidity, true)
+      const resultDown = getDeltaY(priceA, priceB, liquidity, false) ?? U64_MAX
+      const resultUp = getDeltaY(priceA, priceB, liquidity, true) ?? U64_MAX
 
       const expectedResultDown = new BN(144669023)
       const expectedResultUp = new BN(144669024)
 
       assert.ok(resultDown.eq(expectedResultDown))
       assert.ok(resultUp.eq(expectedResultUp))
+    })
+
+    it('overflow', async () => {
+      const priceA: Decimal = { v: PRICE_DENOMINATOR }
+      const priceB: Decimal = { v: PRICE_DENOMINATOR.muln(2) }
+      const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN(2).pow(new BN(64))) }
+
+      const resultDown = getDeltaY(priceA, priceB, liquidity, false)
+      const resultUp = getDeltaY(priceA, priceB, liquidity, true)
+
+      assert.ok(resultDown === null)
+      assert.ok(resultUp === null)
+    })
+
+    it('huge liquidity', async () => {
+      const priceA: Decimal = { v: PRICE_DENOMINATOR }
+      const priceB: Decimal = { v: PRICE_DENOMINATOR.addn(1000000) }
+      const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN(2).pow(new BN(80))) }
+
+      const resultDown = getDeltaY(priceA, priceB, liquidity, false)
+      const resultUp = getDeltaY(priceA, priceB, liquidity, true)
+
+      assert.ok(resultDown !== null)
+      assert.ok(resultUp !== null)
     })
   })
   describe('test getNextPriceXUp', () => {
@@ -966,15 +996,15 @@ describe('Math', () => {
       assert.ok(limit.eq(expected))
     })
     it('Up to price limit', async () => {
-      const step = new BN(4)
+      const step = new BN(5)
       const limit = getSearchLimit(new BN(MAX_TICK - 22), step, true)
-      const expected = new BN(MAX_TICK - 2)
+      const expected = new BN(MAX_TICK - 3)
       assert.ok(limit.eq(expected))
     })
     it('At the price limit', async () => {
-      const step = new BN(4)
-      const limit = getSearchLimit(new BN(MAX_TICK - 2), step, true)
-      const expected = new BN(MAX_TICK - 2)
+      const step = new BN(5)
+      const limit = getSearchLimit(new BN(MAX_TICK - 3), step, true)
+      const expected = new BN(MAX_TICK - 3)
       assert.ok(limit.eq(expected))
     })
   })
@@ -1355,6 +1385,84 @@ describe('Math', () => {
       assert.ok(tokensOwedYTotal.eq(new BN(176750)))
     })
   })
+  describe('test calculatePriceImpact', () => {
+    it('increasing price', () => {
+      // price change       120 -> 599
+      // real price impact  79.96661101836...%
+      const startingSqrtPrice = new BN('10954451150103322269139395')
+      const endingSqrtPrice = new BN('24474476501040834315678144')
+      const priceImpact = calculatePriceImpact(startingSqrtPrice, endingSqrtPrice)
+      assert.ok(priceImpact.eq(new BN('799666110184')))
+    })
+    it('decreasing price', () => {
+      // price change       0.367-> 1.0001^(-221818)
+      // real price impact  99.9999999365... %
+      const startingSqrtPrice = new BN('605805249234438377196232')
+      const endingSqrtPrice = new BN('15258932449895975601')
+      const priceImpact = calculatePriceImpact(startingSqrtPrice, endingSqrtPrice)
+      assert.ok(priceImpact.eq(new BN('999999999366')))
+    })
+  })
+  describe('test minReceivedTokensByAmountIn', () => {
+    describe('x to y', () => {
+      const xToY = true
+      const fee = new BN(DENOMINATOR).divn(10000) // 0.01%
+
+      it('price > 1', () => {
+        const targetPrice = new BN('12' + '0'.repeat(PRICE_SCALE - 1))
+        const targetSqrtPrice = sqrt(targetPrice.mul(PRICE_DENOMINATOR))
+        const amountIn = new BN(999)
+        const minReceivedTokens = calculateMinReceivedTokensByAmountIn(
+          targetSqrtPrice,
+          xToY,
+          amountIn,
+          fee
+        )
+        assert.ok(minReceivedTokens.eq(new BN(1197)))
+      })
+      it('price < 1', () => {
+        const targetPrice = new BN('94' + '0'.repeat(PRICE_SCALE - 5))
+        const targetSqrtPrice = sqrt(targetPrice.mul(PRICE_DENOMINATOR))
+        const amountIn = new BN(1200000000)
+        const minReceivedTokens = calculateMinReceivedTokensByAmountIn(
+          targetSqrtPrice,
+          xToY,
+          amountIn,
+          fee
+        )
+        assert.ok(minReceivedTokens.eq(new BN(1127886)))
+      })
+    })
+    describe('y to x', () => {
+      const xToY = false
+      const fee = new BN(DENOMINATOR).divn(2000) // 0.05%
+
+      it('price > 1', () => {
+        const targetPrice = new BN('99' + '0'.repeat(PRICE_SCALE - 1))
+        const targetSqrtPrice = sqrt(targetPrice.mul(PRICE_DENOMINATOR))
+        const amountIn = new BN(20000)
+        const minReceivedTokens = calculateMinReceivedTokensByAmountIn(
+          targetSqrtPrice,
+          xToY,
+          amountIn,
+          fee
+        )
+        assert.ok(minReceivedTokens.eq(new BN(2018)))
+      })
+      it('price < 1', () => {
+        const targetPrice = new BN('17' + '0'.repeat(PRICE_SCALE - 6))
+        const targetSqrtPrice = sqrt(targetPrice.mul(PRICE_DENOMINATOR))
+        const amountIn = new BN(4000)
+        const minReceivedTokens = calculateMinReceivedTokensByAmountIn(
+          targetSqrtPrice,
+          xToY,
+          amountIn,
+          fee
+        )
+        assert.ok(minReceivedTokens.eq(new BN(235176469)))
+      })
+    })
+  })
   describe('test simulateSwap', () => {
     it('Swap', async () => {
       const simulationResult: SimulationResult = simulateSwap(swapParameters)
@@ -1363,6 +1471,8 @@ describe('Math', () => {
       assert.ok(simulationResult.accumulatedFee.eq(new BN(6)))
       assert.ok(simulationResult.amountPerTick[0].eq(new BN(1000)))
       assert.ok(simulationResult.priceAfterSwap.eq(new BN('999006987054867461743028')))
+      assert.ok(simulationResult.priceImpact.eq(new BN(1985039816)))
+      assert.ok(simulationResult.minReceived.eq(new BN(886)))
     })
   })
   describe('test isEnoughAmountToPushPrice', () => {
@@ -1632,8 +1742,92 @@ describe('Math', () => {
           MAX_TICK,
           tickSpacing
         )
+
         assert.equal(tick, expectedTick)
       })
+    })
+  })
+  describe('test calculateConcentration', () => {
+    it('max concentration', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const expectedResult = 1000.5348136431164
+
+      const result = calculateConcentration(tickSpacing, maxConcentration, 0)
+      assert.equal(result, expectedResult)
+    })
+    it('max concentration -1', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const expectedResult = 833.8623739844425
+
+      const result = calculateConcentration(tickSpacing, maxConcentration, 1)
+      assert.equal(result, expectedResult)
+    })
+    it('n = 1000', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const expectedResult = 5.492027214522115
+
+      const result = calculateConcentration(tickSpacing, maxConcentration, 1000)
+      assert.equal(result, expectedResult)
+    })
+  })
+  describe('test test calculateTickDelta', () => {
+    it('max concentration', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const concentration = 1000.5348136431164
+      const expectedResult = 0
+
+      const result = calculateTickDelta(tickSpacing, maxConcentration, concentration)
+      assert.equal(result, expectedResult)
+    })
+    it('max concentration -1', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const concentration = 833.8623739844425
+      const expectedResult = 1
+
+      const result = calculateTickDelta(tickSpacing, maxConcentration, concentration)
+      assert.equal(result, expectedResult)
+    })
+    it('n = 1000', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const concentration = 5.492027214522115
+      const expectedResult = 1000
+
+      const result = calculateTickDelta(tickSpacing, maxConcentration, concentration)
+      assert.equal(result, expectedResult)
+    })
+  })
+
+  describe('test getConcentrationArray', () => {
+    it('high current tick ', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const expectedResult = 11
+
+      const result = getConcentrationArray(tickSpacing, maxConcentration, 221752)
+
+      assert.equal(result.length, expectedResult)
+    })
+    it('middle current tick ', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const expectedResult = 124
+
+      const result = getConcentrationArray(tickSpacing, maxConcentration, 221300)
+      assert.equal(result.length, expectedResult)
+    })
+    it('low current tick ', async () => {
+      const tickSpacing = 4
+      const maxConcentration = 10
+      const expectedResult = 137
+
+      const result = getConcentrationArray(tickSpacing, maxConcentration, 0)
+      assert.equal(result.length, expectedResult)
     })
   })
 })

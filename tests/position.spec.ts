@@ -12,7 +12,6 @@ import {
 import { Provider, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken, eqDecimal, initEverything } from './testUtils'
-import { MAX_TICK, MIN_TICK } from '@invariant-labs/sdk/lib/math'
 import { fromFee, assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
 import { CreatePool, CreateTick, InitPosition } from '@invariant-labs/sdk/src/market'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
@@ -26,6 +25,8 @@ describe('position', () => {
   const positionOwner = Keypair.generate()
   const admin = Keypair.generate()
   const feeTier: FeeTier = { fee: fromFee(new BN(20)), tickSpacing: 4 }
+  const MAX_TICK = 177_450 // for tickSpacing 4
+  const MIN_TICK = -MAX_TICK
   let market: Market
   let pair: Pair
   let tokenX: Token
@@ -149,7 +150,9 @@ describe('position', () => {
         userTokenY: userTokenYAccount,
         lowerTick,
         upperTick,
-        liquidityDelta
+        liquidityDelta,
+        knownPrice: calculatePriceSqrt(initTick),
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, positionOwner)
 
@@ -280,7 +283,9 @@ describe('position', () => {
         userTokenY: userTokenYAccount,
         lowerTick,
         upperTick,
-        liquidityDelta
+        liquidityDelta,
+        knownPrice: calculatePriceSqrt(initTick),
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, positionOwner)
 
@@ -410,7 +415,9 @@ describe('position', () => {
         userTokenY: userTokenYAccount,
         lowerTick,
         upperTick,
-        liquidityDelta
+        liquidityDelta,
+        knownPrice: calculatePriceSqrt(initTick),
+        slippage: { v: new BN(0) }
       }
       await market.initPosition(initPositionVars, positionOwner)
 

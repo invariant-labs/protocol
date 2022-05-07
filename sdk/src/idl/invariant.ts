@@ -473,6 +473,18 @@ export type Invariant = {
           "type": {
             "defined": "Liquidity"
           }
+        },
+        {
+          "name": "slippageLimitLower",
+          "type": {
+            "defined": "Price"
+          }
+        },
+        {
+          "name": "slippageLimitUpper",
+          "type": {
+            "defined": "Price"
+          }
         }
       ]
     },
@@ -925,11 +937,6 @@ export type Invariant = {
           "name": "feeReceiver",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "programAuthority",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": []
@@ -1289,7 +1296,7 @@ export type Invariant = {
             "type": {
               "array": [
                 "u8",
-                25000
+                11091
               ]
             }
           }
@@ -1515,6 +1522,11 @@ export type Invariant = {
       "code": 6029,
       "name": "InvalidListOwner",
       "msg": "Recipient list address and owner list address should be different"
+    },
+    {
+      "code": 6030,
+      "name": "InvalidTickSpacing",
+      "msg": "Invalid tick spacing"
     }
   ]
 };
@@ -1994,6 +2006,18 @@ export const IDL: Invariant = {
           "type": {
             "defined": "Liquidity"
           }
+        },
+        {
+          "name": "slippageLimitLower",
+          "type": {
+            "defined": "Price"
+          }
+        },
+        {
+          "name": "slippageLimitUpper",
+          "type": {
+            "defined": "Price"
+          }
         }
       ]
     },
@@ -2446,11 +2470,6 @@ export const IDL: Invariant = {
           "name": "feeReceiver",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "programAuthority",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": []
@@ -2810,7 +2829,7 @@ export const IDL: Invariant = {
             "type": {
               "array": [
                 "u8",
-                25000
+                11091
               ]
             }
           }
@@ -3036,6 +3055,11 @@ export const IDL: Invariant = {
       "code": 6029,
       "name": "InvalidListOwner",
       "msg": "Recipient list address and owner list address should be different"
+    },
+    {
+      "code": 6030,
+      "name": "InvalidTickSpacing",
+      "msg": "Invalid tick spacing"
     }
   ]
 };

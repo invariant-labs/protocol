@@ -46,4 +46,6 @@ pub enum ErrorCode {
     InvalidOwner = 20, // 1784
     #[msg("Provided token account mint is different than expected mint token")]
     InvalidMint = 21, // 1785
+    #[msg("Incentive pool is different from stake pool")]
+    DifferentIncentivePool = 22, // 1786
 }

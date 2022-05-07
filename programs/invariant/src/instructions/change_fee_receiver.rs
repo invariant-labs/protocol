@@ -19,8 +19,6 @@ pub struct ChangeFeeReceiver<'info> {
     #[account(constraint = &state.load()?.admin == admin.key @ InvalidAdmin)]
     pub admin: Signer<'info>,
     pub fee_receiver: AccountInfo<'info>,
-    #[account(constraint = &state.load()?.authority == program_authority.key @ InvalidAuthority)]
-    pub program_authority: AccountInfo<'info>,
 }
 
 impl<'info> ChangeFeeReceiver<'info> {

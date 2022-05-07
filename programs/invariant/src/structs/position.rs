@@ -86,17 +86,12 @@ impl Position {
         );
 
         // calculate accumulated fee
-        let tokens_owed_x = match fee_growth_inside_x.lt(&{ self.fee_growth_inside_x }) {
-            true => (fee_growth_inside_x + (FeeGrowth::new(u128::MAX) - self.fee_growth_inside_x))
-                .to_fee(self.liquidity),
-            false => (fee_growth_inside_x - self.fee_growth_inside_x).to_fee(self.liquidity),
-        };
-
-        let tokens_owed_y = match fee_growth_inside_y.lt(&{ self.fee_growth_inside_y }) {
-            true => (fee_growth_inside_y + (FeeGrowth::new(u128::MAX) - self.fee_growth_inside_y))
-                .to_fee(self.liquidity),
-            false => (fee_growth_inside_y - self.fee_growth_inside_y).to_fee(self.liquidity),
-        };
+        let tokens_owed_x = fee_growth_inside_x
+            .unchecked_sub(self.fee_growth_inside_x)
+            .to_fee(self.liquidity);
+        let tokens_owed_y = fee_growth_inside_y
+            .unchecked_sub(self.fee_growth_inside_y)
+            .to_fee(self.liquidity);
 
         self.liquidity = self.calculate_new_liquidity_safely(sign, liquidity_delta)?;
         self.fee_growth_inside_x = fee_growth_inside_x;
@@ -111,7 +106,7 @@ impl Position {
 
     pub fn initialized_id(&mut self, pool: &mut Pool) {
         self.id = pool.position_iterator;
-        pool.position_iterator += 1;
+        pool.position_iterator = pool.position_iterator.checked_add(1).unwrap();
     }
 
     // for future use

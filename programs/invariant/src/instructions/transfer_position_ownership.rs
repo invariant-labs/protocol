@@ -57,14 +57,14 @@ impl<'info> TransferPositionOwnership<'info> {
         let new_position = &mut self.new_position.load_init()?;
         let removed_position = &mut self.removed_position.load_mut()?;
 
-        owner_list.head -= 1;
-        recipient_list.head += 1;
+        owner_list.head = owner_list.head.checked_sub(1).unwrap();
+        recipient_list.head = recipient_list.head.checked_add(1).unwrap();
 
         // reassign all fields in new_position
         {
             **new_position = Position {
                 owner: *self.recipient.key,
-                pool: *self.recipient.key,
+                pool: removed_position.pool,
                 id: removed_position.id,
                 liquidity: removed_position.liquidity,
                 lower_tick_index: removed_position.lower_tick_index,
@@ -81,7 +81,7 @@ impl<'info> TransferPositionOwnership<'info> {
 
         // when removed position is not the last one
         if owner_list.head != index {
-            let last_position = self.last_position.load_mut()?;
+            let mut last_position = self.last_position.load_mut()?;
 
             **removed_position = Position {
                 owner: last_position.owner,
@@ -98,6 +98,9 @@ impl<'info> TransferPositionOwnership<'info> {
                 last_slot: last_position.last_slot,
                 bump: removed_position.bump, // stay with the same bump
             };
+            *last_position = Default::default();
+        } else {
+            **removed_position = Default::default();
         }
 
         Ok(())

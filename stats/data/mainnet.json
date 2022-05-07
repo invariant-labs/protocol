@@ -1,0 +1,1139 @@
+{
+  "6rvpVhL9fxm2WLMefNRaLwv6aNdivZadMi56teWfSkuU": [
+    {
+      "timestamp": 1648036800000,
+      "volumeX": "344800000",
+      "volumeY": "2086800000",
+      "liquidityX": "356979285",
+      "liquidityY": "6610222804",
+      "feeX": "172400",
+      "feeY": "1043400"
+    },
+    {
+      "timestamp": 1648123200000,
+      "volumeX": "3057800000",
+      "volumeY": "18891800000",
+      "liquidityX": "1211377712",
+      "liquidityY": "509292709",
+      "feeX": "1528900",
+      "feeY": "9445900"
+    },
+    {
+      "timestamp": 1648209600000,
+      "volumeX": "3287000000",
+      "volumeY": "20267000000",
+      "liquidityX": "349870330",
+      "liquidityY": "381678966",
+      "feeX": "1643500",
+      "feeY": "10133500"
+    },
+    {
+      "timestamp": 1648296000000,
+      "volumeX": "3472000000",
+      "volumeY": "23729400000",
+      "liquidityX": "183500146",
+      "liquidityY": "2021767233",
+      "feeX": "1736000",
+      "feeY": "11864700"
+    },
+    {
+      "timestamp": 1648382400000,
+      "volumeX": "3781200000",
+      "volumeY": "26556000000",
+      "liquidityX": "201332412",
+      "liquidityY": "1843861352",
+      "feeX": "1890600",
+      "feeY": "13278000"
+    },
+    {
+      "timestamp": 1648468800000,
+      "volumeX": "4054200000",
+      "volumeY": "27068200000",
+      "liquidityX": "405909442",
+      "liquidityY": "129343459",
+      "feeX": "2027100",
+      "feeY": "13534100"
+    },
+    {
+      "timestamp": 1648555200000,
+      "volumeX": "4088600000",
+      "volumeY": "27388400000",
+      "liquidityX": "305874746",
+      "liquidityY": "144688646",
+      "feeX": "2044300",
+      "feeY": "13694200"
+    },
+    {
+      "timestamp": 1648641600000,
+      "volumeX": "4161000000",
+      "volumeY": "27489400000",
+      "liquidityX": "420157570",
+      "liquidityY": "88458073",
+      "feeX": "2080500",
+      "feeY": "13744700"
+    },
+    {
+      "timestamp": 1648728000000,
+      "volumeX": "4230400000",
+      "volumeY": "27489400000",
+      "liquidityX": "334945339",
+      "liquidityY": "12948267",
+      "feeX": "2115200",
+      "feeY": "13744700"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "4230400000",
+      "volumeY": "27489400000",
+      "liquidityX": "334945339",
+      "liquidityY": "12948267",
+      "feeX": "2115200",
+      "feeY": "13744700"
+    }
+  ],
+  "4FkGNJMvKFk9PFwn8TBtk1ShUKege6D5Au87ezwLWiqk": [
+    {
+      "timestamp": 1648036800000,
+      "volumeX": "1000000",
+      "volumeY": "0",
+      "liquidityX": "46590317",
+      "liquidityY": "66399027",
+      "feeX": "100",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648123200000,
+      "volumeX": "1000000",
+      "volumeY": "0",
+      "liquidityX": "48495077",
+      "liquidityY": "70926979",
+      "feeX": "100",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648209600000,
+      "volumeX": "1000000",
+      "volumeY": "0",
+      "liquidityX": "48495077",
+      "liquidityY": "70926979",
+      "feeX": "100",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648296000000,
+      "volumeX": "88000000",
+      "volumeY": "0",
+      "liquidityX": "49456919",
+      "liquidityY": "69964017",
+      "feeX": "8800",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648382400000,
+      "volumeX": "88000000",
+      "volumeY": "0",
+      "liquidityX": "49456919",
+      "liquidityY": "69964017",
+      "feeX": "8800",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648468800000,
+      "volumeX": "88000000",
+      "volumeY": "0",
+      "liquidityX": "49456919",
+      "liquidityY": "69964017",
+      "feeX": "8800",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648555200000,
+      "volumeX": "88000000",
+      "volumeY": "0",
+      "liquidityX": "49456919",
+      "liquidityY": "69964017",
+      "feeX": "8800",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648641600000,
+      "volumeX": "88000000",
+      "volumeY": "0",
+      "liquidityX": "49456919",
+      "liquidityY": "69964017",
+      "feeX": "8800",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648728000000,
+      "volumeX": "88000000",
+      "volumeY": "0",
+      "liquidityX": "49456919",
+      "liquidityY": "69964017",
+      "feeX": "8800",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "88000000",
+      "volumeY": "0",
+      "liquidityX": "49456919",
+      "liquidityY": "69964017",
+      "feeX": "8800",
+      "feeY": "0"
+    }
+  ],
+  "DzCbrMZXNG3XpXuufhBp233LJXvV8Xq1C3q4ksrtbCPP": [
+    {
+      "timestamp": 1648036800000,
+      "volumeX": "600000",
+      "volumeY": "3600000",
+      "liquidityX": "1143971",
+      "liquidityY": "40874569",
+      "feeX": "300",
+      "feeY": "1800"
+    },
+    {
+      "timestamp": 1648123200000,
+      "volumeX": "1600000",
+      "volumeY": "17400000",
+      "liquidityX": "869584",
+      "liquidityY": "49105728",
+      "feeX": "800",
+      "feeY": "8700"
+    },
+    {
+      "timestamp": 1648209600000,
+      "volumeX": "2200000",
+      "volumeY": "30400000",
+      "liquidityX": "572571",
+      "liquidityY": "58318309",
+      "feeX": "1100",
+      "feeY": "15200"
+    },
+    {
+      "timestamp": 1648296000000,
+      "volumeX": "3600000",
+      "volumeY": "32600000",
+      "liquidityX": "687117",
+      "liquidityY": "54727114",
+      "feeX": "1800",
+      "feeY": "16300"
+    },
+    {
+      "timestamp": 1648382400000,
+      "volumeX": "3600000",
+      "volumeY": "36400000",
+      "liquidityX": "578098",
+      "liquidityY": "58143921",
+      "feeX": "1800",
+      "feeY": "18200"
+    },
+    {
+      "timestamp": 1648468800000,
+      "volumeX": "3800000",
+      "volumeY": "53400000",
+      "liquidityX": "122567",
+      "liquidityY": "72913270",
+      "feeX": "1900",
+      "feeY": "26700"
+    },
+    {
+      "timestamp": 1648555200000,
+      "volumeX": "4600000",
+      "volumeY": "61800000",
+      "liquidityX": "2440",
+      "liquidityY": "76946022",
+      "feeX": "2300",
+      "feeY": "30900"
+    },
+    {
+      "timestamp": 1648641600000,
+      "volumeX": "4600000",
+      "volumeY": "62000000",
+      "liquidityX": "49",
+      "liquidityY": "77026906",
+      "feeX": "2300",
+      "feeY": "31000"
+    },
+    {
+      "timestamp": 1648728000000,
+      "volumeX": "4600000",
+      "volumeY": "62000000",
+      "liquidityX": "49",
+      "liquidityY": "77026906",
+      "feeX": "2300",
+      "feeY": "31000"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "4600000",
+      "volumeY": "62000000",
+      "liquidityX": "49",
+      "liquidityY": "77026906",
+      "feeX": "2300",
+      "feeY": "31000"
+    }
+  ],
+  "GmBMZ8BNeNR6mRFqu2ZaFvpxvGPXmc9Aa4a1GWFaxWMv": [
+    {
+      "timestamp": 1648036800000,
+      "volumeX": "0",
+      "volumeY": "101000000",
+      "liquidityX": "59",
+      "liquidityY": "200049949",
+      "feeX": "0",
+      "feeY": "10100"
+    },
+    {
+      "timestamp": 1648123200000,
+      "volumeX": "0",
+      "volumeY": "101000000",
+      "liquidityX": "59",
+      "liquidityY": "200049949",
+      "feeX": "0",
+      "feeY": "10100"
+    },
+    {
+      "timestamp": 1648209600000,
+      "volumeX": "0",
+      "volumeY": "101000000",
+      "liquidityX": "59",
+      "liquidityY": "200049949",
+      "feeX": "0",
+      "feeY": "10100"
+    },
+    {
+      "timestamp": 1648296000000,
+      "volumeX": "0",
+      "volumeY": "101000000",
+      "liquidityX": "59",
+      "liquidityY": "200049949",
+      "feeX": "0",
+      "feeY": "10100"
+    },
+    {
+      "timestamp": 1648382400000,
+      "volumeX": "0",
+      "volumeY": "101000000",
+      "liquidityX": "59",
+      "liquidityY": "200049949",
+      "feeX": "0",
+      "feeY": "10100"
+    },
+    {
+      "timestamp": 1648468800000,
+      "volumeX": "0",
+      "volumeY": "101000000",
+      "liquidityX": "59",
+      "liquidityY": "200049949",
+      "feeX": "0",
+      "feeY": "10100"
+    },
+    {
+      "timestamp": 1648555200000,
+      "volumeX": "0",
+      "volumeY": "101000000",
+      "liquidityX": "59",
+      "liquidityY": "200049949",
+      "feeX": "0",
+      "feeY": "10100"
+    },
+    {
+      "timestamp": 1648641600000,
+      "volumeX": "0",
+      "volumeY": "101000000",
+      "liquidityX": "59",
+      "liquidityY": "200049949",
+      "feeX": "0",
+      "feeY": "10100"
+    },
+    {
+      "timestamp": 1648728000000,
+      "volumeX": "0",
+      "volumeY": "101000000",
+      "liquidityX": "59",
+      "liquidityY": "200049949",
+      "feeX": "0",
+      "feeY": "10100"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "0",
+      "volumeY": "101000000",
+      "liquidityX": "59",
+      "liquidityY": "200049949",
+      "feeX": "0",
+      "feeY": "10100"
+    }
+  ],
+  "5dX3tkVDmbHBWMCQMerAHTmd9wsRvmtKLoQt6qv9fHy7": [
+    {
+      "timestamp": 1648036800000,
+      "volumeX": "1576000000",
+      "volumeY": "1448000000",
+      "liquidityX": "4969932324",
+      "liquidityY": "363027618",
+      "feeX": "157600",
+      "feeY": "144800"
+    },
+    {
+      "timestamp": 1648123200000,
+      "volumeX": "1826000000",
+      "volumeY": "1448000000",
+      "liquidityX": "5266962612",
+      "liquidityY": "163140365",
+      "feeX": "182600",
+      "feeY": "144800"
+    },
+    {
+      "timestamp": 1648209600000,
+      "volumeX": "1826000000",
+      "volumeY": "1597000000",
+      "liquidityX": "7117252241",
+      "liquidityY": "330158337",
+      "feeX": "182600",
+      "feeY": "159700"
+    },
+    {
+      "timestamp": 1648296000000,
+      "volumeX": "1835000000",
+      "volumeY": "1633000000",
+      "liquidityX": "7091230989",
+      "liquidityY": "356163139",
+      "feeX": "183500",
+      "feeY": "163300"
+    },
+    {
+      "timestamp": 1648382400000,
+      "volumeX": "1835000000",
+      "volumeY": "1633000000",
+      "liquidityX": "7091230989",
+      "liquidityY": "356163139",
+      "feeX": "183500",
+      "feeY": "163300"
+    },
+    {
+      "timestamp": 1648468800000,
+      "volumeX": "1837000000",
+      "volumeY": "1633000000",
+      "liquidityX": "7093230788",
+      "liquidityY": "354164583",
+      "feeX": "183700",
+      "feeY": "163300"
+    },
+    {
+      "timestamp": 1648555200000,
+      "volumeX": "1865000000",
+      "volumeY": "1802000000",
+      "liquidityX": "7044227115",
+      "liquidityY": "522314679",
+      "feeX": "186500",
+      "feeY": "180200"
+    },
+    {
+      "timestamp": 1648641600000,
+      "volumeX": "3596000000",
+      "volumeY": "4517000000",
+      "liquidityX": "26057266535",
+      "liquidityY": "6426878863",
+      "feeX": "359600",
+      "feeY": "451700"
+    },
+    {
+      "timestamp": 1648728000000,
+      "volumeX": "3616000000",
+      "volumeY": "4559000000",
+      "liquidityX": "26035841877",
+      "liquidityY": "6448297896",
+      "feeX": "361600",
+      "feeY": "455900"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "3717000000",
+      "volumeY": "4659000000",
+      "liquidityX": "26036815345",
+      "liquidityY": "6447324682",
+      "feeX": "371700",
+      "feeY": "465900"
+    }
+  ],
+  "EWZW9aJmY2LX6ZyV5RU8waHWKF1aGaxzbuBuRQp6G4j": [
+    {
+      "timestamp": 1648036800000,
+      "volumeX": "0",
+      "volumeY": "600000",
+      "liquidityX": "783",
+      "liquidityY": "50086138",
+      "feeX": "0",
+      "feeY": "300"
+    },
+    {
+      "timestamp": 1648123200000,
+      "volumeX": "0",
+      "volumeY": "600000",
+      "liquidityX": "1257",
+      "liquidityY": "50918754",
+      "feeX": "0",
+      "feeY": "300"
+    },
+    {
+      "timestamp": 1648209600000,
+      "volumeX": "0",
+      "volumeY": "36800000",
+      "liquidityX": "435",
+      "liquidityY": "86474632",
+      "feeX": "0",
+      "feeY": "18400"
+    },
+    {
+      "timestamp": 1648296000000,
+      "volumeX": "0",
+      "volumeY": "36800000",
+      "liquidityX": "435",
+      "liquidityY": "86474632",
+      "feeX": "0",
+      "feeY": "18400"
+    },
+    {
+      "timestamp": 1648382400000,
+      "volumeX": "0",
+      "volumeY": "36800000",
+      "liquidityX": "435",
+      "liquidityY": "86474632",
+      "feeX": "0",
+      "feeY": "18400"
+    },
+    {
+      "timestamp": 1648468800000,
+      "volumeX": "0",
+      "volumeY": "36800000",
+      "liquidityX": "435",
+      "liquidityY": "86474632",
+      "feeX": "0",
+      "feeY": "18400"
+    },
+    {
+      "timestamp": 1648555200000,
+      "volumeX": "0",
+      "volumeY": "55000000",
+      "liquidityX": "34",
+      "liquidityY": "104640449",
+      "feeX": "0",
+      "feeY": "27500"
+    },
+    {
+      "timestamp": 1648641600000,
+      "volumeX": "0",
+      "volumeY": "55000000",
+      "liquidityX": "34",
+      "liquidityY": "104640449",
+      "feeX": "0",
+      "feeY": "27500"
+    },
+    {
+      "timestamp": 1648728000000,
+      "volumeX": "0",
+      "volumeY": "55000000",
+      "liquidityX": "34",
+      "liquidityY": "104640449",
+      "feeX": "0",
+      "feeY": "27500"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "0",
+      "volumeY": "56000000",
+      "liquidityX": "32",
+      "liquidityY": "104715164",
+      "feeX": "0",
+      "feeY": "28000"
+    }
+  ],
+  "5yKHz86cvHocaQnxv4mPJjftA4w7BbJzQQr5rG9miyZ3": [
+    {
+      "timestamp": 1648036800000,
+      "volumeX": "1000000",
+      "volumeY": "35200000",
+      "liquidityX": "0",
+      "liquidityY": "0",
+      "feeX": "500",
+      "feeY": "17600"
+    },
+    {
+      "timestamp": 1648123200000,
+      "volumeX": "24600000",
+      "volumeY": "170600000",
+      "liquidityX": "10570820",
+      "liquidityY": "944",
+      "feeX": "12300",
+      "feeY": "85300"
+    },
+    {
+      "timestamp": 1648209600000,
+      "volumeX": "24600000",
+      "volumeY": "170600000",
+      "liquidityX": "9570910",
+      "liquidityY": "29",
+      "feeX": "12300",
+      "feeY": "85300"
+    },
+    {
+      "timestamp": 1648296000000,
+      "volumeX": "24600000",
+      "volumeY": "170600000",
+      "liquidityX": "9570910",
+      "liquidityY": "29",
+      "feeX": "12300",
+      "feeY": "85300"
+    },
+    {
+      "timestamp": 1648382400000,
+      "volumeX": "24600000",
+      "volumeY": "170600000",
+      "liquidityX": "9570910",
+      "liquidityY": "29",
+      "feeX": "12300",
+      "feeY": "85300"
+    },
+    {
+      "timestamp": 1648468800000,
+      "volumeX": "24600000",
+      "volumeY": "170600000",
+      "liquidityX": "9570910",
+      "liquidityY": "29",
+      "feeX": "12300",
+      "feeY": "85300"
+    },
+    {
+      "timestamp": 1648555200000,
+      "volumeX": "24600000",
+      "volumeY": "170600000",
+      "liquidityX": "9570910",
+      "liquidityY": "29",
+      "feeX": "12300",
+      "feeY": "85300"
+    },
+    {
+      "timestamp": 1648641600000,
+      "volumeX": "24600000",
+      "volumeY": "170600000",
+      "liquidityX": "9570910",
+      "liquidityY": "29",
+      "feeX": "12300",
+      "feeY": "85300"
+    },
+    {
+      "timestamp": 1648728000000,
+      "volumeX": "24600000",
+      "volumeY": "170600000",
+      "liquidityX": "9570910",
+      "liquidityY": "29",
+      "feeX": "12300",
+      "feeY": "85300"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "24600000",
+      "volumeY": "170600000",
+      "liquidityX": "9570910",
+      "liquidityY": "29",
+      "feeX": "12300",
+      "feeY": "85300"
+    }
+  ],
+  "HbMbeaDH8xtB1a8WpwjNqcXBBGraKJjJ2xFkXEdAy1rY": [
+    {
+      "timestamp": 1648036800000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "14999999",
+      "liquidityY": "14174045",
+      "feeX": "0",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648123200000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "14999999",
+      "liquidityY": "14174045",
+      "feeX": "0",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648209600000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "14999999",
+      "liquidityY": "14174045",
+      "feeX": "0",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648296000000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "14999999",
+      "liquidityY": "14174045",
+      "feeX": "0",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648382400000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "14999999",
+      "liquidityY": "14174045",
+      "feeX": "0",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648468800000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "14999999",
+      "liquidityY": "14174045",
+      "feeX": "0",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648555200000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "14999999",
+      "liquidityY": "14174045",
+      "feeX": "0",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648641600000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "14999999",
+      "liquidityY": "14174045",
+      "feeX": "0",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648728000000,
+      "volumeX": "5970000000",
+      "volumeY": "6002000000",
+      "liquidityX": "3225244119",
+      "liquidityY": "3003290913",
+      "feeX": "597000",
+      "feeY": "600200"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "6472000000",
+      "volumeY": "6502000000",
+      "liquidityX": "3225193942",
+      "liquidityY": "3003340711",
+      "feeX": "647200",
+      "feeY": "650200"
+    }
+  ],
+  "2keDsfcMY6hLvfrmzDAfnMSudMqYczPVcb8MSkK59P9r": [
+    {
+      "timestamp": 1648036800000,
+      "volumeX": "12600000",
+      "volumeY": "10400000",
+      "liquidityX": "808279828",
+      "liquidityY": "27562264",
+      "feeX": "6300",
+      "feeY": "5200"
+    },
+    {
+      "timestamp": 1648123200000,
+      "volumeX": "277600000",
+      "volumeY": "105000000",
+      "liquidityX": "168007228",
+      "liquidityY": "90802480",
+      "feeX": "138800",
+      "feeY": "52500"
+    },
+    {
+      "timestamp": 1648209600000,
+      "volumeX": "482400000",
+      "volumeY": "147000000",
+      "liquidityX": "3128",
+      "liquidityY": "108470193",
+      "feeX": "241200",
+      "feeY": "73500"
+    },
+    {
+      "timestamp": 1648296000000,
+      "volumeX": "835600000",
+      "volumeY": "164600000",
+      "liquidityX": "191625525",
+      "liquidityY": "88356253",
+      "feeX": "417800",
+      "feeY": "82300"
+    },
+    {
+      "timestamp": 1648382400000,
+      "volumeX": "921200000",
+      "volumeY": "179800000",
+      "liquidityX": "141425230",
+      "liquidityY": "93566610",
+      "feeX": "460600",
+      "feeY": "89900"
+    },
+    {
+      "timestamp": 1648468800000,
+      "volumeX": "1016400000",
+      "volumeY": "206000000",
+      "liquidityX": "7280",
+      "liquidityY": "108469751",
+      "feeX": "508200",
+      "feeY": "103000"
+    },
+    {
+      "timestamp": 1648555200000,
+      "volumeX": "1016400000",
+      "volumeY": "206000000",
+      "liquidityX": "7280",
+      "liquidityY": "108469751",
+      "feeX": "508200",
+      "feeY": "103000"
+    },
+    {
+      "timestamp": 1648641600000,
+      "volumeX": "1016400000",
+      "volumeY": "206000000",
+      "liquidityX": "7280",
+      "liquidityY": "108469751",
+      "feeX": "508200",
+      "feeY": "103000"
+    },
+    {
+      "timestamp": 1648728000000,
+      "volumeX": "1016400000",
+      "volumeY": "206000000",
+      "liquidityX": "7280",
+      "liquidityY": "108469751",
+      "feeX": "508200",
+      "feeY": "103000"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "1016400000",
+      "volumeY": "206000000",
+      "liquidityX": "7280",
+      "liquidityY": "108469751",
+      "feeX": "508200",
+      "feeY": "103000"
+    }
+  ],
+  "B2Mq1fpJ2bZYxxtF4yz6nNvLJLaYzM3zQsHcs2oDqk3z": [
+    {
+      "timestamp": 1648036800000,
+      "volumeX": "0",
+      "volumeY": "101000000",
+      "liquidityX": "199999997",
+      "liquidityY": "287412042",
+      "feeX": "0",
+      "feeY": "10100"
+    },
+    {
+      "timestamp": 1648123200000,
+      "volumeX": "0",
+      "volumeY": "101000000",
+      "liquidityX": "105042264",
+      "liquidityY": "166972208",
+      "feeX": "0",
+      "feeY": "10100"
+    },
+    {
+      "timestamp": 1648209600000,
+      "volumeX": "0",
+      "volumeY": "101000000",
+      "liquidityX": "105042264",
+      "liquidityY": "166972208",
+      "feeX": "0",
+      "feeY": "10100"
+    },
+    {
+      "timestamp": 1648296000000,
+      "volumeX": "0",
+      "volumeY": "101000000",
+      "liquidityX": "105042264",
+      "liquidityY": "166972208",
+      "feeX": "0",
+      "feeY": "10100"
+    },
+    {
+      "timestamp": 1648382400000,
+      "volumeX": "0",
+      "volumeY": "101000000",
+      "liquidityX": "105042264",
+      "liquidityY": "166972208",
+      "feeX": "0",
+      "feeY": "10100"
+    },
+    {
+      "timestamp": 1648468800000,
+      "volumeX": "0",
+      "volumeY": "101000000",
+      "liquidityX": "105042264",
+      "liquidityY": "166972208",
+      "feeX": "0",
+      "feeY": "10100"
+    },
+    {
+      "timestamp": 1648555200000,
+      "volumeX": "0",
+      "volumeY": "111000000",
+      "liquidityX": "105042263",
+      "liquidityY": "187107743",
+      "feeX": "0",
+      "feeY": "11100"
+    },
+    {
+      "timestamp": 1648641600000,
+      "volumeX": "98000000",
+      "volumeY": "111000000",
+      "liquidityX": "202144912",
+      "liquidityY": "84112388",
+      "feeX": "9800",
+      "feeY": "11100"
+    },
+    {
+      "timestamp": 1648728000000,
+      "volumeX": "98000000",
+      "volumeY": "111000000",
+      "liquidityX": "202144912",
+      "liquidityY": "84112388",
+      "feeX": "9800",
+      "feeY": "11100"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "98000000",
+      "volumeY": "111000000",
+      "liquidityX": "202144912",
+      "liquidityY": "84112388",
+      "feeX": "9800",
+      "feeY": "11100"
+    }
+  ],
+  "FeKSMTD9Z22kdnMLeNWAfaTXydbhVixUPcfZDW3QS1X4": [
+    {
+      "timestamp": 1648036800000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "81779303",
+      "liquidityY": "299999999",
+      "feeX": "0",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648123200000,
+      "volumeX": "10000000",
+      "volumeY": "10000000",
+      "liquidityX": "81780301",
+      "liquidityY": "299999037",
+      "feeX": "1000",
+      "feeY": "1000"
+    },
+    {
+      "timestamp": 1648209600000,
+      "volumeX": "10000000",
+      "volumeY": "10000000",
+      "liquidityX": "81780301",
+      "liquidityY": "299999037",
+      "feeX": "1000",
+      "feeY": "1000"
+    },
+    {
+      "timestamp": 1648296000000,
+      "volumeX": "10000000",
+      "volumeY": "10000000",
+      "liquidityX": "81780301",
+      "liquidityY": "299999037",
+      "feeX": "1000",
+      "feeY": "1000"
+    },
+    {
+      "timestamp": 1648382400000,
+      "volumeX": "10000000",
+      "volumeY": "10000000",
+      "liquidityX": "81780301",
+      "liquidityY": "299999037",
+      "feeX": "1000",
+      "feeY": "1000"
+    },
+    {
+      "timestamp": 1648468800000,
+      "volumeX": "10000000",
+      "volumeY": "10000000",
+      "liquidityX": "81780301",
+      "liquidityY": "299999037",
+      "feeX": "1000",
+      "feeY": "1000"
+    },
+    {
+      "timestamp": 1648555200000,
+      "volumeX": "10000000",
+      "volumeY": "10000000",
+      "liquidityX": "81780301",
+      "liquidityY": "299999037",
+      "feeX": "1000",
+      "feeY": "1000"
+    },
+    {
+      "timestamp": 1648641600000,
+      "volumeX": "10000000",
+      "volumeY": "10000000",
+      "liquidityX": "81780301",
+      "liquidityY": "299999037",
+      "feeX": "1000",
+      "feeY": "1000"
+    },
+    {
+      "timestamp": 1648728000000,
+      "volumeX": "10000000",
+      "volumeY": "10000000",
+      "liquidityX": "81780301",
+      "liquidityY": "299999037",
+      "feeX": "1000",
+      "feeY": "1000"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "10000000",
+      "volumeY": "10000000",
+      "liquidityX": "81780301",
+      "liquidityY": "299999037",
+      "feeX": "1000",
+      "feeY": "1000"
+    }
+  ],
+  "2SgUGxYDczrB6wUzXHPJH65pNhWkEzNMEx3km4xTYUTC": [
+    {
+      "timestamp": 1648296000000,
+      "volumeX": "20000000",
+      "volumeY": "314000000",
+      "liquidityX": "19860855",
+      "liquidityY": "388566046",
+      "feeX": "2000",
+      "feeY": "31400"
+    },
+    {
+      "timestamp": 1648382400000,
+      "volumeX": "78000000",
+      "volumeY": "686000000",
+      "liquidityX": "28140929",
+      "liquidityY": "305991990",
+      "feeX": "7800",
+      "feeY": "68600"
+    },
+    {
+      "timestamp": 1648468800000,
+      "volumeX": "150000000",
+      "volumeY": "956000000",
+      "liquidityX": "4415667",
+      "liquidityY": "0",
+      "feeX": "15000",
+      "feeY": "95600"
+    },
+    {
+      "timestamp": 1648555200000,
+      "volumeX": "150000000",
+      "volumeY": "956000000",
+      "liquidityX": "4415667",
+      "liquidityY": "0",
+      "feeX": "15000",
+      "feeY": "95600"
+    },
+    {
+      "timestamp": 1648641600000,
+      "volumeX": "155000000",
+      "volumeY": "956000000",
+      "liquidityX": "14527030",
+      "liquidityY": "34225",
+      "feeX": "15500",
+      "feeY": "95600"
+    },
+    {
+      "timestamp": 1648728000000,
+      "volumeX": "179000000",
+      "volumeY": "956000000",
+      "liquidityX": "14530593",
+      "liquidityY": "0",
+      "feeX": "17900",
+      "feeY": "95600"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "179000000",
+      "volumeY": "956000000",
+      "liquidityX": "14530593",
+      "liquidityY": "0",
+      "feeX": "17900",
+      "feeY": "95600"
+    }
+  ],
+  "C7BLPzc1vzLL3Tm5udXELnHDRXeXkdd5f1oMKP8rwUNv": [
+    {
+      "timestamp": 1648641600000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "0",
+      "liquidityY": "0",
+      "feeX": "0",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648728000000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "0",
+      "liquidityY": "0",
+      "feeX": "0",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "0",
+      "volumeY": "0",
+      "liquidityX": "0",
+      "liquidityY": "0",
+      "feeX": "0",
+      "feeY": "0"
+    }
+  ],
+  "9fY5jLin2yYMK9Eee5diWzJRZqLaYgEUupUNsKVYAMhi": [
+    {
+      "timestamp": 1648728000000,
+      "volumeX": "2000000",
+      "volumeY": "0",
+      "liquidityX": "27186886",
+      "liquidityY": "23187366",
+      "feeX": "200",
+      "feeY": "0"
+    },
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "2000000",
+      "volumeY": "0",
+      "liquidityX": "27186886",
+      "liquidityY": "23187366",
+      "feeX": "200",
+      "feeY": "0"
+    }
+  ],
+  "AXSXYioiHGFvQ1XF4zCvXjnVAcMY68WQ4RH5r5nAdah5": [
+    {
+      "timestamp": 1648814400000,
+      "volumeX": "200000",
+      "volumeY": "0",
+      "liquidityX": "299949",
+      "liquidityY": "100174",
+      "feeX": "100",
+      "feeY": "0"
+    }
+  ]
+}
