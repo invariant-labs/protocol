@@ -140,6 +140,27 @@ export const calculateSecondsPerLiquidityInside = ({
   return secondsPerLiquidityInside
 }
 
+export const dailyFactorRewards = (reward: BN, liquidity: Decimal, duration: BN): BN => {
+  return reward.div(liquidity.v.mul(duration))
+}
+
+export const dailyFactorPool = (
+  volume: Decimal,
+  liquidity: Decimal,
+  feeTier: Decimal,
+  protocolFee: Decimal
+): BN => {
+  return volume.v.mul(feeTier.v.sub(protocolFee.v)).div(liquidity.v)
+}
+
+export const rewardsAPY = (dailyFactorRewards: Decimal, duration: BN): BN => {
+  return duration.mul(dailyFactorRewards.v).addn(1).pow(new BN(365).div(duration)).addn(1)
+}
+
+export const poolAPY = (dailyFactorPool: Decimal, duration: BN): BN => {
+  return dailyFactorPool.v.addn(1).pow(new BN(365).subn(1))
+}
+
 export interface SecondsPerLiquidityInside {
   tickLower: Tick
   tickUpper: Tick
