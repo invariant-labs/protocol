@@ -182,6 +182,7 @@ describe('Staker math tests', () => {
     })
   })
   describe('SecondsPerLiquidityInside tests', () => {
+    const currentTimestamp = new BN(100)
     let tickLower: Tick = {
       pool: Keypair.generate().publicKey,
       index: 0,
@@ -236,12 +237,11 @@ describe('Staker math tests', () => {
         tickLower,
         tickUpper,
         pool,
-        currentTimestamp: new BN(100)
+        currentTimestamp
       }
 
       const result = calculateSecondsPerLiquidityInside(data)
-      console.log(result.toString())
-      assert.ok(result.eq(new BN(981900001)))
+      assert.ok(result.eq(new BN(981900000)))
     })
     it('case 2', async () => {
       pool.currentTickIndex = 0
@@ -249,28 +249,56 @@ describe('Staker math tests', () => {
         tickLower,
         tickUpper,
         pool,
-        currentTimestamp: new BN(100)
+        currentTimestamp
       }
 
       const result = calculateSecondsPerLiquidityInside(data)
-      console.log(result.toString())
       assert.ok(result.eq(new BN(94957300000)))
     })
     it('case 3', async () => {
-      tickLower.index = 0
-      tickLower.secondsPerLiquidityOutside = { v: new BN('3012300000') }
-      tickUpper.index = 10
-      tickUpper.secondsPerLiquidityOutside = { v: new BN('2030400000') }
+      tickLower.secondsPerLiquidityOutside = { v: new BN('2012333200') }
+      tickUpper.secondsPerLiquidityOutside = { v: new BN('3012333310') }
+      pool.currentTickIndex = 20
 
       const data: SecondsPerLiquidityInside = {
         tickLower,
         tickUpper,
-        pool
+        pool,
+        currentTimestamp
       }
 
       const result = calculateSecondsPerLiquidityInside(data)
-      console.log(result.toString())
-      //assert.ok(result.eq(new BN(981900001)))
+      assert.ok(result.eq(new BN(1000000110)))
+    })
+    it('case 4', async () => {
+      tickLower.secondsPerLiquidityOutside = { v: new BN('201233320000') }
+      tickUpper.secondsPerLiquidityOutside = { v: new BN('301233331000') }
+      pool.currentTickIndex = 20
+
+      const data: SecondsPerLiquidityInside = {
+        tickLower,
+        tickUpper,
+        pool,
+        currentTimestamp
+      }
+
+      const result = calculateSecondsPerLiquidityInside(data)
+      assert.ok(result.eq(new BN(100000011000)))
+    })
+    it('case 5', async () => {
+      tickLower.secondsPerLiquidityOutside = { v: new BN('201233320000') }
+      tickUpper.secondsPerLiquidityOutside = { v: new BN('301233331000') }
+      pool.currentTickIndex = -20
+
+      const data: SecondsPerLiquidityInside = {
+        tickLower,
+        tickUpper,
+        pool,
+        currentTimestamp
+      }
+
+      const result = calculateSecondsPerLiquidityInside(data)
+      assert.ok(result.eq(new BN('340282366920938463463374607331768200456')))
     })
   })
 })
