@@ -1,4 +1,4 @@
-mod decimalss;
+mod decimals;
 mod errors;
 mod instructions;
 mod math;
@@ -8,11 +8,11 @@ mod util;
 
 use anchor_lang::prelude::*;
 
-use decimalss::*;
+use decimals::*;
 use errors::*;
 use instructions::*;
 
-declare_id!("G5iMvLKhBKKscSMUazjiWKZXzacjL7oikJAm9FWRTvk");
+declare_id!("3o9gZuZia2fM8Uau6JGGAxY7ZoUQAieCosG9Ln3fYw1u");
 
 #[program]
 pub mod staker {
@@ -22,9 +22,9 @@ pub mod staker {
     pub fn create_incentive(
         ctx: Context<CreateIncentive>,
         nonce: u8,
-        reward: Decimal,
-        start_time: u64,
-        end_time: u64,
+        reward: TokenAmount,
+        start_time: Seconds,
+        end_time: Seconds,
     ) -> ProgramResult {
         instructions::create_incentive::handler(ctx, nonce, reward, start_time, end_time)
     }

@@ -114,6 +114,15 @@ export const calculateSwapStep = (
   byAmountIn: boolean,
   fee: Decimal
 ): SwapResult => {
+  if (liquidity.v.eqn(0)) {
+    return {
+      nextPrice: targetPrice,
+      amountIn: new BN(0),
+      amountOut: new BN(0),
+      feeAmount: new BN(0)
+    }
+  }
+
   const aToB = currentPrice.v.gte(targetPrice.v)
 
   let nextPrice: Decimal = { v: new BN(0) }
@@ -165,7 +174,7 @@ export const calculateSwapStep = (
     }
   }
 
-  if (amountIn === null || amountOut === null) throw 'Amount would be greater than u64'
+  if (amountIn === null || amountOut === null) throw new Error('Amount would be greater than u64')
 
   if (!byAmountIn && amountOut.gt(amount)) {
     amountOut = amount
@@ -331,7 +340,6 @@ export const getNextPriceYDown = (
       .mul(PRICE_DENOMINATOR)
       .add(liquidity.v.mul(new BN(10).pow(new BN(PRICE_SCALE - LIQUIDITY_SCALE))).subn(1))
       .div(liquidity.v.mul(new BN(10).pow(new BN(PRICE_SCALE - LIQUIDITY_SCALE))))
-    assert.isTrue(price.v.gt(quotient))
     return { v: price.v.sub(quotient) }
   }
 }
@@ -638,4 +646,32 @@ export const isEnoughAmountToPushPrice = (
   }
 
   return !currentPriceSqrt.v.eq(nextSqrtPrice.v)
+}
+
+export const calculatePriceImpact = (startingSqrtPrice: BN, endingSqrtPrice: BN): BN => {
+  const startingPrice = startingSqrtPrice.mul(startingSqrtPrice)
+  const endingPrice = endingSqrtPrice.mul(endingSqrtPrice)
+  let priceQuotient
+  if (endingPrice.gte(startingPrice)) {
+    priceQuotient = DENOMINATOR.mul(startingPrice).div(endingPrice)
+  } else {
+    priceQuotient = DENOMINATOR.mul(endingPrice).div(startingPrice)
+  }
+  return DENOMINATOR.sub(priceQuotient)
+}
+
+export const calculateMinReceivedTokensByAmountIn = (
+  targetSqrtPrice: BN,
+  xToY: boolean,
+  amountIn: BN,
+  fee: BN
+) => {
+  const targetPrice = targetSqrtPrice.mul(targetSqrtPrice)
+  let amountOut: BN
+  if (xToY) {
+    amountOut = amountIn.mul(targetPrice).div(PRICE_DENOMINATOR).div(PRICE_DENOMINATOR)
+  } else {
+    amountOut = amountIn.mul(PRICE_DENOMINATOR).mul(PRICE_DENOMINATOR).div(targetPrice)
+  }
+  return DENOMINATOR.sub(fee).mul(amountOut).div(DENOMINATOR)
 }

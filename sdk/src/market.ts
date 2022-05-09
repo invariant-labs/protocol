@@ -26,7 +26,8 @@ import {
   SEED,
   simulateSwap,
   SimulateSwapInterface,
-  SimulationResult
+  SimulationResult,
+  SimulationStatus
 } from './utils'
 import { Invariant, IDL } from './idl/invariant'
 import { ComputeUnitsInstruction, DENOMINATOR, IWallet, Pair, signAndSend } from '.'
@@ -525,8 +526,11 @@ export class Market {
   }
 
   async initPositionTx(initPosition: InitPosition) {
-    const { pair, lowerTick, upperTick } = initPosition
+    const { pair, lowerTick: lowerIndex, upperTick: upperIndex } = initPosition
     const payer = initPosition.owner ?? this.wallet.publicKey
+
+    const lowerTick = lowerIndex === -Infinity ? getMinTick(pair.tickSpacing) : lowerIndex
+    const upperTick = upperIndex === Infinity ? getMaxTick(pair.tickSpacing) : upperIndex
 
     // undefined - tmp solution
     let lowerInstruction: TransactionInstruction | undefined
@@ -563,10 +567,10 @@ export class Market {
       positionInstruction = await this.initPositionInstruction(initPosition, false)
     }
 
-    if (this.network == Network.DEV || this.network == Network.LOCAL) {
+    if (this.network === Network.DEV || this.network === Network.LOCAL) {
       // REMOVE ME WHEN 1.9 HITS MAINNET
-      if (!lowerExists && !upperExists && !listExists) {
-        tx.add(ComputeUnitsInstruction(300000, payer))
+      if (!lowerExists || !upperExists || !listExists) {
+        tx.add(ComputeUnitsInstruction(400000, payer))
       }
     }
     if (!lowerExists && lowerInstruction) {
@@ -626,7 +630,7 @@ export class Market {
     const transaction = new Transaction({
       feePayer: payerPubkey
     })
-    if (this.network == Network.DEV || this.network == Network.LOCAL) {
+    if (this.network === Network.DEV || this.network === Network.LOCAL) {
       // REMOVE ME WHEN 1.9 HITS MAINNET
       transaction.add(ComputeUnitsInstruction(400000, payerPubkey))
     }
@@ -778,6 +782,7 @@ export class Market {
       Infinity,
       xToY ? 'up' : 'down'
     )
+
     const remainingAccounts = await Promise.all(
       indexesInDirection.concat(indexesInReverse).map(async index => {
         const { tickAddress } = await this.getTickAddress(pair, index)
@@ -852,6 +857,7 @@ export class Market {
       Infinity,
       xToY ? 'up' : 'down'
     )
+
     const remainingAccounts = await Promise.all(
       indexesInDirection.concat(indexesInReverse).map(async index => {
         const { tickAddress } = await this.getTickAddress(pair, index)
@@ -897,6 +903,10 @@ export class Market {
     }
 
     const simulationResult: SimulationResult = simulateSwap(swapParameters)
+    if (simulationResult.status !== SimulationStatus.Ok) {
+      throw new Error(simulationResult.status)
+    }
+
     const amountPerTick: BN[] = simulationResult.amountPerTick
     let sum: BN = new BN(0)
     for (const value of amountPerTick) {
@@ -963,7 +973,7 @@ export class Market {
   async swapSplit(swap: Swap, signer: Keypair) {
     const tx = await this.swapTransactionSplit(swap)
 
-    await signAndSend(tx, [signer], this.connection)
+    return await signAndSend(tx, [signer], this.connection)
   }
 
   async getReserveBalances(pair: Pair, tokenX: Token, tokenY: Token) {
@@ -1284,8 +1294,7 @@ export class Market {
         tokenX: pair.tokenX,
         tokenY: pair.tokenY,
         admin: adminPubkey,
-        feeReceiver: feeReceiver,
-        programAuthority: this.programAuthority
+        feeReceiver: feeReceiver
       }
     })
   }
@@ -1500,7 +1509,8 @@ export enum Errors {
   InvalidTickInterval = '0x131', // 5
   NoMoreTicks = '0x132 ', // 6
   TickNotFound = '0x133', // 7
-  PriceLimitReached = '0x134' // 8
+  PriceLimitReached = '0x134', // 8
+  RangeLimitReached = '0x135' // 9
 }
 
 export interface InitPosition {
@@ -1604,4 +1614,12 @@ export interface ChangeFeeReceiver {
   pair: Pair
   admin?: PublicKey
   feeReceiver: PublicKey
+}
+
+export interface PositionInitData {
+  lowerTick: number
+  upperTick: number
+  liquidity: Decimal
+  amountX: BN
+  amountY: BN
 }

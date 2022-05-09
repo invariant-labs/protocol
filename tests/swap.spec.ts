@@ -9,7 +9,6 @@ import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { CreateTick, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
-import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('swap', () => {
   const provider = Provider.local()
@@ -90,8 +89,8 @@ describe('swap', () => {
       owner: positionOwner.publicKey,
       userTokenX: userTokenXAccount,
       userTokenY: userTokenYAccount,
-      lowerTick,
-      upperTick,
+      lowerTick: -Infinity,
+      upperTick: Infinity,
       liquidityDelta,
       knownPrice: (await market.getPool(pair)).sqrtPrice,
       slippage: { v: new BN(0) }
@@ -141,14 +140,17 @@ describe('swap', () => {
     const reserveXDelta = reserveXAfter.sub(reserveXBefore)
     const reserveYDelta = reserveYBefore.sub(reserveYAfter)
 
+    // fee tokens           0.006 * 1000 = 6
+    // protocol fee tokens  ceil(6 * 0.01) = cei(0.06) = 1
+    // pool fee tokens      6 - 1 = 5
+    // fee growth global    5/1000000 = 5 * 10^-6
     assert.ok(amountX.eqn(0))
     assert.ok(amountY.eq(amount.subn(7)))
     assert.ok(reserveXDelta.eq(amount))
     assert.ok(reserveYDelta.eq(amount.subn(7)))
-    // assert.ok(poolData.feeGrowthGlobalX.v.eqn(5400000)) // 0.6 % of amount - protocol fee
-    assert.equal(poolData.feeGrowthGlobalX.v.toString(), '4000000000000000000')
+    assert.equal(poolData.feeGrowthGlobalX.v.toString(), '5000000000000000000')
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
-    assert.ok(poolData.feeProtocolTokenX.eqn(2))
+    assert.ok(poolData.feeProtocolTokenX.eqn(1))
     assert.ok(poolData.feeProtocolTokenY.eqn(0))
 
     assert.equal(poolData.currentTickIndex, -20)

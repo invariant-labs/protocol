@@ -48,7 +48,20 @@ describe('fee-tier', () => {
     }
     await market.createFeeTier(createFeeTierVars, admin)
   })
-
+  it('#createFeeTier() with 0 tick spacing should failed', async () => {
+    const feeTier: FeeTier = {
+      fee: fromFee(new BN(1000)),
+      tickSpacing: 0
+    }
+    const createFeeTierVars: CreateFeeTier = {
+      feeTier: feeTier,
+      admin: admin.publicKey
+    }
+    await assertThrowsAsync(
+      market.createFeeTier(createFeeTierVars, admin),
+      INVARIANT_ERRORS.INVALID_TICK_SPACING
+    )
+  })
   it('Non-Admin #createFeeTier()', async () => {
     await sleep(1000)
     const createFeeTierVars: CreateFeeTier = {

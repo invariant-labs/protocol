@@ -69,16 +69,20 @@ export type Staker = {
         {
           "name": "reward",
           "type": {
-            "defined": "Decimal"
+            "defined": "TokenAmount"
           }
         },
         {
           "name": "startTime",
-          "type": "u64"
+          "type": {
+            "defined": "Seconds"
+          }
         },
         {
           "name": "endTime",
-          "type": "u64"
+          "type": {
+            "defined": "Seconds"
+          }
         }
       ]
     },
@@ -268,26 +272,32 @@ export type Staker = {
           {
             "name": "totalRewardUnclaimed",
             "type": {
-              "defined": "Decimal"
+              "defined": "TokenAmount"
             }
           },
           {
             "name": "totalSecondsClaimed",
             "type": {
-              "defined": "Decimal"
+              "defined": "Seconds"
             }
           },
           {
             "name": "startTime",
-            "type": "u64"
+            "type": {
+              "defined": "Seconds"
+            }
           },
           {
             "name": "endTime",
-            "type": "u64"
+            "type": {
+              "defined": "Seconds"
+            }
           },
           {
             "name": "endClaimTime",
-            "type": "u64"
+            "type": {
+              "defined": "Seconds"
+            }
           },
           {
             "name": "numOfStakes",
@@ -314,19 +324,15 @@ export type Staker = {
             "type": "publicKey"
           },
           {
-            "name": "position",
-            "type": "publicKey"
-          },
-          {
             "name": "secondsPerLiquidityInitial",
             "type": {
-              "defined": "Decimal"
+              "defined": "SecondsPerLiquidity"
             }
           },
           {
             "name": "liquidity",
             "type": {
-              "defined": "Decimal"
+              "defined": "Liquidity"
             }
           },
           {
@@ -339,13 +345,49 @@ export type Staker = {
   ],
   "types": [
     {
-      "name": "Decimal",
+      "name": "Liquidity",
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "v",
             "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SecondsPerLiquidity",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokenAmount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Seconds",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "u64"
           }
         ]
       }
@@ -461,6 +503,11 @@ export type Staker = {
       "code": 6021,
       "name": "InvalidMint",
       "msg": "Provided token account mint is different than expected mint token"
+    },
+    {
+      "code": 6022,
+      "name": "DifferentIncentivePool",
+      "msg": "Incentive pool is different from stake pool"
     }
   ]
 };
@@ -536,16 +583,20 @@ export const IDL: Staker = {
         {
           "name": "reward",
           "type": {
-            "defined": "Decimal"
+            "defined": "TokenAmount"
           }
         },
         {
           "name": "startTime",
-          "type": "u64"
+          "type": {
+            "defined": "Seconds"
+          }
         },
         {
           "name": "endTime",
-          "type": "u64"
+          "type": {
+            "defined": "Seconds"
+          }
         }
       ]
     },
@@ -735,26 +786,32 @@ export const IDL: Staker = {
           {
             "name": "totalRewardUnclaimed",
             "type": {
-              "defined": "Decimal"
+              "defined": "TokenAmount"
             }
           },
           {
             "name": "totalSecondsClaimed",
             "type": {
-              "defined": "Decimal"
+              "defined": "Seconds"
             }
           },
           {
             "name": "startTime",
-            "type": "u64"
+            "type": {
+              "defined": "Seconds"
+            }
           },
           {
             "name": "endTime",
-            "type": "u64"
+            "type": {
+              "defined": "Seconds"
+            }
           },
           {
             "name": "endClaimTime",
-            "type": "u64"
+            "type": {
+              "defined": "Seconds"
+            }
           },
           {
             "name": "numOfStakes",
@@ -781,19 +838,15 @@ export const IDL: Staker = {
             "type": "publicKey"
           },
           {
-            "name": "position",
-            "type": "publicKey"
-          },
-          {
             "name": "secondsPerLiquidityInitial",
             "type": {
-              "defined": "Decimal"
+              "defined": "SecondsPerLiquidity"
             }
           },
           {
             "name": "liquidity",
             "type": {
-              "defined": "Decimal"
+              "defined": "Liquidity"
             }
           },
           {
@@ -806,13 +859,49 @@ export const IDL: Staker = {
   ],
   "types": [
     {
-      "name": "Decimal",
+      "name": "Liquidity",
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "v",
             "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SecondsPerLiquidity",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "u128"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TokenAmount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Seconds",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "v",
+            "type": "u64"
           }
         ]
       }
@@ -928,6 +1017,11 @@ export const IDL: Staker = {
       "code": 6021,
       "name": "InvalidMint",
       "msg": "Provided token account mint is different than expected mint token"
+    },
+    {
+      "code": 6022,
+      "name": "DifferentIncentivePool",
+      "msg": "Incentive pool is different from stake pool"
     }
   ]
 };

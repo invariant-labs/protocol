@@ -80,7 +80,7 @@ impl<'info> CreatePool<'info> {
             token_y_reserve: *self.token_y_reserve.to_account_info().key,
             tick_spacing: fee_tier.tick_spacing,
             fee: fee_tier.fee,
-            protocol_fee: FixedPoint::from_scale(2, 1),
+            protocol_fee: FixedPoint::from_scale(1, 2),
             liquidity: Liquidity::new(0),
             sqrt_price: calculate_price_sqrt(init_tick),
             current_tick_index: init_tick,

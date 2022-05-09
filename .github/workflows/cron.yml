@@ -1,8 +1,8 @@
-name: "Create snapshot of stats"
+name: 'Create snapshot of stats'
 
 on:
   schedule:
-  - cron: "0 12 * * *"
+    - cron: '0 12 * * *'
 
 env:
   solana_version: 1.8.12
@@ -27,8 +27,7 @@ jobs:
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           export ANCHOR_WALLET="/home/runner/.config/solana/id.json"
           npm install
-          npm run snap
-          npm run cachePrices
+          npm run snapV2
           git add ./data
           git commit -m "Snapshot of data done!"
         working-directory: stats

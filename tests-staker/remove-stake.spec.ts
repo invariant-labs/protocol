@@ -1,10 +1,10 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Market, Pair, DENOMINATOR, sleep } from '@invariant-labs/sdk'
-import { Network } from '../sdk-staker/src'
+import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import { CreateIncentive, CreateStake, Decimal, Staker } from '../sdk-staker/src/staker'
+import { CreateIncentive, CreateStake, Decimal, Staker } from '../staker-sdk/src/staker'
 import { eqDecimal, createToken, tou64, signAndSend } from './testUtils'
 import { createToken as createTkn } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
@@ -168,6 +168,8 @@ describe('Remove Stake tests', () => {
       userTokenY: userTokenYAccount,
       lowerTick,
       upperTick,
+      slippage: { v: new BN(0) },
+      knownPrice: (await market.getPool(pair)).sqrtPrice,
       liquidityDelta
     }
     await market.initPosition(initPositionVars, positionOwner)

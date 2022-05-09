@@ -1,15 +1,10 @@
 use anchor_lang::__private::ErrorCode;
 use anchor_lang::__private::CLOSED_ACCOUNT_DISCRIMINATOR;
-use std::convert::TryInto;
 use std::io::Write;
 
 use anchor_lang::prelude::*;
 
 pub const STAKER_SEED: &str = "staker";
-
-pub fn get_current_timestamp() -> u64 {
-    Clock::get().unwrap().unix_timestamp.try_into().unwrap()
-}
 
 pub fn get_current_slot() -> u64 {
     Clock::get().unwrap().slot

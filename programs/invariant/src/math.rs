@@ -7,6 +7,9 @@ use crate::structs::tickmap::MAX_TICK;
 use crate::structs::TICK_LIMIT;
 use crate::*;
 
+pub const MAX_SQRT_PRICE: u128 = 65535383934512647000000000000;
+pub const MIN_SQRT_PRICE: u128 = 15258932000000000000;
+
 #[derive(PartialEq, Debug)]
 pub struct SwapResult {
     pub next_price_sqrt: Price,
@@ -94,6 +97,15 @@ pub fn compute_swap_step(
     by_amount_in: bool,
     fee: FixedPoint,
 ) -> SwapResult {
+    if liquidity.is_zero() {
+        return SwapResult {
+            next_price_sqrt: target_price_sqrt,
+            amount_in: TokenAmount(0),
+            amount_out: TokenAmount(0),
+            fee_amount: TokenAmount(0),
+        };
+    }
+
     let x_to_y = current_price_sqrt >= target_price_sqrt;
 
     let next_price_sqrt;
@@ -328,33 +340,35 @@ pub fn calculate_fee_growth_inside(
 
     // calculate fee growth below
     let fee_growth_below_x = if current_above_lower {
-        tick_lower.fee_growth_outside_x.get()
+        tick_lower.fee_growth_outside_x
     } else {
-        fee_growth_global_x.get() - tick_lower.fee_growth_outside_x.get()
+        fee_growth_global_x.unchecked_sub(tick_lower.fee_growth_outside_x)
     };
     let fee_growth_below_y = if current_above_lower {
-        tick_lower.fee_growth_outside_y.get()
+        tick_lower.fee_growth_outside_y
     } else {
-        fee_growth_global_y.get() - tick_lower.fee_growth_outside_y.get()
+        fee_growth_global_y.unchecked_sub(tick_lower.fee_growth_outside_y)
     };
 
     // calculate fee growth above
     let fee_growth_above_x = if current_below_upper {
-        tick_upper.fee_growth_outside_x.get()
+        tick_upper.fee_growth_outside_x
     } else {
-        fee_growth_global_x.get() - tick_upper.fee_growth_outside_x.get()
+        fee_growth_global_x.unchecked_sub(tick_upper.fee_growth_outside_x)
     };
     let fee_growth_above_y = if current_below_upper {
-        tick_upper.fee_growth_outside_y.get()
+        tick_upper.fee_growth_outside_y
     } else {
-        fee_growth_global_y.get() - tick_upper.fee_growth_outside_y.get()
+        fee_growth_global_y.unchecked_sub(tick_upper.fee_growth_outside_y)
     };
 
     // calculate fee growth inside
-    let fee_growth_inside_x =
-        FeeGrowth::new(fee_growth_global_x.get() - fee_growth_below_x - fee_growth_above_x);
-    let fee_growth_inside_y =
-        FeeGrowth::new(fee_growth_global_y.get() - fee_growth_below_y - fee_growth_above_y);
+    let fee_growth_inside_x = fee_growth_global_x
+        .unchecked_sub(fee_growth_below_x)
+        .unchecked_sub(fee_growth_above_x);
+    let fee_growth_inside_y = fee_growth_global_y
+        .unchecked_sub(fee_growth_below_y)
+        .unchecked_sub(fee_growth_above_y);
 
     (fee_growth_inside_x, fee_growth_inside_y)
 }
@@ -429,16 +443,20 @@ pub fn calculate_seconds_per_liquidity_inside(
     let seconds_per_liquidity_below = if current_above_lower {
         tick_lower.seconds_per_liquidity_outside
     } else {
-        pool.seconds_per_liquidity_global - tick_lower.seconds_per_liquidity_outside
+        pool.seconds_per_liquidity_global
+            .unchecked_sub(tick_lower.seconds_per_liquidity_outside)
     };
 
     let seconds_per_liquidity_above = if current_below_upper {
         tick_upper.seconds_per_liquidity_outside
     } else {
-        pool.seconds_per_liquidity_global - tick_upper.seconds_per_liquidity_outside
+        pool.seconds_per_liquidity_global
+            .unchecked_sub(tick_upper.seconds_per_liquidity_outside)
     };
 
-    pool.seconds_per_liquidity_global - seconds_per_liquidity_below - seconds_per_liquidity_above
+    pool.seconds_per_liquidity_global
+        .unchecked_sub(seconds_per_liquidity_below)
+        .unchecked_sub(seconds_per_liquidity_above)
 }
 
 pub fn is_enough_amount_to_push_price(
@@ -1031,6 +1049,15 @@ mod tests {
     }
 
     #[test]
+    fn edge_prices_regression_test() {
+        let min_sqrt_price = calculate_price_sqrt(-MAX_TICK);
+        let max_sqrt_price = calculate_price_sqrt(MAX_TICK);
+
+        assert_eq!(min_sqrt_price, Price::new(MIN_SQRT_PRICE));
+        assert_eq!(max_sqrt_price, Price::new(MAX_SQRT_PRICE));
+    }
+
+    #[test]
     fn test_get_next_sqrt_price_x_up() {
         // Add
         {
@@ -1435,7 +1462,7 @@ mod tests {
 
         let current_timestamp = 100;
         pool.update_seconds_per_liquidity_global(current_timestamp);
-        assert_eq!(pool.seconds_per_liquidity_global.v, 100000000000);
+        assert_eq!(pool.seconds_per_liquidity_global.get(), 100000000000);
     }
     #[test]
     fn test_calculate_seconds_per_liquidity_inside() {
@@ -1466,7 +1493,7 @@ mod tests {
                 &mut pool,
                 current_timestamp,
             );
-            assert_eq!(seconds_per_liquidity_inside.v, 981900000);
+            assert_eq!(seconds_per_liquidity_inside.get(), 981900000);
         }
 
         {
@@ -1477,7 +1504,7 @@ mod tests {
                 &mut pool,
                 current_timestamp,
             );
-            assert_eq!(seconds_per_liquidity_inside.v, 94957300000);
+            assert_eq!(seconds_per_liquidity_inside.get(), 94957300000);
         }
 
         {
@@ -1490,7 +1517,7 @@ mod tests {
                 &mut pool,
                 current_timestamp,
             );
-            assert_eq!(seconds_per_liquidity_inside.v, 1000000110);
+            assert_eq!(seconds_per_liquidity_inside.get(), 1000000110);
         }
     }
     #[test]

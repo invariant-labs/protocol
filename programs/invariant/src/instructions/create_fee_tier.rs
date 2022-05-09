@@ -26,6 +26,7 @@ impl<'info> CreateFeeTier<'info> {
     pub fn handler(&self, fee: u128, tick_spacing: u16, bump: u8) -> ProgramResult {
         msg!("INVARIANT: CREATE FEE TIER");
 
+        require!(tick_spacing > 0, InvalidTickSpacing);
         let fee_tier = &mut self.fee_tier.load_init()?;
         let fee = FixedPoint::new(fee);
 

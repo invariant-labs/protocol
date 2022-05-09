@@ -10,9 +10,27 @@ import {
   TransactionInstruction
 } from '@solana/web3.js'
 import { calculatePriceSqrt, MAX_TICK, Pair, TICK_LIMIT, Market } from '.'
-import { Decimal, FeeTier, FEE_TIER, PoolStructure, Tickmap, Tick, PoolData } from './market'
-import { calculatePriceAfterSlippage, calculateSwapStep, isEnoughAmountToPushPrice } from './math'
-import { getTickFromPrice } from './tick'
+import {
+  Decimal,
+  FeeTier,
+  FEE_TIER,
+  PoolStructure,
+  Tickmap,
+  Tick,
+  PoolData,
+  Errors,
+  PositionInitData
+} from './market'
+import {
+  calculateMinReceivedTokensByAmountIn,
+  calculatePriceAfterSlippage,
+  calculatePriceImpact,
+  calculateSwapStep,
+  getLiquidityByX,
+  getLiquidityByY,
+  isEnoughAmountToPushPrice
+} from './math'
+import { alignTickToSpacing, getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
 import { struct, u32, u8 } from '@solana/buffer-layout'
 
@@ -29,6 +47,7 @@ export const GROWTH_DENOMINATOR = new BN(10).pow(new BN(GROWTH_SCALE))
 export const FEE_OFFSET = new BN(10).pow(new BN(DECIMAL - FEE_DECIMAL))
 export const FEE_DENOMINATOR = 10 ** FEE_DECIMAL
 export const U128MAX = new BN('340282366920938463463374607431768211455')
+export const CONCENTRATION_FACTOR = 1.00001526069123
 
 export enum ERRORS {
   SIGNATURE = 'Error: Signature verification failed',
@@ -66,7 +85,8 @@ export enum INVARIANT_ERRORS {
   INVALID_MINT = '0x178a',
   INVALID_TICKMAP = '0x178b',
   INVALID_TICKMAP_OWNER = '0x178c',
-  INVALID_LIST_OWNER = '0x178d'
+  INVALID_LIST_OWNER = '0x178d',
+  INVALID_TICK_SPACING = '0x178e'
 }
 
 export interface SimulateSwapPrice {
@@ -93,10 +113,13 @@ export interface SimulateSwapInterface {
 }
 
 export interface SimulationResult {
+  status: SimulationStatus
   amountPerTick: BN[]
   accumulatedAmountIn: BN
   accumulatedAmountOut: BN
   accumulatedFee: BN
+  minReceived: BN
+  priceImpact: BN
   priceAfterSwap: BN
 }
 
@@ -149,8 +172,8 @@ export interface CloserLimitResult {
 
 export const ComputeUnitsInstruction = (units: number, wallet: PublicKey) => {
   const program = new PublicKey('ComputeBudget111111111111111111111111111111')
-  const params = { instruction: 0, units: units }
-  const layout = struct([u8('instruction') as any, u32('units')])
+  const params = { instruction: 0, units: units, additional_fee: 0 }
+  const layout = struct([u8('instruction') as any, u32('units'), u32('additional_fee')])
   const data = Buffer.alloc(layout.span)
   layout.encode(params, data)
   const keys = [{ pubkey: wallet, isSigner: false, isWritable: false }]
@@ -270,6 +293,98 @@ export const toDecimalWithDenominator = (x: number, denominator: BN, decimals: n
   return { v: denominator.muln(x).div(new BN(10).pow(new BN(decimals))) }
 }
 
+export const calculateConcentration = (tickSpacing: number, minimumRange: number, n: number) => {
+  const concentration = 1 / (1 - Math.pow(1.0001, (-tickSpacing * (minimumRange + 2 * n)) / 4))
+  return concentration / CONCENTRATION_FACTOR
+}
+
+export const calculateTickDelta = (
+  tickSpacing: number,
+  minimumRange: number,
+  concentration: number
+) => {
+  const base = Math.pow(1.0001, -(tickSpacing / 4))
+  const logArg =
+    (1 - 1 / (concentration * CONCENTRATION_FACTOR)) /
+    Math.pow(1.0001, (-tickSpacing * minimumRange) / 4)
+
+  return Math.ceil(Math.log(logArg) / Math.log(base) / 2)
+}
+
+export const getConcentrationArray = (
+  tickSpacing: number,
+  minimumRange: number,
+  currentTick: number
+): number[] => {
+  let concentrations: number[] = []
+  let counter = 0
+  let concentration = 0
+  let lastConcentration = calculateConcentration(tickSpacing, minimumRange, counter) + 1
+  let concentrationDelta = 1
+
+  while (concentrationDelta >= 1) {
+    concentration = calculateConcentration(tickSpacing, minimumRange, counter)
+    concentrations.push(concentration)
+    concentrationDelta = lastConcentration - concentration
+    lastConcentration = concentration
+    counter++
+  }
+  concentration = Math.ceil(concentrations[concentrations.length - 1])
+
+  while (concentration > 1) {
+    concentrations.push(concentration)
+    concentration--
+  }
+  const maxTick = alignTickToSpacing(MAX_TICK, tickSpacing)
+  if ((minimumRange / 2) * tickSpacing > maxTick - Math.abs(currentTick)) {
+    throw new Error(Errors.RangeLimitReached)
+  }
+  const limitIndex =
+    (maxTick - Math.abs(currentTick) - (minimumRange / 2) * tickSpacing) / tickSpacing
+
+  return concentrations.slice(0, limitIndex)
+}
+
+export const getPositionInitData = (
+  tokenAmount: BN,
+  tickSpacing: number,
+  concentration: number,
+  minimumRange: number,
+  currentTick: number,
+  currentPriceSqrt: Decimal,
+  roundingUp: boolean,
+  byAmountX: boolean
+): PositionInitData => {
+  let liquidity: Decimal
+  let amountX: BN
+  let amountY: BN
+  const tickDelta = calculateTickDelta(tickSpacing, minimumRange, concentration)
+  const lowerTick = currentTick - (tickDelta + minimumRange / 2) * tickSpacing
+  const upperTick = currentTick + (tickDelta + minimumRange / 2) * tickSpacing
+
+  if (byAmountX) {
+    const result = getLiquidityByX(tokenAmount, lowerTick, upperTick, currentPriceSqrt, roundingUp)
+    liquidity = result.liquidity
+    amountX = tokenAmount
+    amountY = result.y
+  } else {
+    const result = getLiquidityByY(tokenAmount, lowerTick, upperTick, currentPriceSqrt, roundingUp)
+
+    liquidity = result.liquidity
+    amountX = result.x
+    amountY = tokenAmount
+  }
+  const positionData: PositionInitData = {
+    lowerTick,
+    upperTick,
+    liquidity,
+    amountX: amountX,
+    amountY: amountY
+  }
+
+  return positionData
+}
+
 export const toPrice = (x: number, decimals: number = 0): Decimal => {
   return toDecimalWithDenominator(x, PRICE_DENOMINATOR, decimals)
 }
@@ -307,10 +422,21 @@ export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
   }
 }
 
+export enum SimulationStatus {
+  Ok,
+  WrongLimit = 'Price limit is on the wrong side of price',
+  PriceLimitReached = 'Price would cross swap limit',
+  TickNotFound = 'tick crossed but not passed to simulation',
+  NoGainSwap = 'Amount out is zero',
+  TooLargeGap = 'Too large liquidity gap',
+  LimitReached = 'At the end of price range'
+}
+
 export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationResult => {
   const { xToY, byAmountIn, swapAmount, slippage, ticks, tickmap, priceLimit, pool } =
     swapParameters
   let { currentTickIndex, tickSpacing, liquidity, sqrtPrice, fee } = pool
+  const startingSqrtPrice = sqrtPrice.v
   let previousTickIndex = MAX_TICK + 1
   const amountPerTick: BN[] = []
   let accumulatedAmount: BN = new BN(0)
@@ -318,16 +444,21 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
   let accumulatedAmountIn: BN = new BN(0)
   let accumulatedFee: BN = new BN(0)
   const priceLimitAfterSlippage = calculatePriceAfterSlippage(priceLimit, slippage, !xToY)
+
+  // Sanity check, should never throw
   if (xToY) {
     if (sqrtPrice.v.lt(priceLimitAfterSlippage.v)) {
-      throw new Error('Price limit is on the wrong side of price')
+      throw new Error(SimulationStatus.WrongLimit)
     }
   } else {
     if (sqrtPrice.v.gt(priceLimitAfterSlippage.v)) {
-      throw new Error('Price limit is on the wrong side of price')
+      throw new Error(SimulationStatus.WrongLimit)
     }
   }
+
   let remainingAmount: BN = swapAmount
+  let status = SimulationStatus.Ok
+
   while (!remainingAmount.lte(new BN(0))) {
     // find closest initialized tick
     const closerLimit: CloserLimit = {
@@ -364,7 +495,9 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     sqrtPrice = result.nextPrice
 
     if (sqrtPrice.v.eq(priceLimitAfterSlippage.v) && remainingAmount.gt(new BN(0))) {
-      throw new Error('Price would cross swap limit')
+      // throw new Error(SimulationErrors.PriceLimitReached)
+      status = SimulationStatus.PriceLimitReached
+      break
     }
 
     // crossing tick
@@ -383,8 +516,9 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
 
       // cross
       if (initialized) {
-        if (!ticks.has(tickIndex)) throw new Error('tick crossed but not passed to simulation')
-
+        if (!ticks.has(tickIndex)) {
+          throw new Error(SimulationStatus.TickNotFound)
+        }
         const tick = ticks.get(tickIndex) as Tick
 
         if (!xToY || isEnoughAmountToCross) {
@@ -413,28 +547,63 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     // add amount to array if tick was initialized otherwise accumulate amount for next iteration
     accumulatedAmount = accumulatedAmount.add(amountDiff)
     // trunk-ignore(eslint/@typescript-eslint/prefer-optional-chain)
-    if ((limitingTick !== null && limitingTick.initialized) || remainingAmount.eqn(0)) {
+    const isTickInitialized = limitingTick !== null && limitingTick.initialized
+
+    if (isTickInitialized || remainingAmount.eqn(0)) {
       amountPerTick.push(accumulatedAmount)
       accumulatedAmount = new BN(0)
     }
 
+    // in the future this can be replaced by counter
+    if (!isTickInitialized && liquidity.v.eqn(0)) {
+      // throw new Error(SimulationErrors.TooLargeGap)
+      status = SimulationStatus.TooLargeGap
+      break
+    }
+
     if (currentTickIndex === previousTickIndex && !remainingAmount.eqn(0)) {
-      throw new Error('At the end of price range')
+      // throw new Error(SimulationErrors.LimitReached)
+      status = SimulationStatus.LimitReached
+      break
     } else {
       previousTickIndex = currentTickIndex
     }
   }
 
-  if (accumulatedAmountOut.isZero()) {
-    throw new Error('Amount out is zero')
+  if (accumulatedAmountOut.isZero() && status === SimulationStatus.Ok) {
+    // throw new Error(SimulationErrors.NoGainSwap)
+    status = SimulationStatus.NoGainSwap
+  }
+
+  const priceAfterSwap: BN = sqrtPrice.v
+  const priceImpact = calculatePriceImpact(startingSqrtPrice, priceAfterSwap)
+
+  let minReceived: BN
+  if (byAmountIn) {
+    const endingPriceAfterSlippage = calculatePriceAfterSlippage(
+      { v: priceAfterSwap },
+      slippage,
+      !xToY
+    ).v
+    minReceived = calculateMinReceivedTokensByAmountIn(
+      endingPriceAfterSlippage,
+      xToY,
+      accumulatedAmountIn,
+      pool.fee.v
+    )
+  } else {
+    minReceived = accumulatedAmountOut
   }
 
   return {
+    status,
     amountPerTick,
     accumulatedAmountIn,
     accumulatedAmountOut,
     accumulatedFee,
-    priceAfterSwap: sqrtPrice.v
+    priceAfterSwap,
+    priceImpact,
+    minReceived
   }
 }
 
@@ -572,7 +741,7 @@ export const bigNumberToBuffer = (n: BN, size: 16 | 32 | 64 | 128 | 256) => {
 
 export const getMaxTick = (tickSpacing: number) => {
   const limitedByPrice = MAX_TICK - (MAX_TICK % tickSpacing)
-  const limitedByTickmap = TICK_LIMIT * tickSpacing
+  const limitedByTickmap = TICK_LIMIT * tickSpacing - tickSpacing
   return Math.min(limitedByPrice, limitedByTickmap)
 }
 

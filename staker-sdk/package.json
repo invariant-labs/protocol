@@ -1,16 +1,16 @@
 {
-  "name": "@invariant/sdk-staker",
-  "version": "0.3.9",
+  "name": "@invariant-labs/staker-sdk",
+  "version": "0.1.6",
   "description": "",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
-  "author": "Norbert Bodziony",
+  "author": "Robert Godula",
   "scripts": {
     "prebuild": "rm -rf ./src/idl/* && cp -r ../target/types/staker.ts ./src/idl",
     "build": "tsc"
   },
   "keywords": [],
-  "license": "MIT",
+  "license": "",
   "devDependencies": {
     "@project-serum/anchor": "0.20.1",
     "@solana/spl-token": "0.1.6",

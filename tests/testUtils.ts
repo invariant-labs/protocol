@@ -61,7 +61,7 @@ export const createToken = async (
 
 // do not compare bump
 export const positionEquals = (a: Position, b: Position) => {
-  return positionWithoutOwnerEquals(a, b) && a.owner === b.owner
+  return positionWithoutOwnerEquals(a, b) && a.owner.equals(b.owner)
 }
 
 export const positionWithoutOwnerEquals = (a: Position, b: Position) => {
@@ -104,7 +104,8 @@ export const createTokensAndPool = async (
   const promiseResults = await Promise.all([
     createToken(connection, payer, mintAuthority),
     createToken(connection, payer, mintAuthority),
-    connection.requestAirdrop(mintAuthority.publicKey, 1e9)
+    connection.requestAirdrop(mintAuthority.publicKey, 1e9),
+    connection.requestAirdrop(payer.publicKey, 1e9)
   ])
 
   const pair = new Pair(promiseResults[0].publicKey, promiseResults[1].publicKey, feeTier)
