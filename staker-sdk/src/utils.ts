@@ -85,14 +85,15 @@ export const calculateSecondsPerLiquidityInside = ({
       .div(pool.liquidity.v)
   )
   //in case of overflow
-  if (secondsPerLiquidityGlobal > U128MAX) {
+  if (secondsPerLiquidityGlobal.gt(U128MAX)) {
     secondsPerLiquidityGlobal = secondsPerLiquidityGlobal.sub(U128MAX).addn(1)
   }
   if (currentAboveLower) {
     secondsPerLiquidityBelow = tickLower.secondsPerLiquidityOutside.v
   } else {
     // check possibility of underflow
-    if (secondsPerLiquidityGlobal > tickLower.secondsPerLiquidityOutside.v) {
+
+    if (secondsPerLiquidityGlobal.gt(tickLower.secondsPerLiquidityOutside.v)) {
       secondsPerLiquidityBelow = secondsPerLiquidityGlobal.sub(
         tickLower.secondsPerLiquidityOutside.v
       )
@@ -100,14 +101,14 @@ export const calculateSecondsPerLiquidityInside = ({
       secondsPerLiquidityBelow = secondsPerLiquidityGlobal
         .add(U128MAX)
         .sub(tickLower.secondsPerLiquidityOutside.v)
+        .addn(1)
     }
   }
-
   if (currentBelowUpper) {
     secondsPerLiquidityAbove = tickUpper.secondsPerLiquidityOutside.v
   } else {
     // check possibility of underflow
-    if (secondsPerLiquidityGlobal > tickLower.secondsPerLiquidityOutside.v) {
+    if (secondsPerLiquidityGlobal.gt(tickLower.secondsPerLiquidityOutside.v)) {
       secondsPerLiquidityAbove = secondsPerLiquidityGlobal.sub(
         tickUpper.secondsPerLiquidityOutside.v
       )
@@ -115,12 +116,21 @@ export const calculateSecondsPerLiquidityInside = ({
       secondsPerLiquidityAbove = secondsPerLiquidityGlobal
         .add(U128MAX)
         .sub(tickUpper.secondsPerLiquidityOutside.v)
+        .addn(1)
     }
   }
 
-  secondsPerLiquidityInside = secondsPerLiquidityGlobal
-    .sub(secondsPerLiquidityBelow)
-    .sub(secondsPerLiquidityAbove)
+  if (secondsPerLiquidityBelow.add(secondsPerLiquidityAbove).lt(U128MAX)) {
+    secondsPerLiquidityInside = secondsPerLiquidityGlobal
+      .sub(secondsPerLiquidityBelow)
+      .sub(secondsPerLiquidityAbove)
+  } else {
+    secondsPerLiquidityInside = secondsPerLiquidityGlobal
+      .add(U128MAX)
+      .sub(secondsPerLiquidityBelow)
+      .sub(secondsPerLiquidityAbove)
+      .addn(1)
+  }
 
   // check possibility of underflow
   if (secondsPerLiquidityInside.lt(new BN(0))) {
@@ -134,7 +144,7 @@ export interface SecondsPerLiquidityInside {
   tickLower: Tick
   tickUpper: Tick
   pool: PoolStructure
-  currentTimestamp: BN
+  currentTimestamp: BN // unix timestamp in seconds
 }
 export interface CalculateReward {
   totalRewardUnclaimed: BN
