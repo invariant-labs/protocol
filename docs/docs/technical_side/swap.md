@@ -24,6 +24,7 @@ await market.swap(swapVars, owner)
 ### Swap simulation
 
 As u can see when setting `swapVars` the value `estimatedPriceAfterSwap` should be supplied. To obtain this number, perform swap simulation, specifically:
+
 ```ts
   const simProps: SimulateSwapInterface = {
   xToY: boolean
@@ -42,22 +43,20 @@ As u can see when setting `swapVars` the value `estimatedPriceAfterSwap` should 
 The following is an example of usage.
 
 ```ts
-
 const poolData = await market.getPool(pair)
 
-  const simProps: SimulateSwapInterface = {
-    xToY: true,
-    byAmountIn: true,
-    swapAmount: new anchor.BN(1e10),
-    priceLimit: poolData.sqrtPrice,
-    slippage: { v: new anchor.BN(DENOMINATOR) },
-    ticks,
-    tickmap: await market.getTickmap(pair),
-    pool: poolData
-  }
+const simProps: SimulateSwapInterface = {
+  xToY: true,
+  byAmountIn: true,
+  swapAmount: new anchor.BN(1e10),
+  priceLimit: poolData.sqrtPrice,
+  slippage: { v: new anchor.BN(DENOMINATOR) },
+  ticks,
+  tickmap: await market.getTickmap(pair),
+  pool: poolData
+}
 
-  const result = simulateSwap(simProps)
-
+const result = simulateSwap(simProps)
 ```
 
 ### Solana <1.9

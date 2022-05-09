@@ -14,11 +14,11 @@ For each fee tier there is associated max safe and unsafe concentration. For bet
 
 | fee tier | delta price | number of ticks | concentration |
 | -------- | ----------- | --------------- | ------------- |
-| 0.01%    | 0.1%        | 100             | $\times$ 401  |
-| 0.05%    | 2%          | 976             | $\times$ 41   |
-| 0.1%     | 4%          | 1908            | $\times$ 21   |
-| 0.3%     | 10%         | 5248            | $\times$ 8    |
-| 1%       | 15%         | 8110            | $\times$ 5    |
+| 0.01%    | 0.5%        | 100             | $\times$ 401  |
+| 0.05%    | 5%          | 976             | $\times$ 41   |
+| 0.1%     | 10%         | 1908            | $\times$ 21   |
+| 0.3%     | 30%         | 5248            | $\times$ 8    |
+| 1%       | 50%         | 8110            | $\times$ 5    |
 
 ### Unsafe strategy
 
@@ -26,8 +26,8 @@ For each fee tier there is associated max safe and unsafe concentration. For bet
 
 | fee tier | delta price | number of ticks | concentration |
 | -------- | ----------- | --------------- | ------------- |
-| 0.01%    | 0.5%        | 20              | $\times$ 2001 |
-| 0.05%    | 5%          | 368             | $\times$ 109  |
-| 0.1%     | 10%         | 786             | $\times$ 51   |
-| 0.3%     | 30%         | 1908            | $\times$ 21   |
-| 1%       | 50%         | 2796            | $\times$ 15   |
+| 0.01%    | 0.1%        | 20              | $\times$ 2001 |
+| 0.05%    | 2%          | 368             | $\times$ 109  |
+| 0.1%     | 4%          | 786             | $\times$ 51   |
+| 0.3%     | 10%         | 1908            | $\times$ 21   |
+| 1%       | 15%         | 2796            | $\times$ 15   |
