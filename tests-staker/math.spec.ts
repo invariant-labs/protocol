@@ -7,6 +7,7 @@ import {
   calculateReward,
   CalculateReward,
   calculateSecondsPerLiquidityInside,
+  dailyFactorRewards,
   SecondsPerLiquidityInside
 } from '../staker-sdk/src/utils'
 
@@ -299,6 +300,34 @@ describe('Staker math tests', () => {
 
       const result = calculateSecondsPerLiquidityInside(data)
       assert.ok(result.eq(new BN('340282366920938463463374607331768200456')))
+    })
+  })
+  describe('dailyFactorReward tests', () => {
+    it('case 1', async () => {
+      const reward = new BN(10000000000)
+      const liquidity = { v: new BN(1000000) }
+      const duration = new BN(10)
+
+      const result = dailyFactorRewards(reward, liquidity, duration)
+      console.log('result', result.toString())
+      //assert.ok(result.eq(new BN(2)))
+    })
+  })
+  describe('dailyFactorPool tests', () => {
+    it('case 1', async () => {
+      const data: CalculateReward = {
+        totalRewardUnclaimed: new BN(1_000_000),
+        totalSecondsClaimed: new BN(0),
+        startTime: new BN(1637002223),
+        endTime: new BN(1640002223),
+        liquidity: { v: new BN(1_000_000).mul(new BN(10).pow(new BN(6))) },
+        secondsPerLiquidityInsideInitial: { v: new BN(4_000_000) },
+        secondsPerLiquidityInside: { v: new BN(10_000_000) },
+        currentTime: new BN(1637002232)
+      }
+      // const result = calculateReward(data)
+      // assert.ok(result.result.eq(new BN(2)))
+      // assert.ok(result.secondsInside.eq(new BN(6)))
     })
   })
 })
