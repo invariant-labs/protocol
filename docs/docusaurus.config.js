@@ -9,7 +9,7 @@ module.exports = {
   baseUrl: '/',
   onBrokenLinks: 'ignore',
   onBrokenMarkdownLinks: 'warn',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/favicon-16x16.png',
   organizationName: 'Invariant',
   projectName: 'Invariant docs',
   themeConfig: {
