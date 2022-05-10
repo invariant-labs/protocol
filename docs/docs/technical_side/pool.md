@@ -62,7 +62,7 @@ pub struct Pool {
 | oracle_initialized           | bool       | Is oracle set for Pool.                                                                                                                                                                                       |
 | bump                         | u8         | Seed used to ensure the generated address doesn't collide with any other existing one.                                                                                                                        |
 
-Using above props there could be created Pool with different method mentioned in [introduction](/docs/technical_side/introduction.md):
+Using above props there could be created Pool with different method mentioned in [introduction](/docs/technical_side/introduction):
 
 ```ts
   createPoolTx(props:createPoolVars)
