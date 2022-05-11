@@ -85,7 +85,8 @@ export enum INVARIANT_ERRORS {
   INVALID_MINT = '0x178a',
   INVALID_TICKMAP = '0x178b',
   INVALID_TICKMAP_OWNER = '0x178c',
-  INVALID_LIST_OWNER = '0x178d'
+  INVALID_LIST_OWNER = '0x178d',
+  INVALID_TICK_SPACING = '0x178e'
 }
 
 export interface SimulateSwapPrice {
@@ -171,8 +172,8 @@ export interface CloserLimitResult {
 
 export const ComputeUnitsInstruction = (units: number, wallet: PublicKey) => {
   const program = new PublicKey('ComputeBudget111111111111111111111111111111')
-  const params = { instruction: 0, units: units }
-  const layout = struct([u8('instruction') as any, u32('units')])
+  const params = { instruction: 0, units: units, additional_fee: 0 }
+  const layout = struct([u8('instruction') as any, u32('units'), u32('additional_fee')])
   const data = Buffer.alloc(layout.span)
   layout.encode(params, data)
   const keys = [{ pubkey: wallet, isSigner: false, isWritable: false }]

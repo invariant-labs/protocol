@@ -270,7 +270,7 @@ export class Staker {
   }
 
   public async getIncentive(incentivePubKey: PublicKey) {
-    return await this.program.account.incentive.fetch(incentivePubKey) //as IncentiveStructure
+    return (await this.program.account.incentive.fetch(incentivePubKey)) as IncentiveStructure
   }
 
   public async getUserStakeAddressAndBump(incentive: PublicKey, pool: PublicKey, id: BN) {
@@ -278,7 +278,7 @@ export class Staker {
     const idBuf = Buffer.alloc(16)
     idBuf.writeBigUInt64LE(BigInt(id.toString()))
     return await PublicKey.findProgramAddress(
-      [STAKER_SEED, incentive.toBuffer(), pubBuf, idBuf],
+      [Buffer.from(STAKER_SEED), incentive.toBuffer(), pubBuf, idBuf],
       this.programId
     )
   }
@@ -297,7 +297,9 @@ export class Staker {
   }
 
   public async getAllIncentive() {
-    return await this.program.account.incentive.all()
+    return (await this.program.account.incentive.all()).map(i => {
+      return { ...i.account, publicKey: i.publicKey }
+    }) as Incentive[]
   }
 
   private async signAndSend(tx: Transaction, signers?: Keypair[], opts?: ConfirmOptions) {
@@ -392,13 +394,20 @@ export interface EndIncentive {
 }
 
 export interface IncentiveStructure {
+  founder: PublicKey
   tokenAccount: PublicKey
-  totalRewardUnclaimed: BN
-  totalSecondsClaimed: BN
-  startTime: BN
-  endTime: BN
+  totalRewardUnclaimed: Decimal
+  totalSecondsClaimed: Decimal
+  startTime: Decimal
+  endTime: Decimal
+  endClaimTime: Decimal
   numOfStakes: BN
   pool: PublicKey
+  nonce: number
+}
+
+export interface Incentive extends IncentiveStructure {
+  publicKey: PublicKey
 }
 
 export interface Decimal {

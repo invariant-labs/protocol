@@ -24,7 +24,8 @@ module.exports = {
       items: [
         'tutorial/how_to_connect_your_wallet',
         'tutorial/how_to_swap',
-        'tutorial/how_to_add_remove_liquidity'
+        'tutorial/how_to_add_remove_liquidity',
+        'tutorial/uniform_concentration'
       ]
     },
     {
@@ -50,11 +51,16 @@ module.exports = {
       items: [
         'technical_side/introduction',
         'technical_side/quick_start',
-        'technical_side/create_pool',
-        'technical_side/minting_position'
+        'technical_side/pool',
+        'technical_side/minting_position',
+        'technical_side/position_list',
+        'technical_side/swap',
+        'technical_side/withdraw',
+        'technical_side/invariant_errors'
       ]
     },
     'faq',
+    'resources',
     {
       href: 'https://twitter.com/invariant_labs',
       label: 'Twitter',

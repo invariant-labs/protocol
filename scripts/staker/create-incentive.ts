@@ -20,13 +20,13 @@ const seconds = new Date().valueOf() / 1000
 const currentTime = new BN(Math.floor(seconds))
 
 // DEFINE ALL THESE VARS BEFORE EXECUTION
-const REWARD: Decimal = { v: new BN(10) }
+const REWARD: Decimal = { v: new BN(1000000000) }
 const START_TIME: Decimal = { v: currentTime.add(new BN(10)) }
-const END_TIME: Decimal = { v: currentTime.add(new BN(20)) }
+const END_TIME: Decimal = { v: currentTime.add(new BN(3600 * 24 * 7)) }
 const FOUNDER: PublicKey = MINTER.publicKey
 const TOKEN_X: PublicKey = new PublicKey(MOCK_TOKENS.USDC)
-const TOKEN_Y: PublicKey = new PublicKey(MOCK_TOKENS.SOL)
-const FOUNDER_TOKEN_ACCOUNT = new PublicKey('7p7zjaPR7GViePr7sLt5PZC1jwJzUBoRY39seMVmowmP') // define founder token account
+const TOKEN_Y: PublicKey = new PublicKey(MOCK_TOKENS.WSOL)
+const FOUNDER_TOKEN_ACCOUNT = new PublicKey('2KUpBdCYnbd2uCaK6BC8z5JHZ6ZM9N6xeGGUUvMY6hiT') // define founder token account
 const FEE_TIER = FEE_TIERS[0]
 const INVARIANT = new PublicKey('9aiirQKPZ2peE9QrXYmsbTtR7wSDJi2HkQdHuaMpTpei')
 const INCENTIVE_TOKEN = new PublicKey(MOCK_TOKENS.USDC)
@@ -35,6 +35,7 @@ const main = async () => {
   const pair = new Pair(TOKEN_X, TOKEN_Y, FEE_TIER)
   const staker = await Staker.build(Network.DEV, wallet, connection)
   const [poolAddress] = await pair.getAddressAndBump(new PublicKey(getMarketAddress(Network.DEV)))
+  console.log('poolAddress', poolAddress.toString())
 
   const incentiveParams: CreateIncentive = {
     reward: REWARD,

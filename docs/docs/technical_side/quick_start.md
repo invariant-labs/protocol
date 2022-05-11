@@ -1,7 +1,7 @@
 ---
 title: Quick start
 
-slug: /sdk/quick_start
+slug: /technical_side/quick_start
 ---
 
 ### Setting Up
@@ -26,7 +26,12 @@ import { Market, Pair } from '@invariant-labs/sdk'
 
 | Endpoint |                  Program ID                  |
 | -------- | :------------------------------------------: |
-| Devnet   | ESRPyq2GA57atfh3mpq59skfTka3tmd4euajAqkbsiMm |
-| Mainnet  |                    :soon:                    |
+| Devnet   | 9aiirQKPZ2peE9QrXYmsbTtR7wSDJi2HkQdHuaMpTpei |
+| Mainnet  | 48XDC18nH5FLq8kKfE6MJK2hcPFD7xsJQc4dSAgQWNAi |
 
 Data structures are an exact mapping, with the only changes being type and case. Methods called by a user have a corresponding method, that creates instructions, adds them to transaction, signs, and sends it. All methods (including ones used only by admin) have corresponding methods that return just the instruction.
+
+Before you begin making your first pool and position, you must first construct the market as shown below.
+```ts
+const market = await Market.build([Network.MAIN | Network.DEV], provider.wallet, connection)
+```
