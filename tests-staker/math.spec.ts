@@ -1,5 +1,8 @@
+import { FEE_TIER } from '@invariant-labs/sdk'
 import { LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
 import { PoolData, PoolStructure, Tick } from '@invariant-labs/sdk/lib/market'
+import { FEE_DENOMINATOR } from '@invariant-labs/sdk/lib/utils'
+import { FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
 import { BN } from '@project-serum/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { assert } from 'chai'
@@ -7,7 +10,9 @@ import {
   calculateReward,
   CalculateReward,
   calculateSecondsPerLiquidityInside,
+  dailyFactorPool,
   dailyFactorRewards,
+  rewardsAPY,
   SecondsPerLiquidityInside
 } from '../staker-sdk/src/utils'
 
@@ -304,7 +309,7 @@ describe('Staker math tests', () => {
   })
   describe('dailyFactorReward tests', () => {
     it('case 1', async () => {
-      const reward = new BN(10000000000)
+      const reward = new BN(10000)
       const liquidity = { v: new BN(1000000) }
       const duration = new BN(10)
 
@@ -315,19 +320,27 @@ describe('Staker math tests', () => {
   })
   describe('dailyFactorPool tests', () => {
     it('case 1', async () => {
-      const data: CalculateReward = {
-        totalRewardUnclaimed: new BN(1_000_000),
-        totalSecondsClaimed: new BN(0),
-        startTime: new BN(1637002223),
-        endTime: new BN(1640002223),
-        liquidity: { v: new BN(1_000_000).mul(new BN(10).pow(new BN(6))) },
-        secondsPerLiquidityInsideInitial: { v: new BN(4_000_000) },
-        secondsPerLiquidityInside: { v: new BN(10_000_000) },
-        currentTime: new BN(1637002232)
-      }
-      // const result = calculateReward(data)
-      // assert.ok(result.result.eq(new BN(2)))
-      // assert.ok(result.secondsInside.eq(new BN(6)))
+      const volume = { v: new BN(125000) }
+      const liquidity = { v: new BN(1000000) }
+      const feeTier = FEE_TIERS[3] // 0.3%
+
+      const result = dailyFactorPool(volume, liquidity, feeTier)
+      //const temp = feeTier.fee.toNumber() / Math.pow(10, 10)
+      console.log('result pool APY', result)
+      //assert.ok(result.eq(new BN(2)))
     })
+  })
+  describe('reward APY tests', () => {
+    it('case 1', async () => {
+      const dailyFactorRewards = 0.001
+      const duration = 10
+
+      const result = rewardsAPY(dailyFactorRewards, duration)
+      console.log('result APY', result.toString())
+      //assert.ok(result.eq(new BN(2)))
+    })
+  })
+  describe('pool APY tests', () => {
+    it('case 1', async () => {})
   })
 })

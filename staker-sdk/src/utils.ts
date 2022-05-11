@@ -1,10 +1,14 @@
-import { PoolStructure, Tick } from '@invariant-labs/sdk/src/market'
+import { FeeTier, PoolStructure, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
+import { isInitialized, findClosestTicks } from '@invariant-labs/sdk/src/math'
+import { FEE_DENOMINATOR } from '@invariant-labs/sdk/src/utils'
 import { BN } from '@project-serum/anchor'
 
 export const DECIMAL = 12
 export const DENOMINATOR = new BN(10).pow(new BN(DECIMAL))
 export const LIQUIDITY_DENOMINATOR = new BN(10).pow(new BN(6))
 export const U128MAX = new BN('340282366920938463463374607431768211455')
+export const PROTOCOL_FEE: number = 0.0001
+export const FEE_TIER_DENOMINATOR: number = Math.pow(10, 10)
 
 // hex code must be at the end of message
 export enum ERRORS {
@@ -140,25 +144,64 @@ export const calculateSecondsPerLiquidityInside = ({
   return secondsPerLiquidityInside
 }
 
-export const dailyFactorRewards = (reward: BN, liquidity: Decimal, duration: BN): BN => {
-  return reward.div(liquidity.v.mul(duration))
+export const priceLog = (val): number => {
+  return Math.log(val) / Math.log(1.0001)
 }
 
-export const dailyFactorPool = (
-  volume: Decimal,
-  liquidity: Decimal,
-  feeTier: Decimal,
-  protocolFee: Decimal
-): BN => {
-  return volume.v.mul(feeTier.v.sub(protocolFee.v)).div(liquidity.v)
+export const dailyFactorRewards = (reward: BN, liquidity: Decimal, duration: BN): number => {
+  return (
+    reward.mul(LIQUIDITY_DENOMINATOR).div(liquidity.v.mul(duration)).toNumber() /
+    LIQUIDITY_DENOMINATOR.toNumber()
+  )
 }
 
-export const rewardsAPY = (dailyFactorRewards: Decimal, duration: BN): BN => {
-  return duration.mul(dailyFactorRewards.v).addn(1).pow(new BN(365).div(duration)).addn(1)
+export const dailyFactorPool = (volume: Decimal, liquidity: Decimal, feeTier: FeeTier): number => {
+  const fee: number = (feeTier.fee.toNumber() / FEE_TIER_DENOMINATOR) * (1 - PROTOCOL_FEE)
+  console.log('fee', fee)
+  return (
+    (volume.v.toNumber() * fee * LIQUIDITY_DENOMINATOR.toNumber()) /
+    liquidity.v.toNumber() /
+    LIQUIDITY_DENOMINATOR.toNumber()
+  )
 }
 
-export const poolAPY = (dailyFactorPool: Decimal, duration: BN): BN => {
-  return dailyFactorPool.v.addn(1).pow(new BN(365).subn(1))
+export const rewardsAPY = (dailyFactorRewards: number, duration: number): number => {
+  return Math.pow(duration * dailyFactorRewards + 1, 365 / duration) - 1
+}
+
+export const poolAPY = (dailyFactorPool: number): number => {
+  return Math.pow(dailyFactorPool + 1, 365) - 1
+}
+
+export const getRangeFromPrices = (
+  priceMinA: number,
+  priceMaxA: number,
+  priceMinB: number,
+  priceMaxB: number,
+  tickmap: Tickmap,
+  tickSpacing: number
+): LiquidityRange => {
+  // calculate ticks from prices ratio between A and B
+  const tickLower = priceLog(priceMinA / priceMinB)
+  const tickUpper = priceLog(priceMaxA / priceMaxB)
+
+  // check if tick are initialized
+  const isLowerInitialized = isInitialized(tickmap, tickLower, tickSpacing)
+  const isUpperInitialized = isInitialized(tickmap, tickUpper, tickSpacing)
+
+  //
+  if (!isLowerInitialized) {
+    //find closest tick
+    const closestTick = findClosestTicks(tickmap.bitmap, tickLower, tickSpacing, 200)
+  } else {
+  }
+
+  if (!isUpperInitialized) {
+    //find closest tick
+    const closestTick = findClosestTicks(tickmap.bitmap, tickUpper, tickSpacing, 200)
+  } else {
+  }
+  return { tickLower, tickUpper }
 }
 
 export interface SecondsPerLiquidityInside {
@@ -176,4 +219,8 @@ export interface CalculateReward {
   secondsPerLiquidityInsideInitial: Decimal
   secondsPerLiquidityInside: Decimal
   currentTime: BN
+}
+export interface LiquidityRange {
+  tickLower: number
+  tickUpper: number
 }
