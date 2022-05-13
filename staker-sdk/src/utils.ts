@@ -1,6 +1,6 @@
 import { FeeTier, PoolStructure, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
 import { isInitialized, findClosestTicks } from '@invariant-labs/sdk/src/math'
-import { FEE_DENOMINATOR } from '@invariant-labs/sdk/src/utils'
+import { FEE_DENOMINATOR, parseLiquidityOnTicks } from '@invariant-labs/sdk/src/utils'
 import { BN } from '@project-serum/anchor'
 
 export const DECIMAL = 12
@@ -173,37 +173,58 @@ export const poolAPY = (dailyFactorPool: number): number => {
   return Math.pow(dailyFactorPool + 1, 365) - 1
 }
 
-export const getRangeFromPrices = (
-  priceMinA: number,
-  priceMaxA: number,
-  priceMinB: number,
-  priceMaxB: number,
-  tickmap: Tickmap,
-  tickSpacing: number
-): LiquidityRange => {
-  // calculate ticks from prices ratio between A and B
-  const tickLower = priceLog(priceMinA / priceMinB)
-  const tickUpper = priceLog(priceMaxA / priceMaxB)
+// export const getRangeFromPrices = (
+//   priceMinA: number,
+//   priceMaxA: number,
+//   priceMinB: number,
+//   priceMaxB: number,
+//   tickmap: Tickmap,
+//   tickSpacing: number
+// ): LiquidityRange => {
+//   // calculate ticks from prices ratio between A and B
+//   const tickLower = priceLog(priceMinA / priceMinB)
+//   const tickUpper = priceLog(priceMaxA / priceMaxB)
 
-  // check if tick are initialized
-  const isLowerInitialized = isInitialized(tickmap, tickLower, tickSpacing)
-  const isUpperInitialized = isInitialized(tickmap, tickUpper, tickSpacing)
+//   // check if tick are initialized
+//   const isLowerInitialized = isInitialized(tickmap, tickLower, tickSpacing)
+//   const isUpperInitialized = isInitialized(tickmap, tickUpper, tickSpacing)
 
-  //
-  if (!isLowerInitialized) {
-    //find closest tick
-    const closestTick = findClosestTicks(tickmap.bitmap, tickLower, tickSpacing, 200)
-  } else {
-  }
+//   let lowerInitialized: number = null
+//   let upperInitialized: number = null
 
-  if (!isUpperInitialized) {
-    //find closest tick
-    const closestTick = findClosestTicks(tickmap.bitmap, tickUpper, tickSpacing, 200)
-  } else {
-  }
-  return { tickLower, tickUpper }
+//   //find accurate if not
+//   if (!isLowerInitialized) {
+//     //find closest tick on the right
+//     //const closestTick = findClosestTicks(tickmap.bitmap, tickLower, tickSpacing, 200, 'up')
+//     //check if is on the right or left side
+//     //
+//   } else {
+//   }
+
+//   if (!isUpperInitialized) {
+//     //find closest tick on the left
+//     const closestTick = findClosestTicks(tickmap.bitmap, tickUpper, tickSpacing, 200)
+//   } else {
+//   }
+//   return { tickLower, tickUpper }
+// }
+
+export const calculateLiquidityOnTicks = (rawTicks: Tick[], pool: PoolStructure): TicksArray => {
+  const sortedTicks = rawTicks.sort((a, b) => a.index - b.index)
+  const parsedTicks = rawTicks.length ? parseLiquidityOnTicks(sortedTicks, pool) : []
+
+  console.log(parsedTicks)
+
+  const ticks: TicksArray = {}
+
+  parsedTicks.forEach(data => {
+    ticks[data.index] = data.liquidity
+  })
+  return ticks
 }
-
+interface TicksArray {
+  [index: number]: BN
+}
 export interface SecondsPerLiquidityInside {
   tickLower: Tick
   tickUpper: Tick
