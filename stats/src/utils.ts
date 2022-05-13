@@ -160,3 +160,8 @@ export const devnetTokensData = {
     coingeckoId: 'rendoge'
   }
 }
+
+export interface QuotientSnapshot {
+  timestamp: number
+  quotient: number
+}
