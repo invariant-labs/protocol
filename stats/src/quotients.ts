@@ -25,14 +25,14 @@ export const createSnapshotForNetwork = async (network: Network) => {
     case Network.MAIN:
       provider = Provider.local('https://ssc-dao.genesysgo.net')
       fileName = './data/v2/quotients_mainnet.json'
-      snaps = MAINNET_QUOTIENTS
+      snaps = MAINNET_QUOTIENTS as Record<string, QuotientSnapshot[]>
       tokensData = await getTokensData()
       break
     case Network.DEV:
     default:
       provider = Provider.local('https://api.devnet.solana.com')
       fileName = './data/v2/quotients_devnet.json'
-      snaps = DEVNET_QUOTIENTS
+      snaps = DEVNET_QUOTIENTS as Record<string, QuotientSnapshot[]>
       tokensData = devnetTokensData
   }
 
