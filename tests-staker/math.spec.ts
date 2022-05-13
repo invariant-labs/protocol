@@ -7,13 +7,15 @@ import { BN } from '@project-serum/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { assert } from 'chai'
 import {
+  calculateAverageLiquidity,
   calculateReward,
   CalculateReward,
   calculateSecondsPerLiquidityInside,
   dailyFactorPool,
   dailyFactorRewards,
   rewardsAPY,
-  SecondsPerLiquidityInside
+  SecondsPerLiquidityInside,
+  TICKS
 } from '../staker-sdk/src/utils'
 
 describe('Staker math tests', () => {
@@ -314,7 +316,7 @@ describe('Staker math tests', () => {
       const duration = new BN(10)
 
       const result = dailyFactorRewards(reward, liquidity, duration)
-      console.log('result', result.toString())
+      //console.log('result', result.toString())
       //assert.ok(result.eq(new BN(2)))
     })
   })
@@ -326,7 +328,7 @@ describe('Staker math tests', () => {
 
       const result = dailyFactorPool(volume, liquidity, feeTier)
       //const temp = feeTier.fee.toNumber() / Math.pow(10, 10)
-      console.log('result pool APY', result)
+      //console.log('result pool APY', result)
       //assert.ok(result.eq(new BN(2)))
     })
   })
@@ -336,11 +338,42 @@ describe('Staker math tests', () => {
       const duration = 10
 
       const result = rewardsAPY(dailyFactorRewards, duration)
-      console.log('result APY', result.toString())
+      //console.log('result APY', result.toString())
       //assert.ok(result.eq(new BN(2)))
     })
   })
   describe('pool APY tests', () => {
     it('case 1', async () => {})
+  })
+  describe('calculateAverageLiquidity tests', () => {
+    it('case 1', async () => {
+      const ticks = [
+        { liquidity: new BN('1000').mul(LIQUIDITY_DENOMINATOR), index: 10 },
+        { liquidity: new BN('0'), index: 20 }
+      ]
+      const lowerTick = 10
+      const upperTick = 20
+      const result = calculateAverageLiquidity(ticks, lowerTick, upperTick)
+      assert.ok(result.eq(new BN('1000').mul(LIQUIDITY_DENOMINATOR)))
+    })
+    it('case 2', async () => {
+      const lowerTick = 23966
+      const upperTick = 23967
+      const result = calculateAverageLiquidity(TICKS, lowerTick, upperTick)
+      // should be equal to liquidity with index 23966
+      assert.ok(result.eq(new BN('11730731878873587249')))
+    })
+    it('case 3', async () => {
+      const lowerTick = 23964
+      const upperTick = 23969
+      const result = calculateAverageLiquidity(TICKS, lowerTick, upperTick)
+      assert.ok(result.eq(new BN('10910146109682288193')))
+    })
+    it('case 4', async () => {
+      const lowerTick = 23961
+      const upperTick = 23971
+      const result = calculateAverageLiquidity(TICKS, lowerTick, upperTick)
+      assert.ok(result.eq(new BN('10709565852214868098')))
+    })
   })
 })

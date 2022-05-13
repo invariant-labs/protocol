@@ -2,6 +2,7 @@ import { FeeTier, PoolStructure, Tick, Tickmap } from '@invariant-labs/sdk/src/m
 import { isInitialized, findClosestTicks } from '@invariant-labs/sdk/src/math'
 import { FEE_DENOMINATOR, parseLiquidityOnTicks } from '@invariant-labs/sdk/src/utils'
 import { BN } from '@project-serum/anchor'
+import { count } from 'console'
 
 export const DECIMAL = 12
 export const DENOMINATOR = new BN(10).pow(new BN(DECIMAL))
@@ -209,21 +210,39 @@ export const poolAPY = (dailyFactorPool: number): number => {
 //   return { tickLower, tickUpper }
 // }
 
-export const calculateLiquidityOnTicks = (rawTicks: Tick[], pool: PoolStructure): TicksArray => {
+export const calculateLiquidityOnTicks = (rawTicks: Tick[], pool: PoolStructure): TicksArray[] => {
   const sortedTicks = rawTicks.sort((a, b) => a.index - b.index)
-  const parsedTicks = rawTicks.length ? parseLiquidityOnTicks(sortedTicks, pool) : []
-
-  console.log(parsedTicks)
-
-  const ticks: TicksArray = {}
-
-  parsedTicks.forEach(data => {
-    ticks[data.index] = data.liquidity
-  })
+  const ticks: TicksArray[] = rawTicks.length ? parseLiquidityOnTicks(sortedTicks, pool) : []
   return ticks
 }
+
+export const calculateAverageLiquidity = (
+  ticks: TicksArray[],
+  lowerTick: number,
+  upperTick: number
+): BN => {
+  let counter: BN = new BN(0)
+  let sum: BN = new BN(0)
+  let currentIndex = 0
+  let nextIndex = 0
+  let width: BN = new BN(0)
+
+  for (let i = 0; i < ticks.length - 1; i++) {
+    currentIndex = ticks[i].index
+    nextIndex = ticks[i + 1].index
+
+    if (currentIndex >= lowerTick && currentIndex < upperTick) {
+      width = new BN(nextIndex).sub(new BN(currentIndex))
+      counter = counter.add(width)
+      sum = sum.add(width.mul(ticks[i].liquidity))
+    }
+  }
+  return sum.div(counter)
+}
+
 interface TicksArray {
-  [index: number]: BN
+  liquidity: BN
+  index: number
 }
 export interface SecondsPerLiquidityInside {
   tickLower: Tick
@@ -245,3 +264,46 @@ export interface LiquidityRange {
   tickLower: number
   tickUpper: number
 }
+
+export const TICKS = [
+  { liquidity: new BN('264c6d4e386bb', 'hex'), index: -44363 }, // 673755091404475
+  { liquidity: new BN('10f96d86ac1ebd', 'hex'), index: 10103 }, // 4777848433548989
+  { liquidity: new BN('119f48c50da67d', 'hex'), index: 10107 }, // 4960209496548989
+  { liquidity: new BN('9a6982917f848fd', 'hex'), index: 23563 }, // 4960209496548989
+  { liquidity: new BN('119f48c50da67d', 'hex'), index: 23583 }, // 695410494738548989
+  { liquidity: new BN('97361a0ee3a7cfd', 'hex'), index: 23939 }, // 4960209496548989
+  { liquidity: new BN('9ec34bee8d1a03d', 'hex'), index: 23945 }, // 715004435399548989
+  { liquidity: new BN('1a91636ae55727fd', 'hex'), index: 23947 }, // 1914420627374548989
+  { liquidity: new BN('1c958e88117c9eac', 'hex'), index: 23948 }, // 2059709119651946156
+  { liquidity: new BN('1d0d99acb6a69e6c', 'hex'), index: 23950 }, // 2093498368874946156
+  { liquidity: new BN('32f9c880e2da056b', 'hex'), index: 23955 }, //
+  { liquidity: new BN('7813fa9c39055ccf', 'hex'), index: 23956 }, //
+  { liquidity: new BN('84c5de2c369bb171', 'hex'), index: 23957 }, //
+  { liquidity: new BN('989927a105941c71', 'hex'), index: 23958 }, //
+  { liquidity: new BN('8f376548dc6745f1', 'hex'), index: 23959 }, //
+  { liquidity: new BN('9016af785152fef1', 'hex'), index: 23961 }, // 10382678922244587249
+  { liquidity: new BN('990d91a1737d9e31', 'hex'), index: 23964 }, // 11028631185113587249
+  { liquidity: new BN('9894be8378e67af1', 'hex'), index: 23965 }, // 10994622062196587249
+  { liquidity: new BN('a2cbee7de39c5e31', 'hex'), index: 23966 }, // 11730731878873587249
+  { liquidity: new BN('94049d5ca9358931', 'hex'), index: 23967 }, // 10665822838821587249
+  { liquidity: new BN('9200723f7d101282', 'hex'), index: 23968 }, // 10520534346544190082
+  { liquidity: new BN('9188671ad7e612c2', 'hex'), index: 23970 }, // 10486745097321190082
+  { liquidity: new BN('a4539f382e6e70ec', 'hex'), index: 23971 }, // 11840982908933140716
+  { liquidity: new BN('8fad6f7280509b3c', 'hex'), index: 23975 }, // 10353053655964359484
+  { liquidity: new BN('4a933d572a2543d8', 'hex'), index: 23976 }, //
+  { liquidity: new BN('3de159c72c8eef36', 'hex'), index: 23977 }, //
+  { liquidity: new BN('34ea779e0a644ff6', 'hex'), index: 23978 }, //
+  { liquidity: new BN('214d6bfe1ee48227', 'hex'), index: 23979 }, //
+  { liquidity: new BN('206e21cea9f8c927', 'hex'), index: 23981 }, //
+  { liquidity: new BN('21b9616a76f837e7', 'hex'), index: 23983 }, //
+  { liquidity: new BN('178231700c4254a7', 'hex'), index: 23984 }, //
+  { liquidity: new BN('15a453e54a23a1e7', 'hex'), index: 23987 }, //
+  { liquidity: new BN('16fb56e2dd84dd33', 'hex'), index: 23990 }, //
+  { liquidity: new BN('4301ec586fc7f09', 'hex'), index: 23991 }, //
+  { liquidity: new BN('2b3e1e2256e5089', 'hex'), index: 23999 }, //
+  { liquidity: new BN('168a246586ee1c9', 'hex'), index: 24003 }, //
+  { liquidity: new BN('119f48c50da67d', 'hex'), index: 24010 }, //
+  { liquidity: new BN('30aa213450e7b', 'hex'), index: 37831 }, //
+  { liquidity: new BN('264c6d4e386bb', 'hex'), index: 37835 }, //
+  { liquidity: new BN('0', 'hex'), index: 44362 } //
+]
