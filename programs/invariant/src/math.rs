@@ -1462,7 +1462,7 @@ mod tests {
 
         let current_timestamp = 100;
         pool.update_seconds_per_liquidity_global(current_timestamp);
-        assert_eq!(pool.seconds_per_liquidity_global.get(), 100000000000);
+        assert_eq!({ pool.seconds_per_liquidity_global }.get(), 100000000000);
     }
     #[test]
     fn test_calculate_seconds_per_liquidity_inside() {
