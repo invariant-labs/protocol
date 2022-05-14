@@ -74,7 +74,7 @@ export const createSnapshotForNetwork = async (network: Network) => {
 
       return {
         address: address.toString(),
-        quotient: typeof +JSON.stringify(quotient) !== 'number' ? 0 : quotient ?? 0
+        quotient: isNaN(+JSON.stringify(quotient)) ? 0 : quotient ?? 0
       }
     })
   )
