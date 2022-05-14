@@ -7,9 +7,8 @@ import { createToken, initEverything } from './testUtils'
 import { Market, Pair, tou64, LIQUIDITY_DENOMINATOR, Network } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { toDecimal } from '@invariant-labs/sdk/src/utils'
-import { CreateTick, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
-import { calculateLiquidityOnTicks } from '../staker-sdk/src/utils'
+import { InitPosition } from '@invariant-labs/sdk/src/market'
+import { getTickArray } from '../staker-sdk/src/utils'
 
 describe('swap', () => {
   const provider = Provider.local()
@@ -57,21 +56,6 @@ describe('swap', () => {
 
   it('#swap() within a tick', async () => {
     // Deposit
-    const upperTick = 10
-    // const createTickVars: CreateTick = {
-    //   pair,
-    //   index: upperTick,
-    //   payer: admin.publicKey
-    // }
-    // await market.createTick(createTickVars, admin)
-
-    const lowerTick = -10
-    // const createTickVars2: CreateTick = {
-    //   pair,
-    //   index: lowerTick,
-    //   payer: admin.publicKey
-    // }
-    // await market.createTick(createTickVars2, admin)
 
     const positionOwner = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
@@ -90,8 +74,8 @@ describe('swap', () => {
       owner: positionOwner.publicKey,
       userTokenX: userTokenXAccount,
       userTokenY: userTokenYAccount,
-      lowerTick,
-      upperTick,
+      lowerTick: -10,
+      upperTick: 10,
       liquidityDelta,
       knownPrice: (await market.getPool(pair)).sqrtPrice,
       slippage: { v: new BN(0) }
@@ -117,12 +101,11 @@ describe('swap', () => {
 
     const pool = await market.getPool(pair)
 
-    const ticks = calculateLiquidityOnTicks(rawTicks, pool)
-    //console.log(ticks)
+    const ticks = getTickArray(rawTicks, pool)
 
-    console.log(ticks[-20].toString())
-    console.log(ticks[-10].toString())
-    console.log(ticks[10].toString())
-    console.log(ticks[20].toString())
+    assert.ok(ticks[0].liquidity.eq(new BN(1000000000000)))
+    assert.ok(ticks[1].liquidity.eq(new BN(2000000000000)))
+    assert.ok(ticks[2].liquidity.eq(new BN(1000000000000)))
+    assert.ok(ticks[3].liquidity.eq(new BN(0)))
   })
 })

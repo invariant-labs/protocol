@@ -1,5 +1,5 @@
 import { FeeTier, PoolStructure, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
-import { isInitialized, findClosestTicks } from '@invariant-labs/sdk/src/math'
+import { isInitialized, findClosestTicks, MAX_TICK, MIN_TICK } from '@invariant-labs/sdk/src/math'
 import { FEE_DENOMINATOR, parseLiquidityOnTicks } from '@invariant-labs/sdk/src/utils'
 import { BN } from '@project-serum/anchor'
 import { count } from 'console'
@@ -11,22 +11,9 @@ export const U128MAX = new BN('340282366920938463463374607431768211455')
 export const PROTOCOL_FEE: number = 0.0001
 export const FEE_TIER_DENOMINATOR: number = Math.pow(10, 10)
 
-// hex code must be at the end of message
-export enum ERRORS {
-  SIGNATURE = 'Error: Signature verification failed',
-  SIGNER = 'Error: unknown signer',
-  PANICKED = 'Program failed to complete',
-  SERIALIZATION = '0xa4',
-  ALLOWANCE = 'custom program error: 0x1',
-  NO_SIGNERS = 'Error: No signers'
-}
-
-export enum STAKER_ERRORS {
-  ZERO_AMOUNT = '0x1773',
-  START_IN_PAST = '0x1775',
-  TO_LONG_DURATION = '0x1774',
-  ENDED = '0x1776',
-  DIFFERENT_INCENTIVE_POOL = '0x1786'
+export enum Errors {
+  TickNotFound = 'Tick was not found', // 0
+  TickArrayIsEmpty = 'Tick array is empty' // 1
 }
 
 export interface Decimal {
@@ -149,6 +136,29 @@ export const priceLog = (val): number => {
   return Math.log(val) / Math.log(1.0001)
 }
 
+export const calculateLiquidity = (
+  priceMinA: number,
+  priceMaxA: number,
+  priceMinB: number,
+  priceMaxB: number,
+  tickmap: Tickmap,
+  tickSpacing: number,
+  rawTicks: Tick[],
+  pool: PoolStructure
+): Decimal => {
+  const { tickLower, tickUpper } = getRangeFromPrices(
+    priceMinA,
+    priceMaxA,
+    priceMinB,
+    priceMaxB,
+    tickmap,
+    tickSpacing
+  )
+  const ticks = getTickArray(rawTicks, pool)
+  const liquidity = calculateAverageLiquidity(ticks, tickLower, tickUpper)
+  return { v: liquidity }
+}
+
 export const dailyFactorRewards = (reward: BN, liquidity: Decimal, duration: BN): number => {
   return (
     reward.mul(LIQUIDITY_DENOMINATOR).div(liquidity.v.mul(duration)).toNumber() /
@@ -174,45 +184,64 @@ export const poolAPY = (dailyFactorPool: number): number => {
   return Math.pow(dailyFactorPool + 1, 365) - 1
 }
 
-// export const getRangeFromPrices = (
-//   priceMinA: number,
-//   priceMaxA: number,
-//   priceMinB: number,
-//   priceMaxB: number,
-//   tickmap: Tickmap,
-//   tickSpacing: number
-// ): LiquidityRange => {
-//   // calculate ticks from prices ratio between A and B
-//   const tickLower = priceLog(priceMinA / priceMinB)
-//   const tickUpper = priceLog(priceMaxA / priceMaxB)
+export const getRangeFromPrices = (
+  priceMinA: number,
+  priceMaxA: number,
+  priceMinB: number,
+  priceMaxB: number,
+  tickmap: Tickmap,
+  tickSpacing: number
+): LiquidityRange => {
+  // calculate ticks from prices ratio between A and B
+  let tickLower = priceLog(priceMinA / priceMinB)
+  let tickUpper = priceLog(priceMaxA / priceMaxB)
 
-//   // check if tick are initialized
-//   const isLowerInitialized = isInitialized(tickmap, tickLower, tickSpacing)
-//   const isUpperInitialized = isInitialized(tickmap, tickUpper, tickSpacing)
+  // check if tick are initialized
+  const isLowerInitialized = isInitialized(tickmap, tickLower, tickSpacing)
+  const isUpperInitialized = isInitialized(tickmap, tickUpper, tickSpacing)
 
-//   let lowerInitialized: number = null
-//   let upperInitialized: number = null
+  //find accurate if not initialized
+  if (!isLowerInitialized) {
+    //find closest tick on the right
+    const closestTicks = findClosestTicks(
+      tickmap.bitmap,
+      tickLower,
+      tickSpacing,
+      MAX_TICK,
+      tickUpper,
+      'up'
+    )
+    if (!closestTicks.length) {
+      throw new Error(Errors.TickNotFound)
+    }
+    tickLower = closestTicks[0]
+  }
 
-//   //find accurate if not
-//   if (!isLowerInitialized) {
-//     //find closest tick on the right
-//     //const closestTick = findClosestTicks(tickmap.bitmap, tickLower, tickSpacing, 200, 'up')
-//     //check if is on the right or left side
-//     //
-//   } else {
-//   }
+  if (!isUpperInitialized) {
+    //find closest tick on the left
+    const closestTicks = findClosestTicks(
+      tickmap.bitmap,
+      tickUpper,
+      tickSpacing,
+      MIN_TICK,
+      tickLower,
+      'down'
+    )
+    if (!closestTicks.length) {
+      throw new Error(Errors.TickNotFound)
+    }
+    tickUpper = closestTicks[0]
+  }
 
-//   if (!isUpperInitialized) {
-//     //find closest tick on the left
-//     const closestTick = findClosestTicks(tickmap.bitmap, tickUpper, tickSpacing, 200)
-//   } else {
-//   }
-//   return { tickLower, tickUpper }
-// }
+  return { tickLower, tickUpper }
+}
 
-export const calculateLiquidityOnTicks = (rawTicks: Tick[], pool: PoolStructure): TicksArray[] => {
+export const getTickArray = (rawTicks: Tick[], pool: PoolStructure): TicksArray[] => {
   const sortedTicks = rawTicks.sort((a, b) => a.index - b.index)
   const ticks: TicksArray[] = rawTicks.length ? parseLiquidityOnTicks(sortedTicks, pool) : []
+  if (!ticks.length) {
+    throw new Error(Errors.TickArrayIsEmpty)
+  }
   return ticks
 }
 
@@ -240,7 +269,7 @@ export const calculateAverageLiquidity = (
   return sum.div(counter)
 }
 
-interface TicksArray {
+export interface TicksArray {
   liquidity: BN
   index: number
 }
