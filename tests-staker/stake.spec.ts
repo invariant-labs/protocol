@@ -169,7 +169,6 @@ describe('Stake tests', () => {
       index
     )
     const positionStructBefore = await market.getPosition(positionOwner.publicKey, index)
-    console.log(' liquidity', positionStructBefore.liquidity.v.toString())
     const poolAddress = positionStructBefore.pool
     const positionId = positionStructBefore.id
 

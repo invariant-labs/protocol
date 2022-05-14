@@ -175,7 +175,6 @@ export const dailyFactorRewards = (reward: BN, liquidity: Decimal, duration: BN)
 
 export const dailyFactorPool = (volume: Decimal, liquidity: Decimal, feeTier: FeeTier): number => {
   const fee: number = (feeTier.fee.toNumber() / FEE_TIER_DENOMINATOR) * (1 - PROTOCOL_FEE)
-  console.log('fee', fee)
   return (
     (volume.v.toNumber() * fee * LIQUIDITY_DENOMINATOR.toNumber()) /
     liquidity.v.toNumber() /
@@ -184,11 +183,11 @@ export const dailyFactorPool = (volume: Decimal, liquidity: Decimal, feeTier: Fe
 }
 
 export const rewardsAPY = (dailyFactorRewards: number, duration: number): number => {
-  return Math.pow(duration * dailyFactorRewards + 1, 365 / duration) - 1
+  return (Math.pow(duration * dailyFactorRewards + 1, 365 / duration) - 1) * 100
 }
 
 export const poolAPY = (dailyFactorPool: number): number => {
-  return Math.pow(dailyFactorPool + 1, 365) - 1
+  return (Math.pow(dailyFactorPool + 1, 365) - 1) * 100
 }
 
 export const getRangeFromPrices = (

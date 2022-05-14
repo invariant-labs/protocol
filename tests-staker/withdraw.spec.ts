@@ -50,12 +50,7 @@ describe('Withdraw tests', () => {
   before(async () => {
     // create staker
 
-    staker = await Staker.build(
-      Network.LOCAL,
-      provider.wallet,
-      connection,
-      anchor.workspace.Staker.programId
-    )
+    staker = await Staker.build(Network.LOCAL, provider.wallet, connection)
 
     await Promise.all([
       connection.requestAirdrop(mintAuthority.publicKey, 1e9),
@@ -247,8 +242,7 @@ describe('Withdraw tests', () => {
       owner: positionOwner.publicKey,
       incentiveTokenAccount: incentiveTokenAccount.publicKey,
       ownerTokenAcc: ownerTokenAcc,
-      index,
-      nonce
+      index
     }
 
     const withdrawIx = await staker.withdrawIx(withdraw)
@@ -257,7 +251,6 @@ describe('Withdraw tests', () => {
 
     // should be around half of reward
     const balanceAfter = (await incentiveToken.getAccountInfo(ownerTokenAcc)).amount
-    console.log(balanceAfter)
     assert.ok(almostEqual(balanceAfter, new BN('500'), epsilon))
   })
   it('Withdraw - remove position', async () => {
@@ -421,8 +414,7 @@ describe('Withdraw tests', () => {
       owner: positionOwner.publicKey,
       incentiveTokenAccount: incentiveTokenAccount.publicKey,
       ownerTokenAcc: ownerTokenAcc,
-      index,
-      nonce
+      index
     }
 
     const withdrawIx = await staker.withdrawIx(withdraw)
@@ -622,8 +614,7 @@ describe('Withdraw tests', () => {
       owner: positionOwner.publicKey,
       incentiveTokenAccount: incentiveTokenAccount.publicKey,
       ownerTokenAcc: ownerTokenAcc,
-      index: firstPositionIndex,
-      nonce
+      index: firstPositionIndex
     }
 
     // update after
