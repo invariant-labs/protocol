@@ -1,10 +1,7 @@
-import { FEE_TIER } from '@invariant-labs/sdk'
 import { LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
-import { PoolData, PoolStructure, Tick } from '@invariant-labs/sdk/lib/market'
-import { FEE_DENOMINATOR } from '@invariant-labs/sdk/lib/utils'
-import { FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
+import { PoolStructure, Tick } from '@invariant-labs/sdk/lib/market'
 import { BN } from '@project-serum/anchor'
-import { Keypair, PublicKey } from '@solana/web3.js'
+import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import {
   calculateReward,
@@ -12,8 +9,7 @@ import {
   calculateSecondsPerLiquidityInside,
   dailyFactorRewards,
   rewardsAPY,
-  SecondsPerLiquidityInside,
-  TICKS
+  SecondsPerLiquidityInside
 } from '../staker-sdk/src/utils'
 
 describe('Staker math tests', () => {
