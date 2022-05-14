@@ -226,7 +226,8 @@ export const sleep = async (ms: number) => {
   return await new Promise(resolve => setTimeout(resolve, ms))
 }
 
-export const tou64 = (amount: BN) => new u64(amount.toString())
+export const tou64 = (amount: number | string | Uint8Array | Buffer | BN) =>
+  new u64(amount)
 
 export const fromFee = (fee: BN): BN => {
   // e.g fee - BN(1) -> 0.001%
