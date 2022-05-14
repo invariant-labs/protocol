@@ -28,22 +28,26 @@ import {
 } from '@invariant-labs/sdk/src/math'
 import {
   bigNumberToBuffer,
+  calculateAverageLiquidity,
   calculateClaimAmount,
   calculateConcentration,
   calculateFeeGrowthInside,
   calculateTickDelta,
   calculateTokensOwed,
   CloserLimit,
+  dailyFactorPool,
   FeeGrowthInside,
   getCloserLimit,
   getConcentrationArray,
   GROWTH_DENOMINATOR,
+  poolAPY,
   PositionClaimData,
   PRICE_DENOMINATOR,
   PRICE_SCALE,
   SimulateClaim,
   simulateSwap,
   SimulationResult,
+  TICKS,
   TokensOwed,
   toPercent,
   toPrice,
@@ -54,9 +58,10 @@ import { Decimal, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
 import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
 import { Keypair } from '@solana/web3.js'
 import { swapParameters } from './swap'
-import { LIQUIDITY_DENOMINATOR, toDecimal } from '@invariant-labs/sdk/lib/utils'
+import { FEE_TIERS, LIQUIDITY_DENOMINATOR, toDecimal } from '@invariant-labs/sdk/lib/utils'
 import { priceToTickInRange } from '@invariant-labs/sdk/src/tick'
 import { U64_MAX } from '@invariant-labs/sdk/lib/math'
+import { rewardsAPY } from '../staker-sdk/src/utils'
 
 describe('Math', () => {
   describe('Test sqrt price calculation', () => {
@@ -1838,6 +1843,55 @@ describe('Math', () => {
 
       const result = getConcentrationArray(tickSpacing, maxConcentration, 0)
       assert.equal(result.length, expectedResult)
+    })
+  })
+  describe('dailyFactorPool tests', () => {
+    it('case 1', async () => {
+      const volume = { v: new BN(125000) }
+      const liquidity = { v: new BN(1000000) }
+      const feeTier = FEE_TIERS[3] // 0.3%
+
+      const result = dailyFactorPool(volume, liquidity, feeTier)
+      assert.equal(result, 0.03749625)
+    })
+  })
+  describe('pool APY tests', () => {
+    it('case 1', async () => {
+      const dailyFactorRewards = 0.0003713
+
+      const result = poolAPY(dailyFactorRewards)
+      assert.equal(result, 14.510844705102667)
+    })
+  })
+  describe('calculateAverageLiquidity tests', () => {
+    it('case 1', async () => {
+      const ticks = [
+        { liquidity: new BN('1000').mul(LIQUIDITY_DENOMINATOR), index: 10 },
+        { liquidity: new BN('0'), index: 20 }
+      ]
+      const lowerTick = 10
+      const upperTick = 20
+      const result = calculateAverageLiquidity(ticks, lowerTick, upperTick)
+      assert.ok(result.eq(new BN('1000').mul(LIQUIDITY_DENOMINATOR)))
+    })
+    it('case 2', async () => {
+      const lowerTick = 23966
+      const upperTick = 23967
+      const result = calculateAverageLiquidity(TICKS, lowerTick, upperTick)
+      // should be equal to liquidity with index 23966
+      assert.ok(result.eq(new BN('11730731878873587249')))
+    })
+    it('case 3', async () => {
+      const lowerTick = 23964
+      const upperTick = 23969
+      const result = calculateAverageLiquidity(TICKS, lowerTick, upperTick)
+      assert.ok(result.eq(new BN('10910146109682288193')))
+    })
+    it('case 4', async () => {
+      const lowerTick = 23961
+      const upperTick = 23971
+      const result = calculateAverageLiquidity(TICKS, lowerTick, upperTick)
+      assert.ok(result.eq(new BN('10709565852214868098')))
     })
   })
 })

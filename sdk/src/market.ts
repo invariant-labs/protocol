@@ -1511,7 +1511,8 @@ export enum Errors {
   NoMoreTicks = '0x132 ', // 6
   TickNotFound = '0x133', // 7
   PriceLimitReached = '0x134', // 8
-  RangeLimitReached = '0x135' // 9
+  RangeLimitReached = '0x135', // 9
+  TickArrayIsEmpty = '0x136' // 10
 }
 
 export interface InitPosition {
