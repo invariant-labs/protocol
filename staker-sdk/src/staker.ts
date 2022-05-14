@@ -184,8 +184,6 @@ export class Staker {
     invariant
   }: CreateStake) {
     const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
-    console.log('user stake ', userStakeAddress.toString())
-    console.log('program id', this.programId.toString())
 
     return this.program.instruction.stake(index, {
       accounts: {
