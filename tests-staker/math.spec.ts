@@ -13,6 +13,7 @@ import {
   calculateSecondsPerLiquidityInside,
   dailyFactorPool,
   dailyFactorRewards,
+  poolAPY,
   rewardsAPY,
   SecondsPerLiquidityInside,
   TICKS
@@ -316,8 +317,7 @@ describe('Staker math tests', () => {
       const duration = new BN(10)
 
       const result = dailyFactorRewards(reward, liquidity, duration)
-      //console.log('result', result.toString())
-      //assert.ok(result.eq(new BN(2)))
+      assert.equal(result, 0.001)
     })
   })
   describe('dailyFactorPool tests', () => {
@@ -327,9 +327,7 @@ describe('Staker math tests', () => {
       const feeTier = FEE_TIERS[3] // 0.3%
 
       const result = dailyFactorPool(volume, liquidity, feeTier)
-      //const temp = feeTier.fee.toNumber() / Math.pow(10, 10)
-      //console.log('result pool APY', result)
-      //assert.ok(result.eq(new BN(2)))
+      assert.equal(result, 0.03749625)
     })
   })
   describe('reward APY tests', () => {
@@ -338,12 +336,17 @@ describe('Staker math tests', () => {
       const duration = 10
 
       const result = rewardsAPY(dailyFactorRewards, duration)
-      //console.log('result APY', result.toString())
-      //assert.ok(result.eq(new BN(2)))
+      assert.equal(result, 43.790483176778205)
     })
   })
   describe('pool APY tests', () => {
-    it('case 1', async () => {})
+    it('case 1', async () => {
+      const dailyFactorRewards = 0.0003713
+
+      const result = poolAPY(dailyFactorRewards)
+      console.log(result)
+      assert.equal(result, 14.510844705102667)
+    })
   })
   describe('calculateAverageLiquidity tests', () => {
     it('case 1', async () => {
