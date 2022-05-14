@@ -70,10 +70,11 @@ export const createSnapshotForNetwork = async (network: Network) => {
       const tokenXPrice = tokenXData.coingeckoId ? coingeckoPrices[tokenXData.coingeckoId] ?? 0 : 0
       const tokenYPrice = tokenYData.coingeckoId ? coingeckoPrices[tokenYData.coingeckoId] ?? 0 : 0
 
+      const quotient = tokenXPrice / tokenYPrice
 
       return {
         address: address.toString(),
-        quotient: tokenXPrice / tokenYPrice
+        quotient: isNaN(quotient) ? 0 : (tokenXPrice / tokenYPrice) ?? 0
       }
     })
   )
