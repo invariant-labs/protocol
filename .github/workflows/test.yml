@@ -121,21 +121,13 @@ jobs:
         run: |
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           anchor build
-      - name: build invariant sdk
-        run: |
-          npm install
-          npm install @solana/buffer-layout
-          npm run build
-        working-directory: ./sdk
-      - name: build staker sdk
-        run: |
-          npm install
-          npm run build
-        working-directory: ./staker-sdk
       - name: install
         run: |
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           npm install
+      - name: build invariant sdk & staker sdk
+        run: |
+          npm run build:all
       - name: test
         run: |
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
