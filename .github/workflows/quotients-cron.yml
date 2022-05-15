@@ -1,8 +1,8 @@
-name: 'Create snapshot of stats'
+name: 'Create snapshot of pool tokens prices quotients'
 
 on:
   schedule:
-    - cron: '0 12 * * *'
+    - cron: '0 * * * *'
 
 env:
   solana_version: 1.9.14
@@ -27,9 +27,9 @@ jobs:
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           export ANCHOR_WALLET="/home/runner/.config/solana/id.json"
           npm install
-          npm run snapV2
+          npm run quotients
           git add ./data
-          git commit -m "Snapshot of data done!"
+          git commit -m "Snapshot of quotients done!"
         working-directory: stats
       - name: GitHub Push
         uses: ad-m/github-push-action@v0.6.0
