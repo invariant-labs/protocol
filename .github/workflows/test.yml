@@ -39,7 +39,6 @@ jobs:
             'npm run test:change-fee-receiver',
             'npm run test:whole-liquidity',
             'npm run test:remove-stake',
-            'npm run test:remove-all-stakes',
             'npm run test:position-change',
             'npm run test:protocol-fee',
             'npm run test:target',
