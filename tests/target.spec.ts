@@ -7,7 +7,7 @@ import { createToken, createUserWithTokens, initEverything } from './testUtils'
 import { Market, Pair, Network, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { toDecimal } from '@invariant-labs/sdk/src/utils'
+import { toDecimal, tou64 } from '@invariant-labs/sdk/src/utils'
 import { CreateTick, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 
