@@ -58,39 +58,6 @@ jobs:
       - name: test
         run: |
           echo "${{ matrix.case }}"
-      - uses: actions/cache@v2
-        name: Cache Cargo registry + index
-        id: cache-anchor
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-          key: cargo-${{ runner.os }}-v0000-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions/cache@v2
-        name: Cache Solana Tool Suite
-        id: cache-solana
-        with:
-          path: |
-            ~/.cache/solana/
-            ~/.local/share/solana/
-          key: solana-${{ runner.os }}-v0000-${{ env.solana_version }}
-      - uses: actions/cache@v2
-        name: Cache target folder
-        id: cache-programs
-        with:
-          path: |
-            ./target
-          key: solana-${{ runner.os }}-v0000-${{ hashFiles('**/programs/**/*.rs') }}-${{ hashFiles('**/programs/**/*.toml') }}
-      - uses: actions/cache@v2
-        name: Cache Node Modules
-        id: cache-node-modules
-        with:
-          path: |
-            ~/.npm/
-            ./node_modules
-          key: npm-${{ runner.os }}-v0000-${{ hashFiles('**/package-lock.json') }}
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
@@ -111,7 +78,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pkg-config build-essential libudev-dev
       - name: install solana
-        if: steps.cache-solana.outputs.cache-hit != 'true'
         run: |
           sh -c "$(curl -sSfL https://release.solana.com/v${{ env.solana_version }}/install)"
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
@@ -122,7 +88,6 @@ jobs:
           solana --version
           solana-keygen new
       - name: install Anchor
-        if: steps.cache-anchor.outputs.cache-hit != 'true'
         run: |
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           cargo install --git https://github.com/project-serum/anchor --tag v${{ env.anchor_version }}  anchor-cli --locked
