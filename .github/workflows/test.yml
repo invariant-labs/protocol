@@ -47,7 +47,6 @@ jobs:
             'npm run test:big-swap',
             'npm run test:create',
             'npm run test:stake',
-            'npm run test:withdraw-staker',
             'npm run test:multicall',
             'npm run test:oracle',
             'npm run test:limits',
