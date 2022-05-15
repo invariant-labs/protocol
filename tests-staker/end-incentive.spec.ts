@@ -5,11 +5,12 @@ import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
 import { CreateIncentive, Decimal, EndIncentive, Staker } from '../staker-sdk/src/staker'
-import { assertThrowsAsync, createToken, signAndSend, tou64 } from './testUtils'
+import { assertThrowsAsync, createToken, signAndSend } from './testUtils'
 import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { Token } from '@solana/spl-token'
+import { tou64 } from '@invariant-labs/sdk/src/utils'
 
 describe('End incentive tests', () => {
   const provider = Provider.local()

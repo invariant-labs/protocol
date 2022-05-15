@@ -1,5 +1,4 @@
 import { Provider, BN, utils } from '@project-serum/anchor'
-import { u64 } from '@solana/spl-token'
 import {
   ConfirmOptions,
   Connection,
@@ -33,6 +32,7 @@ import {
 import { alignTickToSpacing, getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
 import { struct, u32, u8 } from '@solana/buffer-layout'
+import { u64 } from '@solana/spl-token'
 
 export const SEED = 'Invariant'
 export const DECIMAL = 12
@@ -226,8 +226,10 @@ export const sleep = async (ms: number) => {
   return await new Promise(resolve => setTimeout(resolve, ms))
 }
 
-export const tou64 = (amount: number | string | Uint8Array | Buffer | BN) =>
-  new u64(amount)
+export const tou64 = amount => {
+  // eslint-disable-next-line new-cap
+  return new u64(amount.toString())
+}
 
 export const fromFee = (fee: BN): BN => {
   // e.g fee - BN(1) -> 0.001%

@@ -7,7 +7,6 @@ import { createToken } from './testUtils'
 import {
   Market,
   Pair,
-  tou64,
   TICK_LIMIT,
   Network,
   INVARIANT_ERRORS,
@@ -15,7 +14,7 @@ import {
 } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { assertThrowsAsync, fromFee } from '@invariant-labs/sdk/lib/utils'
-import { PRICE_DENOMINATOR, toDecimal } from '@invariant-labs/sdk/src/utils'
+import { PRICE_DENOMINATOR, toDecimal, tou64 } from '@invariant-labs/sdk/src/utils'
 import {
   CreateFeeTier,
   CreatePool,

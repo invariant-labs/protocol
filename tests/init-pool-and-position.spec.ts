@@ -4,10 +4,11 @@ import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken } from './testUtils'
-import { Market, Pair, tou64, Network, calculatePriceSqrt } from '@invariant-labs/sdk'
+import { Market, Pair, Network, calculatePriceSqrt } from '@invariant-labs/sdk'
 import { CreateFeeTier, FeeTier, InitPoolAndPosition } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { isInitialized } from '@invariant-labs/sdk/lib/math'
+import { tou64 } from '@invariant-labs/sdk/src/utils'
 
 describe('swap', () => {
   const provider = Provider.local()

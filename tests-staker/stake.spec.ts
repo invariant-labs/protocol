@@ -5,7 +5,7 @@ import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
 import { Decimal, Staker, CreateStake, CreateIncentive } from '../staker-sdk/src/staker'
-import { createToken, tou64, signAndSend, eqDecimal, assertThrowsAsync } from './testUtils'
+import { createToken, signAndSend, eqDecimal, assertThrowsAsync } from './testUtils'
 import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
@@ -14,6 +14,7 @@ import { InitPosition, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src
 import { FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
 import { calculatePriceSqrt } from '@invariant-labs/sdk'
 import { STAKER_ERRORS } from '../staker-sdk/src/utils'
+import { tou64 } from '@invariant-labs/sdk/src/utils'
 
 describe('Stake tests', () => {
   const provider = Provider.local()

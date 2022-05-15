@@ -1,7 +1,6 @@
 import { FEE_TIER, Market } from './market'
 import {
   SEED,
-  tou64,
   DENOMINATOR,
   signAndSend,
   sleep,
@@ -33,7 +32,6 @@ export {
   calculatePriceSqrt,
   findTickmapChanges,
   fromInteger,
-  tou64,
   SEED,
   INVARIANT_ERRORS,
   DENOMINATOR,

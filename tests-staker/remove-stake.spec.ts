@@ -5,7 +5,7 @@ import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
 import { CreateIncentive, CreateStake, Decimal, Staker } from '../staker-sdk/src/staker'
-import { eqDecimal, createToken, tou64, signAndSend } from './testUtils'
+import { eqDecimal, createToken, signAndSend } from './testUtils'
 import { createToken as createTkn } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
@@ -16,6 +16,7 @@ import {
   InitPosition,
   UpdateSecondsPerLiquidity
 } from '@invariant-labs/sdk/src/market'
+import { tou64 } from '@invariant-labs/sdk/src/utils'
 
 // To run this test you have change WEEK to 3 sec in staker program
 

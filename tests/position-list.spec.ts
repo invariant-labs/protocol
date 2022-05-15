@@ -1,11 +1,11 @@
 import * as anchor from '@project-serum/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { assert } from 'chai'
-import { Market, Pair, tou64, fromInteger, Network, sleep } from '@invariant-labs/sdk'
+import { Market, Pair, fromInteger, Network, sleep } from '@invariant-labs/sdk'
 import { Provider, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken, eqDecimal, positionEquals, positionWithoutOwnerEquals } from './testUtils'
-import { assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
+import { assertThrowsAsync, tou64 } from '@invariant-labs/sdk/src/utils'
 import { ERRORS, fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import {

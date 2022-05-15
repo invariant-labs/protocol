@@ -6,7 +6,6 @@ import { assert } from 'chai'
 import {
   Market,
   Pair,
-  tou64,
   PRICE_DENOMINATOR,
   LIQUIDITY_DENOMINATOR,
   TICK_LIMIT,
@@ -20,7 +19,7 @@ import {
   Swap
 } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { toDecimal } from '@invariant-labs/sdk/src/utils'
+import { toDecimal, tou64 } from '@invariant-labs/sdk/src/utils'
 import { createToken } from './testUtils'
 
 describe('swap', () => {
