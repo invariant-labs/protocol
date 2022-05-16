@@ -4,12 +4,13 @@ import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
 import { assertThrowsAsync, createToken, initEverything } from './testUtils'
-import { Market, Pair, tou64, LIQUIDITY_DENOMINATOR, Network } from '@invariant-labs/sdk'
+import { Market, Pair, LIQUIDITY_DENOMINATOR, Network } from '@invariant-labs/sdk'
 import { fromFee, toDecimal } from '@invariant-labs/sdk/lib/utils'
 import { Decimal, FeeTier, RemovePosition } from '@invariant-labs/sdk/lib/market'
 import { CreateTick, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 import { signAndSend } from '@invariant-labs/sdk'
 import { INVARIANT_ERRORS } from '@invariant-labs/sdk'
+import { tou64 } from '@invariant-labs/sdk/src/utils'
 
 describe('withdraw', () => {
   const provider = Provider.local()

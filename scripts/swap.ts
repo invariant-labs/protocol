@@ -4,8 +4,8 @@ import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
 import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
 import { MINTER } from './minter'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { Market, Pair, tou64 } from '@invariant-labs/sdk/src'
-import { FEE_TIERS, fromFee } from '@invariant-labs/sdk/src/utils'
+import { Market, Pair } from '@invariant-labs/sdk/src'
+import { FEE_TIERS, fromFee, tou64 } from '@invariant-labs/sdk/src/utils'
 import { Swap } from '@invariant-labs/sdk/src/market'
 
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)

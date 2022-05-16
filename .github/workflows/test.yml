@@ -8,8 +8,8 @@ on:
     branches:
       - master
 env:
-  solana_version: 1.8.12
-  anchor_version: 0.20.1
+  solana_version: 1.9.14
+  anchor_version: 0.21.0
 
 jobs:
   install:
@@ -22,22 +22,31 @@ jobs:
             'npm run test:cross',
             'npm run test:cross-both-side',
             'npm run test:liquidity-gap',
+            'npm run test:simulate-swap',
             'npm run test:reversed',
             'npm run test:position',
             'npm run test:math',
             'npm run test:withdraw',
             'npm run test:position-list',
             'npm run test:claim',
+            'npm run test:random',
+            'npm run test:simulate-claim-amount',
+            'npm run test:reward',
+            'npm run test:cu',
+            'npm run test:init-both',
+            'npm run test:change-protocol-fee',
+            'npm run test:tickmap',
+            'npm run test:change-fee-receiver',
+            'npm run test:whole-liquidity',
+            'npm run test:position-change',
             'npm run test:protocol-fee',
             'npm run test:target',
             'npm run test:slippage',
+            'npm run test:position-slippage',
             'npm run test:fee-tier',
             'npm run test:big-swap',
-            'npm run test:claim-amount',
             'npm run test:create',
             'npm run test:stake',
-            'npm run test:withdraw-staker',
-            'npm run test:end-incentive',
             'npm run test:multicall',
             'npm run test:oracle',
             'npm run test:limits',
@@ -49,39 +58,6 @@ jobs:
       - name: test
         run: |
           echo "${{ matrix.case }}"
-      - uses: actions/cache@v2
-        name: Cache Cargo registry + index
-        id: cache-anchor
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-          key: cargo-${{ runner.os }}-v0000-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions/cache@v2
-        name: Cache Solana Tool Suite
-        id: cache-solana
-        with:
-          path: |
-            ~/.cache/solana/
-            ~/.local/share/solana/
-          key: solana-${{ runner.os }}-v0000-${{ env.solana_version }}
-      - uses: actions/cache@v2
-        name: Cache target folder
-        id: cache-programs
-        with:
-          path: |
-            ./target
-          key: solana-${{ runner.os }}-v0000-${{ hashFiles('**/programs/**/*.rs') }}-${{ hashFiles('**/programs/**/*.toml') }}
-      - uses: actions/cache@v2
-        name: Cache Node Modules
-        id: cache-node-modules
-        with:
-          path: |
-            ~/.npm/
-            ./node_modules
-          key: npm-${{ runner.os }}-v0000-${{ hashFiles('**/package-lock.json') }}
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
@@ -102,7 +78,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pkg-config build-essential libudev-dev
       - name: install solana
-        if: steps.cache-solana.outputs.cache-hit != 'true'
         run: |
           sh -c "$(curl -sSfL https://release.solana.com/v${{ env.solana_version }}/install)"
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
@@ -113,7 +88,6 @@ jobs:
           solana --version
           solana-keygen new
       - name: install Anchor
-        if: steps.cache-anchor.outputs.cache-hit != 'true'
         run: |
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           cargo install --git https://github.com/project-serum/anchor --tag v${{ env.anchor_version }}  anchor-cli --locked
@@ -121,21 +95,13 @@ jobs:
         run: |
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           anchor build
-      - name: build amm sdk
-        run: |
-          npm install
-          npm install @solana/buffer-layout
-          npm run build
-        working-directory: ./sdk
-      - name: build staker sdk
-        run: |
-          npm install
-          npm run build
-        working-directory: ./sdk-staker
       - name: install
         run: |
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           npm install
+      - name: build invariant sdk & staker sdk
+        run: |
+          npm run build:all
       - name: test
         run: |
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"

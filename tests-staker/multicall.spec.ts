@@ -1,9 +1,9 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
-import { Market, Pair, DENOMINATOR, sleep, PRICE_DENOMINATOR } from '@invariant-labs/sdk'
+import { Market, Pair, sleep, PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
-import { createToken, tou64, getTime, signAndSend, almostEqual } from './testUtils'
+import { createToken, getTime, signAndSend, almostEqual } from './testUtils'
 import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { fromInteger, toDecimal } from '../staker-sdk/lib/utils'
@@ -12,6 +12,7 @@ import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { InitPosition, Swap, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
 import { CreateIncentive, CreateStake, Withdraw, Decimal, Staker } from '../staker-sdk/src/staker'
 import { assert } from 'chai'
+import { tou64 } from '@invariant-labs/sdk/src/utils'
 
 describe('Multicall test', () => {
   const provider = Provider.local()

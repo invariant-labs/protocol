@@ -4,7 +4,6 @@ import { assert } from 'chai'
 import {
   Market,
   Pair,
-  tou64,
   calculatePriceSqrt,
   LIQUIDITY_DENOMINATOR,
   Network
@@ -12,7 +11,7 @@ import {
 import { Provider, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken, eqDecimal, initEverything } from './testUtils'
-import { fromFee, assertThrowsAsync } from '@invariant-labs/sdk/src/utils'
+import { fromFee, assertThrowsAsync, tou64 } from '@invariant-labs/sdk/src/utils'
 import { CreatePool, CreateTick, InitPosition } from '@invariant-labs/sdk/src/market'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 

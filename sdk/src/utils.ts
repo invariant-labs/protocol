@@ -1,5 +1,4 @@
 import { Provider, BN, utils } from '@project-serum/anchor'
-import { u64 } from '@solana/spl-token'
 import {
   ConfirmOptions,
   Connection,
@@ -33,6 +32,7 @@ import {
 import { alignTickToSpacing, getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
 import { struct, u32, u8 } from '@solana/buffer-layout'
+import { u64 } from '@solana/spl-token'
 
 export const SEED = 'Invariant'
 export const DECIMAL = 12

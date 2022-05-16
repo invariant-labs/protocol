@@ -4,19 +4,13 @@ import { Market, Pair } from '@invariant-labs/sdk'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
 import { CreateIncentive, Decimal, Staker } from '../staker-sdk/src/staker'
-import {
-  eqDecimal,
-  createToken,
-  tou64,
-  assertThrowsAsync,
-  ERRORS_STAKER,
-  signAndSend
-} from './testUtils'
+import { eqDecimal, createToken, assertThrowsAsync, ERRORS_STAKER, signAndSend } from './testUtils'
 import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { Token } from '@solana/spl-token'
 import { Network } from '../staker-sdk/lib'
+import { tou64 } from '@invariant-labs/sdk/src/utils'
 
 describe('Create incentive tests', () => {
   const provider = Provider.local()

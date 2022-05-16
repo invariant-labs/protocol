@@ -10,11 +10,15 @@ import {
   InitPosition,
   Swap
 } from '@invariant-labs/sdk/src/market'
-import { feeToTickSpacing, FEE_TIERS, generateTicksArray } from '@invariant-labs/sdk/src/utils'
+import {
+  feeToTickSpacing,
+  FEE_TIERS,
+  generateTicksArray,
+  tou64
+} from '@invariant-labs/sdk/src/utils'
 import BN from 'bn.js'
-import { Pair, tou64, TICK_LIMIT, calculatePriceSqrt } from '@invariant-labs/sdk'
+import { Pair, TICK_LIMIT, calculatePriceSqrt } from '@invariant-labs/sdk'
 import { assert } from 'chai'
-import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {
