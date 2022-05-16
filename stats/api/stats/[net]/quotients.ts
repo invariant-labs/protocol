@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node'
-import DEVNET_QUOTIENTS from '../../../../data/v2/quotients_devnet.json'
-import MAINNET_QUOTIENTS from '../../../../data/v2/quotients_mainnet.json'
+import DEVNET_QUOTIENTS from '../../../data/quotients_devnet.json'
+import MAINNET_QUOTIENTS from '../../../data/quotients_mainnet.json'
 
 export default function (req: VercelRequest, res: VercelResponse) {
   // @ts-expect-error

@@ -2,8 +2,8 @@ import { Network, Market, Pair, getMarketAddress } from '@invariant-labs/sdk'
 import { Provider } from '@project-serum/anchor'
 import { PublicKey } from '@solana/web3.js'
 import fs from 'fs'
-import DEVNET_QUOTIENTS from '../data/v2/quotients_devnet.json'
-import MAINNET_QUOTIENTS from '../data/v2/quotients_mainnet.json'
+import DEVNET_QUOTIENTS from '../data/quotients_devnet.json'
+import MAINNET_QUOTIENTS from '../data/quotients_mainnet.json'
 import {
   devnetTokensData,
   getTokensData,
@@ -24,14 +24,14 @@ export const createSnapshotForNetwork = async (network: Network) => {
   switch (network) {
     case Network.MAIN:
       provider = Provider.local('https://ssc-dao.genesysgo.net')
-      fileName = './data/v2/quotients_mainnet.json'
+      fileName = './data/quotients_mainnet.json'
       snaps = MAINNET_QUOTIENTS as Record<string, QuotientSnapshot[]>
       tokensData = await getTokensData()
       break
     case Network.DEV:
     default:
       provider = Provider.local('https://api.devnet.solana.com')
-      fileName = './data/v2/quotients_devnet.json'
+      fileName = './data/quotients_devnet.json'
       snaps = DEVNET_QUOTIENTS as Record<string, QuotientSnapshot[]>
       tokensData = devnetTokensData
   }

@@ -5,10 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "snap": "ts-node ./src/snap.ts",
-    "snapV2": "ts-node ./src/snapV2.ts",
-    "quotients": "ts-node ./src/quotients.ts",
-    "cachePrices": "ts-node ./src/cachePrices.ts",
-    "convertToV2": "ts-node ./src/convertV1SnapsToV2.ts"
+    "quotients": "ts-node ./src/quotients.ts"
   },
   "author": "",
   "license": "ISC",

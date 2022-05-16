@@ -9,20 +9,16 @@
       "destination": "/api/$1"
     },
     {
-      "source": "/stats/:net",
-      "destination": "/api/stats/:net"
+      "source": "/:net/short",
+      "destination": "/api/stats/:net/short"
     },
     {
-      "source": "/stats/v2/:net/short",
-      "destination": "/api/stats/v2/:net/short"
+      "source": "/:net/full",
+      "destination": "/api/stats/:net/full"
     },
     {
-      "source": "/stats/v2/:net/full",
-      "destination": "/api/stats/v2/:net/full"
-    },
-    {
-      "source": "/stats/v2/:net/quotients",
-      "destination": "/api/stats/v2/:net/quotients"
+      "source": "/:net/quotients",
+      "destination": "/api/stats/:net/quotients"
     }
   ]
 }

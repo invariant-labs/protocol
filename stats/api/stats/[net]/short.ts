@@ -1,7 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node'
-import DEVNET_DATA from '../../../../data/v2/devnet.json'
-import MAINNET_DATA from '../../../../data/v2/mainnet.json'
-import { PoolSnapshot } from '../../../../src/utils'
+import DEVNET_DATA from '../../../data/devnet.json'
+import MAINNET_DATA from '../../../data/mainnet.json'
+import { PoolSnapshot } from '../../../src/utils'
 
 export default function (req: VercelRequest, res: VercelResponse) {
   // @ts-expect-error

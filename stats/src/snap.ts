@@ -1,44 +1,51 @@
 import { Network, Market, Pair, getMarketAddress } from '@invariant-labs/sdk'
-import { Provider } from '@project-serum/anchor'
+import { BN, Provider } from '@project-serum/anchor'
 import { PublicKey } from '@solana/web3.js'
 import fs from 'fs'
 import DEVNET_DATA from '../data/devnet.json'
 import MAINNET_DATA from '../data/mainnet.json'
+import {
+  devnetTokensData,
+  getTokensData,
+  getTokensPrices,
+  getUsdValue24,
+  PoolSnapshot,
+  TokenData
+} from './utils'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config()
-
-export interface PoolSnapshot {
-  timestamp: number
-  volumeX: string
-  volumeY: string
-  liquidityX: string
-  liquidityY: string
-  feeX: string
-  feeY: string
-}
 
 export const createSnapshotForNetwork = async (network: Network) => {
   let provider: Provider
   let fileName: string
   let snaps: Record<string, PoolSnapshot[]>
+  let tokensData: Record<string, TokenData>
 
   switch (network) {
     case Network.MAIN:
-      provider = Provider.local(
-        'https://solana--mainnet.datahub.figment.io/apikey/182e93d87a1f1d335c9d74d6c7371388'
-      )
+      provider = Provider.local('https://ssc-dao.genesysgo.net')
       fileName = './data/mainnet.json'
       snaps = MAINNET_DATA
+      tokensData = await getTokensData()
       break
     case Network.DEV:
     default:
-      provider = Provider.local(
-        'https://solana--devnet.datahub.figment.io/apikey/182e93d87a1f1d335c9d74d6c7371388'
-      )
+      provider = Provider.local('https://api.devnet.solana.com')
       fileName = './data/devnet.json'
       snaps = DEVNET_DATA
+      tokensData = devnetTokensData
   }
+
+  const idsList: string[] = []
+
+  Object.values(tokensData).forEach(token => {
+    if (typeof token?.coingeckoId !== 'undefined') {
+      idsList.push(token.coingeckoId)
+    }
+  })
+
+  const coingeckoPrices = await getTokensPrices(idsList)
 
   const connection = provider.connection
 
@@ -62,15 +69,75 @@ export const createSnapshotForNetwork = async (network: Network) => {
 
       const { feeX, feeY } = await market.getGlobalFee(pair)
 
+      let lastSnapshot: PoolSnapshot | undefined
+      const tokenXData = tokensData?.[pool.tokenX.toString()] ?? {
+        decimals: 0
+      }
+      const tokenYData = tokensData?.[pool.tokenY.toString()] ?? {
+        decimals: 0
+      }
+      const tokenXPrice = tokenXData.coingeckoId ? coingeckoPrices[tokenXData.coingeckoId] ?? 0 : 0
+      const tokenYPrice = tokenYData.coingeckoId ? coingeckoPrices[tokenYData.coingeckoId] ?? 0 : 0
+
+      if (snaps?.[address.toString()]) {
+        lastSnapshot = snaps[address.toString()][snaps[address.toString()].length - 1]
+      }
+
       return {
         address: address.toString(),
         stats: {
-          volumeX: volumeX.toString(),
-          volumeY: volumeY.toString(),
-          liquidityX: liquidityX.toString(),
-          liquidityY: liquidityY.toString(),
-          feeX: feeX.toString(),
-          feeY: feeY.toString()
+          volumeX: {
+            tokenBNFromBeginning: volumeX.toString(),
+            usdValue24: getUsdValue24(
+              volumeX,
+              tokenXData.decimals,
+              tokenXPrice,
+              typeof lastSnapshot !== 'undefined'
+                ? new BN(lastSnapshot.volumeX.tokenBNFromBeginning)
+                : new BN(0)
+            )
+          },
+          volumeY: {
+            tokenBNFromBeginning: volumeY.toString(),
+            usdValue24: getUsdValue24(
+              volumeY,
+              tokenYData.decimals,
+              tokenYPrice,
+              typeof lastSnapshot !== 'undefined'
+                ? new BN(lastSnapshot.volumeY.tokenBNFromBeginning)
+                : new BN(0)
+            )
+          },
+          liquidityX: {
+            tokenBNFromBeginning: liquidityX.toString(),
+            usdValue24: getUsdValue24(liquidityX, tokenXData.decimals, tokenXPrice, new BN(0))
+          },
+          liquidityY: {
+            tokenBNFromBeginning: liquidityY.toString(),
+            usdValue24: getUsdValue24(liquidityY, tokenYData.decimals, tokenYPrice, new BN(0))
+          },
+          feeX: {
+            tokenBNFromBeginning: feeX.toString(),
+            usdValue24: getUsdValue24(
+              feeX,
+              tokenXData.decimals,
+              tokenXPrice,
+              typeof lastSnapshot !== 'undefined'
+                ? new BN(lastSnapshot.feeX.tokenBNFromBeginning)
+                : new BN(0)
+            )
+          },
+          feeY: {
+            tokenBNFromBeginning: feeY.toString(),
+            usdValue24: getUsdValue24(
+              feeY,
+              tokenYData.decimals,
+              tokenYPrice,
+              typeof lastSnapshot !== 'undefined'
+                ? new BN(lastSnapshot.feeY.tokenBNFromBeginning)
+                : new BN(0)
+            )
+          }
         }
       }
     })
