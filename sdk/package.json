@@ -13,7 +13,7 @@
   "license": "",
   "devDependencies": {
     "@solana/spl-token": "0.1.6",
-    "@solana/web3.js": "1.18.0",
+    "@solana/web3.js": "1.25.0",
     "@types/chai": "^4.2.15",
     "@types/mocha": "^8.2.1",
     "ts-mocha": "^8.0.0",
