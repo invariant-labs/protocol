@@ -449,6 +449,17 @@ export const getX = (
   return liquidity.mul(nominator).div(denominator).div(LIQUIDITY_DENOMINATOR)
 }
 
+export const getXfromLiquidity = (liquidity: BN, upperSqrtPrice: BN, lowerSqrtPrice: BN): BN => {
+  if (upperSqrtPrice.lte(new BN(0)) || lowerSqrtPrice.lte(new BN(0))) {
+    throw new Error('Price cannot be lower or equal 0')
+  }
+
+  const denominator = lowerSqrtPrice.mul(upperSqrtPrice).div(PRICE_DENOMINATOR)
+  const nominator = upperSqrtPrice.sub(lowerSqrtPrice)
+
+  return liquidity.mul(nominator).div(denominator).div(LIQUIDITY_DENOMINATOR)
+}
+
 export const getY = (
   liquidity: BN,
   upperSqrtPrice: BN,

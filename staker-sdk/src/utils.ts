@@ -133,11 +133,13 @@ export const calculateSecondsPerLiquidityInside = ({
   return secondsPerLiquidityInside
 }
 
-export const dailyFactorRewards = (reward: BN, liquidity: Decimal, duration: BN): number => {
-  return (
-    reward.mul(LIQUIDITY_DENOMINATOR).div(liquidity.v.mul(duration)).toNumber() /
-    LIQUIDITY_DENOMINATOR.toNumber()
-  )
+export const dailyFactorRewards = (
+  rewardInUSD: number,
+  tokenXamount: BN,
+  tokenXprice: number,
+  duration: number
+): number => {
+  return rewardInUSD / (tokenXamount.toNumber() * tokenXprice * duration)
 }
 
 export const rewardsAPY = (dailyFactorRewards: number, duration: number): number => {

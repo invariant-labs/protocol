@@ -28,17 +28,19 @@ import {
 } from '@invariant-labs/sdk/src/math'
 import {
   bigNumberToBuffer,
-  calculateAverageLiquidity,
   calculateClaimAmount,
   calculateConcentration,
   calculateFeeGrowthInside,
   calculateTickDelta,
   calculateTokensOwed,
+  calculateTokenXinRange,
   CloserLimit,
   dailyFactorPool,
   FeeGrowthInside,
   getCloserLimit,
   getConcentrationArray,
+  getRangeBasedOnFeeGrowth,
+  getTokenXInRange,
   GROWTH_DENOMINATOR,
   poolAPY,
   PositionClaimData,
@@ -1845,11 +1847,11 @@ describe('Math', () => {
   })
   describe('dailyFactorPool tests', () => {
     it('case 1', async () => {
-      const volume = { v: new BN(125000) }
-      const liquidity = { v: new BN(1000000) }
+      const volume = new BN(125000)
+      const tokenXamount = new BN(1000000)
       const feeTier = FEE_TIERS[3] // 0.3%
 
-      const result = dailyFactorPool(volume, liquidity, feeTier)
+      const result = dailyFactorPool(volume, tokenXamount, feeTier)
       assert.equal(result, 0.03749625)
     })
   })
@@ -1862,34 +1864,34 @@ describe('Math', () => {
     })
   })
   describe('calculateAverageLiquidity tests', () => {
-    it('case 1', async () => {
-      const ticks = [
-        { liquidity: new BN('1000').mul(LIQUIDITY_DENOMINATOR), index: 10 },
-        { liquidity: new BN('0'), index: 20 }
-      ]
-      const lowerTick = 10
-      const upperTick = 20
-      const result = calculateAverageLiquidity(ticks, lowerTick, upperTick)
-      assert.ok(result.eq(new BN('1000').mul(LIQUIDITY_DENOMINATOR)))
-    })
-    it('case 2', async () => {
-      const lowerTick = 23966
-      const upperTick = 23967
-      const result = calculateAverageLiquidity(TICKS, lowerTick, upperTick)
-      // should be equal to liquidity with index 23966
-      assert.ok(result.eq(new BN('11730731878873587249')))
-    })
-    it('case 3', async () => {
-      const lowerTick = 23964
-      const upperTick = 23969
-      const result = calculateAverageLiquidity(TICKS, lowerTick, upperTick)
-      assert.ok(result.eq(new BN('10910146109682288193')))
-    })
-    it('case 4', async () => {
-      const lowerTick = 23961
-      const upperTick = 23971
-      const result = calculateAverageLiquidity(TICKS, lowerTick, upperTick)
-      assert.ok(result.eq(new BN('10709565852214868098')))
-    })
+    // it('case 1', async () => {
+    //   const ticks = [
+    //     { liquidity: new BN('1000').mul(LIQUIDITY_DENOMINATOR), index: 10 },
+    //     { liquidity: new BN('0'), index: 20 }
+    //   ]
+    //   const lowerTick = 10
+    //   const upperTick = 20
+    //   const result = getTokenXInRange(ticks, 10, 20)
+    //   assert.ok(result.eq(new BN('1000').mul(LIQUIDITY_DENOMINATOR)))
+    // })
+    //   it('case 2', async () => {
+    //     const lowerTick = 23966
+    //     const upperTick = 23967
+    //     const result = calculateAverageLiquidity(TICKS, lowerTick, upperTick)
+    //     // should be equal to liquidity with index 23966
+    //     assert.ok(result.eq(new BN('11730731878873587249')))
+    //   })
+    //   it('case 3', async () => {
+    //     const lowerTick = 23964
+    //     const upperTick = 23969
+    //     const result = calculateAverageLiquidity(TICKS, lowerTick, upperTick)
+    //     assert.ok(result.eq(new BN('10910146109682288193')))
+    //   })
+    //   it('case 4', async () => {
+    //     const lowerTick = 23961
+    //     const upperTick = 23971
+    //     const result = calculateAverageLiquidity(TICKS, lowerTick, upperTick)
+    //     assert.ok(result.eq(new BN('10709565852214868098')))
+    //   })
   })
 })

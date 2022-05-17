@@ -185,7 +185,7 @@ describe('Staker math tests', () => {
   })
   describe('SecondsPerLiquidityInside tests', () => {
     const currentTimestamp = new BN(100)
-    let tickLower: Tick = {
+    const tickLower: Tick = {
       pool: Keypair.generate().publicKey,
       index: 0,
       sign: true,
@@ -197,7 +197,7 @@ describe('Staker math tests', () => {
       secondsPerLiquidityOutside: { v: new BN('3012300000') },
       bump: 0
     }
-    let tickUpper: Tick = {
+    const tickUpper: Tick = {
       pool: Keypair.generate().publicKey,
       index: 10,
       sign: true,
@@ -209,7 +209,7 @@ describe('Staker math tests', () => {
       secondsPerLiquidityOutside: { v: new BN('2030400000') },
       bump: 0
     }
-    let pool: PoolStructure = {
+    const pool: PoolStructure = {
       tokenX: Keypair.generate().publicKey,
       tokenY: Keypair.generate().publicKey,
       tokenXReserve: Keypair.generate().publicKey,
@@ -305,12 +305,13 @@ describe('Staker math tests', () => {
   })
   describe('dailyFactorReward tests', () => {
     it('case 1', async () => {
-      const reward = new BN(10000)
-      const liquidity = { v: new BN(1000000) }
-      const duration = new BN(10)
+      const reward = 100000000
+      const tokenXAmount = new BN(100000)
+      const duration = 10
+      const price = 13425
 
-      const result = dailyFactorRewards(reward, liquidity, duration)
-      assert.equal(result, 0.001)
+      const result = dailyFactorRewards(reward, tokenXAmount, price, duration)
+      assert.equal(result, 0.0074487895716946)
     })
   })
   describe('reward APY tests', () => {
@@ -319,7 +320,7 @@ describe('Staker math tests', () => {
       const duration = 10
 
       const result = rewardsAPY(dailyFactorRewards, duration)
-      assert.equal(result, 43.790483176778205)
+      assert.equal(result, Number('43.790483176778205'))
     })
   })
 })

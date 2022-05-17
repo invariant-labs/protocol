@@ -29,6 +29,7 @@ import {
   findClosestTicks,
   getLiquidityByX,
   getLiquidityByY,
+  getXfromLiquidity,
   isEnoughAmountToPushPrice,
   isInitialized,
   MIN_TICK,
@@ -613,7 +614,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
   }
 }
 
-export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
+export const parseLiquidityOnTicks = (ticks: Tick[]) => {
   let currentLiquidity = new BN(0)
 
   return ticks.map(tick => {
@@ -624,6 +625,19 @@ export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
     }
   })
 }
+
+export const parseFeeGrowthAndLiquidityOnTicks = (ticks: Tick[]): ParsedTick[] => {
+  let currentLiquidity = new BN(0)
+  return ticks.map(tick => {
+    currentLiquidity = currentLiquidity.add(tick.liquidityChange.v.muln(tick.sign ? 1 : -1))
+    return {
+      liquidity: currentLiquidity,
+      index: tick.index,
+      feeGrowth: tick.feeGrowthOutsideX
+    }
+  })
+}
+
 export const calculateFeeGrowthInside = ({
   tickLower,
   tickUpper,
@@ -757,129 +771,154 @@ export const getMinTick = (tickSpacing: number) => {
   return Math.max(limitedByPrice, limitedByTickmap)
 }
 
-export const dailyFactorPool = (volume: Decimal, liquidity: Decimal, feeTier: FeeTier): number => {
+export const dailyFactorPool = (volume: BN, tokenXamount: BN, feeTier: FeeTier): number => {
   const fee: number = (feeTier.fee.toNumber() / FEE_TIER_DENOMINATOR) * (1 - PROTOCOL_FEE)
-  return (
-    (volume.v.toNumber() * fee * LIQUIDITY_DENOMINATOR.toNumber()) /
-    liquidity.v.toNumber() /
-    LIQUIDITY_DENOMINATOR.toNumber()
-  )
+  return (volume.toNumber() * fee) / tokenXamount.toNumber()
 }
+
 export const poolAPY = (dailyFactorPool: number): number => {
   return (Math.pow(dailyFactorPool + 1, 365) - 1) * 100
 }
 
-export const getRangeFromPrices = (
-  priceMinTokenX: number,
-  priceMaxTokenX: number,
-  priceMinTokenY: number,
-  priceMaxTokenY: number,
-  tickmap: Tickmap,
-  tickSpacing: number
-): LiquidityRange => {
-  // calculate ticks from prices ratio between A and B
-  let tickLower = priceToTick(priceMinTokenY / priceMinTokenX)
-  let tickUpper = priceToTick(priceMaxTokenY / priceMaxTokenX)
-
-  // check if tick are initialized
-  const isLowerInitialized = isInitialized(tickmap, tickLower, tickSpacing)
-  const isUpperInitialized = isInitialized(tickmap, tickUpper, tickSpacing)
-
-  //find accurate if not initialized
-  if (!isLowerInitialized) {
-    //find closest tick on the right
-    const closestTicks = findClosestTicks(
-      tickmap.bitmap,
-      tickLower,
-      tickSpacing,
-      MAX_TICK,
-      tickUpper,
-      'up'
-    )
-    if (!closestTicks.length) {
-      throw new Error(Errors.TickNotFound)
-    }
-    tickLower = closestTicks[0]
-  }
-
-  if (!isUpperInitialized) {
-    //find closest tick on the left
-    const closestTicks = findClosestTicks(
-      tickmap.bitmap,
-      tickUpper,
-      tickSpacing,
-      MIN_TICK,
-      tickLower,
-      'down'
-    )
-    if (!closestTicks.length) {
-      throw new Error(Errors.TickNotFound)
-    }
-    tickUpper = closestTicks[0]
-  }
-
-  return { tickLower, tickUpper }
+export const getVolume = (
+  volumeX: number,
+  volumeY: number,
+  previousSqrtPrice: number,
+  currentSqrtPrice: number
+): number => {
+  const sqrtPrice = Math.sqrt(previousSqrtPrice * currentSqrtPrice)
+  return volumeX + volumeY / sqrtPrice
 }
 
-export const getTickArray = (rawTicks: Tick[], pool: PoolStructure): TicksArray[] => {
+// export const getRangeFromPrices = (
+//   priceMinTokenX: number,
+//   priceMaxTokenX: number,
+//   priceMinTokenY: number,
+//   priceMaxTokenY: number,
+//   tickmap: Tickmap,
+//   tickSpacing: number
+// ): LiquidityRange => {
+//   // calculate ticks from prices ratio between A and B
+//   let tickLower = priceToTick(priceMinTokenY / priceMinTokenX)
+//   let tickUpper = priceToTick(priceMaxTokenY / priceMaxTokenX)
+
+//   // check if tick are initialized
+//   const isLowerInitialized = isInitialized(tickmap, tickLower, tickSpacing)
+//   const isUpperInitialized = isInitialized(tickmap, tickUpper, tickSpacing)
+
+//   //find accurate if not initialized
+//   if (!isLowerInitialized) {
+//     //find closest tick on the right
+//     const closestTicks = findClosestTicks(
+//       tickmap.bitmap,
+//       tickLower,
+//       tickSpacing,
+//       MAX_TICK,
+//       tickUpper,
+//       'up'
+//     )
+//     if (!closestTicks.length) {
+//       throw new Error(Errors.TickNotFound)
+//     }
+//     tickLower = closestTicks[0]
+//   }
+
+//   if (!isUpperInitialized) {
+//     //find closest tick on the left
+//     const closestTicks = findClosestTicks(
+//       tickmap.bitmap,
+//       tickUpper,
+//       tickSpacing,
+//       MIN_TICK,
+//       tickLower,
+//       'down'
+//     )
+//     if (!closestTicks.length) {
+//       throw new Error(Errors.TickNotFound)
+//     }
+//     tickUpper = closestTicks[0]
+//   }
+
+//   return { tickLower, tickUpper }
+// }
+
+export const getTickArray = (rawTicks: Tick[]): ParsedTick[] => {
   const sortedTicks = rawTicks.sort((a, b) => a.index - b.index)
-  const ticks: TicksArray[] = rawTicks.length ? parseLiquidityOnTicks(sortedTicks, pool) : []
+  const ticks: ParsedTick[] = rawTicks.length ? parseFeeGrowthAndLiquidityOnTicks(sortedTicks) : []
   if (!ticks.length) {
     throw new Error(Errors.TickArrayIsEmpty)
   }
   return ticks
 }
 
-export const calculateAverageLiquidity = (
-  ticks: TicksArray[],
-  lowerTick: number,
-  upperTick: number
-): BN => {
-  let counter: BN = new BN(0)
-  let sum: BN = new BN(0)
+export const getTokenXInRange = (ticks: ParsedTick[], lowerTick: number, upperTick: number): BN => {
+  let sumTokenX: BN = new BN(0)
   let currentIndex = 0
   let nextIndex = 0
-  let width: BN = new BN(0)
 
   for (let i = 0; i < ticks.length - 1; i++) {
     currentIndex = ticks[i].index
     nextIndex = ticks[i + 1].index
 
     if (currentIndex >= lowerTick && currentIndex < upperTick) {
-      width = new BN(nextIndex).sub(new BN(currentIndex))
-      counter = counter.add(width)
-      sum = sum.add(width.mul(ticks[i].liquidity))
+      const lowerSqrtPrice = calculatePriceSqrt(currentIndex)
+      const upperSqrtPrice = calculatePriceSqrt(nextIndex)
+
+      sumTokenX = sumTokenX.add(
+        getXfromLiquidity(ticks[i].liquidity, upperSqrtPrice.v, lowerSqrtPrice.v)
+      )
     }
   }
-  return sum.div(counter)
+  return sumTokenX
 }
 
-export const calculateLiquidity = (
-  priceMinTokenX: number,
-  priceMaxTokenX: number,
-  priceMinTokenY: number,
-  priceMaxTokenY: number,
-  tickmap: Tickmap,
-  tickSpacing: number,
-  rawTicks: Tick[],
-  pool: PoolStructure
-): Decimal => {
-  const { tickLower, tickUpper } = getRangeFromPrices(
-    priceMinTokenX,
-    priceMaxTokenX,
-    priceMinTokenY,
-    priceMaxTokenY,
-    tickmap,
-    tickSpacing
-  )
-  const ticks = getTickArray(rawTicks, pool)
-  const liquidity = calculateAverageLiquidity(ticks, tickLower, tickUpper)
-  return { v: liquidity }
+export const getRangeBasedOnFeeGrowth = (
+  tickArrayPrevious: ParsedTick[],
+  tickArrayCurrent: ParsedTick[]
+) => {
+  let tickLower: number = null
+  let tickUpper: number = null
+  let tickLowerSaved = false
+  let lastIndex = 0
+
+  for (let i = 0; i < tickArrayPrevious.length - 1; i++) {
+    let previousTick = tickArrayPrevious[i]
+    let currentTick = tickArrayCurrent[i]
+
+    if (previousTick.feeGrowth != currentTick.feeGrowth) {
+      if (!tickLowerSaved) {
+        tickLower = previousTick.index
+        tickLowerSaved = true
+        lastIndex = i
+      }
+      tickUpper = currentTick.index
+    }
+  }
+  if (tickLower == tickUpper) {
+    tickUpper = tickArrayPrevious[lastIndex + 1].index
+  }
+  return {
+    tickLower,
+    tickUpper
+  }
 }
 
-export interface TicksArray {
+export const calculateTokenXinRange = (
+  ticksPreviousSnapshot: Tick[],
+  ticksCurrentSnapshot: Tick[]
+): BN => {
+  const tickArrayPrevious = getTickArray(ticksPreviousSnapshot)
+  const tickArrayCurrent = getTickArray(ticksCurrentSnapshot)
+
+  const { tickLower, tickUpper } = getRangeBasedOnFeeGrowth(tickArrayPrevious, tickArrayCurrent)
+
+  return getTokenXInRange(tickArrayPrevious, tickLower, tickUpper)
+}
+
+export interface ParsedTick {
   liquidity: BN
   index: number
+  feeGrowth: Decimal
 }
 
 export interface LiquidityRange {
