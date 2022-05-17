@@ -251,7 +251,7 @@ export class Market {
     const pool = await this.getPool(pair)
     const ticks = await this.getClosestTicks(pair, Infinity)
 
-    return parseLiquidityOnTicks(ticks, pool)
+    return parseLiquidityOnTicks(ticks)
   }
 
   async getPositionList(owner: PublicKey) {
