@@ -47,13 +47,12 @@ import {
   SimulateClaim,
   simulateSwap,
   SimulationResult,
-  TICKS,
   TokensOwed,
   toPercent,
   toPrice,
   U128MAX
 } from '@invariant-labs/sdk/src/utils'
-import { setInitialized } from './testUtils'
+import { setInitialized, TICKS } from './testUtils'
 import { Decimal, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
 import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
 import { Keypair } from '@solana/web3.js'
@@ -61,7 +60,6 @@ import { swapParameters } from './swap'
 import { FEE_TIERS, LIQUIDITY_DENOMINATOR, toDecimal } from '@invariant-labs/sdk/lib/utils'
 import { priceToTickInRange } from '@invariant-labs/sdk/src/tick'
 import { U64_MAX } from '@invariant-labs/sdk/lib/math'
-import { rewardsAPY } from '../staker-sdk/src/utils'
 
 describe('Math', () => {
   describe('Test sqrt price calculation', () => {

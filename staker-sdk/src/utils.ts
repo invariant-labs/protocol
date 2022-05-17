@@ -25,7 +25,7 @@ export const toDecimal = (x: number, decimals: number = 0): Decimal => {
   return { v: DENOMINATOR.muln(x).div(new BN(10).pow(new BN(decimals))) }
 }
 
-export const STAKER_SEED = Buffer.from('staker')
+export const STAKER_SEED = 'staker'
 
 export const fromInteger = (integer: number): { v: BN } => {
   return { v: new BN(integer).mul(DENOMINATOR) }

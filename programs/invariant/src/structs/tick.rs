@@ -15,6 +15,7 @@ pub struct Tick {
     pub fee_growth_outside_x: FeeGrowth,
     pub fee_growth_outside_y: FeeGrowth,
     pub seconds_per_liquidity_outside: FixedPoint,
+    pub seconds_outside: u64,
     pub bump: u8,
 }
 

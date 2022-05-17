@@ -4,6 +4,7 @@ use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::structs::tickmap::Tickmap;
 use crate::util::check_tick;
+use crate::util::get_current_timestamp;
 use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
@@ -45,6 +46,7 @@ impl<'info> CreateTick<'info> {
 
         let mut tick = self.tick.load_init()?;
         let pool = self.pool.load()?;
+        let current_timestamp = get_current_timestamp();
 
         check_tick(index, pool.tick_spacing)?;
 
@@ -64,6 +66,10 @@ impl<'info> CreateTick<'info> {
             fee_growth_outside_y: match below_current_tick {
                 true => pool.fee_growth_global_y,
                 false => FeeGrowth::new(0),
+            },
+            seconds_outside: match below_current_tick {
+                true => (current_timestamp.checked_sub(pool.start_timestamp).unwrap()),
+                false => 0,
             },
             seconds_per_liquidity_outside: match below_current_tick {
                 true => pool.seconds_per_liquidity_global,
