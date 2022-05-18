@@ -133,19 +133,6 @@ export const calculateSecondsPerLiquidityInside = ({
   return secondsPerLiquidityInside
 }
 
-export const dailyFactorRewards = (
-  rewardInUSD: number,
-  tokenXamount: BN,
-  tokenXprice: number,
-  duration: number
-): number => {
-  return rewardInUSD / (tokenXamount.toNumber() * tokenXprice * duration)
-}
-
-export const rewardsAPY = (dailyFactorRewards: number, duration: number): number => {
-  return (Math.pow(duration * dailyFactorRewards + 1, 365 / duration) - 1) * 100
-}
-
 export interface SecondsPerLiquidityInside {
   tickLower: Tick
   tickUpper: Tick
