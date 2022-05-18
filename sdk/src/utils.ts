@@ -626,18 +626,6 @@ export const parseLiquidityOnTicks = (ticks: Tick[]) => {
   })
 }
 
-export const parseFeeGrowthAndLiquidityOnTicks = (ticks: Tick[]): ParsedTick[] => {
-  let currentLiquidity = new BN(0)
-  return ticks.map(tick => {
-    currentLiquidity = currentLiquidity.add(tick.liquidityChange.v.muln(tick.sign ? 1 : -1))
-    return {
-      liquidity: currentLiquidity,
-      index: tick.index,
-      feeGrowth: tick.feeGrowthOutsideX
-    }
-  })
-}
-
 export const calculateFeeGrowthInside = ({
   tickLower,
   tickUpper,
@@ -842,14 +830,25 @@ export const getVolume = (
 //   return { tickLower, tickUpper }
 // }
 
-export const getTickArray = (rawTicks: Tick[]): ParsedTick[] => {
-  const sortedTicks = rawTicks.sort((a, b) => a.index - b.index)
-  const ticks: ParsedTick[] = rawTicks.length ? parseFeeGrowthAndLiquidityOnTicks(sortedTicks) : []
-  if (!ticks.length) {
-    throw new Error(Errors.TickArrayIsEmpty)
-  }
-  return ticks
-}
+// export const getTickArray = (rawTicks: Tick[]): ParsedTick[] => {
+//   const sortedTicks = rawTicks.sort((a, b) => a.index - b.index)
+//   const ticks: ParsedTick[] = rawTicks.length ? parseFeeGrowthAndLiquidityOnTicks(sortedTicks) : []
+//   if (!ticks.length) {
+//     throw new Error(Errors.TickArrayIsEmpty)
+//   }
+//   return ticks
+// }
+
+// export const getMappedTickArray = (rawTicks: Tick[]): ParsedTick[] => {
+//   const sortedTicks = rawTicks.sort((a, b) => a.index - b.index)
+//   const ticks: { [key: number]: ParsedTick } = rawTicks.length
+//     ? parseFeeGrowthAndLiquidityOnTicksMap(sortedTicks)
+//     : []
+//   if (!ticks.) {
+//     throw new Error(Errors.TickArrayIsEmpty)
+//   }
+//   return ticks
+// }
 
 export const getTokenXInRange = (ticks: ParsedTick[], lowerTick: number, upperTick: number): BN => {
   let sumTokenX: BN = new BN(0)
@@ -874,24 +873,30 @@ export const getTokenXInRange = (ticks: ParsedTick[], lowerTick: number, upperTi
 
 export const getRangeBasedOnFeeGrowth = (
   tickArrayPrevious: ParsedTick[],
-  tickArrayCurrent: ParsedTick[]
+  tickMapCurrent: Map<number, ParsedTick>
 ) => {
   let tickLower: number = null
   let tickUpper: number = null
   let tickLowerSaved = false
   let lastIndex = 0
+  let previousSnapTick
+  let currentSnapTick
 
   for (let i = 0; i < tickArrayPrevious.length - 1; i++) {
-    let previousTick = tickArrayPrevious[i]
-    let currentTick = tickArrayCurrent[i]
+    previousSnapTick = tickArrayPrevious[i]
+    if (tickMapCurrent.has(previousSnapTick.index)) {
+      currentSnapTick = tickMapCurrent.get(previousSnapTick.index)
+    } else {
+      continue
+    }
 
-    if (previousTick.feeGrowth != currentTick.feeGrowth) {
+    if (!previousSnapTick.feeGrowth.v.eq(currentSnapTick.feeGrowth.v)) {
       if (!tickLowerSaved) {
-        tickLower = previousTick.index
+        tickLower = previousSnapTick.index
         tickLowerSaved = true
         lastIndex = i
       }
-      tickUpper = currentTick.index
+      tickUpper = currentSnapTick.index
     }
   }
   if (tickLower == tickUpper) {
@@ -902,15 +907,47 @@ export const getRangeBasedOnFeeGrowth = (
     tickUpper
   }
 }
+export const parseFeeGrowthAndLiquidityOnTicksArray = (ticks: Tick[]): ParsedTick[] => {
+  const sortedTicks = ticks.sort((a, b) => a.index - b.index)
 
+  let currentLiquidity = new BN(0)
+  return sortedTicks.map(tick => {
+    currentLiquidity = currentLiquidity.add(tick.liquidityChange.v.muln(tick.sign ? 1 : -1))
+    return {
+      liquidity: currentLiquidity,
+      index: tick.index,
+      feeGrowth: tick.feeGrowthOutsideX
+    }
+  })
+}
+
+export const parseFeeGrowthAndLiquidityOnTicksMap = (ticks: Tick[]): Map<number, ParsedTick> => {
+  const sortedTicks = ticks.sort((a, b) => a.index - b.index)
+  let currentLiquidity = new BN(0)
+  let ticksMap = new Map<number, ParsedTick>()
+  sortedTicks.map(tick => {
+    currentLiquidity = currentLiquidity.add(tick.liquidityChange.v.muln(tick.sign ? 1 : -1))
+    ticksMap.set(tick.index, {
+      liquidity: currentLiquidity,
+      index: tick.index,
+      feeGrowth: tick.feeGrowthOutsideX
+    })
+  })
+
+  return ticksMap
+}
 export const calculateTokenXinRange = (
   ticksPreviousSnapshot: Tick[],
   ticksCurrentSnapshot: Tick[]
 ): BN => {
-  const tickArrayPrevious = getTickArray(ticksPreviousSnapshot)
-  const tickArrayCurrent = getTickArray(ticksCurrentSnapshot)
+  const tickArrayPrevious = parseFeeGrowthAndLiquidityOnTicksArray(ticksPreviousSnapshot)
+  const tickMapCurrent = parseFeeGrowthAndLiquidityOnTicksMap(ticksCurrentSnapshot)
 
-  const { tickLower, tickUpper } = getRangeBasedOnFeeGrowth(tickArrayPrevious, tickArrayCurrent)
+  if (!tickArrayPrevious.length || !tickMapCurrent.size) {
+    throw new Error(Errors.TickArrayIsEmpty)
+  }
+
+  const { tickLower, tickUpper } = getRangeBasedOnFeeGrowth(tickArrayPrevious, tickMapCurrent)
 
   return getTokenXInRange(tickArrayPrevious, tickLower, tickUpper)
 }
