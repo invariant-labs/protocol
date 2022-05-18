@@ -36,6 +36,7 @@ import {
   calculateTokenXinRange,
   CloserLimit,
   dailyFactorPool,
+  dailyFactorRewards,
   FeeGrowthInside,
   getCloserLimit,
   getConcentrationArray,
@@ -46,6 +47,7 @@ import {
   PositionClaimData,
   PRICE_DENOMINATOR,
   PRICE_SCALE,
+  rewardsAPY,
   SimulateClaim,
   simulateSwap,
   SimulationResult,
@@ -1847,22 +1849,42 @@ describe('Math', () => {
   })
   describe('dailyFactorPool tests', () => {
     it('case 1', async () => {
-      const volume = new BN(125000)
+      const volume = 125000
       const tokenXamount = new BN(1000000)
       const feeTier = FEE_TIERS[3] // 0.3%
 
-      const result = dailyFactorPool(volume, tokenXamount, feeTier)
+      const result = dailyFactorPool(tokenXamount, volume, feeTier)
       assert.equal(result, 0.03749625)
     })
   })
-  describe('pool APY tests', () => {
+  describe('dailyFactorReward tests', () => {
     it('case 1', async () => {
-      const dailyFactorRewards = 0.0003713
+      const reward = 100000000
+      const tokenXAmount = new BN(100000)
+      const duration = 10
+      const price = 13425
 
-      const result = poolAPY(dailyFactorRewards)
-      assert.equal(result, 14.510844705102667)
+      const result = dailyFactorRewards(reward, tokenXAmount, price, duration)
+      assert.equal(result, 0.0074487895716946)
     })
   })
+  // describe('pool APY tests', () => {
+  //   it('case 1', async () => {
+  //     const dailyFactorRewards = 0.0003713
+
+  //     const result = poolAPY(dailyFactorRewards)
+  //     assert.equal(result, 14.510844705102667)
+  //   })
+  // })
+  // describe('reward APY tests', () => {
+  //   it('case 1', async () => {
+  //     const dailyFactorRewards = 0.001
+  //     const duration = 10
+
+  //     const result = rewardsAPY(dailyFactorRewards, duration)
+  //     assert.equal(result, Number('43.790483176778205'))
+  //   })
+  // })
   describe('calculateAverageLiquidity tests', () => {
     // it('case 1', async () => {
     //   const ticks = [

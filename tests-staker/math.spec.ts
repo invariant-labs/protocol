@@ -7,8 +7,6 @@ import {
   calculateReward,
   CalculateReward,
   calculateSecondsPerLiquidityInside,
-  dailyFactorRewards,
-  rewardsAPY,
   SecondsPerLiquidityInside
 } from '../staker-sdk/src/utils'
 
@@ -301,26 +299,6 @@ describe('Staker math tests', () => {
 
       const result = calculateSecondsPerLiquidityInside(data)
       assert.ok(result.eq(new BN('340282366920938463463374607331768200456')))
-    })
-  })
-  describe('dailyFactorReward tests', () => {
-    it('case 1', async () => {
-      const reward = 100000000
-      const tokenXAmount = new BN(100000)
-      const duration = 10
-      const price = 13425
-
-      const result = dailyFactorRewards(reward, tokenXAmount, price, duration)
-      assert.equal(result, 0.0074487895716946)
-    })
-  })
-  describe('reward APY tests', () => {
-    it('case 1', async () => {
-      const dailyFactorRewards = 0.001
-      const duration = 10
-
-      const result = rewardsAPY(dailyFactorRewards, duration)
-      assert.equal(result, Number('43.790483176778205'))
     })
   })
 })
