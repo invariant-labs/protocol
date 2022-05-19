@@ -227,7 +227,7 @@ export const sleep = async (ms: number) => {
 }
 
 export const tou64 = amount => {
-  // eslint-disable-next-line new-cap
+  // @ts-expect-error
   return new u64(amount.toString())
 }
 
