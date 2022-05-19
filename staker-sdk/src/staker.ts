@@ -307,12 +307,13 @@ export class Staker {
     tx.feePayer = this.wallet.publicKey
     tx.recentBlockhash = blockhash.blockhash
 
-    await this.wallet.signTransaction(tx)
-    if (signers) tx.partialSign(...signers)
+    let signedTx = await this.wallet.signTransaction(tx)
+    if (signers) signedTx.partialSign(...signers)
 
+    const rawTx = signedTx.serialize()
     return await sendAndConfirmRawTransaction(
       this.connection,
-      tx.serialize(),
+      rawTx,
       opts ?? Provider.defaultOptions()
     )
   }
@@ -326,14 +327,15 @@ export class Staker {
       tx.recentBlockhash = blockhash.blockhash
     })
 
-    await this.wallet.signAllTransactions(txs)
+    let signedTxs = await this.wallet.signAllTransactions(txs)
 
     const stringTx: string[] = []
-    for (let i = 0; i < txs.length; i++) {
+    for (let i = 0; i < signedTxs.length; i++) {
+      const rawTx = signedTxs[i].serialize()
       stringTx.push(
         await sendAndConfirmRawTransaction(
           this.connection,
-          txs[i].serialize(),
+          rawTx,
           opts ?? Provider.defaultOptions()
         )
       )
