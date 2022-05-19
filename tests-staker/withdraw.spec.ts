@@ -26,7 +26,7 @@ describe('Withdraw tests', () => {
   const positionOwner = Keypair.generate()
   const founderAccount = Keypair.generate()
   const admin = Keypair.generate()
-  const epsilon = new BN(21)
+  const epsilon = new BN(50)
   let nonce: number
   let staker: Staker
   let market: Market
