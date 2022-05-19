@@ -227,7 +227,7 @@ export const sleep = async (ms: number) => {
 }
 
 export const tou64 = amount => {
-  // @ts-expect-error
+  // @ts-ignore
   return new u64(amount.toString())
 }
 
