@@ -51,7 +51,7 @@ pub fn handler(ctx: Context<CreateUserStake>) -> ProgramResult {
     require!(slot == update_slot, SlotsAreNotEqual);
 
     **user_stake = UserStake {
-        liquidity: Liquidity::new(position.liquidity.get()),
+        liquidity: Liquidity::new({ position.liquidity }.get()),
         incentive: ctx.accounts.incentive.key(),
         bump: *ctx.bumps.get("user_stake").unwrap(),
         seconds_per_liquidity_initial: SecondsPerLiquidity::from_decimal(
