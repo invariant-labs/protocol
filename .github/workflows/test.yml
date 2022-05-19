@@ -8,8 +8,8 @@ on:
     branches:
       - master
 env:
-  solana_version: 1.8.12
-  anchor_version: 0.20.1
+  solana_version: 1.9.14
+  anchor_version: 0.21.0
 
 jobs:
   install:
@@ -22,22 +22,31 @@ jobs:
             'npm run test:cross',
             'npm run test:cross-both-side',
             'npm run test:liquidity-gap',
+            'npm run test:simulate-swap',
             'npm run test:reversed',
             'npm run test:position',
             'npm run test:math',
             'npm run test:withdraw',
             'npm run test:position-list',
             'npm run test:claim',
+            'npm run test:random',
+            'npm run test:simulate-claim-amount',
+            'npm run test:reward',
+            'npm run test:cu',
+            'npm run test:init-both',
+            'npm run test:change-protocol-fee',
+            'npm run test:tickmap',
+            'npm run test:change-fee-receiver',
+            'npm run test:whole-liquidity',
+            'npm run test:position-change',
             'npm run test:protocol-fee',
             'npm run test:target',
             'npm run test:slippage',
+            'npm run test:position-slippage',
             'npm run test:fee-tier',
             'npm run test:big-swap',
-            'npm run test:claim-amount',
             'npm run test:create',
             'npm run test:stake',
-            'npm run test:withdraw-staker',
-            'npm run test:end-incentive',
             'npm run test:multicall',
             'npm run test:oracle',
             'npm run test:limits',
@@ -121,21 +130,13 @@ jobs:
         run: |
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           anchor build
-      - name: build amm sdk
-        run: |
-          npm install
-          npm install @solana/buffer-layout
-          npm run build
-        working-directory: ./sdk
-      - name: build staker sdk
-        run: |
-          npm install
-          npm run build
-        working-directory: ./sdk-staker
       - name: install
         run: |
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           npm install
+      - name: build invariant sdk & staker sdk
+        run: |
+          npm run build:all
       - name: test
         run: |
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"

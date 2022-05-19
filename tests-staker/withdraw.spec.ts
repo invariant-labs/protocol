@@ -3,14 +3,7 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Market, Pair, DENOMINATOR, sleep, PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
-import {
-  createToken,
-  tou64,
-  getTime,
-  signAndSend,
-  almostEqual,
-  assertThrowsAsync
-} from './testUtils'
+import { createToken, getTime, signAndSend, almostEqual, assertThrowsAsync } from './testUtils'
 import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { STAKER_ERRORS, toDecimal } from '../staker-sdk/lib/utils'
@@ -19,6 +12,7 @@ import { FeeTier, RemovePosition } from '@invariant-labs/sdk/lib/market'
 import { InitPosition, Swap, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
 import { CreateIncentive, CreateStake, Withdraw, Decimal, Staker } from '../staker-sdk/src/staker'
 import { assert } from 'chai'
+import { tou64 } from '@invariant-labs/sdk/src/utils'
 
 describe('Withdraw tests', () => {
   const provider = Provider.local()

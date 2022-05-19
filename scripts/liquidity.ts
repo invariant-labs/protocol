@@ -3,11 +3,12 @@ import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
 import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
 import { MINTER } from './minter'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { Market, Pair, tou64 } from '@invariant-labs/sdk/src'
+import { Market, Pair } from '@invariant-labs/sdk/src'
 import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/src/utils'
 import { MAX_TICK } from '@invariant-labs/sdk'
 import { getLiquidityByY } from '@invariant-labs/sdk/lib/math'
 import { InitPosition } from '@invariant-labs/sdk/src/market'
+import { tou64 } from '@invariant-labs/sdk/lib/utils'
 
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()

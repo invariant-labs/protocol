@@ -4,11 +4,11 @@ import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken } from './testUtils'
-import { Market, Pair, tou64, Network } from '@invariant-labs/sdk'
+import { Market, Pair, Network, calculatePriceSqrt } from '@invariant-labs/sdk'
 import { CreateFeeTier, FeeTier, InitPoolAndPosition } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { isInitialized } from '@invariant-labs/sdk/lib/math'
-import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
+import { tou64 } from '@invariant-labs/sdk/src/utils'
 
 describe('swap', () => {
   const provider = Provider.local()
@@ -72,6 +72,7 @@ describe('swap', () => {
       tokenY.mintTo(userTokenY, mintAuthority, [], tou64(1e9))
     ])
 
+    const initTick = pair.tickSpacing * 3
     const lowerTick = pair.tickSpacing * 2
     const upperTick = pair.tickSpacing * 4
 
@@ -85,8 +86,8 @@ describe('swap', () => {
       lowerTick,
       upperTick,
       liquidityDelta: { v: liquidity },
-      initTick: pair.tickSpacing * 3,
-      knownPrice: { v: PRICE_DENOMINATOR },
+      initTick,
+      knownPrice: calculatePriceSqrt(initTick),
       slippage: { v: new BN(0) }
     }
 
@@ -100,7 +101,6 @@ describe('swap', () => {
     assert.isTrue(isInitialized(tickmap, lowerTick, pair.tickSpacing))
     assert.isTrue(isInitialized(tickmap, upperTick, pair.tickSpacing))
   })
-
   it('#init second one on the same keypair', async () => {
     const [userTokenX, userTokenY] = await Promise.all([
       tokenX.createAccount(owner.publicKey),
@@ -112,6 +112,7 @@ describe('swap', () => {
       tokenY.mintTo(userTokenY, mintAuthority, [], tou64(1e9))
     ])
 
+    const initTick = pair.tickSpacing * 3
     const lowerTick = pair.tickSpacing * 2
     const upperTick = pair.tickSpacing * 4
 
@@ -125,8 +126,8 @@ describe('swap', () => {
       lowerTick,
       upperTick,
       liquidityDelta: { v: liquidity },
-      initTick: pair.tickSpacing * 3,
-      knownPrice: { v: PRICE_DENOMINATOR },
+      initTick,
+      knownPrice: calculatePriceSqrt(initTick),
       slippage: { v: new BN(0) }
     }
 

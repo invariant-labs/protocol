@@ -3,7 +3,7 @@ import { Staker as StakerIdl, IDL } from './idl/staker'
 import { BN, Program, Provider } from '@project-serum/anchor'
 import { IWallet } from '.'
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { UpdateSecondsPerLiquidity, Market } from '@invariant-labs/sdk/src/market'
+import { UpdateSecondsPerLiquidity, Market } from '@invariant-labs/sdk/lib/market'
 import {
   Connection,
   PublicKey,
