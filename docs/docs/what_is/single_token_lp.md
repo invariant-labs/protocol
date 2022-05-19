@@ -1,7 +1,7 @@
 ---
 title: Single token LP
 
-slug: /what_is/single_token_lp
+slug: /single_token_lp
 ---
 
 Concentrated liquidity allows one more, interesting feature — liquidity position with only one token.

@@ -1,6 +1,5 @@
 module.exports = {
   docs: [
-    'home',
     {
       type: 'category',
       label: 'What is Invariant',
@@ -33,7 +32,7 @@ module.exports = {
       label: 'Invariant Bonds',
       // collapsed: true,
       items: [
-        'invariant_bonds/introduction',
+        'invariant_bonds/introduction_bonds',
         'invariant_bonds/math',
         'invariant_bonds/bond_example'
       ]
@@ -42,7 +41,7 @@ module.exports = {
       type: 'category',
       label: 'Invariant Staker',
       // collapsed: true,
-      items: ['invariant_staker/introduction', 'invariant_staker/calculation']
+      items: ['invariant_staker/introduction_staker', 'invariant_staker/calculation']
     },
     {
       type: 'category',

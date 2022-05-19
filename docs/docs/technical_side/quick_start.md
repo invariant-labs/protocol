@@ -1,7 +1,7 @@
 ---
 title: Quick start
 
-slug: /technical_side/quick_start
+slug: /quick_start
 ---
 
 ### Setting Up

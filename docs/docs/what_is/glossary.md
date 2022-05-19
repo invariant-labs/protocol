@@ -1,7 +1,7 @@
 ---
 title: Glossary
 
-slug: /what_is/glossary
+slug: /glossary
 ---
 
 ### Automated Market Maker

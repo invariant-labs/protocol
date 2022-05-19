@@ -1,7 +1,7 @@
 ---
 title: Fees
 
-slug: /what_is/fees
+slug: /fees
 ---
 
 ### Swap Fees

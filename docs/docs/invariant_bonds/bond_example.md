@@ -1,7 +1,7 @@
 ---
 title: Example
 
-slug: /invariant_bonds/bond_examples
+slug: /bond_examples
 ---
 
 Seller want to sale 1 m INVT for USDC with:

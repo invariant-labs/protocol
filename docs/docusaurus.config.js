@@ -22,7 +22,30 @@ module.exports = {
       logo: {
         alt: 'Invariant Logo',
         src: 'img/logo.png'
-      }
+      },
+      items: [
+        {
+          to: 'docs/the_birth_of_the_idea',
+          activeBasePath: 'docs',
+          label: 'Documentation',
+          position: 'left',
+        },
+        {
+          href: 'https://invariant.app/',
+          label: 'Application',
+          position: 'left',
+        },
+        {
+          href: 'https://medium.com/@invariant_labs',
+          label: 'Medium',
+          position: 'left',
+        },
+        {
+          href: 'https://github.com/invariant-labs',
+          label: 'GitHub',
+          position: 'left',
+        },
+      ],
     },
     footer: {
       style: 'dark',

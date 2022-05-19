@@ -1,7 +1,7 @@
 ---
 title: Merge
 
-slug: /what_is/merge
+slug: /merge
 ---
 
 ### What can you do with Invariant?

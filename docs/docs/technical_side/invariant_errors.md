@@ -1,7 +1,7 @@
 ---
 title: Invariant Errors
 
-slug: /technical_side/invariant_errors
+slug: /invariant_errors
 ---
 
 ```ts

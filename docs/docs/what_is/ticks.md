@@ -1,7 +1,7 @@
 ---
 title: Ticks
 
-slug: /what_is/ticks
+slug: /ticks
 ---
 
 Without ticks, there is no possible way to make concentrated liquidity work.

@@ -1,7 +1,7 @@
 ---
 title: Calculation
 
-slug: /invariant_staker/calculation
+slug: /calculation
 ---
 
 | Variable                             | Description                                                                                           |

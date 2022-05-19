@@ -1,7 +1,7 @@
 ---
 title: Concentrated Liquidity
 
-slug: /what_is/concentrated_liquidity
+slug: /concentrated_liquidity
 ---
 
 It’s our main feature and enables maximum capital efficiency. In common liquidity pools, liquidity is distributed along the whole price curve.

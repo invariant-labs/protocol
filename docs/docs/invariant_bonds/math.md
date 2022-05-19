@@ -1,7 +1,7 @@
 ---
 title: Math
 
-slug: /invariant_bonds/math
+slug: /math
 ---
 
 The Bonds, are price mechanisms that tries to sell tokens at a predetermined rate over a specified period of time.

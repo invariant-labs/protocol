@@ -1,7 +1,7 @@
 ---
 title: The birth of the idea
 
-slug: /what_is/the_birth_of_the_idea
+slug: /the_birth_of_the_idea
 ---
 
 While [Solana](https://solana.com/) has multiple exchange protocols, the most advanced ones appear to focus on other blockchains. That is something we want Invariant to change. We decided to bring Uniswap v3 to Solana, because its concept of providing liquidity only within a certain range seemed the most promising.

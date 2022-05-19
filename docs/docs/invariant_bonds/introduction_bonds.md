@@ -1,7 +1,7 @@
 ---
 title: Introduction
 
-slug: /invariant_bonds/introduction
+slug: /introduction_bonds
 ---
 
 Bonds are a pricing mechanism that allows you to purchase tokens at a cheaper price. Bond is made up of various variables. The first, floor price, defines the lowest price at which we may buy tokens. Each token purchase increases the price, which further falls in a linearly over time. The up bound parameter controls how much the price can rise, while the velocity parameter determines how fast the price hits floor price.

@@ -1,7 +1,7 @@
 ---
 title: Price of the token
 
-slug: /what_is/price_of_the_token
+slug: /price_of_the_token
 ---
 
 The price of the tokens in Invariant is determined by the ratio of both tokens in the liquidity pool.
