@@ -25,9 +25,14 @@ import {
   calculatePriceAfterSlippage,
   calculatePriceImpact,
   calculateSwapStep,
+  findClosestTicks,
   getLiquidityByX,
   getLiquidityByY,
-  isEnoughAmountToPushPrice
+  getXfromLiquidity,
+  isEnoughAmountToPushPrice,
+  isInitialized,
+  MIN_TICK,
+  priceToTick
 } from './math'
 import { alignTickToSpacing, getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
@@ -48,6 +53,8 @@ export const FEE_OFFSET = new BN(10).pow(new BN(DECIMAL - FEE_DECIMAL))
 export const FEE_DENOMINATOR = 10 ** FEE_DECIMAL
 export const U128MAX = new BN('340282366920938463463374607431768211455')
 export const CONCENTRATION_FACTOR = 1.00001526069123
+export const FEE_TIER_DENOMINATOR: number = Math.pow(10, 10)
+export const PROTOCOL_FEE: number = 0.0001
 
 export enum ERRORS {
   SIGNATURE = 'Error: Signature verification failed',
@@ -607,7 +614,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
   }
 }
 
-export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
+export const parseLiquidityOnTicks = (ticks: Tick[]) => {
   let currentLiquidity = new BN(0)
 
   return ticks.map(tick => {
@@ -618,6 +625,7 @@ export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
     }
   })
 }
+
 export const calculateFeeGrowthInside = ({
   tickLower,
   tickUpper,
@@ -749,4 +757,187 @@ export const getMinTick = (tickSpacing: number) => {
   const limitedByPrice = -MAX_TICK + (MAX_TICK % tickSpacing)
   const limitedByTickmap = -TICK_LIMIT * tickSpacing
   return Math.max(limitedByPrice, limitedByTickmap)
+}
+
+export const getVolume = (
+  volumeX: number,
+  volumeY: number,
+  previousSqrtPrice: number,
+  currentSqrtPrice: number
+): number => {
+  const sqrtPrice = Math.sqrt(previousSqrtPrice * currentSqrtPrice)
+  return volumeX + volumeY / sqrtPrice
+}
+
+export const getTokenXInRange = (ticks: ParsedTick[], lowerTick: number, upperTick: number): BN => {
+  let sumTokenX: BN = new BN(0)
+  let currentIndex = 0
+  let nextIndex = 0
+
+  for (let i = 0; i < ticks.length - 1; i++) {
+    currentIndex = ticks[i].index
+    nextIndex = ticks[i + 1].index
+
+    if (currentIndex >= lowerTick && currentIndex < upperTick) {
+      const lowerSqrtPrice = calculatePriceSqrt(currentIndex)
+      const upperSqrtPrice = calculatePriceSqrt(nextIndex)
+
+      sumTokenX = sumTokenX.add(
+        getXfromLiquidity(ticks[i].liquidity, upperSqrtPrice.v, lowerSqrtPrice.v)
+      )
+    }
+  }
+  return sumTokenX
+}
+
+export const getRangeBasedOnFeeGrowth = (
+  tickArrayPrevious: ParsedTick[],
+  tickMapCurrent: Map<number, ParsedTick>
+) => {
+  let tickLower: number = null
+  let tickUpper: number = null
+  let tickLowerSaved = false
+  let lastIndex = 0
+  let previousSnapTick
+  let currentSnapTick
+
+  for (let i = 0; i < tickArrayPrevious.length - 1; i++) {
+    previousSnapTick = tickArrayPrevious[i]
+    if (tickMapCurrent.has(previousSnapTick.index)) {
+      currentSnapTick = tickMapCurrent.get(previousSnapTick.index)
+    } else {
+      continue
+    }
+
+    if (!previousSnapTick.feeGrowth.v.eq(currentSnapTick.feeGrowth.v)) {
+      if (!tickLowerSaved) {
+        tickLower = previousSnapTick.index
+        tickLowerSaved = true
+        lastIndex = i
+      }
+      tickUpper = currentSnapTick.index
+    }
+  }
+  if (tickLower == tickUpper) {
+    tickUpper = tickArrayPrevious[lastIndex + 1].index
+  }
+  return {
+    tickLower,
+    tickUpper
+  }
+}
+export const parseFeeGrowthAndLiquidityOnTicksArray = (ticks: Tick[]): ParsedTick[] => {
+  const sortedTicks = ticks.sort((a, b) => a.index - b.index)
+
+  let currentLiquidity = new BN(0)
+  return sortedTicks.map(tick => {
+    currentLiquidity = currentLiquidity.add(tick.liquidityChange.v.muln(tick.sign ? 1 : -1))
+    return {
+      liquidity: currentLiquidity,
+      index: tick.index,
+      feeGrowth: tick.feeGrowthOutsideX
+    }
+  })
+}
+
+export const parseFeeGrowthAndLiquidityOnTicksMap = (ticks: Tick[]): Map<number, ParsedTick> => {
+  const sortedTicks = ticks.sort((a, b) => a.index - b.index)
+  let currentLiquidity = new BN(0)
+  let ticksMap = new Map<number, ParsedTick>()
+  sortedTicks.map(tick => {
+    currentLiquidity = currentLiquidity.add(tick.liquidityChange.v.muln(tick.sign ? 1 : -1))
+    ticksMap.set(tick.index, {
+      liquidity: currentLiquidity,
+      index: tick.index,
+      feeGrowth: tick.feeGrowthOutsideX
+    })
+  })
+
+  return ticksMap
+}
+export const calculateTokenXinRange = (
+  ticksPreviousSnapshot: Tick[],
+  ticksCurrentSnapshot: Tick[]
+): Range => {
+  const tickArrayPrevious = parseFeeGrowthAndLiquidityOnTicksArray(ticksPreviousSnapshot)
+  const tickMapCurrent = parseFeeGrowthAndLiquidityOnTicksMap(ticksCurrentSnapshot)
+
+  if (!tickArrayPrevious.length || !tickMapCurrent.size) {
+    throw new Error(Errors.TickArrayIsEmpty)
+  }
+
+  const { tickLower, tickUpper } = getRangeBasedOnFeeGrowth(tickArrayPrevious, tickMapCurrent)
+  const tokenXamount = getTokenXInRange(tickArrayPrevious, tickLower, tickUpper)
+
+  return { tokenXamount, tickLower, tickUpper }
+}
+
+export const dailyFactorPool = (tokenXamount: BN, volume: number, feeTier: FeeTier): number => {
+  const fee: number = (feeTier.fee.toNumber() / FEE_TIER_DENOMINATOR) * (1 - PROTOCOL_FEE)
+  return (volume * fee) / tokenXamount.toNumber()
+}
+
+export const poolAPY = (params: ApyPoolParams): number => {
+  const range = calculateTokenXinRange(params.ticksPreviousSnapshot, params.ticksCurrentSnapshot)
+
+  const previousSqrtPrice = calculatePriceSqrt(range.tickLower).v.div(PRICE_DENOMINATOR).toNumber()
+  const currentSqrtPrice = calculatePriceSqrt(range.tickUpper).v.div(PRICE_DENOMINATOR).toNumber()
+  const volume = getVolume(params.volumeX, params.volumeY, previousSqrtPrice, currentSqrtPrice)
+  const feeTier = params.feeTier
+
+  const dailyFactor = dailyFactorPool(range.tokenXamount, volume, feeTier)
+  return (Math.pow(dailyFactor + 1, 365) - 1) * 100
+}
+
+export const dailyFactorRewards = (
+  rewardInUSD: number,
+  tokenXamount: BN,
+  tokenXprice: number,
+  duration: number
+): number => {
+  return rewardInUSD / (tokenXamount.toNumber() * tokenXprice * duration)
+}
+
+export const rewardsAPY = (params: ApyRewardsParams): number => {
+  const range = calculateTokenXinRange(params.ticksPreviousSnapshot, params.ticksCurrentSnapshot)
+
+  const dailyFactor = dailyFactorRewards(
+    params.rewardInUSD,
+    range.tokenXamount,
+    params.tokenXprice,
+    params.duration
+  )
+  return (Math.pow(params.duration * dailyFactor + 1, 365 / params.duration) - 1) * 100
+}
+
+export interface ParsedTick {
+  liquidity: BN
+  index: number
+  feeGrowth: Decimal
+}
+
+export interface LiquidityRange {
+  tickLower: number
+  tickUpper: number
+}
+
+export interface Range {
+  tokenXamount: BN
+  tickLower: number
+  tickUpper: number
+}
+
+export interface ApyPoolParams {
+  feeTier: FeeTier
+  ticksPreviousSnapshot: Tick[]
+  ticksCurrentSnapshot: Tick[]
+  volumeX: number
+  volumeY: number
+}
+export interface ApyRewardsParams {
+  ticksPreviousSnapshot: Tick[]
+  ticksCurrentSnapshot: Tick[]
+  rewardInUSD: number
+  tokenXprice: number
+  duration: number
 }

@@ -22,7 +22,7 @@ const currentTime = new BN(Math.floor(seconds))
 // DEFINE ALL THESE VARS BEFORE EXECUTION
 const REWARD: Decimal = { v: new BN(1000000000) }
 const START_TIME: Decimal = { v: currentTime.add(new BN(10)) }
-const END_TIME: Decimal = { v: currentTime.add(new BN(3600 * 24 * 7)) }
+const END_TIME: Decimal = { v: currentTime.add(new BN(3600 * 24 * 30)) }
 const FOUNDER: PublicKey = MINTER.publicKey
 const TOKEN_X: PublicKey = new PublicKey(MOCK_TOKENS.USDC)
 const TOKEN_Y: PublicKey = new PublicKey(MOCK_TOKENS.WSOL)
@@ -35,7 +35,6 @@ const main = async () => {
   const pair = new Pair(TOKEN_X, TOKEN_Y, FEE_TIER)
   const staker = await Staker.build(Network.DEV, wallet, connection)
   const [poolAddress] = await pair.getAddressAndBump(new PublicKey(getMarketAddress(Network.DEV)))
-  console.log('poolAddress', poolAddress.toString())
 
   const incentiveParams: CreateIncentive = {
     reward: REWARD,

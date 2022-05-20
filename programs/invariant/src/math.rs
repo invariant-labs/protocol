@@ -1519,6 +1519,34 @@ mod tests {
             );
             assert_eq!(seconds_per_liquidity_inside.get(), 1000000110);
         }
+
+        {
+            tick_lower.seconds_per_liquidity_outside = FixedPoint::new(201233320000);
+            tick_upper.seconds_per_liquidity_outside = FixedPoint::new(301233331000);
+            pool.current_tick_index = 20;
+            let seconds_per_liquidity_inside = calculate_seconds_per_liquidity_inside(
+                tick_lower,
+                tick_upper,
+                &mut pool,
+                current_timestamp,
+            );
+            assert_eq!(seconds_per_liquidity_inside.get(), 100000011000);
+        }
+        {
+            tick_lower.seconds_per_liquidity_outside = FixedPoint::new(201233320000);
+            tick_upper.seconds_per_liquidity_outside = FixedPoint::new(301233331000);
+            pool.current_tick_index = -20;
+            let seconds_per_liquidity_inside = calculate_seconds_per_liquidity_inside(
+                tick_lower,
+                tick_upper,
+                &mut pool,
+                current_timestamp,
+            );
+            assert_eq!(
+                seconds_per_liquidity_inside.get(),
+                340282366920938463463374607331768200456
+            );
+        }
     }
     #[test]
     fn test_is_enough_amount_to_push_price() {

@@ -1,18 +1,13 @@
+import { FeeTier, PoolStructure, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
+import { isInitialized, findClosestTicks, MAX_TICK, MIN_TICK } from '@invariant-labs/sdk/src/math'
+import { FEE_DENOMINATOR, parseLiquidityOnTicks } from '@invariant-labs/sdk/src/utils'
 import { BN } from '@project-serum/anchor'
+import { count } from 'console'
 
 export const DECIMAL = 12
 export const DENOMINATOR = new BN(10).pow(new BN(DECIMAL))
 export const LIQUIDITY_DENOMINATOR = new BN(10).pow(new BN(6))
-
-// hex code must be at the end of message
-export enum ERRORS {
-  SIGNATURE = 'Error: Signature verification failed',
-  SIGNER = 'Error: unknown signer',
-  PANICKED = 'Program failed to complete',
-  SERIALIZATION = '0xa4',
-  ALLOWANCE = 'custom program error: 0x1',
-  NO_SIGNERS = 'Error: No signers'
-}
+export const U128MAX = new BN('340282366920938463463374607431768211455')
 
 export enum STAKER_ERRORS {
   ZERO_AMOUNT = '0x1773',
@@ -62,6 +57,88 @@ export const calculateReward = ({
   return { secondsInside, result }
 }
 
+export const calculateSecondsPerLiquidityInside = ({
+  tickLower,
+  tickUpper,
+  pool,
+  currentTimestamp
+}: SecondsPerLiquidityInside) => {
+  const currentAboveLower = pool.currentTickIndex >= tickLower.index
+  const currentBelowUpper = pool.currentTickIndex < tickUpper.index
+  let secondsPerLiquidityBelow: BN
+  let secondsPerLiquidityAbove: BN
+  let secondsPerLiquidityInside: BN
+  let secondsPerLiquidityGlobal: BN
+
+  secondsPerLiquidityGlobal = pool.secondsPerLiquidityGlobal.v.add(
+    currentTimestamp
+      .sub(pool.lastTimestamp)
+      .mul(DENOMINATOR) // align to fixed point precision
+      .mul(LIQUIDITY_DENOMINATOR)
+      .div(pool.liquidity.v)
+  )
+  //in case of overflow
+  if (secondsPerLiquidityGlobal.gt(U128MAX)) {
+    secondsPerLiquidityGlobal = secondsPerLiquidityGlobal.sub(U128MAX).addn(1)
+  }
+  if (currentAboveLower) {
+    secondsPerLiquidityBelow = tickLower.secondsPerLiquidityOutside.v
+  } else {
+    // check possibility of underflow
+
+    if (secondsPerLiquidityGlobal.gt(tickLower.secondsPerLiquidityOutside.v)) {
+      secondsPerLiquidityBelow = secondsPerLiquidityGlobal.sub(
+        tickLower.secondsPerLiquidityOutside.v
+      )
+    } else {
+      secondsPerLiquidityBelow = secondsPerLiquidityGlobal
+        .add(U128MAX)
+        .sub(tickLower.secondsPerLiquidityOutside.v)
+        .addn(1)
+    }
+  }
+  if (currentBelowUpper) {
+    secondsPerLiquidityAbove = tickUpper.secondsPerLiquidityOutside.v
+  } else {
+    // check possibility of underflow
+    if (secondsPerLiquidityGlobal.gt(tickLower.secondsPerLiquidityOutside.v)) {
+      secondsPerLiquidityAbove = secondsPerLiquidityGlobal.sub(
+        tickUpper.secondsPerLiquidityOutside.v
+      )
+    } else {
+      secondsPerLiquidityAbove = secondsPerLiquidityGlobal
+        .add(U128MAX)
+        .sub(tickUpper.secondsPerLiquidityOutside.v)
+        .addn(1)
+    }
+  }
+
+  if (secondsPerLiquidityBelow.add(secondsPerLiquidityAbove).lt(U128MAX)) {
+    secondsPerLiquidityInside = secondsPerLiquidityGlobal
+      .sub(secondsPerLiquidityBelow)
+      .sub(secondsPerLiquidityAbove)
+  } else {
+    secondsPerLiquidityInside = secondsPerLiquidityGlobal
+      .add(U128MAX)
+      .sub(secondsPerLiquidityBelow)
+      .sub(secondsPerLiquidityAbove)
+      .addn(1)
+  }
+
+  // check possibility of underflow
+  if (secondsPerLiquidityInside.lt(new BN(0))) {
+    secondsPerLiquidityInside = U128MAX.sub(secondsPerLiquidityInside.abs()).addn(1)
+  }
+
+  return secondsPerLiquidityInside
+}
+
+export interface SecondsPerLiquidityInside {
+  tickLower: Tick
+  tickUpper: Tick
+  pool: PoolStructure
+  currentTimestamp: BN // unix timestamp in seconds
+}
 export interface CalculateReward {
   totalRewardUnclaimed: BN
   totalSecondsClaimed: BN

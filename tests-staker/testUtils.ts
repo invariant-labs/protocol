@@ -95,7 +95,7 @@ export const createToken = async (
   return token
 }
 
-export const almostEqual = (num1: BN, num2: BN, epsilon: BN = new BN(10)) => {
+export const almostEqual = (num1: BN, num2: BN, epsilon: BN = new BN(50)) => {
   return num1.sub(num2).abs().lt(epsilon)
 }
 

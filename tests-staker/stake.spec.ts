@@ -1,6 +1,12 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
-import { Market, Pair, DENOMINATOR, PRICE_DENOMINATOR } from '@invariant-labs/sdk'
+import {
+  Market,
+  Pair,
+  DENOMINATOR,
+  PRICE_DENOMINATOR,
+  calculatePriceSqrt
+} from '@invariant-labs/sdk'
 import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
@@ -8,11 +14,9 @@ import { Decimal, Staker, CreateStake, CreateIncentive } from '../staker-sdk/src
 import { createToken, signAndSend, eqDecimal, assertThrowsAsync } from './testUtils'
 import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { fromFee } from '@invariant-labs/sdk/lib/utils'
+import { fromFee, FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { InitPosition, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
-import { FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
-import { calculatePriceSqrt } from '@invariant-labs/sdk'
 import { STAKER_ERRORS } from '../staker-sdk/src/utils'
 import { tou64 } from '@invariant-labs/sdk/src/utils'
 
@@ -43,12 +47,7 @@ describe('Stake tests', () => {
   before(async () => {
     // create staker
 
-    staker = await Staker.build(
-      Network.LOCAL,
-      provider.wallet,
-      connection,
-      anchor.workspace.Staker.programId
-    )
+    staker = await Staker.build(Network.LOCAL, provider.wallet, connection)
 
     await Promise.all([
       connection.requestAirdrop(mintAuthority.publicKey, 1e9),

@@ -33,14 +33,21 @@ import {
   calculateFeeGrowthInside,
   calculateTickDelta,
   calculateTokensOwed,
+  calculateTokenXinRange,
   CloserLimit,
+  dailyFactorPool,
+  dailyFactorRewards,
   FeeGrowthInside,
   getCloserLimit,
   getConcentrationArray,
+  getRangeBasedOnFeeGrowth,
+  getTokenXInRange,
   GROWTH_DENOMINATOR,
+  poolAPY,
   PositionClaimData,
   PRICE_DENOMINATOR,
   PRICE_SCALE,
+  rewardsAPY,
   SimulateClaim,
   simulateSwap,
   SimulationResult,
@@ -49,12 +56,12 @@ import {
   toPrice,
   U128MAX
 } from '@invariant-labs/sdk/src/utils'
-import { setInitialized } from './testUtils'
+import { setInitialized, TICKS } from './testUtils'
 import { Decimal, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
 import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
 import { Keypair } from '@solana/web3.js'
 import { swapParameters } from './swap'
-import { LIQUIDITY_DENOMINATOR, toDecimal } from '@invariant-labs/sdk/lib/utils'
+import { FEE_TIERS, LIQUIDITY_DENOMINATOR, toDecimal } from '@invariant-labs/sdk/lib/utils'
 import { priceToTickInRange } from '@invariant-labs/sdk/src/tick'
 import { U64_MAX } from '@invariant-labs/sdk/lib/math'
 
@@ -1112,6 +1119,7 @@ describe('Math', () => {
       sqrtPrice: { v: new BN(0) },
       feeGrowthOutsideX: { v: new BN(0) },
       feeGrowthOutsideY: { v: new BN(0) },
+      secondsPerLiquidityOutside: { v: new BN(0) },
       bump: 0
     }
     const upperTick: Tick = {
@@ -1123,6 +1131,7 @@ describe('Math', () => {
       sqrtPrice: { v: new BN(0) },
       feeGrowthOutsideX: { v: new BN(0) },
       feeGrowthOutsideY: { v: new BN(0) },
+      secondsPerLiquidityOutside: { v: new BN(0) },
       bump: 0
     }
 
@@ -1312,6 +1321,8 @@ describe('Math', () => {
         sqrtPrice: { v: new BN(0) },
         feeGrowthOutsideX: { v: new BN(0) },
         feeGrowthOutsideY: { v: new BN(0) },
+        secondsPerLiquidityOutside: { v: new BN(0) },
+
         bump: 0
       }
       const upperTick: Tick = {
@@ -1323,6 +1334,8 @@ describe('Math', () => {
         sqrtPrice: { v: new BN(0) },
         feeGrowthOutsideX: { v: new BN(0) },
         feeGrowthOutsideY: { v: new BN(0) },
+        secondsPerLiquidityOutside: { v: new BN(0) },
+
         bump: 0
       }
 
@@ -1357,6 +1370,8 @@ describe('Math', () => {
         sqrtPrice: { v: new BN('029cf3124f61', 'hex') },
         feeGrowthOutsideX: { v: new BN('0c4fee04dd2b3b8c', 'hex') },
         feeGrowthOutsideY: { v: new BN('01a99cb6b2bd6911e7', 'hex') },
+        secondsPerLiquidityOutside: { v: new BN(0) },
+
         bump: 0
       }
       const upperTick: Tick = {
@@ -1368,6 +1383,8 @@ describe('Math', () => {
         sqrtPrice: { v: new BN('029d9e665157', 'hex') },
         feeGrowthOutsideX: { v: new BN('3b9f3a68b9c225', 'hex') },
         feeGrowthOutsideY: { v: new BN('2c0282aeb7b74a', 'hex') },
+        secondsPerLiquidityOutside: { v: new BN(0) },
+
         bump: 0
       }
 
@@ -1829,5 +1846,74 @@ describe('Math', () => {
       const result = getConcentrationArray(tickSpacing, maxConcentration, 0)
       assert.equal(result.length, expectedResult)
     })
+  })
+  describe('dailyFactorPool tests', () => {
+    it('case 1', async () => {
+      const volume = 125000
+      const tokenXamount = new BN(1000000)
+      const feeTier = FEE_TIERS[3] // 0.3%
+
+      const result = dailyFactorPool(tokenXamount, volume, feeTier)
+      assert.equal(result, 0.03749625)
+    })
+  })
+  describe('dailyFactorReward tests', () => {
+    it('case 1', async () => {
+      const reward = 100000000
+      const tokenXAmount = new BN(100000)
+      const duration = 10
+      const price = 13425
+
+      const result = dailyFactorRewards(reward, tokenXAmount, price, duration)
+      assert.equal(result, 0.0074487895716946)
+    })
+  })
+  // describe('pool APY tests', () => {
+  //   it('case 1', async () => {
+  //     const dailyFactorRewards = 0.0003713
+
+  //     const result = poolAPY(dailyFactorRewards)
+  //     assert.equal(result, 14.510844705102667)
+  //   })
+  // })
+  // describe('reward APY tests', () => {
+  //   it('case 1', async () => {
+  //     const dailyFactorRewards = 0.001
+  //     const duration = 10
+
+  //     const result = rewardsAPY(dailyFactorRewards, duration)
+  //     assert.equal(result, Number('43.790483176778205'))
+  //   })
+  // })
+  describe('calculateAverageLiquidity tests', () => {
+    // it('case 1', async () => {
+    //   const ticks = [
+    //     { liquidity: new BN('1000').mul(LIQUIDITY_DENOMINATOR), index: 10 },
+    //     { liquidity: new BN('0'), index: 20 }
+    //   ]
+    //   const lowerTick = 10
+    //   const upperTick = 20
+    //   const result = getTokenXInRange(ticks, 10, 20)
+    //   assert.ok(result.eq(new BN('1000').mul(LIQUIDITY_DENOMINATOR)))
+    // })
+    //   it('case 2', async () => {
+    //     const lowerTick = 23966
+    //     const upperTick = 23967
+    //     const result = calculateAverageLiquidity(TICKS, lowerTick, upperTick)
+    //     // should be equal to liquidity with index 23966
+    //     assert.ok(result.eq(new BN('11730731878873587249')))
+    //   })
+    //   it('case 3', async () => {
+    //     const lowerTick = 23964
+    //     const upperTick = 23969
+    //     const result = calculateAverageLiquidity(TICKS, lowerTick, upperTick)
+    //     assert.ok(result.eq(new BN('10910146109682288193')))
+    //   })
+    //   it('case 4', async () => {
+    //     const lowerTick = 23961
+    //     const upperTick = 23971
+    //     const result = calculateAverageLiquidity(TICKS, lowerTick, upperTick)
+    //     assert.ok(result.eq(new BN('10709565852214868098')))
+    //   })
   })
 })

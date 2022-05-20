@@ -3,12 +3,12 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Market, Pair, DENOMINATOR, sleep, PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
-import { createToken, getTime, signAndSend, almostEqual, assertThrowsAsync } from './testUtils'
+import { createToken, getTime, signAndSend, almostEqual } from './testUtils'
 import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { STAKER_ERRORS, toDecimal } from '../staker-sdk/lib/utils'
+import { toDecimal } from '../staker-sdk/lib/utils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { FeeTier, RemovePosition } from '@invariant-labs/sdk/lib/market'
+import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { InitPosition, Swap, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
 import { CreateIncentive, CreateStake, Withdraw, Decimal, Staker } from '../staker-sdk/src/staker'
 import { assert } from 'chai'
@@ -26,8 +26,7 @@ describe('Withdraw tests', () => {
   const positionOwner = Keypair.generate()
   const founderAccount = Keypair.generate()
   const admin = Keypair.generate()
-  const epsilon = new BN(21)
-  let nonce: number
+  const epsilon = new BN(100)
   let staker: Staker
   let market: Market
   let pool: PublicKey
@@ -44,12 +43,7 @@ describe('Withdraw tests', () => {
   before(async () => {
     // create staker
 
-    staker = await Staker.build(
-      Network.LOCAL,
-      provider.wallet,
-      connection,
-      anchor.workspace.Staker.programId
-    )
+    staker = await Staker.build(Network.LOCAL, provider.wallet, connection)
 
     await Promise.all([
       connection.requestAirdrop(mintAuthority.publicKey, 1e9),
@@ -241,8 +235,7 @@ describe('Withdraw tests', () => {
       owner: positionOwner.publicKey,
       incentiveTokenAccount: incentiveTokenAccount.publicKey,
       ownerTokenAcc: ownerTokenAcc,
-      index,
-      nonce
+      index
     }
 
     const withdrawIx = await staker.withdrawIx(withdraw)
@@ -251,8 +244,8 @@ describe('Withdraw tests', () => {
 
     // should be around half of reward
     const balanceAfter = (await incentiveToken.getAccountInfo(ownerTokenAcc)).amount
-    console.log(balanceAfter)
-    assert.ok(almostEqual(balanceAfter, new BN('500'), epsilon))
+    console.log(balanceAfter.toString())
+    assert.ok(almostEqual(new BN(balanceAfter), new BN('500'), epsilon))
   })
   it('Withdraw - remove position', async () => {
     const founderAccount = Keypair.generate()
@@ -415,8 +408,7 @@ describe('Withdraw tests', () => {
       owner: positionOwner.publicKey,
       incentiveTokenAccount: incentiveTokenAccount.publicKey,
       ownerTokenAcc: ownerTokenAcc,
-      index,
-      nonce
+      index
     }
 
     const withdrawIx = await staker.withdrawIx(withdraw)
@@ -616,8 +608,7 @@ describe('Withdraw tests', () => {
       owner: positionOwner.publicKey,
       incentiveTokenAccount: incentiveTokenAccount.publicKey,
       ownerTokenAcc: ownerTokenAcc,
-      index: firstPositionIndex,
-      nonce
+      index: firstPositionIndex
     }
 
     // update after
