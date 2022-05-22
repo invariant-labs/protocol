@@ -863,6 +863,7 @@ export const calculateTokenXinRange = (
   const tickMapCurrent = parseFeeGrowthAndLiquidityOnTicksMap(ticksCurrentSnapshot)
 
   if (!tickArrayPrevious.length || !tickMapCurrent.size) {
+    // This also should be handled in SDK
     throw new Error(Errors.TickArrayIsEmpty)
   }
 
