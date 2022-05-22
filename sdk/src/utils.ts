@@ -53,8 +53,8 @@ export const FEE_OFFSET = new BN(10).pow(new BN(DECIMAL - FEE_DECIMAL))
 export const FEE_DENOMINATOR = 10 ** FEE_DECIMAL
 export const U128MAX = new BN('340282366920938463463374607431768211455')
 export const CONCENTRATION_FACTOR = 1.00001526069123
-export const FEE_TIER_DENOMINATOR: number = Math.pow(10, 10)
-export const PROTOCOL_FEE: number = 0.0001
+export const FEE_TIER_DENOMINATOR: number = Math.pow(10, 10) // maybe (DECIMAL - 2) inside od 19?
+export const PROTOCOL_FEE: number = 0.0001 // protocol fee is 1%
 
 export enum ERRORS {
   SIGNATURE = 'Error: Signature verification failed',
@@ -766,7 +766,7 @@ export const getVolume = (
   currentSqrtPrice: number
 ): number => {
   const sqrtPrice = Math.sqrt(previousSqrtPrice * currentSqrtPrice)
-  return volumeX + volumeY / sqrtPrice
+  return volumeX + volumeY / sqrtPrice // x = y/p, x != y/sqrt(p)
 }
 
 export const getTokenXInRange = (ticks: ParsedTick[], lowerTick: number, upperTick: number): BN => {
@@ -885,6 +885,8 @@ export const poolAPY = (params: ApyPoolParams): number => {
   const volume = getVolume(params.volumeX, params.volumeY, previousSqrtPrice, currentSqrtPrice)
   const feeTier = params.feeTier
 
+  // That's not good approach - APY is calculated only based on last day
+  // IMO should be calculated from last 7 days
   const dailyFactor = dailyFactorPool(range.tokenXamount, volume, feeTier)
   return (Math.pow(dailyFactor + 1, 365) - 1) * 100
 }
