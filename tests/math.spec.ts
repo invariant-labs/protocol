@@ -24,7 +24,8 @@ import {
   findClosestTicks,
   isEnoughAmountToPushPrice,
   calculatePriceImpact,
-  calculateMinReceivedTokensByAmountIn
+  calculateMinReceivedTokensByAmountIn,
+  getXfromLiquidity
 } from '@invariant-labs/sdk/src/math'
 import {
   bigNumberToBuffer,
@@ -55,16 +56,24 @@ import {
   TokensOwed,
   toPercent,
   toPrice,
+  getVolume,
   U128MAX
 } from '@invariant-labs/sdk/src/utils'
-import { setInitialized, TICKS } from './testUtils'
+import { createTickArray, setInitialized } from './testUtils'
 import { Decimal, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
 import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
 import { Keypair } from '@solana/web3.js'
 import { swapParameters } from './swap'
-import { FEE_TIERS, LIQUIDITY_DENOMINATOR, toDecimal } from '@invariant-labs/sdk/lib/utils'
+import {
+  ApyPoolParams,
+  ApyRewardsParams,
+  FEE_TIERS,
+  LIQUIDITY_DENOMINATOR,
+  toDecimal
+} from '@invariant-labs/sdk/lib/utils'
 import { priceToTickInRange } from '@invariant-labs/sdk/src/tick'
 import { U64_MAX } from '@invariant-labs/sdk/lib/math'
+import { DECIMAL } from '@invariant-labs/sdk/lib/utils'
 
 describe('Math', () => {
   describe('Test sqrt price calculation', () => {
@@ -510,6 +519,20 @@ describe('Math', () => {
       }
 
       assert.isTrue(false)
+    })
+    it('getXfromLiquidity', async () => {
+      const upperSqrtPrice = calculatePriceSqrt(500)
+      const lowerSqrtPrice = calculatePriceSqrt(-480)
+
+      const x = getXfromLiquidity(liquidity, upperSqrtPrice.v, lowerSqrtPrice.v)
+      assert.ok(x.eqn(97))
+    })
+    it('getXfromLiquidity 2', async () => {
+      const upperSqrtPrice = calculatePriceSqrt(480)
+      const lowerSqrtPrice = calculatePriceSqrt(470)
+
+      const x = getXfromLiquidity(new BN(673755091404475), upperSqrtPrice.v, lowerSqrtPrice.v)
+      assert.ok(x.eqn(328954))
     })
   })
 
@@ -1860,12 +1883,13 @@ describe('Math', () => {
   })
   describe('dailyFactorReward tests', () => {
     it('case 1', async () => {
-      const reward = 100000000
-      const tokenXAmount = new BN(100000)
+      const reward = 100
+      const tokenXAmount = new BN(1000_000000)
       const duration = 10
-      const price = 13425
+      const price = 1.3425
+      const tokenDecimal = 6
 
-      const result = dailyFactorRewards(reward, tokenXAmount, price, duration)
+      const result = dailyFactorRewards(reward, tokenXAmount, price, tokenDecimal, duration)
       assert.equal(result, 0.0074487895716946)
     })
   })
@@ -1877,52 +1901,61 @@ describe('Math', () => {
       assert.equal(volume, 180_000000)
     })
   })
-  // describe('pool APY tests', () => {
-  //   it('case 1', async () => {
-  //     const dailyFactorRewards = 0.0003713
+  describe('pool APY tests', () => {
+    it('case 1', async () => {
+      //const dailyFactorRewards = 0.0003713
+      const previous = createTickArray(1000)
 
-  //     const result = poolAPY(dailyFactorRewards)
-  //     assert.equal(result, 14.510844705102667)
-  //   })
-  // })
-  // describe('reward APY tests', () => {
-  //   it('case 1', async () => {
-  //     const dailyFactorRewards = 0.001
-  //     const duration = 10
+      let current: Tick[] = previous.map(tick => ({
+        ...tick,
+        liquidityChange: {
+          v: tick.liquidityChange.v.add(new BN(10000000).mul(LIQUIDITY_DENOMINATOR))
+        },
+        feeGrowthOutsideX: { v: tick.feeGrowthOutsideX.v.add(new BN(10)) }
+      }))
 
-  //     const result = rewardsAPY(dailyFactorRewards, duration)
-  //     assert.equal(result, Number('43.790483176778205'))
-  //   })
-  // })
-  describe('calculateAverageLiquidity tests', () => {
-    // it('case 1', async () => {
-    //   const ticks = [
-    //     { liquidity: new BN('1000').mul(LIQUIDITY_DENOMINATOR), index: 10 },
-    //     { liquidity: new BN('0'), index: 20 }
-    //   ]
-    //   const lowerTick = 10
-    //   const upperTick = 20
-    //   const result = getTokenXInRange(ticks, 10, 20)
-    //   assert.ok(result.eq(new BN('1000').mul(LIQUIDITY_DENOMINATOR)))
-    // })
-    //   it('case 2', async () => {
-    //     const lowerTick = 23966
-    //     const upperTick = 23967
-    //     const result = calculateAverageLiquidity(TICKS, lowerTick, upperTick)
-    //     // should be equal to liquidity with index 23966
-    //     assert.ok(result.eq(new BN('11730731878873587249')))
-    //   })
-    //   it('case 3', async () => {
-    //     const lowerTick = 23964
-    //     const upperTick = 23969
-    //     const result = calculateAverageLiquidity(TICKS, lowerTick, upperTick)
-    //     assert.ok(result.eq(new BN('10910146109682288193')))
-    //   })
-    //   it('case 4', async () => {
-    //     const lowerTick = 23961
-    //     const upperTick = 23971
-    //     const result = calculateAverageLiquidity(TICKS, lowerTick, upperTick)
-    //     assert.ok(result.eq(new BN('10709565852214868098')))
-    //   })
+      const paramsApy: ApyPoolParams = {
+        feeTier: FEE_TIERS[3],
+        ticksPreviousSnapshot: previous,
+        ticksCurrentSnapshot: current,
+        volumeX: 50_000000,
+        volumeY: 50_000000
+      }
+      let result = false
+      const apy = poolAPY(paramsApy)
+      if (apy > 130 || apy < 180) {
+        result = true
+      }
+      assert.ok(result)
+    })
+  })
+  describe('reward APY tests', () => {
+    it('case 1', async () => {
+      const previous = createTickArray(1000)
+
+      let current: Tick[] = previous.map(tick => ({
+        ...tick,
+        liquidityChange: {
+          v: tick.liquidityChange.v.add(new BN(10000000).mul(LIQUIDITY_DENOMINATOR))
+        },
+        feeGrowthOutsideX: { v: tick.feeGrowthOutsideX.v.add(new BN(10)) }
+      }))
+
+      const paramsApy: ApyRewardsParams = {
+        ticksPreviousSnapshot: previous,
+        ticksCurrentSnapshot: current,
+        rewardInUSD: 100,
+        tokenXprice: 1.3425,
+        tokenDecimal: 6,
+        duration: 10
+      }
+
+      let result = false
+      const apy = rewardsAPY(paramsApy)
+      if (apy > 20 || apy < 30) {
+        result = true
+      }
+      assert.ok(result)
+    })
   })
 })

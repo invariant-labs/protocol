@@ -32,7 +32,8 @@ import {
   isEnoughAmountToPushPrice,
   isInitialized,
   MIN_TICK,
-  priceToTick
+  priceToTick,
+  sqrt
 } from './math'
 import { alignTickToSpacing, getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
@@ -772,8 +773,8 @@ export const getVolume = (
 
 export const getTokenXInRange = (ticks: ParsedTick[], lowerTick: number, upperTick: number): BN => {
   let sumTokenX: BN = new BN(0)
-  let currentIndex = 0
-  let nextIndex = 0
+  let currentIndex: number = null
+  let nextIndex: number = null
 
   for (let i = 0; i < ticks.length - 1; i++) {
     currentIndex = ticks[i].index
@@ -782,7 +783,6 @@ export const getTokenXInRange = (ticks: ParsedTick[], lowerTick: number, upperTi
     if (currentIndex >= lowerTick && currentIndex < upperTick) {
       const lowerSqrtPrice = calculatePriceSqrt(currentIndex)
       const upperSqrtPrice = calculatePriceSqrt(nextIndex)
-
       sumTokenX = sumTokenX.add(
         getXfromLiquidity(ticks[i].liquidity, upperSqrtPrice.v, lowerSqrtPrice.v)
       )
@@ -799,8 +799,8 @@ export const getRangeBasedOnFeeGrowth = (
   let tickUpper: number = null
   let tickLowerSaved = false
   let lastIndex = 0
-  let previousSnapTick
-  let currentSnapTick
+  let previousSnapTick: ParsedTick = null
+  let currentSnapTick: ParsedTick = null
 
   for (let i = 0; i < tickArrayPrevious.length - 1; i++) {
     previousSnapTick = tickArrayPrevious[i]
@@ -861,6 +861,7 @@ export const calculateTokenXinRange = (
   ticksCurrentSnapshot: Tick[]
 ): Range => {
   const tickArrayPrevious = parseFeeGrowthAndLiquidityOnTicksArray(ticksPreviousSnapshot)
+  const tickArrayCurrent = parseFeeGrowthAndLiquidityOnTicksArray(ticksCurrentSnapshot)
   const tickMapCurrent = parseFeeGrowthAndLiquidityOnTicksMap(ticksCurrentSnapshot)
 
   if (!tickArrayPrevious.length || !tickMapCurrent.size) {
@@ -868,7 +869,11 @@ export const calculateTokenXinRange = (
   }
 
   const { tickLower, tickUpper } = getRangeBasedOnFeeGrowth(tickArrayPrevious, tickMapCurrent)
-  const tokenXamount = getTokenXInRange(tickArrayPrevious, tickLower, tickUpper)
+  if (tickLower == null || tickUpper == null) {
+    throw new Error(Errors.TickArrayAreTheSame)
+  }
+
+  const tokenXamount = getTokenXInRange(tickArrayCurrent, tickLower, tickUpper)
 
   return { tokenXamount, tickLower, tickUpper }
 }
@@ -881,12 +886,13 @@ export const dailyFactorPool = (tokenXamount: BN, volume: number, feeTier: FeeTi
 export const poolAPY = (params: ApyPoolParams): number => {
   const range = calculateTokenXinRange(params.ticksPreviousSnapshot, params.ticksCurrentSnapshot)
 
-  const previousSqrtPrice = calculatePriceSqrt(range.tickLower).v.div(PRICE_DENOMINATOR).toNumber()
-  const currentSqrtPrice = calculatePriceSqrt(range.tickUpper).v.div(PRICE_DENOMINATOR).toNumber()
+  const previousSqrtPrice = calculatePriceSqrt(range.tickLower)
+  const currentSqrtPrice = calculatePriceSqrt(range.tickUpper)
   const volume = getVolume(params.volumeX, params.volumeY, previousSqrtPrice, currentSqrtPrice)
   const feeTier = params.feeTier
 
   const dailyFactor = dailyFactorPool(range.tokenXamount, volume, feeTier)
+
   return (Math.pow(dailyFactor + 1, 365) - 1) * 100
 }
 
@@ -894,9 +900,13 @@ export const dailyFactorRewards = (
   rewardInUSD: number,
   tokenXamount: BN,
   tokenXprice: number,
+  tokenDecimal: number,
   duration: number
 ): number => {
-  return rewardInUSD / (tokenXamount.toNumber() * tokenXprice * duration)
+  return (
+    rewardInUSD /
+    (tokenXamount.div(new BN(10).pow(new BN(tokenDecimal))).toNumber() * tokenXprice * duration)
+  )
 }
 
 export const rewardsAPY = (params: ApyRewardsParams): number => {
@@ -906,6 +916,7 @@ export const rewardsAPY = (params: ApyRewardsParams): number => {
     params.rewardInUSD,
     range.tokenXamount,
     params.tokenXprice,
+    params.tokenDecimal,
     params.duration
   )
   return (Math.pow(params.duration * dailyFactor + 1, 365 / params.duration) - 1) * 100
@@ -940,5 +951,6 @@ export interface ApyRewardsParams {
   ticksCurrentSnapshot: Tick[]
   rewardInUSD: number
   tokenXprice: number
+  tokenDecimal: number
   duration: number
 }
