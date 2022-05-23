@@ -1918,12 +1918,13 @@ describe('Math', () => {
         feeTier: FEE_TIERS[3],
         ticksPreviousSnapshot: previous,
         ticksCurrentSnapshot: current,
+        weeklyFactor: 0.002,
         volumeX: 50_000000,
         volumeY: 50_000000
       }
       let result = false
-      const apy = poolAPY(paramsApy)
-      if (apy > 130 || apy < 180) {
+      const poolApy = poolAPY(paramsApy)
+      if (poolApy.apy > 130 || poolApy.apy < 180) {
         result = true
       }
       assert.ok(result)
@@ -1944,6 +1945,7 @@ describe('Math', () => {
       const paramsApy: ApyRewardsParams = {
         ticksPreviousSnapshot: previous,
         ticksCurrentSnapshot: current,
+        weeklyFactor: 0.01,
         rewardInUSD: 100,
         tokenXprice: 1.3425,
         tokenDecimal: 6,
@@ -1951,8 +1953,8 @@ describe('Math', () => {
       }
 
       let result = false
-      const apy = rewardsAPY(paramsApy)
-      if (apy > 20 || apy < 30) {
+      const reward = rewardsAPY(paramsApy)
+      if (reward.reward > 20 || reward.reward < 30) {
         result = true
       }
       assert.ok(result)

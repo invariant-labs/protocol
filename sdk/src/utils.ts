@@ -54,7 +54,7 @@ export const FEE_OFFSET = new BN(10).pow(new BN(DECIMAL - FEE_DECIMAL))
 export const FEE_DENOMINATOR = 10 ** FEE_DECIMAL
 export const U128MAX = new BN('340282366920938463463374607431768211455')
 export const CONCENTRATION_FACTOR = 1.00001526069123
-export const FEE_TIER_DENOMINATOR: number = Math.pow(10, 10)
+export const FEE_TIER_DENOMINATOR: number = Math.pow(10, DECIMAL - 2)
 export const PROTOCOL_FEE: number = 0.0001
 
 export enum ERRORS {
@@ -883,7 +883,7 @@ export const dailyFactorPool = (tokenXamount: BN, volume: number, feeTier: FeeTi
   return (volume * fee) / tokenXamount.toNumber()
 }
 
-export const poolAPY = (params: ApyPoolParams): number => {
+export const poolAPY = (params: ApyPoolParams) => {
   const range = calculateTokenXinRange(params.ticksPreviousSnapshot, params.ticksCurrentSnapshot)
 
   const previousSqrtPrice = calculatePriceSqrt(range.tickLower)
@@ -892,8 +892,10 @@ export const poolAPY = (params: ApyPoolParams): number => {
   const feeTier = params.feeTier
 
   const dailyFactor = dailyFactorPool(range.tokenXamount, volume, feeTier)
+  const apyFactor = (dailyFactor + params.weeklyFactor * 6) / 7
+  const apy = (Math.pow(apyFactor + 1, 365) - 1) * 100
 
-  return (Math.pow(dailyFactor + 1, 365) - 1) * 100
+  return { apy, apyFactor }
 }
 
 export const dailyFactorRewards = (
@@ -909,7 +911,7 @@ export const dailyFactorRewards = (
   )
 }
 
-export const rewardsAPY = (params: ApyRewardsParams): number => {
+export const rewardsAPY = (params: ApyRewardsParams) => {
   const range = calculateTokenXinRange(params.ticksPreviousSnapshot, params.ticksCurrentSnapshot)
 
   const dailyFactor = dailyFactorRewards(
@@ -919,7 +921,9 @@ export const rewardsAPY = (params: ApyRewardsParams): number => {
     params.tokenDecimal,
     params.duration
   )
-  return (Math.pow(params.duration * dailyFactor + 1, 365 / params.duration) - 1) * 100
+  const rewardFactor = (dailyFactor + params.weeklyFactor * 6) / 7
+  const reward = (Math.pow(params.duration * rewardFactor + 1, 365 / params.duration) - 1) * 100
+  return { reward, rewardFactor }
 }
 
 export interface ParsedTick {
@@ -943,12 +947,14 @@ export interface ApyPoolParams {
   feeTier: FeeTier
   ticksPreviousSnapshot: Tick[]
   ticksCurrentSnapshot: Tick[]
+  weeklyFactor: number
   volumeX: number
   volumeY: number
 }
 export interface ApyRewardsParams {
   ticksPreviousSnapshot: Tick[]
   ticksCurrentSnapshot: Tick[]
+  weeklyFactor: number
   rewardInUSD: number
   tokenXprice: number
   tokenDecimal: number
