@@ -762,11 +762,12 @@ export const getMinTick = (tickSpacing: number) => {
 export const getVolume = (
   volumeX: number,
   volumeY: number,
-  previousSqrtPrice: number,
-  currentSqrtPrice: number
+  previousSqrtPrice: Decimal,
+  currentSqrtPrice: Decimal
 ): number => {
-  const sqrtPrice = Math.sqrt(previousSqrtPrice * currentSqrtPrice)
-  return volumeX + volumeY / sqrtPrice
+  const price = previousSqrtPrice.v.mul(currentSqrtPrice.v).div(PRICE_DENOMINATOR)
+  const denominatedVolumeY = new BN(volumeY).mul(PRICE_DENOMINATOR).div(price).toNumber()
+  return volumeX + denominatedVolumeY
 }
 
 export const getTokenXInRange = (ticks: ParsedTick[], lowerTick: number, upperTick: number): BN => {

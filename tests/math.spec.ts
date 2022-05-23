@@ -42,6 +42,7 @@ import {
   getConcentrationArray,
   getRangeBasedOnFeeGrowth,
   getTokenXInRange,
+  getVolume,
   GROWTH_DENOMINATOR,
   poolAPY,
   PositionClaimData,
@@ -1866,6 +1867,14 @@ describe('Math', () => {
 
       const result = dailyFactorRewards(reward, tokenXAmount, price, duration)
       assert.equal(result, 0.0074487895716946)
+    })
+  })
+  describe('getVolume tests', () => {
+    it('case 1', async () => {
+      const previousSqrtPrice = calculatePriceSqrt(-500)
+      const currentSqrtPrice = calculatePriceSqrt(500)
+      const volume = getVolume(100_000000, 80_000000, previousSqrtPrice, currentSqrtPrice)
+      assert.equal(volume, 180_000000)
     })
   })
   // describe('pool APY tests', () => {
