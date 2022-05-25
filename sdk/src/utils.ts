@@ -55,7 +55,7 @@ export const FEE_DENOMINATOR = 10 ** FEE_DECIMAL
 export const U128MAX = new BN('340282366920938463463374607431768211455')
 export const CONCENTRATION_FACTOR = 1.00001526069123
 export const FEE_TIER_DENOMINATOR: number = Math.pow(10, DECIMAL - 2)
-export const PROTOCOL_FEE: number = 0.0001
+export const PROTOCOL_FEE: number = 0.01
 
 export enum ERRORS {
   SIGNATURE = 'Error: Signature verification failed',
@@ -811,8 +811,10 @@ export const getRangeBasedOnFeeGrowth = (
     }
 
     if (
-      !previousSnapTick.feeGrowthOutsideX.v.eq(currentSnapTick.feeGrowthOutsideX.v) ||
-      !previousSnapTick.feeGrowthOutsideY.v.eq(currentSnapTick.feeGrowthOutsideY.v)
+      !(
+        previousSnapTick.feeGrowthOutsideX.v.eq(currentSnapTick.feeGrowthOutsideX.v) &&
+        previousSnapTick.feeGrowthOutsideY.v.eq(currentSnapTick.feeGrowthOutsideY.v)
+      )
     ) {
       if (!tickLowerSaved) {
         tickLower = previousSnapTick.index
@@ -871,19 +873,14 @@ export const calculateTokenXinRange = (
   const tickMapCurrent = parseFeeGrowthAndLiquidityOnTicksMap(ticksCurrentSnapshot)
   let tokenXamount = new BN(0)
 
-  if (!tickArrayPrevious.length && !tickMapCurrent.size) {
+  if (!(tickArrayPrevious.length || tickArrayCurrent.length)) {
     throw new Error(Errors.TickArrayIsEmpty)
   }
-  if (!tickArrayPrevious.length) {
-    const tickLower = tickArrayCurrent[0].index
-    const tickUpper = tickArrayCurrent[tickArrayCurrent.length - 1].index
-    tokenXamount = getTokenXInRange(tickArrayCurrent, tickLower, tickUpper)
-    return { tokenXamount, tickLower, tickUpper }
-  }
-  if (!tickArrayPrevious.length) {
-    const tickLower = tickArrayPrevious[0].index
-    const tickUpper = tickArrayPrevious[tickArrayPrevious.length - 1].index
-    tokenXamount = getTokenXInRange(tickArrayPrevious, tickLower, tickUpper)
+  if (!(tickArrayPrevious.length && tickArrayCurrent.length)) {
+    const notEmptyArray = tickArrayPrevious.length ? tickArrayPrevious : tickArrayCurrent
+    const tickLower = notEmptyArray[0].index
+    const tickUpper = notEmptyArray[notEmptyArray.length - 1].index
+    tokenXamount = getTokenXInRange(notEmptyArray, tickLower, tickUpper)
     return { tokenXamount, tickLower, tickUpper }
   }
 

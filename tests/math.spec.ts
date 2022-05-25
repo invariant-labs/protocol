@@ -1878,7 +1878,7 @@ describe('Math', () => {
       const feeTier = FEE_TIERS[3] // 0.3%
 
       const result = dailyFactorPool(tokenXamount, volume, feeTier)
-      assert.equal(result, 0.03749625)
+      assert.equal(result, 0.037125)
     })
   })
   describe('dailyFactorReward tests', () => {
