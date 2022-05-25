@@ -944,7 +944,7 @@ export const poolAPY = (params: ApyPoolParams) => {
     dailyFactor = 0
   }
 
-  const apyFactor = (dailyFactor + weeklyFactor * 6) / 7
+  const apyFactor = weeklyFactor ? (dailyFactor + weeklyFactor * 6) / 7 : dailyFactor
   const apy = (Math.pow(apyFactor + 1, 365) - 1) * 100
 
   return { apy, apyFactor }
@@ -986,8 +986,9 @@ export const rewardsAPY = (params: ApyRewardsParams) => {
     dailyFactor = 0
   }
 
-  const rewardFactor = (dailyFactor + weeklyFactor * 6) / 7
+  const rewardFactor = weeklyFactor ? (dailyFactor + weeklyFactor * 6) / 7 : dailyFactor
   const reward = (Math.pow(duration * rewardFactor + 1, 365 / duration) - 1) * 100
+
   return { reward, rewardFactor }
 }
 
