@@ -878,11 +878,13 @@ export const calculateTokenXinRange = (
     const tickLower = tickArrayCurrent[0].index
     const tickUpper = tickArrayCurrent[tickArrayCurrent.length - 1].index
     tokenXamount = getTokenXInRange(tickArrayCurrent, tickLower, tickUpper)
+    return { tokenXamount, tickLower, tickUpper }
   }
   if (!tickArrayPrevious.length) {
     const tickLower = tickArrayPrevious[0].index
     const tickUpper = tickArrayPrevious[tickArrayPrevious.length - 1].index
     tokenXamount = getTokenXInRange(tickArrayPrevious, tickLower, tickUpper)
+    return { tokenXamount, tickLower, tickUpper }
   }
 
   let { tickLower, tickUpper } = getRangeBasedOnFeeGrowth(tickArrayPrevious, tickMapCurrent)
@@ -918,24 +920,31 @@ export const getTicksFromSwapRange = (ticks: ParsedTick[], currentTickIndex: num
 }
 
 export const poolAPY = (params: ApyPoolParams) => {
-  let range: Range = null
+  const {
+    feeTier,
+    currentTickIndex,
+    ticksPreviousSnapshot,
+    ticksCurrentSnapshot,
+    weeklyFactor,
+    volumeX,
+    volumeY
+  } = params
   let dailyFactor: number = null
   try {
-    range = calculateTokenXinRange(
-      params.ticksPreviousSnapshot,
-      params.ticksCurrentSnapshot,
-      params.currentTickIndex
+    const { tokenXamount, tickLower, tickUpper } = calculateTokenXinRange(
+      ticksPreviousSnapshot,
+      ticksCurrentSnapshot,
+      currentTickIndex
     )
-    const previousSqrtPrice = calculatePriceSqrt(range.tickLower)
-    const currentSqrtPrice = calculatePriceSqrt(range.tickUpper)
-    const volume = getVolume(params.volumeX, params.volumeY, previousSqrtPrice, currentSqrtPrice)
-    const feeTier = params.feeTier
-    dailyFactor = dailyFactorPool(range.tokenXamount, volume, feeTier)
+    const previousSqrtPrice = calculatePriceSqrt(tickLower)
+    const currentSqrtPrice = calculatePriceSqrt(tickUpper)
+    const volume = getVolume(volumeX, volumeY, previousSqrtPrice, currentSqrtPrice)
+    dailyFactor = dailyFactorPool(tokenXamount, volume, feeTier)
   } catch (e: any) {
     dailyFactor = 0
   }
 
-  const apyFactor = (dailyFactor + params.weeklyFactor * 6) / 7
+  const apyFactor = (dailyFactor + weeklyFactor * 6) / 7
   const apy = (Math.pow(apyFactor + 1, 365) - 1) * 100
 
   return { apy, apyFactor }
@@ -955,27 +964,30 @@ export const dailyFactorRewards = (
 }
 
 export const rewardsAPY = (params: ApyRewardsParams) => {
-  let range: Range = null
+  const {
+    ticksPreviousSnapshot,
+    ticksCurrentSnapshot,
+    currentTickIndex,
+    weeklyFactor,
+    rewardInUSD,
+    tokenXprice,
+    tokenDecimal,
+    duration
+  } = params
   let dailyFactor: number = null
   try {
-    range = calculateTokenXinRange(
-      params.ticksPreviousSnapshot,
-      params.ticksCurrentSnapshot,
-      params.currentTickIndex
+    const { tokenXamount } = calculateTokenXinRange(
+      ticksPreviousSnapshot,
+      ticksCurrentSnapshot,
+      currentTickIndex
     )
-    dailyFactor = dailyFactorRewards(
-      params.rewardInUSD,
-      range.tokenXamount,
-      params.tokenXprice,
-      params.tokenDecimal,
-      params.duration
-    )
+    dailyFactor = dailyFactorRewards(rewardInUSD, tokenXamount, tokenXprice, tokenDecimal, duration)
   } catch (e: any) {
     dailyFactor = 0
   }
 
-  const rewardFactor = (dailyFactor + params.weeklyFactor * 6) / 7
-  const reward = (Math.pow(params.duration * rewardFactor + 1, 365 / params.duration) - 1) * 100
+  const rewardFactor = (dailyFactor + weeklyFactor * 6) / 7
+  const reward = (Math.pow(duration * rewardFactor + 1, 365 / duration) - 1) * 100
   return { reward, rewardFactor }
 }
 
