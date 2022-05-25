@@ -1939,7 +1939,8 @@ describe('Math', () => {
         liquidityChange: {
           v: tick.liquidityChange.v.add(new BN(10000000).mul(LIQUIDITY_DENOMINATOR))
         },
-        feeGrowthOutsideX: { v: tick.feeGrowthOutsideX.v.add(new BN(10)) }
+        feeGrowthOutsideX: { v: tick.feeGrowthOutsideX.v.add(new BN(10)) },
+        feeGrowthOutsideY: { v: tick.feeGrowthOutsideY.v.add(new BN(10)) }
       }))
 
       const paramsApy: ApyRewardsParams = {

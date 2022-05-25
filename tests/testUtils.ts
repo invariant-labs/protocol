@@ -361,7 +361,7 @@ export const createTickArray = (size: number) => {
       liquidityGross: { v: new BN(0) },
       sqrtPrice: { v: new BN(0) },
       feeGrowthOutsideX: { v: new BN(Math.random() * 100) },
-      feeGrowthOutsideY: { v: new BN(0) },
+      feeGrowthOutsideY: { v: new BN(Math.random() * 100) },
       secondsPerLiquidityOutside: { v: new BN(0) },
       bump: 0
     }
