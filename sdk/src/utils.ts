@@ -65,7 +65,8 @@ export enum ERRORS {
   ALLOWANCE = 'custom program error: 0x1',
   NO_SIGNERS = 'Error: No signers',
   CONSTRAINT_RAW = '0x7d3',
-  CONSTRAINT_SEEDS = '0x7d6'
+  CONSTRAINT_SEEDS = '0x7d6',
+  ACCOUNT_OWNED_BY_WRONG_PROGRAM = '0xbbf'
 }
 
 export enum INVARIANT_ERRORS {
