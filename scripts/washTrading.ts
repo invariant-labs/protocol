@@ -133,7 +133,7 @@ const main = async () => {
     swapLogs.forEach(log => console.log(log))
 
     try {
-      const tx = await market.swapSplit(swapVars, MINTER)
+      const tx = await market.swap(swapVars, MINTER)
       console.log('success: ', tx)
     } catch (err: any) {
       if (isRPCError(err)) {

@@ -757,7 +757,7 @@ export class Market {
       tickmap.bitmap,
       pool.currentTickIndex,
       pool.tickSpacing,
-      10,
+      18,
       Infinity,
       xToY ? 'down' : 'up'
     )
@@ -766,7 +766,7 @@ export class Market {
       tickmap.bitmap,
       pool.currentTickIndex,
       pool.tickSpacing,
-      3,
+      2,
       Infinity,
       xToY ? 'up' : 'down'
     )

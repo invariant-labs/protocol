@@ -140,7 +140,7 @@ describe('compare', () => {
       accountY,
       byAmountIn: true
     }
-    await market.swapSplit(swapVars, owner)
+    await market.swap(swapVars, owner)
 
     // make swap on second pool without simulation TODO
     const swapVars2: Swap = {
