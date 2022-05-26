@@ -6,13 +6,15 @@ import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { createToken, getTime, signAndSend, almostEqual } from './testUtils'
 import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { toDecimal } from '../staker-sdk/lib/utils'
+import { STAKER_ERRORS, toDecimal } from '../staker-sdk/lib/utils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { FeeTier } from '@invariant-labs/sdk/lib/market'
+import { FeeTier, RemovePosition } from '@invariant-labs/sdk/lib/market'
 import { InitPosition, Swap, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
 import { CreateIncentive, CreateStake, Withdraw, Decimal, Staker } from '../staker-sdk/src/staker'
 import { assert } from 'chai'
 import { tou64 } from '@invariant-labs/sdk/src/utils'
+import { assertThrowsAsync } from '@invariant-labs/sdk/lib/utils'
+import { ERRORS } from '@invariant-labs/sdk/lib/utils'
 
 describe('Withdraw tests', () => {
   const provider = Provider.local()
@@ -244,7 +246,6 @@ describe('Withdraw tests', () => {
 
     // should be around half of reward
     const balanceAfter = (await incentiveToken.getAccountInfo(ownerTokenAcc)).amount
-    console.log(balanceAfter.toString())
     assert.ok(almostEqual(new BN(balanceAfter), new BN('500'), epsilon))
   })
   it('Withdraw - remove position', async () => {
@@ -416,7 +417,7 @@ describe('Withdraw tests', () => {
 
     await assertThrowsAsync(
       signAndSend(withdrawTx, [positionOwner], staker.connection),
-      STAKER_ERRORS.POSITION_DOES_NOT_EXIST
+      ERRORS.ACCOUNT_OWNED_BY_WRONG_PROGRAM
     )
   })
   it('Withdraw - move position index', async () => {
