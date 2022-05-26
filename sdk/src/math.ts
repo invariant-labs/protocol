@@ -38,7 +38,7 @@ export const isInitialized = (tickmap: Tickmap, index: number, tickSpacing: numb
 
   return value !== 0
 }
-export const priceToTick = (val): number => {
+export const priceToTick = (val: number): number => {
   return Math.log(val) / Math.log(1.0001)
 }
 

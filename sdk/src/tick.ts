@@ -68,6 +68,6 @@ export const alignTickToSpacing = (inputTick: number, tickSpacing: number): numb
   }
 }
 
-const remEuklid = (a, b): number => {
+const remEuklid = (a: number, b: number): number => {
   return ((a % b) + b) % b
 }
