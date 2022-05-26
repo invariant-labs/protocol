@@ -567,12 +567,6 @@ export class Market {
       positionInstruction = await this.initPositionInstruction(initPosition, false)
     }
 
-    if (this.network === Network.DEV || this.network === Network.LOCAL) {
-      // REMOVE ME WHEN 1.9 HITS MAINNET
-      if (!lowerExists || !upperExists || !listExists) {
-        tx.add(ComputeUnitsInstruction(400000, payer))
-      }
-    }
     if (!lowerExists && lowerInstruction) {
       tx.add(lowerInstruction)
     }
@@ -630,10 +624,6 @@ export class Market {
     const transaction = new Transaction({
       feePayer: payerPubkey
     })
-    if (this.network === Network.DEV || this.network === Network.LOCAL) {
-      // REMOVE ME WHEN 1.9 HITS MAINNET
-      transaction.add(ComputeUnitsInstruction(400000, payerPubkey))
-    }
 
     transaction
       .add(
