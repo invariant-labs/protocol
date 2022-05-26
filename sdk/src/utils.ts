@@ -234,7 +234,7 @@ export const sleep = async (ms: number) => {
   return await new Promise(resolve => setTimeout(resolve, ms))
 }
 
-export const tou64 = amount => {
+export const tou64 = (amount: BN) => {
   // @ts-ignore
   return new u64(amount.toString())
 }
@@ -773,8 +773,8 @@ export const getVolume = (
 
 export const getTokenXInRange = (ticks: ParsedTick[], lowerTick: number, upperTick: number): BN => {
   let sumTokenX: BN = new BN(0)
-  let currentIndex: number = null
-  let nextIndex: number = null
+  let currentIndex: number | null
+  let nextIndex: number | null
 
   for (let i = 0; i < ticks.length - 1; i++) {
     currentIndex = ticks[i].index
@@ -794,21 +794,19 @@ export const getTokenXInRange = (ticks: ParsedTick[], lowerTick: number, upperTi
 export const getRangeBasedOnFeeGrowth = (
   tickArrayPrevious: ParsedTick[],
   tickMapCurrent: Map<number, ParsedTick>
-) => {
-  let tickLower: number = null
-  let tickUpper: number = null
+): { tickLower: number | null; tickUpper: number | null } => {
+  let tickLower: number | null = null
+  let tickUpper: number | null = null
   let tickLowerSaved = false
   let lastIndex = 0
-  let previousSnapTick: ParsedTick = null
-  let currentSnapTick: ParsedTick = null
+  let previousSnapTick: ParsedTick
+  let currentSnapTick: ParsedTick | undefined
 
   for (let i = 0; i < tickArrayPrevious.length - 1; i++) {
     previousSnapTick = tickArrayPrevious[i]
-    if (tickMapCurrent.has(previousSnapTick.index)) {
-      currentSnapTick = tickMapCurrent.get(previousSnapTick.index)
-    } else {
-      continue
-    }
+
+    currentSnapTick = tickMapCurrent.get(previousSnapTick.index)
+    if (currentSnapTick === undefined) continue
 
     if (
       !(
@@ -824,7 +822,7 @@ export const getRangeBasedOnFeeGrowth = (
       tickUpper = currentSnapTick.index
     }
   }
-  if (tickLower == tickUpper) {
+  if (tickLower === tickUpper) {
     tickUpper = tickArrayPrevious[lastIndex + 1].index
   }
   return {
@@ -891,6 +889,9 @@ export const calculateTokenXinRange = (
     tickLower = lower
     tickUpper = upper
   }
+  if (tickLower == null || tickUpper == null) {
+    throw new Error(Errors.TickNotFound)
+  }
 
   tokenXamount = getTokenXInRange(tickArrayCurrent, tickLower, tickUpper)
 
@@ -902,18 +903,19 @@ export const dailyFactorPool = (tokenXamount: BN, volume: number, feeTier: FeeTi
   return (volume * fee) / tokenXamount.toNumber()
 }
 
-export const getTicksFromSwapRange = (ticks: ParsedTick[], currentTickIndex: number) => {
-  let lower = null
-  let upper = null
-
+export const getTicksFromSwapRange = (
+  ticks: ParsedTick[],
+  currentTickIndex: number
+): { lower: number | null; upper: number | null } => {
   for (let i = 0; i < ticks.length - 1; i++) {
-    lower = ticks[i].index
-    upper = ticks[i + 1].index
+    const lower = ticks[i].index
+    const upper = ticks[i + 1].index
 
     if (lower <= currentTickIndex && upper >= currentTickIndex) {
       return { lower, upper }
     }
   }
+  return { lower: null, upper: null }
 }
 
 export const poolAPY = (params: ApyPoolParams) => {
@@ -926,7 +928,7 @@ export const poolAPY = (params: ApyPoolParams) => {
     volumeX,
     volumeY
   } = params
-  let dailyFactor: number = null
+  let dailyFactor: number | null
   try {
     const { tokenXamount, tickLower, tickUpper } = calculateTokenXinRange(
       ticksPreviousSnapshot,
@@ -971,7 +973,7 @@ export const rewardsAPY = (params: ApyRewardsParams) => {
     tokenDecimal,
     duration
   } = params
-  let dailyFactor: number = null
+  let dailyFactor: number | null
   try {
     const { tokenXamount } = calculateTokenXinRange(
       ticksPreviousSnapshot,
