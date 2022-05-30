@@ -404,13 +404,10 @@ export const toPercent = (x: number, decimals: number = 0): Decimal => {
 
 export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
   const { sqrtPriceLimit, xToY, currentTick, tickSpacing, tickmap } = closerLimit
-  let index: number | null
 
-  if (xToY) {
-    index = getPreviousTick(tickmap, currentTick, tickSpacing)
-  } else {
-    index = getNextTick(tickmap, currentTick, tickSpacing)
-  }
+  let index: number | null = xToY
+    ? getPreviousTick(tickmap, currentTick, tickSpacing)
+    : getNextTick(tickmap, currentTick, tickSpacing)
   let sqrtPrice: Decimal
   let init: boolean
 
