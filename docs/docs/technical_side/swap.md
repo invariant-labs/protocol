@@ -58,13 +58,3 @@ const simProps: SimulateSwapInterface = {
 
 const result = simulateSwap(simProps)
 ```
-
-### Solana <1.9
-
-It is recommended to use the function `swapSplit` to prevent overflow due to compute unit limitations.
-
-```ts
-await market.swapSplit(swapVars, owner)
-```
-
-It divides a big swap into smaller ones to minimize compute units.
