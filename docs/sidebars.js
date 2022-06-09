@@ -54,7 +54,6 @@ module.exports = {
         'technical_side/minting_position',
         'technical_side/position_list',
         'technical_side/swap',
-        'technical_side/withdraw',
         'technical_side/invariant_errors'
       ]
     },
