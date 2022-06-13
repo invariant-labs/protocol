@@ -795,34 +795,39 @@ export const getRangeBasedOnFeeGrowth = (
 ): { tickLower: number | null; tickUpper: number | null } => {
   let tickLower: number | null = null
   let tickUpper: number | null = null
-  let tickLowerSaved = false
-  let lastIndex = 0
-  let previousSnapTick: ParsedTick
+  let tickLowerIndex: number = -1
+  let tickUpperIndex: number = -1
+  let tickLowerIndexSaved = false
+
   let currentSnapTick: ParsedTick | undefined
+  const MIN_INDEX = 0
+  const MAX_INDEX = tickArrayPrevious.length - 1
 
   for (let i = 0; i < tickArrayPrevious.length - 1; i++) {
-    previousSnapTick = tickArrayPrevious[i]
-
-    currentSnapTick = tickMapCurrent.get(previousSnapTick.index)
+    currentSnapTick = tickMapCurrent.get(tickArrayPrevious[i].index)
     if (currentSnapTick === undefined) continue
 
     if (
       !(
-        previousSnapTick.feeGrowthOutsideX.v.eq(currentSnapTick.feeGrowthOutsideX.v) &&
-        previousSnapTick.feeGrowthOutsideY.v.eq(currentSnapTick.feeGrowthOutsideY.v)
+        tickArrayPrevious[i].feeGrowthOutsideX.v.eq(currentSnapTick.feeGrowthOutsideX.v) &&
+        tickArrayPrevious[i].feeGrowthOutsideY.v.eq(currentSnapTick.feeGrowthOutsideY.v)
       )
     ) {
-      if (!tickLowerSaved) {
-        tickLower = previousSnapTick.index
-        tickLowerSaved = true
-        lastIndex = i
+      if (!tickLowerIndexSaved) {
+        tickLowerIndex = i
+        tickLowerIndexSaved = true
       }
-      tickUpper = currentSnapTick.index
+      tickUpperIndex = i
     }
   }
-  if (tickLower === tickUpper) {
-    tickUpper = tickArrayPrevious[lastIndex + 1].index
-  }
+  tickLower =
+    tickLowerIndex > MIN_INDEX
+      ? tickArrayPrevious[tickLowerIndex - 1].index
+      : tickArrayPrevious[tickLowerIndex].index
+  tickUpper =
+    tickUpperIndex < MAX_INDEX
+      ? tickArrayPrevious[tickUpperIndex + 1].index
+      : tickArrayPrevious[tickUpperIndex].index
   return {
     tickLower,
     tickUpper
