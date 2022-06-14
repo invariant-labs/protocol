@@ -1953,8 +1953,13 @@ describe('Math', () => {
       //let result = false
       console.log('###########################################################')
       array.forEach(paramsApy => {
+        const tempX = paramsApy.volumeX
+        const tempY = paramsApy.volumeY
+        console.log('######## APY #############################################################')
+        console.log('volume x', tempX)
+        console.log('volume y', tempY)
         const poolApy = poolAPY(paramsApy)
-        console.log('######## APY ######')
+
         console.log(poolApy.apy)
         console.log(poolApy.apyFactor)
       })

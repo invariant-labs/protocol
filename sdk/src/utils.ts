@@ -798,7 +798,7 @@ export const getRangeBasedOnFeeGrowth = (
   let tickLowerIndex: number = -1
   let tickUpperIndex: number = -1
   let tickLowerIndexSaved = false
-
+  //console.log('here 1.1 ')
   let currentSnapTick: ParsedTick | undefined
   const MIN_INDEX = 0
   const MAX_INDEX = tickArrayPrevious.length - 1
@@ -820,14 +820,23 @@ export const getRangeBasedOnFeeGrowth = (
       tickUpperIndex = i
     }
   }
-  tickLower =
-    tickLowerIndex > MIN_INDEX
-      ? tickArrayPrevious[tickLowerIndex - 1].index
-      : tickArrayPrevious[tickLowerIndex].index
-  tickUpper =
-    tickUpperIndex < MAX_INDEX
-      ? tickArrayPrevious[tickUpperIndex + 1].index
-      : tickArrayPrevious[tickUpperIndex].index
+  //console.log('here 1.2 ')
+  //console.log(tickLowerIndex)
+  //console.log(tickUpperIndex)
+
+  if (tickLowerIndex !== -1) {
+    tickLower =
+      tickLowerIndex > MIN_INDEX
+        ? tickArrayPrevious[tickLowerIndex - 1].index
+        : tickArrayPrevious[tickLowerIndex].index
+  }
+  if (tickUpperIndex !== -1) {
+    tickUpper =
+      tickUpperIndex < MAX_INDEX
+        ? tickArrayPrevious[tickUpperIndex + 1].index
+        : tickArrayPrevious[tickUpperIndex].index
+  }
+  //console.log('here 1.3 ')
   return {
     tickLower,
     tickUpper
@@ -875,6 +884,7 @@ export const calculateTokenXinRange = (
   let tokenXamount = new BN(0)
 
   if (!(tickArrayPrevious.length || tickArrayCurrent.length)) {
+    //console.log('error 1 ')
     throw new Error(Errors.TickArrayIsEmpty)
   }
   if (!(tickArrayPrevious.length && tickArrayCurrent.length)) {
@@ -884,15 +894,16 @@ export const calculateTokenXinRange = (
     tokenXamount = getTokenXInRange(notEmptyArray, tickLower, tickUpper)
     return { tokenXamount, tickLower, tickUpper }
   }
-
+  //console.log('here 1 ')
   let { tickLower, tickUpper } = getRangeBasedOnFeeGrowth(tickArrayPrevious, tickMapCurrent)
-
+  //console.log('here 2 ')
   if (tickLower == null || tickUpper == null) {
     const { lower, upper } = getTicksFromSwapRange(tickArrayCurrent, currentTickIndex)
     tickLower = lower
     tickUpper = upper
   }
   if (tickLower == null || tickUpper == null) {
+    //console.log('error 2 ')
     throw new Error(Errors.TickNotFound)
   }
 
@@ -933,16 +944,21 @@ export const poolAPY = (params: ApyPoolParams) => {
   } = params
   let dailyFactor: number | null
   try {
+    //console.log('**************************')
     const { tokenXamount, tickLower, tickUpper } = calculateTokenXinRange(
       ticksPreviousSnapshot,
       ticksCurrentSnapshot,
       currentTickIndex
     )
+
     const previousSqrtPrice = calculatePriceSqrt(tickLower)
     const currentSqrtPrice = calculatePriceSqrt(tickUpper)
     const volume = getVolume(volumeX, volumeY, previousSqrtPrice, currentSqrtPrice)
+    //console.log('volume', volume)
     dailyFactor = dailyFactorPool(tokenXamount, volume, feeTier)
+    //console.log('dailyFactor', dailyFactor)
   } catch (e: any) {
+    console.log('error', e.message)
     dailyFactor = 0
   }
 
