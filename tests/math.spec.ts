@@ -59,7 +59,7 @@ import {
   getVolume,
   U128MAX
 } from '@invariant-labs/sdk/src/utils'
-import { createTickArray, setInitialized } from './testUtils'
+import { createTickArray, dataApy, setInitialized, jsonArrayToTicks } from './testUtils'
 import { Decimal, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
 import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
 import { Keypair } from '@solana/web3.js'
@@ -1918,6 +1918,7 @@ describe('Math', () => {
         feeTier: FEE_TIERS[3],
         ticksPreviousSnapshot: previous,
         ticksCurrentSnapshot: current,
+        currentTickIndex: 0,
         weeklyFactor: 0.002,
         volumeX: 50_000000,
         volumeY: 50_000000
@@ -1929,12 +1930,46 @@ describe('Math', () => {
       }
       assert.ok(result)
     })
+    it('case 1', async () => {
+      //const dailyFactorRewards = 0.0003713
+      const previous = createTickArray(1000)
+      //let temp = dataApy['4FkGNJMvKFk9PFwn8TBtk1ShUKege6D5Au87ezwLWiqk']
+
+      const array: ApyPoolParams[] = []
+
+      for (const value of Object.values(dataApy)) {
+        const paramsApy: ApyPoolParams = {
+          feeTier: { fee: new BN(value.feeTier.fee) },
+          ticksPreviousSnapshot: jsonArrayToTicks(value.ticksPreviousSnapshot),
+          ticksCurrentSnapshot: jsonArrayToTicks(value.ticksCurrentSnapshot),
+          currentTickIndex: value.currentTickIndex,
+          weeklyFactor: value.weeklyFactor,
+          volumeX: value.volumeX,
+          volumeY: value.volumeY
+        }
+        array.push(paramsApy)
+      }
+
+      //let result = false
+      console.log('###########################################################')
+      array.forEach(paramsApy => {
+        const poolApy = poolAPY(paramsApy)
+        console.log('######## APY ######')
+        console.log(poolApy.apy)
+        console.log(poolApy.apyFactor)
+      })
+
+      // if (poolApy.apy > 130 || poolApy.apy < 180) {
+      //   result = true
+      // }
+      // assert.ok(result)
+    })
   })
   describe('reward APY tests', () => {
     it('case 1', async () => {
       const previous = createTickArray(1000)
 
-      let current: Tick[] = previous.map(tick => ({
+      const current: Tick[] = previous.map(tick => ({
         ...tick,
         liquidityChange: {
           v: tick.liquidityChange.v.add(new BN(10000000).mul(LIQUIDITY_DENOMINATOR))
@@ -1946,6 +1981,7 @@ describe('Math', () => {
       const paramsApy: ApyRewardsParams = {
         ticksPreviousSnapshot: previous,
         ticksCurrentSnapshot: current,
+        currentTickIndex: 1000,
         weeklyFactor: 0.01,
         rewardInUSD: 100,
         tokenXprice: 1.3425,
