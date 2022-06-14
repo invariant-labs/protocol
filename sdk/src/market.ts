@@ -246,6 +246,23 @@ export class Market {
     ).map(a => a.account) as Tick[]
   }
 
+  async getAllUserPositions(owner: PublicKey): Promise<PositionStructure[]> {
+    const positionStructs: PositionStructure[] = []
+    const positions: Position[] = (
+      await this.program.account.position.all([
+        {
+          memcmp: { bytes: bs58.encode(owner.toBuffer()), offset: 8 }
+        }
+      ])
+    ).map(a => a.account) as Position[]
+
+    positions.map(position => ({
+      ...position
+    }))
+
+    return positionStructs
+  }
+
   async getLiquidityOnTicks(pair: Pair) {
     const ticks = await this.getClosestTicks(pair, Infinity)
 
@@ -1338,6 +1355,19 @@ export interface Position {
   tokensOwedY: Decimal
   bump: number
 }
+
+export interface PositionStructure {
+  tickerTokenA: string
+  tickerTokenB: string
+  amountTokenA: BN
+  amountTokenB: BN
+  lowerPrice: Decimal
+  upperPrice: Decimal
+  value: Decimal
+  unclaimedFees: Decimal
+  feeTier: Decimal
+}
+
 export interface FeeTier {
   fee: BN
   tickSpacing?: number
