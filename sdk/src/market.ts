@@ -18,14 +18,19 @@ import {
   isInitialized
 } from './math'
 import {
+  calculateClaimAmount,
   feeToTickSpacing,
   FEE_TIERS,
+  getCoingeckoTokenPrice,
   getFeeTierAddress,
   getMaxTick,
   getMinTick,
   getTokensData,
+  getTokenValueInUSD,
   parseLiquidityOnTicks,
+  PositionClaimData,
   SEED,
+  SimulateClaim,
   simulateSwap,
   SimulateSwapInterface,
   SimulationResult,
@@ -269,19 +274,23 @@ export class Market {
       const upperPrice = { v: calculatePriceSqrt(position.upperTickIndex).v.pow(new BN(2)) }
       const feeTier: FeeTier = { fee: pool.fee.v, tickSpacing: pool.tickSpacing }
       const tokensData = await getTokensData()
-      const tokenA = tokensData[pool.tokenX.toString()]
-      const tokenB = tokensData[pool.tokenY.toString()]
-      //const value = 0
+      const tokenX = tokensData[pool.tokenX.toString()]
+      const tokenY = tokensData[pool.tokenY.toString()]
+      const priceTokenX = await getCoingeckoTokenPrice(tokenX.id)
+      const priceTokenY = await getCoingeckoTokenPrice(tokenY.id)
+      const valueTokenX = getTokenValueInUSD(priceTokenX, position.tokensOwedX, tokenX.decimals)
+      const valueTokenY = getTokenValueInUSD(priceTokenY, position.tokensOwedY, tokenY.decimals)
+      const valueInUsd = valueTokenX + valueTokenY
 
       positionStructs.push({
-        tickerTokenA: tokenA.ticker,
-        tickerTokenB: tokenB.ticker,
-        amountTokenA: position.tokensOwedX,
-        amountTokenB: position.tokensOwedY,
+        tickerTokenX: tokenX.ticker,
+        tickerTokenY: tokenY.ticker,
+        amountTokenX: position.tokensOwedX,
+        amountTokenY: position.tokensOwedY,
         lowerPrice,
         upperPrice,
-        value: { v: new BN(0) },
-        unclaimedFees: { v: new BN(0) },
+        value: valueInUsd,
+        unclaimedFees: { v: new BN(0) }, //TODO calculate unclaimed fees
         feeTier
       })
     })
@@ -1383,13 +1392,13 @@ export interface Position {
 }
 
 export interface PositionStructure {
-  tickerTokenA: string
-  tickerTokenB: string
-  amountTokenA: Decimal
-  amountTokenB: Decimal
+  tickerTokenX: string
+  tickerTokenY: string
+  amountTokenX: Decimal
+  amountTokenY: Decimal
   lowerPrice: Decimal
   upperPrice: Decimal
-  value: Decimal
+  value: number
   unclaimedFees: Decimal
   feeTier: FeeTier
 }
