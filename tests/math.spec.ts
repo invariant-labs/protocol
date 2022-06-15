@@ -56,8 +56,10 @@ import {
   TokensOwed,
   toPercent,
   toPrice,
-  getVolume,
-  U128MAX
+  getTokensData,
+  U128MAX,
+  TokenData,
+  getCoingeckoTokenPrice
 } from '@invariant-labs/sdk/src/utils'
 import { createTickArray, setInitialized } from './testUtils'
 import { Decimal, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
@@ -1959,6 +1961,18 @@ describe('Math', () => {
         result = true
       }
       assert.ok(result)
+    })
+  })
+  describe('test getTokenData', () => {
+    it('check ticker and decimals', async () => {
+      const tokenData = await getTokensData()
+      const usdc = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
+      const token: TokenData = tokenData[usdc]
+      assert.equal(token.ticker, 'USDC')
+      assert.equal(token.decimals, 6)
+      assert.equal(token.id, 'usd-coin')
+      const price = await getCoingeckoTokenPrice('usd-coin')
+      console.log(price)
     })
   })
 })
