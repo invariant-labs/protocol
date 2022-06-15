@@ -59,7 +59,8 @@ import {
   getTokensData,
   U128MAX,
   TokenData,
-  getCoingeckoTokenPrice
+  getCoingeckoTokenPrice,
+  getTokenValueInUSD
 } from '@invariant-labs/sdk/src/utils'
 import { createTickArray, setInitialized } from './testUtils'
 import { Decimal, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
@@ -1972,7 +1973,16 @@ describe('Math', () => {
       assert.equal(token.decimals, 6)
       assert.equal(token.id, 'usd-coin')
       const price = await getCoingeckoTokenPrice('usd-coin')
-      console.log(price)
+    })
+  })
+  describe('test getTokenValueInUSD', () => {
+    it('check calculated value', async () => {
+      const decimals: number = 6
+      const tokenAmount: Decimal = { v: new BN(10).pow(new BN(decimals)).muln(100) }
+      const price: number = 123.456
+
+      const value = getTokenValueInUSD(price, tokenAmount, decimals)
+      assert.equal(value, 12345.6)
     })
   })
 })
