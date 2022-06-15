@@ -822,14 +822,18 @@ export const getRangeBasedOnFeeGrowth = (
       tickUpperIndex = i
     }
   }
-  tickLower =
-    tickLowerIndex > MIN_INDEX
-      ? tickArrayPrevious[tickLowerIndex - 1].index
-      : tickArrayPrevious[tickLowerIndex].index
-  tickUpper =
-    tickUpperIndex < MAX_INDEX
-      ? tickArrayPrevious[tickUpperIndex + 1].index
-      : tickArrayPrevious[tickUpperIndex].index
+  if (tickLowerIndex !== -1) {
+    tickLower =
+      tickLowerIndex > MIN_INDEX
+        ? tickArrayPrevious[tickLowerIndex - 1].index
+        : tickArrayPrevious[tickLowerIndex].index
+  }
+  if (tickUpperIndex !== -1) {
+    tickUpper =
+      tickUpperIndex < MAX_INDEX
+        ? tickArrayPrevious[tickUpperIndex + 1].index
+        : tickArrayPrevious[tickUpperIndex].index
+  }
   return {
     tickLower,
     tickUpper
