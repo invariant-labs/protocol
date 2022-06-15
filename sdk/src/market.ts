@@ -19,9 +19,11 @@ import {
 } from './math'
 import {
   feeToTickSpacing,
+  FEE_TIERS,
   getFeeTierAddress,
   getMaxTick,
   getMinTick,
+  getTokensData,
   parseLiquidityOnTicks,
   SEED,
   simulateSwap,
@@ -158,6 +160,10 @@ export class Market {
     return (await this.program.account.pool.fetch(address)) as PoolStructure
   }
 
+  async getPoolByAddress(address: PublicKey) {
+    return (await this.program.account.pool.fetch(address)) as PoolStructure
+  }
+
   public async onPoolChange(
     tokenX: PublicKey,
     tokenY: PublicKey,
@@ -248,6 +254,7 @@ export class Market {
 
   async getAllUserPositions(owner: PublicKey): Promise<PositionStructure[]> {
     const positionStructs: PositionStructure[] = []
+
     const positions: Position[] = (
       await this.program.account.position.all([
         {
@@ -256,9 +263,28 @@ export class Market {
       ])
     ).map(a => a.account) as Position[]
 
-    positions.map(position => ({
-      ...position
-    }))
+    positions.map(async position => {
+      const pool: PoolStructure = await this.getPoolByAddress(position.pool)
+      const lowerPrice = { v: calculatePriceSqrt(position.lowerTickIndex).v.pow(new BN(2)) }
+      const upperPrice = { v: calculatePriceSqrt(position.upperTickIndex).v.pow(new BN(2)) }
+      const feeTier: FeeTier = { fee: pool.fee.v, tickSpacing: pool.tickSpacing }
+      const tokensData = await getTokensData()
+      const tokenA = tokensData[pool.tokenX.toString()]
+      const tokenB = tokensData[pool.tokenY.toString()]
+      //const value = 0
+
+      positionStructs.push({
+        tickerTokenA: tokenA.ticker,
+        tickerTokenB: tokenB.ticker,
+        amountTokenA: position.tokensOwedX,
+        amountTokenB: position.tokensOwedY,
+        lowerPrice,
+        upperPrice,
+        value: { v: new BN(0) },
+        unclaimedFees: { v: new BN(0) },
+        feeTier
+      })
+    })
 
     return positionStructs
   }
@@ -1359,13 +1385,13 @@ export interface Position {
 export interface PositionStructure {
   tickerTokenA: string
   tickerTokenB: string
-  amountTokenA: BN
-  amountTokenB: BN
+  amountTokenA: Decimal
+  amountTokenB: Decimal
   lowerPrice: Decimal
   upperPrice: Decimal
   value: Decimal
   unclaimedFees: Decimal
-  feeTier: Decimal
+  feeTier: FeeTier
 }
 
 export interface FeeTier {
