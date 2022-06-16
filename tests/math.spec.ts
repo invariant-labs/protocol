@@ -1978,7 +1978,7 @@ describe('Math', () => {
   describe('test getTokenValueInUSD', () => {
     it('check calculated value', async () => {
       const decimals: number = 6
-      const tokenAmount: Decimal = { v: new BN(10).pow(new BN(decimals)).muln(100) }
+      const tokenAmount: BN = new BN(10).pow(new BN(decimals)).muln(100)
       const price: number = 123.456
 
       const value = getTokenValueInUSD(price, tokenAmount, decimals)
