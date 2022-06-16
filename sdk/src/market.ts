@@ -34,7 +34,8 @@ import {
   simulateSwap,
   SimulateSwapInterface,
   SimulationResult,
-  SimulationStatus
+  SimulationStatus,
+  TokenData
 } from './utils'
 import { Invariant, IDL } from './idl/invariant'
 import { DENOMINATOR, IWallet, Pair, signAndSend } from '.'
@@ -274,47 +275,74 @@ export class Market {
     ).map(a => a.account) as Position[]
 
     positions.map(async position => {
-      const pool: PoolStructure = await this.getPoolByAddress(position.pool)
-      const lowerPrice = { v: calculatePriceSqrt(position.lowerTickIndex).v.pow(new BN(2)) }
-      const upperPrice = { v: calculatePriceSqrt(position.upperTickIndex).v.pow(new BN(2)) }
-      const feeTier: FeeTier = { fee: pool.fee.v, tickSpacing: pool.tickSpacing }
-      const pair: Pair = new Pair(pool.tokenX, pool.tokenY, feeTier)
+      const {
+        pool: poolAddress,
+        lowerTickIndex,
+        upperTickIndex,
+        tokensOwedX,
+        tokensOwedY,
+        liquidity,
+        feeGrowthInsideX,
+        feeGrowthInsideY
+      }: Position = position
+
+      const {
+        fee,
+        tickSpacing,
+        tokenX,
+        tokenY,
+        currentTickIndex,
+        feeGrowthGlobalX,
+        feeGrowthGlobalY
+      }: PoolStructure = await this.getPoolByAddress(poolAddress)
+      const lowerPrice: Decimal = { v: calculatePriceSqrt(lowerTickIndex).v.pow(new BN(2)) }
+      const upperPrice: Decimal = { v: calculatePriceSqrt(upperTickIndex).v.pow(new BN(2)) }
+      const feeTier: FeeTier = { fee: fee.v, tickSpacing }
       const tokensData = await getTokensData()
-      const tokenX = tokensData[pool.tokenX.toString()]
-      const tokenY = tokensData[pool.tokenY.toString()]
-      const priceTokenX = await getCoingeckoTokenPrice(tokenX.id)
-      const priceTokenY = await getCoingeckoTokenPrice(tokenY.id)
-      const valueTokenX = getTokenValueInUSD(priceTokenX, position.tokensOwedX.v, tokenX.decimals)
-      const valueTokenY = getTokenValueInUSD(priceTokenY, position.tokensOwedY.v, tokenY.decimals)
-      const valueInUsd = valueTokenX + valueTokenY
+      const tokenXData: TokenData = tokensData[tokenX.toString()]
+      const tokenYData: TokenData = tokensData[tokenY.toString()]
+      const priceTokenX: number = await getCoingeckoTokenPrice(tokenXData.id)
+      const priceTokenY: number = await getCoingeckoTokenPrice(tokenYData.id)
+      const valueTokenX: number = getTokenValueInUSD(
+        priceTokenX,
+        tokensOwedX.v,
+        tokenXData.decimals
+      )
+      const valueTokenY: number = getTokenValueInUSD(
+        priceTokenY,
+        tokensOwedY.v,
+        tokenYData.decimals
+      )
+      const valueInUsd: number = valueTokenX + valueTokenY
+
       const positionData: PositionClaimData = {
-        liquidity: position.liquidity,
-        feeGrowthInsideX: position.feeGrowthInsideX,
-        feeGrowthInsideY: position.feeGrowthInsideY,
-        tokensOwedX: position.tokensOwedX,
-        tokensOwedY: position.tokensOwedY
+        liquidity,
+        feeGrowthInsideX,
+        feeGrowthInsideY,
+        tokensOwedX,
+        tokensOwedY
       }
 
       const claim: SimulateClaim = {
         position: positionData,
-        tickLower: await this.getTickByPool(position.pool, position.lowerTickIndex),
-        tickUpper: await this.getTickByPool(position.pool, position.upperTickIndex),
-        tickCurrent: pool.currentTickIndex,
-        feeGrowthGlobalX: pool.feeGrowthGlobalX,
-        feeGrowthGlobalY: pool.feeGrowthGlobalY
+        tickLower: await this.getTickByPool(poolAddress, lowerTickIndex),
+        tickUpper: await this.getTickByPool(poolAddress, upperTickIndex),
+        tickCurrent: currentTickIndex,
+        feeGrowthGlobalX,
+        feeGrowthGlobalY
       }
 
       const [unclaimedFeesX, unclaimedFeesY] = calculateClaimAmount(claim)
 
       const unclaimedFees: number =
-        getTokenValueInUSD(priceTokenX, unclaimedFeesX, tokenX.decimals) +
-        getTokenValueInUSD(priceTokenX, unclaimedFeesY, tokenX.decimals)
+        getTokenValueInUSD(priceTokenX, unclaimedFeesX, tokenXData.decimals) +
+        getTokenValueInUSD(priceTokenY, unclaimedFeesY, tokenYData.decimals)
 
       positionStructs.push({
-        tickerTokenX: tokenX.ticker,
-        tickerTokenY: tokenY.ticker,
-        amountTokenX: position.tokensOwedX,
-        amountTokenY: position.tokensOwedY,
+        tickerTokenX: tokenXData.ticker,
+        tickerTokenY: tokenYData.ticker,
+        amountTokenX: tokensOwedX,
+        amountTokenY: tokensOwedY,
         lowerPrice,
         upperPrice,
         value: valueInUsd,
