@@ -228,6 +228,11 @@ export class Market {
     return (await this.program.account.tick.fetch(tickAddress)) as Tick
   }
 
+  async getTickByPool(poolAddress: PublicKey, index: number) {
+    const { tickAddress } = await this.getTickAddressByPool(poolAddress, index)
+    return (await this.program.account.tick.fetch(tickAddress)) as Tick
+  }
+
   async getClosestTicks(pair: Pair, limit: number, maxRange?: number, oneWay?: 'up' | 'down') {
     const state = await this.getPool(pair)
     const tickmap = await this.getTickmap(pair)
@@ -273,6 +278,7 @@ export class Market {
       const lowerPrice = { v: calculatePriceSqrt(position.lowerTickIndex).v.pow(new BN(2)) }
       const upperPrice = { v: calculatePriceSqrt(position.upperTickIndex).v.pow(new BN(2)) }
       const feeTier: FeeTier = { fee: pool.fee.v, tickSpacing: pool.tickSpacing }
+      const pair: Pair = new Pair(pool.tokenX, pool.tokenY, feeTier)
       const tokensData = await getTokensData()
       const tokenX = tokensData[pool.tokenX.toString()]
       const tokenY = tokensData[pool.tokenY.toString()]
@@ -281,6 +287,24 @@ export class Market {
       const valueTokenX = getTokenValueInUSD(priceTokenX, position.tokensOwedX, tokenX.decimals)
       const valueTokenY = getTokenValueInUSD(priceTokenY, position.tokensOwedY, tokenY.decimals)
       const valueInUsd = valueTokenX + valueTokenY
+      const positionData: PositionClaimData = {
+        liquidity: position.liquidity,
+        feeGrowthInsideX: position.feeGrowthInsideX,
+        feeGrowthInsideY: position.feeGrowthInsideY,
+        tokensOwedX: position.tokensOwedX,
+        tokensOwedY: position.tokensOwedY
+      }
+
+      const claim: SimulateClaim = {
+        position: positionData,
+        tickLower: await this.getTickByPool(position.pool, position.lowerTickIndex),
+        tickUpper: await this.getTickByPool(position.pool, position.upperTickIndex),
+        tickCurrent: pool.currentTickIndex,
+        feeGrowthGlobalX: pool.feeGrowthGlobalX,
+        feeGrowthGlobalY: pool.feeGrowthGlobalY
+      }
+
+      const [unclaimedFeesX, unclaimedFeesY] = calculateClaimAmount(claim)
 
       positionStructs.push({
         tickerTokenX: tokenX.ticker,
@@ -335,6 +359,21 @@ export class Market {
 
   async getTickAddress(pair: Pair, index: number) {
     const poolAddress = await pair.getAddress(this.program.programId)
+    const indexBuffer = Buffer.alloc(4)
+    indexBuffer.writeInt32LE(index)
+
+    const [tickAddress, tickBump] = await PublicKey.findProgramAddress(
+      [Buffer.from(utils.bytes.utf8.encode(TICK_SEED)), poolAddress.toBuffer(), indexBuffer],
+      this.program.programId
+    )
+
+    return {
+      tickAddress,
+      tickBump
+    }
+  }
+
+  async getTickAddressByPool(poolAddress: PublicKey, index: number) {
     const indexBuffer = Buffer.alloc(4)
     indexBuffer.writeInt32LE(index)
 
