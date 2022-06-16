@@ -1037,12 +1037,8 @@ export const getCoingeckoTokenPrice = async (id: string): Promise<number> => {
     })
 }
 
-export const getTokenValueInUSD = (
-  tokenXprice: number,
-  amount: Decimal,
-  decimals: number
-): number => {
-  return amount.v.div(new BN(10).pow(new BN(decimals))).toNumber() * tokenXprice
+export const getTokenValueInUSD = (tokenXprice: number, amount: BN, decimals: number): number => {
+  return amount.div(new BN(10).pow(new BN(decimals))).toNumber() * tokenXprice
 }
 // export const getTokensPrices = async (idsList: string[]): Promise<Record<string, number>> => {
 //   const prices = await getCoingeckoPricesData(idsList)

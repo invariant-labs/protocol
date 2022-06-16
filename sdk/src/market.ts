@@ -284,8 +284,8 @@ export class Market {
       const tokenY = tokensData[pool.tokenY.toString()]
       const priceTokenX = await getCoingeckoTokenPrice(tokenX.id)
       const priceTokenY = await getCoingeckoTokenPrice(tokenY.id)
-      const valueTokenX = getTokenValueInUSD(priceTokenX, position.tokensOwedX, tokenX.decimals)
-      const valueTokenY = getTokenValueInUSD(priceTokenY, position.tokensOwedY, tokenY.decimals)
+      const valueTokenX = getTokenValueInUSD(priceTokenX, position.tokensOwedX.v, tokenX.decimals)
+      const valueTokenY = getTokenValueInUSD(priceTokenY, position.tokensOwedY.v, tokenY.decimals)
       const valueInUsd = valueTokenX + valueTokenY
       const positionData: PositionClaimData = {
         liquidity: position.liquidity,
@@ -306,6 +306,10 @@ export class Market {
 
       const [unclaimedFeesX, unclaimedFeesY] = calculateClaimAmount(claim)
 
+      const unclaimedFees: number =
+        getTokenValueInUSD(priceTokenX, unclaimedFeesX, tokenX.decimals) +
+        getTokenValueInUSD(priceTokenX, unclaimedFeesY, tokenX.decimals)
+
       positionStructs.push({
         tickerTokenX: tokenX.ticker,
         tickerTokenY: tokenY.ticker,
@@ -314,7 +318,7 @@ export class Market {
         lowerPrice,
         upperPrice,
         value: valueInUsd,
-        unclaimedFees: { v: new BN(0) }, //TODO calculate unclaimed fees
+        unclaimedFees,
         feeTier
       })
     })
@@ -1437,8 +1441,8 @@ export interface PositionStructure {
   amountTokenY: Decimal
   lowerPrice: Decimal
   upperPrice: Decimal
-  value: number
-  unclaimedFees: Decimal
+  value: number // both token in USD
+  unclaimedFees: number // both token in USD
   feeTier: FeeTier
 }
 
