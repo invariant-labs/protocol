@@ -272,9 +272,9 @@ export class Market {
           memcmp: { bytes: bs58.encode(owner.toBuffer()), offset: 8 }
         }
       ])
-    ).map(a => a.account) as Position[]
+    ).map(({ account }) => account) as Position[]
 
-    positions.map(async position => {
+    for (const position of positions) {
       const {
         pool: poolAddress,
         lowerTickIndex,
@@ -295,6 +295,7 @@ export class Market {
         feeGrowthGlobalX,
         feeGrowthGlobalY
       }: PoolStructure = await this.getPoolByAddress(poolAddress)
+
       const lowerPrice: Decimal = { v: calculatePriceSqrt(lowerTickIndex).v.pow(new BN(2)) }
       const upperPrice: Decimal = { v: calculatePriceSqrt(upperTickIndex).v.pow(new BN(2)) }
       const feeTier: FeeTier = { fee: fee.v, tickSpacing }
@@ -338,7 +339,7 @@ export class Market {
         getTokenValueInUSD(priceTokenX, unclaimedFeesX, tokenXData.decimals) +
         getTokenValueInUSD(priceTokenY, unclaimedFeesY, tokenYData.decimals)
 
-      positionStructs.push({
+      const positionStruct: PositionStructure = {
         tickerTokenX: tokenXData.ticker,
         tickerTokenY: tokenYData.ticker,
         amountTokenX: tokensOwedX,
@@ -348,8 +349,9 @@ export class Market {
         value: valueInUsd,
         unclaimedFees,
         feeTier
-      })
-    })
+      }
+      positionStructs.push(positionStruct)
+    }
 
     return positionStructs
   }
@@ -1285,7 +1287,7 @@ export class Market {
         }
       ])
     ).map(a => a.account) as Position[]
-
+    console.log(positions.length)
     let liquidity = new BN(0)
     for (const position of positions) {
       liquidity = liquidity.add(position.liquidity.v)
