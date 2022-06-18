@@ -20,21 +20,13 @@ import {
 import {
   calculateClaimAmount,
   feeToTickSpacing,
-  FEE_TIERS,
-  getCoingeckoTokenPrice,
   getFeeTierAddress,
   getMaxTick,
   getMinTick,
-  getTokensData,
-  getTokenValueInUSD,
   parseLiquidityOnTicks,
   PositionClaimData,
   SEED,
   SimulateClaim,
-  simulateSwap,
-  SimulateSwapInterface,
-  SimulationResult,
-  SimulationStatus,
   TokenData
 } from './utils'
 import { Invariant, IDL } from './idl/invariant'
@@ -299,22 +291,6 @@ export class Market {
       const lowerPrice: Decimal = { v: calculatePriceSqrt(lowerTickIndex).v.pow(new BN(2)) }
       const upperPrice: Decimal = { v: calculatePriceSqrt(upperTickIndex).v.pow(new BN(2)) }
       const feeTier: FeeTier = { fee: fee.v, tickSpacing }
-      const tokensData = await getTokensData()
-      const tokenXData: TokenData = tokensData[tokenX.toString()]
-      const tokenYData: TokenData = tokensData[tokenY.toString()]
-      const priceTokenX: number = await getCoingeckoTokenPrice(tokenXData.id)
-      const priceTokenY: number = await getCoingeckoTokenPrice(tokenYData.id)
-      const valueTokenX: number = getTokenValueInUSD(
-        priceTokenX,
-        tokensOwedX.v,
-        tokenXData.decimals
-      )
-      const valueTokenY: number = getTokenValueInUSD(
-        priceTokenY,
-        tokensOwedY.v,
-        tokenYData.decimals
-      )
-      const valueInUsd: number = valueTokenX + valueTokenY
 
       const positionData: PositionClaimData = {
         liquidity,
@@ -335,20 +311,16 @@ export class Market {
 
       const [unclaimedFeesX, unclaimedFeesY] = calculateClaimAmount(claim)
 
-      const unclaimedFees: number =
-        getTokenValueInUSD(priceTokenX, unclaimedFeesX, tokenXData.decimals) +
-        getTokenValueInUSD(priceTokenY, unclaimedFeesY, tokenYData.decimals)
-
       const positionStruct: PositionStructure = {
-        tickerTokenX: tokenXData.ticker,
-        tickerTokenY: tokenYData.ticker,
-        amountTokenX: tokensOwedX,
-        amountTokenY: tokensOwedY,
+        tokenX,
+        tokenY,
+        feeTier,
+        amountTokenX: tokensOwedX.v,
+        amountTokenY: tokensOwedY.v,
         lowerPrice,
         upperPrice,
-        value: valueInUsd,
-        unclaimedFees,
-        feeTier
+        unclaimedFeesX,
+        unclaimedFeesY
       }
       positionStructs.push(positionStruct)
     }
@@ -1465,15 +1437,15 @@ export interface Position {
 }
 
 export interface PositionStructure {
-  tickerTokenX: string
-  tickerTokenY: string
-  amountTokenX: Decimal
-  amountTokenY: Decimal
+  tokenX: PublicKey
+  tokenY: PublicKey
+  feeTier: FeeTier
+  amountTokenX: BN
+  amountTokenY: BN
   lowerPrice: Decimal
   upperPrice: Decimal
-  value: number // both token in USD
-  unclaimedFees: number // both token in USD
-  feeTier: FeeTier
+  unclaimedFeesX: BN
+  unclaimedFeesY: BN
 }
 
 export interface FeeTier {

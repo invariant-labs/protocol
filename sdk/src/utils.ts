@@ -35,12 +35,10 @@ import {
   priceToTick,
   sqrt
 } from './math'
-import axios, { AxiosResponse } from 'axios'
 import { alignTickToSpacing, getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
 import { struct, u32, u8 } from '@solana/buffer-layout'
 import { u64 } from '@solana/spl-token'
-import { TokenListContainer, TokenListProvider } from '@solana/spl-token-registry'
 
 export const SEED = 'Invariant'
 export const DECIMAL = 12
@@ -998,47 +996,6 @@ export const rewardsAPY = (params: ApyRewardsParams) => {
   const reward = (Math.pow(duration * rewardFactor + 1, 365 / duration) - 1) * 100
 
   return { reward, rewardFactor }
-}
-const coingeckoIdOverwrites = {
-  '9vMJfxuKxXBoEa7rM12mYLMwTacLMLDJqHozw96WQL8i': 'terrausd',
-  '7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj': 'lido-staked-sol',
-  NRVwhjBQiUPYtfDT5zRBVJajzFQHaBUNtC7SNVvqRFa: 'nirvana-nirv'
-}
-
-export const getTokensData = async (): Promise<Record<string, TokenData>> => {
-  const tokens: TokenListContainer = await new TokenListProvider().resolve()
-
-  const tokenList = tokens
-    .filterByClusterSlug('mainnet-beta')
-    .getList()
-    .filter(token => token.chainId === 101)
-
-  const tokensObj: Record<string, TokenData> = {}
-
-  tokenList.forEach(token => {
-    tokensObj[token.address.toString()] = {
-      // @ts-ignore
-      id: coingeckoIdOverwrites?.[token.address.toString()] ?? token.extensions?.coingeckoId,
-      decimals: token.decimals,
-      ticker: token.symbol
-    }
-  })
-
-  return tokensObj
-}
-
-export const getCoingeckoTokenPrice = async (id: string): Promise<number> => {
-  return await axios
-    .get<CoingeckoApiPriceData[]>(
-      `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${id}`
-    )
-    .then(res => {
-      return res.data[0].current_price
-    })
-}
-
-export const getTokenValueInUSD = (tokenXprice: number, amount: BN, decimals: number): number => {
-  return amount.div(new BN(10).pow(new BN(decimals))).toNumber() * tokenXprice
 }
 export interface CoingeckoApiPriceData {
   id: string
