@@ -20,6 +20,7 @@ import BN from 'bn.js'
 import { Pair, TICK_LIMIT, calculatePriceSqrt } from '@invariant-labs/sdk'
 import { assert } from 'chai'
 import { LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
+import { ApyPoolParams } from '@invariant-labs/sdk/lib/utils'
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {
@@ -370,3 +371,209 @@ export const createTickArray = (size: number) => {
 
   return ticks
 }
+
+export const dataApy: ApyPoolParams = {
+  feeTier: { fee: new BN('b2d05e00', 'hex') },
+  volumeX: 0,
+  volumeY: 100000000,
+  ticksPreviousSnapshot: [
+    {
+      index: -23550,
+      sign: true,
+      bump: 249,
+      liquidityChange: { v: new BN('02d1c1a563edbe65', 'hex') },
+      liquidityGross: { v: new BN('02d1c1a563edbe65', 'hex') },
+      sqrtPrice: { v: new BN('413c4b06c166eb93c000', 'hex') },
+      feeGrowthOutsideX: { v: new BN('4544f377d876ce6c23', 'hex') },
+      feeGrowthOutsideY: { v: new BN('047f4d3b047bd73a21', 'hex') },
+      secondsPerLiquidityOutside: { v: new BN('5fa579', 'hex') },
+      pool: new PublicKey('0')
+    },
+    {
+      index: -23040,
+      sign: true,
+      bump: 255,
+      liquidityChange: { v: new BN('02b350b64e63d028', 'hex') },
+      liquidityGross: { v: new BN('02b350b64e63d028', 'hex') },
+      sqrtPrice: { v: new BN('42eb9ad66f1962502000', 'hex') },
+      feeGrowthOutsideX: { v: new BN('00', 'hex') },
+      feeGrowthOutsideY: { v: new BN('00', 'hex') },
+      secondsPerLiquidityOutside: { v: new BN('00', 'hex') },
+      pool: new PublicKey('0')
+    },
+    {
+      index: -13560,
+      sign: false,
+      bump: 255,
+      liquidityChange: { v: new BN('02d1c1a563edbe65', 'hex') },
+      liquidityGross: { v: new BN('02d1c1a563edbe65', 'hex') },
+      sqrtPrice: { v: new BN('6b7fad71fb273b6c3000', 'hex') },
+      feeGrowthOutsideX: { v: new BN('01848b7fc2aca555fb', 'hex') },
+      feeGrowthOutsideY: { v: new BN('00', 'hex') },
+      secondsPerLiquidityOutside: { v: new BN('3544ed', 'hex') },
+      pool: new PublicKey('0')
+    },
+    {
+      index: -9690,
+      sign: false,
+      bump: 255,
+      liquidityChange: { v: new BN('02b350b64e63d028', 'hex') },
+      liquidityGross: { v: new BN('02b350b64e63d028', 'hex') },
+      sqrtPrice: { v: new BN('82728375f12782274000', 'hex') },
+      feeGrowthOutsideX: { v: new BN('70cd1f1cc611e1cf', 'hex') },
+      feeGrowthOutsideY: { v: new BN('39b7a98d6b75312a', 'hex') },
+      secondsPerLiquidityOutside: { v: new BN('5fa579', 'hex') },
+      pool: new PublicKey('0')
+    },
+    {
+      index: -6720,
+      sign: true,
+      bump: 255,
+      liquidityChange: { v: new BN('a3fa3bf1b23293', 'hex') },
+      liquidityGross: { v: new BN('a3fa3bf1b23293', 'hex') },
+      sqrtPrice: { v: new BN('9754726db32b7273b000', 'hex') },
+      feeGrowthOutsideX: { v: new BN('70cd1f1cc611e1cf', 'hex') },
+      feeGrowthOutsideY: { v: new BN('39b7a98d6b75312a', 'hex') },
+      secondsPerLiquidityOutside: { v: new BN('5fa579', 'hex') },
+      pool: new PublicKey('0')
+    },
+    {
+      index: -6660,
+      sign: true,
+      bump: 252,
+      liquidityChange: { v: new BN('025d12dad50ea041', 'hex') },
+      liquidityGross: { v: new BN('025d12dad50ea041', 'hex') },
+      sqrtPrice: { v: new BN('97c8d64600848589d000', 'hex') },
+      feeGrowthOutsideX: { v: new BN('00', 'hex') },
+      feeGrowthOutsideY: { v: new BN('00', 'hex') },
+      secondsPerLiquidityOutside: { v: new BN('00', 'hex') },
+      pool: new PublicKey('0')
+    },
+    {
+      index: 23040,
+      sign: false,
+      bump: 255,
+      liquidityChange: { v: new BN('a3fa3bf1b23293', 'hex') },
+      liquidityGross: { v: new BN('a3fa3bf1b23293', 'hex') },
+      sqrtPrice: { v: new BN('029e12dadf1a00d40fd000', 'hex') },
+      feeGrowthOutsideX: { v: new BN('00', 'hex') },
+      feeGrowthOutsideY: { v: new BN('00', 'hex') },
+      secondsPerLiquidityOutside: { v: new BN('00', 'hex') },
+      pool: new PublicKey('0')
+    },
+    {
+      index: 30210,
+      sign: false,
+      bump: 253,
+      liquidityChange: { v: new BN('025d12dad50ea041', 'hex') },
+      liquidityGross: { v: new BN('025d12dad50ea041', 'hex') },
+      sqrtPrice: { v: new BN('03befac15258ffa9b36000', 'hex') },
+      feeGrowthOutsideX: { v: new BN('00', 'hex') },
+      feeGrowthOutsideY: { v: new BN('00', 'hex') },
+      secondsPerLiquidityOutside: { v: new BN('00', 'hex') },
+      pool: new PublicKey('0')
+    }
+  ],
+  ticksCurrentSnapshot: [
+    {
+      index: -23550,
+      sign: true,
+      bump: 249,
+      liquidityChange: { v: new BN('02d1c1a563edbe65', 'hex') },
+      liquidityGross: { v: new BN('02d1c1a563edbe65', 'hex') },
+      sqrtPrice: { v: new BN('413c4b06c166eb93c000', 'hex') },
+      feeGrowthOutsideX: { v: new BN('4544f377d876ce6c23', 'hex') },
+      feeGrowthOutsideY: { v: new BN('047f4d3b047bd73a21', 'hex') },
+      secondsPerLiquidityOutside: { v: new BN('5fa579', 'hex') },
+      pool: new PublicKey('0')
+    },
+    {
+      index: -23040,
+      sign: true,
+      bump: 255,
+      liquidityChange: { v: new BN('02b350b64e63d028', 'hex') },
+      liquidityGross: { v: new BN('02b350b64e63d028', 'hex') },
+      sqrtPrice: { v: new BN('42eb9ad66f1962502000', 'hex') },
+      feeGrowthOutsideX: { v: new BN('00', 'hex') },
+      feeGrowthOutsideY: { v: new BN('00', 'hex') },
+      secondsPerLiquidityOutside: { v: new BN('00', 'hex') },
+      pool: new PublicKey('0')
+    },
+    {
+      index: -13560,
+      sign: false,
+      bump: 255,
+      liquidityChange: { v: new BN('02d1c1a563edbe65', 'hex') },
+      liquidityGross: { v: new BN('02d1c1a563edbe65', 'hex') },
+      sqrtPrice: { v: new BN('6b7fad71fb273b6c3000', 'hex') },
+      feeGrowthOutsideX: { v: new BN('01848b7fc2aca555fb', 'hex') },
+      feeGrowthOutsideY: { v: new BN('00', 'hex') },
+      secondsPerLiquidityOutside: { v: new BN('3544ed', 'hex') },
+      pool: new PublicKey('0')
+    },
+    {
+      index: -9690,
+      sign: false,
+      bump: 255,
+      liquidityChange: { v: new BN('02b350b64e63d028', 'hex') },
+      liquidityGross: { v: new BN('02b350b64e63d028', 'hex') },
+      sqrtPrice: { v: new BN('82728375f12782274000', 'hex') },
+      feeGrowthOutsideX: { v: new BN('70cd1f1cc611e1cf', 'hex') },
+      feeGrowthOutsideY: { v: new BN('39b7a98d6b75312a', 'hex') },
+      secondsPerLiquidityOutside: { v: new BN('5fa579', 'hex') },
+      pool: new PublicKey('0')
+    },
+    {
+      index: -6720,
+      sign: true,
+      bump: 255,
+      liquidityChange: { v: new BN('a3fa3bf1b23293', 'hex') },
+      liquidityGross: { v: new BN('a3fa3bf1b23293', 'hex') },
+      sqrtPrice: { v: new BN('9754726db32b7273b000', 'hex') },
+      feeGrowthOutsideX: { v: new BN('70cd1f1cc611e1cf', 'hex') },
+      feeGrowthOutsideY: { v: new BN('39b7a98d6b75312a', 'hex') },
+      secondsPerLiquidityOutside: { v: new BN('5fa579', 'hex') },
+      pool: new PublicKey('0')
+    },
+    {
+      index: -6660,
+      sign: true,
+      bump: 252,
+      liquidityChange: { v: new BN('025d12dad50ea041', 'hex') },
+      liquidityGross: { v: new BN('025d12dad50ea041', 'hex') },
+      sqrtPrice: { v: new BN('97c8d64600848589d000', 'hex') },
+      feeGrowthOutsideX: { v: new BN('00', 'hex') },
+      feeGrowthOutsideY: { v: new BN('00', 'hex') },
+      secondsPerLiquidityOutside: { v: new BN('00', 'hex') },
+      pool: new PublicKey('0')
+    },
+    {
+      index: 23040,
+      sign: false,
+      bump: 255,
+      liquidityChange: { v: new BN('a3fa3bf1b23293', 'hex') },
+      liquidityGross: { v: new BN('a3fa3bf1b23293', 'hex') },
+      sqrtPrice: { v: new BN('029e12dadf1a00d40fd000', 'hex') },
+      feeGrowthOutsideX: { v: new BN('00', 'hex') },
+      feeGrowthOutsideY: { v: new BN('00', 'hex') },
+      secondsPerLiquidityOutside: { v: new BN('00', 'hex') },
+      pool: new PublicKey('0')
+    },
+    {
+      index: 30210,
+      sign: false,
+      bump: 253,
+      liquidityChange: { v: new BN('025d12dad50ea041', 'hex') },
+      liquidityGross: { v: new BN('025d12dad50ea041', 'hex') },
+      sqrtPrice: { v: new BN('03befac15258ffa9b36000', 'hex') },
+      feeGrowthOutsideX: { v: new BN('00', 'hex') },
+      feeGrowthOutsideY: { v: new BN('00', 'hex') },
+      secondsPerLiquidityOutside: { v: new BN('00', 'hex') },
+      pool: new PublicKey('0')
+    }
+  ],
+  weeklyFactor: 0.0001722669807333221,
+  currentTickIndex: -14580
+}
+
+//let temp = {"AvNeVrKZy1FaEG9suboRXNPgmnMwomiU5EvkF6jGxGrX":{"feeTier":{"fee":"b2d05e00"},"volumeX":0,"volumeY":100000000,"ticksPreviousSnapshot":[{"index":-23550,"sign":true,"bump":249,"liquidityChange":{"v":"02d1c1a563edbe65"},"liquidityGross":{"v":"02d1c1a563edbe65"},"sqrtPrice":{"v":"413c4b06c166eb93c000"},"feeGrowthOutsideX":{"v":"4544f377d876ce6c23"},"feeGrowthOutsideY":{"v":"047f4d3b047bd73a21"},"secondsPerLiquidityOutside":{"v":"5fa579"},"pool":{"_bn":"936570e58056596455bbb22631e5fcfdd7ac1978ba3a6a6a705b79acc211225c"}},{"index":-23040,"sign":true,"bump":255,"liquidityChange":{"v":"02b350b64e63d028"},"liquidityGross":{"v":"02b350b64e63d028"},"sqrtPrice":{"v":"42eb9ad66f1962502000"},"feeGrowthOutsideX":{"v":"00"},"feeGrowthOutsideY":{"v":"00"},"secondsPerLiquidityOutside":{"v":"00"},"pool":{"_bn":"936570e58056596455bbb22631e5fcfdd7ac1978ba3a6a6a705b79acc211225c"}},{"index":-13560,"sign":false,"bump":255,"liquidityChange":{"v":"02d1c1a563edbe65"},"liquidityGross":{"v":"02d1c1a563edbe65"},"sqrtPrice":{"v":"6b7fad71fb273b6c3000"},"feeGrowthOutsideX":{"v":"01848b7fc2aca555fb"},"feeGrowthOutsideY":{"v":"00"},"secondsPerLiquidityOutside":{"v":"3544ed"},"pool":{"_bn":"936570e58056596455bbb22631e5fcfdd7ac1978ba3a6a6a705b79acc211225c"}},{"index":-9690,"sign":false,"bump":255,"liquidityChange":{"v":"02b350b64e63d028"},"liquidityGross":{"v":"02b350b64e63d028"},"sqrtPrice":{"v":"82728375f12782274000"},"feeGrowthOutsideX":{"v":"70cd1f1cc611e1cf"},"feeGrowthOutsideY":{"v":"39b7a98d6b75312a"},"secondsPerLiquidityOutside":{"v":"5fa579"},"pool":{"_bn":"936570e58056596455bbb22631e5fcfdd7ac1978ba3a6a6a705b79acc211225c"}},{"index":-6720,"sign":true,"bump":255,"liquidityChange":{"v":"a3fa3bf1b23293"},"liquidityGross":{"v":"a3fa3bf1b23293"},"sqrtPrice":{"v":"9754726db32b7273b000"},"feeGrowthOutsideX":{"v":"70cd1f1cc611e1cf"},"feeGrowthOutsideY":{"v":"39b7a98d6b75312a"},"secondsPerLiquidityOutside":{"v":"5fa579"},"pool":{"_bn":"936570e58056596455bbb22631e5fcfdd7ac1978ba3a6a6a705b79acc211225c"}},{"index":-6660,"sign":true,"bump":252,"liquidityChange":{"v":"025d12dad50ea041"},"liquidityGross":{"v":"025d12dad50ea041"},"sqrtPrice":{"v":"97c8d64600848589d000"},"feeGrowthOutsideX":{"v":"00"},"feeGrowthOutsideY":{"v":"00"},"secondsPerLiquidityOutside":{"v":"00"},"pool":{"_bn":"936570e58056596455bbb22631e5fcfdd7ac1978ba3a6a6a705b79acc211225c"}},{"index":23040,"sign":false,"bump":255,"liquidityChange":{"v":"a3fa3bf1b23293"},"liquidityGross":{"v":"a3fa3bf1b23293"},"sqrtPrice":{"v":"029e12dadf1a00d40fd000"},"feeGrowthOutsideX":{"v":"00"},"feeGrowthOutsideY":{"v":"00"},"secondsPerLiquidityOutside":{"v":"00"},"pool":{"_bn":"936570e58056596455bbb22631e5fcfdd7ac1978ba3a6a6a705b79acc211225c"}},{"index":30210,"sign":false,"bump":253,"liquidityChange":{"v":"025d12dad50ea041"},"liquidityGross":{"v":"025d12dad50ea041"},"sqrtPrice":{"v":"03befac15258ffa9b36000"},"feeGrowthOutsideX":{"v":"00"},"feeGrowthOutsideY":{"v":"00"},"secondsPerLiquidityOutside":{"v":"00"},"pool":{"_bn":"936570e58056596455bbb22631e5fcfdd7ac1978ba3a6a6a705b79acc211225c"}}],"ticksCurrentSnapshot":[{"index":-23550,"sign":true,"bump":249,"liquidityChange":{"v":"02d1c1a563edbe65"},"liquidityGross":{"v":"02d1c1a563edbe65"},"sqrtPrice":{"v":"413c4b06c166eb93c000"},"feeGrowthOutsideX":{"v":"4544f377d876ce6c23"},"feeGrowthOutsideY":{"v":"047f4d3b047bd73a21"},"secondsPerLiquidityOutside":{"v":"5fa579"},"pool":{"_bn":"936570e58056596455bbb22631e5fcfdd7ac1978ba3a6a6a705b79acc211225c"}},{"index":-23040,"sign":true,"bump":255,"liquidityChange":{"v":"02b350b64e63d028"},"liquidityGross":{"v":"02b350b64e63d028"},"sqrtPrice":{"v":"42eb9ad66f1962502000"},"feeGrowthOutsideX":{"v":"00"},"feeGrowthOutsideY":{"v":"00"},"secondsPerLiquidityOutside":{"v":"00"},"pool":{"_bn":"936570e58056596455bbb22631e5fcfdd7ac1978ba3a6a6a705b79acc211225c"}},{"index":-13560,"sign":false,"bump":255,"liquidityChange":{"v":"02d1c1a563edbe65"},"liquidityGross":{"v":"02d1c1a563edbe65"},"sqrtPrice":{"v":"6b7fad71fb273b6c3000"},"feeGrowthOutsideX":{"v":"01848b7fc2aca555fb"},"feeGrowthOutsideY":{"v":"00"},"secondsPerLiquidityOutside":{"v":"3544ed"},"pool":{"_bn":"936570e58056596455bbb22631e5fcfdd7ac1978ba3a6a6a705b79acc211225c"}},{"index":-9690,"sign":false,"bump":255,"liquidityChange":{"v":"02b350b64e63d028"},"liquidityGross":{"v":"02b350b64e63d028"},"sqrtPrice":{"v":"82728375f12782274000"},"feeGrowthOutsideX":{"v":"70cd1f1cc611e1cf"},"feeGrowthOutsideY":{"v":"39b7a98d6b75312a"},"secondsPerLiquidityOutside":{"v":"5fa579"},"pool":{"_bn":"936570e58056596455bbb22631e5fcfdd7ac1978ba3a6a6a705b79acc211225c"}},{"index":-6720,"sign":true,"bump":255,"liquidityChange":{"v":"a3fa3bf1b23293"},"liquidityGross":{"v":"a3fa3bf1b23293"},"sqrtPrice":{"v":"9754726db32b7273b000"},"feeGrowthOutsideX":{"v":"70cd1f1cc611e1cf"},"feeGrowthOutsideY":{"v":"39b7a98d6b75312a"},"secondsPerLiquidityOutside":{"v":"5fa579"},"pool":{"_bn":"936570e58056596455bbb22631e5fcfdd7ac1978ba3a6a6a705b79acc211225c"}},{"index":-6660,"sign":true,"bump":252,"liquidityChange":{"v":"025d12dad50ea041"},"liquidityGross":{"v":"025d12dad50ea041"},"sqrtPrice":{"v":"97c8d64600848589d000"},"feeGrowthOutsideX":{"v":"00"},"feeGrowthOutsideY":{"v":"00"},"secondsPerLiquidityOutside":{"v":"00"},"pool":{"_bn":"936570e58056596455bbb22631e5fcfdd7ac1978ba3a6a6a705b79acc211225c"}},{"index":23040,"sign":false,"bump":255,"liquidityChange":{"v":"a3fa3bf1b23293"},"liquidityGross":{"v":"a3fa3bf1b23293"},"sqrtPrice":{"v":"029e12dadf1a00d40fd000"},"feeGrowthOutsideX":{"v":"00"},"feeGrowthOutsideY":{"v":"00"},"secondsPerLiquidityOutside":{"v":"00"},"pool":{"_bn":"936570e58056596455bbb22631e5fcfdd7ac1978ba3a6a6a705b79acc211225c"}},{"index":30210,"sign":false,"bump":253,"liquidityChange":{"v":"025d12dad50ea041"},"liquidityGross":{"v":"025d12dad50ea041"},"sqrtPrice":{"v":"03befac15258ffa9b36000"},"feeGrowthOutsideX":{"v":"00"},"feeGrowthOutsideY":{"v":"00"},"secondsPerLiquidityOutside":{"v":"00"},"pool":{"_bn":"936570e58056596455bbb22631e5fcfdd7ac1978ba3a6a6a705b79acc211225c"}}],"weeklyFactor":0.0001722669807333221,"currentTickIndex":-14580}

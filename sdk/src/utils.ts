@@ -950,10 +950,11 @@ export const poolAPY = (params: ApyPoolParams) => {
     dailyFactor = 0
   }
 
-  const apyFactor = weeklyFactor ? (dailyFactor + weeklyFactor * 6) / 7 : dailyFactor
-  const apy = (Math.pow(apyFactor + 1, 365) - 1) * 100
+  const newWeeklyFactor = updateWeeklyFactor(weeklyFactor, dailyFactor)
 
-  return { apy, apyFactor }
+  const apy = (Math.pow(average(newWeeklyFactor) + 1, 365) - 1) * 100
+
+  return { apy, newWeeklyFactor }
 }
 
 export const dailyFactorRewards = (
@@ -998,6 +999,15 @@ export const rewardsAPY = (params: ApyRewardsParams) => {
   return { reward, rewardFactor }
 }
 
+export const average = (array: number[]) =>
+  array.reduce((prev: number, curr: number) => prev + curr) / array.length
+
+export const updateWeeklyFactor = (weeklyFactor: number[], dailyFactor: number): number[] => {
+  weeklyFactor.shift()
+  weeklyFactor.push(dailyFactor)
+  return weeklyFactor
+}
+
 export interface ParsedTick {
   liquidity: BN
   index: number
@@ -1021,7 +1031,7 @@ export interface ApyPoolParams {
   currentTickIndex: number
   ticksPreviousSnapshot: Tick[]
   ticksCurrentSnapshot: Tick[]
-  weeklyFactor: number
+  weeklyFactor: number[]
   volumeX: number
   volumeY: number
 }
