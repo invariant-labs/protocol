@@ -25,15 +25,10 @@ import {
   calculatePriceAfterSlippage,
   calculatePriceImpact,
   calculateSwapStep,
-  findClosestTicks,
   getLiquidityByX,
   getLiquidityByY,
   getXfromLiquidity,
-  isEnoughAmountToPushPrice,
-  isInitialized,
-  MIN_TICK,
-  priceToTick,
-  sqrt
+  isEnoughAmountToPushPrice
 } from './math'
 import { alignTickToSpacing, getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
@@ -993,10 +988,11 @@ export const rewardsAPY = (params: ApyRewardsParams) => {
     dailyFactor = 0
   }
 
-  const rewardFactor = weeklyFactor ? (dailyFactor + weeklyFactor * 6) / 7 : dailyFactor
-  const reward = (Math.pow(duration * rewardFactor + 1, 365 / duration) - 1) * 100
+  const newWeeklyFactor = updateWeeklyFactor(weeklyFactor, dailyFactor)
 
-  return { reward, rewardFactor }
+  const reward = (Math.pow(duration * average(newWeeklyFactor) + 1, 365 / duration) - 1) * 100
+
+  return { reward, newWeeklyFactor }
 }
 
 export const average = (array: number[]) =>
@@ -1039,7 +1035,7 @@ export interface ApyRewardsParams {
   ticksPreviousSnapshot: Tick[]
   ticksCurrentSnapshot: Tick[]
   currentTickIndex: number
-  weeklyFactor: number
+  weeklyFactor: number[]
   rewardInUSD: number
   tokenXprice: number
   tokenDecimal: number
