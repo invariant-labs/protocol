@@ -1972,17 +1972,6 @@ describe('Math', () => {
       assert.equal(token.ticker, 'USDC')
       assert.equal(token.decimals, 6)
       assert.equal(token.id, 'usd-coin')
-      const price = await getCoingeckoTokenPrice('usd-coin')
-    })
-  })
-  describe('test getTokenValueInUSD', () => {
-    it('check calculated value', async () => {
-      const decimals: number = 6
-      const tokenAmount: BN = new BN(10).pow(new BN(decimals)).muln(100)
-      const price: number = 123.456
-
-      const value = getTokenValueInUSD(price, tokenAmount, decimals)
-      assert.equal(value, 12345.6)
     })
   })
 })

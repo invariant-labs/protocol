@@ -23,8 +23,11 @@ import {
   getFeeTierAddress,
   getMaxTick,
   getMinTick,
+  getPrice,
+  getTokensData,
   parseLiquidityOnTicks,
   PositionClaimData,
+  PRICE_DENOMINATOR,
   SEED,
   SimulateClaim,
   TokenData
@@ -266,6 +269,8 @@ export class Market {
       ])
     ).map(({ account }) => account) as Position[]
 
+    console.log('positions', positions.length)
+
     for (const position of positions) {
       const {
         pool: poolAddress,
@@ -287,10 +292,36 @@ export class Market {
         feeGrowthGlobalX,
         feeGrowthGlobalY
       }: PoolStructure = await this.getPoolByAddress(poolAddress)
+      console.log(currentTickIndex)
 
-      const lowerPrice: Decimal = { v: calculatePriceSqrt(lowerTickIndex).v.pow(new BN(2)) }
-      const upperPrice: Decimal = { v: calculatePriceSqrt(upperTickIndex).v.pow(new BN(2)) }
+      const tokenData = await getTokensData()
+      const dataTokenX: TokenData = tokenData[tokenX.toString()]
+      const dataTokenY: TokenData = tokenData[tokenY.toString()]
+
+      const decimalDiff: number = dataTokenX.decimals - dataTokenY.decimals
+
+      const currentSqrtPrice: Decimal = calculatePriceSqrt(currentTickIndex)
+      const lowerSqrtPrice: Decimal = calculatePriceSqrt(lowerTickIndex)
+      const upperSqrtPrice: Decimal = calculatePriceSqrt(upperTickIndex)
+
+      const lowerPrice: Decimal = getPrice(lowerSqrtPrice, decimalDiff)
+      const upperPrice: Decimal = getPrice(upperSqrtPrice, decimalDiff)
+
       const feeTier: FeeTier = { fee: fee.v, tickSpacing }
+
+      const amountTokenX: BN = getX(
+        liquidity.v,
+        upperSqrtPrice.v,
+        currentSqrtPrice.v,
+        lowerSqrtPrice.v
+      )
+
+      const amountTokenY: BN = getY(
+        liquidity.v,
+        upperSqrtPrice.v,
+        currentSqrtPrice.v,
+        lowerSqrtPrice.v
+      )
 
       const positionData: PositionClaimData = {
         liquidity,
@@ -315,8 +346,8 @@ export class Market {
         tokenX,
         tokenY,
         feeTier,
-        amountTokenX: tokensOwedX.v,
-        amountTokenY: tokensOwedY.v,
+        amountTokenX,
+        amountTokenY,
         lowerPrice,
         upperPrice,
         unclaimedFeesX,
