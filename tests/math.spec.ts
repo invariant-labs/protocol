@@ -56,10 +56,9 @@ import {
   TokensOwed,
   toPercent,
   toPrice,
-  getVolume,
   U128MAX
 } from '@invariant-labs/sdk/src/utils'
-import { createTickArray, setInitialized } from './testUtils'
+import { createTickArray, dataApy, setInitialized } from './testUtils'
 import { Decimal, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
 import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
 import { Keypair } from '@solana/web3.js'
@@ -73,7 +72,6 @@ import {
 } from '@invariant-labs/sdk/lib/utils'
 import { priceToTickInRange } from '@invariant-labs/sdk/src/tick'
 import { U64_MAX } from '@invariant-labs/sdk/lib/math'
-import { DECIMAL } from '@invariant-labs/sdk/lib/utils'
 
 describe('Math', () => {
   describe('Test sqrt price calculation', () => {
@@ -1903,10 +1901,9 @@ describe('Math', () => {
   })
   describe('pool APY tests', () => {
     it('case 1', async () => {
-      //const dailyFactorRewards = 0.0003713
       const previous = createTickArray(1000)
 
-      let current: Tick[] = previous.map(tick => ({
+      const current: Tick[] = previous.map(tick => ({
         ...tick,
         liquidityChange: {
           v: tick.liquidityChange.v.add(new BN(10000000).mul(LIQUIDITY_DENOMINATOR))
@@ -1916,15 +1913,16 @@ describe('Math', () => {
 
       const paramsApy: ApyPoolParams = {
         feeTier: FEE_TIERS[3],
+        currentTickIndex: 0,
         ticksPreviousSnapshot: previous,
         ticksCurrentSnapshot: current,
-        weeklyFactor: 0.002,
+        weeklyFactor: [0.001, 0.002, 0.003, 0.004, 0.003, 0.002, 0.001],
         volumeX: 50_000000,
         volumeY: 50_000000
       }
       let result = false
       const poolApy = poolAPY(paramsApy)
-      if (poolApy.apy > 130 || poolApy.apy < 180) {
+      if (poolApy.apy > 140 && poolApy.apy < 150) {
         result = true
       }
       assert.ok(result)
@@ -1934,7 +1932,7 @@ describe('Math', () => {
     it('case 1', async () => {
       const previous = createTickArray(1000)
 
-      let current: Tick[] = previous.map(tick => ({
+      const current: Tick[] = previous.map(tick => ({
         ...tick,
         liquidityChange: {
           v: tick.liquidityChange.v.add(new BN(10000000).mul(LIQUIDITY_DENOMINATOR))
@@ -1946,16 +1944,17 @@ describe('Math', () => {
       const paramsApy: ApyRewardsParams = {
         ticksPreviousSnapshot: previous,
         ticksCurrentSnapshot: current,
-        weeklyFactor: 0.01,
+        weeklyFactor: [0.001, 0.001, 0.01, 0.001, 0.001, 0.001, 0.001],
         rewardInUSD: 100,
         tokenXprice: 1.3425,
         tokenDecimal: 6,
-        duration: 10
+        duration: 10,
+        currentTickIndex: 0
       }
 
       let result = false
       const reward = rewardsAPY(paramsApy)
-      if (reward.reward > 20 || reward.reward < 30) {
+      if (reward.reward > 120 && reward.reward < 130) {
         result = true
       }
       assert.ok(result)
