@@ -39,6 +39,7 @@ import { alignTickToSpacing, getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
 import { struct, u32, u8 } from '@solana/buffer-layout'
 import { u64 } from '@solana/spl-token'
+import { TokenInfo, TokenListContainer, TokenListProvider } from '@solana/spl-token-registry'
 
 export const SEED = 'Invariant'
 export const DECIMAL = 12
@@ -997,9 +998,45 @@ export const rewardsAPY = (params: ApyRewardsParams) => {
 
   return { reward, rewardFactor }
 }
-export interface CoingeckoApiPriceData {
-  id: string
-  current_price: number
+
+const coingeckoIdOverwrites = {
+  '9vMJfxuKxXBoEa7rM12mYLMwTacLMLDJqHozw96WQL8i': 'terrausd',
+  '7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj': 'lido-staked-sol',
+  NRVwhjBQiUPYtfDT5zRBVJajzFQHaBUNtC7SNVvqRFa: 'nirvana-nirv'
+}
+
+export const getTokensData = async (): Promise<Record<string, TokenData>> => {
+  const tokens: TokenListContainer = await new TokenListProvider().resolve()
+
+  const tokenList = tokens
+    .filterByClusterSlug('mainnet-beta')
+    .getList()
+    .filter(token => token.chainId === 101)
+
+  const tokensObj: Record<string, TokenData> = {}
+
+  tokenList.forEach((token: TokenInfo) => {
+    tokensObj[token.address.toString()] = {
+      // @ts-expect-error
+      id: coingeckoIdOverwrites?.[token.address.toString()] ?? token.extensions?.coingeckoId,
+      decimals: token.decimals,
+      ticker: token.symbol
+    }
+  })
+
+  return tokensObj
+}
+
+export const getPrice = (sqrtPrice: Decimal, decimalDiff: number): Decimal => {
+  const price = sqrtPrice.v.pow(new BN(2)) // sqrtPrice^2
+  const priceWithCorrectPrecision = price.div(new BN(10).pow(new BN(40))) // price / 10^40, becouse now is 48 we need 8
+  if (decimalDiff > 0) {
+    return { v: priceWithCorrectPrecision.mul(new BN(10).pow(new BN(decimalDiff))) }
+  }
+  if (decimalDiff < 0) {
+    return { v: priceWithCorrectPrecision.div(new BN(10).pow(new BN(Math.abs(decimalDiff)))) }
+  }
+  return { v: priceWithCorrectPrecision }
 }
 
 export interface TokenData {
