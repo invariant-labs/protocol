@@ -269,8 +269,6 @@ export class Market {
       ])
     ).map(({ account }) => account) as Position[]
 
-    console.log('positions', positions.length)
-
     for (const position of positions) {
       const {
         pool: poolAddress,
@@ -292,7 +290,6 @@ export class Market {
         feeGrowthGlobalX,
         feeGrowthGlobalY
       }: PoolStructure = await this.getPoolByAddress(poolAddress)
-      console.log(currentTickIndex)
 
       const tokenData = await getTokensData()
       const dataTokenX: TokenData = tokenData[tokenX.toString()]
@@ -1290,7 +1287,6 @@ export class Market {
         }
       ])
     ).map(a => a.account) as Position[]
-    console.log(positions.length)
     let liquidity = new BN(0)
     for (const position of positions) {
       liquidity = liquidity.add(position.liquidity.v)

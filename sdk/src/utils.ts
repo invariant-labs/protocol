@@ -1017,7 +1017,7 @@ export const getTokensData = async (): Promise<Record<string, TokenData>> => {
 
   tokenList.forEach((token: TokenInfo) => {
     tokensObj[token.address.toString()] = {
-      // @ts-expect-error
+      // @ts-ignore
       id: coingeckoIdOverwrites?.[token.address.toString()] ?? token.extensions?.coingeckoId,
       decimals: token.decimals,
       ticker: token.symbol
