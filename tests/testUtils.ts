@@ -17,9 +17,9 @@ import {
   tou64
 } from '@invariant-labs/sdk/src/utils'
 import BN from 'bn.js'
-import { Pair, TICK_LIMIT, calculatePriceSqrt } from '@invariant-labs/sdk'
+import { Pair, TICK_LIMIT, calculatePriceSqrt, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
 import { assert } from 'chai'
-import { LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
+import { ApyPoolParams } from '@invariant-labs/sdk/lib/utils'
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {
@@ -370,3 +370,5 @@ export const createTickArray = (size: number) => {
 
   return ticks
 }
+
+//export const dataApy: ApyPoolParams = {}

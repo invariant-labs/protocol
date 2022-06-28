@@ -25,15 +25,10 @@ import {
   calculatePriceAfterSlippage,
   calculatePriceImpact,
   calculateSwapStep,
-  findClosestTicks,
   getLiquidityByX,
   getLiquidityByY,
   getXfromLiquidity,
-  isEnoughAmountToPushPrice,
-  isInitialized,
-  MIN_TICK,
-  priceToTick,
-  sqrt
+  isEnoughAmountToPushPrice
 } from './math'
 import { alignTickToSpacing, getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
@@ -951,10 +946,11 @@ export const poolAPY = (params: ApyPoolParams) => {
     dailyFactor = 0
   }
 
-  const apyFactor = weeklyFactor ? (dailyFactor + weeklyFactor * 6) / 7 : dailyFactor
-  const apy = (Math.pow(apyFactor + 1, 365) - 1) * 100
+  const newWeeklyFactor = updateWeeklyFactor(weeklyFactor, dailyFactor)
 
-  return { apy, apyFactor }
+  const apy = (Math.pow(average(newWeeklyFactor) + 1, 365) - 1) * 100
+
+  return { apy, newWeeklyFactor }
 }
 
 export const dailyFactorRewards = (
@@ -993,10 +989,20 @@ export const rewardsAPY = (params: ApyRewardsParams) => {
     dailyFactor = 0
   }
 
-  const rewardFactor = weeklyFactor ? (dailyFactor + weeklyFactor * 6) / 7 : dailyFactor
-  const reward = (Math.pow(duration * rewardFactor + 1, 365 / duration) - 1) * 100
+  const newWeeklyFactor = updateWeeklyFactor(weeklyFactor, dailyFactor)
 
-  return { reward, rewardFactor }
+  const reward = (Math.pow(duration * average(newWeeklyFactor) + 1, 365 / duration) - 1) * 100
+
+  return { reward, newWeeklyFactor }
+}
+
+export const average = (array: number[]) =>
+  array.reduce((prev: number, curr: number) => prev + curr) / array.length
+
+export const updateWeeklyFactor = (weeklyFactor: number[], dailyFactor: number): number[] => {
+  weeklyFactor.shift()
+  weeklyFactor.push(dailyFactor)
+  return weeklyFactor
 }
 
 const coingeckoIdOverwrites = {
@@ -1067,7 +1073,7 @@ export interface ApyPoolParams {
   currentTickIndex: number
   ticksPreviousSnapshot: Tick[]
   ticksCurrentSnapshot: Tick[]
-  weeklyFactor: number
+  weeklyFactor: number[]
   volumeX: number
   volumeY: number
 }
@@ -1075,7 +1081,7 @@ export interface ApyRewardsParams {
   ticksPreviousSnapshot: Tick[]
   ticksCurrentSnapshot: Tick[]
   currentTickIndex: number
-  weeklyFactor: number
+  weeklyFactor: number[]
   rewardInUSD: number
   tokenXprice: number
   tokenDecimal: number
