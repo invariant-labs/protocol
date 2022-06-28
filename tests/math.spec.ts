@@ -34,15 +34,12 @@ import {
   calculateFeeGrowthInside,
   calculateTickDelta,
   calculateTokensOwed,
-  calculateTokenXinRange,
   CloserLimit,
   dailyFactorPool,
   dailyFactorRewards,
   FeeGrowthInside,
   getCloserLimit,
   getConcentrationArray,
-  getRangeBasedOnFeeGrowth,
-  getTokenXInRange,
   getVolume,
   GROWTH_DENOMINATOR,
   poolAPY,
@@ -56,6 +53,8 @@ import {
   TokensOwed,
   toPercent,
   toPrice,
+  getTokensData,
+  TokenData,
   U128MAX
 } from '@invariant-labs/sdk/src/utils'
 import { createTickArray, dataApy, setInitialized } from './testUtils'
@@ -1958,6 +1957,16 @@ describe('Math', () => {
         result = true
       }
       assert.ok(result)
+    })
+  })
+  describe('test getTokenData', () => {
+    it('check ticker and decimals', async () => {
+      const tokenData = await getTokensData()
+      const usdc = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
+      const token: TokenData = tokenData[usdc]
+      assert.equal(token.ticker, 'USDC')
+      assert.equal(token.decimals, 6)
+      assert.equal(token.id, 'usd-coin')
     })
   })
 })

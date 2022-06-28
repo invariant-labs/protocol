@@ -53,9 +53,9 @@ const initPositionVars: InitPosition = {
 
 and call
 
-````ts
- await market.initPosition(initPositionVars, positionOwner)```
-````
+```ts
+await market.initPosition(initPositionVars, positionOwner)
+```
 
 Similar manner is for removing position.
 To fetch position by index use
@@ -69,3 +69,36 @@ or fetch all
 ```ts
 await market.getPositionList(owner: PublicKey)
 ```
+
+also is possible to fetch all user positions as 'PositionStructure[]'
+
+```ts
+await market.getAllUserPositions(owner: PublicKey)
+```
+
+which contains
+
+```ts
+interface PositionStructure {
+  tokenX: PublicKey
+  tokenY: PublicKey
+  feeTier: FeeTier
+  amountTokenX: BN
+  amountTokenY: BN
+  lowerPrice: Decimal
+  upperPrice: Decimal
+  unclaimedFeesX: BN
+  unclaimedFeesY: BN
+}
+```
+
+| Variable         | Description                                                                        |
+| ---------------- | ---------------------------------------------------------------------------------- |
+| `tokenX`         | Position's token x mint address                                                    |
+| `tokenY`         | Position's token y mint address                                                    |
+| `amountTokenX`   | Amount of token x based on current state                                           |
+| `amountTokenY`   | Amount of token y based on current state                                           |
+| `lowerPrice`     | Lower position's price with 8 decimals calculated on the basis of lower tick index |
+| `upperPrice`     | Upper position's price with 8 decimals calculated on the basis of upper tick index |
+| `unclaimedFeesX` | Unclaimed fees in token x based on current state                                   |
+| `unclaimedFeesY` | Unclaimed fees in token y based on current state                                   |

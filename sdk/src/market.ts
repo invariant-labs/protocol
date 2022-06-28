@@ -18,16 +18,19 @@ import {
   isInitialized
 } from './math'
 import {
+  calculateClaimAmount,
   feeToTickSpacing,
   getFeeTierAddress,
   getMaxTick,
   getMinTick,
+  getPrice,
+  getTokensData,
   parseLiquidityOnTicks,
+  PositionClaimData,
+  PRICE_DENOMINATOR,
   SEED,
-  simulateSwap,
-  SimulateSwapInterface,
-  SimulationResult,
-  SimulationStatus
+  SimulateClaim,
+  TokenData
 } from './utils'
 import { Invariant, IDL } from './idl/invariant'
 import { DENOMINATOR, IWallet, Pair, signAndSend } from '.'
@@ -158,6 +161,10 @@ export class Market {
     return (await this.program.account.pool.fetch(address)) as PoolStructure
   }
 
+  async getPoolByAddress(address: PublicKey) {
+    return (await this.program.account.pool.fetch(address)) as PoolStructure
+  }
+
   public async onPoolChange(
     tokenX: PublicKey,
     tokenY: PublicKey,
@@ -217,6 +224,11 @@ export class Market {
     return (await this.program.account.tick.fetch(tickAddress)) as Tick
   }
 
+  async getTickByPool(poolAddress: PublicKey, index: number) {
+    const { tickAddress } = await this.getTickAddressByPool(poolAddress, index)
+    return (await this.program.account.tick.fetch(tickAddress)) as Tick
+  }
+
   async getClosestTicks(pair: Pair, limit: number, maxRange?: number, oneWay?: 'up' | 'down') {
     const state = await this.getPool(pair)
     const tickmap = await this.getTickmap(pair)
@@ -244,6 +256,104 @@ export class Market {
         }
       ])
     ).map(a => a.account) as Tick[]
+  }
+
+  async getAllUserPositions(owner: PublicKey): Promise<PositionStructure[]> {
+    const positionStructs: PositionStructure[] = []
+
+    const positions: Position[] = (
+      await this.program.account.position.all([
+        {
+          memcmp: { bytes: bs58.encode(owner.toBuffer()), offset: 8 }
+        }
+      ])
+    ).map(({ account }) => account) as Position[]
+
+    for (const position of positions) {
+      const {
+        pool: poolAddress,
+        lowerTickIndex,
+        upperTickIndex,
+        tokensOwedX,
+        tokensOwedY,
+        liquidity,
+        feeGrowthInsideX,
+        feeGrowthInsideY
+      }: Position = position
+
+      const {
+        fee,
+        tickSpacing,
+        tokenX,
+        tokenY,
+        currentTickIndex,
+        feeGrowthGlobalX,
+        feeGrowthGlobalY
+      }: PoolStructure = await this.getPoolByAddress(poolAddress)
+
+      const tokenData = await getTokensData()
+      const dataTokenX: TokenData = tokenData[tokenX.toString()]
+      const dataTokenY: TokenData = tokenData[tokenY.toString()]
+
+      const decimalDiff: number = dataTokenX.decimals - dataTokenY.decimals
+
+      const currentSqrtPrice: Decimal = calculatePriceSqrt(currentTickIndex)
+      const lowerSqrtPrice: Decimal = calculatePriceSqrt(lowerTickIndex)
+      const upperSqrtPrice: Decimal = calculatePriceSqrt(upperTickIndex)
+
+      const lowerPrice: Decimal = getPrice(lowerSqrtPrice, decimalDiff)
+      const upperPrice: Decimal = getPrice(upperSqrtPrice, decimalDiff)
+
+      const feeTier: FeeTier = { fee: fee.v, tickSpacing }
+
+      const amountTokenX: BN = getX(
+        liquidity.v,
+        upperSqrtPrice.v,
+        currentSqrtPrice.v,
+        lowerSqrtPrice.v
+      )
+
+      const amountTokenY: BN = getY(
+        liquidity.v,
+        upperSqrtPrice.v,
+        currentSqrtPrice.v,
+        lowerSqrtPrice.v
+      )
+
+      const positionData: PositionClaimData = {
+        liquidity,
+        feeGrowthInsideX,
+        feeGrowthInsideY,
+        tokensOwedX,
+        tokensOwedY
+      }
+
+      const claim: SimulateClaim = {
+        position: positionData,
+        tickLower: await this.getTickByPool(poolAddress, lowerTickIndex),
+        tickUpper: await this.getTickByPool(poolAddress, upperTickIndex),
+        tickCurrent: currentTickIndex,
+        feeGrowthGlobalX,
+        feeGrowthGlobalY
+      }
+
+      const [unclaimedFeesX, unclaimedFeesY] = calculateClaimAmount(claim)
+
+      const positionStruct: PositionStructure = {
+        tokenX,
+        tokenY,
+        feeTier,
+        amountTokenX,
+        amountTokenY,
+        lowerPrice,
+        upperPrice,
+        unclaimedFeesX,
+        unclaimedFeesY
+      }
+      positionStructs.push(positionStruct)
+    }
+
+    return positionStructs
   }
 
   async getLiquidityOnTicks(pair: Pair) {
@@ -283,6 +393,21 @@ export class Market {
 
   async getTickAddress(pair: Pair, index: number) {
     const poolAddress = await pair.getAddress(this.program.programId)
+    const indexBuffer = Buffer.alloc(4)
+    indexBuffer.writeInt32LE(index)
+
+    const [tickAddress, tickBump] = await PublicKey.findProgramAddress(
+      [Buffer.from(utils.bytes.utf8.encode(TICK_SEED)), poolAddress.toBuffer(), indexBuffer],
+      this.program.programId
+    )
+
+    return {
+      tickAddress,
+      tickBump
+    }
+  }
+
+  async getTickAddressByPool(poolAddress: PublicKey, index: number) {
     const indexBuffer = Buffer.alloc(4)
     indexBuffer.writeInt32LE(index)
 
@@ -1162,7 +1287,6 @@ export class Market {
         }
       ])
     ).map(a => a.account) as Position[]
-
     let liquidity = new BN(0)
     for (const position of positions) {
       liquidity = liquidity.add(position.liquidity.v)
@@ -1338,6 +1462,19 @@ export interface Position {
   tokensOwedY: Decimal
   bump: number
 }
+
+export interface PositionStructure {
+  tokenX: PublicKey
+  tokenY: PublicKey
+  feeTier: FeeTier
+  amountTokenX: BN
+  amountTokenY: BN
+  lowerPrice: Decimal
+  upperPrice: Decimal
+  unclaimedFeesX: BN
+  unclaimedFeesY: BN
+}
+
 export interface FeeTier {
   fee: BN
   tickSpacing?: number
