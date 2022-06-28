@@ -122,6 +122,8 @@ impl<'info> Swap<'info> {
         let tickmap = ctx.accounts.tickmap.load()?;
         let state = ctx.accounts.state.load()?;
 
+        ctx.remaining_accounts.iter().for_each(|acc| println!("account = {:?}", acc));
+
         // limit is on the right side of price
         if x_to_y {
             require!(
@@ -141,6 +143,7 @@ impl<'info> Swap<'info> {
 
         let mut total_amount_in = TokenAmount(0);
         let mut total_amount_out = TokenAmount(0);
+        let mut total_amount_referral = TokenAmount(0);
 
         while !remaining_amount.is_zero() {
             let (swap_limit, limiting_tick) = get_closer_limit(
@@ -166,7 +169,10 @@ impl<'info> Swap<'info> {
                 remaining_amount -= result.amount_out;
             }
 
-            pool.add_fee(result.fee_amount, x_to_y);
+            // extract referral fee
+            let referral_fee = TokenAmount::from_decimal(result.fee_amount.big_mul(FixedPoint::from_scale(1, 2)));
+            total_amount_referral += referral_fee;
+            pool.add_fee(result.fee_amount - referral_fee, x_to_y);
 
             pool.sqrt_price = result.next_price_sqrt;
 
@@ -259,6 +265,8 @@ impl<'info> Swap<'info> {
 
         token::transfer(take_ctx, total_amount_in.0)?;
         token::transfer(send_ctx.with_signer(signer), total_amount_out.0)?;
+        // if !total_amount_referral.is_zero() {
+        // }
 
         Ok(())
     }
