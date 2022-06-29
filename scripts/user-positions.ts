@@ -13,9 +13,7 @@ const connection = provider.connection
 const main = async () => {
   const market = await Market.build(Network.MAIN, provider.wallet, connection)
 
-  const positions = await market.getAllUserPositions(
-    new PublicKey('JDn5Ttup4ur8aeH2cs5vf6HBE2nqRgZwea9c3bbv75Dj')
-  )
+  const positions = await market.getAllUserPositions(new PublicKey(''))
   console.log('length', positions.length)
   for (const position of positions) {
     console.log('########################################')

@@ -882,7 +882,7 @@ export class Market {
       tickmap.bitmap,
       pool.currentTickIndex,
       pool.tickSpacing,
-      referralAccount ? 18 : 19,
+      referralAccount ? TICK_CROSSES_PER_IX - 1 : TICK_CROSSES_PER_IX,
       Infinity,
       xToY ? 'down' : 'up'
     )

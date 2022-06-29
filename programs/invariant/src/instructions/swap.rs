@@ -122,7 +122,26 @@ impl<'info> Swap<'info> {
         let tickmap = ctx.accounts.tickmap.load()?;
         let state = ctx.accounts.state.load()?;
 
-        ctx.remaining_accounts.iter().for_each(|acc| println!("account = {:?}", acc));
+        // TODO: match pattern
+        let mut is_referral = false;
+        let mut referral_address = Pubkey::default();
+        
+        let referral_account = ctx
+            .remaining_accounts
+            .iter()
+            .find(|account| *account.owner != *ctx.program_id);
+        
+        if referral_account.is_some() {
+            let referral_token = Account::<'_, TokenAccount>::try_from(referral_account.unwrap()).unwrap();
+            
+            referral_address = referral_token.key();
+            is_referral = referral_token.mint == match x_to_y {
+                true => ctx.accounts.token_x.key(),
+                false => ctx.accounts.token_y.key() 
+            };
+        }
+        msg!("is_referral = {:?}", is_referral);
+        msg!("referral_address = {:?}", referral_address);
 
         // limit is on the right side of price
         if x_to_y {
@@ -266,6 +285,7 @@ impl<'info> Swap<'info> {
         token::transfer(take_ctx, total_amount_in.0)?;
         token::transfer(send_ctx.with_signer(signer), total_amount_out.0)?;
         // if !total_amount_referral.is_zero() {
+            // send value to referral
         // }
 
         Ok(())

@@ -73,9 +73,11 @@ describe('swap', () => {
     await market.createTick(createTickVars2, admin)
 
     const positionOwner = Keypair.generate()
+    const referralAccount = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
     const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
     const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
+    const referralTokenXAccount = await tokenX.createAccount(referralAccount.publicKey)
     const mintAmount = tou64(new BN(10).pow(new BN(10)))
 
     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
@@ -122,9 +124,12 @@ describe('swap', () => {
       accountX,
       accountY,
       byAmountIn: true,
-      owner: owner.publicKey
+      owner: owner.publicKey,
+      referralAccount: referralTokenXAccount
     }
     await market.swap(swapVars, owner)
+
+    console.log(`referralTokenXAccount = ${referralTokenXAccount.toString()}`)
 
     // Check pool
     const poolData = await market.getPool(pair)
