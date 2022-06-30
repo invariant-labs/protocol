@@ -1,4 +1,4 @@
-use crate::decimals::*;
+use crate::{decimals::*, interfaces::TakeRefTokens};
 use crate::interfaces::send_tokens::SendTokens;
 use crate::interfaces::take_tokens::TakeTokens;
 use crate::log::get_tick_at_sqrt_price;
@@ -106,6 +106,19 @@ impl<'info> SendTokens<'info> for Swap<'info> {
     }
 }
 
+impl<'info> TakeRefTokens<'info> for Swap<'info> {
+    fn take_ref_x(&self, to: AccountInfo<'info>) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+        CpiContext::new(
+            self.token_program.to_account_info(),
+            Transfer {
+                from: self.account_x.to_account_info(),
+                to: to.to_account_info(),
+                authority: self.owner.to_account_info().clone(),
+            },
+        )
+    }
+}
+
 impl<'info> Swap<'info> {
     pub fn handler(
         ctx: Context<Swap>,
@@ -188,10 +201,16 @@ impl<'info> Swap<'info> {
                 remaining_amount -= result.amount_out;
             }
 
-            // extract referral fee
-            let referral_fee = TokenAmount::from_decimal(result.fee_amount.big_mul(FixedPoint::from_scale(1, 2)));
-            total_amount_referral += referral_fee;
-            pool.add_fee(result.fee_amount - referral_fee, x_to_y);
+            match is_referral {
+                true => {
+                    let referral_fee = TokenAmount::from_decimal(result.fee_amount.big_mul(FixedPoint::from_scale(1, 2)));
+                    pool.add_fee(result.fee_amount - referral_fee, x_to_y);
+                    total_amount_referral += referral_fee;
+                },
+                false => {
+                    pool.add_fee(result.fee_amount, x_to_y);
+                }
+            };            
 
             pool.sqrt_price = result.next_price_sqrt;
 
@@ -284,9 +303,10 @@ impl<'info> Swap<'info> {
 
         token::transfer(take_ctx, total_amount_in.0)?;
         token::transfer(send_ctx.with_signer(signer), total_amount_out.0)?;
-        // if !total_amount_referral.is_zero() {
-            // send value to referral
-        // }
+        if is_referral && !total_amount_referral.is_zero() {
+            // TODO: select x or y and transfer depends on x_to_y
+            ctx.accounts.take_ref_x(*referral_account.unwrap());
+        }
 
         Ok(())
     }
