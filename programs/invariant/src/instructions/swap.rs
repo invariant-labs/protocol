@@ -1,6 +1,7 @@
-use crate::{decimals::*, interfaces::TakeRefTokens};
+use crate::decimals::*;
 use crate::interfaces::send_tokens::SendTokens;
 use crate::interfaces::take_tokens::TakeTokens;
+use crate::interfaces::take_ref_tokens::TakeRefTokens;
 use crate::log::get_tick_at_sqrt_price;
 use crate::math::compute_swap_step;
 use crate::structs::pool::Pool;
@@ -121,7 +122,7 @@ impl<'info> TakeRefTokens<'info> for Swap<'info> {
 
 impl<'info> Swap<'info> {
     pub fn handler(
-        ctx: Context<Swap>,
+        ctx: Context<'_, '_, '_, 'info, Swap<'info>>,
         x_to_y: bool,
         amount: u64,
         by_amount_in: bool, // whether amount specifies input or output
@@ -203,7 +204,9 @@ impl<'info> Swap<'info> {
 
             match is_referral {
                 true => {
-                    let referral_fee = TokenAmount::from_decimal(result.fee_amount.big_mul(FixedPoint::from_scale(1, 2)));
+                    // change value of referral fee
+                    let referral_fee = TokenAmount::from_decimal(result.fee_amount.big_mul(FixedPoint::from_scale(8, 1)));
+                    msg!("referral_fee = {:?}", referral_fee);
                     pool.add_fee(result.fee_amount - referral_fee, x_to_y);
                     total_amount_referral += referral_fee;
                 },
@@ -305,7 +308,8 @@ impl<'info> Swap<'info> {
         token::transfer(send_ctx.with_signer(signer), total_amount_out.0)?;
         if is_referral && !total_amount_referral.is_zero() {
             // TODO: select x or y and transfer depends on x_to_y
-            ctx.accounts.take_ref_x(*referral_account.unwrap());
+            let take_ref_ctx = ctx.accounts.take_ref_x(referral_account.unwrap().clone());
+            token::transfer(take_ref_ctx, total_amount_referral.0)?;
         }
 
         Ok(())

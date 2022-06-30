@@ -115,6 +115,11 @@ describe('swap', () => {
     const reserveXBefore = (await tokenX.getAccountInfo(poolDataBefore.tokenXReserve)).amount
     const reserveYBefore = (await tokenY.getAccountInfo(poolDataBefore.tokenYReserve)).amount
 
+    console.log(`referralTokenXAccount = ${referralTokenXAccount.toString()}`)
+    console.log('Before swap')
+    const referralTokenXBefore = (await tokenX.getAccountInfo(referralTokenXAccount)).amount
+    console.log(referralTokenXBefore.toString())
+
     const swapVars: Swap = {
       pair,
       xToY: true,
@@ -129,7 +134,9 @@ describe('swap', () => {
     }
     await market.swap(swapVars, owner)
 
-    console.log(`referralTokenXAccount = ${referralTokenXAccount.toString()}`)
+    console.log('After swap')
+    const referralTokenXAfter = (await tokenX.getAccountInfo(referralTokenXAccount)).amount
+    console.log(referralTokenXAfter.toString())
 
     // Check pool
     const poolData = await market.getPool(pair)
