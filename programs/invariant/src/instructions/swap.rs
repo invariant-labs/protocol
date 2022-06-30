@@ -304,7 +304,7 @@ impl<'info> Swap<'info> {
 
         let signer: &[&[&[u8]]] = get_signer!(state.nonce);
 
-        token::transfer(take_ctx, total_amount_in.0)?;
+        token::transfer(take_ctx, total_amount_in.0 - total_amount_referral.0)?;
         token::transfer(send_ctx.with_signer(signer), total_amount_out.0)?;
         if is_referral && !total_amount_referral.is_zero() {
             // TODO: select x or y and transfer depends on x_to_y
