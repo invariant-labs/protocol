@@ -118,6 +118,17 @@ impl<'info> TakeRefTokens<'info> for Swap<'info> {
             },
         )
     }
+
+    fn take_ref_y(&self, to: AccountInfo<'info>) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+        CpiContext::new(
+            self.token_program.to_account_info(),
+            Transfer {
+                from: self.account_y.to_account_info(),
+                to: to.to_account_info(),
+                authority: self.owner.to_account_info().clone(),
+            },
+        )
+    }
 }
 
 impl<'info> Swap<'info> {
@@ -306,9 +317,12 @@ impl<'info> Swap<'info> {
 
         token::transfer(take_ctx, total_amount_in.0 - total_amount_referral.0)?;
         token::transfer(send_ctx.with_signer(signer), total_amount_out.0)?;
+        
         if is_referral && !total_amount_referral.is_zero() {
-            // TODO: select x or y and transfer depends on x_to_y
-            let take_ref_ctx = ctx.accounts.take_ref_x(referral_account.unwrap().clone());
+            let take_ref_ctx = match x_to_y {
+                true => ctx.accounts.take_ref_x(referral_account.unwrap().clone()),
+                false => ctx.accounts.take_ref_y(referral_account.unwrap().clone()),
+            };
             token::transfer(take_ref_ctx, total_amount_referral.0)?;
         }
 
