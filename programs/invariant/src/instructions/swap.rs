@@ -1,7 +1,7 @@
 use crate::decimals::*;
 use crate::interfaces::send_tokens::SendTokens;
-use crate::interfaces::take_tokens::TakeTokens;
 use crate::interfaces::take_ref_tokens::TakeRefTokens;
+use crate::interfaces::take_tokens::TakeTokens;
 use crate::log::get_tick_at_sqrt_price;
 use crate::math::compute_swap_step;
 use crate::structs::pool::Pool;
@@ -150,20 +150,21 @@ impl<'info> Swap<'info> {
         // TODO: match pattern
         let mut is_referral = false;
         let mut referral_address = Pubkey::default();
-        
         let referral_account = ctx
             .remaining_accounts
             .iter()
             .find(|account| *account.owner != *ctx.program_id);
-        
+
         if referral_account.is_some() {
-            let referral_token = Account::<'_, TokenAccount>::try_from(referral_account.unwrap()).unwrap();
-            
+            let referral_token =
+                Account::<'_, TokenAccount>::try_from(referral_account.unwrap()).unwrap();
+
             referral_address = referral_token.key();
-            is_referral = referral_token.mint == match x_to_y {
-                true => ctx.accounts.token_x.key(),
-                false => ctx.accounts.token_y.key() 
-            };
+            is_referral = referral_token.mint
+                == match x_to_y {
+                    true => ctx.accounts.token_x.key(),
+                    false => ctx.accounts.token_y.key(),
+                };
         }
         msg!("is_referral = {:?}", is_referral);
         msg!("referral_address = {:?}", referral_address);
@@ -216,15 +217,17 @@ impl<'info> Swap<'info> {
             match is_referral {
                 true => {
                     // change value of referral fee
-                    let referral_fee = TokenAmount::from_decimal(result.fee_amount.big_mul(FixedPoint::from_scale(8, 1)));
+                    let referral_fee = TokenAmount::from_decimal(
+                        result.fee_amount.big_mul(FixedPoint::from_scale(8, 1)),
+                    );
                     msg!("referral_fee = {:?}", referral_fee);
                     pool.add_fee(result.fee_amount - referral_fee, x_to_y);
                     total_amount_referral += referral_fee;
-                },
+                }
                 false => {
                     pool.add_fee(result.fee_amount, x_to_y);
                 }
-            };            
+            };
 
             pool.sqrt_price = result.next_price_sqrt;
 
@@ -317,7 +320,7 @@ impl<'info> Swap<'info> {
 
         token::transfer(take_ctx, total_amount_in.0 - total_amount_referral.0)?;
         token::transfer(send_ctx.with_signer(signer), total_amount_out.0)?;
-        
+
         if is_referral && !total_amount_referral.is_zero() {
             let take_ref_ctx = match x_to_y {
                 true => ctx.accounts.take_ref_x(referral_account.unwrap().clone()),
