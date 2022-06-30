@@ -73,11 +73,9 @@ describe('swap', () => {
     await market.createTick(createTickVars2, admin)
 
     const positionOwner = Keypair.generate()
-    const referralAccount = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
     const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
     const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
-    const referralTokenXAccount = await tokenX.createAccount(referralAccount.publicKey)
     const mintAmount = tou64(new BN(10).pow(new BN(10)))
 
     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
@@ -115,11 +113,6 @@ describe('swap', () => {
     const reserveXBefore = (await tokenX.getAccountInfo(poolDataBefore.tokenXReserve)).amount
     const reserveYBefore = (await tokenY.getAccountInfo(poolDataBefore.tokenYReserve)).amount
 
-    console.log(`referralTokenXAccount = ${referralTokenXAccount.toString()}`)
-    console.log('Before swap')
-    const referralTokenXBefore = (await tokenX.getAccountInfo(referralTokenXAccount)).amount
-    console.log(referralTokenXBefore.toString())
-
     const swapVars: Swap = {
       pair,
       xToY: true,
@@ -129,14 +122,9 @@ describe('swap', () => {
       accountX,
       accountY,
       byAmountIn: true,
-      owner: owner.publicKey,
-      referralAccount: referralTokenXAccount
+      owner: owner.publicKey
     }
     await market.swap(swapVars, owner)
-
-    console.log('After swap')
-    const referralTokenXAfter = (await tokenX.getAccountInfo(referralTokenXAccount)).amount
-    console.log(referralTokenXAfter.toString())
 
     // Check pool
     const poolData = await market.getPool(pair)
