@@ -153,7 +153,7 @@ impl<'info> Swap<'info> {
         let referral_account = ctx
             .remaining_accounts
             .iter()
-            .find(|account| *account.owner != *ctx.program_id);
+            .find(|account| *account.owner != *ctx.program_id); // restricted accounts list
 
         if referral_account.is_some() {
             let referral_token =
@@ -207,6 +207,7 @@ impl<'info> Swap<'info> {
                 by_amount_in,
                 pool.fee,
             );
+            msg!("swap result = {:?}", result);
             // make remaining amount smaller
             if by_amount_in {
                 remaining_amount -= result.amount_in + result.fee_amount;
@@ -214,19 +215,9 @@ impl<'info> Swap<'info> {
                 remaining_amount -= result.amount_out;
             }
 
-            match is_referral {
-                true => {
-                    // change value of referral fee
-                    let referral_fee = TokenAmount::from_decimal(
-                        result.fee_amount.big_mul(FixedPoint::from_scale(8, 1)),
-                    );
-                    msg!("referral_fee = {:?}", referral_fee);
-                    pool.add_fee(result.fee_amount - referral_fee, x_to_y);
-                    total_amount_referral += referral_fee;
-                }
-                false => {
-                    pool.add_fee(result.fee_amount, x_to_y);
-                }
+            total_amount_referral += match is_referral {
+                true => pool.add_fee(result.fee_amount, FixedPoint::from_scale(1, 2), x_to_y),
+                false => pool.add_fee(result.fee_amount, FixedPoint::from_integer(0), x_to_y),
             };
 
             pool.sqrt_price = result.next_price_sqrt;
@@ -281,7 +272,7 @@ impl<'info> Swap<'info> {
                         cross_tick(&mut tick, &mut pool)?;
                     } else if !remaining_amount.is_zero() {
                         if by_amount_in {
-                            pool.add_fee(remaining_amount, x_to_y);
+                            pool.add_fee(remaining_amount, FixedPoint::from_integer(0), x_to_y);
                             total_amount_in += remaining_amount;
                         }
                         remaining_amount = TokenAmount(0);
