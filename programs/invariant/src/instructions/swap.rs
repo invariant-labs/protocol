@@ -204,7 +204,6 @@ impl<'info> Swap<'info> {
                 by_amount_in,
                 pool.fee,
             );
-            msg!("swap result = {:?}", result);
             // make remaining amount smaller
             if by_amount_in {
                 remaining_amount -= result.amount_in + result.fee_amount;
@@ -305,16 +304,20 @@ impl<'info> Swap<'info> {
         };
 
         let signer: &[&[&[u8]]] = get_signer!(state.nonce);
-
-        token::transfer(take_ctx, total_amount_in.0 - total_amount_referral.0)?;
         token::transfer(send_ctx.with_signer(signer), total_amount_out.0)?;
 
-        if is_ref && !total_amount_referral.is_zero() {
-            let take_ref_ctx = match x_to_y {
-                true => ctx.accounts.take_ref_x(ref_account.unwrap().clone()),
-                false => ctx.accounts.take_ref_y(ref_account.unwrap().clone()),
-            };
-            token::transfer(take_ref_ctx, total_amount_referral.0)?;
+        match is_ref && !total_amount_referral.is_zero() {
+            true => {
+                let take_ref_ctx = match x_to_y {
+                    true => ctx.accounts.take_ref_x(ref_account.unwrap().clone()),
+                    false => ctx.accounts.take_ref_y(ref_account.unwrap().clone()),
+                };
+                token::transfer(take_ctx, total_amount_in.0 - total_amount_referral.0)?;
+                token::transfer(take_ref_ctx, total_amount_referral.0)?;
+            }
+            false => {
+                token::transfer(take_ctx, total_amount_in.0)?;
+            }
         }
 
         Ok(())
