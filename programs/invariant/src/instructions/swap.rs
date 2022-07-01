@@ -147,27 +147,24 @@ impl<'info> Swap<'info> {
         let tickmap = ctx.accounts.tickmap.load()?;
         let state = ctx.accounts.state.load()?;
 
-        // TODO: match pattern
-        let mut is_referral = false;
-        let mut referral_address = Pubkey::default();
-        let referral_account = ctx
+        let (is_ref, ref_account) = match ctx
             .remaining_accounts
             .iter()
-            .find(|account| *account.owner != *ctx.program_id); // restricted accounts list
-
-        if referral_account.is_some() {
-            let referral_token =
-                Account::<'_, TokenAccount>::try_from(referral_account.unwrap()).unwrap();
-
-            referral_address = referral_token.key();
-            is_referral = referral_token.mint
-                == match x_to_y {
-                    true => ctx.accounts.token_x.key(),
-                    false => ctx.accounts.token_y.key(),
-                };
-        }
-        msg!("is_referral = {:?}", is_referral);
-        msg!("referral_address = {:?}", referral_address);
+            .find(|account| *account.owner != *ctx.program_id)
+        {
+            Some(account) => {
+                let ref_token = Account::<'_, TokenAccount>::try_from(account).unwrap();
+                match ref_token.mint
+                    == match x_to_y {
+                        true => ctx.accounts.token_x.key(),
+                        false => ctx.accounts.token_y.key(),
+                    } {
+                    true => (true, Some(account)),
+                    false => (false, None),
+                }
+            }
+            None => (false, None),
+        };
 
         // limit is on the right side of price
         if x_to_y {
@@ -215,7 +212,7 @@ impl<'info> Swap<'info> {
                 remaining_amount -= result.amount_out;
             }
 
-            total_amount_referral += match is_referral {
+            total_amount_referral += match is_ref {
                 true => pool.add_fee(result.fee_amount, FixedPoint::from_scale(1, 2), x_to_y),
                 false => pool.add_fee(result.fee_amount, FixedPoint::from_integer(0), x_to_y),
             };
@@ -312,10 +309,10 @@ impl<'info> Swap<'info> {
         token::transfer(take_ctx, total_amount_in.0 - total_amount_referral.0)?;
         token::transfer(send_ctx.with_signer(signer), total_amount_out.0)?;
 
-        if is_referral && !total_amount_referral.is_zero() {
+        if is_ref && !total_amount_referral.is_zero() {
             let take_ref_ctx = match x_to_y {
-                true => ctx.accounts.take_ref_x(referral_account.unwrap().clone()),
-                false => ctx.accounts.take_ref_y(referral_account.unwrap().clone()),
+                true => ctx.accounts.take_ref_x(ref_account.unwrap().clone()),
+                false => ctx.accounts.take_ref_y(ref_account.unwrap().clone()),
             };
             token::transfer(take_ref_ctx, total_amount_referral.0)?;
         }
