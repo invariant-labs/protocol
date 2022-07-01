@@ -125,10 +125,10 @@ describe('Referral swap', () => {
     const reserveXBefore = (await tokenX.getAccountInfo(poolDataBefore.tokenXReserve)).amount
     const reserveYBefore = (await tokenY.getAccountInfo(poolDataBefore.tokenYReserve)).amount
 
-    console.log(`referralTokenXAccount = ${referralTokenXAccount.toString()}`)
-    console.log('Before swap')
+    // console.log(`referralTokenXAccount = ${referralTokenXAccount.toString()}`)
+    // console.log('Before swap')
     const referralTokenXBefore = (await tokenX.getAccountInfo(referralTokenXAccount)).amount
-    console.log(referralTokenXBefore.toString())
+    // console.log(referralTokenXBefore.toString())
 
     const swapVars: Swap = {
       pair,
@@ -144,9 +144,9 @@ describe('Referral swap', () => {
     }
     await market.swap(swapVars, owner)
 
-    console.log('After swap')
+    // console.log('After swap')
     const referralTokenXAfter = (await tokenX.getAccountInfo(referralTokenXAccount)).amount
-    console.log(referralTokenXAfter.toString())
+    // console.log(referralTokenXAfter.toString())
 
     // Check pool
     const poolData = await market.getPool(pair)
@@ -155,26 +155,32 @@ describe('Referral swap', () => {
     assert.ok(poolData.sqrtPrice.v.lt(poolDataBefore.sqrtPrice.v))
 
     // Check amounts and fees
-    // const amountX = (await tokenX.getAccountInfo(accountX)).amount
-    // const amountY = (await tokenY.getAccountInfo(accountY)).amount
-    // const reserveXAfter = (await tokenX.getAccountInfo(poolData.tokenXReserve)).amount
-    // const reserveYAfter = (await tokenY.getAccountInfo(poolData.tokenYReserve)).amount
-    // const reserveXDelta = reserveXAfter.sub(reserveXBefore)
-    // const reserveYDelta = reserveYBefore.sub(reserveYAfter)
+    const amountX = (await tokenX.getAccountInfo(accountX)).amount
+    const amountY = (await tokenY.getAccountInfo(accountY)).amount
+    const reserveXAfter = (await tokenX.getAccountInfo(poolData.tokenXReserve)).amount
+    const reserveYAfter = (await tokenY.getAccountInfo(poolData.tokenYReserve)).amount
+    const referralXDelta = referralTokenXAfter.sub(referralTokenXBefore)
+    const reserveXDelta = reserveXAfter.sub(reserveXBefore)
+    const reserveYDelta = reserveYBefore.sub(reserveYAfter)
 
-    // CALCULATING STATS REQUIRE SAME METHOD TO SWAP WITH REFERRAL AND WITHOUT REFERRAL
-    // fee tokens           0.005 * 100000 = 500
-    // protocol fee tokens  ceil(500 * 0.01) = 5
-    // referral fee
-    // pool fee tokens      500 - 5 = 5
-    // fee growth global    5/1000000 = 5 * 10^-6
-    // assert.ok(amountX.eqn(0))
-    // assert.ok(amountY.eq(amount.subn(7)))
-    // assert.ok(reserveXDelta.eq(amount))
-    // assert.ok(reserveYDelta.eq(amount.subn(7)))
-    // assert.equal(poolData.feeGrowthGlobalX.v.toString(), '5000000000000000000')
-    // assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
-    // assert.ok(poolData.feeProtocolTokenX.eqn(1))
-    // assert.ok(poolData.feeProtocolTokenY.eqn(0))
+    // fee tokens           11, 333, 157 (estimated 0.005 * 100000 = 500)
+    // protocol fee tokens  ceil(11 * 0.01) + ceil(333 * 0.01) + ceil(157 * 0.01) = 7
+    // referral fee         floor(11 * 0.01) + floor(333 * 0.01) + floor(157 * 0.01) = 4
+    // pool fee tokens      501 - 7 - 4 = 490
+    // fee growth global    10/2000000 + 326/1000000 + 154/1000000 = 4.85 * 10^-4
+    // y token to user      1998 + 62164 + 26502 = 90664
+    const expectedXProtocolFee = new BN(7)
+    const expectedXReferralFee = new BN(4)
+    const expectedYTransferTo = new BN(90664)
+
+    assert.ok(amountX.eqn(0))
+    assert.ok(amountY.eq(expectedYTransferTo))
+    assert.ok(reserveXDelta.eq(amount.sub(expectedXReferralFee)))
+    assert.ok(referralXDelta.eq(expectedXReferralFee))
+    assert.ok(reserveYDelta.eq(expectedYTransferTo))
+    assert.ok(poolData.feeProtocolTokenX.eq(expectedXProtocolFee))
+    assert.ok(poolData.feeProtocolTokenY.eqn(0))
+    assert.equal(poolData.feeGrowthGlobalX.v.toString(), '485000000000000000000')
+    assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
   })
 })
