@@ -1,5 +1,6 @@
 use crate::decimals::*;
 use crate::interfaces::send_tokens::SendTokens;
+use crate::interfaces::take_ref_tokens::TakeRefTokens;
 use crate::interfaces::take_tokens::TakeTokens;
 use crate::log::get_tick_at_sqrt_price;
 use crate::math::compute_swap_step;
@@ -106,9 +107,33 @@ impl<'info> SendTokens<'info> for Swap<'info> {
     }
 }
 
+impl<'info> TakeRefTokens<'info> for Swap<'info> {
+    fn take_ref_x(&self, to: AccountInfo<'info>) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+        CpiContext::new(
+            self.token_program.to_account_info(),
+            Transfer {
+                from: self.account_x.to_account_info(),
+                to: to.to_account_info(),
+                authority: self.owner.to_account_info().clone(),
+            },
+        )
+    }
+
+    fn take_ref_y(&self, to: AccountInfo<'info>) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+        CpiContext::new(
+            self.token_program.to_account_info(),
+            Transfer {
+                from: self.account_y.to_account_info(),
+                to: to.to_account_info(),
+                authority: self.owner.to_account_info().clone(),
+            },
+        )
+    }
+}
+
 impl<'info> Swap<'info> {
     pub fn handler(
-        ctx: Context<Swap>,
+        ctx: Context<'_, '_, '_, 'info, Swap<'info>>,
         x_to_y: bool,
         amount: u64,
         by_amount_in: bool, // whether amount specifies input or output
@@ -121,6 +146,25 @@ impl<'info> Swap<'info> {
         let mut pool = ctx.accounts.pool.load_mut()?;
         let tickmap = ctx.accounts.tickmap.load()?;
         let state = ctx.accounts.state.load()?;
+
+        let ref_account = match ctx
+            .remaining_accounts
+            .iter()
+            .find(|account| *account.owner != *ctx.program_id)
+        {
+            Some(account) => {
+                let ref_token = Account::<'_, TokenAccount>::try_from(account).unwrap();
+                match ref_token.mint
+                    == match x_to_y {
+                        true => ctx.accounts.token_x.key(),
+                        false => ctx.accounts.token_y.key(),
+                    } {
+                    true => Some(account),
+                    false => None,
+                }
+            }
+            None => None,
+        };
 
         // limit is on the right side of price
         if x_to_y {
@@ -141,6 +185,7 @@ impl<'info> Swap<'info> {
 
         let mut total_amount_in = TokenAmount(0);
         let mut total_amount_out = TokenAmount(0);
+        let mut total_amount_referral = TokenAmount(0);
 
         while !remaining_amount.is_zero() {
             let (swap_limit, limiting_tick) = get_closer_limit(
@@ -166,7 +211,10 @@ impl<'info> Swap<'info> {
                 remaining_amount -= result.amount_out;
             }
 
-            pool.add_fee(result.fee_amount, x_to_y);
+            total_amount_referral += match ref_account.is_some() {
+                true => pool.add_fee(result.fee_amount, FixedPoint::from_scale(1, 2), x_to_y),
+                false => pool.add_fee(result.fee_amount, FixedPoint::from_integer(0), x_to_y),
+            };
 
             pool.sqrt_price = result.next_price_sqrt;
 
@@ -220,7 +268,7 @@ impl<'info> Swap<'info> {
                         cross_tick(&mut tick, &mut pool)?;
                     } else if !remaining_amount.is_zero() {
                         if by_amount_in {
-                            pool.add_fee(remaining_amount, x_to_y);
+                            pool.add_fee(remaining_amount, FixedPoint::from_integer(0), x_to_y);
                             total_amount_in += remaining_amount;
                         }
                         remaining_amount = TokenAmount(0);
@@ -256,9 +304,21 @@ impl<'info> Swap<'info> {
         };
 
         let signer: &[&[&[u8]]] = get_signer!(state.nonce);
-
-        token::transfer(take_ctx, total_amount_in.0)?;
         token::transfer(send_ctx.with_signer(signer), total_amount_out.0)?;
+
+        match ref_account.is_some() && !total_amount_referral.is_zero() {
+            true => {
+                let take_ref_ctx = match x_to_y {
+                    true => ctx.accounts.take_ref_x(ref_account.unwrap().clone()),
+                    false => ctx.accounts.take_ref_y(ref_account.unwrap().clone()),
+                };
+                token::transfer(take_ctx, total_amount_in.0 - total_amount_referral.0)?;
+                token::transfer(take_ref_ctx, total_amount_referral.0)?;
+            }
+            false => {
+                token::transfer(take_ctx, total_amount_in.0)?;
+            }
+        }
 
         Ok(())
     }

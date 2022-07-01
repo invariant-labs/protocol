@@ -27,7 +27,6 @@ import {
   getTokensData,
   parseLiquidityOnTicks,
   PositionClaimData,
-  PRICE_DENOMINATOR,
   SEED,
   SimulateClaim,
   TokenData
@@ -866,7 +865,8 @@ export class Market {
       slippage,
       accountX,
       accountY,
-      byAmountIn
+      byAmountIn,
+      referralAccount
     } = swap
     const owner = swap.owner ?? this.wallet.publicKey
 
@@ -882,7 +882,7 @@ export class Market {
       tickmap.bitmap,
       pool.currentTickIndex,
       pool.tickSpacing,
-      19,
+      referralAccount ? TICK_CROSSES_PER_IX - 1 : TICK_CROSSES_PER_IX,
       Infinity,
       xToY ? 'down' : 'up'
     )
@@ -902,6 +902,10 @@ export class Market {
         return tickAddress
       })
     )
+
+    if (referralAccount) {
+      remainingAccounts.unshift(referralAccount)
+    }
 
     // trunk-ignore(eslint)
     const ra: Array<{ pubkey: PublicKey; isWritable: boolean; isSigner: boolean }> =
@@ -1545,6 +1549,7 @@ export interface Swap {
   accountX: PublicKey
   accountY: PublicKey
   byAmountIn: boolean
+  referralAccount?: PublicKey
 }
 export interface UpdateSecondsPerLiquidity {
   pair: Pair

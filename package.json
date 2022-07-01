@@ -4,6 +4,7 @@
     "test:staker-all": "npm run test:create && npm run test:stake && npm run test:withdraw-staker && npm run test:multicall && npm run test:position-change && npm run test:math-staker",
     "test:all": "npm run test:invariant-all && npm run test:staker-all",
     "test:swap": "anchor test --skip-build tests/swap.spec.ts",
+    "test:referral": "anchor test --skip-build tests/referral-swap.spec.ts",
     "test:range": "anchor test --skip-build tests/liquidity-range.spec.ts",
     "test:cross-both-side": "anchor test --skip-build tests/cross-both-side.spec.ts",
     "test:liquidity-gap": "anchor test --skip-build tests/liquidity-gap.spec.ts",
