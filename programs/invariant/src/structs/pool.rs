@@ -42,7 +42,7 @@ impl Pool {
         let protocol_fee = TokenAmount::from_decimal_up(amount.big_mul_up(self.protocol_fee));
         let ref_fee = match ref_percentage.is_zero() {
             true => TokenAmount(0),
-            false => TokenAmount::from_decimal(amount.big_mul(FixedPoint::from_scale(1, 2))),
+            false => TokenAmount::from_decimal(amount.big_mul(ref_percentage)),
         };
         let pool_fee = amount - protocol_fee - ref_fee;
 
