@@ -1,14 +1,17 @@
 version: 0.1
 cli:
-  version: 0.4.3-beta
+  version: 0.13.2-beta
 lint:
   enabled:
-    - actionlint@1.6.4
-    - clippy@1.56.1
+    - markdownlint@0.31.1
+    - svgo@2.8.0
+    - taplo@release-taplo-cli-0.6.8
+    - actionlint@1.6.15
+    - clippy@1.58.1
     - eslint@7.32.0
-    - gitleaks@7.6.1
-    - prettier@2.4.1
-    - rustfmt@1.56.1
+    - gitleaks@8.8.11
+    - prettier@2.7.1
+    - rustfmt@1.58.1
   ignore:
     - linters: [ALL]
       paths:
