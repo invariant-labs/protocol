@@ -147,7 +147,7 @@ impl<'info> Swap<'info> {
         let tickmap = ctx.accounts.tickmap.load()?;
         let state = ctx.accounts.state.load()?;
 
-        let (is_ref, ref_account) = match ctx
+        let ref_account = match ctx
             .remaining_accounts
             .iter()
             .find(|account| *account.owner != *ctx.program_id)
@@ -159,11 +159,11 @@ impl<'info> Swap<'info> {
                         true => ctx.accounts.token_x.key(),
                         false => ctx.accounts.token_y.key(),
                     } {
-                    true => (true, Some(account)),
-                    false => (false, None),
+                    true => Some(account),
+                    false => None,
                 }
             }
-            None => (false, None),
+            None => None,
         };
 
         // limit is on the right side of price
@@ -211,7 +211,7 @@ impl<'info> Swap<'info> {
                 remaining_amount -= result.amount_out;
             }
 
-            total_amount_referral += match is_ref {
+            total_amount_referral += match ref_account.is_some() {
                 true => pool.add_fee(result.fee_amount, FixedPoint::from_scale(1, 2), x_to_y),
                 false => pool.add_fee(result.fee_amount, FixedPoint::from_integer(0), x_to_y),
             };
@@ -306,7 +306,7 @@ impl<'info> Swap<'info> {
         let signer: &[&[&[u8]]] = get_signer!(state.nonce);
         token::transfer(send_ctx.with_signer(signer), total_amount_out.0)?;
 
-        match is_ref && !total_amount_referral.is_zero() {
+        match ref_account.is_some() && !total_amount_referral.is_zero() {
             true => {
                 let take_ref_ctx = match x_to_y {
                     true => ctx.accounts.take_ref_x(ref_account.unwrap().clone()),
