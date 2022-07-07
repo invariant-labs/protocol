@@ -100,6 +100,8 @@ impl Pool {
 
 #[cfg(test)]
 mod tests {
+    use std::result;
+
     use super::*;
 
     #[test]
@@ -174,6 +176,48 @@ mod tests {
             assert_eq!({ pool.fee_protocol_token_x }, 0);
             assert_eq!({ pool.fee_protocol_token_y }, 40);
             assert_eq!(ref_fee, TokenAmount(2));
+        }
+    }
+
+    #[test]
+    fn test_update_seconds_per_liquidity_global() {
+        let mut test_pool;
+        //without overflow
+        {
+            test_pool = Pool {
+                seconds_per_liquidity_global: FixedPoint { v: (34028) },
+                liquidity: Liquidity { v: (15) },
+                last_timestamp: 15,
+                ..Default::default()
+            };
+            let current_timestamp: u64 = 18446;
+            test_pool.update_seconds_per_liquidity_global(current_timestamp);
+            let result = test_pool.seconds_per_liquidity_global;
+            assert_eq!(
+                result,
+                FixedPoint {
+                    v: (1228733333333333367361)
+                }
+            );
+        }
+
+        //with overflow
+        {
+            test_pool = Pool {
+                seconds_per_liquidity_global: FixedPoint { v: (u128::MAX) },
+                liquidity: Liquidity { v: (1) },
+                last_timestamp: 0,
+                ..Default::default()
+            };
+            let current_timestamp: u64 = u64::MAX;
+            test_pool.update_seconds_per_liquidity_global(current_timestamp);
+            let result = test_pool.seconds_per_liquidity_global;
+            assert_eq!(
+                result,
+                FixedPoint {
+                    v: (18446744073709551614999999999999999999)
+                }
+            );
         }
     }
 }
