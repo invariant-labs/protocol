@@ -265,7 +265,7 @@ impl<'info> Swap<'info> {
                     // crossing tick
                     if !x_to_y || is_enough_amount_to_cross {
                         msg!("INVARIANT: CROSSING TICK {} ", { tick.index });
-                        cross_tick(&mut tick, &mut pool, 1844674407370955)?;
+                        cross_tick(&mut tick, &mut pool, get_current_timestamp())?;
                     } else if !remaining_amount.is_zero() {
                         if by_amount_in {
                             pool.add_fee(remaining_amount, FixedPoint::from_integer(0), x_to_y);
