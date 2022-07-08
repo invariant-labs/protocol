@@ -299,7 +299,8 @@ mod test {
         }
         //underflow
         {
-            //tick.fee_growth_outside = fee_growth_global - tick.fee_growth_outside
+            //  When fee_growth_global < tick.fee_growth_outside
+            {
             {
                 {
                     let mut pool = Pool {
@@ -357,7 +358,7 @@ mod test {
                 }
             }
 
-            //seconds_per_liquidity_outside=seconds_per_liquidity_global-tick.seconds_per_liquidity_outside seconds_per_liquidity_global<tick.seconds_per_liquidity_outside
+            // When ppol.seconds_per_liquidity_global < tick.seconds_per_liquidity_outside 
             {
                 let mut pool = Pool {
                     fee_growth_global_x: FeeGrowth::new(145),
