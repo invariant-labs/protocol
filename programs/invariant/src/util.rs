@@ -92,8 +92,6 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool, current_timestamp: u
         .fee_growth_global_y
         .unchecked_sub(tick.fee_growth_outside_y);
 
-    // let current_timestamp: u64 = ;
-
     //second_passed=current_timestamp-pool.start_timestamp
     let seconds_passed: u64 = current_timestamp.checked_sub(pool.start_timestamp).unwrap();
     tick.seconds_outside = seconds_passed - tick.seconds_outside;
