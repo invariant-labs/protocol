@@ -301,50 +301,103 @@ mod test {
         {
             //  When fee_growth_global < tick.fee_growth_outside
             {
-            {
+                {
+                    {
+                        let mut pool = Pool {
+                            fee_growth_global_x: FeeGrowth::new(3402),
+                            fee_growth_global_y: FeeGrowth::new(3401),
+                            liquidity: Liquidity::new(14),
+                            last_timestamp: 9,
+                            start_timestamp: 15,
+                            seconds_per_liquidity_global: FixedPoint::new(22),
+                            current_tick_index: 9,
+                            ..Default::default()
+                        };
+                        let tick = Tick {
+                            fee_growth_outside_x: FeeGrowth::new(26584),
+                            fee_growth_outside_y: FeeGrowth::new(1256588),
+                            index: 45,
+                            seconds_outside: 74,
+                            seconds_per_liquidity_outside: FixedPoint::new(23),
+                            liquidity_change: Liquidity::new(10),
+                            ..Default::default()
+                        };
+                        let result_pool = Pool {
+                            fee_growth_global_x: FeeGrowth::new(3402),
+                            fee_growth_global_y: FeeGrowth::new(3401),
+                            liquidity: Liquidity::new(4),
+                            last_timestamp: 1844674407370953,
+                            start_timestamp: 15,
+                            seconds_per_liquidity_global: FixedPoint::new(
+                                131762457669353142857142857142879,
+                            ),
+                            current_tick_index: 9,
+                            ..Default::default()
+                        };
+                        let result_tick = Tick {
+                            fee_growth_outside_x: FeeGrowth::new(
+                                340282366920938463463374607431768188274,
+                            ),
+                            fee_growth_outside_y: FeeGrowth::new(
+                                340282366920938463463374607431766958269,
+                            ),
+                            index: 45,
+                            seconds_outside: 1844674407370864,
+                            seconds_per_liquidity_outside: FixedPoint::new(
+                                131762457669353142857142857142856,
+                            ),
+                            liquidity_change: Liquidity::new(10),
+                            ..Default::default()
+                        };
+
+                        let fef_tick = RefCell::new(tick);
+                        let mut refmut_tick = fef_tick.borrow_mut();
+                        cross_tick(&mut refmut_tick, &mut pool, 1844674407370953);
+                        assert_eq!(*refmut_tick, result_tick);
+                        assert_eq!(pool, result_pool);
+                    }
+                }
+
+                // When ppol.seconds_per_liquidity_global < tick.seconds_per_liquidity_outside
                 {
                     let mut pool = Pool {
-                        fee_growth_global_x: FeeGrowth::new(3402),
-                        fee_growth_global_y: FeeGrowth::new(3401),
+                        fee_growth_global_x: FeeGrowth::new(145),
+                        fee_growth_global_y: FeeGrowth::new(364),
                         liquidity: Liquidity::new(14),
-                        last_timestamp: 9,
+                        last_timestamp: 16,
                         start_timestamp: 15,
-                        seconds_per_liquidity_global: FixedPoint::new(22),
+                        seconds_per_liquidity_global: FixedPoint::new(354),
                         current_tick_index: 9,
                         ..Default::default()
                     };
                     let tick = Tick {
-                        fee_growth_outside_x: FeeGrowth::new(26584),
-                        fee_growth_outside_y: FeeGrowth::new(1256588),
+                        fee_growth_outside_x: FeeGrowth::new(99),
+                        fee_growth_outside_y: FeeGrowth::new(256),
                         index: 45,
                         seconds_outside: 74,
-                        seconds_per_liquidity_outside: FixedPoint::new(23),
+                        seconds_per_liquidity_outside: FixedPoint::new(35),
                         liquidity_change: Liquidity::new(10),
                         ..Default::default()
                     };
                     let result_pool = Pool {
-                        fee_growth_global_x: FeeGrowth::new(3402),
-                        fee_growth_global_y: FeeGrowth::new(3401),
+                        fee_growth_global_x: FeeGrowth::new(145),
+                        fee_growth_global_y: FeeGrowth::new(364),
                         liquidity: Liquidity::new(4),
                         last_timestamp: 1844674407370953,
                         start_timestamp: 15,
                         seconds_per_liquidity_global: FixedPoint::new(
-                            131762457669353142857142857142879,
+                            131762457669352642857142857143211,
                         ),
                         current_tick_index: 9,
                         ..Default::default()
                     };
                     let result_tick = Tick {
-                        fee_growth_outside_x: FeeGrowth::new(
-                            340282366920938463463374607431768188274,
-                        ),
-                        fee_growth_outside_y: FeeGrowth::new(
-                            340282366920938463463374607431766958269,
-                        ),
+                        fee_growth_outside_x: FeeGrowth::new(46),
+                        fee_growth_outside_y: FeeGrowth::new(108),
                         index: 45,
                         seconds_outside: 1844674407370864,
                         seconds_per_liquidity_outside: FixedPoint::new(
-                            131762457669353142857142857142856,
+                            131762457669352642857142857143176,
                         ),
                         liquidity_change: Liquidity::new(10),
                         ..Default::default()
@@ -358,59 +411,7 @@ mod test {
                 }
             }
 
-            // When ppol.seconds_per_liquidity_global < tick.seconds_per_liquidity_outside 
-            {
-                let mut pool = Pool {
-                    fee_growth_global_x: FeeGrowth::new(145),
-                    fee_growth_global_y: FeeGrowth::new(364),
-                    liquidity: Liquidity::new(14),
-                    last_timestamp: 16,
-                    start_timestamp: 15,
-                    seconds_per_liquidity_global: FixedPoint::new(354),
-                    current_tick_index: 9,
-                    ..Default::default()
-                };
-                let tick = Tick {
-                    fee_growth_outside_x: FeeGrowth::new(99),
-                    fee_growth_outside_y: FeeGrowth::new(256),
-                    index: 45,
-                    seconds_outside: 74,
-                    seconds_per_liquidity_outside: FixedPoint::new(35),
-                    liquidity_change: Liquidity::new(10),
-                    ..Default::default()
-                };
-                let result_pool = Pool {
-                    fee_growth_global_x: FeeGrowth::new(145),
-                    fee_growth_global_y: FeeGrowth::new(364),
-                    liquidity: Liquidity::new(4),
-                    last_timestamp: 1844674407370953,
-                    start_timestamp: 15,
-                    seconds_per_liquidity_global: FixedPoint::new(
-                        131762457669352642857142857143211,
-                    ),
-                    current_tick_index: 9,
-                    ..Default::default()
-                };
-                let result_tick = Tick {
-                    fee_growth_outside_x: FeeGrowth::new(46),
-                    fee_growth_outside_y: FeeGrowth::new(108),
-                    index: 45,
-                    seconds_outside: 1844674407370864,
-                    seconds_per_liquidity_outside: FixedPoint::new(
-                        131762457669352642857142857143176,
-                    ),
-                    liquidity_change: Liquidity::new(10),
-                    ..Default::default()
-                };
-
-                let fef_tick = RefCell::new(tick);
-                let mut refmut_tick = fef_tick.borrow_mut();
-                cross_tick(&mut refmut_tick, &mut pool, 1844674407370953);
-                assert_eq!(*refmut_tick, result_tick);
-                assert_eq!(pool, result_pool);
-            }
+            Ok(())
         }
-
-        Ok(())
     }
 }
