@@ -289,6 +289,7 @@ mod test {
             assert_eq!(*refmut_tick, result_tick);
             assert_eq!(pool, result_pool);
         }
+        // fee_growth_outside should underflow
         {
             let mut pool = Pool {
                 fee_growth_global_x: FeeGrowth::new(3402),
@@ -335,6 +336,7 @@ mod test {
             assert_eq!(*refmut_tick, result_tick);
             assert_eq!(pool, result_pool);
         }
+        // seconds_per_liquidity_outside should underflow
         {
             let mut pool = Pool {
                 fee_growth_global_x: FeeGrowth::new(145),
