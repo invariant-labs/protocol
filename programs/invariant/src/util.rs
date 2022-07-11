@@ -84,7 +84,6 @@ pub fn get_closer_limit(
 }
 
 pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool, current_timestamp: u64) -> Result<()> {
-    // tick.fee_growth_outside = fee_growth_global - tick.fee_growth_outside
     tick.fee_growth_outside_x = pool
         .fee_growth_global_x
         .unchecked_sub(tick.fee_growth_outside_x);
@@ -92,7 +91,6 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool, current_timestamp: u
         .fee_growth_global_y
         .unchecked_sub(tick.fee_growth_outside_y);
 
-    //second_passed=current_timestamp-pool.start_timestamp
     let seconds_passed: u64 = current_timestamp.checked_sub(pool.start_timestamp).unwrap();
     tick.seconds_outside = seconds_passed - tick.seconds_outside;
 
@@ -104,12 +102,13 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool, current_timestamp: u
     tick.seconds_per_liquidity_outside = pool
         .seconds_per_liquidity_global
         .unchecked_sub(tick.seconds_per_liquidity_outside);
-    //seconds_per_liquidity_outside=seconds_per_liquidity_global-tick.seconds_per_liquidity_outside
 
     // When going to higher tick net_liquidity should be added and for going lower subtracted
     if (pool.current_tick_index >= tick.index) ^ tick.sign {
+        // trunk-ignore(clippy/assign_op_pattern)
         pool.liquidity = pool.liquidity + tick.liquidity_change;
     } else {
+        // trunk-ignore(clippy/assign_op_pattern)
         pool.liquidity = pool.liquidity - tick.liquidity_change;
     }
 

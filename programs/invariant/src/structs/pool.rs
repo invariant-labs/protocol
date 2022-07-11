@@ -52,14 +52,12 @@ impl Pool {
         let fee_growth = FeeGrowth::from_fee(self.liquidity, pool_fee);
 
         if in_x {
-            // trunk-ignore(clippy/unaligned_references)
             self.fee_growth_global_x = self.fee_growth_global_x.unchecked_add(fee_growth);
             self.fee_protocol_token_x = self
                 .fee_protocol_token_x
                 .checked_add(protocol_fee.0)
                 .unwrap();
         } else {
-            // trunk-ignore(clippy/unaligned_references)
             self.fee_growth_global_y = self.fee_growth_global_y.unchecked_add(fee_growth);
             self.fee_protocol_token_y = self
                 .fee_protocol_token_y
