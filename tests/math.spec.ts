@@ -55,7 +55,8 @@ import {
   toPrice,
   getTokensData,
   TokenData,
-  U128MAX
+  U128MAX,
+  Range
 } from '@invariant-labs/sdk/src/utils'
 import { createTickArray, dataApy, setInitialized } from './testUtils'
 import { Decimal, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
@@ -67,7 +68,8 @@ import {
   ApyRewardsParams,
   FEE_TIERS,
   LIQUIDITY_DENOMINATOR,
-  toDecimal
+  toDecimal,
+  WeeklyData
 } from '@invariant-labs/sdk/lib/utils'
 import { priceToTickInRange } from '@invariant-labs/sdk/src/tick'
 import { U64_MAX } from '@invariant-labs/sdk/lib/math'
@@ -1909,13 +1911,26 @@ describe('Math', () => {
         },
         feeGrowthOutsideX: { v: tick.feeGrowthOutsideX.v.add(new BN(10)) }
       }))
+      const weeklyData: WeeklyData = {
+        weeklyFactor: [0.001, 0.002, 0.003, 0.004, 0.003, 0.002, 0.001],
+        weeklyRange: [
+          { tickLower: -800, tickUpper: 1000 },
+          { tickLower: -700, tickUpper: 2000 },
+          { tickLower: -600, tickUpper: 3000 },
+          { tickLower: -500, tickUpper: 4000 },
+          { tickLower: -600, tickUpper: 3000 },
+          { tickLower: -700, tickUpper: 2000 },
+          { tickLower: -800, tickUpper: 1000 }
+        ],
+        apy: 0.037125
+      }
 
       const paramsApy: ApyPoolParams = {
         feeTier: FEE_TIERS[3],
         currentTickIndex: 0,
         ticksPreviousSnapshot: previous,
         ticksCurrentSnapshot: current,
-        weeklyFactor: [0.001, 0.002, 0.003, 0.004, 0.003, 0.002, 0.001],
+        weeklyData,
         volumeX: 50_000000,
         volumeY: 50_000000
       }
@@ -1925,6 +1940,9 @@ describe('Math', () => {
         result = true
       }
       assert.ok(result)
+      assert.ok(poolApy.weeklyRange.length === 7)
+      assert.ok(poolApy.weeklyRange[0].tickLower === -700)
+      assert.ok(poolApy.weeklyRange[0].tickUpper === 2000)
     })
   })
   describe('reward APY tests', () => {

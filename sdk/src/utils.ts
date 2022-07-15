@@ -851,7 +851,7 @@ export const parseFeeGrowthAndLiquidityOnTicksArray = (ticks: Tick[]): ParsedTic
 export const parseFeeGrowthAndLiquidityOnTicksMap = (ticks: Tick[]): Map<number, ParsedTick> => {
   const sortedTicks = ticks.sort((a, b) => a.index - b.index)
   let currentLiquidity = new BN(0)
-  let ticksMap = new Map<number, ParsedTick>()
+  const ticksMap = new Map<number, ParsedTick>()
   sortedTicks.map(tick => {
     currentLiquidity = currentLiquidity.add(tick.liquidityChange.v.muln(tick.sign ? 1 : -1))
     ticksMap.set(tick.index, {
@@ -868,7 +868,7 @@ export const calculateTokenXinRange = (
   ticksPreviousSnapshot: Tick[],
   ticksCurrentSnapshot: Tick[],
   currentTickIndex: number
-): Range => {
+): RangeData => {
   const tickArrayPrevious = parseFeeGrowthAndLiquidityOnTicksArray(ticksPreviousSnapshot)
   const tickArrayCurrent = parseFeeGrowthAndLiquidityOnTicksArray(ticksCurrentSnapshot)
   const tickMapCurrent = parseFeeGrowthAndLiquidityOnTicksMap(ticksCurrentSnapshot)
@@ -921,17 +921,19 @@ export const getTicksFromSwapRange = (
   return { lower: null, upper: null }
 }
 
-export const poolAPY = (params: ApyPoolParams) => {
+export const poolAPY = (params: ApyPoolParams): WeeklyData => {
   const {
     feeTier,
     currentTickIndex,
     ticksPreviousSnapshot,
     ticksCurrentSnapshot,
-    weeklyFactor,
+    weeklyData,
     volumeX,
     volumeY
   } = params
+  const { weeklyFactor, weeklyRange } = weeklyData
   let dailyFactor: number | null
+  let dailyRange: Range
   try {
     const { tokenXamount, tickLower, tickUpper } = calculateTokenXinRange(
       ticksPreviousSnapshot,
@@ -942,15 +944,22 @@ export const poolAPY = (params: ApyPoolParams) => {
     const currentSqrtPrice = calculatePriceSqrt(tickUpper)
     const volume = getVolume(volumeX, volumeY, previousSqrtPrice, currentSqrtPrice)
     dailyFactor = dailyFactorPool(tokenXamount, volume, feeTier)
+    dailyRange = { tickLower, tickUpper }
   } catch (e: any) {
     dailyFactor = 0
+    dailyRange = { tickLower: null, tickUpper: null }
   }
 
   const newWeeklyFactor = updateWeeklyFactor(weeklyFactor, dailyFactor)
+  const newWeeklyRange = updateWeeklyRange(weeklyRange, dailyRange)
 
   const apy = (Math.pow(average(newWeeklyFactor) + 1, 365) - 1) * 100
 
-  return { apy, newWeeklyFactor }
+  return {
+    weeklyFactor: newWeeklyFactor,
+    weeklyRange: newWeeklyRange,
+    apy
+  }
 }
 
 export const dailyFactorRewards = (
@@ -1003,6 +1012,12 @@ export const updateWeeklyFactor = (weeklyFactor: number[], dailyFactor: number):
   weeklyFactor.shift()
   weeklyFactor.push(dailyFactor)
   return weeklyFactor
+}
+
+export const updateWeeklyRange = (weeklyRange: Range[], dailyRange: Range): Range[] => {
+  weeklyRange.shift()
+  weeklyRange.push(dailyRange)
+  return weeklyRange
 }
 
 const coingeckoIdOverwrites = {
@@ -1062,7 +1077,7 @@ export interface LiquidityRange {
   tickUpper: number
 }
 
-export interface Range {
+export interface RangeData {
   tokenXamount: BN
   tickLower: number
   tickUpper: number
@@ -1073,7 +1088,7 @@ export interface ApyPoolParams {
   currentTickIndex: number
   ticksPreviousSnapshot: Tick[]
   ticksCurrentSnapshot: Tick[]
-  weeklyFactor: number[]
+  weeklyData: WeeklyData
   volumeX: number
   volumeY: number
 }
@@ -1086,4 +1101,15 @@ export interface ApyRewardsParams {
   tokenXprice: number
   tokenDecimal: number
   duration: number
+}
+
+export interface WeeklyData {
+  weeklyFactor: number[]
+  weeklyRange: Range[]
+  apy: number
+}
+
+export interface Range {
+  tickLower: number | null
+  tickUpper: number | null
 }
