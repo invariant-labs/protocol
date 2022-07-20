@@ -13,7 +13,7 @@ use invariant::structs::Position;
 pub struct CreateUserStake<'info> {
     #[account(init,
         seeds = [b"staker", incentive.key().as_ref(), position.load()?.pool.as_ref(), &position.load()?.id.to_le_bytes() ],
-        payer = owner,
+        payer = signer,
         bump)]
     pub user_stake: AccountLoader<'info, UserStake>,
     #[account(
@@ -28,8 +28,9 @@ pub struct CreateUserStake<'info> {
         constraint = incentive.load()?.pool == position.load()?.pool @ DifferentIncentivePool
     )]
     pub incentive: AccountLoader<'info, Incentive>,
+    pub owner: AccountInfo<'info>,
     #[account(mut)]
-    pub owner: Signer<'info>,
+    pub signer: Signer<'info>,
     #[account(address = invariant::ID)]
     pub invariant: Program<'info, Invariant>,
     #[account(address = system_program::ID)]
