@@ -180,6 +180,7 @@ export class Staker {
     position,
     incentive,
     owner,
+    signer,
     index,
     invariant
   }: CreateStake) {
@@ -191,6 +192,7 @@ export class Staker {
         position,
         incentive,
         owner,
+        signer,
         systemProgram: SystemProgram.programId,
         invariant,
         rent: SYSVAR_RENT_PUBKEY
@@ -364,6 +366,7 @@ export interface CreateStake {
   position: PublicKey
   incentive: PublicKey
   owner: PublicKey
+  signer: PublicKey
   index: number
   invariant: PublicKey
 }
