@@ -44,12 +44,7 @@ describe('Remove Stake tests', () => {
 
   before(async () => {
     // create staker
-    staker = await Staker.build(
-      Network.LOCAL,
-      provider.wallet,
-      connection,
-      anchor.workspace.Staker.programId
-    )
+    staker = await Staker.build(Network.LOCAL, provider.wallet, connection)
 
     await Promise.all([
       await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
@@ -118,8 +113,8 @@ describe('Remove Stake tests', () => {
     const seconds = new Date().valueOf() / 1000
     const currentTime = new BN(Math.floor(seconds))
     const reward: Decimal = { v: new BN(10) }
-    const startTime = currentTime.add(new BN(0))
-    const endTime = currentTime.add(new BN(5))
+    const startTime = { v: currentTime.add(new BN(0)) }
+    const endTime = { v: currentTime.add(new BN(5)) }
 
     const createIncentiveVars: CreateIncentive = {
       reward,
@@ -189,6 +184,7 @@ describe('Remove Stake tests', () => {
     const update: UpdateSecondsPerLiquidity = {
       pair,
       owner: positionOwner.publicKey,
+      signer: positionOwner.publicKey,
       lowerTickIndex: lowerTick,
       upperTickIndex: upperTick,
       index
@@ -200,6 +196,7 @@ describe('Remove Stake tests', () => {
       position,
       incentive: incentiveAccount.publicKey,
       owner: positionOwner.publicKey,
+      signer: positionOwner.publicKey,
       invariant
     }
 

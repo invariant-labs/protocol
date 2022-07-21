@@ -33,12 +33,7 @@ describe('End incentive tests', () => {
   before(async () => {
     // create staker instance
 
-    staker = await Staker.build(
-      Network.LOCAL,
-      provider.wallet,
-      connection,
-      anchor.workspace.Staker.programId
-    )
+    staker = await Staker.build(Network.LOCAL, provider.wallet, connection)
 
     // create token
     incentiveToken = await createToken(connection, wallet, wallet)
@@ -97,8 +92,8 @@ describe('End incentive tests', () => {
     const seconds = new Date().valueOf() / 1000
     const currentTime = new BN(Math.floor(seconds))
     const reward: Decimal = { v: new BN(10) }
-    const startTime = currentTime.add(new BN(0))
-    const endTime = currentTime.add(new BN(10))
+    const startTime = { v: currentTime.add(new BN(0)) }
+    const endTime = { v: currentTime.add(new BN(10)) }
 
     const balanceBefore = (await incentiveToken.getAccountInfo(founderTokenAccount)).amount
 

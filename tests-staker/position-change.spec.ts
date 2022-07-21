@@ -25,7 +25,7 @@ describe('Withdraw with transfer position ownership', () => {
   const founderAccount = Keypair.generate()
   const positionRecipient = Keypair.generate()
   const admin = Keypair.generate()
-  const epsilon = new BN(50)
+  const epsilon = new BN(100)
   let nonce: number
   let staker: Staker
   let market: Market
@@ -43,12 +43,7 @@ describe('Withdraw with transfer position ownership', () => {
   before(async () => {
     // create staker
 
-    staker = await Staker.build(
-      Network.LOCAL,
-      provider.wallet,
-      connection,
-      anchor.workspace.Staker.programId
-    )
+    staker = await Staker.build(Network.LOCAL, provider.wallet, connection)
 
     await Promise.all([
       connection.requestAirdrop(mintAuthority.publicKey, 1e9),
@@ -179,6 +174,7 @@ describe('Withdraw with transfer position ownership', () => {
     const update: UpdateSecondsPerLiquidity = {
       pair,
       owner: positionOwner.publicKey,
+      signer: positionOwner.publicKey,
       lowerTickIndex: lowerTick,
       upperTickIndex: upperTick,
       index
@@ -190,6 +186,7 @@ describe('Withdraw with transfer position ownership', () => {
       position,
       incentive: incentiveAccount.publicKey,
       owner: positionOwner.publicKey,
+      signer: positionOwner.publicKey,
       invariant: anchor.workspace.Invariant.programId
     }
 
@@ -253,6 +250,7 @@ describe('Withdraw with transfer position ownership', () => {
     const updateRecipient: UpdateSecondsPerLiquidity = {
       pair,
       owner: positionRecipient.publicKey,
+      signer: positionRecipient.publicKey,
       lowerTickIndex: lowerTick,
       upperTickIndex: upperTick,
       index
@@ -266,8 +264,7 @@ describe('Withdraw with transfer position ownership', () => {
       owner: positionRecipient.publicKey,
       incentiveTokenAccount: incentiveTokenAccount.publicKey,
       ownerTokenAcc: positionRecipientTokenAccount,
-      index,
-      nonce
+      index
     }
     const updateRecipientIx = await market.updateSecondsPerLiquidityInstruction(updateRecipient)
     const withdrawIx = await staker.withdrawIx(withdraw)
@@ -276,6 +273,7 @@ describe('Withdraw with transfer position ownership', () => {
 
     // should be around half of reward
     const balanceAfter = (await incentiveToken.getAccountInfo(positionRecipientTokenAccount)).amount
+    console.log(balanceAfter.toString())
     assert.ok(almostEqual(balanceAfter, new BN('500'), epsilon))
   })
 })
