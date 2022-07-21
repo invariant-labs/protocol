@@ -40,7 +40,9 @@ pub struct UpdateSecondsPerLiquidity<'info> {
     pub token_x: Account<'info, Mint>,
     #[account(constraint = token_y.key() == pool.load()?.token_y @ InvalidTokenAccount)]
     pub token_y: Account<'info, Mint>,
-    pub owner: Signer<'info>,
+    pub owner: AccountInfo<'info>,
+    #[account(mut)]
+    pub signer: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,

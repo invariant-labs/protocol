@@ -52,12 +52,7 @@ describe('Multicall test', () => {
   before(async () => {
     // create staker
 
-    staker = await Staker.build(
-      Network.LOCAL,
-      provider.wallet,
-      connection,
-      anchor.workspace.Staker.programId
-    )
+    staker = await Staker.build(Network.LOCAL, provider.wallet, connection)
 
     await Promise.all([
       connection.requestAirdrop(mintAuthority.publicKey, 1e9),
@@ -257,6 +252,7 @@ describe('Multicall test', () => {
     const firstUpdate: UpdateSecondsPerLiquidity = {
       pair,
       owner: firstPositionOwner.publicKey,
+      signer: firstPositionOwner.publicKey,
       lowerTickIndex: firstLowerTick,
       upperTickIndex: firstUpperTick,
       index
@@ -265,6 +261,7 @@ describe('Multicall test', () => {
     const secondUpdate: UpdateSecondsPerLiquidity = {
       pair,
       owner: secondPositionOwner.publicKey,
+      signer: secondPositionOwner.publicKey,
       lowerTickIndex: secondLowerTick,
       upperTickIndex: secondUpperTick,
       index
@@ -287,6 +284,7 @@ describe('Multicall test', () => {
       position: firstPosition,
       incentive: firstIncentiveAccount.publicKey,
       owner: firstPositionOwner.publicKey,
+      signer: firstPositionOwner.publicKey,
       invariant: anchor.workspace.Invariant.programId
     }
 
@@ -302,6 +300,7 @@ describe('Multicall test', () => {
       position: secondPosition,
       incentive: firstIncentiveAccount.publicKey,
       owner: secondPositionOwner.publicKey,
+      signer: secondPositionOwner.publicKey,
       invariant
     }
 
@@ -317,6 +316,7 @@ describe('Multicall test', () => {
       position: firstPosition,
       incentive: secondIncentiveAccount.publicKey,
       owner: firstPositionOwner.publicKey,
+      signer: firstPositionOwner.publicKey,
       invariant
     }
 
@@ -332,6 +332,7 @@ describe('Multicall test', () => {
       position: secondPosition,
       incentive: secondIncentiveAccount.publicKey,
       owner: secondPositionOwner.publicKey,
+      signer: secondPositionOwner.publicKey,
       invariant
     }
 
@@ -371,8 +372,7 @@ describe('Multicall test', () => {
       owner: firstPositionOwner.publicKey,
       incentiveTokenAccount: firstIncentiveTokenAccount.publicKey,
       ownerTokenAcc: firstOwnerTokenAccount,
-      index,
-      nonce
+      index
     }
 
     const firstWithdrawIx = await staker.withdrawIx(firstWithdraw)
@@ -391,8 +391,7 @@ describe('Multicall test', () => {
       owner: secondPositionOwner.publicKey,
       incentiveTokenAccount: firstIncentiveTokenAccount.publicKey,
       ownerTokenAcc: secondOwnerTokenAccount,
-      index,
-      nonce
+      index
     }
 
     const secondWithdrawIx = await staker.withdrawIx(secondWithdraw)
@@ -410,8 +409,7 @@ describe('Multicall test', () => {
       owner: firstPositionOwner.publicKey,
       incentiveTokenAccount: secondIncentiveTokenAccount.publicKey,
       ownerTokenAcc: firstOwnerTokenAccount,
-      index,
-      nonce
+      index
     }
 
     const thirdWithdrawIx = await staker.withdrawIx(thirdWithdraw)
@@ -429,8 +427,7 @@ describe('Multicall test', () => {
       owner: secondPositionOwner.publicKey,
       incentiveTokenAccount: secondIncentiveTokenAccount.publicKey,
       ownerTokenAcc: secondOwnerTokenAccount,
-      index,
-      nonce
+      index
     }
 
     const fourthWithdrawIx = await staker.withdrawIx(fourthWithdraw)

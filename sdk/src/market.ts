@@ -1156,7 +1156,7 @@ export class Market {
   }
 
   async updateSecondsPerLiquidityInstruction(updateSecondsPerLiquidity: UpdateSecondsPerLiquidity) {
-    const { pair, lowerTickIndex, upperTickIndex, index } = updateSecondsPerLiquidity
+    const { pair, signer, lowerTickIndex, upperTickIndex, index } = updateSecondsPerLiquidity
     const owner = updateSecondsPerLiquidity.owner ?? this.wallet.publicKey
 
     const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTickIndex)
@@ -1177,6 +1177,7 @@ export class Market {
           tokenX: pair.tokenX,
           tokenY: pair.tokenY,
           owner,
+          signer,
           rent: SYSVAR_RENT_PUBKEY,
           systemProgram: SystemProgram.programId
         }
@@ -1554,6 +1555,7 @@ export interface Swap {
 export interface UpdateSecondsPerLiquidity {
   pair: Pair
   owner?: PublicKey
+  signer: PublicKey
   lowerTickIndex: number
   upperTickIndex: number
   index: number

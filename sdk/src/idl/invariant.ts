@@ -773,6 +773,11 @@ export type Invariant = {
         {
           "name": "owner",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "signer",
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -2306,6 +2311,11 @@ export const IDL: Invariant = {
         {
           "name": "owner",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "signer",
+          "isMut": true,
           "isSigner": true
         },
         {
