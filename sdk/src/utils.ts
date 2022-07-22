@@ -765,8 +765,13 @@ export const getVolume = (
   return volumeX + denominatedVolumeY
 }
 
-export const getTokenXInRange = (ticks: ParsedTick[], lowerTick: number, upperTick: number): BN => {
+export const getTokenXInRange = (
+  ticks: ParsedTick[],
+  lowerTick: number,
+  upperTick: number
+): { tokenXamount: BN; liquidity: BN } => {
   let sumTokenX: BN = new BN(0)
+  let liquidity: BN = new BN(0)
   let currentIndex: number | null
   let nextIndex: number | null
 
@@ -780,9 +785,10 @@ export const getTokenXInRange = (ticks: ParsedTick[], lowerTick: number, upperTi
       sumTokenX = sumTokenX.add(
         getXfromLiquidity(ticks[i].liquidity, upperSqrtPrice.v, lowerSqrtPrice.v)
       )
+      liquidity = liquidity.add(ticks[i].liquidity)
     }
   }
-  return sumTokenX
+  return { tokenXamount: sumTokenX, liquidity }
 }
 
 export const getRangeBasedOnFeeGrowth = (
@@ -873,6 +879,7 @@ export const calculateTokenXinRange = (
   const tickArrayCurrent = parseFeeGrowthAndLiquidityOnTicksArray(ticksCurrentSnapshot)
   const tickMapCurrent = parseFeeGrowthAndLiquidityOnTicksMap(ticksCurrentSnapshot)
   let tokenXamount = new BN(0)
+  let liquidity = new BN(0)
 
   if (!(tickArrayPrevious.length || tickArrayCurrent.length)) {
     throw new Error(Errors.TickArrayIsEmpty)
@@ -881,8 +888,10 @@ export const calculateTokenXinRange = (
     const notEmptyArray = tickArrayPrevious.length ? tickArrayPrevious : tickArrayCurrent
     const tickLower = notEmptyArray[0].index
     const tickUpper = notEmptyArray[notEmptyArray.length - 1].index
-    tokenXamount = getTokenXInRange(notEmptyArray, tickLower, tickUpper)
-    return { tokenXamount, tickLower, tickUpper }
+    let result = getTokenXInRange(notEmptyArray, tickLower, tickUpper)
+    tokenXamount = result.tokenXamount
+    liquidity = result.liquidity
+    return { tokenXamount, tickLower, tickUpper, liquidity }
   }
 
   let { tickLower, tickUpper } = getRangeBasedOnFeeGrowth(tickArrayPrevious, tickMapCurrent)
@@ -896,9 +905,11 @@ export const calculateTokenXinRange = (
     throw new Error(Errors.TickNotFound)
   }
 
-  tokenXamount = getTokenXInRange(tickArrayCurrent, tickLower, tickUpper)
+  let result = getTokenXInRange(tickArrayCurrent, tickLower, tickUpper)
+  tokenXamount = result.tokenXamount
+  liquidity = result.liquidity
 
-  return { tokenXamount, tickLower, tickUpper }
+  return { tokenXamount, tickLower, tickUpper, liquidity }
 }
 
 export const dailyFactorPool = (tokenXamount: BN, volume: number, feeTier: FeeTier): number => {
@@ -931,15 +942,17 @@ export const poolAPY = (params: ApyPoolParams): WeeklyData => {
     volumeX,
     volumeY
   } = params
-  const { weeklyFactor, weeklyRange } = weeklyData
+  const { weeklyFactor, weeklyRange, weeklyLiquidity, weeklyVolumeX, weeklyVolumeY } = weeklyData
   let dailyFactor: number | null
   let dailyRange: Range
+  let dailyLiquidity: BN = new BN(0)
   try {
-    const { tokenXamount, tickLower, tickUpper } = calculateTokenXinRange(
+    const { tokenXamount, tickLower, tickUpper, liquidity } = calculateTokenXinRange(
       ticksPreviousSnapshot,
       ticksCurrentSnapshot,
       currentTickIndex
     )
+    dailyLiquidity = liquidity
     const previousSqrtPrice = calculatePriceSqrt(tickLower)
     const currentSqrtPrice = calculatePriceSqrt(tickUpper)
     const volume = getVolume(volumeX, volumeY, previousSqrtPrice, currentSqrtPrice)
@@ -952,12 +965,18 @@ export const poolAPY = (params: ApyPoolParams): WeeklyData => {
 
   const newWeeklyFactor = updateWeeklyFactor(weeklyFactor, dailyFactor)
   const newWeeklyRange = updateWeeklyRange(weeklyRange, dailyRange)
+  const newWeeklyLiquidity = updateWeeklyLiquidity(weeklyLiquidity, dailyLiquidity)
+  const newWeeklyVolumeX = updateWeeklyVolumeX(weeklyVolumeX, volumeX)
+  const newWeeklyVolumeY = updateWeeklyVolumeY(weeklyVolumeY, volumeY)
 
   const apy = (Math.pow(average(newWeeklyFactor) + 1, 365) - 1) * 100
 
   return {
     weeklyFactor: newWeeklyFactor,
     weeklyRange: newWeeklyRange,
+    weeklyLiquidity: newWeeklyLiquidity,
+    weeklyVolumeX: newWeeklyVolumeX,
+    weeklyVolumeY: newWeeklyVolumeY,
     apy
   }
 }
@@ -1018,6 +1037,24 @@ export const updateWeeklyRange = (weeklyRange: Range[], dailyRange: Range): Rang
   weeklyRange.shift()
   weeklyRange.push(dailyRange)
   return weeklyRange
+}
+
+export const updateWeeklyLiquidity = (weeklyLiquidity: BN[], liquidity: BN): BN[] => {
+  weeklyLiquidity.shift()
+  weeklyLiquidity.push(liquidity)
+  return weeklyLiquidity
+}
+
+export const updateWeeklyVolumeX = (weeklyVolumeX: number[], volumeX: number): number[] => {
+  weeklyVolumeX.shift()
+  weeklyVolumeX.push(volumeX)
+  return weeklyVolumeX
+}
+
+export const updateWeeklyVolumeY = (weeklyVolumeY: number[], volumeY: number): number[] => {
+  weeklyVolumeY.shift()
+  weeklyVolumeY.push(volumeY)
+  return weeklyVolumeY
 }
 
 const coingeckoIdOverwrites = {
@@ -1081,6 +1118,7 @@ export interface RangeData {
   tokenXamount: BN
   tickLower: number
   tickUpper: number
+  liquidity: BN
 }
 
 export interface ApyPoolParams {
@@ -1106,6 +1144,9 @@ export interface ApyRewardsParams {
 export interface WeeklyData {
   weeklyFactor: number[]
   weeklyRange: Range[]
+  weeklyLiquidity: BN[]
+  weeklyVolumeX: number[]
+  weeklyVolumeY: number[]
   apy: number
 }
 
