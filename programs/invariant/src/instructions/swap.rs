@@ -152,17 +152,19 @@ impl<'info> Swap<'info> {
             .iter()
             .find(|account| *account.owner != *ctx.program_id)
         {
-            Some(account) => {
-                let ref_token = Account::<'_, TokenAccount>::try_from(account).unwrap();
-                match ref_token.mint
-                    == match x_to_y {
-                        true => ctx.accounts.token_x.key(),
-                        false => ctx.accounts.token_y.key(),
-                    } {
-                    true => Some(account),
-                    false => None,
+            Some(account) => match Account::<'_, TokenAccount>::try_from(account) {
+                Ok(token) => {
+                    match token.mint
+                        == match x_to_y {
+                            true => ctx.accounts.token_x.key(),
+                            false => ctx.accounts.token_y.key(),
+                        } {
+                        true => Some(account),
+                        false => None,
+                    }
                 }
-            }
+                Err(_) => None,
+            },
             None => None,
         };
 
