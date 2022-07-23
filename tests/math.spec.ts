@@ -1922,6 +1922,8 @@ describe('Math', () => {
           { tickLower: -700, tickUpper: 2000 },
           { tickLower: -800, tickUpper: 1000 }
         ],
+        tokenXamount: new BN(0),
+        volume: 0,
         apy: 0.037125
       }
 

@@ -934,17 +934,22 @@ export const poolAPY = (params: ApyPoolParams): WeeklyData => {
   const { weeklyFactor, weeklyRange } = weeklyData
   let dailyFactor: number | null
   let dailyRange: Range
+  let dailyTokenXamount: BN = new BN(0)
+  let dailyVolumeX: number = 0
   try {
     const { tokenXamount, tickLower, tickUpper } = calculateTokenXinRange(
       ticksPreviousSnapshot,
       ticksCurrentSnapshot,
       currentTickIndex
     )
+
     const previousSqrtPrice = calculatePriceSqrt(tickLower)
     const currentSqrtPrice = calculatePriceSqrt(tickUpper)
     const volume = getVolume(volumeX, volumeY, previousSqrtPrice, currentSqrtPrice)
     dailyFactor = dailyFactorPool(tokenXamount, volume, feeTier)
     dailyRange = { tickLower, tickUpper }
+    dailyTokenXamount = tokenXamount
+    dailyVolumeX = volumeX
   } catch (e: any) {
     dailyFactor = 0
     dailyRange = { tickLower: null, tickUpper: null }
@@ -958,6 +963,8 @@ export const poolAPY = (params: ApyPoolParams): WeeklyData => {
   return {
     weeklyFactor: newWeeklyFactor,
     weeklyRange: newWeeklyRange,
+    tokenXamount: dailyTokenXamount,
+    volumeX: dailyVolumeX,
     apy
   }
 }
@@ -1106,6 +1113,8 @@ export interface ApyRewardsParams {
 export interface WeeklyData {
   weeklyFactor: number[]
   weeklyRange: Range[]
+  tokenXamount: BN
+  volumeX: number
   apy: number
 }
 
