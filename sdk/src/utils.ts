@@ -964,7 +964,7 @@ export const poolAPY = (params: ApyPoolParams): WeeklyData => {
     weeklyFactor: newWeeklyFactor,
     weeklyRange: newWeeklyRange,
     tokenXamount: dailyTokenXamount,
-    volume: dailyVolumeX,
+    volumeX: dailyVolumeX,
     apy
   }
 }
@@ -1114,7 +1114,7 @@ export interface WeeklyData {
   weeklyFactor: number[]
   weeklyRange: Range[]
   tokenXamount: BN
-  volume: number
+  volumeX: number
   apy: number
 }
 
