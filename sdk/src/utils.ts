@@ -931,22 +931,25 @@ export const poolAPY = (params: ApyPoolParams): WeeklyData => {
     volumeX,
     volumeY
   } = params
-  const { weeklyFactor, weeklyRange, weeklyTokenXamount, weeklyVolumeX, weeklyVolumeY } = weeklyData
+  const { weeklyFactor, weeklyRange } = weeklyData
   let dailyFactor: number | null
   let dailyRange: Range
   let dailyTokenXamount: BN = new BN(0)
+  let dailyVolumeX: number = 0
   try {
     const { tokenXamount, tickLower, tickUpper } = calculateTokenXinRange(
       ticksPreviousSnapshot,
       ticksCurrentSnapshot,
       currentTickIndex
     )
-    dailyTokenXamount = tokenXamount
+
     const previousSqrtPrice = calculatePriceSqrt(tickLower)
     const currentSqrtPrice = calculatePriceSqrt(tickUpper)
     const volume = getVolume(volumeX, volumeY, previousSqrtPrice, currentSqrtPrice)
     dailyFactor = dailyFactorPool(tokenXamount, volume, feeTier)
     dailyRange = { tickLower, tickUpper }
+    dailyTokenXamount = tokenXamount
+    dailyVolumeX = volumeX
   } catch (e: any) {
     dailyFactor = 0
     dailyRange = { tickLower: null, tickUpper: null }
@@ -954,18 +957,14 @@ export const poolAPY = (params: ApyPoolParams): WeeklyData => {
 
   const newWeeklyFactor = updateWeeklyFactor(weeklyFactor, dailyFactor)
   const newWeeklyRange = updateWeeklyRange(weeklyRange, dailyRange)
-  const newWeeklyTokenXamount = updateWeeklyTokenAmountX(weeklyTokenXamount, dailyTokenXamount)
-  const newWeeklyVolumeX = updateWeeklyVolumeX(weeklyVolumeX, volumeX)
-  const newWeeklyVolumeY = updateWeeklyVolumeY(weeklyVolumeY, volumeY)
 
   const apy = (Math.pow(average(newWeeklyFactor) + 1, 365) - 1) * 100
 
   return {
     weeklyFactor: newWeeklyFactor,
     weeklyRange: newWeeklyRange,
-    weeklyTokenXamount: newWeeklyTokenXamount,
-    weeklyVolumeX: newWeeklyVolumeX,
-    weeklyVolumeY: newWeeklyVolumeY,
+    tokenXamount: dailyTokenXamount,
+    volume: dailyVolumeX,
     apy
   }
 }
@@ -1026,24 +1025,6 @@ export const updateWeeklyRange = (weeklyRange: Range[], dailyRange: Range): Rang
   weeklyRange.shift()
   weeklyRange.push(dailyRange)
   return weeklyRange
-}
-
-export const updateWeeklyTokenAmountX = (weeklyLiquidity: BN[], liquidity: BN): BN[] => {
-  weeklyLiquidity.shift()
-  weeklyLiquidity.push(liquidity)
-  return weeklyLiquidity
-}
-
-export const updateWeeklyVolumeX = (weeklyVolumeX: number[], volumeX: number): number[] => {
-  weeklyVolumeX.shift()
-  weeklyVolumeX.push(volumeX)
-  return weeklyVolumeX
-}
-
-export const updateWeeklyVolumeY = (weeklyVolumeY: number[], volumeY: number): number[] => {
-  weeklyVolumeY.shift()
-  weeklyVolumeY.push(volumeY)
-  return weeklyVolumeY
 }
 
 const coingeckoIdOverwrites = {
@@ -1132,9 +1113,8 @@ export interface ApyRewardsParams {
 export interface WeeklyData {
   weeklyFactor: number[]
   weeklyRange: Range[]
-  weeklyTokenXamount: BN[]
-  weeklyVolumeX: number[]
-  weeklyVolumeY: number[]
+  tokenXamount: BN
+  volume: number
   apy: number
 }
 
