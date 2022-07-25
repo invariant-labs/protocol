@@ -453,6 +453,19 @@ export class Market {
     return await this.getPositionAddress(owner, positionList.head)
   }
 
+  async getPositionsForPool(pool: PublicKey) {
+    return (
+      await this.program.account.position.all([
+        {
+          memcmp: { bytes: bs58.encode(pool.toBuffer()), offset: 40 }
+        }
+      ])
+    ).map(({ account, publicKey }) => ({
+      ...account,
+      address: publicKey
+    })) as PositionWithAddress[]
+  }
+
   async createFeeTierInstruction({ feeTier, admin }: CreateFeeTier) {
     admin = admin ?? this.wallet.publicKey
     const { fee, tickSpacing } = feeTier
@@ -1611,4 +1624,8 @@ export interface PositionInitData {
   liquidity: Decimal
   amountX: BN
   amountY: BN
+}
+
+export interface PositionWithAddress extends Position {
+  address: PublicKey
 }
