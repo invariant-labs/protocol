@@ -152,7 +152,6 @@ describe('Stake tests', () => {
     const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) }
 
     await market.createPositionList(positionOwner.publicKey, positionOwner)
-    const poolData = await market.getPool(pair)
 
     const initPositionVars: InitPosition = {
       pair,
@@ -181,7 +180,6 @@ describe('Stake tests', () => {
     const update: UpdateSecondsPerLiquidity = {
       pair,
       owner: positionOwner.publicKey,
-      signer: positionOwner.publicKey,
       lowerTickIndex: lowerTick,
       upperTickIndex: upperTick,
       index
@@ -193,7 +191,6 @@ describe('Stake tests', () => {
       position,
       incentive: incentiveAccount.publicKey,
       owner: positionOwner.publicKey,
-      signer: positionOwner.publicKey,
       invariant: anchor.workspace.Invariant.programId
     }
 
@@ -257,7 +254,6 @@ describe('Stake tests', () => {
     const update: UpdateSecondsPerLiquidity = {
       pair: secondPair,
       owner: positionOwner.publicKey,
-      signer: positionOwner.publicKey,
       lowerTickIndex: lowerTick,
       upperTickIndex: upperTick,
       index: newPositionIndex
@@ -269,7 +265,6 @@ describe('Stake tests', () => {
       position: positionAddress,
       incentive: incentiveAccount.publicKey,
       owner: positionOwner.publicKey,
-      signer: positionOwner.publicKey,
       invariant: anchor.workspace.Invariant.programId
     }
 
@@ -326,9 +321,6 @@ describe('Stake tests', () => {
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
 
     const liquidityDelta = { v: new BN(1000000).mul(DENOMINATOR) }
-
-    //await market.createPositionList(positionOwner.publicKey, positionOwner)
-    const poolData = await market.getPool(pair)
 
     const initPositionVars: InitPosition = {
       pair,
