@@ -94,8 +94,7 @@ pub fn handler(ctx: Context<Withdraw>, _index: i32, nonce: u8) -> ProgramResult 
 
         incentive.total_seconds_claimed = incentive.total_seconds_claimed + seconds_inside;
         incentive.total_reward_unclaimed = reward_unclaimed - reward;
-        user_stake.seconds_per_liquidity_initial = SecondsPerLiquidity::from_integer(0);
-        user_stake.liquidity = Liquidity::from_integer(0);
+        user_stake.seconds_per_liquidity_initial = seconds_per_liquidity_inside;
 
         let seeds = &[STAKER_SEED.as_bytes(), &[nonce]];
         let signer = &[&seeds[..]];
