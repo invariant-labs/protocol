@@ -1067,6 +1067,33 @@ export const getPrice = (sqrtPrice: Decimal, decimalDiff: number): Decimal => {
   return { v: priceWithCorrectPrecision }
 }
 
+export const getPositionIndex = async (
+  expectedAddress: PublicKey,
+  invariantAddress: PublicKey,
+  owner: PublicKey
+): Promise<number> => {
+  let index: number = -1
+  let counter: number = 0
+  let found: Boolean = false
+
+  while (!found) {
+    const indexBuffer = Buffer.alloc(4)
+
+    const [positionAddress, positionBump] = await PublicKey.findProgramAddress(
+      [Buffer.from(utils.bytes.utf8.encode('positionv1')), owner.toBuffer(), indexBuffer],
+      invariantAddress
+    )
+    if (positionAddress.toString() == expectedAddress.toString()) {
+      found = true
+      index = counter
+    }
+    console.log(counter)
+    counter++
+  }
+
+  return index
+}
+
 export interface TokenData {
   id: string
   decimals: number
