@@ -1177,7 +1177,7 @@ export class Market {
           tokenX: pair.tokenX,
           tokenY: pair.tokenY,
           owner,
-          signer,
+          signer: signer ?? owner,
           rent: SYSVAR_RENT_PUBKEY,
           systemProgram: SystemProgram.programId
         }
@@ -1555,7 +1555,7 @@ export interface Swap {
 export interface UpdateSecondsPerLiquidity {
   pair: Pair
   owner?: PublicKey
-  signer: PublicKey
+  signer?: PublicKey
   lowerTickIndex: number
   upperTickIndex: number
   index: number

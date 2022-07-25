@@ -184,7 +184,6 @@ describe('Remove Stake tests', () => {
     const update: UpdateSecondsPerLiquidity = {
       pair,
       owner: positionOwner.publicKey,
-      signer: positionOwner.publicKey,
       lowerTickIndex: lowerTick,
       upperTickIndex: upperTick,
       index

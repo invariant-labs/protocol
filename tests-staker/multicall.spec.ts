@@ -252,7 +252,6 @@ describe('Multicall test', () => {
     const firstUpdate: UpdateSecondsPerLiquidity = {
       pair,
       owner: firstPositionOwner.publicKey,
-      signer: firstPositionOwner.publicKey,
       lowerTickIndex: firstLowerTick,
       upperTickIndex: firstUpperTick,
       index
@@ -261,7 +260,6 @@ describe('Multicall test', () => {
     const secondUpdate: UpdateSecondsPerLiquidity = {
       pair,
       owner: secondPositionOwner.publicKey,
-      signer: secondPositionOwner.publicKey,
       lowerTickIndex: secondLowerTick,
       upperTickIndex: secondUpperTick,
       index

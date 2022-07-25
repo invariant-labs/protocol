@@ -179,7 +179,6 @@ describe('Withdraw tests', () => {
     const update: UpdateSecondsPerLiquidity = {
       pair,
       owner: positionOwner.publicKey,
-      signer: positionOwner.publicKey,
       lowerTickIndex: lowerTick,
       upperTickIndex: upperTick,
       index
@@ -191,7 +190,6 @@ describe('Withdraw tests', () => {
       position,
       incentive: incentiveAccount.publicKey,
       owner: positionOwner.publicKey,
-      signer: positionOwner.publicKey,
       invariant: anchor.workspace.Invariant.programId
     }
 
@@ -343,7 +341,6 @@ describe('Withdraw tests', () => {
     const update: UpdateSecondsPerLiquidity = {
       pair,
       owner: positionOwner.publicKey,
-      signer: positionOwner.publicKey,
       lowerTickIndex: lowerTick,
       upperTickIndex: upperTick,
       index
@@ -355,7 +352,6 @@ describe('Withdraw tests', () => {
       position,
       incentive: secondsIncentiveAccount.publicKey,
       owner: positionOwner.publicKey,
-      signer: positionOwner.publicKey,
       invariant: anchor.workspace.Invariant.programId
     }
 
@@ -537,7 +533,6 @@ describe('Withdraw tests', () => {
     const update: UpdateSecondsPerLiquidity = {
       pair,
       owner: positionOwner.publicKey,
-      signer: positionOwner.publicKey,
       lowerTickIndex: lowerTick,
       upperTickIndex: upperTick,
       index: secondPositionIndex
@@ -549,7 +544,6 @@ describe('Withdraw tests', () => {
       position,
       incentive: thirdIncentiveAccount.publicKey,
       owner: positionOwner.publicKey,
-      signer: positionOwner.publicKey,
       invariant: anchor.workspace.Invariant.programId
     }
 

@@ -174,7 +174,6 @@ describe('Withdraw with transfer position ownership', () => {
     const update: UpdateSecondsPerLiquidity = {
       pair,
       owner: positionOwner.publicKey,
-      signer: positionOwner.publicKey,
       lowerTickIndex: lowerTick,
       upperTickIndex: upperTick,
       index
@@ -186,7 +185,6 @@ describe('Withdraw with transfer position ownership', () => {
       position,
       incentive: incentiveAccount.publicKey,
       owner: positionOwner.publicKey,
-      signer: positionOwner.publicKey,
       invariant: anchor.workspace.Invariant.programId
     }
 
@@ -273,7 +271,6 @@ describe('Withdraw with transfer position ownership', () => {
 
     // should be around half of reward
     const balanceAfter = (await incentiveToken.getAccountInfo(positionRecipientTokenAccount)).amount
-    console.log(balanceAfter.toString())
     assert.ok(almostEqual(balanceAfter, new BN('500'), epsilon))
   })
 })
