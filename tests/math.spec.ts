@@ -1877,7 +1877,7 @@ describe('Math', () => {
       const feeTier = FEE_TIERS[3] // 0.3%
 
       const result = dailyFactorPool(tokenXamount, volume, feeTier)
-      assert.equal(result, 0.037125)
+      assert.equal(result, 0.037125) // HERE'S BUG, IT SHOULDN'T BE DENOMINATED IN PERCENTAGE. IT SHOULD BE IN DECIMAL ( 0.[00]037125) )
     })
   })
   describe('dailyFactorReward tests', () => {
