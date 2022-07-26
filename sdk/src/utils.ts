@@ -50,7 +50,6 @@ export const FEE_OFFSET = new BN(10).pow(new BN(DECIMAL - FEE_DECIMAL))
 export const FEE_DENOMINATOR = 10 ** FEE_DECIMAL
 export const U128MAX = new BN('340282366920938463463374607431768211455')
 export const CONCENTRATION_FACTOR = 1.00001526069123
-export const FEE_TIER_DENOMINATOR: number = Math.pow(10, DECIMAL - 2)
 export const PROTOCOL_FEE: number = 0.01
 
 export enum ERRORS {
@@ -902,7 +901,7 @@ export const calculateTokenXinRange = (
 }
 
 export const dailyFactorPool = (tokenXamount: BN, volume: number, feeTier: FeeTier): number => {
-  const fee: number = (feeTier.fee.toNumber() / FEE_TIER_DENOMINATOR) * (1 - PROTOCOL_FEE)
+  const fee: number = (feeTier.fee.toNumber() / DENOMINATOR.toNumber()) * (1 - PROTOCOL_FEE)
   return (volume * fee) / tokenXamount.toNumber()
 }
 

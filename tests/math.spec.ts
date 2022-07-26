@@ -55,10 +55,9 @@ import {
   toPrice,
   getTokensData,
   TokenData,
-  U128MAX,
-  Range
+  U128MAX
 } from '@invariant-labs/sdk/src/utils'
-import { createTickArray, dataApy, setInitialized } from './testUtils'
+import { createTickArray, setInitialized } from './testUtils'
 import { Decimal, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
 import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
 import { Keypair } from '@solana/web3.js'
@@ -1877,7 +1876,7 @@ describe('Math', () => {
       const feeTier = FEE_TIERS[3] // 0.3%
 
       const result = dailyFactorPool(tokenXamount, volume, feeTier)
-      assert.equal(result, 0.037125)
+      assert.equal(result, 0.00037125)
     })
   })
   describe('dailyFactorReward tests', () => {
@@ -1923,7 +1922,7 @@ describe('Math', () => {
           { tickLower: -800, tickUpper: 1000 }
         ],
         tokenXamount: new BN(0),
-        volume: 0,
+        volumeX: 0,
         apy: 0.037125
       }
 
@@ -1936,12 +1935,11 @@ describe('Math', () => {
         volumeX: 50_000000,
         volumeY: 50_000000
       }
-      let result = false
+      // dailyFactor = [0.002, 0.003, 0.004, 0.003, 0.002, 0.001, 0.0000217622417796679]
+      // avg(dailyFactor) = 0.002145966...
+      // APY = 118.679796944...
       const poolApy = poolAPY(paramsApy)
-      if (poolApy.apy > 140 && poolApy.apy < 150) {
-        result = true
-      }
-      assert.ok(result)
+      assert.ok(poolApy.apy > 118 && poolApy.apy < 119)
       assert.ok(poolApy.weeklyRange.length === 7)
       assert.ok(poolApy.weeklyRange[0].tickLower === -700)
       assert.ok(poolApy.weeklyRange[0].tickUpper === 2000)
