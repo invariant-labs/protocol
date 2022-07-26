@@ -15,6 +15,9 @@ no-entrypoint = []
 no-idl = []
 cpi = ["no-entrypoint"]
 default = []
+jupiter = []
+none = []
+all = []
 
 [dependencies]
 decimal = { path = "decimal" }
