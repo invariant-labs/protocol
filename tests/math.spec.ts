@@ -55,10 +55,9 @@ import {
   toPrice,
   getTokensData,
   TokenData,
-  U128MAX,
-  Range
+  U128MAX
 } from '@invariant-labs/sdk/src/utils'
-import { createTickArray, dataApy, setInitialized } from './testUtils'
+import { createTickArray, setInitialized } from './testUtils'
 import { Decimal, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
 import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
 import { Keypair } from '@solana/web3.js'
@@ -1877,7 +1876,7 @@ describe('Math', () => {
       const feeTier = FEE_TIERS[3] // 0.3%
 
       const result = dailyFactorPool(tokenXamount, volume, feeTier)
-      assert.equal(result, 0.00037125) // HERE'S BUG, IT SHOULDN'T BE DENOMINATED IN PERCENTAGE. IT SHOULD BE IN DECIMAL ( 0.[00]037125) )
+      assert.equal(result, 0.00037125)
     })
   })
   describe('dailyFactorReward tests', () => {
