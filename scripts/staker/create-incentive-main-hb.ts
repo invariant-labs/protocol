@@ -21,19 +21,19 @@ const seconds = new Date().valueOf() / 1000
 const currentTime = new BN(Math.floor(seconds))
 
 // DEFINE ALL THESE VARS BEFORE EXECUTION
-const REWARD: Decimal = { v: new BN(10).pow(new BN(6)).muln() } // 1000 HBB
+const REWARD: Decimal = { v: new BN(10).pow(new BN(6)).muln() } // amount of HBB token
 const START_TIME: Decimal = { v: currentTime.add(new BN(0)) }
-const END_TIME: Decimal = { v: currentTime.add(new BN(3600 * 24 * 7)) } // one hour
+const END_TIME: Decimal = { v: currentTime.add(new BN(3600 * 24 * 7)) } // week
 const FOUNDER: PublicKey = MINTER.publicKey
-const TOKEN_X: PublicKey = new PublicKey(MAINNET_TOKENS.USDC)
-const TOKEN_Y: PublicKey = new PublicKey(MAINNET_TOKENS.USDH)
+const TOKEN_USDC: PublicKey = new PublicKey(MAINNET_TOKENS.USDC)
+const TOKEN_USDH: PublicKey = new PublicKey(MAINNET_TOKENS.USDH)
 const FOUNDER_TOKEN_ACCOUNT = new PublicKey('') // define founder token account
 const FEE_TIER = FEE_TIERS[0] // 0.01%
 const INVARIANT = new PublicKey('9aiirQKPZ2peE9QrXYmsbTtR7wSDJi2HkQdHuaMpTpei')
 const INCENTIVE_TOKEN = new PublicKey(MAINNET_TOKENS.HBB)
 
 const main = async () => {
-  const pair = new Pair(TOKEN_X, TOKEN_Y, FEE_TIER)
+  const pair = new Pair(TOKEN_USDC, TOKEN_USDH, FEE_TIER)
   const staker = await Staker.build(Network.DEV, wallet, connection)
   const [poolAddress] = await pair.getAddressAndBump(new PublicKey(getMarketAddress(Network.DEV)))
 
