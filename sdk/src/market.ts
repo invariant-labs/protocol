@@ -257,6 +257,16 @@ export class Market {
     ).map(a => a.account) as Tick[]
   }
 
+  async getAllPositions(owner: PublicKey) {
+    return (
+      await this.program.account.tick.all([
+        {
+          memcmp: { bytes: bs58.encode(owner.toBuffer()), offset: 8 }
+        }
+      ])
+    ).map(a => a.account) as Position[]
+  }
+
   async getAllUserPositions(owner: PublicKey): Promise<PositionStructure[]> {
     const positionStructs: PositionStructure[] = []
 

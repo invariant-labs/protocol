@@ -1078,16 +1078,17 @@ export const getPositionIndex = async (
 
   while (!found) {
     const indexBuffer = Buffer.alloc(4)
+    indexBuffer.writeInt32LE(counter)
 
     const [positionAddress, positionBump] = await PublicKey.findProgramAddress(
       [Buffer.from(utils.bytes.utf8.encode('positionv1')), owner.toBuffer(), indexBuffer],
       invariantAddress
     )
+
     if (positionAddress.toString() == expectedAddress.toString()) {
       found = true
       index = counter
     }
-    console.log(counter)
     counter++
   }
 
