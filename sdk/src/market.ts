@@ -257,6 +257,16 @@ export class Market {
     ).map(a => a.account) as Tick[]
   }
 
+  async getAllPositions(owner: PublicKey) {
+    return (
+      await this.program.account.tick.all([
+        {
+          memcmp: { bytes: bs58.encode(owner.toBuffer()), offset: 8 }
+        }
+      ])
+    ).map(a => a.account) as Position[]
+  }
+
   async getAllUserPositions(owner: PublicKey): Promise<PositionStructure[]> {
     const positionStructs: PositionStructure[] = []
 
@@ -451,6 +461,19 @@ export class Market {
   async getNewPositionAddress(owner: PublicKey) {
     const positionList = await this.getPositionList(owner)
     return await this.getPositionAddress(owner, positionList.head)
+  }
+
+  async getPositionsForPool(pool: PublicKey) {
+    return (
+      await this.program.account.position.all([
+        {
+          memcmp: { bytes: bs58.encode(pool.toBuffer()), offset: 40 }
+        }
+      ])
+    ).map(({ account, publicKey }) => ({
+      ...account,
+      address: publicKey
+    })) as PositionWithAddress[]
   }
 
   async createFeeTierInstruction({ feeTier, admin }: CreateFeeTier) {
@@ -1611,4 +1634,8 @@ export interface PositionInitData {
   liquidity: Decimal
   amountX: BN
   amountY: BN
+}
+
+export interface PositionWithAddress extends Position {
+  address: PublicKey
 }
