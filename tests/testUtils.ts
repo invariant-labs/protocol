@@ -1,7 +1,7 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js'
 import { TokenInstructions } from '@project-serum/serum'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { FeeTier, Market, Position } from '@invariant-labs/sdk/lib/market'
+import { FeeTier, Market, Position, Tick } from '@invariant-labs/sdk/lib/market'
 import {
   CreateFeeTier,
   CreatePool,
@@ -10,11 +10,16 @@ import {
   InitPosition,
   Swap
 } from '@invariant-labs/sdk/src/market'
-import { feeToTickSpacing, FEE_TIERS, generateTicksArray } from '@invariant-labs/sdk/src/utils'
+import {
+  feeToTickSpacing,
+  FEE_TIERS,
+  generateTicksArray,
+  tou64
+} from '@invariant-labs/sdk/src/utils'
 import BN from 'bn.js'
-import { Pair, tou64, TICK_LIMIT, calculatePriceSqrt } from '@invariant-labs/sdk'
+import { Pair, TICK_LIMIT, calculatePriceSqrt, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
 import { assert } from 'chai'
-import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
+import { ApyPoolParams } from '@invariant-labs/sdk/lib/utils'
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {
@@ -344,3 +349,26 @@ export const initEverything = async (
     assert.ok(tickmapData.bitmap.every(v => v === 0))
   }
 }
+
+export const createTickArray = (size: number) => {
+  const ticks: Tick[] = []
+  for (let i = -(size / 2); i < size / 2; i++) {
+    const tick: Tick = {
+      pool: Keypair.generate().publicKey,
+      index: i * 10,
+      sign: true,
+      liquidityChange: { v: new BN(Math.random() * 100000000).mul(LIQUIDITY_DENOMINATOR) },
+      liquidityGross: { v: new BN(0) },
+      sqrtPrice: { v: new BN(0) },
+      feeGrowthOutsideX: { v: new BN(Math.random() * 100) },
+      feeGrowthOutsideY: { v: new BN(Math.random() * 100) },
+      secondsPerLiquidityOutside: { v: new BN(0) },
+      bump: 0
+    }
+    ticks.push(tick)
+  }
+
+  return ticks
+}
+
+//export const dataApy: ApyPoolParams = {}

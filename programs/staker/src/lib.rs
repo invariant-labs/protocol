@@ -12,7 +12,7 @@ use decimals::*;
 use errors::*;
 use instructions::*;
 
-declare_id!("3o9gZuZia2fM8Uau6JGGAxY7ZoUQAieCosG9Ln3fYw1u");
+declare_id!("MJ6WF1tpEJ7Gk8ULqejDJapRfqBwBEp1dH5QvAgYxu9");
 
 #[program]
 pub mod staker {

@@ -1,13 +1,18 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
-import { Market, Network, Pair, LIQUIDITY_DENOMINATOR, tou64 } from '@invariant-labs/sdk'
+import { Market, Network, Pair, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken, initEverything } from './testUtils'
 import { assert } from 'chai'
-import { assertThrowsAsync, INVARIANT_ERRORS, toDecimal } from '@invariant-labs/sdk/src/utils'
+import {
+  assertThrowsAsync,
+  INVARIANT_ERRORS,
+  toDecimal,
+  tou64
+} from '@invariant-labs/sdk/src/utils'
 import { CreateTick, InitPosition, Swap, WithdrawProtocolFee } from '@invariant-labs/sdk/src/market'
 import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 

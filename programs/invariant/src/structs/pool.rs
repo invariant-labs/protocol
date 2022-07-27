@@ -33,30 +33,38 @@ pub struct Pool {
 
 impl Pool {
     #[allow(unaligned_references)]
-    pub fn add_fee(&mut self, amount: TokenAmount, in_x: bool) {
+    pub fn add_fee(
+        &mut self,
+        amount: TokenAmount,
+        ref_percentage: FixedPoint,
+        in_x: bool,
+    ) -> TokenAmount {
         let protocol_fee = TokenAmount::from_decimal_up(amount.big_mul_up(self.protocol_fee));
-        let pool_fee = amount - protocol_fee;
+        let ref_fee = match ref_percentage.is_zero() {
+            true => TokenAmount(0),
+            false => TokenAmount::from_decimal(amount.big_mul(ref_percentage)),
+        };
+        let pool_fee = amount - protocol_fee - ref_fee;
 
         if pool_fee.is_zero() || self.liquidity.is_zero() {
-            return;
+            return ref_fee;
         }
         let fee_growth = FeeGrowth::from_fee(self.liquidity, pool_fee);
 
         if in_x {
-            // trunk-ignore(clippy/unaligned_references)
             self.fee_growth_global_x = self.fee_growth_global_x.unchecked_add(fee_growth);
             self.fee_protocol_token_x = self
                 .fee_protocol_token_x
                 .checked_add(protocol_fee.0)
                 .unwrap();
         } else {
-            // trunk-ignore(clippy/unaligned_references)
             self.fee_growth_global_y = self.fee_growth_global_y.unchecked_add(fee_growth);
             self.fee_protocol_token_y = self
                 .fee_protocol_token_y
                 .checked_add(protocol_fee.0)
                 .unwrap();
         }
+        ref_fee
     }
 
     pub fn update_liquidity_safely(&mut self, liquidity_delta: Liquidity, add: bool) -> Result<()> {
@@ -90,6 +98,8 @@ impl Pool {
 
 #[cfg(test)]
 mod tests {
+    use std::result;
+
     use super::*;
 
     #[test]
@@ -137,17 +147,75 @@ mod tests {
 
     #[test]
     fn test_add_fee() {
-        let mut pool = Pool {
+        let pool = Pool {
             protocol_fee: FixedPoint::from_scale(2, 1),
             liquidity: Liquidity::from_integer(10),
             ..Default::default()
         };
-        let amount = TokenAmount::from_integer(6);
-        let in_x = true;
+        // without referral
+        {
+            let mut pool = pool.clone();
+            let amount = TokenAmount::from_integer(6);
+            let ref_fee = pool.add_fee(amount, FixedPoint::from_integer(0), true);
+            assert_eq!({ pool.fee_growth_global_x }, FeeGrowth::from_scale(4, 1));
+            assert_eq!({ pool.fee_growth_global_y }, FeeGrowth::from_integer(0));
+            assert_eq!({ pool.fee_protocol_token_x }, 2);
+            assert_eq!({ pool.fee_protocol_token_y }, 0);
+            assert!(ref_fee.is_zero())
+        }
+        // with referral
+        {
+            let mut pool = pool.clone();
+            let amount = TokenAmount::from_integer(200);
+            let ref_fee = pool.add_fee(amount, FixedPoint::from_scale(1, 2), false);
 
-        pool.add_fee(amount, in_x);
+            assert_eq!({ pool.fee_growth_global_x }, FeeGrowth::from_integer(0));
+            assert_eq!({ pool.fee_growth_global_y }, FeeGrowth::from_scale(158, 1));
+            assert_eq!({ pool.fee_protocol_token_x }, 0);
+            assert_eq!({ pool.fee_protocol_token_y }, 40);
+            assert_eq!(ref_fee, TokenAmount(2));
+        }
+    }
 
-        assert_eq!({ pool.fee_growth_global_x }, FeeGrowth::from_scale(4, 1));
-        assert_eq!({ pool.fee_protocol_token_x }, 2);
+    #[test]
+    fn test_update_seconds_per_liquidity_global() {
+        let mut test_pool;
+        //without overflow
+        {
+            test_pool = Pool {
+                seconds_per_liquidity_global: FixedPoint { v: (34028) },
+                liquidity: Liquidity { v: (15) },
+                last_timestamp: 15,
+                ..Default::default()
+            };
+            let current_timestamp: u64 = 18446;
+            test_pool.update_seconds_per_liquidity_global(current_timestamp);
+            let result = test_pool.seconds_per_liquidity_global;
+            assert_eq!(
+                result,
+                FixedPoint {
+                    v: (1228733333333333367361)
+                }
+            );
+        }
+
+        //with overflow
+        {
+            test_pool = Pool {
+                seconds_per_liquidity_global: FixedPoint { v: (u128::MAX) },
+                liquidity: Liquidity { v: (1) },
+                last_timestamp: 0,
+                ..Default::default()
+            };
+            let current_timestamp: u64 = u64::MAX;
+            test_pool.update_seconds_per_liquidity_global(current_timestamp);
+            let result = test_pool.seconds_per_liquidity_global;
+            assert_eq!(
+                result,
+                FixedPoint {
+                    v: (18446744073709551614999999999999999999)
+                }
+            );
+        }
     }
 }

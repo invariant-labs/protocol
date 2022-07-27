@@ -4,10 +4,10 @@ import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken, initEverything } from './testUtils'
-import { Market, Pair, tou64, LIQUIDITY_DENOMINATOR, Network } from '@invariant-labs/sdk'
+import { Market, Pair, LIQUIDITY_DENOMINATOR, Network } from '@invariant-labs/sdk'
 import { FeeTier, InitPosition, Swap } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { toDecimal } from '@invariant-labs/sdk/src/utils'
+import { toDecimal, tou64 } from '@invariant-labs/sdk/src/utils'
 import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('compare', () => {
@@ -140,7 +140,7 @@ describe('compare', () => {
       accountY,
       byAmountIn: true
     }
-    await market.swapSplit(swapVars, owner)
+    await market.swap(swapVars, owner)
 
     // make swap on second pool without simulation TODO
     const swapVars2: Swap = {

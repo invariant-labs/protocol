@@ -24,7 +24,8 @@ import {
   findClosestTicks,
   isEnoughAmountToPushPrice,
   calculatePriceImpact,
-  calculateMinReceivedTokensByAmountIn
+  calculateMinReceivedTokensByAmountIn,
+  getXfromLiquidity
 } from '@invariant-labs/sdk/src/math'
 import {
   bigNumberToBuffer,
@@ -34,27 +35,41 @@ import {
   calculateTickDelta,
   calculateTokensOwed,
   CloserLimit,
+  dailyFactorPool,
+  dailyFactorRewards,
   FeeGrowthInside,
   getCloserLimit,
   getConcentrationArray,
+  getVolume,
   GROWTH_DENOMINATOR,
+  poolAPY,
   PositionClaimData,
   PRICE_DENOMINATOR,
   PRICE_SCALE,
+  rewardsAPY,
   SimulateClaim,
   simulateSwap,
   SimulationResult,
   TokensOwed,
   toPercent,
   toPrice,
+  getTokensData,
+  TokenData,
   U128MAX
 } from '@invariant-labs/sdk/src/utils'
-import { setInitialized } from './testUtils'
+import { createTickArray, setInitialized } from './testUtils'
 import { Decimal, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
 import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
 import { Keypair } from '@solana/web3.js'
 import { swapParameters } from './swap'
-import { LIQUIDITY_DENOMINATOR, toDecimal } from '@invariant-labs/sdk/lib/utils'
+import {
+  ApyPoolParams,
+  ApyRewardsParams,
+  FEE_TIERS,
+  LIQUIDITY_DENOMINATOR,
+  toDecimal,
+  WeeklyData
+} from '@invariant-labs/sdk/lib/utils'
 import { priceToTickInRange } from '@invariant-labs/sdk/src/tick'
 import { U64_MAX } from '@invariant-labs/sdk/lib/math'
 
@@ -502,6 +517,20 @@ describe('Math', () => {
       }
 
       assert.isTrue(false)
+    })
+    it('getXfromLiquidity', async () => {
+      const upperSqrtPrice = calculatePriceSqrt(500)
+      const lowerSqrtPrice = calculatePriceSqrt(-480)
+
+      const x = getXfromLiquidity(liquidity, upperSqrtPrice.v, lowerSqrtPrice.v)
+      assert.ok(x.eqn(97))
+    })
+    it('getXfromLiquidity 2', async () => {
+      const upperSqrtPrice = calculatePriceSqrt(480)
+      const lowerSqrtPrice = calculatePriceSqrt(470)
+
+      const x = getXfromLiquidity(new BN(673755091404475), upperSqrtPrice.v, lowerSqrtPrice.v)
+      assert.ok(x.eqn(328954))
     })
   })
 
@@ -1112,6 +1141,7 @@ describe('Math', () => {
       sqrtPrice: { v: new BN(0) },
       feeGrowthOutsideX: { v: new BN(0) },
       feeGrowthOutsideY: { v: new BN(0) },
+      secondsPerLiquidityOutside: { v: new BN(0) },
       bump: 0
     }
     const upperTick: Tick = {
@@ -1123,6 +1153,7 @@ describe('Math', () => {
       sqrtPrice: { v: new BN(0) },
       feeGrowthOutsideX: { v: new BN(0) },
       feeGrowthOutsideY: { v: new BN(0) },
+      secondsPerLiquidityOutside: { v: new BN(0) },
       bump: 0
     }
 
@@ -1312,6 +1343,8 @@ describe('Math', () => {
         sqrtPrice: { v: new BN(0) },
         feeGrowthOutsideX: { v: new BN(0) },
         feeGrowthOutsideY: { v: new BN(0) },
+        secondsPerLiquidityOutside: { v: new BN(0) },
+
         bump: 0
       }
       const upperTick: Tick = {
@@ -1323,6 +1356,8 @@ describe('Math', () => {
         sqrtPrice: { v: new BN(0) },
         feeGrowthOutsideX: { v: new BN(0) },
         feeGrowthOutsideY: { v: new BN(0) },
+        secondsPerLiquidityOutside: { v: new BN(0) },
+
         bump: 0
       }
 
@@ -1357,6 +1392,8 @@ describe('Math', () => {
         sqrtPrice: { v: new BN('029cf3124f61', 'hex') },
         feeGrowthOutsideX: { v: new BN('0c4fee04dd2b3b8c', 'hex') },
         feeGrowthOutsideY: { v: new BN('01a99cb6b2bd6911e7', 'hex') },
+        secondsPerLiquidityOutside: { v: new BN(0) },
+
         bump: 0
       }
       const upperTick: Tick = {
@@ -1368,6 +1405,8 @@ describe('Math', () => {
         sqrtPrice: { v: new BN('029d9e665157', 'hex') },
         feeGrowthOutsideX: { v: new BN('3b9f3a68b9c225', 'hex') },
         feeGrowthOutsideY: { v: new BN('2c0282aeb7b74a', 'hex') },
+        secondsPerLiquidityOutside: { v: new BN(0) },
+
         bump: 0
       }
 
@@ -1828,6 +1867,124 @@ describe('Math', () => {
 
       const result = getConcentrationArray(tickSpacing, maxConcentration, 0)
       assert.equal(result.length, expectedResult)
+    })
+  })
+  describe('dailyFactorPool tests', () => {
+    it('case 1', async () => {
+      const volume = 125000
+      const tokenXamount = new BN(1000000)
+      const feeTier = FEE_TIERS[3] // 0.3%
+
+      const result = dailyFactorPool(tokenXamount, volume, feeTier)
+      assert.equal(result, 0.00037125)
+    })
+  })
+  describe('dailyFactorReward tests', () => {
+    it('case 1', async () => {
+      const reward = 100
+      const tokenXAmount = new BN(1000_000000)
+      const duration = 10
+      const price = 1.3425
+      const tokenDecimal = 6
+
+      const result = dailyFactorRewards(reward, tokenXAmount, price, tokenDecimal, duration)
+      assert.equal(result, 0.0074487895716946)
+    })
+  })
+  describe('getVolume tests', () => {
+    it('case 1', async () => {
+      const previousSqrtPrice = calculatePriceSqrt(-500)
+      const currentSqrtPrice = calculatePriceSqrt(500)
+      const volume = getVolume(100_000000, 80_000000, previousSqrtPrice, currentSqrtPrice)
+      assert.equal(volume, 180_000000)
+    })
+  })
+  describe('pool APY tests', () => {
+    it('case 1', async () => {
+      const previous = createTickArray(1000)
+
+      const current: Tick[] = previous.map(tick => ({
+        ...tick,
+        liquidityChange: {
+          v: tick.liquidityChange.v.add(new BN(10000000).mul(LIQUIDITY_DENOMINATOR))
+        },
+        feeGrowthOutsideX: { v: tick.feeGrowthOutsideX.v.add(new BN(10)) }
+      }))
+      const weeklyData: WeeklyData = {
+        weeklyFactor: [0.001, 0.002, 0.003, 0.004, 0.003, 0.002, 0.001],
+        weeklyRange: [
+          { tickLower: -800, tickUpper: 1000 },
+          { tickLower: -700, tickUpper: 2000 },
+          { tickLower: -600, tickUpper: 3000 },
+          { tickLower: -500, tickUpper: 4000 },
+          { tickLower: -600, tickUpper: 3000 },
+          { tickLower: -700, tickUpper: 2000 },
+          { tickLower: -800, tickUpper: 1000 }
+        ],
+        tokenXamount: new BN(0),
+        volumeX: 0,
+        apy: 0.037125
+      }
+
+      const paramsApy: ApyPoolParams = {
+        feeTier: FEE_TIERS[3],
+        currentTickIndex: 0,
+        ticksPreviousSnapshot: previous,
+        ticksCurrentSnapshot: current,
+        weeklyData,
+        volumeX: 50_000000,
+        volumeY: 50_000000
+      }
+      // dailyFactor = [0.002, 0.003, 0.004, 0.003, 0.002, 0.001, 0.0000217622417796679]
+      // avg(dailyFactor) = 0.002145966...
+      // APY = 118.679796944...
+      const poolApy = poolAPY(paramsApy)
+      assert.ok(poolApy.apy > 118 && poolApy.apy < 119)
+      assert.ok(poolApy.weeklyRange.length === 7)
+      assert.ok(poolApy.weeklyRange[0].tickLower === -700)
+      assert.ok(poolApy.weeklyRange[0].tickUpper === 2000)
+    })
+  })
+  describe('reward APY tests', () => {
+    it('case 1', async () => {
+      const previous = createTickArray(1000)
+
+      const current: Tick[] = previous.map(tick => ({
+        ...tick,
+        liquidityChange: {
+          v: tick.liquidityChange.v.add(new BN(10000000).mul(LIQUIDITY_DENOMINATOR))
+        },
+        feeGrowthOutsideX: { v: tick.feeGrowthOutsideX.v.add(new BN(10)) },
+        feeGrowthOutsideY: { v: tick.feeGrowthOutsideY.v.add(new BN(10)) }
+      }))
+
+      const paramsApy: ApyRewardsParams = {
+        ticksPreviousSnapshot: previous,
+        ticksCurrentSnapshot: current,
+        weeklyFactor: [0.001, 0.001, 0.01, 0.001, 0.001, 0.001, 0.001],
+        rewardInUSD: 100,
+        tokenXprice: 1.3425,
+        tokenDecimal: 6,
+        duration: 10,
+        currentTickIndex: 0
+      }
+
+      let result = false
+      const reward = rewardsAPY(paramsApy)
+      if (reward.reward > 120 && reward.reward < 130) {
+        result = true
+      }
+      assert.ok(result)
+    })
+  })
+  describe('test getTokenData', () => {
+    it('check ticker and decimals', async () => {
+      const tokenData = await getTokensData()
+      const usdc = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'
+      const token: TokenData = tokenData[usdc]
+      assert.equal(token.ticker, 'USDC')
+      assert.equal(token.decimals, 6)
+      assert.equal(token.id, 'usd-coin')
     })
   })
 })

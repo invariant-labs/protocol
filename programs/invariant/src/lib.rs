@@ -47,8 +47,8 @@ pub mod invariant {
             .handler(init_tick, *ctx.bumps.get("pool").unwrap())
     }
 
-    pub fn swap(
-        ctx: Context<Swap>,
+    pub fn swap<'info>(
+        ctx: Context<'_, '_, '_, 'info, Swap<'info>>,
         x_to_y: bool,
         amount: u64,
         by_amount_in: bool, // whether amount specifies input or output

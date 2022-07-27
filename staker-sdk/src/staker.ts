@@ -3,7 +3,7 @@ import { Staker as StakerIdl, IDL } from './idl/staker'
 import { BN, Program, Provider } from '@project-serum/anchor'
 import { IWallet } from '.'
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { UpdateSecondsPerLiquidity, Market } from '@invariant-labs/sdk/src/market'
+import { UpdateSecondsPerLiquidity, Market } from '@invariant-labs/sdk/lib/market'
 import {
   Connection,
   PublicKey,
@@ -180,12 +180,11 @@ export class Staker {
     position,
     incentive,
     owner,
+    signer,
     index,
     invariant
   }: CreateStake) {
     const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
-    console.log('user stake ', userStakeAddress.toString())
-    console.log('program id', this.programId.toString())
 
     return this.program.instruction.stake(index, {
       accounts: {
@@ -193,6 +192,7 @@ export class Staker {
         position,
         incentive,
         owner,
+        signer: signer ?? owner,
         systemProgram: SystemProgram.programId,
         invariant,
         rent: SYSVAR_RENT_PUBKEY
@@ -309,12 +309,13 @@ export class Staker {
     tx.feePayer = this.wallet.publicKey
     tx.recentBlockhash = blockhash.blockhash
 
-    await this.wallet.signTransaction(tx)
-    if (signers) tx.partialSign(...signers)
+    let signedTx = await this.wallet.signTransaction(tx)
+    if (signers) signedTx.partialSign(...signers)
 
+    const rawTx = signedTx.serialize()
     return await sendAndConfirmRawTransaction(
       this.connection,
-      tx.serialize(),
+      rawTx,
       opts ?? Provider.defaultOptions()
     )
   }
@@ -328,14 +329,15 @@ export class Staker {
       tx.recentBlockhash = blockhash.blockhash
     })
 
-    await this.wallet.signAllTransactions(txs)
+    let signedTxs = await this.wallet.signAllTransactions(txs)
 
     const stringTx: string[] = []
-    for (let i = 0; i < txs.length; i++) {
+    for (let i = 0; i < signedTxs.length; i++) {
+      const rawTx = signedTxs[i].serialize()
       stringTx.push(
         await sendAndConfirmRawTransaction(
           this.connection,
-          txs[i].serialize(),
+          rawTx,
           opts ?? Provider.defaultOptions()
         )
       )
@@ -364,6 +366,7 @@ export interface CreateStake {
   position: PublicKey
   incentive: PublicKey
   owner: PublicKey
+  signer?: PublicKey
   index: number
   invariant: PublicKey
 }

@@ -1,5 +1,4 @@
 import { Provider, BN, utils } from '@project-serum/anchor'
-import { u64 } from '@solana/spl-token'
 import {
   ConfirmOptions,
   Connection,
@@ -28,11 +27,14 @@ import {
   calculateSwapStep,
   getLiquidityByX,
   getLiquidityByY,
+  getXfromLiquidity,
   isEnoughAmountToPushPrice
 } from './math'
 import { alignTickToSpacing, getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
 import { struct, u32, u8 } from '@solana/buffer-layout'
+import { u64 } from '@solana/spl-token'
+import { TokenInfo, TokenListContainer, TokenListProvider } from '@solana/spl-token-registry'
 
 export const SEED = 'Invariant'
 export const DECIMAL = 12
@@ -48,6 +50,7 @@ export const FEE_OFFSET = new BN(10).pow(new BN(DECIMAL - FEE_DECIMAL))
 export const FEE_DENOMINATOR = 10 ** FEE_DECIMAL
 export const U128MAX = new BN('340282366920938463463374607431768211455')
 export const CONCENTRATION_FACTOR = 1.00001526069123
+export const PROTOCOL_FEE: number = 0.01
 
 export enum ERRORS {
   SIGNATURE = 'Error: Signature verification failed',
@@ -57,7 +60,8 @@ export enum ERRORS {
   ALLOWANCE = 'custom program error: 0x1',
   NO_SIGNERS = 'Error: No signers',
   CONSTRAINT_RAW = '0x7d3',
-  CONSTRAINT_SEEDS = '0x7d6'
+  CONSTRAINT_SEEDS = '0x7d6',
+  ACCOUNT_OWNED_BY_WRONG_PROGRAM = '0xbbf'
 }
 
 export enum INVARIANT_ERRORS {
@@ -226,8 +230,8 @@ export const sleep = async (ms: number) => {
   return await new Promise(resolve => setTimeout(resolve, ms))
 }
 
-export const tou64 = amount => {
-  // eslint-disable-next-line new-cap
+export const tou64 = (amount: BN) => {
+  // @ts-ignore
   return new u64(amount.toString())
 }
 
@@ -395,13 +399,10 @@ export const toPercent = (x: number, decimals: number = 0): Decimal => {
 
 export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
   const { sqrtPriceLimit, xToY, currentTick, tickSpacing, tickmap } = closerLimit
-  let index: number | null
 
-  if (xToY) {
-    index = getPreviousTick(tickmap, currentTick, tickSpacing)
-  } else {
-    index = getNextTick(tickmap, currentTick, tickSpacing)
-  }
+  let index: number | null = xToY
+    ? getPreviousTick(tickmap, currentTick, tickSpacing)
+    : getNextTick(tickmap, currentTick, tickSpacing)
   let sqrtPrice: Decimal
   let init: boolean
 
@@ -410,7 +411,7 @@ export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
     init = true
   } else {
     index = getSearchLimit(new BN(currentTick), new BN(tickSpacing), !xToY).toNumber()
-    sqrtPrice = calculatePriceSqrt(index)
+    sqrtPrice = calculatePriceSqrt(index as number)
     init = false
   }
   if (xToY && sqrtPrice.v.gt(sqrtPriceLimit.v) && index !== null) {
@@ -607,7 +608,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
   }
 }
 
-export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
+export const parseLiquidityOnTicks = (ticks: Tick[]) => {
   let currentLiquidity = new BN(0)
 
   return ticks.map(tick => {
@@ -618,6 +619,7 @@ export const parseLiquidityOnTicks = (ticks: Tick[], pool: PoolStructure) => {
     }
   })
 }
+
 export const calculateFeeGrowthInside = ({
   tickLower,
   tickUpper,
@@ -749,4 +751,401 @@ export const getMinTick = (tickSpacing: number) => {
   const limitedByPrice = -MAX_TICK + (MAX_TICK % tickSpacing)
   const limitedByTickmap = -TICK_LIMIT * tickSpacing
   return Math.max(limitedByPrice, limitedByTickmap)
+}
+
+export const getVolume = (
+  volumeX: number,
+  volumeY: number,
+  previousSqrtPrice: Decimal,
+  currentSqrtPrice: Decimal
+): number => {
+  const price = previousSqrtPrice.v.mul(currentSqrtPrice.v).div(PRICE_DENOMINATOR)
+  const denominatedVolumeY = new BN(volumeY).mul(PRICE_DENOMINATOR).div(price).toNumber()
+  return volumeX + denominatedVolumeY
+}
+
+export const getTokenXInRange = (ticks: ParsedTick[], lowerTick: number, upperTick: number): BN => {
+  let sumTokenX: BN = new BN(0)
+  let currentIndex: number | null
+  let nextIndex: number | null
+
+  for (let i = 0; i < ticks.length - 1; i++) {
+    currentIndex = ticks[i].index
+    nextIndex = ticks[i + 1].index
+
+    if (currentIndex >= lowerTick && currentIndex < upperTick) {
+      const lowerSqrtPrice = calculatePriceSqrt(currentIndex)
+      const upperSqrtPrice = calculatePriceSqrt(nextIndex)
+      sumTokenX = sumTokenX.add(
+        getXfromLiquidity(ticks[i].liquidity, upperSqrtPrice.v, lowerSqrtPrice.v)
+      )
+    }
+  }
+  return sumTokenX
+}
+
+export const getRangeBasedOnFeeGrowth = (
+  tickArrayPrevious: ParsedTick[],
+  tickMapCurrent: Map<number, ParsedTick>
+): { tickLower: number | null; tickUpper: number | null } => {
+  let tickLower: number | null = null
+  let tickUpper: number | null = null
+  let tickLowerIndex: number = -1
+  let tickUpperIndex: number = -1
+  let tickLowerIndexSaved = false
+
+  let currentSnapTick: ParsedTick | undefined
+  const MIN_INDEX = 0
+  const MAX_INDEX = tickArrayPrevious.length - 1
+
+  for (let i = 0; i < tickArrayPrevious.length - 1; i++) {
+    currentSnapTick = tickMapCurrent.get(tickArrayPrevious[i].index)
+    if (currentSnapTick === undefined) continue
+
+    if (
+      !(
+        tickArrayPrevious[i].feeGrowthOutsideX.v.eq(currentSnapTick.feeGrowthOutsideX.v) &&
+        tickArrayPrevious[i].feeGrowthOutsideY.v.eq(currentSnapTick.feeGrowthOutsideY.v)
+      )
+    ) {
+      if (!tickLowerIndexSaved) {
+        tickLowerIndex = i
+        tickLowerIndexSaved = true
+      }
+      tickUpperIndex = i
+    }
+  }
+  if (tickLowerIndex !== -1) {
+    tickLower =
+      tickLowerIndex > MIN_INDEX
+        ? tickArrayPrevious[tickLowerIndex - 1].index
+        : tickArrayPrevious[tickLowerIndex].index
+  }
+  if (tickUpperIndex !== -1) {
+    tickUpper =
+      tickUpperIndex < MAX_INDEX
+        ? tickArrayPrevious[tickUpperIndex + 1].index
+        : tickArrayPrevious[tickUpperIndex].index
+  }
+  return {
+    tickLower,
+    tickUpper
+  }
+}
+export const parseFeeGrowthAndLiquidityOnTicksArray = (ticks: Tick[]): ParsedTick[] => {
+  const sortedTicks = ticks.sort((a, b) => a.index - b.index)
+
+  let currentLiquidity = new BN(0)
+  return sortedTicks.map(tick => {
+    currentLiquidity = currentLiquidity.add(tick.liquidityChange.v.muln(tick.sign ? 1 : -1))
+    return {
+      liquidity: currentLiquidity,
+      index: tick.index,
+      feeGrowthOutsideX: tick.feeGrowthOutsideX,
+      feeGrowthOutsideY: tick.feeGrowthOutsideY
+    }
+  })
+}
+
+export const parseFeeGrowthAndLiquidityOnTicksMap = (ticks: Tick[]): Map<number, ParsedTick> => {
+  const sortedTicks = ticks.sort((a, b) => a.index - b.index)
+  let currentLiquidity = new BN(0)
+  const ticksMap = new Map<number, ParsedTick>()
+  sortedTicks.map(tick => {
+    currentLiquidity = currentLiquidity.add(tick.liquidityChange.v.muln(tick.sign ? 1 : -1))
+    ticksMap.set(tick.index, {
+      liquidity: currentLiquidity,
+      index: tick.index,
+      feeGrowthOutsideX: tick.feeGrowthOutsideX,
+      feeGrowthOutsideY: tick.feeGrowthOutsideY
+    })
+  })
+
+  return ticksMap
+}
+export const calculateTokenXinRange = (
+  ticksPreviousSnapshot: Tick[],
+  ticksCurrentSnapshot: Tick[],
+  currentTickIndex: number
+): RangeData => {
+  const tickArrayPrevious = parseFeeGrowthAndLiquidityOnTicksArray(ticksPreviousSnapshot)
+  const tickArrayCurrent = parseFeeGrowthAndLiquidityOnTicksArray(ticksCurrentSnapshot)
+  const tickMapCurrent = parseFeeGrowthAndLiquidityOnTicksMap(ticksCurrentSnapshot)
+  let tokenXamount = new BN(0)
+
+  if (!(tickArrayPrevious.length || tickArrayCurrent.length)) {
+    throw new Error(Errors.TickArrayIsEmpty)
+  }
+  if (!(tickArrayPrevious.length && tickArrayCurrent.length)) {
+    const notEmptyArray = tickArrayPrevious.length ? tickArrayPrevious : tickArrayCurrent
+    const tickLower = notEmptyArray[0].index
+    const tickUpper = notEmptyArray[notEmptyArray.length - 1].index
+    tokenXamount = getTokenXInRange(notEmptyArray, tickLower, tickUpper)
+    return { tokenXamount, tickLower, tickUpper }
+  }
+
+  let { tickLower, tickUpper } = getRangeBasedOnFeeGrowth(tickArrayPrevious, tickMapCurrent)
+
+  if (tickLower == null || tickUpper == null) {
+    const { lower, upper } = getTicksFromSwapRange(tickArrayCurrent, currentTickIndex)
+    tickLower = lower
+    tickUpper = upper
+  }
+  if (tickLower == null || tickUpper == null) {
+    throw new Error(Errors.TickNotFound)
+  }
+
+  tokenXamount = getTokenXInRange(tickArrayCurrent, tickLower, tickUpper)
+
+  return { tokenXamount, tickLower, tickUpper }
+}
+
+export const dailyFactorPool = (tokenXamount: BN, volume: number, feeTier: FeeTier): number => {
+  const fee: number = (feeTier.fee.toNumber() / DENOMINATOR.toNumber()) * (1 - PROTOCOL_FEE)
+  return (volume * fee) / tokenXamount.toNumber()
+}
+
+export const getTicksFromSwapRange = (
+  ticks: ParsedTick[],
+  currentTickIndex: number
+): { lower: number | null; upper: number | null } => {
+  for (let i = 0; i < ticks.length - 1; i++) {
+    const lower = ticks[i].index
+    const upper = ticks[i + 1].index
+
+    if (lower <= currentTickIndex && upper >= currentTickIndex) {
+      return { lower, upper }
+    }
+  }
+  return { lower: null, upper: null }
+}
+
+export const poolAPY = (params: ApyPoolParams): WeeklyData => {
+  const {
+    feeTier,
+    currentTickIndex,
+    ticksPreviousSnapshot,
+    ticksCurrentSnapshot,
+    weeklyData,
+    volumeX,
+    volumeY
+  } = params
+  const { weeklyFactor, weeklyRange } = weeklyData
+  let dailyFactor: number | null
+  let dailyRange: Range
+  let dailyTokenXamount: BN = new BN(0)
+  let dailyVolumeX: number = 0
+  try {
+    const { tokenXamount, tickLower, tickUpper } = calculateTokenXinRange(
+      ticksPreviousSnapshot,
+      ticksCurrentSnapshot,
+      currentTickIndex
+    )
+
+    const previousSqrtPrice = calculatePriceSqrt(tickLower)
+    const currentSqrtPrice = calculatePriceSqrt(tickUpper)
+    const volume = getVolume(volumeX, volumeY, previousSqrtPrice, currentSqrtPrice)
+    dailyFactor = dailyFactorPool(tokenXamount, volume, feeTier)
+    dailyRange = { tickLower, tickUpper }
+    dailyTokenXamount = tokenXamount
+    dailyVolumeX = volumeX
+  } catch (e: any) {
+    dailyFactor = 0
+    dailyRange = { tickLower: null, tickUpper: null }
+  }
+
+  const newWeeklyFactor = updateWeeklyFactor(weeklyFactor, dailyFactor)
+  const newWeeklyRange = updateWeeklyRange(weeklyRange, dailyRange)
+
+  const apy = (Math.pow(average(newWeeklyFactor) + 1, 365) - 1) * 100
+
+  return {
+    weeklyFactor: newWeeklyFactor,
+    weeklyRange: newWeeklyRange,
+    tokenXamount: dailyTokenXamount,
+    volumeX: dailyVolumeX,
+    apy
+  }
+}
+
+export const dailyFactorRewards = (
+  rewardInUSD: number,
+  tokenXamount: BN,
+  tokenXprice: number,
+  tokenDecimal: number,
+  duration: number
+): number => {
+  return (
+    rewardInUSD /
+    (tokenXamount.div(new BN(10).pow(new BN(tokenDecimal))).toNumber() * tokenXprice * duration)
+  )
+}
+
+export const rewardsAPY = (params: ApyRewardsParams) => {
+  const {
+    ticksPreviousSnapshot,
+    ticksCurrentSnapshot,
+    currentTickIndex,
+    weeklyFactor,
+    rewardInUSD,
+    tokenXprice,
+    tokenDecimal,
+    duration
+  } = params
+  let dailyFactor: number | null
+  try {
+    const { tokenXamount } = calculateTokenXinRange(
+      ticksPreviousSnapshot,
+      ticksCurrentSnapshot,
+      currentTickIndex
+    )
+    dailyFactor = dailyFactorRewards(rewardInUSD, tokenXamount, tokenXprice, tokenDecimal, duration)
+  } catch (e: any) {
+    dailyFactor = 0
+  }
+
+  const newWeeklyFactor = updateWeeklyFactor(weeklyFactor, dailyFactor)
+
+  const reward = (Math.pow(duration * average(newWeeklyFactor) + 1, 365 / duration) - 1) * 100
+
+  return { reward, newWeeklyFactor }
+}
+
+export const average = (array: number[]) =>
+  array.reduce((prev: number, curr: number) => prev + curr) / array.length
+
+export const updateWeeklyFactor = (weeklyFactor: number[], dailyFactor: number): number[] => {
+  weeklyFactor.shift()
+  weeklyFactor.push(dailyFactor)
+  return weeklyFactor
+}
+
+export const updateWeeklyRange = (weeklyRange: Range[], dailyRange: Range): Range[] => {
+  weeklyRange.shift()
+  weeklyRange.push(dailyRange)
+  return weeklyRange
+}
+
+const coingeckoIdOverwrites = {
+  '9vMJfxuKxXBoEa7rM12mYLMwTacLMLDJqHozw96WQL8i': 'terrausd',
+  '7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj': 'lido-staked-sol',
+  NRVwhjBQiUPYtfDT5zRBVJajzFQHaBUNtC7SNVvqRFa: 'nirvana-nirv'
+}
+
+export const getTokensData = async (): Promise<Record<string, TokenData>> => {
+  const tokens: TokenListContainer = await new TokenListProvider().resolve()
+
+  const tokenList = tokens
+    .filterByClusterSlug('mainnet-beta')
+    .getList()
+    .filter(token => token.chainId === 101)
+
+  const tokensObj: Record<string, TokenData> = {}
+
+  tokenList.forEach((token: TokenInfo) => {
+    tokensObj[token.address.toString()] = {
+      // @ts-ignore
+      id: coingeckoIdOverwrites?.[token.address.toString()] ?? token.extensions?.coingeckoId,
+      decimals: token.decimals,
+      ticker: token.symbol
+    }
+  })
+
+  return tokensObj
+}
+
+export const getPrice = (sqrtPrice: Decimal, decimalDiff: number): Decimal => {
+  const price = sqrtPrice.v.pow(new BN(2)) // sqrtPrice^2
+  const priceWithCorrectPrecision = price.div(new BN(10).pow(new BN(40))) // price / 10^40, becouse now is 48 we need 8
+  if (decimalDiff > 0) {
+    return { v: priceWithCorrectPrecision.mul(new BN(10).pow(new BN(decimalDiff))) }
+  }
+  if (decimalDiff < 0) {
+    return { v: priceWithCorrectPrecision.div(new BN(10).pow(new BN(Math.abs(decimalDiff)))) }
+  }
+  return { v: priceWithCorrectPrecision }
+}
+
+export const getPositionIndex = async (
+  expectedAddress: PublicKey,
+  invariantAddress: PublicKey,
+  owner: PublicKey
+): Promise<number> => {
+  let index: number = -1
+  let counter: number = 0
+  let found: Boolean = false
+
+  while (!found) {
+    const indexBuffer = Buffer.alloc(4)
+    indexBuffer.writeInt32LE(counter)
+
+    const [positionAddress, positionBump] = await PublicKey.findProgramAddress(
+      [Buffer.from(utils.bytes.utf8.encode('positionv1')), owner.toBuffer(), indexBuffer],
+      invariantAddress
+    )
+
+    if (positionAddress.toString() == expectedAddress.toString()) {
+      found = true
+      index = counter
+    }
+    counter++
+  }
+
+  return index
+}
+
+export interface TokenData {
+  id: string
+  decimals: number
+  ticker: string
+}
+export interface ParsedTick {
+  liquidity: BN
+  index: number
+  feeGrowthOutsideX: Decimal
+  feeGrowthOutsideY: Decimal
+}
+
+export interface LiquidityRange {
+  tickLower: number
+  tickUpper: number
+}
+
+export interface RangeData {
+  tokenXamount: BN
+  tickLower: number
+  tickUpper: number
+}
+
+export interface ApyPoolParams {
+  feeTier: FeeTier
+  currentTickIndex: number
+  ticksPreviousSnapshot: Tick[]
+  ticksCurrentSnapshot: Tick[]
+  weeklyData: WeeklyData
+  volumeX: number
+  volumeY: number
+}
+export interface ApyRewardsParams {
+  ticksPreviousSnapshot: Tick[]
+  ticksCurrentSnapshot: Tick[]
+  currentTickIndex: number
+  weeklyFactor: number[]
+  rewardInUSD: number
+  tokenXprice: number
+  tokenDecimal: number
+  duration: number
+}
+
+export interface WeeklyData {
+  weeklyFactor: number[]
+  weeklyRange: Range[]
+  tokenXamount: BN
+  volumeX: number
+  apy: number
+}
+
+export interface Range {
+  tickLower: number | null
+  tickUpper: number | null
 }

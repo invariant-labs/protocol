@@ -1,14 +1,17 @@
 export enum Network {
   LOCAL,
-  DEV
+  DEV,
+  MAIN
 }
 
 export const getStakerAddress = (network: Network) => {
   switch (network) {
     case Network.LOCAL:
-      return '3o9gZuZia2fM8Uau6JGGAxY7ZoUQAieCosG9Ln3fYw1u'
+      return 'MJ6WF1tpEJ7Gk8ULqejDJapRfqBwBEp1dH5QvAgYxu9'
     case Network.DEV:
-      return '3o9gZuZia2fM8Uau6JGGAxY7ZoUQAieCosG9Ln3fYw1u'
+      return 'GqzPhMxtHjXhePt1EDHTBv2SVYEehmwAVbLdtUfNGi9J'
+    case Network.MAIN:
+      return 'MJ6WF1tpEJ7Gk8ULqejDJapRfqBwBEp1dH5QvAgYxu9'
     default:
       throw new Error('Unknown network')
   }

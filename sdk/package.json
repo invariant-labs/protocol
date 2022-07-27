@@ -1,6 +1,6 @@
 {
   "name": "@invariant-labs/sdk",
-  "version": "0.8.8",
+  "version": "0.9.19",
   "description": "",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -12,7 +12,7 @@
   "author": "",
   "license": "",
   "devDependencies": {
-    "@solana/spl-token": "0.1.6",
+    "@solana/spl-token": "0.1.8",
     "@solana/web3.js": "1.18.0",
     "@types/chai": "^4.2.15",
     "@types/mocha": "^8.2.1",
@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@project-serum/anchor": "0.21.0",
+    "@solana/spl-token-registry": "^0.2.4484",
     "chai": "^4.3.0"
   }
 }

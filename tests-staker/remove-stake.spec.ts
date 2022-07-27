@@ -5,7 +5,7 @@ import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
 import { CreateIncentive, CreateStake, Decimal, Staker } from '../staker-sdk/src/staker'
-import { eqDecimal, createToken, tou64, signAndSend } from './testUtils'
+import { eqDecimal, createToken, signAndSend } from './testUtils'
 import { createToken as createTkn } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
@@ -16,6 +16,7 @@ import {
   InitPosition,
   UpdateSecondsPerLiquidity
 } from '@invariant-labs/sdk/src/market'
+import { tou64 } from '@invariant-labs/sdk/src/utils'
 
 // To run this test you have change WEEK to 3 sec in staker program
 
@@ -43,12 +44,7 @@ describe('Remove Stake tests', () => {
 
   before(async () => {
     // create staker
-    staker = await Staker.build(
-      Network.LOCAL,
-      provider.wallet,
-      connection,
-      anchor.workspace.Staker.programId
-    )
+    staker = await Staker.build(Network.LOCAL, provider.wallet, connection)
 
     await Promise.all([
       await connection.requestAirdrop(mintAuthority.publicKey, 1e9),
@@ -117,8 +113,8 @@ describe('Remove Stake tests', () => {
     const seconds = new Date().valueOf() / 1000
     const currentTime = new BN(Math.floor(seconds))
     const reward: Decimal = { v: new BN(10) }
-    const startTime = currentTime.add(new BN(0))
-    const endTime = currentTime.add(new BN(5))
+    const startTime = { v: currentTime.add(new BN(0)) }
+    const endTime = { v: currentTime.add(new BN(5)) }
 
     const createIncentiveVars: CreateIncentive = {
       reward,
@@ -199,6 +195,7 @@ describe('Remove Stake tests', () => {
       position,
       incentive: incentiveAccount.publicKey,
       owner: positionOwner.publicKey,
+      signer: positionOwner.publicKey,
       invariant
     }
 

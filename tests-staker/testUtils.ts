@@ -50,11 +50,6 @@ export const eqDecimal = (a: Decimal, b: Decimal) => {
   return a.v.eq(b.v)
 }
 
-export const tou64 = amount => {
-  // eslint-disable-next-line new-cap
-  return new u64(amount.toString())
-}
-
 export const getTime = () => {
   const seconds = new Date().valueOf() / 1000
   const currentTime = new BN(Math.floor(seconds))
@@ -100,7 +95,7 @@ export const createToken = async (
   return token
 }
 
-export const almostEqual = (num1: BN, num2: BN, epsilon: BN = new BN(10)) => {
+export const almostEqual = (num1: BN, num2: BN, epsilon: BN = new BN(50)) => {
   return num1.sub(num2).abs().lt(epsilon)
 }
 

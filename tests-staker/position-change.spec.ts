@@ -3,7 +3,7 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Market, Pair, sleep, PRICE_DENOMINATOR, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
 import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
-import { createToken, tou64, getTime, signAndSend, almostEqual } from './testUtils'
+import { createToken, getTime, signAndSend, almostEqual } from './testUtils'
 import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { toDecimal } from '../staker-sdk/lib/utils'
@@ -12,6 +12,7 @@ import { FeeTier, TransferPositionOwnership } from '@invariant-labs/sdk/lib/mark
 import { InitPosition, Swap, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
 import { CreateIncentive, CreateStake, Withdraw, Decimal, Staker } from '../staker-sdk/src/staker'
 import { assert } from 'chai'
+import { tou64 } from '@invariant-labs/sdk/src/utils'
 
 describe('Withdraw with transfer position ownership', () => {
   const provider = Provider.local()
@@ -24,7 +25,7 @@ describe('Withdraw with transfer position ownership', () => {
   const founderAccount = Keypair.generate()
   const positionRecipient = Keypair.generate()
   const admin = Keypair.generate()
-  const epsilon = new BN(50)
+  const epsilon = new BN(100)
   let nonce: number
   let staker: Staker
   let market: Market
@@ -42,12 +43,7 @@ describe('Withdraw with transfer position ownership', () => {
   before(async () => {
     // create staker
 
-    staker = await Staker.build(
-      Network.LOCAL,
-      provider.wallet,
-      connection,
-      anchor.workspace.Staker.programId
-    )
+    staker = await Staker.build(Network.LOCAL, provider.wallet, connection)
 
     await Promise.all([
       connection.requestAirdrop(mintAuthority.publicKey, 1e9),
@@ -252,6 +248,7 @@ describe('Withdraw with transfer position ownership', () => {
     const updateRecipient: UpdateSecondsPerLiquidity = {
       pair,
       owner: positionRecipient.publicKey,
+      signer: positionRecipient.publicKey,
       lowerTickIndex: lowerTick,
       upperTickIndex: upperTick,
       index
@@ -265,8 +262,7 @@ describe('Withdraw with transfer position ownership', () => {
       owner: positionRecipient.publicKey,
       incentiveTokenAccount: incentiveTokenAccount.publicKey,
       ownerTokenAcc: positionRecipientTokenAccount,
-      index,
-      nonce
+      index
     }
     const updateRecipientIx = await market.updateSecondsPerLiquidityInstruction(updateRecipient)
     const withdrawIx = await staker.withdrawIx(withdraw)

@@ -9,6 +9,7 @@
     "feetier",
     "feetierv",
     "initializable",
+    "Keypair",
     "lamports",
     "ledgerhq",
     "localnet",
@@ -35,10 +36,12 @@
     "tickv",
     "tweetnacl",
     "uppest",
-    "WSOL"
+    "WSOL",
+    "Xamount",
+    "Xprice"
   ],
   "editor.formatOnSave": true,
   "[rust]": {
-    "editor.defaultFormatter": "matklad.rust-analyzer"
+    "editor.defaultFormatter": "rust-lang.rust-analyzer"
   }
 }

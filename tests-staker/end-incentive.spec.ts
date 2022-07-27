@@ -5,11 +5,12 @@ import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
 import { CreateIncentive, Decimal, EndIncentive, Staker } from '../staker-sdk/src/staker'
-import { assertThrowsAsync, createToken, signAndSend, tou64 } from './testUtils'
+import { assertThrowsAsync, createToken, signAndSend } from './testUtils'
 import { createToken as createTkn, initEverything } from '../tests/testUtils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { Token } from '@solana/spl-token'
+import { tou64 } from '@invariant-labs/sdk/src/utils'
 
 describe('End incentive tests', () => {
   const provider = Provider.local()
@@ -32,12 +33,7 @@ describe('End incentive tests', () => {
   before(async () => {
     // create staker instance
 
-    staker = await Staker.build(
-      Network.LOCAL,
-      provider.wallet,
-      connection,
-      anchor.workspace.Staker.programId
-    )
+    staker = await Staker.build(Network.LOCAL, provider.wallet, connection)
 
     // create token
     incentiveToken = await createToken(connection, wallet, wallet)
@@ -96,8 +92,8 @@ describe('End incentive tests', () => {
     const seconds = new Date().valueOf() / 1000
     const currentTime = new BN(Math.floor(seconds))
     const reward: Decimal = { v: new BN(10) }
-    const startTime = currentTime.add(new BN(0))
-    const endTime = currentTime.add(new BN(10))
+    const startTime = { v: currentTime.add(new BN(0)) }
+    const endTime = { v: currentTime.add(new BN(10)) }
 
     const balanceBefore = (await incentiveToken.getAccountInfo(founderTokenAccount)).amount
 

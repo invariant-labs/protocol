@@ -6,7 +6,6 @@ import { assert } from 'chai'
 import {
   Market,
   Pair,
-  tou64,
   PRICE_DENOMINATOR,
   LIQUIDITY_DENOMINATOR,
   TICK_LIMIT,
@@ -20,7 +19,7 @@ import {
   Swap
 } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { toDecimal } from '@invariant-labs/sdk/src/utils'
+import { toDecimal, tou64 } from '@invariant-labs/sdk/src/utils'
 import { createToken } from './testUtils'
 
 describe('swap', () => {
@@ -96,6 +95,7 @@ describe('swap', () => {
   })
 
   // Working from version 1.9, therefore skipped
+  // TODO
   it.skip('#swap', async () => {
     // Deposit
 
@@ -152,7 +152,7 @@ describe('swap', () => {
       byAmountIn: true,
       owner: owner.publicKey
     }
-    await market.swapSplit(swapVars, owner)
+    await market.swap(swapVars, owner)
 
     // make swap bigger than cross tick
     const swapVars2: Swap = {
@@ -166,7 +166,7 @@ describe('swap', () => {
       byAmountIn: true,
       owner: owner.publicKey
     }
-    await market.swapSplit(swapVars2, owner)
+    await market.swap(swapVars2, owner)
 
     // Check pool
     const poolData = await market.getPool(pair)

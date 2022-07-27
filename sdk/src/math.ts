@@ -38,6 +38,9 @@ export const isInitialized = (tickmap: Tickmap, index: number, tickSpacing: numb
 
   return value !== 0
 }
+export const priceToTick = (val: number): number => {
+  return Math.log(val) / Math.log(1.0001)
+}
 
 export const fromInteger = (integer: number): { v: BN } => {
   return { v: new BN(integer).mul(DENOMINATOR) }
@@ -442,6 +445,17 @@ export const getX = (
     denominator = upperSqrtPrice.mul(currentSqrtPrice).div(PRICE_DENOMINATOR)
     nominator = upperSqrtPrice.sub(currentSqrtPrice)
   }
+
+  return liquidity.mul(nominator).div(denominator).div(LIQUIDITY_DENOMINATOR)
+}
+
+export const getXfromLiquidity = (liquidity: BN, upperSqrtPrice: BN, lowerSqrtPrice: BN): BN => {
+  if (upperSqrtPrice.lte(new BN(0)) || lowerSqrtPrice.lte(new BN(0))) {
+    throw new Error('Price cannot be lower or equal 0')
+  }
+
+  const denominator = lowerSqrtPrice.mul(upperSqrtPrice).div(PRICE_DENOMINATOR)
+  const nominator = upperSqrtPrice.sub(lowerSqrtPrice)
 
   return liquidity.mul(nominator).div(denominator).div(LIQUIDITY_DENOMINATOR)
 }

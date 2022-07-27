@@ -13,7 +13,7 @@ use invariant::structs::Position;
 pub struct CreateUserStake<'info> {
     #[account(init,
         seeds = [b"staker", incentive.key().as_ref(), position.load()?.pool.as_ref(), &position.load()?.id.to_le_bytes() ],
-        payer = owner,
+        payer = signer,
         bump)]
     pub user_stake: AccountLoader<'info, UserStake>,
     #[account(
@@ -28,8 +28,9 @@ pub struct CreateUserStake<'info> {
         constraint = incentive.load()?.pool == position.load()?.pool @ DifferentIncentivePool
     )]
     pub incentive: AccountLoader<'info, Incentive>,
+    pub owner: AccountInfo<'info>,
     #[account(mut)]
-    pub owner: Signer<'info>,
+    pub signer: Signer<'info>,
     #[account(address = invariant::ID)]
     pub invariant: Program<'info, Invariant>,
     #[account(address = system_program::ID)]
@@ -51,11 +52,11 @@ pub fn handler(ctx: Context<CreateUserStake>) -> ProgramResult {
     require!(slot == update_slot, SlotsAreNotEqual);
 
     **user_stake = UserStake {
-        liquidity: Liquidity::new(position.liquidity.v),
+        liquidity: Liquidity::new({ position.liquidity }.get()),
         incentive: ctx.accounts.incentive.key(),
         bump: *ctx.bumps.get("user_stake").unwrap(),
-        seconds_per_liquidity_initial: SecondsPerLiquidity::new(
-            position.seconds_per_liquidity_inside.v,
+        seconds_per_liquidity_initial: SecondsPerLiquidity::from_decimal(
+            position.seconds_per_liquidity_inside,
         ),
     };
     incentive.num_of_stakes += 1;
