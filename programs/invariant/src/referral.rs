@@ -4,30 +4,20 @@ pub mod referral {
     pub fn contains(ref_owner: Pubkey) -> bool {
         #[cfg(feature = "jupiter")]
         {
-            let p_key_one = Pubkey::from_str(&"JUP3c2Uh3WA4Ng34tw6kPd2G4C5BB21Xo36Je1s32Ph");
-            let example_one = p_key_one.unwrap();
-            let p_key_two = Pubkey::from_str(&"JUP2jxvXaqu7NQY1GmNF4m1vodw12LVXYxbFL2uJvfo");
-            let example_two = p_key_two.unwrap();
-            if ref_owner.eq(&example_two) {
-                return true;
-            } else if ref_owner.eq(&example_one) {
+            let jup3 = Pubkey::from_str(&"JUP3c2Uh3WA4Ng34tw6kPd2G4C5BB21Xo36Je1s32Ph").unwrap();
+            let jup2 = Pubkey::from_str(&"JUP2jxvXaqu7NQY1GmNF4m1vodw12LVXYxbFL2uJvfo").unwrap();
+            if ref_owner.eq(&jup3) || ref_owner.eq(&jup2) {
                 return true;
             } else {
                 return false;
             }
         }
 
-        #[cfg(feature = "none")]
-        {
-            println!("none");
-            return false;
-        }
-
         #[cfg(feature = "all")]
-        {
-            println!("all");
-            return true;
-        }
+        return true;
+
+        #[cfg(feature = "none")]
+        return false;
 
         false
     }
@@ -51,19 +41,17 @@ mod tests {
     #[test]
     #[cfg_attr(not(feature = "none"), ignore)]
     fn test_is_referral_for_none() {
-        let p_key = Pubkey::from_str(&"7CKCpJWFRu1WAWfCvDkwyniP6JGpSyMf4Bkxk2U6v2Ej");
-        let example = contains(p_key.unwrap());
-        assert!(!example);
+        let example = Pubkey::from_str(&"7CKCpJWFRu1WAWfCvDkwyniP6JGpSyMf4Bkxk2U6v2Ej").unwrap();
+        assert!(!contains(example));
     }
 
     #[test]
     #[cfg_attr(not(feature = "jupiter"), ignore)]
     fn test_is_referral_for_jupiter() {
-        let p_key = Pubkey::from_str(&"7CKCpJWFRu1WAWfCvDkwyniP6JGpSyMf4Bkxk2U6v2Ej");
-        let example = contains(p_key.unwrap());
+        let example = Pubkey::from_str(&"7CKCpJWFRu1WAWfCvDkwyniP6JGpSyMf4Bkxk2U6v2Ej").unwrap();
+        let example = contains(example);
         assert!(!example);
-        let pub_key = Pubkey::from_str(&"JUP2jxvXaqu7NQY1GmNF4m1vodw12LVXYxbFL2uJvfo");
-        let example = contains(pub_key.unwrap());
-        assert!(example);
+        let jup2 = Pubkey::from_str(&"JUP2jxvXaqu7NQY1GmNF4m1vodw12LVXYxbFL2uJvfo").unwrap();
+        assert!(contains(jup2));
     }
 }
