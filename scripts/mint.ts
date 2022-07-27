@@ -17,19 +17,17 @@ const connection = provider.connection
 const wallet = provider.wallet.payer as Keypair
 
 const main = async () => {
-  const recipient = new PublicKey('2tEidvr2FV19EvgQw8b53crdJJjdwHUKkwZA469Qu4EE')
-  //const recipient = new PublicKey('SygPUczok5Wx8Xc1ujkzVXopb9KxtsVH7FPvu5TGRmX')
-
-  //await mintUsdc(recipient)
+  const recipient = new PublicKey('')
+  // await mintUsdc(recipient)
   // await mintUsdh(recipient)
-  // console.log(MINTER.publicKey.toString())
-  await mintHbb(recipient)
+  // await mintHbb(recipient)
 }
 
 const mintUsdh = async (recipient: PublicKey) => {
   const usdh = new Token(connection, new PublicKey(MOCK_TOKENS.USDH), TOKEN_PROGRAM_ID, wallet)
 
   const recipientUsdh = await usdh.createAccount(recipient)
+  console.log(recipientUsdh.toString())
 
   const usdhAmount = new BN(10).pow(new BN(6)).muln(1000) // 1000 usdh
 
