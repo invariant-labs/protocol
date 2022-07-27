@@ -13,6 +13,10 @@ doctest = false
 no-entrypoint = []
 no-idl = []
 cpi = ["no-entrypoint"]
+default = ["none"]
+jupiter = []
+none = []
+all = []
 
 
 [dependencies]
