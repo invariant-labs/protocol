@@ -1,6 +1,6 @@
 import { Staker, Network } from '../../staker-sdk/src'
 import { Provider, Wallet } from '@project-serum/anchor'
-import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
+import { Keypair, PublicKey } from '@solana/web3.js'
 import { BN } from '../../staker-sdk/lib'
 import { Decimal } from '@invariant-labs/sdk/src/market'
 import { CreateIncentive } from '../../staker-sdk/src/staker'
@@ -10,7 +10,7 @@ import { MAINNET_TOKENS } from '@invariant-labs/sdk/src/network'
 
 ////////////////////  README  /////////////////////////////////
 // 1. Default signer is local Keypair
-// 2. Set reward and reward token decimal, default is 0
+// 2. Set reward and reward token decimal, default is 1
 // 3. Set start time (number of seconds from current time), default is 0
 // 4. Set end time (duration in seconds), default is 0
 // 5. FOUNDER is local keypair
@@ -37,7 +37,7 @@ const currentTime = new BN(Math.floor(seconds))
 
 // DEFINE ALL THESE VARS BEFORE EXECUTION
 const REWARD_TOKEN_DECIMAL = 6
-const REWARD: Decimal = { v: new BN(10).pow(new BN(REWARD_TOKEN_DECIMAL)).muln(0) }
+const REWARD: Decimal = { v: new BN(10).pow(new BN(REWARD_TOKEN_DECIMAL)).muln(1) }
 const START_TIME: Decimal = { v: currentTime.add(new BN(0)) }
 const END_TIME: Decimal = { v: currentTime.add(START_TIME.v).add(new BN(0)) }
 const FOUNDER: PublicKey = wallet.publicKey
