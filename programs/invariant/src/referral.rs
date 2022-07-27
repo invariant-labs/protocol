@@ -1,23 +1,22 @@
 pub mod referral {
     use anchor_lang::prelude::Pubkey;
-
+    use std::{borrow::Borrow, str::FromStr};
     pub fn contains(ref_owner: Pubkey) -> bool {
-        // #[cfg(feature = "jupiter")]
-        // {
-        //     println!("jupiter");
-        //     let p_key_one = Pubkey::from_str(&"7CKCpJWFRu1WAWfCvDkwyniP6JGpSyMf4Bkxk2U6v2Ej");
-        //     let example_one = p_key_one.unwrap();
-        //     let p_key_two = Pubkey::from_str(&"JUP2jxvXaqu7NQY1GmNF4m1vodw12LVXYxbFL2uJvfo");
-        //     let example_two = p_key_two.unwrap();
-
-        //     if ref_owner.eq(&example_two.unwrap()) {
-        //         return true;
-        //     } else if ref_owner.eq(&example_one.unwrap()) {
-        //         return true;
-        //     } else {
-        //         return false;
-        //     }
-        // }
+            
+        #[cfg(feature = "jupiter")]
+        {
+            let p_key_one = Pubkey::from_str(&"JUP3c2Uh3WA4Ng34tw6kPd2G4C5BB21Xo36Je1s32Ph");
+            let example_one = p_key_one.unwrap();
+            let p_key_two = Pubkey::from_str(&"JUP2jxvXaqu7NQY1GmNF4m1vodw12LVXYxbFL2uJvfo");
+            let example_two = p_key_two.unwrap();
+            if ref_owner.eq(&example_two) {
+                return true;
+            } else if ref_owner.eq(&example_one) {
+                return true;
+            } else {
+                return false;
+            }
+        }
 
         #[cfg(feature = "none")]
         {
@@ -30,6 +29,7 @@ pub mod referral {
             println!("all");
             return true;
         }
+    
 
         false
     }
