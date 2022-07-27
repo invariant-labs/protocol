@@ -1,6 +1,6 @@
 {
   "name": "@invariant-labs/sdk",
-  "version": "0.9.18",
+  "version": "0.9.19",
   "description": "",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
