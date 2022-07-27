@@ -31,23 +31,22 @@ mod tests {
     #[test]
     #[cfg_attr(not(feature = "all"), ignore)]
     fn test_is_referral_for_all() {
-        let example = contains(Pubkey::default());
-        assert!(example);
+        let is_constains = contains(Pubkey::default());
+        assert!(is_constains);
     }
 
     #[test]
     #[cfg_attr(any(feature = "jupiter", feature = "all"), ignore)]
     fn test_is_referral_for_none() {
-        let example = Pubkey::from_str(&"7CKCpJWFRu1WAWfCvDkwyniP6JGpSyMf4Bkxk2U6v2Ej").unwrap();
-        assert!(!contains(example));
+        let pubkey = Pubkey::from_str(&"7CKCpJWFRu1WAWfCvDkwyniP6JGpSyMf4Bkxk2U6v2Ej").unwrap();
+        assert!(!contains(pubkey));
     }
 
     #[test]
     #[cfg_attr(not(feature = "jupiter"), ignore)]
     fn test_is_referral_for_jupiter() {
-        let example = Pubkey::from_str(&"7CKCpJWFRu1WAWfCvDkwyniP6JGpSyMf4Bkxk2U6v2Ej").unwrap();
-        let example = contains(example);
-        assert!(!example);
+        let pubkey = Pubkey::from_str(&"7CKCpJWFRu1WAWfCvDkwyniP6JGpSyMf4Bkxk2U6v2Ej").unwrap();
+        assert!(!contains(pubkey));
         let jup2 = Pubkey::from_str(&"JUP2jxvXaqu7NQY1GmNF4m1vodw12LVXYxbFL2uJvfo").unwrap();
         assert!(contains(jup2));
     }
