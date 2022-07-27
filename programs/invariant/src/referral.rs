@@ -39,7 +39,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(not(feature = "none"), ignore)]
+    #[cfg_attr(any(feature = "jupiter", feature = "all"), ignore)]
     fn test_is_referral_for_none() {
         let example = Pubkey::from_str(&"7CKCpJWFRu1WAWfCvDkwyniP6JGpSyMf4Bkxk2U6v2Ej").unwrap();
         assert!(!contains(example));
