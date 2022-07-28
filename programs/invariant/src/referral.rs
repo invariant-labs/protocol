@@ -7,7 +7,7 @@ pub mod referral {
             let jup3 = Pubkey::from_str(&"JUP3c2Uh3WA4Ng34tw6kPd2G4C5BB21Xo36Je1s32Ph").unwrap();
             let jup2 = Pubkey::from_str(&"JUP2jxvXaqu7NQY1GmNF4m1vodw12LVXYxbFL2uJvfo").unwrap();
             if ref_owner.eq(&jup3) || ref_owner.eq(&jup2) {
-                true
+                return true;
             }
         }
 
