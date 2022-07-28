@@ -795,6 +795,25 @@ export const getTokensAndLiquidityInRange = (
   return { tokenXamount, liquidity, nextInitializedTick }
 }
 
+export const getTokensAndLiquidityOnSingleTick = (
+  ticks: Map<number, ParsedTick>,
+  currentTickIndex: number,
+  nextInitialized: number
+): { singleTickTokens: BN; singleTickLiquidity: BN } => {
+  const singleTickLiquidity = ticks.get(currentTickIndex)?.liquidity as BN
+
+  const lowerSqrtPrice = calculatePriceSqrt(currentTickIndex)
+  const upperSqrtPrice = calculatePriceSqrt(nextInitialized)
+
+  const singleTickTokens = getXfromLiquidity(
+    singleTickLiquidity,
+    upperSqrtPrice.v,
+    lowerSqrtPrice.v
+  )
+
+  return { singleTickTokens, singleTickLiquidity }
+}
+
 export const getRangeBasedOnFeeGrowth = (
   tickArrayPrevious: ParsedTick[],
   tickMapCurrent: Map<number, ParsedTick>
@@ -897,9 +916,16 @@ export const calculateTokenXandLiquidityRange = (
       currentTickIndex
     )
 
+    const { singleTickTokens, singleTickLiquidity } = getTokensAndLiquidityOnSingleTick(
+      tickMapCurrent,
+      currentTickIndex,
+      nextInitializedTick
+    )
     return {
       tokenXamount,
       liquidity,
+      singleTickTokens,
+      singleTickLiquidity,
       tickLower,
       tickUpper
     }
@@ -922,10 +948,17 @@ export const calculateTokenXandLiquidityRange = (
     tickUpper,
     currentTickIndex
   )
+  const { singleTickTokens, singleTickLiquidity } = getTokensAndLiquidityOnSingleTick(
+    tickMapCurrent,
+    currentTickIndex,
+    nextInitializedTick
+  )
 
   return {
     tokenXamount,
     liquidity,
+    singleTickTokens,
+    singleTickLiquidity,
     tickLower,
     tickUpper
   }
@@ -1146,6 +1179,8 @@ export interface LiquidityRange {
 export interface RangeData {
   tokenXamount: BN
   liquidity: BN
+  singleTickTokens: BN
+  singleTickLiquidity: BN
   tickLower: number
   tickUpper: number
 }
