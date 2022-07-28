@@ -1,4 +1,3 @@
-use crate::decimals::*;
 use crate::interfaces::send_tokens::SendTokens;
 use crate::interfaces::take_ref_tokens::TakeRefTokens;
 use crate::interfaces::take_tokens::TakeTokens;
@@ -10,6 +9,7 @@ use crate::structs::tickmap::Tickmap;
 use crate::util::get_closer_limit;
 use crate::ErrorCode::*;
 use crate::*;
+use crate::{decimals::*, referral::referral::contains};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
@@ -150,7 +150,7 @@ impl<'info> Swap<'info> {
         let ref_account = match ctx
             .remaining_accounts
             .iter()
-            .find(|account| *account.owner != *ctx.program_id)
+            .find(|account| contains(*account.owner))
         {
             Some(account) => match Account::<'_, TokenAccount>::try_from(account) {
                 Ok(token) => {
