@@ -52,7 +52,10 @@ jobs:
             'npm run test:oracle',
             'npm run test:limits',
             'npm run test:compare',
-            'cargo test'
+            'cargo test',
+            'cargo test --features "none"',
+            'cargo test --features "all"',
+            'cargo test --features "jupiter"'
           ]
     steps:
       - uses: actions/checkout@v2
