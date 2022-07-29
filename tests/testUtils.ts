@@ -371,4 +371,520 @@ export const createTickArray = (size: number) => {
   return ticks
 }
 
-//export const dataApy: ApyPoolParams = {}
+export const jsonArrayToTicks = (data: any[]) => {
+  const ticks: Tick[] = []
+
+  data.forEach(tick => {
+    ticks.push({
+      index: tick.index,
+      sign: tick.sign,
+      bump: tick.bump,
+      liquidityChange: { v: new BN(tick.liquidityChange.v) },
+      liquidityGross: { v: new BN(tick.liquidityGross.v) },
+      sqrtPrice: { v: new BN(tick.sqrtPrice.v) },
+      feeGrowthOutsideX: { v: new BN(tick.feeGrowthOutsideX.v) },
+      feeGrowthOutsideY: { v: new BN(tick.feeGrowthOutsideY.v) },
+      secondsPerLiquidityOutside: {
+        v: new BN(tick.secondsPerLiquidityOutside.v)
+      },
+      pool: new PublicKey(tick.pool)
+    })
+  })
+
+  return ticks
+}
+
+export const usdcUsdhPool = {
+  feeTier: { fee: '100000000' },
+  volumeX: 2948000000,
+  volumeY: 2552000000,
+  ticksPreviousSnapshot: [
+    {
+      index: -13860,
+      sign: true,
+      bump: 251,
+      liquidityChange: { v: '22964554844140308' },
+      liquidityGross: { v: '22964554844140308' },
+      sqrtPrice: { v: '500090922499000000000000' },
+      feeGrowthOutsideX: { v: '124251168448391763' },
+      feeGrowthOutsideY: { v: '146254149906104013' },
+      secondsPerLiquidityOutside: { v: '264697' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: -39,
+      sign: true,
+      bump: 253,
+      liquidityChange: { v: '161429709979803343' },
+      liquidityGross: { v: '161429709979803343' },
+      sqrtPrice: { v: '998051997319000000000000' },
+      feeGrowthOutsideX: { v: '124251168448391763' },
+      feeGrowthOutsideY: { v: '146254149906104013' },
+      secondsPerLiquidityOutside: { v: '264157' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: -10,
+      sign: true,
+      bump: 255,
+      liquidityChange: { v: '2000600039969988198' },
+      liquidityGross: { v: '2000600039969988198' },
+      sqrtPrice: { v: '999500149965000000000000' },
+      feeGrowthOutsideX: { v: '0' },
+      feeGrowthOutsideY: { v: '0' },
+      secondsPerLiquidityOutside: { v: '0' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: -6,
+      sign: true,
+      bump: 255,
+      liquidityChange: { v: '11699113914588497725' },
+      liquidityGross: { v: '11699113914588497725' },
+      sqrtPrice: { v: '999700059990000000000000' },
+      feeGrowthOutsideX: { v: '124251168448391763' },
+      feeGrowthOutsideY: { v: '146254149906104013' },
+      secondsPerLiquidityOutside: { v: '264155' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: -2,
+      sign: true,
+      bump: 255,
+      liquidityChange: { v: '15563669416664063941' },
+      liquidityGross: { v: '15563669416664063941' },
+      sqrtPrice: { v: '999900009999000000000000' },
+      feeGrowthOutsideX: { v: '124251168448391763' },
+      feeGrowthOutsideY: { v: '146254149906104013' },
+      secondsPerLiquidityOutside: { v: '264639' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 0,
+      sign: true,
+      bump: 253,
+      liquidityChange: { v: '14214718904961000000' },
+      liquidityGross: { v: '14214718904961000000' },
+      sqrtPrice: { v: '1000000000000000000000000' },
+      feeGrowthOutsideX: { v: '125342983384200995' },
+      feeGrowthOutsideY: { v: '146260402736825943' },
+      secondsPerLiquidityOutside: { v: '265443' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 2,
+      sign: true,
+      bump: 255,
+      liquidityChange: { v: '280022883875000000' },
+      liquidityGross: { v: '280022883875000000' },
+      sqrtPrice: { v: '1000100000000000000000000' },
+      feeGrowthOutsideX: { v: '124251168448391763' },
+      feeGrowthOutsideY: { v: '146254149906104013' },
+      secondsPerLiquidityOutside: { v: '249352' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 3,
+      sign: true,
+      bump: 254,
+      liquidityChange: { v: '141968198361735573' },
+      liquidityGross: { v: '141968198361735573' },
+      sqrtPrice: { v: '1000150003749000000000000' },
+      feeGrowthOutsideX: { v: '124355143127782591' },
+      feeGrowthOutsideY: { v: '146260402736825943' },
+      secondsPerLiquidityOutside: { v: '265408' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 4,
+      sign: true,
+      bump: 254,
+      liquidityChange: { v: '170571497404733572290' },
+      liquidityGross: { v: '170571497404733572290' },
+      sqrtPrice: { v: '1000200010000000000000000' },
+      feeGrowthOutsideX: { v: '124252497947731995' },
+      feeGrowthOutsideY: { v: '146260402736825943' },
+      secondsPerLiquidityOutside: { v: '265406' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 5,
+      sign: false,
+      bump: 252,
+      liquidityChange: { v: '170713465603095307863' },
+      liquidityGross: { v: '170713465603095307863' },
+      sqrtPrice: { v: '1000250018750000000000000' },
+      feeGrowthOutsideX: { v: '0' },
+      feeGrowthOutsideY: { v: '0' },
+      secondsPerLiquidityOutside: { v: '0' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 8,
+      sign: false,
+      bump: 255,
+      liquidityChange: { v: '280022883875000000' },
+      liquidityGross: { v: '280022883875000000' },
+      sqrtPrice: { v: '1000400060004000000000000' },
+      feeGrowthOutsideX: { v: '0' },
+      feeGrowthOutsideY: { v: '0' },
+      secondsPerLiquidityOutside: { v: '0' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 9,
+      sign: false,
+      bump: 254,
+      liquidityChange: { v: '14214718904961000000' },
+      liquidityGross: { v: '14214718904961000000' },
+      sqrtPrice: { v: '1000450078756000000000000' },
+      feeGrowthOutsideX: { v: '0' },
+      feeGrowthOutsideY: { v: '0' },
+      secondsPerLiquidityOutside: { v: '0' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 10,
+      sign: false,
+      bump: 253,
+      liquidityChange: { v: '17564269456634052139' },
+      liquidityGross: { v: '17564269456634052139' },
+      sqrtPrice: { v: '1000500100010000000000000' },
+      feeGrowthOutsideX: { v: '44518539706358012' },
+      feeGrowthOutsideY: { v: '44584358715477974' },
+      secondsPerLiquidityOutside: { v: '29240' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 14,
+      sign: false,
+      bump: 248,
+      liquidityChange: { v: '9779105136174456388' },
+      liquidityGross: { v: '9779105136174456388' },
+      sqrtPrice: { v: '1000700210035000000000000' },
+      feeGrowthOutsideX: { v: '0' },
+      feeGrowthOutsideY: { v: '0' },
+      secondsPerLiquidityOutside: { v: '0' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 15,
+      sign: false,
+      bump: 255,
+      liquidityChange: { v: '1920008778414041337' },
+      liquidityGross: { v: '1920008778414041337' },
+      sqrtPrice: { v: '1000750243793000000000000' },
+      feeGrowthOutsideX: { v: '0' },
+      feeGrowthOutsideY: { v: '0' },
+      secondsPerLiquidityOutside: { v: '0' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 47,
+      sign: false,
+      bump: 249,
+      liquidityChange: { v: '161429709979803343' },
+      liquidityGross: { v: '161429709979803343' },
+      sqrtPrice: { v: '1002352645643000000000000' },
+      feeGrowthOutsideX: { v: '0' },
+      feeGrowthOutsideY: { v: '0' },
+      secondsPerLiquidityOutside: { v: '0' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 13868,
+      sign: false,
+      bump: 255,
+      liquidityChange: { v: '22964554844140308' },
+      liquidityGross: { v: '22964554844140308' },
+      sqrtPrice: { v: '2000436350662000000000000' },
+      feeGrowthOutsideX: { v: '0' },
+      feeGrowthOutsideY: { v: '0' },
+      secondsPerLiquidityOutside: { v: '0' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    }
+  ],
+  ticksCurrentSnapshot: [
+    {
+      index: -13860,
+      sign: true,
+      bump: 251,
+      liquidityChange: { v: '19068164041883237' },
+      liquidityGross: { v: '19068164041883237' },
+      sqrtPrice: { v: '500090922499000000000000' },
+      feeGrowthOutsideX: { v: '124251168448391763' },
+      feeGrowthOutsideY: { v: '146254149906104013' },
+      secondsPerLiquidityOutside: { v: '264697' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: -39,
+      sign: true,
+      bump: 253,
+      liquidityChange: { v: '161429709979803343' },
+      liquidityGross: { v: '161429709979803343' },
+      sqrtPrice: { v: '998051997319000000000000' },
+      feeGrowthOutsideX: { v: '124251168448391763' },
+      feeGrowthOutsideY: { v: '146254149906104013' },
+      secondsPerLiquidityOutside: { v: '264157' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: -21,
+      sign: true,
+      bump: 254,
+      liquidityChange: { v: '40357944858000000' },
+      liquidityGross: { v: '40357944858000000' },
+      sqrtPrice: { v: '998950603498000000000000' },
+      feeGrowthOutsideX: { v: '125342983384200995' },
+      feeGrowthOutsideY: { v: '146260402736825943' },
+      secondsPerLiquidityOutside: { v: '265976' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: -10,
+      sign: true,
+      bump: 255,
+      liquidityChange: { v: '8353205782440988198' },
+      liquidityGross: { v: '8353205782440988198' },
+      sqrtPrice: { v: '999500149965000000000000' },
+      feeGrowthOutsideX: { v: '0' },
+      feeGrowthOutsideY: { v: '0' },
+      secondsPerLiquidityOutside: { v: '0' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: -6,
+      sign: true,
+      bump: 255,
+      liquidityChange: { v: '37131384992131673308' },
+      liquidityGross: { v: '37131384992131673308' },
+      sqrtPrice: { v: '999700059990000000000000' },
+      feeGrowthOutsideX: { v: '124251168448391763' },
+      feeGrowthOutsideY: { v: '146254149906104013' },
+      secondsPerLiquidityOutside: { v: '264155' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: -5,
+      sign: true,
+      bump: 255,
+      liquidityChange: { v: '759269202163885743' },
+      liquidityGross: { v: '759269202163885743' },
+      sqrtPrice: { v: '999750043743000000000000' },
+      feeGrowthOutsideX: { v: '125342983384200995' },
+      feeGrowthOutsideY: { v: '146260402736825943' },
+      secondsPerLiquidityOutside: { v: '266097' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: -2,
+      sign: true,
+      bump: 255,
+      liquidityChange: { v: '15563669416664063941' },
+      liquidityGross: { v: '15563669416664063941' },
+      sqrtPrice: { v: '999900009999000000000000' },
+      feeGrowthOutsideX: { v: '124251168448391763' },
+      feeGrowthOutsideY: { v: '146254149906104013' },
+      secondsPerLiquidityOutside: { v: '264639' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: -1,
+      sign: true,
+      bump: 255,
+      liquidityChange: { v: '13210465448874091781' },
+      liquidityGross: { v: '13210465448874091781' },
+      sqrtPrice: { v: '999950003749000000000000' },
+      feeGrowthOutsideX: { v: '125670055388951310' },
+      feeGrowthOutsideY: { v: '146327805999865497' },
+      secondsPerLiquidityOutside: { v: '266308' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 2,
+      sign: true,
+      bump: 255,
+      liquidityChange: { v: '20363576185323580807' },
+      liquidityGross: { v: '20363576185323580807' },
+      sqrtPrice: { v: '1000100000000000000000000' },
+      feeGrowthOutsideX: { v: '124251168448391763' },
+      feeGrowthOutsideY: { v: '146254149906104013' },
+      secondsPerLiquidityOutside: { v: '249352' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 4,
+      sign: true,
+      bump: 254,
+      liquidityChange: { v: '136542678376659381762' },
+      liquidityGross: { v: '136542678376659381762' },
+      sqrtPrice: { v: '1000200010000000000000000' },
+      feeGrowthOutsideX: { v: '124252497947731995' },
+      feeGrowthOutsideY: { v: '146260402736825943' },
+      secondsPerLiquidityOutside: { v: '265406' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 5,
+      sign: false,
+      bump: 252,
+      liquidityChange: { v: '136542678376659381762' },
+      liquidityGross: { v: '136542678376659381762' },
+      sqrtPrice: { v: '1000250018750000000000000' },
+      feeGrowthOutsideX: { v: '0' },
+      feeGrowthOutsideY: { v: '0' },
+      secondsPerLiquidityOutside: { v: '0' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 7,
+      sign: false,
+      bump: 255,
+      liquidityChange: { v: '20083553301448580807' },
+      liquidityGross: { v: '20083553301448580807' },
+      sqrtPrice: { v: '1000350043751000000000000' },
+      feeGrowthOutsideX: { v: '0' },
+      feeGrowthOutsideY: { v: '0' },
+      secondsPerLiquidityOutside: { v: '0' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 8,
+      sign: false,
+      bump: 255,
+      liquidityChange: { v: '280022883875000000' },
+      liquidityGross: { v: '280022883875000000' },
+      sqrtPrice: { v: '1000400060004000000000000' },
+      feeGrowthOutsideX: { v: '0' },
+      feeGrowthOutsideY: { v: '0' },
+      secondsPerLiquidityOutside: { v: '0' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 9,
+      sign: false,
+      bump: 254,
+      liquidityChange: { v: '13210465448874091781' },
+      liquidityGross: { v: '13210465448874091781' },
+      sqrtPrice: { v: '1000450078756000000000000' },
+      feeGrowthOutsideX: { v: '0' },
+      feeGrowthOutsideY: { v: '0' },
+      secondsPerLiquidityOutside: { v: '0' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 10,
+      sign: false,
+      bump: 253,
+      liquidityChange: { v: '17564269456634052139' },
+      liquidityGross: { v: '17564269456634052139' },
+      sqrtPrice: { v: '1000500100010000000000000' },
+      feeGrowthOutsideX: { v: '44518539706358012' },
+      feeGrowthOutsideY: { v: '44584358715477974' },
+      secondsPerLiquidityOutside: { v: '29240' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 13,
+      sign: false,
+      bump: 255,
+      liquidityChange: { v: '759269202163885743' },
+      liquidityGross: { v: '759269202163885743' },
+      sqrtPrice: { v: '1000650178776000000000000' },
+      feeGrowthOutsideX: { v: '0' },
+      feeGrowthOutsideY: { v: '0' },
+      secondsPerLiquidityOutside: { v: '0' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 14,
+      sign: false,
+      bump: 248,
+      liquidityChange: { v: '43349110313498673308' },
+      liquidityGross: { v: '43349110313498673308' },
+      sqrtPrice: { v: '1000700210035000000000000' },
+      feeGrowthOutsideX: { v: '0' },
+      feeGrowthOutsideY: { v: '0' },
+      secondsPerLiquidityOutside: { v: '0' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 19,
+      sign: false,
+      bump: 254,
+      liquidityChange: { v: '69000725542000000' },
+      liquidityGross: { v: '69000725542000000' },
+      sqrtPrice: { v: '1000950403850000000000000' },
+      feeGrowthOutsideX: { v: '0' },
+      feeGrowthOutsideY: { v: '0' },
+      secondsPerLiquidityOutside: { v: '0' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 20,
+      sign: false,
+      bump: 253,
+      liquidityChange: { v: '65879695562000000' },
+      liquidityGross: { v: '65879695562000000' },
+      sqrtPrice: { v: '1001000450120000000000000' },
+      feeGrowthOutsideX: { v: '0' },
+      feeGrowthOutsideY: { v: '0' },
+      secondsPerLiquidityOutside: { v: '0' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 29,
+      sign: false,
+      bump: 254,
+      liquidityChange: { v: '40357944858000000' },
+      liquidityGross: { v: '40357944858000000' },
+      sqrtPrice: { v: '1001450979157000000000000' },
+      feeGrowthOutsideX: { v: '0' },
+      feeGrowthOutsideY: { v: '0' },
+      secondsPerLiquidityOutside: { v: '0' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 47,
+      sign: false,
+      bump: 249,
+      liquidityChange: { v: '161429709979803343' },
+      liquidityGross: { v: '161429709979803343' },
+      sqrtPrice: { v: '1002352645643000000000000' },
+      feeGrowthOutsideX: { v: '0' },
+      feeGrowthOutsideY: { v: '0' },
+      secondsPerLiquidityOutside: { v: '0' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    },
+    {
+      index: 13868,
+      sign: false,
+      bump: 255,
+      liquidityChange: { v: '19068164041883237' },
+      liquidityGross: { v: '19068164041883237' },
+      sqrtPrice: { v: '2000436350662000000000000' },
+      feeGrowthOutsideX: { v: '0' },
+      feeGrowthOutsideY: { v: '0' },
+      secondsPerLiquidityOutside: { v: '0' },
+      pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
+    }
+  ],
+  weeklyData: {
+    apy: 3.735282822246333,
+    weeklyFactor: [
+      0.00022857443139982658, 0, 0.00009452793774090681, 0, 1.8592488396109084e-8,
+      0.00009883249908486575, 0.00005695808454318339
+    ],
+    weeklyRange: [
+      { tickLower: 2, tickUpper: 19 },
+      { tickLower: -1, tickUpper: 10 },
+      { tickLower: -1, tickUpper: 10 },
+      { tickLower: 2, tickUpper: 8 },
+      { tickLower: 2, tickUpper: 8 },
+      { tickLower: 3, tickUpper: 4 },
+      { tickLower: 2, tickUpper: 4 }
+    ]
+  },
+  currentTickIndex: 4
+}
