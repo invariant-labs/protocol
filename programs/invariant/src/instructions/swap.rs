@@ -9,7 +9,7 @@ use crate::structs::tickmap::Tickmap;
 use crate::util::get_closer_limit;
 use crate::ErrorCode::*;
 use crate::*;
-use crate::{decimals::*, referral::referral::contains};
+use crate::{decimals::*, referral::whitelist::contains};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 

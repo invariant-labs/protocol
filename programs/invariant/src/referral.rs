@@ -1,22 +1,20 @@
-pub mod referral {
+pub mod whitelist {
     use anchor_lang::prelude::Pubkey;
     #[cfg(feature = "jupiter")]
     use std::str::FromStr;
 
+    #[allow(unreachable_code)]
     pub fn contains(_ref_owner: Pubkey) -> bool {
         #[cfg(feature = "jupiter")]
         {
-            let jup3 = Pubkey::from_str(&"JUP3c2Uh3WA4Ng34tw6kPd2G4C5BB21Xo36Je1s32Ph").unwrap();
             let jup2 = Pubkey::from_str(&"JUP2jxvXaqu7NQY1GmNF4m1vodw12LVXYxbFL2uJvfo").unwrap();
-            if _ref_owner.eq(&jup3) || _ref_owner.eq(&jup2) {
-                return true;
-            }
+            return jup2 == _ref_owner;
         }
 
         #[cfg(feature = "all")]
         return true;
 
-        #[cfg(not(feature = "all"))]
+        #[cfg(feature = "none")]
         return false;
     }
 }
@@ -27,7 +25,7 @@ mod tests {
 
     use anchor_lang::prelude::Pubkey;
 
-    use super::referral::contains;
+    use super::whitelist::contains;
 
     #[test]
     #[cfg_attr(not(feature = "all"), ignore)]
