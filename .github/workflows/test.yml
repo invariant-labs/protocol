@@ -52,10 +52,12 @@ jobs:
             'npm run test:oracle',
             'npm run test:limits',
             'npm run test:compare',
-            'npm run test:referral',
             'cargo test',
-            'cargo test --features "none"',
+            'npm run test:referral-all',
+            'npm run test:referral-none',
+            'npm run test:referral-jupiter',
             'cargo test --features "all"',
+            'cargo test --features "none"',
             'cargo test --features "jupiter"'
           ]
     steps:
