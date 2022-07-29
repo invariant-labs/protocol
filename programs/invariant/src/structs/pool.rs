@@ -98,7 +98,6 @@ impl Pool {
 
 #[cfg(test)]
 mod tests {
-    use std::result;
 
     use super::*;
 

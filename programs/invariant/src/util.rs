@@ -145,11 +145,7 @@ pub fn close<'info>(
 
 #[cfg(test)]
 mod test {
-    use std::{
-        borrow::{Borrow, BorrowMut},
-        cell::RefCell,
-        result,
-    };
+    use std::cell::RefCell;
 
     use super::*;
 
@@ -235,10 +231,10 @@ mod test {
                 ..Default::default()
             };
 
-            let mut ref_tick = RefCell::new(tick);
+            let ref_tick = RefCell::new(tick);
             let mut refmut_tick = ref_tick.borrow_mut();
 
-            cross_tick(&mut refmut_tick, &mut pool, 18446744073709);
+            cross_tick(&mut refmut_tick, &mut pool, 18446744073709).ok();
 
             assert_eq!(*refmut_tick, result_tick);
             assert_eq!(pool, result_pool);
@@ -283,9 +279,9 @@ mod test {
                 ..Default::default()
             };
 
-            let mut fef_tick = RefCell::new(tick);
+            let fef_tick = RefCell::new(tick);
             let mut refmut_tick = fef_tick.borrow_mut();
-            cross_tick(&mut refmut_tick, &mut pool, 1844674407370);
+            cross_tick(&mut refmut_tick, &mut pool, 1844674407370).ok();
             assert_eq!(*refmut_tick, result_tick);
             assert_eq!(pool, result_pool);
         }
@@ -332,7 +328,7 @@ mod test {
 
             let fef_tick = RefCell::new(tick);
             let mut refmut_tick = fef_tick.borrow_mut();
-            cross_tick(&mut refmut_tick, &mut pool, 1844674407370953);
+            cross_tick(&mut refmut_tick, &mut pool, 1844674407370953).ok();
             assert_eq!(*refmut_tick, result_tick);
             assert_eq!(pool, result_pool);
         }
@@ -379,7 +375,7 @@ mod test {
 
             let fef_tick = RefCell::new(tick);
             let mut refmut_tick = fef_tick.borrow_mut();
-            cross_tick(&mut refmut_tick, &mut pool, 1844674407370953);
+            cross_tick(&mut refmut_tick, &mut pool, 1844674407370953).ok();
             assert_eq!(*refmut_tick, result_tick);
             assert_eq!(pool, result_pool);
         }
