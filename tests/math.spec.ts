@@ -57,7 +57,12 @@ import {
   TokenData,
   U128MAX
 } from '@invariant-labs/sdk/src/utils'
-import { createTickArray, setInitialized } from './testUtils'
+import {
+  createTickArray,
+  jsonArrayToTicks,
+  setInitialized,
+  usdcUsdhPoolSnapshot
+} from './testUtils'
 import { Decimal, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
 import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
 import { Keypair } from '@solana/web3.js'
@@ -1947,34 +1952,22 @@ describe('Math', () => {
   })
   describe('reward APY tests', () => {
     it('case 1', async () => {
-      const previous = createTickArray(1000)
-
-      const current: Tick[] = previous.map(tick => ({
-        ...tick,
-        liquidityChange: {
-          v: tick.liquidityChange.v.add(new BN(10000000).mul(LIQUIDITY_DENOMINATOR))
-        },
-        feeGrowthOutsideX: { v: tick.feeGrowthOutsideX.v.add(new BN(10)) },
-        feeGrowthOutsideY: { v: tick.feeGrowthOutsideY.v.add(new BN(10)) }
-      }))
+      const previous = jsonArrayToTicks(usdcUsdhPoolSnapshot.ticksPreviousSnapshot)
+      const current = jsonArrayToTicks(usdcUsdhPoolSnapshot.ticksCurrentSnapshot)
 
       const paramsApy: ApyRewardsParams = {
         ticksPreviousSnapshot: previous,
         ticksCurrentSnapshot: current,
-        weeklyFactor: [0.001, 0.001, 0.01, 0.001, 0.001, 0.001, 0.001],
-        rewardInUSD: 100,
-        tokenXprice: 1.3425,
+        currentTickIndex: usdcUsdhPoolSnapshot.currentTickIndex,
+        rewardInUsd: 3000,
+        tokenPrice: 0.9995,
         tokenDecimal: 6,
-        duration: 10,
-        currentTickIndex: 0
+        duration: 14
       }
 
-      let result = false
       const reward = rewardsAPY(paramsApy)
-      if (reward.reward > 120 && reward.reward < 130) {
-        result = true
-      }
-      assert.ok(result)
+      assert.equal(reward.apy, 1.1079550023602733)
+      assert.equal(reward.apySingleTick, 4.048465442981172)
     })
   })
   describe('test getTokenData', () => {
