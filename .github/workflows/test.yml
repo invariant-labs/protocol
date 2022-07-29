@@ -52,6 +52,7 @@ jobs:
             'npm run test:oracle',
             'npm run test:limits',
             'npm run test:compare',
+            'npm run test:referral',
             'cargo test',
             'cargo test --features "none"',
             'cargo test --features "all"',
