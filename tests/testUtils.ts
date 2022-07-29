@@ -394,10 +394,7 @@ export const jsonArrayToTicks = (data: any[]) => {
   return ticks
 }
 
-export const usdcUsdhPool = {
-  feeTier: { fee: '100000000' },
-  volumeX: 2948000000,
-  volumeY: 2552000000,
+export const usdcUsdhPoolSnapshot = {
   ticksPreviousSnapshot: [
     {
       index: -13860,
@@ -870,21 +867,5 @@ export const usdcUsdhPool = {
       pool: 'FwiuNR91xfiUvWiBu4gieK4SFmh9qjMhYS9ebyYJ8PGj'
     }
   ],
-  weeklyData: {
-    apy: 3.735282822246333,
-    weeklyFactor: [
-      0.00022857443139982658, 0, 0.00009452793774090681, 0, 1.8592488396109084e-8,
-      0.00009883249908486575, 0.00005695808454318339
-    ],
-    weeklyRange: [
-      { tickLower: 2, tickUpper: 19 },
-      { tickLower: -1, tickUpper: 10 },
-      { tickLower: -1, tickUpper: 10 },
-      { tickLower: 2, tickUpper: 8 },
-      { tickLower: 2, tickUpper: 8 },
-      { tickLower: 3, tickUpper: 4 },
-      { tickLower: 2, tickUpper: 4 }
-    ]
-  },
   currentTickIndex: 4
 }

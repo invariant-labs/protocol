@@ -57,7 +57,12 @@ import {
   TokenData,
   U128MAX
 } from '@invariant-labs/sdk/src/utils'
-import { createTickArray, jsonArrayToTicks, setInitialized, usdcUsdhPool } from './testUtils'
+import {
+  createTickArray,
+  jsonArrayToTicks,
+  setInitialized,
+  usdcUsdhPoolSnapshot
+} from './testUtils'
 import { Decimal, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
 import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
 import { Keypair } from '@solana/web3.js'
@@ -1899,75 +1904,61 @@ describe('Math', () => {
       assert.equal(volume, 180_000000)
     })
   })
-  // describe('pool APY tests', () => {
-  //   it('case 1', async () => {
-  //     const previous = createTickArray(1000)
+  describe('pool APY tests', () => {
+    it('case 1', async () => {
+      const previous = createTickArray(1000)
 
-  //     const current: Tick[] = previous.map(tick => ({
-  //       ...tick,
-  //       liquidityChange: {
-  //         v: tick.liquidityChange.v.add(new BN(10000000).mul(LIQUIDITY_DENOMINATOR))
-  //       },
-  //       feeGrowthOutsideX: { v: tick.feeGrowthOutsideX.v.add(new BN(10)) }
-  //     }))
-  //     const weeklyData: WeeklyData = {
-  //       weeklyFactor: [0.001, 0.002, 0.003, 0.004, 0.003, 0.002, 0.001],
-  //       weeklyRange: [
-  //         { tickLower: -800, tickUpper: 1000 },
-  //         { tickLower: -700, tickUpper: 2000 },
-  //         { tickLower: -600, tickUpper: 3000 },
-  //         { tickLower: -500, tickUpper: 4000 },
-  //         { tickLower: -600, tickUpper: 3000 },
-  //         { tickLower: -700, tickUpper: 2000 },
-  //         { tickLower: -800, tickUpper: 1000 }
-  //       ],
-  //       tokenXamount: new BN(0),
-  //       volumeX: 0,
-  //       apy: 0.037125
-  //     }
+      const current: Tick[] = previous.map(tick => ({
+        ...tick,
+        liquidityChange: {
+          v: tick.liquidityChange.v.add(new BN(10000000).mul(LIQUIDITY_DENOMINATOR))
+        },
+        feeGrowthOutsideX: { v: tick.feeGrowthOutsideX.v.add(new BN(10)) }
+      }))
+      const weeklyData: WeeklyData = {
+        weeklyFactor: [0.001, 0.002, 0.003, 0.004, 0.003, 0.002, 0.001],
+        weeklyRange: [
+          { tickLower: -800, tickUpper: 1000 },
+          { tickLower: -700, tickUpper: 2000 },
+          { tickLower: -600, tickUpper: 3000 },
+          { tickLower: -500, tickUpper: 4000 },
+          { tickLower: -600, tickUpper: 3000 },
+          { tickLower: -700, tickUpper: 2000 },
+          { tickLower: -800, tickUpper: 1000 }
+        ],
+        tokenXamount: new BN(0),
+        volumeX: 0,
+        apy: 0.037125
+      }
 
-  //     const paramsApy: ApyPoolParams = {
-  //       feeTier: FEE_TIERS[3],
-  //       currentTickIndex: 0,
-  //       ticksPreviousSnapshot: previous,
-  //       ticksCurrentSnapshot: current,
-  //       weeklyData,
-  //       volumeX: 50_000000,
-  //       volumeY: 50_000000
-  //     }
-  //     // dailyFactor = [0.002, 0.003, 0.004, 0.003, 0.002, 0.001, 0.0000217622417796679]
-  //     // avg(dailyFactor) = 0.002145966...
-  //     // APY = 118.679796944...
-  //     const poolApy = poolAPY(paramsApy)
-  //     assert.ok(poolApy.apy > 118 && poolApy.apy < 119)
-  //     assert.ok(poolApy.weeklyRange.length === 7)
-  //     assert.ok(poolApy.weeklyRange[0].tickLower === -700)
-  //     assert.ok(poolApy.weeklyRange[0].tickUpper === 2000)
-  //   })
-  // })
+      const paramsApy: ApyPoolParams = {
+        feeTier: FEE_TIERS[3],
+        currentTickIndex: 0,
+        ticksPreviousSnapshot: previous,
+        ticksCurrentSnapshot: current,
+        weeklyData,
+        volumeX: 50_000000,
+        volumeY: 50_000000
+      }
+      // dailyFactor = [0.002, 0.003, 0.004, 0.003, 0.002, 0.001, 0.0000217622417796679]
+      // avg(dailyFactor) = 0.002145966...
+      // APY = 118.679796944...
+      const poolApy = poolAPY(paramsApy)
+      assert.ok(poolApy.apy > 118 && poolApy.apy < 119)
+      assert.ok(poolApy.weeklyRange.length === 7)
+      assert.ok(poolApy.weeklyRange[0].tickLower === -700)
+      assert.ok(poolApy.weeklyRange[0].tickUpper === 2000)
+    })
+  })
   describe('reward APY tests', () => {
     it('case 1', async () => {
-      // const previous = createTickArray(1000)
-
-      // const current: Tick[] = previous.map(tick => ({
-      //   ...tick,
-      //   liquidityChange: {
-      //     v: tick.liquidityChange.v.add(new BN(10000000).mul(LIQUIDITY_DENOMINATOR))
-      //   },
-      //   feeGrowthOutsideX: { v: tick.feeGrowthOutsideX.v.add(new BN(10)) },
-      //   feeGrowthOutsideY: { v: tick.feeGrowthOutsideY.v.add(new BN(10)) }
-      // }))
-
-      const previous = jsonArrayToTicks(usdcUsdhPool.ticksPreviousSnapshot)
-      const current = jsonArrayToTicks(usdcUsdhPool.ticksCurrentSnapshot)
-
-      // console.log(previous)
-      // console.log(current)
+      const previous = jsonArrayToTicks(usdcUsdhPoolSnapshot.ticksPreviousSnapshot)
+      const current = jsonArrayToTicks(usdcUsdhPoolSnapshot.ticksCurrentSnapshot)
 
       const paramsApy: ApyRewardsParams = {
         ticksPreviousSnapshot: previous,
         ticksCurrentSnapshot: current,
-        currentTickIndex: usdcUsdhPool.currentTickIndex,
+        currentTickIndex: usdcUsdhPoolSnapshot.currentTickIndex,
         rewardInUsd: 3000,
         tokenPrice: 0.9995,
         tokenDecimal: 6,
@@ -1990,19 +1981,3 @@ describe('Math', () => {
     })
   })
 })
-
-// {
-//   index: 13868,
-//   sign: false,
-//   bump: 255,
-//   liquidityChange: { v: <BN: 43be64e83c3e65> },
-//   liquidityGross: { v: <BN: 43be64e83c3e65> },
-//   sqrtPrice: { v: <BN: 1a79bdf32910f828a6000> },
-//   feeGrowthOutsideX: { v: <BN: 0> },
-//   feeGrowthOutsideY: { v: <BN: 0> },
-//   secondsPerLiquidityOutside: { v: <BN: 0> },
-//   pool: PublicKey {
-//     _bn: <BN: de085c45c2184add0423364d0ac5a34a9d17a51cbfafc9e8feb3615d70336c30>
-//   }
-// }
-// ]
