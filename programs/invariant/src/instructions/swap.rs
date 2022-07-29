@@ -214,7 +214,7 @@ impl<'info> Swap<'info> {
             }
 
             total_amount_referral += match ref_account.is_some() {
-                true => pool.add_fee(result.fee_amount, FixedPoint::from_scale(1, 2), x_to_y),
+                true => pool.add_fee(result.fee_amount, FixedPoint::from_scale(2, 1), x_to_y),
                 false => pool.add_fee(result.fee_amount, FixedPoint::from_integer(0), x_to_y),
             };
 
