@@ -55,7 +55,9 @@ import {
   toPrice,
   getTokensData,
   TokenData,
-  U128MAX
+  U128MAX,
+  ApyPositionRewardsParams,
+  positionsRewardAPY
 } from '@invariant-labs/sdk/src/utils'
 import {
   createTickArray,
@@ -63,15 +65,16 @@ import {
   setInitialized,
   usdcUsdhPoolSnapshot
 } from './testUtils'
-import { Decimal, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
+import { Decimal, Position, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
 import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
-import { Keypair } from '@solana/web3.js'
+import { Keypair, PublicKey } from '@solana/web3.js'
 import { swapParameters } from './swap'
 import {
   ApyPoolParams,
   ApyRewardsParams,
   FEE_TIERS,
   LIQUIDITY_DENOMINATOR,
+  parseFeeGrowthAndLiquidityOnTicksMap,
   toDecimal,
   WeeklyData
 } from '@invariant-labs/sdk/lib/utils'
@@ -1968,6 +1971,35 @@ describe('Math', () => {
       const reward = rewardsAPY(paramsApy)
       assert.equal(reward.apy, 1.1079550023602733)
       assert.equal(reward.apySingleTick, 4.048465442981172)
+    })
+  })
+  describe('position reward APY tests', () => {
+    it('case 1', async () => {
+      const previous = jsonArrayToTicks(usdcUsdhPoolSnapshot.ticksPreviousSnapshot)
+      const current = jsonArrayToTicks(usdcUsdhPoolSnapshot.ticksCurrentSnapshot)
+
+      const tickLower = 4
+      const tickUpper = 5
+      const tickMapCurrent = parseFeeGrowthAndLiquidityOnTicksMap(current)
+      // trunk-ignore(eslint/@typescript-eslint/consistent-type-assertions)
+      const liquidity = tickMapCurrent.get(tickLower)?.liquidity as BN
+
+      const paramsApy: ApyPositionRewardsParams = {
+        ticksPreviousSnapshot: previous,
+        ticksCurrentSnapshot: current,
+        currentTickIndex: usdcUsdhPoolSnapshot.currentTickIndex,
+        rewardInUsd: 3000,
+        tokenPrice: 0.9995,
+        tokenDecimal: 6,
+        duration: 14,
+        positionLiquidity: { v: liquidity },
+        lowerTickIndex: tickLower,
+        upperTickIndex: tickUpper
+      }
+
+      const apy = positionsRewardAPY(paramsApy)
+
+      assert.equal(apy, 4.048465442981172)
     })
   })
   describe('test getTokenData', () => {
