@@ -1175,11 +1175,12 @@ export const positionsRewardAPY = (params: ApyPositionRewardsParams) => {
     tokenPrice,
     tokenDecimal,
     duration,
-    position
+    positionLiquidity,
+    lowerTickIndex,
+    upperTickIndex
   } = params
   let dailyFactor: number | null
   const decimal: BN = new BN(10).pow(new BN(tokenDecimal))
-  const { liquidity: positionLiquidity, lowerTickIndex, upperTickIndex } = position
   try {
     const { poolLiquidity } = calculateTokensAndLiquidityForPosition(
       ticksPreviousSnapshot,
@@ -1350,7 +1351,9 @@ export interface ApyPositionRewardsParams {
   tokenPrice: number
   tokenDecimal: number
   duration: number
-  position: Position
+  positionLiquidity: Decimal
+  lowerTickIndex: number
+  upperTickIndex: number
 }
 
 export interface WeeklyData {
