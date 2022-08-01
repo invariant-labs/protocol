@@ -1012,7 +1012,7 @@ export const calculateTokensAndLiquidity = (
   }
 }
 
-export const calculateTokensAndLiquidityForPosition = (
+export const calculatePoolLiquidityFromSnapshot = (
   ticksPreviousSnapshot: Tick[],
   ticksCurrentSnapshot: Tick[],
   currentTickIndex: number
@@ -1182,7 +1182,7 @@ export const positionsRewardAPY = (params: ApyPositionRewardsParams) => {
   let dailyFactor: number | null
   const decimal: BN = new BN(10).pow(new BN(tokenDecimal))
   try {
-    const { poolLiquidity } = calculateTokensAndLiquidityForPosition(
+    const { poolLiquidity } = calculatePoolLiquidityFromSnapshot(
       ticksPreviousSnapshot,
       ticksCurrentSnapshot,
       currentTickIndex
