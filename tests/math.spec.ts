@@ -65,9 +65,9 @@ import {
   setInitialized,
   usdcUsdhPoolSnapshot
 } from './testUtils'
-import { Decimal, Position, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
+import { Decimal, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
 import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
-import { Keypair, PublicKey } from '@solana/web3.js'
+import { Keypair } from '@solana/web3.js'
 import { swapParameters } from './swap'
 import {
   ApyPoolParams,
