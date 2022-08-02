@@ -1122,7 +1122,7 @@ export const rewardsAPY = (params: ApyRewardsParams): { apy: number; apySingleTi
     dailyFactorSingleTick =
       (dailyRewards / singleTickTokens.div(decimal).toNumber()) * tokenPrice * liquidityRatio
   } catch (e: any) {
-    return { apy: 10, apySingleTick: 10 }
+    return { apy: Infinity, apySingleTick: Infinity }
   }
 
   const apy = Math.pow(dailyFactor + 1, 365) - 1
