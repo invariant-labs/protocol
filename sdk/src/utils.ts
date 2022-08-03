@@ -1124,6 +1124,12 @@ export const positionsRewardAPY = (params: ApyPositionRewardsParams): number => 
   } = params
   let dailyFactor: number | null
   const decimal: BN = new BN(10).pow(new BN(tokenDecimal))
+
+  // check if position is active
+  if (lowerTickIndex > currentTickIndex || upperTickIndex < currentTickIndex) {
+    return 0
+  }
+
   try {
     const { poolLiquidity } = calculatePoolLiquidityFromSnapshot(
       ticksCurrentSnapshot,
