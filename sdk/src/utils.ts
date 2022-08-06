@@ -18,8 +18,7 @@ import {
   Tick,
   PoolData,
   Errors,
-  PositionInitData,
-  Position
+  PositionInitData
 } from './market'
 import {
   calculateMinReceivedTokensByAmountIn,
@@ -114,6 +113,15 @@ export interface SimulateSwapInterface {
   slippage: Decimal
   ticks: Map<number, Tick>
   tickmap: Tickmap
+  pool: PoolData
+}
+
+export interface Simulation {
+  xToY: boolean
+  byAmountIn: boolean
+  swapAmount: BN
+  priceLimit: Decimal
+  slippage: Decimal
   pool: PoolData
 }
 
@@ -321,7 +329,7 @@ export const getConcentrationArray = (
   minimumRange: number,
   currentTick: number
 ): number[] => {
-  let concentrations: number[] = []
+  const concentrations: number[] = []
   let counter = 0
   let concentration = 0
   let lastConcentration = calculateConcentration(tickSpacing, minimumRange, counter) + 1
@@ -432,6 +440,50 @@ export enum SimulationStatus {
   NoGainSwap = 'Amount out is zero',
   TooLargeGap = 'Too large liquidity gap',
   LimitReached = 'At the end of price range'
+}
+
+export const swapSimulation = async (
+  xToY: boolean,
+  byAmountIn: boolean,
+  swapAmount: BN,
+  priceLimit: Decimal,
+  slippage: Decimal,
+  market: Market,
+  poolAddress: PublicKey
+): Promise<SimulationResult> => {
+  const { currentTickIndex, fee, tickSpacing, tokenX, tokenY, liquidity, sqrtPrice } =
+    await market.getPoolByAddress(poolAddress)
+
+  const feeTier: FeeTier = { fee: fee.v, tickSpacing }
+  const pair: Pair = new Pair(tokenX, tokenY, feeTier)
+  const tickmap = await market.getTickmap(pair)
+  const allTicks = await market.getAllTicks(pair)
+
+  const ticks: Map<number, Tick> = new Map()
+  allTicks.forEach(tick => {
+    ticks.set(tick.index, tick)
+  })
+
+  const poolData: PoolData = {
+    currentTickIndex,
+    tickSpacing,
+    liquidity,
+    fee,
+    sqrtPrice
+  }
+
+  const swapParameters: SimulateSwapInterface = {
+    xToY,
+    byAmountIn,
+    swapAmount,
+    priceLimit,
+    slippage,
+    ticks,
+    tickmap,
+    pool: poolData
+  }
+
+  return simulateSwap(swapParameters)
 }
 
 export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationResult => {
