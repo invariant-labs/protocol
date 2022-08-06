@@ -18,8 +18,7 @@ import {
   Tick,
   PoolData,
   Errors,
-  PositionInitData,
-  Position
+  PositionInitData
 } from './market'
 import {
   calculateMinReceivedTokensByAmountIn,
@@ -330,7 +329,7 @@ export const getConcentrationArray = (
   minimumRange: number,
   currentTick: number
 ): number[] => {
-  let concentrations: number[] = []
+  const concentrations: number[] = []
   let counter = 0
   let concentration = 0
   let lastConcentration = calculateConcentration(tickSpacing, minimumRange, counter) + 1
@@ -443,8 +442,7 @@ export enum SimulationStatus {
   LimitReached = 'At the end of price range'
 }
 
-//TODO change fn name
-export const simulation = async (
+export const swapSimulation = async (
   xToY: boolean,
   byAmountIn: boolean,
   swapAmount: BN,
