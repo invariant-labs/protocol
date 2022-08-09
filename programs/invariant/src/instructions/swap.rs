@@ -11,14 +11,14 @@ use crate::ErrorCode::*;
 use crate::*;
 use crate::{decimals::*, referral::whitelist::contains};
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Mint, TokenAccount, Transfer};
+use anchor_spl::token::{TokenAccount, Transfer};
 
 #[derive(Accounts)]
 pub struct Swap<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
     #[account(mut,
-        seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref(), &pool.load()?.fee.v.to_le_bytes(), &pool.load()?.tick_spacing.to_le_bytes()],
+        seeds = [b"poolv1", account_x.mint.as_ref(), account_y.to_account_info().key.as_ref(), &pool.load()?.fee.v.to_le_bytes(), &pool.load()?.tick_spacing.to_le_bytes()],
         bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,
@@ -27,28 +27,22 @@ pub struct Swap<'info> {
         constraint = tickmap.to_account_info().owner == program_id @ InvalidTickmapOwner
     )]
     pub tickmap: AccountLoader<'info, Tickmap>,
-    #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x @ InvalidTokenAccount)]
-    pub token_x: Account<'info, Mint>,
-    #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y @ InvalidTokenAccount)]
-    pub token_y: Account<'info, Mint>,
     #[account(mut,
-        constraint = &account_x.mint == token_x.to_account_info().key @ InvalidMint,
         constraint = &account_x.owner == owner.key @ InvalidOwner
     )]
     pub account_x: Account<'info, TokenAccount>,
     #[account(mut,
-        constraint = &account_y.mint == token_y.to_account_info().key @ InvalidMint,
         constraint = &account_y.owner == owner.key @ InvalidOwner
     )]
     pub account_y: Account<'info, TokenAccount>,
     #[account(mut,
-        constraint = &reserve_x.mint == token_x.to_account_info().key @ InvalidMint,
+        constraint = reserve_x.mint == account_x.mint @ InvalidMint,
         constraint = &reserve_x.owner == program_authority.key @ InvalidAuthority,
         constraint = reserve_x.to_account_info().key == &pool.load()?.token_x_reserve @ InvalidTokenAccount
     )]
     pub reserve_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = &reserve_y.mint == token_y.to_account_info().key @ InvalidMint,
+        constraint = reserve_y.mint == account_y.mint @ InvalidMint,
         constraint = &reserve_y.owner == program_authority.key @ InvalidAuthority,
         constraint = reserve_y.to_account_info().key == &pool.load()?.token_y_reserve @ InvalidTokenAccount
     )]
@@ -156,8 +150,8 @@ impl<'info> Swap<'info> {
                 Ok(token) => {
                     match token.mint
                         == match x_to_y {
-                            true => ctx.accounts.token_x.key(),
-                            false => ctx.accounts.token_y.key(),
+                            true => ctx.accounts.account_x.mint,
+                            false => ctx.accounts.account_y.mint,
                         } {
                         true => Some(account),
                         false => None,
