@@ -1,6 +1,6 @@
 {
   "name": "@invariant-labs/staker-sdk",
-  "version": "0.2.5",
+  "version": "0.2.7",
   "description": "",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

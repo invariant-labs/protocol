@@ -1,4 +1,3 @@
-use crate::decimals::*;
 use crate::interfaces::send_tokens::SendTokens;
 use crate::interfaces::take_ref_tokens::TakeRefTokens;
 use crate::interfaces::take_tokens::TakeTokens;
@@ -10,6 +9,7 @@ use crate::structs::tickmap::Tickmap;
 use crate::util::get_closer_limit;
 use crate::ErrorCode::*;
 use crate::*;
+use crate::{decimals::*, referral::whitelist::contains};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
 
@@ -150,19 +150,21 @@ impl<'info> Swap<'info> {
         let ref_account = match ctx
             .remaining_accounts
             .iter()
-            .find(|account| *account.owner != *ctx.program_id)
+            .find(|account| contains(*account.owner))
         {
-            Some(account) => {
-                let ref_token = Account::<'_, TokenAccount>::try_from(account).unwrap();
-                match ref_token.mint
-                    == match x_to_y {
-                        true => ctx.accounts.token_x.key(),
-                        false => ctx.accounts.token_y.key(),
-                    } {
-                    true => Some(account),
-                    false => None,
+            Some(account) => match Account::<'_, TokenAccount>::try_from(account) {
+                Ok(token) => {
+                    match token.mint
+                        == match x_to_y {
+                            true => ctx.accounts.token_x.key(),
+                            false => ctx.accounts.token_y.key(),
+                        } {
+                        true => Some(account),
+                        false => None,
+                    }
                 }
-            }
+                Err(_) => None,
+            },
             None => None,
         };
 
@@ -212,7 +214,7 @@ impl<'info> Swap<'info> {
             }
 
             total_amount_referral += match ref_account.is_some() {
-                true => pool.add_fee(result.fee_amount, FixedPoint::from_scale(1, 2), x_to_y),
+                true => pool.add_fee(result.fee_amount, FixedPoint::from_scale(2, 1), x_to_y),
                 false => pool.add_fee(result.fee_amount, FixedPoint::from_integer(0), x_to_y),
             };
 

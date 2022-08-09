@@ -55,9 +55,16 @@ import {
   toPrice,
   getTokensData,
   TokenData,
-  U128MAX
+  U128MAX,
+  ApyPositionRewardsParams,
+  positionsRewardAPY
 } from '@invariant-labs/sdk/src/utils'
-import { createTickArray, setInitialized } from './testUtils'
+import {
+  createTickArray,
+  jsonArrayToTicks,
+  setInitialized,
+  usdcUsdhPoolSnapshot
+} from './testUtils'
 import { Decimal, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
 import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
 import { Keypair } from '@solana/web3.js'
@@ -67,6 +74,7 @@ import {
   ApyRewardsParams,
   FEE_TIERS,
   LIQUIDITY_DENOMINATOR,
+  parseFeeGrowthAndLiquidityOnTicksMap,
   toDecimal,
   WeeklyData
 } from '@invariant-labs/sdk/lib/utils'
@@ -1946,35 +1954,87 @@ describe('Math', () => {
     })
   })
   describe('reward APY tests', () => {
-    it('case 1', async () => {
-      const previous = createTickArray(1000)
-
-      const current: Tick[] = previous.map(tick => ({
-        ...tick,
-        liquidityChange: {
-          v: tick.liquidityChange.v.add(new BN(10000000).mul(LIQUIDITY_DENOMINATOR))
-        },
-        feeGrowthOutsideX: { v: tick.feeGrowthOutsideX.v.add(new BN(10)) },
-        feeGrowthOutsideY: { v: tick.feeGrowthOutsideY.v.add(new BN(10)) }
-      }))
+    it('ticks from current snapshot', async () => {
+      const current = jsonArrayToTicks(usdcUsdhPoolSnapshot.ticksCurrentSnapshot)
 
       const paramsApy: ApyRewardsParams = {
-        ticksPreviousSnapshot: previous,
         ticksCurrentSnapshot: current,
-        weeklyFactor: [0.001, 0.001, 0.01, 0.001, 0.001, 0.001, 0.001],
-        rewardInUSD: 100,
-        tokenXprice: 1.3425,
+        currentTickIndex: usdcUsdhPoolSnapshot.currentTickIndex,
+        rewardInUsd: 3000,
+        tokenPrice: 0.9995,
         tokenDecimal: 6,
-        duration: 10,
-        currentTickIndex: 0
+        duration: 14
       }
 
-      let result = false
       const reward = rewardsAPY(paramsApy)
-      if (reward.reward > 120 && reward.reward < 130) {
-        result = true
+      assert.equal(reward.apy, 1.1079550023602733)
+      assert.equal(reward.apySingleTick, 4.048465442981172)
+    })
+    it('empty array', async () => {
+      const current: Tick[] = []
+
+      const paramsApy: ApyRewardsParams = {
+        ticksCurrentSnapshot: current,
+        currentTickIndex: usdcUsdhPoolSnapshot.currentTickIndex,
+        rewardInUsd: 3000,
+        tokenPrice: 0.9995,
+        tokenDecimal: 6,
+        duration: 14
       }
-      assert.ok(result)
+
+      const reward = rewardsAPY(paramsApy)
+      assert.equal(reward.apy, Infinity)
+      assert.equal(reward.apySingleTick, Infinity)
+    })
+  })
+  describe('position reward APY tests', () => {
+    it('ticks from current snapshot', async () => {
+      const current = jsonArrayToTicks(usdcUsdhPoolSnapshot.ticksCurrentSnapshot)
+
+      const tickLower = 4
+      const tickUpper = 5
+      const tickMapCurrent = parseFeeGrowthAndLiquidityOnTicksMap(current)
+      // trunk-ignore(eslint/@typescript-eslint/consistent-type-assertions)
+      const liquidity = tickMapCurrent.get(tickLower)?.liquidity as BN
+
+      const paramsApy: ApyPositionRewardsParams = {
+        ticksCurrentSnapshot: current,
+        currentTickIndex: usdcUsdhPoolSnapshot.currentTickIndex,
+        rewardInUsd: 3000,
+        tokenPrice: 0.9995,
+        tokenDecimal: 6,
+        duration: 14,
+        positionLiquidity: { v: liquidity },
+        lowerTickIndex: tickLower,
+        upperTickIndex: tickUpper
+      }
+
+      const apy = positionsRewardAPY(paramsApy)
+      assert.equal(apy, 4.048465442981172)
+    })
+    it('empty array', async () => {
+      const current: Tick[] = []
+
+      const tickLower = 4
+      const tickUpper = 5
+      const tickMapCurrent = parseFeeGrowthAndLiquidityOnTicksMap(current)
+      // trunk-ignore(eslint/@typescript-eslint/consistent-type-assertions)
+      const liquidity = tickMapCurrent.get(tickLower)?.liquidity as BN
+
+      const paramsApy: ApyPositionRewardsParams = {
+        ticksCurrentSnapshot: current,
+        currentTickIndex: usdcUsdhPoolSnapshot.currentTickIndex,
+        rewardInUsd: 3000,
+        tokenPrice: 0.9995,
+        tokenDecimal: 6,
+        duration: 14,
+        positionLiquidity: { v: liquidity },
+        lowerTickIndex: tickLower,
+        upperTickIndex: tickUpper
+      }
+
+      const apy = positionsRewardAPY(paramsApy)
+      assert.equal(apy, Infinity)
     })
   })
   describe('test getTokenData', () => {
