@@ -172,7 +172,7 @@ export type Staker = {
         },
         {
           "name": "owner",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -691,7 +691,7 @@ export const IDL: Staker = {
         },
         {
           "name": "owner",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {

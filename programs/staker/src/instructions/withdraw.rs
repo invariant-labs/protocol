@@ -38,6 +38,7 @@ pub struct Withdraw<'info> {
     pub owner_token_account: Account<'info, TokenAccount>,
     #[account(seeds = [b"staker".as_ref()], bump = nonce)]
     pub staker_authority: AccountInfo<'info>,
+    #[account(mut)]
     pub owner: AccountInfo<'info>,
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
@@ -69,10 +70,7 @@ pub fn handler(ctx: Context<Withdraw>, _index: i32, nonce: u8) -> ProgramResult 
 
         require!(slot == update_slot, SlotsAreNotEqual);
         require!(user_stake.liquidity.v != 0, ZeroSecondsStaked);
-        require!(
-            user_stake.seconds_per_liquidity_initial.v != 0,
-            ZeroSecPerLiq
-        );
+
         let seconds_per_liquidity_inside =
             SecondsPerLiquidity::new(position.seconds_per_liquidity_inside.v);
 
@@ -101,7 +99,9 @@ pub fn handler(ctx: Context<Withdraw>, _index: i32, nonce: u8) -> ProgramResult 
 
         let cpi_ctx = ctx.accounts.withdraw().with_signer(signer);
 
-        token::transfer(cpi_ctx, reward.get())?;
+        if !reward.is_zero() {
+            token::transfer(cpi_ctx, reward.get())?;
+        }
     }
 
     if Seconds::now() > { incentive.end_time } {

@@ -36,7 +36,7 @@ const main = async () => {
   const positions = await market.getPositionsForPool(poolAddress)
 
   for (const position of positions) {
-    const index = await getPositionIndex(position.address, INVARIANT, position.owner)
+    const index = getPositionIndex(position.address, INVARIANT, position.owner)
     const update: UpdateSecondsPerLiquidity = {
       pair,
       owner: position.owner,

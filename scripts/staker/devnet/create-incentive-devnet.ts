@@ -1,16 +1,16 @@
-import { Staker, Network } from '../../staker-sdk/src'
+import { Staker, Network } from '../../../staker-sdk/src'
 import { Provider, Wallet } from '@project-serum/anchor'
 import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
-import { BN } from '../../staker-sdk/lib'
+import { BN } from '../../../staker-sdk/lib'
 import { Decimal } from '@invariant-labs/sdk/src/market'
-import { CreateIncentive } from '../../staker-sdk/src/staker'
+import { CreateIncentive } from '../../../staker-sdk/src/staker'
 import { getMarketAddress, Pair } from '@invariant-labs/sdk/src'
 import { FEE_TIERS } from '@invariant-labs/sdk/src/utils'
 import { MOCK_TOKENS } from '@invariant-labs/sdk/src/network'
 
 ////////////////////  README  /////////////////////////////////
 // 1. Default signer is local Keypair
-// 2. Set reward and reward token decimal, default is 1
+// 2. Set reward and reward token decimal, default decimal is 1
 // 3. Set start time (number of seconds from current time), default is 0
 // 4. Set end time (duration in seconds), default is 0
 // 5. FOUNDER is local keypair
@@ -37,16 +37,16 @@ const currentTime = new BN(Math.floor(seconds))
 
 // DEFINE ALL THESE VARS BEFORE EXECUTION
 const REWARD_TOKEN_DECIMAL = 6
-const REWARD: Decimal = { v: new BN(10).pow(new BN(REWARD_TOKEN_DECIMAL)).muln(1) }
-const START_TIME: Decimal = { v: currentTime.add(new BN(0)) }
-const END_TIME: Decimal = { v: currentTime.add(START_TIME.v).add(new BN(0)) }
+const REWARD: Decimal = { v: new BN(10).pow(new BN(REWARD_TOKEN_DECIMAL)).muln(2000) }
+const START_TIME: Decimal = { v: currentTime.add(new BN(20)) }
+const END_TIME: Decimal = { v: currentTime.add(new BN(320)) }
 const FOUNDER: PublicKey = wallet.publicKey
-const TOKEN_A: PublicKey = new PublicKey('')
-const TOKEN_B: PublicKey = new PublicKey('')
-const FOUNDER_TOKEN_ACCOUNT = new PublicKey('')
+const TOKEN_A: PublicKey = new PublicKey(MOCK_TOKENS.USDC)
+const TOKEN_B: PublicKey = new PublicKey(MOCK_TOKENS.USDH)
+const FOUNDER_TOKEN_ACCOUNT = new PublicKey('tLeyLk6PexmoupDg67PMa9q8YnE3Fu1fwhALXg4XtXz')
 const FEE_TIER = FEE_TIERS[0]
 const INVARIANT = new PublicKey(getMarketAddress(Network.DEV))
-const INCENTIVE_TOKEN = new PublicKey('')
+const INCENTIVE_TOKEN = new PublicKey(MOCK_TOKENS.HBB)
 
 const main = async () => {
   const pair = new Pair(TOKEN_A, TOKEN_B, FEE_TIER)
