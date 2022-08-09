@@ -1268,11 +1268,11 @@ export const getPrice = (sqrtPrice: Decimal, decimalDiff: number): Decimal => {
   return { v: priceWithCorrectPrecision }
 }
 
-export const getPositionIndex = (
+export const getPositionIndex = async (
   expectedAddress: PublicKey,
   invariantAddress: PublicKey,
   owner: PublicKey
-): number => {
+): Promise<number> => {
   let index: number = -1
   let counter: number = 0
   let found: Boolean = false
@@ -1281,7 +1281,7 @@ export const getPositionIndex = (
     const indexBuffer = Buffer.alloc(4)
     indexBuffer.writeInt32LE(counter)
 
-    const [positionAddress, positionBump] = PublicKey.findProgramAddressSync(
+    const [positionAddress, positionBump] = await PublicKey.findProgramAddress(
       [Buffer.from(utils.bytes.utf8.encode('positionv1')), owner.toBuffer(), indexBuffer],
       invariantAddress
     )
