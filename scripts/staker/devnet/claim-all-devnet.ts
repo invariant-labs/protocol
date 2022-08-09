@@ -1,14 +1,16 @@
-import { Staker, Network } from '../../../staker-sdk/src'
 import { Provider, Wallet } from '@project-serum/anchor'
 import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
 import { Market, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
-import { Stake, Withdraw } from '../../../staker-sdk/lib/staker'
-import { getMarketAddress, Pair } from '@invariant-labs/sdk/src'
+
+import { getMarketAddress, Network, Pair } from '@invariant-labs/sdk/src'
 import { FEE_TIERS, getPositionIndex } from '@invariant-labs/sdk/src/utils'
 import { MAINNET_TOKENS } from '@invariant-labs/sdk/lib/network'
 import { Position, PositionWithAddress } from '@invariant-labs/sdk/lib/market'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { sleep } from '@invariant-labs/sdk'
+import { Staker } from '../../../staker-sdk/src'
 import { MOCK_TOKENS } from '@invariant-labs/sdk'
+import { Withdraw } from '../../../staker-sdk/src/staker'
 
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
@@ -16,6 +18,7 @@ require('dotenv').config()
 const provider = Provider.local(clusterApiUrl('devnet'), {
   skipPreflight: true
 })
+
 const connection = provider.connection
 // @ts-expect-error
 const wallet = provider.wallet.payer as Keypair
@@ -23,8 +26,10 @@ const signer = new Wallet(wallet)
 
 // DEFINE ALL THESE VARS BEFORE EXECUTION
 
-const INCENTIVE: PublicKey = new PublicKey('')
-const INCENTIVE_TOKEN: PublicKey = new PublicKey('')
+const INCENTIVE: PublicKey = new PublicKey('ELpvKvVfG7tDHBrzCWzJtmGkZE83CASd8VTNVE1tj9rY') // FILL THIS
+const INCENTIVE_TOKEN_ACCOUNT: PublicKey = new PublicKey(
+  '2yhq4hXkiKVJJjirr9CFyP21AmyoECb1uG5ds2ayFqFX'
+)
 const TOKEN_USDC: PublicKey = new PublicKey(MOCK_TOKENS.USDC)
 const TOKEN_USDT: PublicKey = new PublicKey(MOCK_TOKENS.USDH)
 const INVARIANT = new PublicKey(getMarketAddress(Network.DEV))
@@ -44,12 +49,22 @@ const main = async () => {
     INCENTIVE,
     INVARIANT
   )
+
   const hbbAddress = new PublicKey(MOCK_TOKENS.HBB)
   const HBB: Token = new Token(connection, hbbAddress, TOKEN_PROGRAM_ID, wallet)
 
   for (const position of stakedPositions) {
     const positionStruct = await market.getPosition(position.owner, position.index)
-    const ownerTokenAccount = (await HBB.getOrCreateAssociatedAccountInfo(position.owner)).address
+    await sleep(200)
+    console.log('************************')
+    console.log('OWNER', positionStruct.owner.toString())
+    const ownerTokenAccount = await HBB.getOrCreateAssociatedAccountInfo(position.owner)
+    const { address, owner, index } = position
+
+    console.log('address:', address.toString())
+    console.log('owner:', owner.toString())
+    console.log('index:', index)
+    console.log('ownerTokenAccount:', ownerTokenAccount.address.toString())
 
     const stringTx = await claimReward(
       market,
@@ -60,7 +75,7 @@ const main = async () => {
       positionStruct,
       position.address,
       poolAddress,
-      ownerTokenAccount,
+      ownerTokenAccount.address,
       position.index
     )
     console.log('Claim tx', stringTx)
@@ -96,7 +111,7 @@ const claimReward = async (
     id: position.id,
     position: positionAddress,
     owner,
-    incentiveTokenAccount: INCENTIVE_TOKEN,
+    incentiveTokenAccount: INCENTIVE_TOKEN_ACCOUNT,
     ownerTokenAcc,
     index: positionIndex
   }
@@ -112,6 +127,9 @@ const getStakedPositions = async (
   invariant: PublicKey
 ): Promise<StakedPosition[]> => {
   const positions: PositionWithAddress[] = await market.getPositionsForPool(poolAddress)
+  // positions.forEach(async position => {
+  //   console.log(position.owner.toString())
+  // })
 
   const stakedPositions: StakedPosition[] = []
 
@@ -120,10 +138,10 @@ const getStakedPositions = async (
 
     try {
       await staker.program.account.userStake.fetch(address)
-      const index = getPositionIndex(position.address, invariant, position.owner)
+      const index = await getPositionIndex(position.address, invariant, position.owner)
       stakedPositions.push({ address: position.address, owner: position.owner, index })
     } catch (e) {
-      console.log(e)
+      //console.log(e)
     }
   }
 

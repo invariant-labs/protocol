@@ -8,11 +8,12 @@ import { FEE_TIERS, getPositionIndex } from '@invariant-labs/sdk/src/utils'
 import { MAINNET_TOKENS } from '@invariant-labs/sdk/lib/network'
 import { Position, PositionWithAddress } from '@invariant-labs/sdk/lib/market'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { sleep } from '@invariant-labs/sdk'
 
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
-const provider = Provider.local('https://api.mainnet-beta.solana.com', {
+const provider = Provider.local('https://rpc.nightly.app:8899', {
   skipPreflight: true
 })
 
@@ -49,7 +50,16 @@ const main = async () => {
 
   for (const position of stakedPositions) {
     const positionStruct = await market.getPosition(position.owner, position.index)
-    const ownerTokenAccount = (await HBB.getOrCreateAssociatedAccountInfo(position.owner)).address
+    await sleep(200)
+    // console.log('************************')
+    // console.log('OWNER', positionStruct.owner.toString())
+    const ownerTokenAccount = await HBB.getOrCreateAssociatedAccountInfo(position.owner)
+    const { address, owner, index } = position
+
+    // console.log('address:', address.toString())
+    // console.log('owner:', owner.toString())
+    // console.log('index:', index)
+    // console.log('ownerTokenAccount:', ownerTokenAccount.address.toString())
 
     const stringTx = await claimReward(
       market,
@@ -60,7 +70,7 @@ const main = async () => {
       positionStruct,
       position.address,
       poolAddress,
-      ownerTokenAccount,
+      ownerTokenAccount.address,
       position.index
     )
     console.log('Claim tx', stringTx)
@@ -112,7 +122,6 @@ const getStakedPositions = async (
   invariant: PublicKey
 ): Promise<StakedPosition[]> => {
   const positions: PositionWithAddress[] = await market.getPositionsForPool(poolAddress)
-
   const stakedPositions: StakedPosition[] = []
 
   for (const position of positions) {
@@ -120,10 +129,10 @@ const getStakedPositions = async (
 
     try {
       await staker.program.account.userStake.fetch(address)
-      const index = getPositionIndex(position.address, invariant, position.owner)
+      const index = await getPositionIndex(position.address, invariant, position.owner)
       stakedPositions.push({ address: position.address, owner: position.owner, index })
     } catch (e) {
-      console.log(e)
+      //console.log(e)
     }
   }
 

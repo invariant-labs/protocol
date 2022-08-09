@@ -19,9 +19,9 @@ const wallet = provider.wallet.payer as Keypair
 const signer = new Wallet(wallet)
 
 // DEFINE ALL THESE VARS BEFORE EXECUTION
-const INCENTIVE: PublicKey = new PublicKey('')
-const TOKEN_USDC: PublicKey = new PublicKey(MOCK_TOKENS.USDC)
-const TOKEN_USDT: PublicKey = new PublicKey(MOCK_TOKENS.USDH)
+const INCENTIVE: PublicKey = new PublicKey('ELpvKvVfG7tDHBrzCWzJtmGkZE83CASd8VTNVE1tj9rY') // FILL THIS
+const TOKEN_USDC: PublicKey = new PublicKey(MOCK_TOKENS.USDC) // FILL THIS
+const TOKEN_USDT: PublicKey = new PublicKey(MOCK_TOKENS.USDH) // FILL THIS
 const INVARIANT = new PublicKey(getMarketAddress(Network.DEV))
 const FEE_TIER = FEE_TIERS[0]
 
@@ -31,11 +31,11 @@ const main = async () => {
 
   const pair = new Pair(TOKEN_USDC, TOKEN_USDT, FEE_TIER)
   const [poolAddress] = await pair.getAddressAndBump(INVARIANT)
-  const pool = await market.getPool(pair)
+  //const pool = await market.getPool(pair)
   const positions = await market.getPositionsForPool(poolAddress)
 
   for (const position of positions) {
-    const index = getPositionIndex(position.address, INVARIANT, position.owner)
+    const index = await getPositionIndex(position.address, INVARIANT, position.owner)
     const update: UpdateSecondsPerLiquidity = {
       pair,
       owner: position.owner,
