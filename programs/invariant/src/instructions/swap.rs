@@ -18,7 +18,7 @@ pub struct Swap<'info> {
     #[account(seeds = [b"statev1".as_ref()], bump = state.load()?.bump)]
     pub state: AccountLoader<'info, State>,
     #[account(mut,
-        seeds = [b"poolv1", account_x.mint.as_ref(), account_y.to_account_info().key.as_ref(), &pool.load()?.fee.v.to_le_bytes(), &pool.load()?.tick_spacing.to_le_bytes()],
+        seeds = [b"poolv1", account_x.mint.as_ref(), account_y.mint.as_ref(), &pool.load()?.fee.v.to_le_bytes(), &pool.load()?.tick_spacing.to_le_bytes()],
         bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,
