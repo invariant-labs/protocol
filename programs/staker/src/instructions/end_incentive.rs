@@ -46,7 +46,6 @@ impl<'info> ReturnFounds<'info> {
 pub fn handler(ctx: Context<ReturnFounds>, nonce: u8) -> ProgramResult {
     {
         let incentive = ctx.accounts.incentive.load()?;
-        require!(Seconds::now() > { incentive.end_claim_time }, TooEarly);
         require!(incentive.num_of_stakes == 0, StakeExist);
         let remaining_reward = incentive.total_reward_unclaimed;
 
