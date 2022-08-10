@@ -19,7 +19,7 @@ const wallet = provider.wallet.payer as Keypair
 const signer = new Wallet(wallet)
 
 // DEFINE ALL THESE VARS BEFORE EXECUTION
-const INCENTIVE: PublicKey = new PublicKey('ELpvKvVfG7tDHBrzCWzJtmGkZE83CASd8VTNVE1tj9rY') // FILL THIS
+const INCENTIVE: PublicKey = new PublicKey('') // FILL THIS
 const TOKEN_USDC: PublicKey = new PublicKey(MOCK_TOKENS.USDC) // FILL THIS
 const TOKEN_USDT: PublicKey = new PublicKey(MOCK_TOKENS.USDH) // FILL THIS
 const INVARIANT = new PublicKey(getMarketAddress(Network.DEV))
@@ -56,7 +56,7 @@ const main = async () => {
     }
 
     const result = await staker.createStake(market, update, createStake)
-    console.log(`Created stake `, result.stringTx)
+    console.log('Created stake', result.stringTx)
   }
 }
 

@@ -21,11 +21,9 @@ const FOUNDER: PublicKey = wallet.publicKey
 const FOUNDER_TOKEN_ACCOUNT: PublicKey = new PublicKey(
   'tLeyLk6PexmoupDg67PMa9q8YnE3Fu1fwhALXg4XtXz'
 )
-const INCENTIVE: PublicKey = new PublicKey('ELpvKvVfG7tDHBrzCWzJtmGkZE83CASd8VTNVE1tj9rY')
+const INCENTIVE: PublicKey = new PublicKey('')
 const INCENTIVE_TOKEN: PublicKey = new PublicKey(MOCK_TOKENS.HBB)
-const INCENTIVE_TOKEN_ACCOUNT: PublicKey = new PublicKey(
-  '2yhq4hXkiKVJJjirr9CFyP21AmyoECb1uG5ds2ayFqFX'
-)
+const INCENTIVE_TOKEN_ACCOUNT: PublicKey = new PublicKey('')
 const main = async () => {
   const staker = await Staker.build(Network.DEV, signer, connection)
 
