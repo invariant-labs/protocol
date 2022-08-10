@@ -372,6 +372,7 @@ export interface CreateStake {
 }
 export interface Stake {
   incentive: PublicKey
+  position: PublicKey
   secondsPerLiquidityInitial: Decimal
   liquidity: Decimal
   bump: number
