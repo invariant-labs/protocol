@@ -329,6 +329,10 @@ export type Staker = {
             "type": "publicKey"
           },
           {
+            "name": "position",
+            "type": "publicKey"
+          },
+          {
             "name": "secondsPerLiquidityInitial",
             "type": {
               "defined": "SecondsPerLiquidity"
@@ -845,6 +849,10 @@ export const IDL: Staker = {
         "fields": [
           {
             "name": "incentive",
+            "type": "publicKey"
+          },
+          {
+            "name": "position",
             "type": "publicKey"
           },
           {

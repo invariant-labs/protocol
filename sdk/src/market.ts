@@ -1187,25 +1187,20 @@ export class Market {
     const poolAddress = await pair.getAddress(this.program.programId)
     const { positionAddress } = await this.getPositionAddress(owner, index)
 
-    return this.program.instruction.updateSecondsPerLiquidity(
-      lowerTickIndex,
-      upperTickIndex,
-      index,
-      {
-        accounts: {
-          pool: poolAddress,
-          lowerTick: lowerTickAddress,
-          upperTick: upperTickAddress,
-          position: positionAddress,
-          tokenX: pair.tokenX,
-          tokenY: pair.tokenY,
-          owner,
-          signer: signer ?? owner,
-          rent: SYSVAR_RENT_PUBKEY,
-          systemProgram: SystemProgram.programId
-        }
+    return this.program.instruction.updateSecondsPerLiquidity(index, {
+      accounts: {
+        pool: poolAddress,
+        lowerTick: lowerTickAddress,
+        upperTick: upperTickAddress,
+        position: positionAddress,
+        tokenX: pair.tokenX,
+        tokenY: pair.tokenY,
+        owner,
+        signer: signer ?? owner,
+        rent: SYSVAR_RENT_PUBKEY,
+        systemProgram: SystemProgram.programId
       }
-    )
+    })
   }
 
   async updateSecondsPerLiquidityTransaction(updateSecondsPerLiquidity: UpdateSecondsPerLiquidity) {
