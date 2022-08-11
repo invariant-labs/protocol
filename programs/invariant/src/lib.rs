@@ -27,6 +27,8 @@ const SEED: &str = "Invariant";
 
 #[program]
 pub mod invariant {
+    use std::ops::Add;
+
     use super::*;
 
     pub fn create_state(ctx: Context<CreateState>, nonce: u8) -> ProgramResult {
@@ -79,6 +81,22 @@ pub mod invariant {
         slippage_limit_upper: Price,
     ) -> ProgramResult {
         ctx.accounts.handler(
+            liquidity_delta,
+            slippage_limit_lower,
+            slippage_limit_upper,
+            *ctx.bumps.get("position").unwrap(),
+        )
+    }
+
+    pub fn change_liquidity(
+        ctx: Context<ChangeLiquidity>,
+        add: bool,
+        liquidity_delta: Liquidity,
+        slippage_limit_lower: Price,
+        slippage_limit_upper: Price,
+    ) -> ProgramResult {
+        ctx.accounts.handler(
+            add,
             liquidity_delta,
             slippage_limit_lower,
             slippage_limit_upper,
