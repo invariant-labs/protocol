@@ -117,10 +117,16 @@ export class Staker {
   }
 
   public async closeStakeByOwner(closeStake: CloseStake) {
-    const { pool, id, incentive, position, owner } = closeStake
+    const { pool, id, incentive, position, owner, index } = closeStake
     const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
 
-    const closeIx = await this.closeStakeByOwnerIx(userStakeAddress, incentive, position, owner)
+    const closeIx = await this.closeStakeByOwnerIx(
+      userStakeAddress,
+      incentive,
+      position,
+      owner,
+      index
+    )
     const tx = new Transaction().add(closeIx)
     const stringTx = await this.signAndSend(tx)
 
@@ -271,9 +277,10 @@ export class Staker {
     userStake: PublicKey,
     incentive: PublicKey,
     position: PublicKey,
-    owner: PublicKey
+    owner: PublicKey,
+    index: number
   ) {
-    return this.program.instruction.closeStakeByOwner({
+    return this.program.instruction.closeStakeByOwner(index, {
       accounts: {
         incentive,
         userStake,
@@ -429,6 +436,7 @@ export interface CloseStake {
   incentive: PublicKey
   position: PublicKey
   owner: PublicKey
+  index: number
 }
 
 export interface IncentiveStructure {
