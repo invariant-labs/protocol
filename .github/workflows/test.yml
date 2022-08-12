@@ -53,6 +53,7 @@ jobs:
             'npm run test:limits',
             'npm run test:compare',
             'npm run test:max-tick-cross',
+            'npm run test:close-stake',
             'cargo test',
             'npm run test:referral-all',
             'npm run test:referral-none',
