@@ -1,17 +1,17 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { Keypair } from '@solana/web3.js'
+import { Keypair, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken, initEverything } from './testUtils'
 import { Market, Pair, LIQUIDITY_DENOMINATOR, Network } from '@invariant-labs/sdk/src'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal, tou64 } from '@invariant-labs/sdk/src/utils'
-import { CreateTick, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
-import { sleep } from '@invariant-labs/sdk'
+import { InitPosition, Swap } from '@invariant-labs/sdk/src/market'
+import { ComputeUnitsInstruction, signAndSend } from '@invariant-labs/sdk'
 
-describe('swap', () => {
+describe('Max tick crosses', () => {
   //const provider = Provider.local(undefined, { skipPreflight: true })
   const provider = Provider.local()
   const connection = provider.connection
@@ -56,17 +56,7 @@ describe('swap', () => {
     await initEverything(market, [pair], admin)
   })
 
-  it('#swap() within a tick', async () => {
-    // Deposit
-    for (let index = -200; index < 50; index += 10) {
-      const createTickVars: CreateTick = {
-        pair,
-        index,
-        payer: admin.publicKey
-      }
-      await market.createTick(createTickVars, admin)
-    }
-
+  it('#swap() max crosses', async () => {
     const positionOwner = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
     const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
@@ -75,11 +65,11 @@ describe('swap', () => {
 
     await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
     await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-    const liquidityDelta = { v: new BN(1000000).mul(LIQUIDITY_DENOMINATOR) }
+    const liquidityDelta = { v: new BN(10000000).mul(LIQUIDITY_DENOMINATOR) }
 
     await market.createPositionList(positionOwner.publicKey, positionOwner)
 
-    for (let i = -200; i < 50; i += 10) {
+    for (let i = -200; i < 20; i += 10) {
       const initPositionVars: InitPosition = {
         pair,
         owner: positionOwner.publicKey,
@@ -100,7 +90,7 @@ describe('swap', () => {
     const owner = Keypair.generate()
     await connection.requestAirdrop(owner.publicKey, 1e9)
 
-    const amount = new BN(3000)
+    const amount = new BN(95000)
     const accountX = await tokenX.createAccount(owner.publicKey)
     const accountY = await tokenY.createAccount(owner.publicKey)
     await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
@@ -113,17 +103,22 @@ describe('swap', () => {
       xToY: true,
       amount,
       estimatedPriceAfterSwap: poolDataBefore.sqrtPrice, // ignore price impact using high slippage tolerance
-      slippage: toDecimal(2, 2),
+      slippage: toDecimal(1, 0),
       accountX,
       accountY,
       byAmountIn: true,
       owner: owner.publicKey
     }
-    await market.swap(swapVars, owner)
 
-    // // Check pool
+    const unitsIx = ComputeUnitsInstruction(14000000, owner.publicKey)
+    const tx = new Transaction().add(unitsIx)
+    const swapTx = await market.swapTransaction(swapVars)
+    tx.add(swapTx)
+    await signAndSend(tx, [owner], connection)
+
+    // Check crosses
     const poolData = await market.getPool(pair)
-    console.log(poolData.currentTickIndex)
-    // assert.equal(poolData.currentTickIndex, -20)
+    const crosses = Math.abs((poolData.currentTickIndex - poolDataBefore.currentTickIndex) / 10)
+    assert.equal(crosses, 19)
   })
 })
