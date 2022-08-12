@@ -1,28 +1,31 @@
-import { Staker, Network } from '../../staker-sdk/src'
 import { Provider, Wallet } from '@project-serum/anchor'
 import { clusterApiUrl, PublicKey } from '@solana/web3.js'
-import { EndIncentive } from '../../staker-sdk/src/staker'
-import { MINTER } from '../minter'
 import { MOCK_TOKENS } from '@invariant-labs/sdk'
+import { EndIncentive, Staker } from '../../../staker-sdk/src/staker'
+import { Network } from '../../../staker-sdk/src'
+
+// trunk-ignore(eslint/@typescript-eslint/no-var-requires)
+require('dotenv').config()
 
 const provider = Provider.local(clusterApiUrl('devnet'), {
   skipPreflight: true
 })
+
 const connection = provider.connection
-const wallet = new Wallet(MINTER)
+// @ts-expect-error
+const wallet = provider.wallet.payer as Keypair
+const signer = new Wallet(wallet)
 
 // DEFINE ALL THESE VARS BEFORE EXECUTION
-const FOUNDER: PublicKey = new PublicKey(MINTER.publicKey)
+const FOUNDER: PublicKey = wallet.publicKey
 const FOUNDER_TOKEN_ACCOUNT: PublicKey = new PublicKey(
-  '7p7zjaPR7GViePr7sLt5PZC1jwJzUBoRY39seMVmowmP'
+  'tLeyLk6PexmoupDg67PMa9q8YnE3Fu1fwhALXg4XtXz'
 )
-const INCENTIVE: PublicKey = new PublicKey('12GvxJpZ8ZLCwbafEWg5s15Ys5iFqhH4vdaw31HYQv5Q')
-const INCENTIVE_TOKEN: PublicKey = new PublicKey(MOCK_TOKENS.USDC)
-const INCENTIVE_TOKEN_ACCOUNT: PublicKey = new PublicKey(
-  'FvgniRRatzmcjLqFsRk9BvPhYBQq2gs4AjoX6Dxtx5tp'
-)
+const INCENTIVE: PublicKey = new PublicKey('')
+const INCENTIVE_TOKEN: PublicKey = new PublicKey(MOCK_TOKENS.HBB)
+const INCENTIVE_TOKEN_ACCOUNT: PublicKey = new PublicKey('')
 const main = async () => {
-  const staker = await Staker.build(Network.DEV, wallet, connection)
+  const staker = await Staker.build(Network.DEV, signer, connection)
 
   const endIncentive: EndIncentive = {
     incentive: INCENTIVE,

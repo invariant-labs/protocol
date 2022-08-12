@@ -5,6 +5,7 @@ mod interfaces;
 mod log;
 mod macros;
 mod math;
+mod referral;
 pub mod structs;
 mod uint;
 mod util;

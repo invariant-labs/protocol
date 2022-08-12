@@ -158,12 +158,12 @@ describe('Referral swap', () => {
 
     // fee tokens           11, 333, 157 (estimated 0.005 * 100000 = 500)
     // protocol fee tokens  ceil(11 * 0.01) + ceil(333 * 0.01) + ceil(157 * 0.01) = 7
-    // referral fee         floor(11 * 0.01) + floor(333 * 0.01) + floor(157 * 0.01) = 4
-    // pool fee tokens      501 - 7 - 4 = 490
-    // fee growth global    10/2000000 + 326/1000000 + 154/1000000 = 4.85 * 10^-4
+    // referral fee         0
+    // pool fee tokens      501 - 7 = 494
+    // fee growth global    10/2000000 + (326+3)/1000000 + (155+1)/1000000 = 4.89 * 10^-4
     // y token to user      1998 + 62164 + 26502 = 90664
     const expectedXProtocolFee = new BN(7)
-    const expectedXReferralFee = new BN(4)
+    const expectedXReferralFee = new BN(0)
     const expectedYTransferTo = new BN(90664)
 
     assert.ok(amountX.eqn(0))
@@ -173,7 +173,7 @@ describe('Referral swap', () => {
     assert.ok(reserveYDelta.eq(expectedYTransferTo))
     assert.ok(poolData.feeProtocolTokenX.eq(expectedXProtocolFee))
     assert.ok(poolData.feeProtocolTokenY.eqn(0))
-    assert.equal(poolData.feeGrowthGlobalX.v.toString(), '485000000000000000000')
+    assert.equal(poolData.feeGrowthGlobalX.v.toString(), '489000000000000000000')
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
   })
 })

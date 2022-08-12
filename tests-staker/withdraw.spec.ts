@@ -25,6 +25,8 @@ describe('Withdraw tests', () => {
   const incentiveAccount = Keypair.generate()
   const secondsIncentiveAccount = Keypair.generate()
   const thirdIncentiveAccount = Keypair.generate()
+  const fourthIncentiveAccount = Keypair.generate()
+  const fifthIncentiveAccount = Keypair.generate()
   const positionOwner = Keypair.generate()
   const founderAccount = Keypair.generate()
   const admin = Keypair.generate()
@@ -52,7 +54,9 @@ describe('Withdraw tests', () => {
       connection.requestAirdrop(positionOwner.publicKey, 1e9),
       connection.requestAirdrop(incentiveAccount.publicKey, 10e9),
       connection.requestAirdrop(secondsIncentiveAccount.publicKey, 10e9),
-      connection.requestAirdrop(thirdIncentiveAccount.publicKey, 10e9)
+      connection.requestAirdrop(thirdIncentiveAccount.publicKey, 10e9),
+      connection.requestAirdrop(fourthIncentiveAccount.publicKey, 10e9),
+      connection.requestAirdrop(fifthIncentiveAccount.publicKey, 10e9)
     ])
 
     // create token
@@ -626,5 +630,212 @@ describe('Withdraw tests', () => {
     const withdrawIx = await staker.withdrawIx(withdraw)
     const withdrawTx = new Transaction().add(updateAfterIx).add(withdrawIx)
     await signAndSend(withdrawTx, [positionOwner], staker.connection)
+  })
+  it('Withdraw - by other account', async () => {
+    const founderAccount = Keypair.generate()
+    const positionOwner = Keypair.generate()
+
+    await Promise.all([
+      connection.requestAirdrop(founderAccount.publicKey, 1e9),
+      connection.requestAirdrop(positionOwner.publicKey, 1e9)
+    ])
+
+    // create taken acc for founder and staker
+    founderTokenAccount = await incentiveToken.createAccount(founderAccount.publicKey)
+    incentiveTokenAccount = Keypair.generate()
+    ownerTokenAcc = await incentiveToken.createAccount(positionOwner.publicKey)
+
+    // mint to founder acc
+    await incentiveToken.mintTo(founderTokenAccount, wallet, [], tou64(new anchor.BN(5000 * 1e12)))
+
+    // create incentive
+
+    const currentTime = getTime()
+    const reward: Decimal = { v: new BN(1000) }
+    const startTime = { v: currentTime.add(new BN(0)) }
+    const endTime = { v: currentTime.add(new BN(200)) }
+
+    const createIncentiveVars: CreateIncentive = {
+      reward,
+      startTime,
+      endTime,
+      pool,
+      founder: founderAccount.publicKey,
+      incentiveToken: incentiveToken.publicKey,
+      founderTokenAccount: founderTokenAccount,
+      invariant
+    }
+    const createTx = new Transaction().add(
+      await staker.createIncentiveIx(
+        createIncentiveVars,
+        fourthIncentiveAccount.publicKey,
+        incentiveTokenAccount.publicKey
+      )
+    )
+
+    await signAndSend(
+      createTx,
+      [founderAccount, fourthIncentiveAccount, incentiveTokenAccount],
+      staker.connection
+    )
+    // create position
+    await connection.requestAirdrop(positionOwner.publicKey, 1e9)
+    const upperTick = 20
+    const lowerTick = -40
+
+    const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
+    const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
+    const mintAmount = tou64(new BN(10).pow(new BN(10)))
+
+    await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+    await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+
+    const liquidityDelta = { v: new BN(2000000).mul(DENOMINATOR) }
+
+    await market.createPositionList(positionOwner.publicKey, positionOwner)
+
+    // create first position
+    const initPositionVars: InitPosition = {
+      pair,
+      owner: positionOwner.publicKey,
+      userTokenX: userTokenXAccount,
+      userTokenY: userTokenYAccount,
+      lowerTick: -30,
+      upperTick: 10,
+      liquidityDelta,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: toDecimal(1, 3)
+    }
+    await market.initPosition(initPositionVars, positionOwner)
+
+    // create second position
+    const initPositionVars2: InitPosition = {
+      pair,
+      owner: positionOwner.publicKey,
+      userTokenX: userTokenXAccount,
+      userTokenY: userTokenYAccount,
+      lowerTick,
+      upperTick,
+      liquidityDelta,
+      knownPrice: { v: PRICE_DENOMINATOR },
+      slippage: toDecimal(1, 3)
+    }
+    await market.initPosition(initPositionVars2, positionOwner)
+
+    const firstPositionIndex = 0
+    const secondPositionIndex = 1
+
+    const { positionAddress: position } = await market.getPositionAddress(
+      positionOwner.publicKey,
+      secondPositionIndex
+    )
+
+    // wait for some seconds per liquidity
+    await sleep(10000)
+
+    const positionStructBefore = await market.getPosition(
+      positionOwner.publicKey,
+      secondPositionIndex
+    )
+    const poolAddress = positionStructBefore.pool
+    const positionId = positionStructBefore.id
+
+    // stake
+    const update: UpdateSecondsPerLiquidity = {
+      pair,
+      owner: positionOwner.publicKey,
+      lowerTickIndex: lowerTick,
+      upperTickIndex: upperTick,
+      index: secondPositionIndex
+    }
+    const createStake: CreateStake = {
+      pool: poolAddress,
+      id: positionId,
+      index: secondPositionIndex,
+      position,
+      incentive: fourthIncentiveAccount.publicKey,
+      owner: positionOwner.publicKey,
+      invariant: anchor.workspace.Invariant.programId
+    }
+
+    const updateIx = await market.updateSecondsPerLiquidityInstruction(update)
+    const stakeIx = await staker.createStakeIx(createStake)
+    const tx = new Transaction().add(updateIx).add(stakeIx)
+
+    await signAndSend(tx, [positionOwner], staker.connection)
+
+    // Create owner
+    const trader = Keypair.generate()
+    await connection.requestAirdrop(trader.publicKey, 1e9)
+    const amount = new BN(1000)
+
+    const accountX = await tokenX.createAccount(trader.publicKey)
+    const accountY = await tokenY.createAccount(trader.publicKey)
+
+    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
+
+    // Swap
+    const poolDataBefore = await market.getPool(pair)
+
+    const swapVars: Swap = {
+      pair,
+      xToY: true,
+      amount,
+      estimatedPriceAfterSwap: poolDataBefore.sqrtPrice, // ignore price impact using high slippage tolerance
+      slippage: toDecimal(1, 2),
+      accountX,
+      accountY,
+      byAmountIn: true,
+      owner: trader.publicKey
+    }
+
+    await market.swap(swapVars, trader)
+
+    await sleep(10000)
+
+    // Remove first position
+    const removePositionVars: RemovePosition = {
+      pair,
+      owner: positionOwner.publicKey,
+      index: firstPositionIndex,
+      userTokenX: userTokenXAccount,
+      userTokenY: userTokenYAccount
+    }
+    await market.removePosition(removePositionVars, positionOwner)
+
+    // get second position data, now it should be at index 0
+    const { positionAddress: secondPositionAddress } = await market.getPositionAddress(
+      positionOwner.publicKey,
+      0
+    )
+
+    const secondPosition = await market.getPosition(positionOwner.publicKey, 0)
+
+    // withdraw
+    const withdraw: Withdraw = {
+      incentive: fourthIncentiveAccount.publicKey,
+      pool: poolAddress,
+      id: secondPosition.id,
+      position: secondPositionAddress,
+      owner: positionOwner.publicKey,
+      incentiveTokenAccount: incentiveTokenAccount.publicKey,
+      ownerTokenAcc: ownerTokenAcc,
+      index: firstPositionIndex
+    }
+
+    // update after
+    const updateAfter: UpdateSecondsPerLiquidity = {
+      pair,
+      owner: positionOwner.publicKey,
+      signer: founderAccount.publicKey,
+      lowerTickIndex: lowerTick,
+      upperTickIndex: upperTick,
+      index: firstPositionIndex
+    }
+    const updateAfterIx = await market.updateSecondsPerLiquidityInstruction(updateAfter)
+
+    const withdrawIx = await staker.withdrawIx(withdraw)
+    const withdrawTx = new Transaction().add(updateAfterIx).add(withdrawIx)
+    await signAndSend(withdrawTx, [founderAccount], staker.connection)
   })
 })
