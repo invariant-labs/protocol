@@ -944,8 +944,6 @@ export class Market {
         state: this.stateAddress,
         pool: poolAddress,
         tickmap: pool.tickmap,
-        tokenX: pool.tokenX,
-        tokenY: pool.tokenY,
         reserveX: pool.tokenXReserve,
         reserveY: pool.tokenYReserve,
         owner,
