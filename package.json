@@ -1,7 +1,7 @@
 {
   "scripts": {
     "test:invariant-all": "npm run test:swap && npm run test:cross && npm run test:cross-both-side && npm run test:liquidity-gap && npm run test:reversed && npm run test:position && npm run test:math && npm run test:withdraw && npm run test:position-list && npm run test:claim && npm run test:protocol-fee && npm run test:target && npm run test:slippage && npm run test:position-slippage && npm run test:fee-tier && npm run test:simulate-swap && npm run test:simulate-claim-amount && npm run test:oracle && npm run test:limits && npm run test:big-swap && npm run test:compare && npm run test:tickmap && npm run test:change-fee-receiver && npm run test:random && npm run test:change-protocol-fee && npm run test:whole-liquidity && npm run test:cu && npm run test:referral-all && npm run test:referral-none && npm run test:referral-jupiter && npm run test:max-tick-cross",
-    "test:staker-all": "npm run test:create && npm run test:stake && npm run test:withdraw-staker && npm run test:multicall && npm run test:position-change && npm run test:math-staker",
+    "test:staker-all": "npm run test:create && npm run test:stake && npm run test:withdraw-staker && npm run test:multicall && npm run test:position-change && npm run test:math-staker && npm run test:close-stake",
     "test:all": "npm run test:invariant-all && npm run test:staker-all",
     "test:swap": "anchor test --skip-build tests/swap.spec.ts",
     "test:referral-all": "anchor test tests/referral-swap-all.spec.ts -- --features \"all\"",
@@ -45,6 +45,7 @@
     "test:max-tick-cross": "anchor test --skip-build tests/max-tick-cross.spec.ts",
     "test:remove-stake": "anchor test --skip-build tests-staker/remove-stake.spec.ts",
     "test:remove-all-stakes": "anchor test --skip-build tests-staker/remove-all-stakes.spec.ts",
+    "test:close-stake": "anchor test --skip-build tests-staker/close-stake.spec.ts",
     "test:position-change": "anchor test --skip-build tests-staker/position-change.spec.ts",
     "build:invariant": "cd sdk && npm run build",
     "build:staker": "cd staker-sdk && npm run build",
