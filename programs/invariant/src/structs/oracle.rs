@@ -63,7 +63,7 @@ mod tests {
             assert_eq!(oracle.head as u64, index);
             assert_eq!(oracle.amount as u64, index + 1);
             assert_eq!({ oracle.data[oracle.head as usize].timestamp }, index);
-            assert_eq!(oracle.data[oracle.head as usize].price.v, index as u128);
+            assert_eq!({ oracle.data[oracle.head as usize].price.v }, index as u128);
 
             index += 1;
         }
@@ -75,7 +75,7 @@ mod tests {
             assert_eq!(oracle.head as u64, index - SIZE as u64);
             assert_eq!(oracle.amount as u64, SIZE as u64);
             assert_eq!({ oracle.data[oracle.head as usize].timestamp }, index);
-            assert_eq!(oracle.data[oracle.head as usize].price.v, index as u128);
+            assert_eq!({ oracle.data[oracle.head as usize].price.v }, index as u128);
 
             index += 1;
         }

@@ -116,6 +116,23 @@ export class Staker {
     return stringTx
   }
 
+  public async closeStakeByOwner(closeStake: CloseStake) {
+    const { pool, id, incentive, position, owner, index } = closeStake
+    const [userStakeAddress] = await this.getUserStakeAddressAndBump(incentive, pool, id)
+
+    const closeIx = await this.closeStakeByOwnerIx(
+      userStakeAddress,
+      incentive,
+      position,
+      owner,
+      index
+    )
+    const tx = new Transaction().add(closeIx)
+    const stringTx = await this.signAndSend(tx)
+
+    return stringTx
+  }
+
   public async removeAllStakes(incentive: PublicKey, founder: PublicKey) {
     const stakes = await this.getAllIncentiveStakes(incentive)
     let tx = new Transaction()
@@ -256,6 +273,23 @@ export class Staker {
     })
   }
 
+  public async closeStakeByOwnerIx(
+    userStake: PublicKey,
+    incentive: PublicKey,
+    position: PublicKey,
+    owner: PublicKey,
+    index: number
+  ) {
+    return this.program.instruction.closeStakeByOwner(index, {
+      accounts: {
+        incentive,
+        userStake,
+        position,
+        owner
+      }
+    })
+  }
+
   // getters
   async getProgramAuthority() {
     const [authority, nonce] = await PublicKey.findProgramAddress(
@@ -309,7 +343,7 @@ export class Staker {
     tx.feePayer = this.wallet.publicKey
     tx.recentBlockhash = blockhash.blockhash
 
-    let signedTx = await this.wallet.signTransaction(tx)
+    const signedTx = await this.wallet.signTransaction(tx)
     if (signers) signedTx.partialSign(...signers)
 
     const rawTx = signedTx.serialize()
@@ -329,7 +363,7 @@ export class Staker {
       tx.recentBlockhash = blockhash.blockhash
     })
 
-    let signedTxs = await this.wallet.signAllTransactions(txs)
+    const signedTxs = await this.wallet.signAllTransactions(txs)
 
     const stringTx: string[] = []
     for (let i = 0; i < signedTxs.length; i++) {
@@ -372,6 +406,7 @@ export interface CreateStake {
 }
 export interface Stake {
   incentive: PublicKey
+  position: PublicKey
   secondsPerLiquidityInitial: Decimal
   liquidity: Decimal
   bump: number
@@ -393,6 +428,15 @@ export interface EndIncentive {
   incentiveTokenAccount: PublicKey
   founderTokenAccount: PublicKey
   founder: PublicKey
+}
+
+export interface CloseStake {
+  pool: PublicKey
+  id: BN
+  incentive: PublicKey
+  position: PublicKey
+  owner: PublicKey
+  index: number
 }
 
 export interface IncentiveStructure {

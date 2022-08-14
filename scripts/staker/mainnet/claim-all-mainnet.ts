@@ -1,21 +1,28 @@
-import { Staker, Network } from '../../staker-sdk/src'
+import { Staker, Network } from '../../../staker-sdk/src'
 import { Provider, Wallet } from '@project-serum/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
-import { Market, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
-import { Stake, Withdraw } from '../../staker-sdk/lib/staker'
+import {
+  Market,
+  UpdateSecondsPerLiquidity,
+  Position,
+  PositionWithAddress
+} from '@invariant-labs/sdk/lib/market'
+import { Withdraw } from '../../../staker-sdk/lib/staker'
 import { getMarketAddress, Pair } from '@invariant-labs/sdk/src'
 import { FEE_TIERS, getPositionIndex } from '@invariant-labs/sdk/src/utils'
 import { MAINNET_TOKENS } from '@invariant-labs/sdk/lib/network'
-import { Position, PositionWithAddress } from '@invariant-labs/sdk/lib/market'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { sleep } from '@invariant-labs/sdk'
 
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
-const provider = Provider.local('https://rpc.nightly.app:8899', {
-  skipPreflight: true
-})
+const provider = Provider.local(
+  'https://tame-ancient-mountain.solana-mainnet.quiknode.pro/6a9a95bf7bbb108aea620e7ee4c1fd5e1b67cc62/',
+  {
+    skipPreflight: true
+  }
+)
 
 const connection = provider.connection
 // @ts-expect-error
@@ -24,8 +31,8 @@ const signer = new Wallet(wallet)
 
 // DEFINE ALL THESE VARS BEFORE EXECUTION
 
-const INCENTIVE: PublicKey = new PublicKey('EfAJjXZppDeQPRpfjkndsPjUrp6hjcMuACHhghNmYE1t')
-const INCENTIVE_TOKEN: PublicKey = new PublicKey('FBNC4ZmLWLnGAvHnPvhnFDFeiEgztGcAKJktBwUaYdmx')
+const INCENTIVE: PublicKey = new PublicKey('')
+const INCENTIVE_TOKEN: PublicKey = new PublicKey('')
 const TOKEN_USDC: PublicKey = new PublicKey(MAINNET_TOKENS.USDC)
 const TOKEN_USDT: PublicKey = new PublicKey(MAINNET_TOKENS.USDH)
 const INVARIANT = new PublicKey(getMarketAddress(Network.MAIN))
@@ -51,15 +58,7 @@ const main = async () => {
   for (const position of stakedPositions) {
     const positionStruct = await market.getPosition(position.owner, position.index)
     await sleep(200)
-    // console.log('************************')
-    // console.log('OWNER', positionStruct.owner.toString())
     const ownerTokenAccount = await HBB.getOrCreateAssociatedAccountInfo(position.owner)
-    const { address, owner, index } = position
-
-    // console.log('address:', address.toString())
-    // console.log('owner:', owner.toString())
-    // console.log('index:', index)
-    // console.log('ownerTokenAccount:', ownerTokenAccount.address.toString())
 
     const stringTx = await claimReward(
       market,

@@ -1,9 +1,9 @@
-import { Staker, Network } from '../../staker-sdk/src/'
+import { Staker, Network } from '../../../staker-sdk/src'
 import { Provider, Wallet } from '@project-serum/anchor'
-import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
-import { BN } from '../../staker-sdk/lib'
+import { Keypair, PublicKey } from '@solana/web3.js'
+import { BN } from '../../../staker-sdk/lib'
 import { Decimal } from '@invariant-labs/sdk/src/market'
-import { CreateIncentive } from '../../staker-sdk/src/staker'
+import { CreateIncentive } from '../../../staker-sdk/src/staker'
 import { getMarketAddress, Pair } from '@invariant-labs/sdk/src'
 import { FEE_TIERS } from '@invariant-labs/sdk/src/utils'
 import { MAINNET_TOKENS } from '@invariant-labs/sdk/src/network'
@@ -11,10 +11,12 @@ import { MAINNET_TOKENS } from '@invariant-labs/sdk/src/network'
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
-const provider = Provider.local('https://api.mainnet-beta.solana.com', {
-  skipPreflight: true
-})
-
+const provider = Provider.local(
+  'https://tame-ancient-mountain.solana-mainnet.quiknode.pro/6a9a95bf7bbb108aea620e7ee4c1fd5e1b67cc62/',
+  {
+    skipPreflight: true
+  }
+)
 const connection = provider.connection
 // @ts-expect-error
 const wallet = provider.wallet.payer as Keypair
@@ -24,9 +26,9 @@ const seconds = new Date().valueOf() / 1000
 const currentTime = new BN(Math.floor(seconds))
 
 // DEFINE ALL THESE VARS BEFORE EXECUTION
-const REWARD: Decimal = { v: new BN(10).pow(new BN(6)).muln(14000) } // amount of HBB token
-const START_TIME: Decimal = { v: currentTime.add(new BN(0)) }
-const END_TIME: Decimal = { v: currentTime.add(new BN(3600 * 24 * 14)) } // 2 weeks
+const REWARD: Decimal = { v: new BN(10).pow(new BN(6)).muln(0) } // amount of HBB token
+const START_TIME: Decimal = { v: currentTime.add(new BN(10)) }
+const END_TIME: Decimal = { v: currentTime.add(new BN(3600 * 24 * 3)) } // 3 days
 const FOUNDER: PublicKey = wallet.publicKey
 const TOKEN_USDC: PublicKey = new PublicKey(MAINNET_TOKENS.USDC)
 const TOKEN_USDH: PublicKey = new PublicKey(MAINNET_TOKENS.USDH)

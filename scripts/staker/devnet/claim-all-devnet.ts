@@ -1,15 +1,12 @@
 import { Provider, Wallet } from '@project-serum/anchor'
 import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
 import { Market, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
-
 import { getMarketAddress, Network, Pair } from '@invariant-labs/sdk/src'
 import { FEE_TIERS, getPositionIndex } from '@invariant-labs/sdk/src/utils'
-import { MAINNET_TOKENS } from '@invariant-labs/sdk/lib/network'
 import { Position, PositionWithAddress } from '@invariant-labs/sdk/lib/market'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { sleep } from '@invariant-labs/sdk'
+import { sleep, MOCK_TOKENS } from '@invariant-labs/sdk'
 import { Staker } from '../../../staker-sdk/src'
-import { MOCK_TOKENS } from '@invariant-labs/sdk'
 import { Withdraw } from '../../../staker-sdk/src/staker'
 
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
@@ -26,10 +23,8 @@ const signer = new Wallet(wallet)
 
 // DEFINE ALL THESE VARS BEFORE EXECUTION
 
-const INCENTIVE: PublicKey = new PublicKey('ELpvKvVfG7tDHBrzCWzJtmGkZE83CASd8VTNVE1tj9rY') // FILL THIS
-const INCENTIVE_TOKEN_ACCOUNT: PublicKey = new PublicKey(
-  '2yhq4hXkiKVJJjirr9CFyP21AmyoECb1uG5ds2ayFqFX'
-)
+const INCENTIVE: PublicKey = new PublicKey('') // FILL THIS
+const INCENTIVE_TOKEN_ACCOUNT: PublicKey = new PublicKey('')
 const TOKEN_USDC: PublicKey = new PublicKey(MOCK_TOKENS.USDC)
 const TOKEN_USDT: PublicKey = new PublicKey(MOCK_TOKENS.USDH)
 const INVARIANT = new PublicKey(getMarketAddress(Network.DEV))

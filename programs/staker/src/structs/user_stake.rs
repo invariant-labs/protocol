@@ -5,6 +5,7 @@ use anchor_lang::prelude::*;
 #[derive(PartialEq, Default, Debug)]
 pub struct UserStake {
     pub incentive: Pubkey,
+    pub position: Pubkey,
     pub seconds_per_liquidity_initial: SecondsPerLiquidity,
     pub liquidity: Liquidity,
     pub bump: u8,

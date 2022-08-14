@@ -68,7 +68,7 @@ impl<'info> CreateTick<'info> {
                 false => FeeGrowth::new(0),
             },
             seconds_outside: match below_current_tick {
-                true => (current_timestamp.checked_sub(pool.start_timestamp).unwrap()),
+                true => current_timestamp.checked_sub(pool.start_timestamp).unwrap(),
                 false => 0,
             },
             seconds_per_liquidity_outside: match below_current_tick {

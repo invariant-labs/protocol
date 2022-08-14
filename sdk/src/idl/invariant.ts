@@ -173,16 +173,6 @@ export type Invariant = {
           "isSigner": false
         },
         {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenY",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "accountX",
           "isMut": true,
           "isSigner": false
@@ -1708,16 +1698,6 @@ export const IDL: Invariant = {
         {
           "name": "tickmap",
           "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenX",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenY",
-          "isMut": false,
           "isSigner": false
         },
         {
