@@ -18,7 +18,7 @@ const signer = new Wallet(wallet)
 
 // DEFINE ALL THESE VARS BEFORE EXECUTION
 const FOUNDER: PublicKey = wallet.publicKey
-const INCENTIVE: PublicKey = new PublicKey('')
+const INCENTIVE: PublicKey = new PublicKey('HvVL7Ny8f4nF9xH6BTq7LtbjEiNgw92YhC77QDP2yjyn')
 
 const main = async () => {
   const staker = await Staker.build(Network.MAIN, signer, connection)
