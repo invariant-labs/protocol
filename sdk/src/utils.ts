@@ -1213,6 +1213,42 @@ export const positionsRewardAPY = (params: ApyPositionRewardsParams): number => 
   return positionApy
 }
 
+export const calculateUserDailyRewards = (params: UserDailyRewardsParams): number => {
+  const {
+    ticksCurrentSnapshot,
+    currentTickIndex,
+    rewardInTokens,
+    userLiquidity,
+    duration,
+    lowerTickIndex,
+    upperTickIndex
+  } = params
+  // check if position is active
+  if (lowerTickIndex > currentTickIndex || upperTickIndex <= currentTickIndex) {
+    return 0
+  }
+
+  let userDailyRewards: number
+  try {
+    const { singleTickLiquidity } = calculateTokensAndLiquidity(
+      ticksCurrentSnapshot,
+      currentTickIndex
+    )
+
+    const dailyRewards = rewardInTokens / duration
+
+    const liquidityRatio =
+      userLiquidity.v.mul(LIQUIDITY_DENOMINATOR).div(singleTickLiquidity).toNumber() /
+      LIQUIDITY_DENOMINATOR.toNumber()
+
+    userDailyRewards = dailyRewards * liquidityRatio
+  } catch (e: any) {
+    return 0
+  }
+
+  return userDailyRewards
+}
+
 export const average = (array: number[]) =>
   array.reduce((prev: number, curr: number) => prev + curr) / array.length
 
@@ -1340,6 +1376,15 @@ export interface ApyRewardsParams {
   tokenPrice: number
   tokenDecimal: number
   duration: number
+}
+export interface UserDailyRewardsParams {
+  ticksCurrentSnapshot: Tick[]
+  currentTickIndex: number
+  rewardInTokens: number
+  userLiquidity: Decimal
+  duration: number
+  lowerTickIndex: number
+  upperTickIndex: number
 }
 
 export interface ApyPositionRewardsParams {
