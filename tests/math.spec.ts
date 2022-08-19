@@ -2062,9 +2062,9 @@ describe('Math', () => {
         upperTickIndex: tickUpper
       }
 
-      const apy = calculateUserDailyRewards(paramsApy)
-      //10000 tokens / 10 days * 20% of liquidity = 2000 tokens
-      assert.equal(apy, 200)
+      const dailyRewards = calculateUserDailyRewards(paramsApy)
+      //10000 tokens / 10 days * 20% of liquidity = 200 tokens
+      assert.equal(dailyRewards, 200)
     })
     it('inactive position', async () => {
       const current = jsonArrayToTicks(usdcUsdhPoolSnapshot.ticksCurrentSnapshot)
@@ -2086,9 +2086,9 @@ describe('Math', () => {
         upperTickIndex: tickUpper
       }
 
-      const apy = calculateUserDailyRewards(paramsApy)
+      const dailyRewards = calculateUserDailyRewards(paramsApy)
       // position is inactive should return 0
-      assert.equal(apy, 0)
+      assert.equal(dailyRewards, 0)
     })
   })
   describe('test getTokenData', () => {
