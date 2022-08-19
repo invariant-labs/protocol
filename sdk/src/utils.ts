@@ -1183,7 +1183,7 @@ export const positionsRewardAPY = (params: ApyPositionRewardsParams): number => 
   }
 
   try {
-    const { poolLiquidity } = calculatePoolLiquidityFromSnapshot(
+    const { singleTickLiquidity } = calculateTokensAndLiquidity(
       ticksCurrentSnapshot,
       currentTickIndex
     )
@@ -1191,7 +1191,7 @@ export const positionsRewardAPY = (params: ApyPositionRewardsParams): number => 
     const dailyRewards = rewardInUsd / duration
 
     const liquidityRatio =
-      positionLiquidity.v.mul(LIQUIDITY_DENOMINATOR).div(poolLiquidity).toNumber() /
+      positionLiquidity.v.mul(LIQUIDITY_DENOMINATOR).div(singleTickLiquidity).toNumber() /
       LIQUIDITY_DENOMINATOR.toNumber()
 
     const lowerSqrtPrice = calculatePriceSqrt(lowerTickIndex)
@@ -1201,9 +1201,8 @@ export const positionsRewardAPY = (params: ApyPositionRewardsParams): number => 
       upperSqrtPrice.v,
       lowerSqrtPrice.v
     )
-
     dailyFactor =
-      (dailyRewards / positionTokens.div(decimal).toNumber()) * tokenPrice * liquidityRatio
+      (dailyRewards * liquidityRatio) / (positionTokens.div(decimal).toNumber() * tokenPrice)
   } catch (e: any) {
     return Infinity
   }
