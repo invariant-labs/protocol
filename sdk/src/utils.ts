@@ -28,7 +28,8 @@ import {
   getLiquidityByX,
   getLiquidityByY,
   getXfromLiquidity,
-  isEnoughAmountToPushPrice
+  isEnoughAmountToPushPrice,
+  sqrt
 } from './math'
 import { alignTickToSpacing, getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
@@ -994,7 +995,11 @@ export const calculateTokensRange = (
     throw new Error(Errors.TickNotFound)
   }
 
-  const tokens = getTokensInRange(tickArrayCurrent, tickLower, tickUpper)
+  const tokensPrevious = getTokensInRange(tickArrayPrevious, tickLower, tickUpper)
+  const tokensCurrent = getTokensInRange(tickArrayCurrent, tickLower, tickUpper)
+
+  // geometric mean of tokensPrevious and tokensCurrent
+  const tokens = sqrt(tokensPrevious.mul(tokensCurrent))
 
   return {
     tokens,
