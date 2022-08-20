@@ -28,7 +28,8 @@ import {
   getLiquidityByX,
   getLiquidityByY,
   getXfromLiquidity,
-  isEnoughAmountToPushPrice
+  isEnoughAmountToPushPrice,
+  sqrt
 } from './math'
 import { alignTickToSpacing, getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
@@ -994,7 +995,11 @@ export const calculateTokensRange = (
     throw new Error(Errors.TickNotFound)
   }
 
-  const tokens = getTokensInRange(tickArrayCurrent, tickLower, tickUpper)
+  const tokensPrevious = getTokensInRange(tickArrayPrevious, tickLower, tickUpper)
+  const tokensCurrent = getTokensInRange(tickArrayCurrent, tickLower, tickUpper)
+
+  // geometric mean of tokensPrevious and tokensCurrent
+  const tokens = sqrt(tokensPrevious.mul(tokensCurrent))
 
   return {
     tokens,
@@ -1183,7 +1188,7 @@ export const positionsRewardAPY = (params: ApyPositionRewardsParams): number => 
   }
 
   try {
-    const { poolLiquidity } = calculatePoolLiquidityFromSnapshot(
+    const { singleTickLiquidity } = calculateTokensAndLiquidity(
       ticksCurrentSnapshot,
       currentTickIndex
     )
@@ -1191,7 +1196,7 @@ export const positionsRewardAPY = (params: ApyPositionRewardsParams): number => 
     const dailyRewards = rewardInUsd / duration
 
     const liquidityRatio =
-      positionLiquidity.v.mul(LIQUIDITY_DENOMINATOR).div(poolLiquidity).toNumber() /
+      positionLiquidity.v.mul(LIQUIDITY_DENOMINATOR).div(singleTickLiquidity).toNumber() /
       LIQUIDITY_DENOMINATOR.toNumber()
 
     const lowerSqrtPrice = calculatePriceSqrt(lowerTickIndex)
@@ -1201,9 +1206,8 @@ export const positionsRewardAPY = (params: ApyPositionRewardsParams): number => 
       upperSqrtPrice.v,
       lowerSqrtPrice.v
     )
-
     dailyFactor =
-      (dailyRewards / positionTokens.div(decimal).toNumber()) * tokenPrice * liquidityRatio
+      (dailyRewards * liquidityRatio) / (positionTokens.div(decimal).toNumber() * tokenPrice)
   } catch (e: any) {
     return Infinity
   }
@@ -1211,6 +1215,42 @@ export const positionsRewardAPY = (params: ApyPositionRewardsParams): number => 
   const positionApy = Math.pow(dailyFactor + 1, 365) - 1
 
   return positionApy
+}
+
+export const calculateUserDailyRewards = (params: UserDailyRewardsParams): number => {
+  const {
+    ticksCurrentSnapshot,
+    currentTickIndex,
+    rewardInTokens,
+    userLiquidity,
+    duration,
+    lowerTickIndex,
+    upperTickIndex
+  } = params
+  // check if position is active
+  if (lowerTickIndex > currentTickIndex || upperTickIndex <= currentTickIndex) {
+    return 0
+  }
+
+  let userDailyRewards: number
+  try {
+    const { singleTickLiquidity } = calculateTokensAndLiquidity(
+      ticksCurrentSnapshot,
+      currentTickIndex
+    )
+
+    const dailyRewards = rewardInTokens / duration
+
+    const liquidityRatio =
+      userLiquidity.v.mul(LIQUIDITY_DENOMINATOR).div(singleTickLiquidity).toNumber() /
+      LIQUIDITY_DENOMINATOR.toNumber()
+
+    userDailyRewards = dailyRewards * liquidityRatio
+  } catch (e: any) {
+    return 0
+  }
+
+  return userDailyRewards
 }
 
 export const average = (array: number[]) =>
@@ -1340,6 +1380,15 @@ export interface ApyRewardsParams {
   tokenPrice: number
   tokenDecimal: number
   duration: number
+}
+export interface UserDailyRewardsParams {
+  ticksCurrentSnapshot: Tick[]
+  currentTickIndex: number
+  rewardInTokens: number
+  userLiquidity: Decimal
+  duration: number
+  lowerTickIndex: number
+  upperTickIndex: number
 }
 
 export interface ApyPositionRewardsParams {
