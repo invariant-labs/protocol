@@ -1135,6 +1135,8 @@ export const rewardsAPY = (params: ApyRewardsParams): { apy: number; apySingleTi
   const {
     ticksCurrentSnapshot,
     currentTickIndex,
+    poolLiquidity,
+    tickSpacing,
     rewardInUsd,
     tokenPrice,
     tokenDecimal,
@@ -1144,19 +1146,32 @@ export const rewardsAPY = (params: ApyRewardsParams): { apy: number; apySingleTi
   let dailyFactorSingleTick: number | null
   const decimal: BN = new BN(10).pow(new BN(tokenDecimal))
   try {
-    const { tokens, liquidity, singleTickTokens, singleTickLiquidity } =
-      calculateTokensAndLiquidity(ticksCurrentSnapshot, currentTickIndex)
+    const { tokens, liquidity } = calculateTokensAndLiquidity(
+      ticksCurrentSnapshot,
+      currentTickIndex
+    )
 
     const dailyRewards = rewardInUsd / duration
 
-    const liquidityRatio =
-      singleTickLiquidity.mul(LIQUIDITY_DENOMINATOR).div(liquidity).toNumber() /
-      LIQUIDITY_DENOMINATOR.toNumber()
+    // const liquidityRatio =
+    //   singleTickLiquidity.mul(LIQUIDITY_DENOMINATOR).div(liquidity).toNumber() /
+    //   LIQUIDITY_DENOMINATOR.toNumber()
 
     dailyFactor = (dailyRewards / tokens.div(decimal).toNumber()) * tokenPrice
 
+    const lowerSqrtPrice = calculatePriceSqrt(currentTickIndex).v
+    const upperSqrtPrice = calculatePriceSqrt(currentTickIndex + tickSpacing).v
+
+    // dailyFactorSingleTick =  lowerSqrtPrice * upperSqrtPrice/ (lowerSqrtPrice + upperSqrtPrice) * 1/liquidity * dailyRewards/price / decimal
+    const priceFactor = lowerSqrtPrice
+      .mul(upperSqrtPrice)
+      .div(lowerSqrtPrice.add(upperSqrtPrice))
+      .toNumber()
+
     dailyFactorSingleTick =
-      (dailyRewards / singleTickTokens.div(decimal).toNumber()) * tokenPrice * liquidityRatio
+      ((((priceFactor * 1) / poolLiquidity.div(LIQUIDITY_DENOMINATOR).toNumber()) * dailyRewards) /
+        decimal.toNumber()) *
+      tokenPrice
   } catch (e: any) {
     return { apy: Infinity, apySingleTick: Infinity }
   }
@@ -1376,6 +1391,8 @@ export interface ApyPoolParams {
 export interface ApyRewardsParams {
   ticksCurrentSnapshot: Tick[]
   currentTickIndex: number
+  poolLiquidity: BN
+  tickSpacing: number
   rewardInUsd: number
   tokenPrice: number
   tokenDecimal: number
