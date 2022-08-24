@@ -1141,21 +1141,17 @@ export const rewardsAPY = (params: ApyRewardsParams): { apy: number; apySingleTi
     tokenDecimal,
     duration
   } = params
-  let dailyFactor: number | null
-  let dailyFactorSingleTick: number | null
-  const decimal: BN = new BN(10).pow(new BN(tokenDecimal))
 
   if (poolLiquidity.eqn(0)) {
     return { apy: Infinity, apySingleTick: Infinity }
   }
-
+  const decimal: BN = new BN(10).pow(new BN(tokenDecimal))
   const dailyRewards = rewardInUsd / duration
-
   const lowerSqrtPrice = calculatePriceSqrt(currentTickIndex).v
   const upperSqrtPrice = calculatePriceSqrt(currentTickIndex + tickSpacing).v
   const tokens = getXfromLiquidity(poolLiquidity, upperSqrtPrice, lowerSqrtPrice)
 
-  dailyFactor = (dailyRewards / tokens.div(decimal).toNumber()) * tokenPrice
+  const dailyFactor = (dailyRewards / tokens.div(decimal).toNumber()) * tokenPrice
 
   const priceFactor = lowerSqrtPrice
     .mul(upperSqrtPrice)
@@ -1166,7 +1162,7 @@ export const rewardsAPY = (params: ApyRewardsParams): { apy: number; apySingleTi
   const rewardsFactor = (dailyRewards / tokenPrice) * decimal.toNumber()
 
   // dailyFactorSingleTick =  lowerSqrtPrice * upperSqrtPrice/ (upperSqrtPrice - lowerSqrtPrice) * 1/liquidity * dailyRewards/price / decimal
-  dailyFactorSingleTick =
+  const dailyFactorSingleTick =
     (priceFactor / poolLiquidity.div(LIQUIDITY_DENOMINATOR).toNumber()) * rewardsFactor
 
   const apy = Math.pow(dailyFactor + 1, 365) - 1
@@ -1177,7 +1173,7 @@ export const rewardsAPY = (params: ApyRewardsParams): { apy: number; apySingleTi
 
 export const positionsRewardAPY = (params: ApyPositionRewardsParams): number => {
   const {
-    ticksCurrentSnapshot,
+    poolLiquidity,
     currentTickIndex,
     rewardInUsd,
     tokenPrice,
@@ -1187,38 +1183,24 @@ export const positionsRewardAPY = (params: ApyPositionRewardsParams): number => 
     lowerTickIndex,
     upperTickIndex
   } = params
-  let dailyFactor: number | null
-  const decimal: BN = new BN(10).pow(new BN(tokenDecimal))
 
   // check if position is active
   if (lowerTickIndex > currentTickIndex || upperTickIndex <= currentTickIndex) {
     return 0
   }
-
-  try {
-    const { singleTickLiquidity } = calculateTokensAndLiquidity(
-      ticksCurrentSnapshot,
-      currentTickIndex
-    )
-
-    const dailyRewards = rewardInUsd / duration
-
-    const liquidityRatio =
-      positionLiquidity.v.mul(LIQUIDITY_DENOMINATOR).div(singleTickLiquidity).toNumber() /
-      LIQUIDITY_DENOMINATOR.toNumber()
-
-    const lowerSqrtPrice = calculatePriceSqrt(lowerTickIndex)
-    const upperSqrtPrice = calculatePriceSqrt(upperTickIndex)
-    const positionTokens = getXfromLiquidity(
-      positionLiquidity.v,
-      upperSqrtPrice.v,
-      lowerSqrtPrice.v
-    )
-    dailyFactor =
-      (dailyRewards * liquidityRatio) / (positionTokens.div(decimal).toNumber() * tokenPrice)
-  } catch (e: any) {
+  if (poolLiquidity.eqn(0)) {
     return Infinity
   }
+  const decimal: BN = new BN(10).pow(new BN(tokenDecimal))
+  const dailyRewards = rewardInUsd / duration
+  const liquidityRatio =
+    positionLiquidity.v.mul(LIQUIDITY_DENOMINATOR).div(poolLiquidity).toNumber() /
+    LIQUIDITY_DENOMINATOR.toNumber()
+  const lowerSqrtPrice = calculatePriceSqrt(lowerTickIndex)
+  const upperSqrtPrice = calculatePriceSqrt(upperTickIndex)
+  const positionTokens = getXfromLiquidity(positionLiquidity.v, upperSqrtPrice.v, lowerSqrtPrice.v)
+  const dailyFactor =
+    (dailyRewards * liquidityRatio) / (positionTokens.div(decimal).toNumber() * tokenPrice)
 
   const positionApy = Math.pow(dailyFactor + 1, 365) - 1
 
@@ -1401,7 +1383,7 @@ export interface UserDailyRewardsParams {
 }
 
 export interface ApyPositionRewardsParams {
-  ticksCurrentSnapshot: Tick[]
+  poolLiquidity: BN
   currentTickIndex: number
   rewardInUsd: number
   tokenPrice: number
