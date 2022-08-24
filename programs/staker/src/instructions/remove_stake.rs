@@ -17,7 +17,7 @@ pub struct RemoveStake<'info> {
 
 pub fn handler(ctx: Context<RemoveStake>) -> ProgramResult {
     let mut incentive = ctx.accounts.incentive.load_mut()?;
-    require!(Seconds::now() > { incentive.end_claim_time }, TooEarly);
+    require!(Seconds::now() > { incentive.end_time }, TooEarly);
     require!(incentive.num_of_stakes > 0, NoStakes);
 
     // decrease number of stakes by 1
