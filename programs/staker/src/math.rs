@@ -252,8 +252,6 @@ mod tests {
         )
         .unwrap();
 
-        msg!("result {}", result);
-        msg!("seconds_inside {}", seconds_inside);
         assert_eq!(result, TokenAmount::new(0));
         assert_eq!(seconds_inside, Seconds::new(6));
     }
@@ -294,5 +292,25 @@ mod tests {
 
         assert_eq!(result, TokenAmount::new(0));
         assert_eq!(seconds_inside, Seconds::new(0));
+    }
+
+    //zero seconds perLiquidity
+    #[test]
+    fn test_calculate_reward_15() {
+        //result should be less than 1 token
+        let (seconds_inside, result) = calculate_reward(
+            TokenAmount::new(2388706726), //
+            Seconds::new(676842),         //
+            Seconds::new(1660469274),
+            Seconds::new(1661765264),
+            Liquidity::new(97003457938114000000), //
+            SecondsPerLiquidity::new(340282366920938463463374607431768211446), //
+            SecondsPerLiquidity::new(2),          //
+            Seconds::new(1661334904),
+        )
+        .unwrap();
+
+        assert_eq!(result, TokenAmount::new(4490775));
+        assert_eq!(seconds_inside, Seconds::new(1164));
     }
 }
