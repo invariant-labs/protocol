@@ -1957,32 +1957,33 @@ describe('Math', () => {
     })
   })
   describe('reward APY tests', () => {
+    const liquidity = new BN('1454523938607876939715')
+    const tickSpacing = 1
     it('ticks from current snapshot', async () => {
-      const current = jsonArrayToTicks(usdcUsdhPoolSnapshot.ticksCurrentSnapshot)
-
       const paramsApy: ApyRewardsParams = {
-        ticksCurrentSnapshot: current,
-        currentTickIndex: usdcUsdhPoolSnapshot.currentTickIndex,
-        rewardInUsd: 3000,
+        currentTickIndex: 45, //45
+        poolLiquidity: liquidity, // 232145105223137352120
+        tickSpacing, // 1
+        rewardInUsd: 5000,
         tokenPrice: 0.9995,
         tokenDecimal: 6,
         duration: 14
       }
 
       const reward = rewardsAPY(paramsApy)
-      assert.equal(reward.apy, 1.1079550023602733)
-      assert.equal(reward.apySingleTick, 4.048465442981172)
-    })
-    it('empty array', async () => {
-      const current: Tick[] = []
 
+      assert.equal(reward.apy, 4.997339186595568)
+      assert.equal(reward.apySingleTick, 5.007731410040398)
+    })
+    it('zero liqudity', async () => {
       const paramsApy: ApyRewardsParams = {
-        ticksCurrentSnapshot: current,
-        currentTickIndex: usdcUsdhPoolSnapshot.currentTickIndex,
-        rewardInUsd: 3000,
+        currentTickIndex: 0,
+        poolLiquidity: new BN(0),
+        tickSpacing, //1
+        rewardInUsd: 100,
         tokenPrice: 0.9995,
         tokenDecimal: 6,
-        duration: 14
+        duration: 10
       }
 
       const reward = rewardsAPY(paramsApy)

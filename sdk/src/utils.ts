@@ -1144,29 +1144,30 @@ export const rewardsAPY = (params: ApyRewardsParams): { apy: number; apySingleTi
   let dailyFactor: number | null
   let dailyFactorSingleTick: number | null
   const decimal: BN = new BN(10).pow(new BN(tokenDecimal))
-  try {
-    const dailyRewards = rewardInUsd / duration
 
-    const lowerSqrtPrice = calculatePriceSqrt(currentTickIndex).v
-    const upperSqrtPrice = calculatePriceSqrt(currentTickIndex + tickSpacing).v
-    const tokens = getXfromLiquidity(poolLiquidity, upperSqrtPrice, lowerSqrtPrice)
-
-    dailyFactor = (dailyRewards / tokens.div(decimal).toNumber()) * tokenPrice
-
-    const priceFactor = lowerSqrtPrice
-      .mul(upperSqrtPrice)
-      .div(upperSqrtPrice.sub(lowerSqrtPrice))
-      .div(PRICE_DENOMINATOR)
-      .toNumber()
-
-    const rewardsFactor = (dailyRewards / tokenPrice) * decimal.toNumber()
-
-    // dailyFactorSingleTick =  lowerSqrtPrice * upperSqrtPrice/ (upperSqrtPrice - lowerSqrtPrice) * 1/liquidity * dailyRewards/price / decimal
-    dailyFactorSingleTick =
-      (priceFactor / poolLiquidity.div(LIQUIDITY_DENOMINATOR).toNumber()) * rewardsFactor
-  } catch (e: any) {
+  if (poolLiquidity.eqn(0)) {
     return { apy: Infinity, apySingleTick: Infinity }
   }
+
+  const dailyRewards = rewardInUsd / duration
+
+  const lowerSqrtPrice = calculatePriceSqrt(currentTickIndex).v
+  const upperSqrtPrice = calculatePriceSqrt(currentTickIndex + tickSpacing).v
+  const tokens = getXfromLiquidity(poolLiquidity, upperSqrtPrice, lowerSqrtPrice)
+
+  dailyFactor = (dailyRewards / tokens.div(decimal).toNumber()) * tokenPrice
+
+  const priceFactor = lowerSqrtPrice
+    .mul(upperSqrtPrice)
+    .div(upperSqrtPrice.sub(lowerSqrtPrice))
+    .div(PRICE_DENOMINATOR)
+    .toNumber()
+
+  const rewardsFactor = (dailyRewards / tokenPrice) * decimal.toNumber()
+
+  // dailyFactorSingleTick =  lowerSqrtPrice * upperSqrtPrice/ (upperSqrtPrice - lowerSqrtPrice) * 1/liquidity * dailyRewards/price / decimal
+  dailyFactorSingleTick =
+    (priceFactor / poolLiquidity.div(LIQUIDITY_DENOMINATOR).toNumber()) * rewardsFactor
 
   const apy = Math.pow(dailyFactor + 1, 365) - 1
   const apySingleTick = Math.pow(dailyFactorSingleTick + 1, 365) - 1
