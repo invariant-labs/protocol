@@ -18,7 +18,8 @@ pub fn calculate_reward(
     }
 
     let seconds_inside = Seconds::from_decimal(
-        (seconds_per_liquidity_inside - seconds_per_liquidity_inside_initial) * liquidity,
+        seconds_per_liquidity_inside.unchecked_sub(seconds_per_liquidity_inside_initial)
+            * liquidity,
     );
 
     let total_seconds_unclaimed =
@@ -233,5 +234,61 @@ mod tests {
         .unwrap();
         assert_eq!(result, TokenAmount::new(0));
         assert_eq!(seconds_inside, Seconds::new(6));
+    }
+    // test underflow
+    #[test]
+    fn test_calculate_reward_12() {
+        //result should be less than 1 token
+        let (seconds_inside, result) = calculate_reward(
+            TokenAmount::new(100_000),
+            Seconds::new(0),
+            Seconds::new(1637002223),
+            Seconds::new(1640002223),
+            Liquidity::from_integer(1_000_000),
+            SecondsPerLiquidity::new(u128::MAX),
+            SecondsPerLiquidity::new(6_000_000),
+            Seconds::new(1637002232),
+        )
+        .unwrap();
+
+        assert_eq!(result, TokenAmount::new(0));
+        assert_eq!(seconds_inside, Seconds::new(6));
+    }
+    //zero seconds perLiquidity
+    #[test]
+    fn test_calculate_reward_13() {
+        let (seconds_inside, result) = calculate_reward(
+            TokenAmount::new(100_000),
+            Seconds::new(0),
+            Seconds::new(1637002223),
+            Seconds::new(1640002223),
+            Liquidity::from_integer(1_000_000),
+            SecondsPerLiquidity::new(6_000_000),
+            SecondsPerLiquidity::new(6_000_000),
+            Seconds::new(1637002232),
+        )
+        .unwrap();
+
+        assert_eq!(result, TokenAmount::new(0));
+        assert_eq!(seconds_inside, Seconds::new(0));
+    }
+
+    //data from real case
+    #[test]
+    fn test_calculate_reward_14() {
+        let (seconds_inside, result) = calculate_reward(
+            TokenAmount::new(2388706726),
+            Seconds::new(676842),
+            Seconds::new(1660469274),
+            Seconds::new(1661765264),
+            Liquidity::new(97003457938114000000),
+            SecondsPerLiquidity::new(340282366920938463463374607431768211446),
+            SecondsPerLiquidity::new(2),
+            Seconds::new(1661334904),
+        )
+        .unwrap();
+
+        assert_eq!(result, TokenAmount::new(4490775));
+        assert_eq!(seconds_inside, Seconds::new(1164));
     }
 }
