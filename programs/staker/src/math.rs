@@ -1,6 +1,7 @@
 use crate::decimals::*;
 use crate::ErrorCode;
 use crate::Result;
+use anchor_lang::prelude::*;
 use std::cmp;
 
 pub fn calculate_reward(
@@ -16,10 +17,16 @@ pub fn calculate_reward(
     if current_time <= start_time {
         return Err(ErrorCode::NotStarted.into());
     }
+    let seconds_per_liquidity =
+        match seconds_per_liquidity_inside < seconds_per_liquidity_inside_initial {
+            true => {
+                SecondsPerLiquidity::new(u128::MAX) - seconds_per_liquidity_inside_initial
+                    + seconds_per_liquidity_inside
+            }
+            false => seconds_per_liquidity_inside - seconds_per_liquidity_inside_initial,
+        };
 
-    let seconds_inside = Seconds::from_decimal(
-        (seconds_per_liquidity_inside - seconds_per_liquidity_inside_initial) * liquidity,
-    );
+    let seconds_inside = Seconds::from_decimal(seconds_per_liquidity * liquidity);
 
     let total_seconds_unclaimed =
         cmp::max(end_time, current_time) - start_time - total_seconds_claimed;
@@ -231,6 +238,27 @@ mod tests {
             Seconds::new(1637002232),
         )
         .unwrap();
+        assert_eq!(result, TokenAmount::new(0));
+        assert_eq!(seconds_inside, Seconds::new(6));
+    }
+
+    #[test]
+    fn test_calculate_reward_12() {
+        //result should be less than 1 token
+        let (seconds_inside, result) = calculate_reward(
+            TokenAmount::new(100_000),
+            Seconds::new(0),
+            Seconds::new(1637002223),
+            Seconds::new(1640002223),
+            Liquidity::from_integer(1_000_000),
+            SecondsPerLiquidity::new(u128::MAX),
+            SecondsPerLiquidity::new(6_000_000),
+            Seconds::new(1637002232),
+        )
+        .unwrap();
+
+        msg!("result {}", result);
+        msg!("seconds_inside {}", seconds_inside);
         assert_eq!(result, TokenAmount::new(0));
         assert_eq!(seconds_inside, Seconds::new(6));
     }
