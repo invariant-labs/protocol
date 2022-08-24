@@ -2029,21 +2029,16 @@ describe('Math', () => {
     })
   })
   describe('calculate user daily rewards tests', () => {
+    const poolLiquidity = new BN('232145105223137352120')
     it('active position 20% of liquidity', async () => {
-      const current = jsonArrayToTicks(usdcUsdhPoolSnapshot.ticksCurrentSnapshot)
       const tickLower = 4
       const tickUpper = 5
 
-      const { singleTickLiquidity } = calculateTokensAndLiquidity(
-        current,
-        usdcUsdhPoolSnapshot.currentTickIndex
-      )
-
       const paramsApy: UserDailyRewardsParams = {
-        ticksCurrentSnapshot: current,
+        poolLiquidity,
         currentTickIndex: usdcUsdhPoolSnapshot.currentTickIndex,
         rewardInTokens: 10000,
-        userLiquidity: { v: singleTickLiquidity.divn(5) },
+        userLiquidity: { v: poolLiquidity.divn(5) },
         duration: 10,
         lowerTickIndex: tickLower,
         upperTickIndex: tickUpper
@@ -2054,20 +2049,14 @@ describe('Math', () => {
       assert.equal(dailyRewards, 200)
     })
     it('inactive position', async () => {
-      const current = jsonArrayToTicks(usdcUsdhPoolSnapshot.ticksCurrentSnapshot)
       const tickLower = 100
       const tickUpper = 110
 
-      const { singleTickLiquidity } = calculateTokensAndLiquidity(
-        current,
-        usdcUsdhPoolSnapshot.currentTickIndex
-      )
-
       const paramsApy: UserDailyRewardsParams = {
-        ticksCurrentSnapshot: current,
+        poolLiquidity,
         currentTickIndex: usdcUsdhPoolSnapshot.currentTickIndex,
         rewardInTokens: 10000,
-        userLiquidity: { v: singleTickLiquidity.divn(5) },
+        userLiquidity: { v: poolLiquidity.divn(5) },
         duration: 10,
         lowerTickIndex: tickLower,
         upperTickIndex: tickUpper
