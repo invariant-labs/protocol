@@ -1,5 +1,6 @@
 import { LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
 import { PoolStructure, Tick } from '@invariant-labs/sdk/lib/market'
+import { U128MAX } from '@invariant-labs/sdk/lib/utils'
 import { BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
@@ -174,6 +175,21 @@ describe('Staker math tests', () => {
         liquidity: { v: new BN(1_000_000).mul(new BN(10).pow(new BN(6))) },
         secondsPerLiquidityInsideInitial: { v: new BN(4_000_000) },
         secondsPerLiquidityInside: { v: new BN(10_000_000) },
+        currentTime: new BN(1637002232)
+      }
+      const result = calculateReward(data)
+      assert.ok(result.result.eq(new BN(0)))
+      assert.ok(result.secondsInside.eq(new BN(6)))
+    })
+    it('case 12', async () => {
+      const data: CalculateReward = {
+        totalRewardUnclaimed: new BN(100_000),
+        totalSecondsClaimed: new BN(0),
+        startTime: new BN(1637002223),
+        endTime: new BN(1640002223),
+        liquidity: { v: new BN(1_000_000).mul(new BN(10).pow(new BN(6))) },
+        secondsPerLiquidityInsideInitial: { v: new BN(U128MAX) },
+        secondsPerLiquidityInside: { v: new BN(6_000_000) },
         currentTime: new BN(1637002232)
       }
       const result = calculateReward(data)
