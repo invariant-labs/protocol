@@ -23,6 +23,12 @@ pub struct SecondsPerLiquidity {
     pub v: u128,
 }
 
+impl SecondsPerLiquidity {
+    pub fn unchecked_sub(self, other: SecondsPerLiquidity) -> SecondsPerLiquidity {
+        SecondsPerLiquidity::new(self.get() - other.get())
+    }
+}
+
 // legacy not serializable may implement later
 #[decimal(0)]
 #[zero_copy]
