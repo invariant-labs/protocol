@@ -258,7 +258,6 @@ mod tests {
     //zero seconds perLiquidity
     #[test]
     fn test_calculate_reward_13() {
-        //result should be less than 1 token
         let (seconds_inside, result) = calculate_reward(
             TokenAmount::new(100_000),
             Seconds::new(0),
@@ -274,38 +273,18 @@ mod tests {
         assert_eq!(result, TokenAmount::new(0));
         assert_eq!(seconds_inside, Seconds::new(0));
     }
-    //zero seconds perLiquidity
+
+    //data from real case
     #[test]
     fn test_calculate_reward_14() {
-        //result should be less than 1 token
         let (seconds_inside, result) = calculate_reward(
-            TokenAmount::new(100_000),
-            Seconds::new(0),
-            Seconds::new(1637002223),
-            Seconds::new(1640002223),
-            Liquidity::from_integer(1_000_000),
-            SecondsPerLiquidity::new(6_000_000),
-            SecondsPerLiquidity::new(6_000_000),
-            Seconds::new(1637002232),
-        )
-        .unwrap();
-
-        assert_eq!(result, TokenAmount::new(0));
-        assert_eq!(seconds_inside, Seconds::new(0));
-    }
-
-    //zero seconds perLiquidity
-    #[test]
-    fn test_calculate_reward_15() {
-        //result should be less than 1 token
-        let (seconds_inside, result) = calculate_reward(
-            TokenAmount::new(2388706726), //
-            Seconds::new(676842),         //
+            TokenAmount::new(2388706726),
+            Seconds::new(676842),
             Seconds::new(1660469274),
             Seconds::new(1661765264),
-            Liquidity::new(97003457938114000000), //
-            SecondsPerLiquidity::new(340282366920938463463374607431768211446), //
-            SecondsPerLiquidity::new(2),          //
+            Liquidity::new(97003457938114000000),
+            SecondsPerLiquidity::new(340282366920938463463374607431768211446),
+            SecondsPerLiquidity::new(2),
             Seconds::new(1661334904),
         )
         .unwrap();
