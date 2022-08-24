@@ -1,7 +1,6 @@
 use crate::decimals::*;
 use crate::ErrorCode;
 use crate::Result;
-use anchor_lang::prelude::*;
 use std::cmp;
 
 pub fn calculate_reward(
