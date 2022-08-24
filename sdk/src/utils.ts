@@ -1133,7 +1133,6 @@ export const dailyFactorRewards = (
 
 export const rewardsAPY = (params: ApyRewardsParams): { apy: number; apySingleTick: number } => {
   const {
-    ticksCurrentSnapshot,
     currentTickIndex,
     poolLiquidity,
     tickSpacing,
@@ -1146,32 +1145,25 @@ export const rewardsAPY = (params: ApyRewardsParams): { apy: number; apySingleTi
   let dailyFactorSingleTick: number | null
   const decimal: BN = new BN(10).pow(new BN(tokenDecimal))
   try {
-    const { tokens, liquidity } = calculateTokensAndLiquidity(
-      ticksCurrentSnapshot,
-      currentTickIndex
-    )
-
     const dailyRewards = rewardInUsd / duration
-
-    // const liquidityRatio =
-    //   singleTickLiquidity.mul(LIQUIDITY_DENOMINATOR).div(liquidity).toNumber() /
-    //   LIQUIDITY_DENOMINATOR.toNumber()
-
-    dailyFactor = (dailyRewards / tokens.div(decimal).toNumber()) * tokenPrice
 
     const lowerSqrtPrice = calculatePriceSqrt(currentTickIndex).v
     const upperSqrtPrice = calculatePriceSqrt(currentTickIndex + tickSpacing).v
+    const tokens = getXfromLiquidity(poolLiquidity, upperSqrtPrice, lowerSqrtPrice)
 
-    // dailyFactorSingleTick =  lowerSqrtPrice * upperSqrtPrice/ (lowerSqrtPrice + upperSqrtPrice) * 1/liquidity * dailyRewards/price / decimal
+    dailyFactor = (dailyRewards / tokens.div(decimal).toNumber()) * tokenPrice
+
     const priceFactor = lowerSqrtPrice
       .mul(upperSqrtPrice)
-      .div(lowerSqrtPrice.add(upperSqrtPrice))
+      .div(upperSqrtPrice.sub(lowerSqrtPrice))
+      .div(PRICE_DENOMINATOR)
       .toNumber()
 
+    const rewardsFactor = (dailyRewards / tokenPrice) * decimal.toNumber()
+
+    // dailyFactorSingleTick =  lowerSqrtPrice * upperSqrtPrice/ (upperSqrtPrice - lowerSqrtPrice) * 1/liquidity * dailyRewards/price / decimal
     dailyFactorSingleTick =
-      ((((priceFactor * 1) / poolLiquidity.div(LIQUIDITY_DENOMINATOR).toNumber()) * dailyRewards) /
-        decimal.toNumber()) *
-      tokenPrice
+      (priceFactor / poolLiquidity.div(LIQUIDITY_DENOMINATOR).toNumber()) * rewardsFactor
   } catch (e: any) {
     return { apy: Infinity, apySingleTick: Infinity }
   }
@@ -1389,7 +1381,6 @@ export interface ApyPoolParams {
   volumeY: number
 }
 export interface ApyRewardsParams {
-  ticksCurrentSnapshot: Tick[]
   currentTickIndex: number
   poolLiquidity: BN
   tickSpacing: number
