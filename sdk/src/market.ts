@@ -24,6 +24,7 @@ import {
   getMaxTick,
   getMinTick,
   getPrice,
+  getTokens,
   getTokensData,
   parseLiquidityOnTicks,
   PositionClaimData,
@@ -257,14 +258,19 @@ export class Market {
     ).map(a => a.account) as Tick[]
   }
 
+  async getAllPoolLiquidityInTokens(poolAddress: PublicKey) {
+    return (await this.program.account.position.all())
+      .map(({ account }) => account)
+      .filter(account => account.pool.equals(poolAddress))
+      .reduce(
+        (tokens, { liquidity, lowerTickIndex, upperTickIndex }) =>
+          tokens.add(getTokens(liquidity.v, lowerTickIndex, upperTickIndex)),
+        new BN(0)
+      )
+  }
+
   async getAllPositions(owner: PublicKey) {
-    return (
-      await this.program.account.tick.all([
-        {
-          memcmp: { bytes: bs58.encode(owner.toBuffer()), offset: 8 }
-        }
-      ])
-    ).map(a => a.account) as Position[]
+    return (await this.program.account.position.all()).map(({ account }) => account) as Position[]
   }
 
   async getAllUserPositions(owner: PublicKey): Promise<PositionStructure[]> {
