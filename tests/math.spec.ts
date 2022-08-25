@@ -1957,14 +1957,15 @@ describe('Math', () => {
     })
   })
   describe('reward APY tests', () => {
-    const liquidity = new BN('1454523938607876939715')
+    const liquidity = new BN('1326751756584093466941')
     const tickSpacing = 1
     it('ticks from current snapshot', async () => {
       const paramsApy: ApyRewardsParams = {
-        currentTickIndex: 45, //45
-        poolLiquidity: liquidity, // 232145105223137352120
+        currentTickIndex: 45,
+        currentLiquidity: liquidity,
+        allLiquidityInTokens: new BN(79372943242),
         tickSpacing, // 1
-        rewardInUsd: 5000,
+        rewardInUsd: 1100,
         tokenPrice: 0.9995,
         tokenDecimal: 6,
         duration: 14
@@ -1972,13 +1973,14 @@ describe('Math', () => {
 
       const reward = rewardsAPY(paramsApy)
 
-      assert.equal(reward.apy, 4.997339186595568)
-      assert.equal(reward.apySingleTick, 5.007731410040398)
+      assert.equal(reward.apy, 0.4347050575407594)
+      assert.equal(reward.apySingleTick, 0.5422869905571346)
     })
     it('zero liqudity', async () => {
       const paramsApy: ApyRewardsParams = {
         currentTickIndex: 0,
-        poolLiquidity: new BN(0),
+        currentLiquidity: new BN(0),
+        allLiquidityInTokens: new BN(0),
         tickSpacing, //1
         rewardInUsd: 100,
         tokenPrice: 0.9995,
