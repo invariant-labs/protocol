@@ -1228,9 +1228,7 @@ export const calculateUserDailyRewards = (params: UserDailyRewardsParams): numbe
     userLiquidity.v.mul(LIQUIDITY_DENOMINATOR).div(poolLiquidity).toNumber() /
     LIQUIDITY_DENOMINATOR.toNumber()
 
-  const userDailyRewards = dailyRewards * liquidityRatio
-
-  return userDailyRewards
+  return dailyRewards * liquidityRatio
 }
 
 export const average = (array: number[]) =>
