@@ -155,13 +155,12 @@ describe('Referral swap', () => {
       tickmap
     })
 
-    // TODO: set slippage to 0%
     const swapVars: Swap = {
       pair,
       xToY: true,
       amount,
-      estimatedPriceAfterSwap: poolDataBefore.sqrtPrice, // ignore price impact using high slippage tolerance
-      slippage: toDecimal(1, 0),
+      estimatedPriceAfterSwap: { v: priceAfterSwap.subn(1) },
+      slippage: toDecimal(0, 0),
       accountX,
       accountY,
       byAmountIn: true,
