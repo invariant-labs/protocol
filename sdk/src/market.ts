@@ -269,6 +269,21 @@ export class Market {
       )
   }
 
+  async getActiveLiquidityInTokens(poolAddress: PublicKey, currentTickIndex: number) {
+    return (await this.program.account.position.all())
+      .map(({ account }) => account)
+      .filter(account => account.pool.equals(poolAddress))
+      .filter(
+        account =>
+          account.lowerTickIndex <= currentTickIndex && account.upperTickIndex > currentTickIndex
+      )
+      .reduce(
+        (tokens, { liquidity, lowerTickIndex, upperTickIndex }) =>
+          tokens.add(getTokens(liquidity.v, lowerTickIndex, upperTickIndex)),
+        new BN(0)
+      )
+  }
+
   async getAllPositions(owner: PublicKey) {
     return (await this.program.account.position.all()).map(({ account }) => account) as Position[]
   }
