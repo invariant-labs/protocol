@@ -1183,7 +1183,7 @@ export const positionsRewardAPY = (params: ApyPositionRewardsParams): number => 
   } = params
 
   // check if position is active
-  if (lowerTickIndex > currentTickIndex || upperTickIndex <= currentTickIndex) {
+  if (!isActive(lowerTickIndex, upperTickIndex, currentTickIndex)) {
     return 0
   }
   if (poolLiquidity.eqn(0)) {
@@ -1216,7 +1216,7 @@ export const calculateUserDailyRewards = (params: UserDailyRewardsParams): numbe
     upperTickIndex
   } = params
   // check if position is active
-  if (lowerTickIndex > currentTickIndex || upperTickIndex <= currentTickIndex) {
+  if (!isActive(lowerTickIndex, upperTickIndex, currentTickIndex)) {
     return 0
   }
   if (poolLiquidity.eqn(0)) {
@@ -1245,6 +1245,10 @@ export const updateWeeklyRange = (weeklyRange: Range[], dailyRange: Range): Rang
   weeklyRange.shift()
   weeklyRange.push(dailyRange)
   return weeklyRange
+}
+
+export const isActive = (lowerIndex: number, upperIndex: number, currentIndex: number): boolean => {
+  return lowerIndex <= currentIndex && upperIndex > currentIndex
 }
 
 const coingeckoIdOverwrites = {
