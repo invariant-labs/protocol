@@ -26,6 +26,7 @@ import {
   getPrice,
   getTokens,
   getTokensData,
+  isActive,
   parseLiquidityOnTicks,
   PositionClaimData,
   SEED,
@@ -273,10 +274,7 @@ export class Market {
     return (await this.program.account.position.all())
       .map(({ account }) => account)
       .filter(account => account.pool.equals(poolAddress))
-      .filter(
-        account =>
-          account.lowerTickIndex <= currentTickIndex && account.upperTickIndex > currentTickIndex
-      )
+      .filter(account => isActive(account.lowerTickIndex, account.upperTickIndex, currentTickIndex))
       .reduce(
         (tokens, { liquidity, lowerTickIndex, upperTickIndex }) =>
           tokens.add(getTokens(liquidity.v, lowerTickIndex, upperTickIndex)),
