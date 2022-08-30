@@ -1913,6 +1913,7 @@ describe('Math', () => {
   describe('pool APY tests', () => {
     it('case 1', async () => {
       const previous = createTickArray(1000)
+      const activeTokens = new BN('12831423759')
 
       const current: Tick[] = previous.map(tick => ({
         ...tick,
@@ -1940,6 +1941,7 @@ describe('Math', () => {
       const paramsApy: ApyPoolParams = {
         feeTier: FEE_TIERS[3],
         currentTickIndex: 0,
+        activeTokens,
         ticksPreviousSnapshot: previous,
         ticksCurrentSnapshot: current,
         weeklyData,

@@ -1071,6 +1071,7 @@ export const poolAPY = (params: ApyPoolParams): WeeklyData => {
   const {
     feeTier,
     currentTickIndex,
+    activeTokens,
     ticksPreviousSnapshot,
     ticksCurrentSnapshot,
     weeklyData,
@@ -1083,7 +1084,7 @@ export const poolAPY = (params: ApyPoolParams): WeeklyData => {
   let dailyTokens: BN = new BN(0)
   let dailyVolumeX: number = 0
   try {
-    const { tokens, tickLower, tickUpper } = calculateTokensRange(
+    const { tickLower, tickUpper } = calculateTokensRange(
       ticksPreviousSnapshot,
       ticksCurrentSnapshot,
       currentTickIndex
@@ -1092,9 +1093,9 @@ export const poolAPY = (params: ApyPoolParams): WeeklyData => {
     const previousSqrtPrice = calculatePriceSqrt(tickLower)
     const currentSqrtPrice = calculatePriceSqrt(tickUpper)
     const volume = getVolume(volumeX, volumeY, previousSqrtPrice, currentSqrtPrice)
-    dailyFactor = dailyFactorPool(tokens, volume, feeTier)
+    dailyFactor = dailyFactorPool(activeTokens, volume, feeTier)
     dailyRange = { tickLower, tickUpper }
-    dailyTokens = tokens
+    dailyTokens = activeTokens
     dailyVolumeX = volumeX
   } catch (e: any) {
     dailyFactor = 0
@@ -1182,7 +1183,7 @@ export const positionsRewardAPY = (params: ApyPositionRewardsParams): number => 
   } = params
 
   // check if position is active
-  if (lowerTickIndex > currentTickIndex || upperTickIndex <= currentTickIndex) {
+  if (!isActive(lowerTickIndex, upperTickIndex, currentTickIndex)) {
     return 0
   }
   if (poolLiquidity.eqn(0)) {
@@ -1215,7 +1216,7 @@ export const calculateUserDailyRewards = (params: UserDailyRewardsParams): numbe
     upperTickIndex
   } = params
   // check if position is active
-  if (lowerTickIndex > currentTickIndex || upperTickIndex <= currentTickIndex) {
+  if (!isActive(lowerTickIndex, upperTickIndex, currentTickIndex)) {
     return 0
   }
   if (poolLiquidity.eqn(0)) {
@@ -1244,6 +1245,10 @@ export const updateWeeklyRange = (weeklyRange: Range[], dailyRange: Range): Rang
   weeklyRange.shift()
   weeklyRange.push(dailyRange)
   return weeklyRange
+}
+
+export const isActive = (lowerIndex: number, upperIndex: number, currentIndex: number): boolean => {
+  return lowerIndex <= currentIndex && upperIndex > currentIndex
 }
 
 const coingeckoIdOverwrites = {
@@ -1345,6 +1350,7 @@ export interface RewardData {
 export interface ApyPoolParams {
   feeTier: FeeTier
   currentTickIndex: number
+  activeTokens: BN
   ticksPreviousSnapshot: Tick[]
   ticksCurrentSnapshot: Tick[]
   weeklyData: WeeklyData

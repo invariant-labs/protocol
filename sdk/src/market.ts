@@ -26,6 +26,7 @@ import {
   getPrice,
   getTokens,
   getTokensData,
+  isActive,
   parseLiquidityOnTicks,
   PositionClaimData,
   SEED,
@@ -262,6 +263,18 @@ export class Market {
     return (await this.program.account.position.all())
       .map(({ account }) => account)
       .filter(account => account.pool.equals(poolAddress))
+      .reduce(
+        (tokens, { liquidity, lowerTickIndex, upperTickIndex }) =>
+          tokens.add(getTokens(liquidity.v, lowerTickIndex, upperTickIndex)),
+        new BN(0)
+      )
+  }
+
+  async getActiveLiquidityInTokens(poolAddress: PublicKey, currentTickIndex: number) {
+    return (await this.program.account.position.all())
+      .map(({ account }) => account)
+      .filter(account => account.pool.equals(poolAddress))
+      .filter(account => isActive(account.lowerTickIndex, account.upperTickIndex, currentTickIndex))
       .reduce(
         (tokens, { liquidity, lowerTickIndex, upperTickIndex }) =>
           tokens.add(getTokens(liquidity.v, lowerTickIndex, upperTickIndex)),
