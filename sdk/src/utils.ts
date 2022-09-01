@@ -129,6 +129,7 @@ export interface Simulation {
 export interface SimulationResult {
   status: SimulationStatus
   amountPerTick: BN[]
+  crossedTicks: number[]
   accumulatedAmountIn: BN
   accumulatedAmountOut: BN
   accumulatedFee: BN
@@ -494,6 +495,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
   const startingSqrtPrice = sqrtPrice.v
   let previousTickIndex = MAX_TICK + 1
   const amountPerTick: BN[] = []
+  const crossedTicks: number[] = []
   let accumulatedAmount: BN = new BN(0)
   let accumulatedAmountOut: BN = new BN(0)
   let accumulatedAmountIn: BN = new BN(0)
@@ -583,6 +585,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
           } else {
             liquidity = { v: liquidity.v.sub(tick.liquidityChange.v) }
           }
+          crossedTicks.push(tickIndex)
         } else if (!remainingAmount.eqn(0)) {
           if (byAmountIn) {
             accumulatedAmountIn = accumulatedAmountIn.add(remainingAmount)
@@ -653,6 +656,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
   return {
     status,
     amountPerTick,
+    crossedTicks,
     accumulatedAmountIn,
     accumulatedAmountOut,
     accumulatedFee,
