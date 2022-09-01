@@ -1520,6 +1520,7 @@ describe('Math', () => {
       assert.ok(simulationResult.accumulatedAmountOut.eq(new BN(993)))
       assert.ok(simulationResult.accumulatedFee.eq(new BN(6)))
       assert.ok(simulationResult.amountPerTick[0].eq(new BN(1000)))
+      assert.equal(simulationResult.crossedTicks.length, 0)
       assert.ok(simulationResult.priceAfterSwap.eq(new BN('999006987054867461743028')))
       assert.ok(simulationResult.priceImpact.eq(new BN(1985039816)))
       assert.ok(simulationResult.minReceived.eq(new BN(886)))

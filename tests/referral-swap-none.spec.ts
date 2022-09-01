@@ -147,6 +147,7 @@ describe('Referral swap', () => {
       accumulatedAmountOut,
       minReceived,
       amountPerTick,
+      crossedTicks,
       priceImpact,
       priceAfterSwap
     } = simulateSwap({
@@ -217,6 +218,8 @@ describe('Referral swap', () => {
     assert.ok(accumulatedAmountOut.eq(expectedYTransferTo))
     // 2001 + 11 = 2012
     // (66422 + 333) + (31076 + 157) = 97988
+    assert.equal(crossedTicks.length, 1)
+    assert.equal(crossedTicks[0], -20)
     assert.equal(amountPerTick.length, 2)
     assert.ok(amountPerTick[0].eqn(2012))
     assert.ok(amountPerTick[1].eqn(97988))
