@@ -772,7 +772,7 @@ export class Market {
     const tokenYReserve = Keypair.generate()
     const tick = initTick ?? 0
 
-    const setCuIx = computeUnitsInstruction(1_400_000, this.wallet.publicKey)
+    const setCuIx = computeUnitsInstruction(1_400_000, payerPubkey)
     const { address: stateAddress } = await this.getStateAddress()
 
     const [poolAddress] = await pair.getAddressAndBump(this.program.programId)
