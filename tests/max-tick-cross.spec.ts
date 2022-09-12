@@ -110,11 +110,8 @@ describe('Max tick crosses', () => {
       owner: owner.publicKey
     }
 
-    const unitsIx = computeUnitsInstruction(14000000, owner.publicKey)
-    const tx = new Transaction().add(unitsIx)
     const swapTx = await market.swapTransaction(swapVars)
-    tx.add(swapTx)
-    await signAndSend(tx, [owner], connection)
+    await signAndSend(swapTx, [owner], connection)
 
     // Check crosses
     const poolData = await market.getPool(pair)
