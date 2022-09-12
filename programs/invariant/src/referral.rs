@@ -7,7 +7,7 @@ pub mod whitelist {
     pub fn contains(_ref_owner: Pubkey) -> bool {
         #[cfg(feature = "jupiter")]
         {
-            let jup2 = Pubkey::from_str(&"JUP2jxvXaqu7NQY1GmNF4m1vodw12LVXYxbFL2uJvfo").unwrap();
+            let jup2 = Pubkey::from_str(&"BUX7s2ef2htTGb2KKoPHWkmzxPj4nTWMWRgs5CSbQxf9").unwrap();
             return jup2 == _ref_owner;
         }
 
@@ -39,7 +39,7 @@ mod tests {
     fn test_is_referral_for_none() {
         let pubkey = Pubkey::from_str(&"7CKCpJWFRu1WAWfCvDkwyniP6JGpSyMf4Bkxk2U6v2Ej").unwrap();
         assert!(!contains(pubkey));
-        let jup2 = Pubkey::from_str(&"JUP2jxvXaqu7NQY1GmNF4m1vodw12LVXYxbFL2uJvfo").unwrap();
+        let jup2 = Pubkey::from_str(&"BUX7s2ef2htTGb2KKoPHWkmzxPj4nTWMWRgs5CSbQxf9").unwrap();
         assert!(!contains(jup2));
     }
 
@@ -48,7 +48,7 @@ mod tests {
     fn test_is_referral_for_jupiter() {
         let pubkey = Pubkey::from_str(&"7CKCpJWFRu1WAWfCvDkwyniP6JGpSyMf4Bkxk2U6v2Ej").unwrap();
         assert!(!contains(pubkey));
-        let jup2 = Pubkey::from_str(&"JUP2jxvXaqu7NQY1GmNF4m1vodw12LVXYxbFL2uJvfo").unwrap();
+        let jup2 = Pubkey::from_str(&"BUX7s2ef2htTGb2KKoPHWkmzxPj4nTWMWRgs5CSbQxf9").unwrap();
         assert!(contains(jup2));
     }
 }
