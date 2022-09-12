@@ -772,6 +772,7 @@ export class Market {
     const tokenYReserve = Keypair.generate()
     const tick = initTick ?? 0
 
+    const setCuIx = computeUnitsInstruction(1_400_000, this.wallet.publicKey)
     const { address: stateAddress } = await this.getStateAddress()
 
     const [poolAddress] = await pair.getAddressAndBump(this.program.programId)
@@ -791,6 +792,7 @@ export class Market {
     })
 
     transaction
+      .add(setCuIx)
       .add(
         SystemProgram.createAccount({
           fromPubkey: payerPubkey,
@@ -978,9 +980,9 @@ export class Market {
   }
 
   async swapTransaction(swap: Swap) {
-    const setCuIx = computeUnitsInstruction(1_400_000, this.wallet.publicKey)
-    const ix = await this.swapInstruction(swap)
-    return new Transaction().add(setCuIx).add(ix)
+    const setCuIx = computeUnitsInstruction(1_400_000, swap.owner ?? this.wallet.publicKey)
+    const swapIx = await this.swapInstruction(swap)
+    return new Transaction().add(setCuIx).add(swapIx)
   }
 
   async swap(swap: Swap, signer: Keypair) {
