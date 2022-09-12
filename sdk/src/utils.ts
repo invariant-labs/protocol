@@ -260,11 +260,11 @@ export const feeToTickSpacing = (fee: BN): number => {
 }
 
 export const FEE_TIERS: FeeTier[] = [
-  { fee: new BN(1).mul(FEE_OFFSET) },
-  { fee: new BN(50).mul(FEE_OFFSET) },
-  { fee: new BN(100).mul(FEE_OFFSET) },
-  { fee: new BN(300).mul(FEE_OFFSET) },
-  { fee: new BN(1000).mul(FEE_OFFSET) }
+  { fee: fromFee(new BN(1)) },
+  { fee: fromFee(new BN(50)) },
+  { fee: fromFee(new BN(100)) },
+  { fee: fromFee(new BN(300)) },
+  { fee: fromFee(new BN(1000)) }
 ]
 
 export const generateTicksArray = (start: number, stop: number, step: number) => {
