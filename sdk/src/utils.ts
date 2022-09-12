@@ -185,7 +185,7 @@ export interface CloserLimitResult {
   limitingTick: TickState | null
 }
 
-export const ComputeUnitsInstruction = (units: number, wallet: PublicKey) => {
+export const computeUnitsInstruction = (units: number, wallet: PublicKey) => {
   const program = new PublicKey('ComputeBudget111111111111111111111111111111')
   const params = { instruction: 0, units: units, additional_fee: 0 }
   const layout = struct([u8('instruction') as any, u32('units'), u32('additional_fee')])

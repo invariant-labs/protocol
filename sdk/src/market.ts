@@ -19,6 +19,7 @@ import {
 } from './math'
 import {
   calculateClaimAmount,
+  computeUnitsInstruction,
   feeToTickSpacing,
   getFeeTierAddress,
   getMaxTick,
@@ -977,8 +978,9 @@ export class Market {
   }
 
   async swapTransaction(swap: Swap) {
+    const setCuIx = computeUnitsInstruction(1_400_000, this.wallet.publicKey)
     const ix = await this.swapInstruction(swap)
-    return new Transaction().add(ix)
+    return new Transaction().add(setCuIx).add(ix)
   }
 
   async swap(swap: Swap, signer: Keypair) {
