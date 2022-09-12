@@ -57,7 +57,9 @@ import {
   TokenData,
   U128MAX,
   ApyPositionRewardsParams,
-  positionsRewardAPY
+  positionsRewardAPY,
+  UserDailyRewardsParams,
+  calculateUserDailyRewards
 } from '@invariant-labs/sdk/src/utils'
 import {
   createTickArray,
@@ -72,6 +74,7 @@ import { swapParameters } from './swap'
 import {
   ApyPoolParams,
   ApyRewardsParams,
+  calculateTokensAndLiquidity,
   FEE_TIERS,
   LIQUIDITY_DENOMINATOR,
   parseFeeGrowthAndLiquidityOnTicksMap,
@@ -1517,6 +1520,7 @@ describe('Math', () => {
       assert.ok(simulationResult.accumulatedAmountOut.eq(new BN(993)))
       assert.ok(simulationResult.accumulatedFee.eq(new BN(6)))
       assert.ok(simulationResult.amountPerTick[0].eq(new BN(1000)))
+      assert.equal(simulationResult.crossedTicks.length, 0)
       assert.ok(simulationResult.priceAfterSwap.eq(new BN('999006987054867461743028')))
       assert.ok(simulationResult.priceImpact.eq(new BN(1985039816)))
       assert.ok(simulationResult.minReceived.eq(new BN(886)))
@@ -1910,6 +1914,7 @@ describe('Math', () => {
   describe('pool APY tests', () => {
     it('case 1', async () => {
       const previous = createTickArray(1000)
+      const activeTokens = new BN('12831423759')
 
       const current: Tick[] = previous.map(tick => ({
         ...tick,
@@ -1937,6 +1942,7 @@ describe('Math', () => {
       const paramsApy: ApyPoolParams = {
         feeTier: FEE_TIERS[3],
         currentTickIndex: 0,
+        activeTokens,
         ticksPreviousSnapshot: previous,
         ticksCurrentSnapshot: current,
         weeklyData,
@@ -1954,32 +1960,35 @@ describe('Math', () => {
     })
   })
   describe('reward APY tests', () => {
+    const liquidity = new BN('1326751756584093466941')
+    const tickSpacing = 1
     it('ticks from current snapshot', async () => {
-      const current = jsonArrayToTicks(usdcUsdhPoolSnapshot.ticksCurrentSnapshot)
-
       const paramsApy: ApyRewardsParams = {
-        ticksCurrentSnapshot: current,
-        currentTickIndex: usdcUsdhPoolSnapshot.currentTickIndex,
-        rewardInUsd: 3000,
+        currentTickIndex: 45,
+        currentLiquidity: liquidity,
+        allLiquidityInTokens: new BN(79372943242),
+        tickSpacing, // 1
+        rewardInUsd: 1100,
         tokenPrice: 0.9995,
         tokenDecimal: 6,
         duration: 14
       }
 
       const reward = rewardsAPY(paramsApy)
-      assert.equal(reward.apy, 1.1079550023602733)
-      assert.equal(reward.apySingleTick, 4.048465442981172)
-    })
-    it('empty array', async () => {
-      const current: Tick[] = []
 
+      assert.equal(reward.apy, 0.4347050575407594)
+      assert.equal(reward.apySingleTick, 0.5422869905571346)
+    })
+    it('zero liqudity', async () => {
       const paramsApy: ApyRewardsParams = {
-        ticksCurrentSnapshot: current,
-        currentTickIndex: usdcUsdhPoolSnapshot.currentTickIndex,
-        rewardInUsd: 3000,
+        currentTickIndex: 0,
+        currentLiquidity: new BN(0),
+        allLiquidityInTokens: new BN(0),
+        tickSpacing, //1
+        rewardInUsd: 100,
         tokenPrice: 0.9995,
         tokenDecimal: 6,
-        duration: 14
+        duration: 10
       }
 
       const reward = rewardsAPY(paramsApy)
@@ -1988,53 +1997,79 @@ describe('Math', () => {
     })
   })
   describe('position reward APY tests', () => {
-    it('ticks from current snapshot', async () => {
-      const current = jsonArrayToTicks(usdcUsdhPoolSnapshot.ticksCurrentSnapshot)
-
-      const tickLower = 4
-      const tickUpper = 5
-      const tickMapCurrent = parseFeeGrowthAndLiquidityOnTicksMap(current)
-      // trunk-ignore(eslint/@typescript-eslint/consistent-type-assertions)
-      const liquidity = tickMapCurrent.get(tickLower)?.liquidity as BN
-
+    const poolLiquidity = new BN('232145105223137352120')
+    const tickLower = 4
+    const tickUpper = 5
+    it('active position 20% of liquidity', async () => {
       const paramsApy: ApyPositionRewardsParams = {
-        ticksCurrentSnapshot: current,
+        poolLiquidity,
         currentTickIndex: usdcUsdhPoolSnapshot.currentTickIndex,
-        rewardInUsd: 3000,
+        rewardInUsd: 1000,
         tokenPrice: 0.9995,
         tokenDecimal: 6,
-        duration: 14,
-        positionLiquidity: { v: liquidity },
+        duration: 10,
+        positionLiquidity: { v: poolLiquidity.divn(5) },
         lowerTickIndex: tickLower,
         upperTickIndex: tickUpper
       }
 
       const apy = positionsRewardAPY(paramsApy)
-      assert.equal(apy, 4.048465442981172)
+      assert.equal(apy, 21.980063906676584)
     })
-    it('empty array', async () => {
-      const current: Tick[] = []
-
-      const tickLower = 4
-      const tickUpper = 5
-      const tickMapCurrent = parseFeeGrowthAndLiquidityOnTicksMap(current)
-      // trunk-ignore(eslint/@typescript-eslint/consistent-type-assertions)
-      const liquidity = tickMapCurrent.get(tickLower)?.liquidity as BN
-
+    it('zero liquidity', async () => {
       const paramsApy: ApyPositionRewardsParams = {
-        ticksCurrentSnapshot: current,
+        poolLiquidity: new BN(0),
         currentTickIndex: usdcUsdhPoolSnapshot.currentTickIndex,
         rewardInUsd: 3000,
         tokenPrice: 0.9995,
         tokenDecimal: 6,
         duration: 14,
-        positionLiquidity: { v: liquidity },
+        positionLiquidity: { v: new BN(1) },
         lowerTickIndex: tickLower,
         upperTickIndex: tickUpper
       }
 
       const apy = positionsRewardAPY(paramsApy)
       assert.equal(apy, Infinity)
+    })
+  })
+  describe('calculate user daily rewards tests', () => {
+    const poolLiquidity = new BN('232145105223137352120')
+    it('active position 20% of liquidity', async () => {
+      const tickLower = 4
+      const tickUpper = 5
+
+      const paramsApy: UserDailyRewardsParams = {
+        poolLiquidity,
+        currentTickIndex: usdcUsdhPoolSnapshot.currentTickIndex,
+        rewardInTokens: 10000,
+        userLiquidity: { v: poolLiquidity.divn(5) },
+        duration: 10,
+        lowerTickIndex: tickLower,
+        upperTickIndex: tickUpper
+      }
+
+      const dailyRewards = calculateUserDailyRewards(paramsApy)
+      //10000 tokens / 10 days * 20% of liquidity = 200 tokens
+      assert.equal(dailyRewards, 200)
+    })
+    it('inactive position', async () => {
+      const tickLower = 100
+      const tickUpper = 110
+
+      const paramsApy: UserDailyRewardsParams = {
+        poolLiquidity,
+        currentTickIndex: usdcUsdhPoolSnapshot.currentTickIndex,
+        rewardInTokens: 10000,
+        userLiquidity: { v: poolLiquidity.divn(5) },
+        duration: 10,
+        lowerTickIndex: tickLower,
+        upperTickIndex: tickUpper
+      }
+
+      const dailyRewards = calculateUserDailyRewards(paramsApy)
+      // position is inactive should return 0
+      assert.equal(dailyRewards, 0)
     })
   })
   describe('test getTokenData', () => {

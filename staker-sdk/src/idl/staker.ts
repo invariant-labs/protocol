@@ -258,6 +258,37 @@ export type Staker = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "closeStakeByOwner",
+      "accounts": [
+        {
+          "name": "incentive",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userStake",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "position",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "i32"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -326,6 +357,10 @@ export type Staker = {
         "fields": [
           {
             "name": "incentive",
+            "type": "publicKey"
+          },
+          {
+            "name": "position",
             "type": "publicKey"
           },
           {
@@ -777,6 +812,37 @@ export const IDL: Staker = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "closeStakeByOwner",
+      "accounts": [
+        {
+          "name": "incentive",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "userStake",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "position",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "i32"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -845,6 +911,10 @@ export const IDL: Staker = {
         "fields": [
           {
             "name": "incentive",
+            "type": "publicKey"
+          },
+          {
+            "name": "position",
             "type": "publicKey"
           },
           {

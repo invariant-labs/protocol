@@ -4,9 +4,16 @@ import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken, initEverything } from './testUtils'
-import { Market, Pair, LIQUIDITY_DENOMINATOR, Network } from '@invariant-labs/sdk'
-import { FeeTier } from '@invariant-labs/sdk/lib/market'
-import { fromFee } from '@invariant-labs/sdk/lib/utils'
+import {
+  Market,
+  Pair,
+  LIQUIDITY_DENOMINATOR,
+  Network,
+  calculatePriceSqrt,
+  MIN_TICK
+} from '@invariant-labs/sdk'
+import { FeeTier, Tick } from '@invariant-labs/sdk/lib/market'
+import { fromFee, simulateSwap, SimulationStatus } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal, tou64 } from '@invariant-labs/sdk/src/utils'
 import { CreateTick, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 
@@ -126,12 +133,40 @@ describe('Referral swap', () => {
     const reserveYBefore = (await tokenY.getAccountInfo(poolDataBefore.tokenYReserve)).amount
     const referralTokenXBefore = (await tokenX.getAccountInfo(referralTokenXAccount)).amount
 
+    // simulate swap before
+    const ticks: Map<number, Tick> = new Map(
+      (await market.getAllTicks(pair)).map(tick => {
+        return [tick.index, tick]
+      })
+    )
+    const tickmap = await market.getTickmap(pair)
+    const {
+      status,
+      accumulatedAmountIn,
+      accumulatedFee,
+      accumulatedAmountOut,
+      minReceived,
+      amountPerTick,
+      crossedTicks,
+      priceImpact,
+      priceAfterSwap
+    } = simulateSwap({
+      pool: poolDataBefore,
+      byAmountIn: true,
+      slippage: toDecimal(1, 0),
+      priceLimit: calculatePriceSqrt(MIN_TICK),
+      swapAmount: amount,
+      xToY: true,
+      ticks,
+      tickmap
+    })
+
     const swapVars: Swap = {
       pair,
       xToY: true,
       amount,
-      estimatedPriceAfterSwap: poolDataBefore.sqrtPrice, // ignore price impact using high slippage tolerance
-      slippage: toDecimal(1, 0),
+      estimatedPriceAfterSwap: { v: priceAfterSwap.subn(1) },
+      slippage: toDecimal(0, 0),
       accountX,
       accountY,
       byAmountIn: true,
@@ -175,5 +210,22 @@ describe('Referral swap', () => {
     assert.ok(poolData.feeProtocolTokenY.eqn(0))
     assert.equal(poolData.feeGrowthGlobalX.v.toString(), '489000000000000000000')
     assert.ok(poolData.feeGrowthGlobalY.v.eqn(0))
+
+    // validate with simulation
+    assert.equal(SimulationStatus.Ok, status.valueOf())
+    assert.ok(poolData.sqrtPrice.v.eq(priceAfterSwap))
+    assert.ok(amount.eq(accumulatedAmountIn.add(accumulatedFee)))
+    assert.ok(accumulatedAmountOut.eq(expectedYTransferTo))
+    // 2001 + 11 = 2012
+    // (66422 + 333) + (31076 + 157) = 97988
+    assert.equal(crossedTicks.length, 1)
+    assert.equal(crossedTicks[0], -20)
+    assert.equal(amountPerTick.length, 2)
+    assert.ok(amountPerTick[0].eqn(2012))
+    assert.ok(amountPerTick[1].eqn(97988))
+    // real     17.1292689332... %
+    // expected 17.1292689333 %
+    assert.ok(priceImpact.eq(new BN('171292689333')))
+    assert.ok(minReceived.eqn(0)) // due extremely low price limit
   })
 })

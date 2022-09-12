@@ -44,4 +44,8 @@ pub mod staker {
     pub fn remove_stake(ctx: Context<RemoveStake>) -> ProgramResult {
         instructions::remove_stake::handler(ctx)
     }
+
+    pub fn close_stake_by_owner(ctx: Context<CloseStakeByOwner>, _index: i32) -> ProgramResult {
+        instructions::close_stake_by_owner::handler(ctx, _index)
+    }
 }

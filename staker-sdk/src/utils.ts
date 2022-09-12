@@ -44,8 +44,17 @@ export const calculateReward = ({
   if (currentTime.lte(startTime)) {
     throw Error("The incentive didn't start yet!")
   }
-  const secondsInside = secondsPerLiquidityInside.v
-    .sub(secondsPerLiquidityInsideInitial.v)
+  let secondsPerLiquidity = new BN(0)
+
+  if (secondsPerLiquidityInside.v.lt(secondsPerLiquidityInsideInitial.v)) {
+    secondsPerLiquidity = U128MAX.sub(
+      secondsPerLiquidityInsideInitial.v.sub(secondsPerLiquidityInside.v)
+    )
+  } else {
+    secondsPerLiquidity = secondsPerLiquidityInside.v.sub(secondsPerLiquidityInsideInitial.v)
+  }
+
+  const secondsInside = secondsPerLiquidity
     .mul(liquidity.v)
     .div(LIQUIDITY_DENOMINATOR)
     .div(DENOMINATOR)

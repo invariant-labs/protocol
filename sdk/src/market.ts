@@ -24,7 +24,9 @@ import {
   getMaxTick,
   getMinTick,
   getPrice,
+  getTokens,
   getTokensData,
+  isActive,
   parseLiquidityOnTicks,
   PositionClaimData,
   SEED,
@@ -257,14 +259,31 @@ export class Market {
     ).map(a => a.account) as Tick[]
   }
 
+  async getAllPoolLiquidityInTokens(poolAddress: PublicKey) {
+    return (await this.program.account.position.all())
+      .map(({ account }) => account)
+      .filter(account => account.pool.equals(poolAddress))
+      .reduce(
+        (tokens, { liquidity, lowerTickIndex, upperTickIndex }) =>
+          tokens.add(getTokens(liquidity.v, lowerTickIndex, upperTickIndex)),
+        new BN(0)
+      )
+  }
+
+  async getActiveLiquidityInTokens(poolAddress: PublicKey, currentTickIndex: number) {
+    return (await this.program.account.position.all())
+      .map(({ account }) => account)
+      .filter(account => account.pool.equals(poolAddress))
+      .filter(account => isActive(account.lowerTickIndex, account.upperTickIndex, currentTickIndex))
+      .reduce(
+        (tokens, { liquidity, lowerTickIndex, upperTickIndex }) =>
+          tokens.add(getTokens(liquidity.v, lowerTickIndex, upperTickIndex)),
+        new BN(0)
+      )
+  }
+
   async getAllPositions(owner: PublicKey) {
-    return (
-      await this.program.account.tick.all([
-        {
-          memcmp: { bytes: bs58.encode(owner.toBuffer()), offset: 8 }
-        }
-      ])
-    ).map(a => a.account) as Position[]
+    return (await this.program.account.position.all()).map(({ account }) => account) as Position[]
   }
 
   async getAllUserPositions(owner: PublicKey): Promise<PositionStructure[]> {
@@ -965,7 +984,7 @@ export class Market {
   async swap(swap: Swap, signer: Keypair) {
     const tx = await this.swapTransaction(swap)
 
-    await signAndSend(tx, [signer], this.connection)
+    return await signAndSend(tx, [signer], this.connection)
   }
 
   async getReserveBalances(pair: Pair, tokenX: Token, tokenY: Token) {
