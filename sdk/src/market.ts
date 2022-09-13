@@ -19,6 +19,7 @@ import {
 } from './math'
 import {
   calculateClaimAmount,
+  computeUnitsInstruction,
   feeToTickSpacing,
   getFeeTierAddress,
   getMaxTick,
@@ -771,6 +772,7 @@ export class Market {
     const tokenYReserve = Keypair.generate()
     const tick = initTick ?? 0
 
+    const setCuIx = computeUnitsInstruction(1_400_000, payerPubkey)
     const { address: stateAddress } = await this.getStateAddress()
 
     const [poolAddress] = await pair.getAddressAndBump(this.program.programId)
@@ -790,6 +792,7 @@ export class Market {
     })
 
     transaction
+      .add(setCuIx)
       .add(
         SystemProgram.createAccount({
           fromPubkey: payerPubkey,
@@ -977,8 +980,9 @@ export class Market {
   }
 
   async swapTransaction(swap: Swap) {
-    const ix = await this.swapInstruction(swap)
-    return new Transaction().add(ix)
+    const setCuIx = computeUnitsInstruction(1_400_000, swap.owner ?? this.wallet.publicKey)
+    const swapIx = await this.swapInstruction(swap)
+    return new Transaction().add(setCuIx).add(swapIx)
   }
 
   async swap(swap: Swap, signer: Keypair) {

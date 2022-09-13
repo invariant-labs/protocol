@@ -5,7 +5,7 @@ import {
   signAndSend,
   sleep,
   INVARIANT_ERRORS,
-  ComputeUnitsInstruction,
+  computeUnitsInstruction,
   PRICE_DENOMINATOR,
   LIQUIDITY_DENOMINATOR
 } from './utils'
@@ -43,7 +43,7 @@ export {
   MOCK_TOKENS,
   FEE_TIER,
   TICK_SEARCH_RANGE,
-  ComputeUnitsInstruction
+  computeUnitsInstruction
 }
 export interface IWallet {
   signTransaction: (tx: Transaction) => Promise<Transaction>
