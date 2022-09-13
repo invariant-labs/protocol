@@ -35,6 +35,7 @@ To get and choose suitable `feeTier`, see `FEE_TIER` constant, i.e.
 
 ```ts
 const FEE_TIERS: FeeTier[] = [
+  { fee: fromFee(new BN(1)) },
   { fee: fromFee(new BN(10)) },
   { fee: fromFee(new BN(50)) },
   { fee: fromFee(new BN(100)) },

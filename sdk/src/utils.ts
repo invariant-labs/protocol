@@ -264,6 +264,7 @@ export const feeToTickSpacing = (fee: BN): number => {
 
 export const FEE_TIERS: FeeTier[] = [
   { fee: fromFee(new BN(1)) },
+  { fee: fromFee(new BN(10)) },
   { fee: fromFee(new BN(50)) },
   { fee: fromFee(new BN(100)) },
   { fee: fromFee(new BN(300)) },
