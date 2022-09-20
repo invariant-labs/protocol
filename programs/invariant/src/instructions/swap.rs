@@ -154,7 +154,6 @@ impl<'info> Swap<'info> {
                             false => ctx.accounts.account_y.mint,
                         };
                     let is_on_whitelist = contains_owner(token.owner);
-
                     match is_valid_mint && is_on_whitelist {
                         true => Some(account),
                         false => None,
