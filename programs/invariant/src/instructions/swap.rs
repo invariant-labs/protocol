@@ -9,7 +9,7 @@ use crate::structs::tickmap::Tickmap;
 use crate::util::get_closer_limit;
 use crate::ErrorCode::*;
 use crate::*;
-use crate::{decimals::*, referral::whitelist::contains};
+use crate::{decimals::*, referral::whitelist::contains_owner};
 use anchor_lang::prelude::*;
 use anchor_spl::token::{TokenAccount, Transfer};
 
@@ -147,19 +147,18 @@ impl<'info> Swap<'info> {
             .find(|account| account.owner == token::ID)
         {
             Some(account) => match Account::<'_, TokenAccount>::try_from(account) {
-                Ok(token) => match contains(token.owner) {
-                    true => {
-                        match token.mint
-                            == match x_to_y {
-                                true => ctx.accounts.account_x.mint,
-                                false => ctx.accounts.account_y.mint,
-                            } {
-                            true => Some(account),
-                            false => None,
-                        }
+                Ok(token) => {
+                    let is_valid_mint = match x_to_y {
+                        true => ctx.accounts.account_x.mint,
+                        false => ctx.accounts.account_y.mint,
+                    };
+                    let is_on_whitelist = contains_owner(token.owner);
+
+                    match is_valid_mint && is_on_whitelist {
+                        true => Some(account),
+                        false => None,
                     }
-                    false => None,
-                },
+                }
                 Err(_) => None,
             },
             None => None,
