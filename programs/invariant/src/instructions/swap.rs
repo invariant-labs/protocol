@@ -144,14 +144,15 @@ impl<'info> Swap<'info> {
         let ref_account = match ctx
             .remaining_accounts
             .iter()
-            .find(|account| account.owner == token::ID)
+            .find(|account| *account.owner == token::ID)
         {
             Some(account) => match Account::<'_, TokenAccount>::try_from(account) {
                 Ok(token) => {
-                    let is_valid_mint = match x_to_y {
-                        true => ctx.accounts.account_x.mint,
-                        false => ctx.accounts.account_y.mint,
-                    };
+                    let is_valid_mint = token.mint
+                        == match x_to_y {
+                            true => ctx.accounts.account_x.mint,
+                            false => ctx.accounts.account_y.mint,
+                        };
                     let is_on_whitelist = contains_owner(token.owner);
 
                     match is_valid_mint && is_on_whitelist {
