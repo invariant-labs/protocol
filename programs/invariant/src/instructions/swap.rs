@@ -144,19 +144,22 @@ impl<'info> Swap<'info> {
         let ref_account = match ctx
             .remaining_accounts
             .iter()
-            .find(|account| contains(*account.owner))
+            .find(|account| account.owner == token::ID)
         {
             Some(account) => match Account::<'_, TokenAccount>::try_from(account) {
-                Ok(token) => {
-                    match token.mint
-                        == match x_to_y {
-                            true => ctx.accounts.account_x.mint,
-                            false => ctx.accounts.account_y.mint,
-                        } {
-                        true => Some(account),
-                        false => None,
+                Ok(token) => match contains(token.owner) {
+                    true => {
+                        match token.mint
+                            == match x_to_y {
+                                true => ctx.accounts.account_x.mint,
+                                false => ctx.accounts.account_y.mint,
+                            } {
+                            true => Some(account),
+                            false => None,
+                        }
                     }
-                }
+                    false => None,
+                },
                 Err(_) => None,
             },
             None => None,
