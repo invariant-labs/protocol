@@ -46,7 +46,7 @@ impl Pool {
         };
         let pool_fee = amount - protocol_fee - ref_fee;
 
-        if pool_fee.is_zero() || self.liquidity.is_zero() {
+        if (pool_fee.is_zero() && protocol_fee.is_zero()) || self.liquidity.is_zero() {
             return ref_fee;
         }
         let fee_growth = FeeGrowth::from_fee(self.liquidity, pool_fee);
