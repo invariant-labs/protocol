@@ -174,6 +174,18 @@ mod tests {
             assert_eq!({ pool.fee_protocol_token_y }, 40);
             assert_eq!(ref_fee, TokenAmount(2));
         }
+        // all tokens go to protocol fee
+        {
+            let mut pool = pool.clone();
+            let amount = TokenAmount::new(1);
+            let ref_fee = pool.add_fee(amount, FixedPoint::from_scale(2, 1), true);
+
+            assert_eq!({ pool.fee_growth_global_x }, FeeGrowth::new(0));
+            assert_eq!({ pool.fee_growth_global_y }, FeeGrowth::new(0));
+            assert_eq!({ pool.fee_protocol_token_x }, 1);
+            assert_eq!({ pool.fee_protocol_token_y }, 0);
+            assert_eq!(ref_fee, TokenAmount(0));
+        }
     }
 
     #[test]
