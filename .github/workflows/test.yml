@@ -19,6 +19,7 @@ jobs:
         case:
           [
             'npm run test:swap',
+            'npm run test:multiple-swap'
             'npm run test:cross',
             'npm run test:cross-both-side',
             'npm run test:liquidity-gap',
