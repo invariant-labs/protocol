@@ -5,7 +5,7 @@ import { Market, Network, Pair, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sd
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { createToken, initEverything } from './testUtils'
+import { createToken, initMarket } from './testUtils'
 import { assert } from 'chai'
 import {
   assertThrowsAsync,
@@ -61,7 +61,7 @@ describe('protocol-fee', () => {
   })
 
   it('#init()', async () => {
-    await initEverything(market, [pair], admin)
+    await initMarket(market, [pair], admin)
   })
 
   it('#initPosition()', async () => {

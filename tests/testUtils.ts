@@ -297,7 +297,7 @@ export const createTicksFromRange = async (
   )
 }
 
-export const initEverything = async (
+export const initMarket = async (
   market: Market,
   pairs: Pair[],
   admin: Keypair,

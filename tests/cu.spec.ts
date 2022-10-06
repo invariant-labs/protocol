@@ -1,7 +1,7 @@
 import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
-import { assertThrowsAsync, createToken, createTokensAndPool, initEverything } from './testUtils'
+import { assertThrowsAsync, createToken, createTokensAndPool, initMarket } from './testUtils'
 import { Market, Pair, Network } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { feeToTickSpacing, fromFee, getMaxTick } from '@invariant-labs/sdk/lib/utils'
@@ -46,7 +46,7 @@ describe('Compute units', () => {
   })
 
   it('#init()', async () => {
-    await initEverything(market, [pair], admin, 0)
+    await initMarket(market, [pair], admin, 0)
   })
 
   it('#swap() adjustable', async () => {

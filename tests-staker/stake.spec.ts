@@ -12,7 +12,7 @@ import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
 import { Decimal, Staker, CreateStake, CreateIncentive } from '../staker-sdk/src/staker'
 import { createToken, signAndSend, eqDecimal, assertThrowsAsync } from './testUtils'
-import { createToken as createTkn, initEverything } from '../tests/testUtils'
+import { createToken as createTkn, initMarket } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { fromFee, FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
@@ -102,7 +102,7 @@ describe('Stake tests', () => {
   })
 
   it('#init()', async () => {
-    await initEverything(market, [pair], admin)
+    await initMarket(market, [pair], admin)
     pool = await pair.getAddress(anchor.workspace.Invariant.programId)
   })
 

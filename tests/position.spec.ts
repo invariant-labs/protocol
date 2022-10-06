@@ -10,7 +10,7 @@ import {
 } from '@invariant-labs/sdk'
 import { Provider, BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { createToken, eqDecimal, initEverything } from './testUtils'
+import { createToken, eqDecimal, initMarket } from './testUtils'
 import { fromFee, assertThrowsAsync, tou64 } from '@invariant-labs/sdk/src/utils'
 import { CreatePool, CreateTick, InitPosition } from '@invariant-labs/sdk/src/market'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
@@ -72,7 +72,7 @@ describe('position', () => {
 
   it('#init()', async () => {
     initTick = -23028
-    await initEverything(market, [pair], admin, initTick)
+    await initMarket(market, [pair], admin, initTick)
   })
 
   it('#createPositionList()', async () => {

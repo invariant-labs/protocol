@@ -3,7 +3,7 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 import { Network, Market, Pair, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { createPosition, createToken, initEverything, performSwap } from './testUtils'
+import { createPosition, createToken, initMarket, performSwap } from './testUtils'
 import { assert } from 'chai'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier, RemovePosition } from '@invariant-labs/sdk/lib/market'
@@ -52,7 +52,7 @@ describe('big-swap', () => {
   })
 
   it('#init()', async () => {
-    await initEverything(market, [pair], admin)
+    await initMarket(market, [pair], admin)
   })
 
   it('#swap()', async () => {
