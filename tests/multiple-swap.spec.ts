@@ -52,7 +52,6 @@ describe('Multiple swap', () => {
       createToken(connection, wallet, mintAuthority),
       createToken(connection, wallet, mintAuthority)
     ])
-
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
@@ -93,8 +92,8 @@ describe('Multiple swap', () => {
       lowerTick,
       upperTick,
       liquidityDelta,
-      knownPrice: (await market.getPool(pair)).sqrtPrice,
-      slippage: { v: new BN(0) }
+      knownPrice: { v: PRICE_DENOMINATOR }, // initial price = 1.0
+      slippage: { v: new BN(0) } // 0% slippage
     }
     await market.initPosition(initPositionVars, user1)
 
@@ -150,7 +149,6 @@ describe('Multiple swap', () => {
       createToken(connection, wallet, mintAuthority),
       createToken(connection, wallet, mintAuthority)
     ])
-
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
     tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
     tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
@@ -191,8 +189,8 @@ describe('Multiple swap', () => {
       lowerTick,
       upperTick,
       liquidityDelta,
-      knownPrice: (await market.getPool(pair)).sqrtPrice,
-      slippage: { v: new BN(0) }
+      knownPrice: { v: PRICE_DENOMINATOR }, // initial price = 1.0
+      slippage: { v: new BN(0) } // 0% slippage
     }
     await market.initPosition(initPositionVars, user1)
 

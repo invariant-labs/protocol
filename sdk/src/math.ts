@@ -494,7 +494,11 @@ export const getLiquidity = (
   currentSqrtPrice: Decimal,
   roundingUp: boolean,
   tickSpacing?: number
-) => {
+): {
+  x: BN
+  y: BN
+  liquidity: { v: BN }
+} => {
   if ((lowerTick === -Infinity || upperTick === Infinity) && tickSpacing === undefined) {
     throw new Error('tickSpacing is required for calculating full range liquidity')
   }
@@ -507,10 +511,16 @@ export const getLiquidity = (
 
   if (upperSqrtPrice.v.lt(currentSqrtPrice.v)) {
     // single token y
-    return getLiquidityByYPrice(y, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
+    return {
+      ...getLiquidityByYPrice(y, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp),
+      y
+    }
   } else if (currentSqrtPrice.v.lt(lowerSqrtPrice.v)) {
     // single token x
-    return getLiquidityByXPrice(x, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp)
+    return {
+      ...getLiquidityByXPrice(x, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp),
+      x
+    }
   }
 
   const { liquidity: liquidityByY, x: estimatedX } = getLiquidityByYPrice(
@@ -527,9 +537,6 @@ export const getLiquidity = (
     currentSqrtPrice,
     roundingUp
   )
-  assert.ok(estimatedX.eq(x))
-  assert.ok(estimatedY.eq(y))
-
   return {
     x,
     y,
