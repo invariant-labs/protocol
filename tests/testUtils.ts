@@ -303,7 +303,9 @@ export const initMarket = async (
   admin: Keypair,
   initTick?: number
 ) => {
-  await market.createState(admin.publicKey, admin)
+  try {
+    await market.createState(admin.publicKey, admin)
+  } catch (e) {}
 
   const state = await market.getState()
   const { bump } = await market.getStateAddress()

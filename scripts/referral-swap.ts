@@ -6,11 +6,8 @@ import { FEE_TIERS } from '@invariant-labs/sdk/src/utils'
 import { Tick } from '@invariant-labs/sdk/src/market'
 import { BN } from '../staker-sdk/lib'
 import { simulateSwap } from '@invariant-labs/sdk/lib/utils'
-import { calculatePriceSqrt } from '@invariant-labs/sdk'
-import { MIN_TICK } from '@invariant-labs/sdk'
 import { signAndSend } from '@invariant-labs/sdk'
 import { associatedAddress } from '@project-serum/anchor/dist/cjs/utils/token'
-import { MAX_TICK } from '@invariant-labs/sdk'
 
 const provider = Provider.local(
   'https://tame-ancient-mountain.solana-mainnet.quiknode.pro/6a9a95bf7bbb108aea620e7ee4c1fd5e1b67cc62',
