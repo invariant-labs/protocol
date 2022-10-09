@@ -3,7 +3,7 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
-import { createToken, initMarket } from './testUtils'
+import { createToken, eqDecimal, initMarket } from './testUtils'
 import { Market, Pair, Network, PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
@@ -21,7 +21,7 @@ describe('Multiple swap', () => {
   const user1 = Keypair.generate()
   const user2 = Keypair.generate()
   const feeTier: FeeTier = {
-    fee: fromFee(new BN(10)),
+    fee: fromFee(new BN(100)),
     tickSpacing: 1
   }
   let market: Market
@@ -142,6 +142,30 @@ describe('Multiple swap', () => {
         user2
       )
     }
+    // const data = await market.getPool(pair)
+    const {
+      currentTickIndex,
+      feeGrowthGlobalX,
+      feeGrowthGlobalY,
+      feeProtocolTokenX,
+      feeProtocolTokenY,
+      liquidity,
+      sqrtPrice,
+      tokenXReserve,
+      tokenYReserve
+    } = await market.getPool(pair)
+
+    // validate pool data
+    assert.equal(currentTickIndex, -821)
+    assert.ok(feeGrowthGlobalX.v.eqn(0))
+    assert.ok(feeGrowthGlobalY.v.eqn(0))
+    assert.ok(feeProtocolTokenX.eqn(10))
+    assert.ok(feeProtocolTokenY.eqn(0))
+    assert.ok(eqDecimal(liquidity, liquidityDelta))
+    assert.ok(eqDecimal(sqrtPrice, { v: new BN('959803483698079499776690') }))
+
+    // validate pool reserves
+    // validate user2 balances
   })
   it('swap Y to X 10 times', async () => {
     // initialize market
