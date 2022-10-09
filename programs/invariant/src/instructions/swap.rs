@@ -165,19 +165,19 @@ impl<'info> Swap<'info> {
         };
 
         // limit is on the right side of price
-        if x_to_y {
-            require!(
-                { pool.sqrt_price } > sqrt_price_limit
-                    && sqrt_price_limit <= Price::new(MAX_SQRT_PRICE),
-                WrongLimit
-            );
-        } else {
-            require!(
-                { pool.sqrt_price } < sqrt_price_limit
-                    && sqrt_price_limit >= Price::new(MIN_SQRT_PRICE),
-                WrongLimit
-            );
-        }
+        // if x_to_y {
+        //     require!(
+        //         { pool.sqrt_price } > sqrt_price_limit
+        //             && sqrt_price_limit <= Price::new(MAX_SQRT_PRICE),
+        //         WrongLimit
+        //     );
+        // } else {
+        //     require!(
+        //         { pool.sqrt_price } < sqrt_price_limit
+        //             && sqrt_price_limit >= Price::new(MIN_SQRT_PRICE),
+        //         WrongLimit
+        //     );
+        // }
 
         let mut remaining_amount = TokenAmount(amount);
 
@@ -186,6 +186,7 @@ impl<'info> Swap<'info> {
         let mut total_amount_referral = TokenAmount(0);
 
         while !remaining_amount.is_zero() {
+            // HERE sqrt_price_limit used
             let (swap_limit, limiting_tick) = get_closer_limit(
                 sqrt_price_limit,
                 x_to_y,
@@ -193,6 +194,8 @@ impl<'info> Swap<'info> {
                 pool.tick_spacing,
                 &tickmap,
             )?;
+            msg!("swap_limit = {:?}", swap_limit);
+            msg!("limiting_tick = {:?}", limiting_tick);
 
             let result = compute_swap_step(
                 pool.sqrt_price,
@@ -203,11 +206,13 @@ impl<'info> Swap<'info> {
                 pool.fee,
             );
             // make remaining amount smaller
+            msg!("remaining_amount before = {:?}", remaining_amount);
             if by_amount_in {
                 remaining_amount -= result.amount_in + result.fee_amount;
             } else {
                 remaining_amount -= result.amount_out;
             }
+            msg!("remaining_amount after = {:?}", remaining_amount);
 
             total_amount_referral += match ref_account.is_some() {
                 true => pool.add_fee(result.fee_amount, FixedPoint::from_scale(2, 1), x_to_y),
@@ -219,24 +224,33 @@ impl<'info> Swap<'info> {
             total_amount_in += result.amount_in + result.fee_amount;
             total_amount_out += result.amount_out;
 
+            let is_enough_amount_to_cross = is_enough_amount_to_push_price(
+                remaining_amount,
+                result.next_price_sqrt,
+                pool.liquidity,
+                pool.fee,
+                by_amount_in,
+                x_to_y,
+            );
+
             // Fail if price would go over swap limit
-            if { pool.sqrt_price } == sqrt_price_limit && !remaining_amount.is_zero() {
+            if { pool.sqrt_price } == sqrt_price_limit
+                && !remaining_amount.is_zero()
+                && is_enough_amount_to_cross
+            {
                 return Err(ErrorCode::PriceLimitReached.into());
             }
+            msg!("pool.sqrt_price = {:?}", { pool.sqrt_price });
+            // msg!("remaining_amount = {:?}", { remaining_amount });
 
             // crossing tick
             // trunk-ignore(clippy/unnecessary_unwrap)
             if result.next_price_sqrt == swap_limit && limiting_tick.is_some() {
                 let (tick_index, initialized) = limiting_tick.unwrap();
 
-                let is_enough_amount_to_cross = is_enough_amount_to_push_price(
-                    remaining_amount,
-                    result.next_price_sqrt,
-                    pool.liquidity,
-                    pool.fee,
-                    by_amount_in,
-                    x_to_y,
-                );
+                msg!("is_enough_amount_to_cross = {:?}", {
+                    is_enough_amount_to_cross
+                });
 
                 if initialized {
                     // Calculating address of the crossed tick
@@ -269,6 +283,7 @@ impl<'info> Swap<'info> {
                             pool.add_fee(remaining_amount, FixedPoint::from_integer(0), x_to_y);
                             total_amount_in += remaining_amount;
                         }
+                        msg!("consume tokens");
                         remaining_amount = TokenAmount(0);
                     }
                 }
@@ -288,7 +303,14 @@ impl<'info> Swap<'info> {
                 );
                 pool.current_tick_index =
                     get_tick_at_sqrt_price(result.next_price_sqrt, pool.tick_spacing);
+                msg!("new tick index = {:?}", { pool.current_tick_index });
             }
+
+            msg!("remaining_amount = {:?}", remaining_amount);
+            msg!("sqrt_price_limit = {:?}", sqrt_price_limit);
+            msg!("pool.sqrt_price = {:?}", { pool.sqrt_price });
+            // TO REMOVE
+            // remaining_amount = TokenAmount(0);
         }
 
         if total_amount_out.0 == 0 {
@@ -303,6 +325,10 @@ impl<'info> Swap<'info> {
 
         let signer: &[&[&[u8]]] = get_signer!(state.nonce);
         token::transfer(send_ctx.with_signer(signer), total_amount_out.0)?;
+
+        msg!("total_amount_in = {:?}", { total_amount_in.0 });
+        msg!("total_amount_out = {:?}", { total_amount_out.0 });
+        msg!("price after calculation = {:?}", { pool.sqrt_price });
 
         match ref_account.is_some() && !total_amount_referral.is_zero() {
             true => {

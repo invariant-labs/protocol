@@ -423,6 +423,8 @@ export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
   let sqrtPrice: Decimal
   let init: boolean
 
+  console.log(`index = ${index}`)
+
   if (index !== null) {
     sqrtPrice = calculatePriceSqrt(index)
     init = true
@@ -430,12 +432,17 @@ export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
     index = getSearchLimit(new BN(currentTick), new BN(tickSpacing), !xToY).toNumber()
     sqrtPrice = calculatePriceSqrt(index as number)
     init = false
+    console.log(`calculated index = ${index}`)
+    console.log(`calculated sqrtPrice = ${sqrtPrice.v.toString()}`)
+    console.log(`sqrtPriceLimit = ${sqrtPriceLimit.v.toString()}`)
   }
   if (xToY && sqrtPrice.v.gt(sqrtPriceLimit.v) && index !== null) {
+    console.log('xToY swap')
     return { swapLimit: sqrtPrice, limitingTick: { index, initialized: init } }
   } else if (!xToY && sqrtPrice.v.lt(sqrtPriceLimit.v) && index !== null) {
     return { swapLimit: sqrtPrice, limitingTick: { index, initialized: init } }
   } else {
+    console.log('tick not found')
     return { swapLimit: sqrtPriceLimit, limitingTick: null }
   }
 }
@@ -510,8 +517,10 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
   let previousTickIndex = MAX_TICK + 1
   const amountPerTick: BN[] = []
   const crossedTicks: number[] = []
+  console.log(`optionalPriceLimit = ${optionalPriceLimit?.v.toString()}`)
   const priceLimit =
-    optionalPriceLimit ?? xToY ? calculatePriceSqrt(MIN_TICK) : calculatePriceSqrt(MAX_TICK)
+    optionalPriceLimit ?? (xToY ? calculatePriceSqrt(MIN_TICK) : calculatePriceSqrt(MAX_TICK))
+  console.log(`[PRE] priceLimit = ${priceLimit.v.toString()}`)
   let accumulatedAmount: BN = new BN(0)
   let accumulatedAmountOut: BN = new BN(0)
   let accumulatedAmountIn: BN = new BN(0)
@@ -543,6 +552,8 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     }
 
     const { swapLimit, limitingTick } = getCloserLimit(closerLimit)
+    console.log(`swap_limit = ${swapLimit.v.toString()}`)
+    console.log(`limitingTick = ${limitingTick}`)
     const result = calculateSwapStep(
       sqrtPrice,
       swapLimit,
@@ -564,8 +575,22 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
       amountDiff = result.amountOut
     }
 
+    console.log(`remaining_amount before = ${remainingAmount.toString()}`)
     remainingAmount = remainingAmount.sub(amountDiff)
+    console.log(`remaining_amount after = ${remainingAmount.toString()}`)
     sqrtPrice = result.nextPrice
+    console.log(`sqrtPrice = ${sqrtPrice.v.toString()}`)
+
+    const isEnoughAmountToCrossTick = isEnoughAmountToPushPrice(
+      remainingAmount,
+      result.nextPrice,
+      pool.liquidity,
+      pool.fee,
+      byAmountIn,
+      xToY
+    )
+
+    // remainingAmount === 0 && isEnoughAmountToCrossTick
 
     if (sqrtPrice.v.eq(priceLimitAfterSlippage.v) && remainingAmount.gt(new BN(0))) {
       // throw new Error(SimulationErrors.PriceLimitReached)
@@ -573,19 +598,12 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
       break
     }
 
+    console.log(`isEnoughAmountToCrossTick = ${isEnoughAmountToCrossTick}`)
+
     // crossing tick
     if (result.nextPrice.v.eq(swapLimit.v) && limitingTick != null) {
       const tickIndex: number = limitingTick.index
       const initialized: boolean = limitingTick.initialized
-
-      const isEnoughAmountToCross = isEnoughAmountToPushPrice(
-        remainingAmount,
-        result.nextPrice,
-        pool.liquidity,
-        pool.fee,
-        byAmountIn,
-        xToY
-      )
 
       // cross
       if (initialized) {
@@ -594,7 +612,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
         }
         const tick = ticks.get(tickIndex) as Tick
 
-        if (!xToY || isEnoughAmountToCross) {
+        if (!xToY || isEnoughAmountToPushPrice) {
           // trunk-ignore(eslint/no-mixed-operators)
           if (currentTickIndex >= tick.index !== tick.sign) {
             liquidity = { v: liquidity.v.add(tick.liquidityChange.v) }
@@ -606,16 +624,18 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
           if (byAmountIn) {
             accumulatedAmountIn = accumulatedAmountIn.add(remainingAmount)
           }
+          console.log('consume tokens')
           remainingAmount = new BN(0)
         }
       }
-      if (xToY && isEnoughAmountToCross) {
+      if (xToY && isEnoughAmountToPushPrice) {
         currentTickIndex = tickIndex - tickSpacing
       } else {
         currentTickIndex = tickIndex
       }
     } else {
       currentTickIndex = getTickFromPrice(currentTickIndex, tickSpacing, result.nextPrice, xToY)
+      console.log(`new tick index = ${currentTickIndex}`)
     }
 
     // add amount to array if tick was initialized otherwise accumulate amount for next iteration
@@ -642,6 +662,10 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     } else {
       previousTickIndex = currentTickIndex
     }
+
+    console.log(`remaining_amount = ${remainingAmount.toString()}`)
+    console.log(`sqrt_price_limit = ${priceLimit.v.toString()}`)
+    console.log(`pool.sqrt_price = ${sqrtPrice.v.toString()}`)
   }
 
   if (accumulatedAmountOut.isZero() && status === SimulationStatus.Ok) {
@@ -649,7 +673,14 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     status = SimulationStatus.NoGainSwap
   }
 
-  const priceAfterSwap: BN = sqrtPrice.v
+  let priceAfterSwap: BN = sqrtPrice.v
+  if (xToY) {
+    priceAfterSwap = priceAfterSwap.subn(1)
+  } else {
+    priceAfterSwap = priceAfterSwap.addn(1)
+  }
+
+  console.log(`priceAfterSwap = ${priceAfterSwap.toString()}`)
   const priceImpact = calculatePriceImpact(startingSqrtPrice, priceAfterSwap)
 
   let minReceived: BN

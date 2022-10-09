@@ -39,12 +39,14 @@ impl Pool {
         ref_percentage: FixedPoint,
         in_x: bool,
     ) -> TokenAmount {
+        msg!("add fee to pool = {:?}", amount);
         let protocol_fee = TokenAmount::from_decimal_up(amount.big_mul_up(self.protocol_fee));
         let ref_fee = match ref_percentage.is_zero() {
             true => TokenAmount(0),
             false => TokenAmount::from_decimal(amount.big_mul(ref_percentage)),
         };
         let pool_fee = amount - protocol_fee - ref_fee;
+        msg!("pool_fee = {:?}", pool_fee);
 
         if (pool_fee.is_zero() && protocol_fee.is_zero()) || self.liquidity.is_zero() {
             return ref_fee;

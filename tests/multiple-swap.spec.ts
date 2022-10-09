@@ -10,6 +10,7 @@ import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { simulateSwap, SimulationStatus, tou64 } from '@invariant-labs/sdk/src/utils'
 import { InitPosition } from '@invariant-labs/sdk/src/market'
 import { getLiquidity } from '@invariant-labs/sdk/src/math'
+import { calculatePriceSqrt } from '@invariant-labs/sdk'
 
 describe('Multiple swap', () => {
   const provider = Provider.local()
@@ -21,7 +22,7 @@ describe('Multiple swap', () => {
   const user1 = Keypair.generate()
   const user2 = Keypair.generate()
   const feeTier: FeeTier = {
-    fee: fromFee(new BN(10)),
+    fee: fromFee(new BN(100)), // 0.1%
     tickSpacing: 1
   }
   let market: Market
@@ -61,7 +62,8 @@ describe('Multiple swap', () => {
     // price range = (0.9, 1/0.9)
     const upperTick = 953
     const lowerTick = -upperTick
-    const mintAmount = new BN(100)
+    const lowerTickSqrtPrice = calculatePriceSqrt(lowerTick)
+    const mintAmount = new BN('1000000000000000000')
 
     //// create user1 and mint 100 token X and 100 token Y to user1
     const [user1AccountX, user1AccountY] = await Promise.all([
@@ -98,7 +100,7 @@ describe('Multiple swap', () => {
     await market.initPosition(initPositionVars, user1)
 
     // create user2 for swap and mint 100 X tokens
-    const swapAmount = new BN(10)
+    const swapAmount = new BN('100000000000000000')
     const swapParams = {
       xToY: true,
       byAmountIn: true,
@@ -110,7 +112,7 @@ describe('Multiple swap', () => {
     ])
     await tokenX.mintTo(user2AccountX, mintAuthority.publicKey, [mintAuthority], tou64(mintAmount))
 
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 1; i++) {
       // fetch required data to simulate swap
       const [poolData, ticks, tickmap] = await Promise.all([
         market.getPool(pair),
@@ -124,9 +126,26 @@ describe('Multiple swap', () => {
         swapAmount,
         ticks,
         tickmap,
+        // priceLimit: { v: new BN('995373131828796614851698') },
+        // priceLimit: { v: new BN('995373131828796614851697') },
         ...swapParams
       })
+      console.log(`estimated price after swap = ${priceAfterSwap.toString()}`)
+      // console.log(`price at tick = ${lowerTickSqrtPrice.v.toString()}`)
       assert.equal(SimulationStatus.Ok, status.valueOf())
+
+      // const { status: secondStatus, priceAfterSwap: secondPriceAfterSwap } = simulateSwap({
+      //   pool: poolData,
+      //   swapAmount,
+      //   ticks,
+      //   tickmap,
+      //   // priceLimit: { v: priceAfterSwap },
+      //   priceLimit: { v: priceAfterSwap.subn(1) },
+      //   ...swapParams
+      // })
+      // console.log(`estimated secondPriceAfterSwap = ${secondPriceAfterSwap.toString()}`)
+      // console.log(secondStatus.valueOf())
+      // assert.equal(SimulationStatus.Ok, secondStatus.valueOf())
 
       // swap
       await market.swap(
@@ -134,6 +153,9 @@ describe('Multiple swap', () => {
           pair,
           amount: swapAmount,
           estimatedPriceAfterSwap: { v: priceAfterSwap },
+          // estimatedPriceAfterSwap: swapParams.xToY
+          //   ? { v: priceAfterSwap.subn(1) }
+          //   : { v: priceAfterSwap.addn(1) },
           accountX: user2AccountX,
           accountY: user2AccountY,
           owner: user2.publicKey,
@@ -142,102 +164,110 @@ describe('Multiple swap', () => {
         user2
       )
     }
+    const pool = await market.getPool(pair) // console.log(pool.feeProtocolTokenX.toString())
+    // console.log(pool.feeProtocolTokenY.toString())
+    // console.log(pool.feeGrowthGlobalX.v.toString())
+    // console.log(pool.feeGrowthGlobalY.v.toString())
+    // console.log(pool.currentTickIndex.toString())
+    // assert.equal(pool.currentTickIndex, lowerTick)
+    // assert.ok(pool.liquidity.v.eq(liquidityDelta.v))
+    console.log(`price after swap ${pool.sqrtPrice.v.toString()}`)
   })
-  it('swap Y to X 10 times', async () => {
-    // initialize market
-    const tokens = await Promise.all([
-      createToken(connection, wallet, mintAuthority),
-      createToken(connection, wallet, mintAuthority)
-    ])
-    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
-    await initMarket(market, [pair], admin, 0)
+  // it('swap Y to X 10 times', async () => {
+  //   // initialize market
+  //   const tokens = await Promise.all([
+  //     createToken(connection, wallet, mintAuthority),
+  //     createToken(connection, wallet, mintAuthority)
+  //   ])
+  //   pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
+  //   tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
+  //   tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+  //   await initMarket(market, [pair], admin, 0)
 
-    // create position with the same amount of tokens (tick, -tick) when current price is 1
-    // price range = (0.9, 1/0.9)
-    const upperTick = 953
-    const lowerTick = -upperTick
-    const mintAmount = new BN(100)
+  //   // create position with the same amount of tokens (tick, -tick) when current price is 1
+  //   // price range = (0.9, 1/0.9)
+  //   const upperTick = 953
+  //   const lowerTick = -upperTick
+  //   const mintAmount = new BN(100)
 
-    //// create user1 and mint 100 token X and 100 token Y to user1
-    const [user1AccountX, user1AccountY] = await Promise.all([
-      tokenX.createAccount(user1.publicKey),
-      tokenY.createAccount(user1.publicKey)
-    ])
-    await Promise.all([
-      tokenX.mintTo(user1AccountX, mintAuthority.publicKey, [mintAuthority], tou64(mintAmount)),
-      tokenY.mintTo(user1AccountY, mintAuthority.publicKey, [mintAuthority], tou64(mintAmount))
-    ])
+  //   //// create user1 and mint 100 token X and 100 token Y to user1
+  //   const [user1AccountX, user1AccountY] = await Promise.all([
+  //     tokenX.createAccount(user1.publicKey),
+  //     tokenY.createAccount(user1.publicKey)
+  //   ])
+  //   await Promise.all([
+  //     tokenX.mintTo(user1AccountX, mintAuthority.publicKey, [mintAuthority], tou64(mintAmount)),
+  //     tokenY.mintTo(user1AccountY, mintAuthority.publicKey, [mintAuthority], tou64(mintAmount))
+  //   ])
 
-    // calculate required liquidity based on token amount
-    const { liquidity: liquidityDelta } = getLiquidity(
-      mintAmount,
-      mintAmount,
-      lowerTick,
-      upperTick,
-      { v: PRICE_DENOMINATOR },
-      true,
-      feeTier.tickSpacing
-    )
+  //   // calculate required liquidity based on token amount
+  //   const { liquidity: liquidityDelta } = getLiquidity(
+  //     mintAmount,
+  //     mintAmount,
+  //     lowerTick,
+  //     upperTick,
+  //     { v: PRICE_DENOMINATOR },
+  //     true,
+  //     feeTier.tickSpacing
+  //   )
 
-    const initPositionVars: InitPosition = {
-      pair,
-      owner: user1.publicKey,
-      userTokenX: user1AccountX,
-      userTokenY: user1AccountY,
-      lowerTick,
-      upperTick,
-      liquidityDelta,
-      knownPrice: { v: PRICE_DENOMINATOR }, // initial price = 1.0
-      slippage: { v: new BN(0) } // 0% slippage
-    }
-    await market.initPosition(initPositionVars, user1)
+  //   const initPositionVars: InitPosition = {
+  //     pair,
+  //     owner: user1.publicKey,
+  //     userTokenX: user1AccountX,
+  //     userTokenY: user1AccountY,
+  //     lowerTick,
+  //     upperTick,
+  //     liquidityDelta,
+  //     knownPrice: { v: PRICE_DENOMINATOR }, // initial price = 1.0
+  //     slippage: { v: new BN(0) } // 0% slippage
+  //   }
+  //   await market.initPosition(initPositionVars, user1)
 
-    // create user2 for swap and mint 100 X tokens
-    const swapAmount = new BN(10)
-    const swapParams = {
-      xToY: true,
-      byAmountIn: true,
-      slippage: { v: new BN(0) }
-    }
-    const [user2AccountX, user2AccountY] = await Promise.all([
-      tokenX.createAccount(user2.publicKey),
-      tokenY.createAccount(user2.publicKey)
-    ])
-    await tokenX.mintTo(user2AccountX, mintAuthority.publicKey, [mintAuthority], tou64(mintAmount))
+  //   // create user2 for swap and mint 100 X tokens
+  //   const swapAmount = new BN(10)
+  //   const swapParams = {
+  //     xToY: true,
+  //     byAmountIn: true,
+  //     slippage: { v: new BN(0) }
+  //   }
+  //   const [user2AccountX, user2AccountY] = await Promise.all([
+  //     tokenX.createAccount(user2.publicKey),
+  //     tokenY.createAccount(user2.publicKey)
+  //   ])
+  //   await tokenX.mintTo(user2AccountX, mintAuthority.publicKey, [mintAuthority], tou64(mintAmount))
 
-    for (let i = 0; i < 10; i++) {
-      // fetch required data to simulate swap
-      const [poolData, ticks, tickmap] = await Promise.all([
-        market.getPool(pair),
-        market.getAllIndexedTicks(pair),
-        market.getTickmap(pair)
-      ])
+  //   for (let i = 0; i < 10; i++) {
+  //     // fetch required data to simulate swap
+  //     const [poolData, ticks, tickmap] = await Promise.all([
+  //       market.getPool(pair),
+  //       market.getAllIndexedTicks(pair),
+  //       market.getTickmap(pair)
+  //     ])
 
-      // simulate swap (required to determine valid price limit that tolerate slippage)
-      const { status, priceAfterSwap } = simulateSwap({
-        pool: poolData,
-        swapAmount,
-        ticks,
-        tickmap,
-        ...swapParams
-      })
-      assert.equal(SimulationStatus.Ok, status.valueOf())
+  //     // simulate swap (required to determine valid price limit that tolerate slippage)
+  //     const { status, priceAfterSwap } = simulateSwap({
+  //       pool: poolData,
+  //       swapAmount,
+  //       ticks,
+  //       tickmap,
+  //       ...swapParams
+  //     })
+  //     assert.equal(SimulationStatus.Ok, status.valueOf())
 
-      // swap
-      await market.swap(
-        {
-          pair,
-          amount: swapAmount,
-          estimatedPriceAfterSwap: { v: priceAfterSwap },
-          accountX: user2AccountX,
-          accountY: user2AccountY,
-          owner: user2.publicKey,
-          ...swapParams
-        },
-        user2
-      )
-    }
-  })
+  //     // swap
+  //     await market.swap(
+  //       {
+  //         pair,
+  //         amount: swapAmount,
+  //         estimatedPriceAfterSwap: { v: priceAfterSwap },
+  //         accountX: user2AccountX,
+  //         accountY: user2AccountY,
+  //         owner: user2.publicKey,
+  //         ...swapParams
+  //       },
+  //       user2
+  //     )
+  //   }
+  // })
 })

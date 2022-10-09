@@ -52,6 +52,7 @@ pub fn get_closer_limit(
     } else {
         tickmap.next_initialized(current_tick, tick_spacing)
     };
+    msg!("closes_tick_index = {:?}", closes_tick_index);
 
     match closes_tick_index {
         Some(index) => {
@@ -69,14 +70,19 @@ pub fn get_closer_limit(
             let index = get_search_limit(current_tick, tick_spacing, !x_to_y);
             let price = calculate_price_sqrt(index);
 
+            msg!("index = {:?}", index);
+            msg!("price = {:?}", price);
+
             require!(current_tick != index, LimitReached);
 
             // trunk-ignore(clippy/if_same_then_else)
             if x_to_y && price > sqrt_price_limit {
+                msg!("xToY swap");
                 Ok((price, Some((index, false))))
             } else if !x_to_y && price < sqrt_price_limit {
                 Ok((price, Some((index, false))))
             } else {
+                msg!("return sqrt_price_limit");
                 Ok((sqrt_price_limit, None))
             }
         }
