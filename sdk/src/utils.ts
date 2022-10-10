@@ -185,7 +185,7 @@ export interface CloserLimitResult {
   limitingTick: TickState | null
 }
 
-export const ComputeUnitsInstruction = (units: number, wallet: PublicKey) => {
+export const computeUnitsInstruction = (units: number, wallet: PublicKey) => {
   const program = new PublicKey('ComputeBudget111111111111111111111111111111')
   const params = { instruction: 0, units: units, additional_fee: 0 }
   const layout = struct([u8('instruction') as any, u32('units'), u32('additional_fee')])
@@ -254,11 +254,16 @@ export const fromFee = (fee: BN): BN => {
 export const feeToTickSpacing = (fee: BN): number => {
   // linear relationship between fee and tickSpacing
   // tickSpacing = fee * 10^4
+  if (fee.lte(fromFee(new BN(10)))) {
+    return 1
+  }
+
   const FEE_TO_SPACING_OFFSET = new BN(10).pow(new BN(DECIMAL - 4))
   return fee.div(FEE_TO_SPACING_OFFSET).toNumber()
 }
 
 export const FEE_TIERS: FeeTier[] = [
+  { fee: fromFee(new BN(1)) },
   { fee: fromFee(new BN(10)) },
   { fee: fromFee(new BN(50)) },
   { fee: fromFee(new BN(100)) },

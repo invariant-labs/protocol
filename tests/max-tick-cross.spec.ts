@@ -9,7 +9,7 @@ import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal, tou64 } from '@invariant-labs/sdk/src/utils'
 import { InitPosition, Swap } from '@invariant-labs/sdk/src/market'
-import { ComputeUnitsInstruction, signAndSend } from '@invariant-labs/sdk'
+import { computeUnitsInstruction, signAndSend } from '@invariant-labs/sdk'
 
 describe('Max tick crosses', () => {
   //const provider = Provider.local(undefined, { skipPreflight: true })
@@ -110,11 +110,8 @@ describe('Max tick crosses', () => {
       owner: owner.publicKey
     }
 
-    const unitsIx = ComputeUnitsInstruction(14000000, owner.publicKey)
-    const tx = new Transaction().add(unitsIx)
     const swapTx = await market.swapTransaction(swapVars)
-    tx.add(swapTx)
-    await signAndSend(tx, [owner], connection)
+    await signAndSend(swapTx, [owner], connection)
 
     // Check crosses
     const poolData = await market.getPool(pair)

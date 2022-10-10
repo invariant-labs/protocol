@@ -17,12 +17,9 @@ import { Tick } from '@invariant-labs/sdk/lib/market'
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
-const provider = Provider.local(
-  'https://solana--mainnet.datahub.figment.io/apikey/182e93d87a1f1d335c9d74d6c7371388',
-  {
-    skipPreflight: true
-  }
-)
+const provider = Provider.local('FILL ME', {
+  skipPreflight: true
+})
 
 const connection = provider.connection
 
@@ -32,6 +29,7 @@ const placeholderTick: Tick = {
   sign: false,
   pool: Keypair.generate().publicKey,
   liquidityGross: { v: new BN(0) },
+  secondsPerLiquidityOutside: { v: new BN(0) },
   feeGrowthOutsideX: { v: new BN(0) },
   feeGrowthOutsideY: { v: new BN(0) },
   sqrtPrice: { v: new BN(0) },
@@ -115,7 +113,7 @@ const main = async () => {
     const ticks = await market.getClosestTicks(pair, Infinity)
 
     // checking liquidity
-    const parsed = parseLiquidityOnTicks(ticks, pool).map(({ index, liquidity }) => ({
+    const parsed = parseLiquidityOnTicks(ticks).map(({ index, liquidity }) => ({
       liquidity: liquidity.toString(),
       index
     }))
@@ -175,9 +173,6 @@ const main = async () => {
       [new BN(0), new BN(0)]
     )
 
-    const feeProtocolTokenX = pool.feeProtocolTokenX
-    const feeProtocolTokenY = pool.feeProtocolTokenY
-
     console.log('sumOfPositions:', ...sumOfPositions.map(i => i.toString()))
 
     const reserves = await market.getReserveBalances(
@@ -186,8 +181,8 @@ const main = async () => {
       new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, Keypair.generate())
     )
     console.log('reserve balances:', reserves.x.toString(), reserves.y.toString())
-    assert.ok(sumOfPositions[0].add(feeProtocolTokenX).lte(reserves.x))
-    assert.ok(sumOfPositions[1].add(feeProtocolTokenY).lte(reserves.y))
+    assert.ok(sumOfPositions[0].lte(reserves.x))
+    assert.ok(sumOfPositions[1].lte(reserves.y))
   }
 }
 // trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
