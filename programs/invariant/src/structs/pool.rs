@@ -46,7 +46,7 @@ impl Pool {
         };
         let pool_fee = amount - protocol_fee - ref_fee;
 
-        if pool_fee.is_zero() || self.liquidity.is_zero() {
+        if (pool_fee.is_zero() && protocol_fee.is_zero()) || self.liquidity.is_zero() {
             return ref_fee;
         }
         let fee_growth = FeeGrowth::from_fee(self.liquidity, pool_fee);
@@ -173,6 +173,18 @@ mod tests {
             assert_eq!({ pool.fee_protocol_token_x }, 0);
             assert_eq!({ pool.fee_protocol_token_y }, 40);
             assert_eq!(ref_fee, TokenAmount(2));
+        }
+        // all tokens go to protocol fee
+        {
+            let mut pool = pool.clone();
+            let amount = TokenAmount::new(1);
+            let ref_fee = pool.add_fee(amount, FixedPoint::from_scale(2, 1), true);
+
+            assert_eq!({ pool.fee_growth_global_x }, FeeGrowth::new(0));
+            assert_eq!({ pool.fee_growth_global_y }, FeeGrowth::new(0));
+            assert_eq!({ pool.fee_protocol_token_x }, 1);
+            assert_eq!({ pool.fee_protocol_token_y }, 0);
+            assert_eq!(ref_fee, TokenAmount(0));
         }
     }
 

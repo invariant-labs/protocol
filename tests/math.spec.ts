@@ -82,7 +82,7 @@ import {
   WeeklyData
 } from '@invariant-labs/sdk/lib/utils'
 import { priceToTickInRange } from '@invariant-labs/sdk/src/tick'
-import { U64_MAX } from '@invariant-labs/sdk/lib/math'
+import { getLiquidity, U64_MAX } from '@invariant-labs/sdk/lib/math'
 
 describe('Math', () => {
   describe('Test sqrt price calculation', () => {
@@ -259,6 +259,101 @@ describe('Math', () => {
       } catch (e) {
         assert.ok(true)
       }
+    })
+  })
+  describe('calculate liquidity (without specifying on which token)', () => {
+    const tokenDecimal = 9
+    const y = new BN(476 * 10 ** (tokenDecimal - 1)) // 47.6
+    const currentTick = -20000
+    const currentSqrtPrice = calculatePriceSqrt(currentTick)
+
+    it('below current tick', async () => {
+      const lowerTick = -22000
+      const upperTick = -21000
+
+      const expectedX = new BN(0)
+      const expectedL = { v: new BN('2789052279103923275') }
+      const { liquidity: roundUpLiquidity, x: expectedRoundUpX } = getLiquidity(
+        expectedX,
+        y,
+        lowerTick,
+        upperTick,
+        currentSqrtPrice,
+        true
+      )
+      const { liquidity: roundDownLiquidity, x: expectedRoundDownX } = getLiquidity(
+        expectedX,
+        y,
+        lowerTick,
+        upperTick,
+        currentSqrtPrice,
+        true
+      )
+
+      assert.ok(expectedL.v.eq(roundUpLiquidity.v))
+      assert.ok(expectedL.v.eq(roundDownLiquidity.v))
+      assert.ok(expectedRoundUpX.eq(new BN(0)))
+      assert.ok(expectedRoundDownX.eq(new BN(0)))
+    })
+    //
+    it('in current tick', async () => {
+      // rust results:
+      const expectedRoundUpL = { v: new BN('584945290554346935') }
+      const expectedRoundDownL = { v: new BN('584945290552000000') }
+
+      const expectedXRoundUp = new BN('77539808126')
+      const expectedXRoundDown = new BN('77539808125')
+
+      const lowerTick = -25000
+      const upperTick = -19000
+
+      const { liquidity: roundUpLiquidity, x: roundUpX } = getLiquidity(
+        expectedXRoundUp,
+        y,
+        lowerTick,
+        upperTick,
+        currentSqrtPrice,
+        true
+      )
+      const { liquidity: roundDownLiquidity, x: roundDownX } = getLiquidity(
+        expectedXRoundDown,
+        y,
+        lowerTick,
+        upperTick,
+        currentSqrtPrice,
+        false
+      )
+      assert.ok(expectedRoundUpL.v.eq(roundUpLiquidity.v))
+      assert.ok(expectedRoundDownL.v.eq(roundDownLiquidity.v))
+      assert.ok(expectedXRoundUp.eq(roundUpX))
+      assert.ok(expectedXRoundDown.eq(roundDownX))
+    })
+    it('above current tick', async () => {
+      const lowerTick = 150
+      const upperTick = 800
+      const x = new BN(43 * 10 ** (tokenDecimal - 2)) // 0.43
+      const sqrtPrice = calculatePriceSqrt(100)
+      const expectedY = new BN(0)
+      const expectedL = { v: new BN('13548826311623850') }
+
+      const {
+        liquidity: roundingUpLiquidity,
+        x: expectedRoundingUpX,
+        y: expectedRoundingUpY
+      } = getLiquidity(x, expectedY, lowerTick, upperTick, sqrtPrice, true)
+
+      const {
+        liquidity: roundingDownLiquidity,
+        x: expectedRoundingDownX,
+        y: expectedRoundingDownY
+      } = getLiquidity(x, expectedY, lowerTick, upperTick, sqrtPrice, false)
+
+      assert.ok(roundingUpLiquidity.v.eq(expectedL.v))
+      assert.ok(roundingDownLiquidity.v.eq(expectedL.v))
+      assert.ok(expectedRoundingUpX.eq(x))
+      assert.ok(expectedRoundingDownX.eq(x))
+      assert.ok(expectedRoundingUpY.eq(expectedY))
+      assert.ok(expectedRoundingDownY.eq(expectedY))
     })
   })
   describe('calculate slippage', () => {

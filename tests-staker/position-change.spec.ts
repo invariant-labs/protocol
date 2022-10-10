@@ -4,7 +4,7 @@ import { Market, Pair, sleep, PRICE_DENOMINATOR, LIQUIDITY_DENOMINATOR } from '@
 import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { createToken, getTime, signAndSend, almostEqual } from './testUtils'
-import { createToken as createTkn, initEverything } from '../tests/testUtils'
+import { createToken as createTkn, initMarket } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { toDecimal } from '../staker-sdk/lib/utils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
@@ -94,7 +94,7 @@ describe('Withdraw with transfer position ownership', () => {
   })
 
   it('#init()', async () => {
-    await initEverything(market, [pair], admin)
+    await initMarket(market, [pair], admin)
     pool = await pair.getAddress(anchor.workspace.Invariant.programId)
   })
 

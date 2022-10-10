@@ -7,7 +7,7 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
-import { createToken, initEverything } from './testUtils'
+import { createToken, initMarket } from './testUtils'
 
 describe('whole-liquidity', () => {
   const provider = Provider.local()
@@ -51,7 +51,7 @@ describe('whole-liquidity', () => {
   })
 
   it('#init()', async () => {
-    await initEverything(market, [pair], admin)
+    await initMarket(market, [pair], admin)
   })
 
   it('#init-positions()', async () => {
