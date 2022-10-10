@@ -142,7 +142,6 @@ describe('Multiple swap', () => {
         user2
       )
     }
-    // const data = await market.getPool(pair)
     const {
       currentTickIndex,
       feeGrowthGlobalX,
@@ -165,7 +164,16 @@ describe('Multiple swap', () => {
     assert.ok(eqDecimal(sqrtPrice, { v: new BN('959803483698079499776690') }))
 
     // validate pool reserves
+    const reserveXAmount = (await tokenX.getAccountInfo(tokenXReserve)).amount
+    const reserveYAmount = (await tokenY.getAccountInfo(tokenYReserve)).amount
+    assert.ok(reserveXAmount.eq(new BN(200)))
+    assert.ok(reserveYAmount.eq(new BN(20)))
+
     // validate user2 balances
+    const user2XAmount = (await tokenX.getAccountInfo(user2AccountX)).amount
+    const user2YAmount = (await tokenY.getAccountInfo(user2AccountY)).amount
+    assert.ok(user2XAmount.eq(new BN(0)))
+    assert.ok(user2YAmount.eq(new BN(80)))
   })
   it('swap Y to X 10 times', async () => {
     // initialize market
@@ -221,7 +229,7 @@ describe('Multiple swap', () => {
     // create user2 for swap and mint 100 X tokens
     const swapAmount = new BN(10)
     const swapParams = {
-      xToY: true,
+      xToY: false,
       byAmountIn: true,
       slippage: { v: new BN(0) }
     }
@@ -229,7 +237,7 @@ describe('Multiple swap', () => {
       tokenX.createAccount(user2.publicKey),
       tokenY.createAccount(user2.publicKey)
     ])
-    await tokenX.mintTo(user2AccountX, mintAuthority.publicKey, [mintAuthority], tou64(mintAmount))
+    await tokenY.mintTo(user2AccountY, mintAuthority.publicKey, [mintAuthority], tou64(mintAmount))
 
     for (let i = 0; i < 10; i++) {
       // fetch required data to simulate swap
@@ -263,5 +271,37 @@ describe('Multiple swap', () => {
         user2
       )
     }
+    const {
+      currentTickIndex,
+      feeGrowthGlobalX,
+      feeGrowthGlobalY,
+      feeProtocolTokenX,
+      feeProtocolTokenY,
+      liquidity,
+      sqrtPrice,
+      tokenXReserve,
+      tokenYReserve
+    } = await market.getPool(pair)
+
+    // validate pool data
+    assert.equal(currentTickIndex, 820)
+    assert.ok(feeGrowthGlobalX.v.eqn(0))
+    assert.ok(feeGrowthGlobalY.v.eqn(0))
+    assert.ok(feeProtocolTokenX.eqn(0))
+    assert.ok(feeProtocolTokenY.eqn(10))
+    assert.ok(eqDecimal(liquidity, liquidityDelta))
+    assert.ok(eqDecimal(sqrtPrice, { v: new BN('1041879944160074453234060') }))
+
+    // validate pool reserves
+    const reserveXAmount = (await tokenX.getAccountInfo(tokenXReserve)).amount
+    const reserveYAmount = (await tokenY.getAccountInfo(tokenYReserve)).amount
+    assert.ok(reserveXAmount.eq(new BN(20)))
+    assert.ok(reserveYAmount.eq(new BN(200)))
+
+    // validate user2 balances
+    const user2XAmount = (await tokenX.getAccountInfo(user2AccountX)).amount
+    const user2YAmount = (await tokenY.getAccountInfo(user2AccountY)).amount
+    assert.ok(user2XAmount.eq(new BN(80)))
+    assert.ok(user2YAmount.eq(new BN(0)))
   })
 })
