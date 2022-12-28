@@ -5,7 +5,7 @@ import * as anchor from '@project-serum/anchor'
 import { Provider, BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
-import { createToken, initEverything } from './testUtils'
+import { createToken, initMarket } from './testUtils'
 
 describe('change-fee-receiver', () => {
   const provider = Provider.local()
@@ -47,7 +47,7 @@ describe('change-fee-receiver', () => {
   })
 
   it('#init()', async () => {
-    await initEverything(market, [pair], admin)
+    await initMarket(market, [pair], admin)
   })
 
   it('#changeFeeReceiver()', async () => {

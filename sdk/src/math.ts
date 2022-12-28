@@ -486,6 +486,64 @@ export const getY = (
   return liquidity.mul(difference).div(PRICE_DENOMINATOR).div(LIQUIDITY_DENOMINATOR)
 }
 
+export const getLiquidity = (
+  x: BN,
+  y: BN,
+  lowerTick: number,
+  upperTick: number,
+  currentSqrtPrice: Decimal,
+  roundingUp: boolean,
+  tickSpacing?: number
+): {
+  x: BN
+  y: BN
+  liquidity: { v: BN }
+} => {
+  if ((lowerTick === -Infinity || upperTick === Infinity) && tickSpacing === undefined) {
+    throw new Error('tickSpacing is required for calculating full range liquidity')
+  }
+
+  const lowerTickIndex = lowerTick !== -Infinity ? lowerTick : getMinTick(tickSpacing as number)
+  const upperTickIndex = upperTick !== Infinity ? upperTick : getMaxTick(tickSpacing as number)
+
+  const lowerSqrtPrice = calculatePriceSqrt(lowerTickIndex)
+  const upperSqrtPrice = calculatePriceSqrt(upperTickIndex)
+
+  if (upperSqrtPrice.v.lt(currentSqrtPrice.v)) {
+    // single token y
+    return {
+      ...getLiquidityByYPrice(y, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp),
+      y
+    }
+  } else if (currentSqrtPrice.v.lt(lowerSqrtPrice.v)) {
+    // single token x
+    return {
+      ...getLiquidityByXPrice(x, lowerSqrtPrice, upperSqrtPrice, currentSqrtPrice, roundingUp),
+      x
+    }
+  }
+
+  const { liquidity: liquidityByY, x: estimatedX } = getLiquidityByYPrice(
+    y,
+    lowerSqrtPrice,
+    upperSqrtPrice,
+    currentSqrtPrice,
+    roundingUp
+  )
+  const { liquidity: liquidityByX, y: estimatedY } = getLiquidityByXPrice(
+    x,
+    lowerSqrtPrice,
+    upperSqrtPrice,
+    currentSqrtPrice,
+    roundingUp
+  )
+  return {
+    x,
+    y,
+    liquidity: liquidityByY.v.lt(liquidityByX.v) ? liquidityByY : liquidityByX
+  }
+}
+
 export const getLiquidityByX = (
   x: BN,
   lowerTick: number,

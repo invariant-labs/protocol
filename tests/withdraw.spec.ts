@@ -3,7 +3,7 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
-import { assertThrowsAsync, createToken, initEverything } from './testUtils'
+import { assertThrowsAsync, createToken, initMarket } from './testUtils'
 import { Market, Pair, LIQUIDITY_DENOMINATOR, Network } from '@invariant-labs/sdk'
 import { fromFee, toDecimal } from '@invariant-labs/sdk/lib/utils'
 import { Decimal, FeeTier, RemovePosition } from '@invariant-labs/sdk/lib/market'
@@ -59,7 +59,7 @@ describe('withdraw', () => {
   })
 
   it('#init()', async () => {
-    await initEverything(market, [pair], admin)
+    await initMarket(market, [pair], admin)
   })
   it('#create position', async () => {
     // Deposit

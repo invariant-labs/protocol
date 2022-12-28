@@ -3,7 +3,7 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Keypair, Transaction } from '@solana/web3.js'
 import { Network, Market, Pair, LIQUIDITY_DENOMINATOR, INVARIANT_ERRORS } from '@invariant-labs/sdk'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { assertThrowsAsync, createToken, initEverything } from './testUtils'
+import { assertThrowsAsync, createToken, initMarket } from './testUtils'
 import { assert } from 'chai'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
@@ -54,7 +54,7 @@ describe('claim', () => {
   })
 
   it('#init()', async () => {
-    await initEverything(market, [pair], admin)
+    await initMarket(market, [pair], admin)
   })
 
   it('#claim', async () => {

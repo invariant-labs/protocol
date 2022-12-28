@@ -29,6 +29,7 @@ import {
   getLiquidityByY,
   getXfromLiquidity,
   isEnoughAmountToPushPrice,
+  MIN_TICK,
   sqrt
 } from './math'
 import { alignTickToSpacing, getTickFromPrice } from './tick'
@@ -110,7 +111,7 @@ export interface SimulateSwapInterface {
   xToY: boolean
   byAmountIn: boolean
   swapAmount: BN
-  priceLimit: Decimal
+  priceLimit?: Decimal
   slippage: Decimal
   ticks: Map<number, Tick>
   tickmap: Tickmap
@@ -494,13 +495,23 @@ export const swapSimulation = async (
 }
 
 export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationResult => {
-  const { xToY, byAmountIn, swapAmount, slippage, ticks, tickmap, priceLimit, pool } =
-    swapParameters
+  const {
+    xToY,
+    byAmountIn,
+    swapAmount,
+    slippage,
+    ticks,
+    tickmap,
+    priceLimit: optionalPriceLimit,
+    pool
+  } = swapParameters
   let { currentTickIndex, tickSpacing, liquidity, sqrtPrice, fee } = pool
   const startingSqrtPrice = sqrtPrice.v
   let previousTickIndex = MAX_TICK + 1
   const amountPerTick: BN[] = []
   const crossedTicks: number[] = []
+  const priceLimit =
+    optionalPriceLimit ?? xToY ? calculatePriceSqrt(MIN_TICK) : calculatePriceSqrt(MAX_TICK)
   let accumulatedAmount: BN = new BN(0)
   let accumulatedAmountOut: BN = new BN(0)
   let accumulatedAmountIn: BN = new BN(0)

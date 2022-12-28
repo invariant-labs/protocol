@@ -297,13 +297,15 @@ export const createTicksFromRange = async (
   )
 }
 
-export const initEverything = async (
+export const initMarket = async (
   market: Market,
   pairs: Pair[],
   admin: Keypair,
   initTick?: number
 ) => {
-  await market.createState(admin.publicKey, admin)
+  try {
+    await market.createState(admin.publicKey, admin)
+  } catch (e) {}
 
   const state = await market.getState()
   const { bump } = await market.getStateAddress()

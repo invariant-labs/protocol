@@ -249,6 +249,14 @@ export class Market {
     return (await this.program.account.tick.fetchMultiple(ticksArray)) as Tick[]
   }
 
+  async getAllIndexedTicks(pair: Pair): Promise<Map<number, Tick>> {
+    return new Map(
+      (await this.getAllTicks(pair)).map(tick => {
+        return [tick.index, tick]
+      })
+    )
+  }
+
   async getAllTicks(pair: Pair) {
     const poolPublicKey = await pair.getAddress(this.program.programId)
     return (

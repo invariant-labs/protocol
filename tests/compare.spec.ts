@@ -3,7 +3,7 @@ import { Provider, BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
-import { createToken, initEverything } from './testUtils'
+import { createToken, initMarket } from './testUtils'
 import { Market, Pair, LIQUIDITY_DENOMINATOR, Network } from '@invariant-labs/sdk'
 import { FeeTier, InitPosition, Swap } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
@@ -60,7 +60,7 @@ describe('compare', () => {
   })
 
   it('#init()', async () => {
-    await initEverything(market, [firstPair, secondPair], admin)
+    await initMarket(market, [firstPair, secondPair], admin)
   })
 
   it('#swap() within a tick', async () => {
