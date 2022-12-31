@@ -40,6 +40,7 @@ pub struct Withdraw<'info> {
     pub staker_authority: AccountInfo<'info>,
     #[account(mut)]
     pub owner: AccountInfo<'info>,
+    /// CHECK: safe as constant
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
 }

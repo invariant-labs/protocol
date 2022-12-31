@@ -21,6 +21,7 @@ pub struct InitializeOracle<'info> {
     pub token_y: Box<Account<'info, Mint>>,
     pub payer: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
+    /// CHECK: safe as constant
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }

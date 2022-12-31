@@ -26,6 +26,7 @@ pub struct ReturnFounds<'info> {
     #[account(seeds = [b"staker".as_ref()], bump = nonce)]
     pub staker_authority: AccountInfo<'info>,
     pub founder: Signer<'info>,
+    /// CHECK: safe as constant
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
 }

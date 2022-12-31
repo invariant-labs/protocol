@@ -18,6 +18,7 @@ pub struct CreateFeeTier<'info> {
     #[account(mut, constraint = &state.load()?.admin == admin.key @ InvalidAdmin)]
     pub admin: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
+    /// CHECK: safe as constant
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }

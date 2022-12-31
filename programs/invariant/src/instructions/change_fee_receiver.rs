@@ -18,6 +18,7 @@ pub struct ChangeFeeReceiver<'info> {
     pub token_y: Account<'info, Mint>,
     #[account(constraint = &state.load()?.admin == admin.key @ InvalidAdmin)]
     pub admin: Signer<'info>,
+    /// CHECK: safe as instruction can be invoked by admin
     pub fee_receiver: AccountInfo<'info>,
 }
 

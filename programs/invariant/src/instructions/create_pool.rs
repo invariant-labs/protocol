@@ -45,10 +45,12 @@ pub struct CreatePool<'info> {
     pub token_y_reserve: Account<'info, TokenAccount>,
     #[account(mut)]
     pub payer: Signer<'info>,
+    /// CHECK: safe as read from state
     #[account(constraint = &state.load()?.authority == authority.key @ InvalidAuthority)]
     pub authority: AccountInfo<'info>,
     pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
+    /// CHECK: safe as constant
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }

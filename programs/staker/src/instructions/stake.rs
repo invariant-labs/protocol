@@ -33,6 +33,7 @@ pub struct CreateUserStake<'info> {
     pub signer: Signer<'info>,
     #[account(address = invariant::ID)]
     pub invariant: Program<'info, Invariant>,
+    /// CHECK: safe as constant
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,

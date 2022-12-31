@@ -19,6 +19,7 @@ pub struct ChangeProtocolFee<'info> {
     pub token_y: Account<'info, Mint>,
     #[account(constraint = &state.load()?.admin == admin.key @ InvalidAdmin)]
     pub admin: Signer<'info>,
+    /// CHECK: safe as read from state
     #[account(constraint = &state.load()?.authority == program_authority.key @ InvalidAuthority)]
     pub program_authority: AccountInfo<'info>,
 }

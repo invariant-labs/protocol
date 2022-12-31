@@ -48,8 +48,10 @@ pub struct Swap<'info> {
     )]
     pub reserve_y: Box<Account<'info, TokenAccount>>,
     pub owner: Signer<'info>,
+    /// CHECK: safe as read from state
     #[account(constraint = &state.load()?.authority == program_authority.key @ InvalidAuthority)]
     pub program_authority: AccountInfo<'info>,
+    /// CHECK: safe as constant
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
 }

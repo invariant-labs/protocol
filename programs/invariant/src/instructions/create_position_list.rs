@@ -10,10 +10,12 @@ pub struct CreatePositionList<'info> {
         payer = signer
     )]
     pub position_list: AccountLoader<'info, PositionList>,
+    /// CHECK: safe as possible to create PositionList to anyone
     pub owner: AccountInfo<'info>,
     #[account(mut)]
     pub signer: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
+    /// CHECK: safe as constant
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }

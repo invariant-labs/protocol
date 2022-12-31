@@ -42,8 +42,10 @@ pub struct TransferPositionOwnership<'info> {
     pub last_position: AccountLoader<'info, Position>,
     #[account(mut)]
     pub owner: Signer<'info>,
+    /// CHECK: safe as possible to transfer position to anyone (required data to transfer position checked above)
     pub recipient: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
+    /// CHECK: safe as constant
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }

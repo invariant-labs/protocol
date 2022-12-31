@@ -66,8 +66,10 @@ pub struct ClaimFee<'info> {
         constraint = reserve_y.key() == pool.load()?.token_y_reserve @ InvalidTokenAccount
     )]
     pub reserve_y: Box<Account<'info, TokenAccount>>,
+    /// CHECK: safe as read from state
     #[account(constraint = &state.load()?.authority == program_authority.key @ InvalidAuthority)]
     pub program_authority: AccountInfo<'info>,
+    /// CHECK: safe as constant
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
 }
