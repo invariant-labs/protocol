@@ -8,7 +8,7 @@ import {
   LIQUIDITY_DENOMINATOR,
   Network
 } from '@invariant-labs/sdk'
-import { Provider, BN } from '@project-serum/anchor'
+import { BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken, eqDecimal, initMarket } from './testUtils'
 import { fromFee, assertThrowsAsync, tou64 } from '@invariant-labs/sdk/src/utils'
@@ -16,7 +16,7 @@ import { CreatePool, CreateTick, InitPosition } from '@invariant-labs/sdk/src/ma
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 
 describe('position', () => {
-  const provider = Provider.local()
+  const provider = anchor.AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair

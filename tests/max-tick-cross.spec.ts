@@ -1,5 +1,5 @@
 import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
+import { BN } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
@@ -12,8 +12,7 @@ import { InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 import { computeUnitsInstruction, signAndSend } from '@invariant-labs/sdk'
 
 describe('Max tick crosses', () => {
-  //const provider = Provider.local(undefined, { skipPreflight: true })
-  const provider = Provider.local()
+  const provider = anchor.AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair

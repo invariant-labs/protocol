@@ -2,12 +2,12 @@ import * as anchor from '@project-serum/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { assert } from 'chai'
 import { Market, Pair, fromInteger, Network, sleep } from '@invariant-labs/sdk/src'
-import { Provider, BN } from '@project-serum/anchor'
+import { BN } from '@project-serum/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken, eqDecimal, positionEquals, positionWithoutOwnerEquals } from './testUtils'
 import { assertThrowsAsync, tou64 } from '@invariant-labs/sdk/src/utils'
-import { ERRORS, fromFee, toDecimal } from '@invariant-labs/sdk/lib/utils'
-import { FeeTier, PositionStructure, Swap } from '@invariant-labs/sdk/lib/market'
+import { ERRORS, fromFee } from '@invariant-labs/sdk/lib/utils'
+import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import {
   CreateFeeTier,
   CreatePool,
@@ -19,7 +19,7 @@ import {
 import { calculatePriceSqrt } from '@invariant-labs/sdk'
 
 describe('Position list', () => {
-  const provider = Provider.local()
+  const provider = anchor.AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair

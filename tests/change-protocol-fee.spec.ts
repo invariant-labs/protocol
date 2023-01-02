@@ -3,13 +3,13 @@ import { Market, Pair } from '@invariant-labs/sdk/src'
 import { ChangeProtocolFee, Decimal, FeeTier } from '@invariant-labs/sdk/src/market'
 import { assertThrowsAsync, fromFee } from '@invariant-labs/sdk/src/utils'
 import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
+import { BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken, initMarket } from './testUtils'
 
 describe('change-protocol-fee', () => {
-  const provider = Provider.local()
+  const provider = anchor.AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair

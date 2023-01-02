@@ -1,5 +1,5 @@
 import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
+import { BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 import { Network, Market, Pair, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
@@ -12,7 +12,7 @@ import { ClaimFee, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('claim', () => {
-  const provider = Provider.local()
+  const provider = anchor.AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair

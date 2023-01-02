@@ -1,5 +1,5 @@
 import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
+import { BN } from '@project-serum/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { Market, Network, Pair, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
@@ -17,7 +17,7 @@ import { CreateTick, InitPosition, Swap, WithdrawProtocolFee } from '@invariant-
 import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 
 describe('protocol-fee', () => {
-  const provider = Provider.local()
+  const provider = anchor.AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair

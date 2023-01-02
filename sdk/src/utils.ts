@@ -1,4 +1,4 @@
-import { Provider, BN, utils } from '@project-serum/anchor'
+import { BN, utils, AnchorProvider } from '@project-serum/anchor'
 import {
   ConfirmOptions,
   Connection,
@@ -230,12 +230,16 @@ export const signAndSend = async (
 ) => {
   tx.setSigners(...signers.map(s => s.publicKey))
   const blockhash = await connection.getRecentBlockhash(
-    opts?.commitment ?? Provider.defaultOptions().commitment
+    opts?.commitment ?? AnchorProvider.defaultOptions().commitment
   )
   tx.recentBlockhash = blockhash.blockhash
   tx.partialSign(...signers)
   const rawTx = tx.serialize()
-  return await sendAndConfirmRawTransaction(connection, rawTx, opts ?? Provider.defaultOptions())
+  return await sendAndConfirmRawTransaction(
+    connection,
+    rawTx,
+    opts ?? AnchorProvider.defaultOptions()
+  )
 }
 
 export const sleep = async (ms: number) => {

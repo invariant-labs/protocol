@@ -2,13 +2,13 @@ import { Market, Pair, Network } from '@invariant-labs/sdk'
 import { ChangeFeeReceiver, FeeTier } from '@invariant-labs/sdk/lib/market'
 import { assertThrowsAsync, fromFee } from '@invariant-labs/sdk/lib/utils'
 import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
+import { BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken, initMarket } from './testUtils'
 
 describe('change-fee-receiver', () => {
-  const provider = Provider.local()
+  const provider = anchor.AnchorProvider.local()
   const connection = provider.connection
 
   // @ts-expect-error
