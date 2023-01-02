@@ -1,4 +1,5 @@
 use crate::decimals::*;
+use crate::errors::ErrorCode;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::*;

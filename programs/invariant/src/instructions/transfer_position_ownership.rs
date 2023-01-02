@@ -22,6 +22,7 @@ pub struct TransferPositionOwnership<'info> {
         seeds = [b"positionv1",
         recipient.key().as_ref(),
         &recipient_list.load()?.head.to_le_bytes()],
+        space = 20,
         bump, payer = owner,
     )]
     pub new_position: AccountLoader<'info, Position>,
@@ -51,7 +52,7 @@ pub struct TransferPositionOwnership<'info> {
 }
 
 impl<'info> TransferPositionOwnership<'info> {
-    pub fn handler(&self, index: u32, bump: u8) -> ProgramResult {
+    pub fn handler(&self, index: u32, bump: u8) -> Result<()> {
         msg!("INVARIANT: TRANSFER POSITION");
 
         let mut owner_list = self.owner_list.load_mut()?;

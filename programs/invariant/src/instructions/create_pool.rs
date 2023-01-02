@@ -19,6 +19,7 @@ pub struct CreatePool<'info> {
     pub state: AccountLoader<'info, State>,
     #[account(init,
         seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref(), &fee_tier.load()?.fee.v.to_le_bytes(), &fee_tier.load()?.tick_spacing.to_le_bytes()],
+        space = 20,
         bump, payer = payer
     )]
     pub pool: AccountLoader<'info, Pool>,
@@ -56,7 +57,7 @@ pub struct CreatePool<'info> {
 }
 
 impl<'info> CreatePool<'info> {
-    pub fn handler(&self, init_tick: i32, bump: u8) -> ProgramResult {
+    pub fn handler(&self, init_tick: i32, bump: u8) -> Result<()> {
         msg!("INVARIANT: CREATE POOL");
 
         let token_x_address = &self.token_x.key();

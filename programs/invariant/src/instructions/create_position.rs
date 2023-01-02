@@ -23,6 +23,7 @@ pub struct CreatePosition<'info> {
         seeds = [b"positionv1",
         owner.key.as_ref(),
         &position_list.load()?.head.to_le_bytes()],
+        space = 20,
         bump, payer = payer,
     )]
     pub position: AccountLoader<'info, Position>,
@@ -123,7 +124,7 @@ impl<'info> CreatePosition<'info> {
         slippage_limit_lower: Price,
         slippage_limit_upper: Price,
         bump: u8,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         msg!("INVARIANT: CREATE POSITION");
 
         let mut position = self.position.load_init()?;

@@ -120,12 +120,7 @@ impl<'info> SendTokens<'info> for RemovePosition<'info> {
 }
 
 impl<'info> RemovePosition<'info> {
-    pub fn handler(
-        &self,
-        index: u32,
-        lower_tick_index: i32,
-        upper_tick_index: i32,
-    ) -> ProgramResult {
+    pub fn handler(&self, index: u32, lower_tick_index: i32, upper_tick_index: i32) -> Result<()> {
         msg!("INVARIANT: REMOVE POSITION");
 
         let state = self.state.load()?;

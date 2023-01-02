@@ -15,6 +15,7 @@ use anchor_spl::token::Mint;
 pub struct CreateTick<'info> {
     #[account(init,
         seeds = [b"tickv1", pool.key().as_ref(), &index.to_le_bytes()],
+        space = 20,
         bump, payer = payer
     )]
     pub tick: AccountLoader<'info, Tick>,
@@ -42,7 +43,7 @@ pub struct CreateTick<'info> {
 }
 
 impl<'info> CreateTick<'info> {
-    pub fn handler(&self, index: i32, bump: u8) -> ProgramResult {
+    pub fn handler(&self, index: i32, bump: u8) -> Result<()> {
         msg!("INVARIANT: CREATE_TICK");
 
         let mut tick = self.tick.load_init()?;

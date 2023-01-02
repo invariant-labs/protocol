@@ -1,7 +1,8 @@
 use crate::decimals::*;
+use crate::errors::ErrorCode;
 use crate::structs::*;
 use crate::util::get_current_slot;
-use crate::ErrorCode::*;
+use crate::*;
 
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
@@ -14,6 +15,7 @@ pub struct CreateUserStake<'info> {
     #[account(init,
         seeds = [b"staker", incentive.key().as_ref(), position.load()?.pool.as_ref(), &position.load()?.id.to_le_bytes() ],
         payer = signer,
+        space = 20,
         bump)]
     pub user_stake: AccountLoader<'info, UserStake>,
     #[account(
@@ -25,9 +27,10 @@ pub struct CreateUserStake<'info> {
     )]
     pub position: AccountLoader<'info, Position>,
     #[account(mut,
-        constraint = incentive.load()?.pool == position.load()?.pool @ DifferentIncentivePool
+        constraint = incentive.load()?.pool == position.load()?.pool @ ErrorCode::DifferentIncentivePool
     )]
     pub incentive: AccountLoader<'info, Incentive>,
+    /// CHECK: safe as anyone can stake position (staking no change ownership; positive only action)
     pub owner: AccountInfo<'info>,
     #[account(mut)]
     pub signer: Signer<'info>,
@@ -39,18 +42,27 @@ pub struct CreateUserStake<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn handler(ctx: Context<CreateUserStake>) -> ProgramResult {
+pub fn handler(ctx: Context<CreateUserStake>) -> Result<()> {
     msg!("STAKE");
     let mut incentive = ctx.accounts.incentive.load_mut()?;
-    require!(Seconds::now() >= { incentive.start_time }, NotStarted);
-    require!(Seconds::now() < { incentive.end_time }, Ended);
-    require!(incentive.num_of_stakes < u64::MAX, NoStakes);
+    require!(
+        Seconds::now() >= { incentive.start_time },
+        errors::ErrorCode::NotStarted
+    );
+    require!(
+        Seconds::now() < { incentive.end_time },
+        errors::ErrorCode::Ended
+    );
+    require!(
+        incentive.num_of_stakes < u64::MAX,
+        errors::ErrorCode::NoStakes
+    );
 
     let user_stake = &mut ctx.accounts.user_stake.load_init()?;
     let position = ctx.accounts.position.load()?;
     let update_slot = position.last_slot;
     let slot = get_current_slot();
-    require!(slot == update_slot, SlotsAreNotEqual);
+    require!(slot == update_slot, errors::ErrorCode::SlotsAreNotEqual);
 
     **user_stake = UserStake {
         position: ctx.accounts.position.key(),
@@ -63,6 +75,6 @@ pub fn handler(ctx: Context<CreateUserStake>) -> ProgramResult {
     };
     incentive.num_of_stakes += 1;
     let liquidity = user_stake.liquidity;
-    require!(!liquidity.is_zero(), ZeroLiquidity);
+    require!(!liquidity.is_zero(), errors::ErrorCode::ZeroLiquidity);
     Ok(())
 }

@@ -1,6 +1,7 @@
 use crate::decimals::*;
+use crate::errors::ErrorCode;
 use crate::structs::*;
-use crate::ErrorCode::*;
+use crate::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::Mint;
@@ -15,7 +16,7 @@ const WEEK: u64 = 604_800; //week in sec
 #[derive(Accounts)]
 #[instruction(nonce: u8)]
 pub struct CreateIncentive<'info> {
-    #[account(init, payer = founder)]
+    #[account(init, space = 20, payer = founder)]
     pub incentive: AccountLoader<'info, Incentive>,
     #[account(init,
         token::mint = incentive_token,
@@ -24,14 +25,15 @@ pub struct CreateIncentive<'info> {
     )]
     pub incentive_token_account: Account<'info, TokenAccount>,
     #[account(mut,
-        constraint = founder_token_account.key() != incentive_token_account.key() @ InvalidTokenAccount,
-        constraint = founder_token_account.mint == incentive_token.key() @ InvalidMint,
-        constraint = founder_token_account.owner == founder.key() @ InvalidOwner
+        constraint = founder_token_account.key() != incentive_token_account.key() @ ErrorCode::InvalidTokenAccount,
+        constraint = founder_token_account.mint == incentive_token.key() @ ErrorCode::InvalidMint,
+        constraint = founder_token_account.owner == founder.key() @ ErrorCode::InvalidOwner
     )]
     pub founder_token_account: Account<'info, TokenAccount>,
     pub pool: AccountLoader<'info, Pool>,
     #[account(mut)]
     pub founder: Signer<'info>,
+    /// CHECK: safe as invoked by incentive owner
     #[account(seeds = [b"staker".as_ref()], bump = nonce)]
     pub staker_authority: AccountInfo<'info>,
     pub incentive_token: Account<'info, Mint>,
@@ -69,17 +71,20 @@ pub fn handler(
     reward: TokenAmount,
     start_time: Seconds,
     end_time: Seconds,
-) -> ProgramResult {
+) -> Result<()> {
     msg!("CREATE INCENTIVE");
-    require!((reward) != TokenAmount::new(0), ZeroAmount);
+    require!(
+        (reward) != TokenAmount::new(0),
+        errors::ErrorCode::ZeroAmount
+    );
 
     require!(
         (start_time + Seconds::new(MAX_TIME_BEFORE_START)) >= Seconds::now(),
-        StartInPast
+        errors::ErrorCode::StartInPast
     );
     require!(
         (Seconds::now() + Seconds::new(MAX_DURATION)) >= end_time,
-        TooLongDuration
+        errors::ErrorCode::TooLongDuration
     );
     let incentive = &mut ctx.accounts.incentive.load_init()?;
 

@@ -1,5 +1,5 @@
 use crate::decimals::*;
-use crate::ErrorCode;
+use crate::errors::ErrorCode;
 use crate::Result;
 use std::cmp;
 

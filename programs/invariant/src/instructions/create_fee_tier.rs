@@ -10,6 +10,7 @@ use anchor_lang::solana_program::system_program;
 pub struct CreateFeeTier<'info> {
     #[account(init,
         seeds = [b"feetierv1", program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()],
+        space = 20,
         bump, payer = admin
     )]
     pub fee_tier: AccountLoader<'info, FeeTier>,
@@ -24,7 +25,7 @@ pub struct CreateFeeTier<'info> {
 }
 
 impl<'info> CreateFeeTier<'info> {
-    pub fn handler(&self, fee: u128, tick_spacing: u16, bump: u8) -> ProgramResult {
+    pub fn handler(&self, fee: u128, tick_spacing: u16, bump: u8) -> Result<()> {
         msg!("INVARIANT: CREATE FEE TIER");
 
         require!(tick_spacing > 0, InvalidTickSpacing);

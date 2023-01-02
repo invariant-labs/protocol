@@ -1,8 +1,9 @@
 use crate::decimals::*;
+use crate::errors::ErrorCode;
 use crate::math::*;
 use crate::structs::*;
 use crate::util::*;
-use crate::ErrorCode::*;
+use crate::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, TokenAccount, Transfer};
 use invariant::structs::Position;
@@ -16,11 +17,11 @@ pub struct Withdraw<'info> {
     )]
     pub user_stake: AccountLoader<'info, UserStake>,
     #[account(mut,
-        constraint = user_stake.load()?.incentive == incentive.key() @ InvalidIncentive
+        constraint = user_stake.load()?.incentive == incentive.key() @ ErrorCode::InvalidIncentive
     )]
     pub incentive: AccountLoader<'info, Incentive>,
     #[account(mut,
-        constraint = incentive_token_account.owner == staker_authority.key() @ InvalidTokenAccount
+        constraint = incentive_token_account.owner == staker_authority.key() @ ErrorCode::InvalidTokenAccount
     )]
     pub incentive_token_account: Account<'info, TokenAccount>,
     #[account(
@@ -32,12 +33,14 @@ pub struct Withdraw<'info> {
     )]
     pub position: AccountLoader<'info, Position>,
     #[account(mut,
-        constraint = owner_token_account.key() != incentive_token_account.key() @ InvalidTokenAccount,
-        constraint = owner_token_account.owner == position.load()?.owner @ InvalidOwner
+        constraint = owner_token_account.key() != incentive_token_account.key() @ ErrorCode::InvalidTokenAccount,
+        constraint = owner_token_account.owner == position.load()?.owner @ ErrorCode::InvalidOwner
     )]
     pub owner_token_account: Account<'info, TokenAccount>,
+    /// CHECK: safe as invoked by incentive owner
     #[account(seeds = [b"staker".as_ref()], bump = nonce)]
     pub staker_authority: AccountInfo<'info>,
+    /// CHECK: safe as owner is validate above
     #[account(mut)]
     pub owner: AccountInfo<'info>,
     /// CHECK: safe as constant
@@ -58,7 +61,7 @@ impl<'info> Withdraw<'info> {
     }
 }
 
-pub fn handler(ctx: Context<Withdraw>, _index: i32, nonce: u8) -> ProgramResult {
+pub fn handler(ctx: Context<Withdraw>, _index: i32, nonce: u8) -> Result<()> {
     msg!("WITHDRAW");
 
     let mut incentive = ctx.accounts.incentive.load_mut()?;
@@ -69,15 +72,21 @@ pub fn handler(ctx: Context<Withdraw>, _index: i32, nonce: u8) -> ProgramResult 
         let update_slot = position.last_slot;
         let slot = get_current_slot();
 
-        require!(slot == update_slot, SlotsAreNotEqual);
-        require!(user_stake.liquidity.v != 0, ZeroSecondsStaked);
+        require!(slot == update_slot, errors::ErrorCode::SlotsAreNotEqual);
+        require!(
+            user_stake.liquidity.v != 0,
+            errors::ErrorCode::ZeroSecondsStaked
+        );
 
         let seconds_per_liquidity_inside =
             SecondsPerLiquidity::new(position.seconds_per_liquidity_inside.v);
 
         let reward_unclaimed = incentive.total_reward_unclaimed;
 
-        require!(reward_unclaimed != TokenAmount::new(0), ZeroAmount);
+        require!(
+            reward_unclaimed != TokenAmount::new(0),
+            errors::ErrorCode::ZeroAmount
+        );
 
         let (seconds_inside, reward) = calculate_reward(
             reward_unclaimed,
@@ -106,7 +115,7 @@ pub fn handler(ctx: Context<Withdraw>, _index: i32, nonce: u8) -> ProgramResult 
     }
 
     if Seconds::now() > { incentive.end_time } {
-        require!(incentive.num_of_stakes > 0, NoStakes);
+        require!(incentive.num_of_stakes > 0, errors::ErrorCode::NoStakes);
         close(
             ctx.accounts.user_stake.to_account_info(),
             ctx.accounts.owner.to_account_info(),

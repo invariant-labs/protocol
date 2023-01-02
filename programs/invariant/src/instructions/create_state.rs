@@ -5,7 +5,7 @@ use anchor_lang::solana_program::system_program;
 #[derive(Accounts)]
 #[instruction( nonce: u8)]
 pub struct CreateState<'info> {
-    #[account(init, seeds = [b"statev1".as_ref()], bump, payer = admin)]
+    #[account(init, seeds = [b"statev1".as_ref()], bump, space = 20, payer = admin)]
     pub state: AccountLoader<'info, State>,
     #[account(mut)]
     pub admin: Signer<'info>,
@@ -18,7 +18,7 @@ pub struct CreateState<'info> {
     pub system_program: AccountInfo<'info>,
 }
 
-pub fn handler(ctx: Context<CreateState>, nonce: u8) -> ProgramResult {
+pub fn handler(ctx: Context<CreateState>, nonce: u8) -> Result<()> {
     msg!("INVARIANT: CREATE STATE");
 
     let state = &mut ctx.accounts.state.load_init()?;

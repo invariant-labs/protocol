@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{errors::ErrorCode, *};
 use anchor_lang::prelude::*;
 use decimals::*;
 

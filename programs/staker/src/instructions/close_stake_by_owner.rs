@@ -1,12 +1,13 @@
+use crate::errors::ErrorCode;
 use crate::structs::{Incentive, UserStake};
-use crate::ErrorCode::*;
+use crate::*;
 use anchor_lang::prelude::*;
 use invariant::structs::Position;
 
 #[derive(Accounts)]
 #[instruction(index: u32)]
 pub struct CloseStakeByOwner<'info> {
-    #[account(mut, constraint = user_stake.load()?.incentive == incentive.key() @ InvalidFounder)]
+    #[account(mut, constraint = user_stake.load()?.incentive == incentive.key() @ ErrorCode::InvalidFounder)]
     pub incentive: AccountLoader<'info, Incentive>,
     #[account(mut,
         close = owner,
@@ -25,9 +26,10 @@ pub struct CloseStakeByOwner<'info> {
     pub owner: Signer<'info>,
 }
 
-pub fn handler(ctx: Context<CloseStakeByOwner>, _index: i32) -> ProgramResult {
+pub fn handler(ctx: Context<CloseStakeByOwner>, _index: i32) -> Result<()> {
     let mut incentive = ctx.accounts.incentive.load_mut()?;
-    require!(incentive.num_of_stakes > 0, NoStakes);
+
+    require!(incentive.num_of_stakes > 0, errors::ErrorCode::NoStakes);
 
     // decrease number of stakes by 1
     incentive.num_of_stakes -= 1;

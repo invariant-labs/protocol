@@ -27,7 +27,7 @@ pub struct InitializeOracle<'info> {
 }
 
 impl<'info> InitializeOracle<'info> {
-    pub fn handler(&self) -> ProgramResult {
+    pub fn handler(&self) -> Result<()> {
         msg!("INVARIANT: INITIALIZE ORACLE");
 
         let oracle = &mut self.oracle.load_init()?;

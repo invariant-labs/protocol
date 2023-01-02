@@ -99,7 +99,7 @@ impl<'info> interfaces::SendTokens<'info> for ClaimFee<'info> {
 }
 
 impl<'info> ClaimFee<'info> {
-    pub fn handler(&self) -> ProgramResult {
+    pub fn handler(&self) -> Result<()> {
         msg!("INVARIANT: CLAIM FEE");
 
         let state = self.state.load()?;

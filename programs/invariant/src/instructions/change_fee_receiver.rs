@@ -23,7 +23,7 @@ pub struct ChangeFeeReceiver<'info> {
 }
 
 impl<'info> ChangeFeeReceiver<'info> {
-    pub fn handler(&self) -> ProgramResult {
+    pub fn handler(&self) -> Result<()> {
         let mut pool = self.pool.load_mut()?;
         pool.fee_receiver = self.fee_receiver.key();
 

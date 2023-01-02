@@ -7,6 +7,7 @@ pub struct CreatePositionList<'info> {
     #[account(init,
         seeds = [b"positionlistv1", owner.key().as_ref()],
         bump,
+        space = 20,
         payer = signer
     )]
     pub position_list: AccountLoader<'info, PositionList>,
@@ -21,7 +22,7 @@ pub struct CreatePositionList<'info> {
 }
 
 impl<'info> CreatePositionList<'info> {
-    pub fn handler(&self, bump: u8) -> ProgramResult {
+    pub fn handler(&self, bump: u8) -> Result<()> {
         msg!("INVARIANT: CREATE POSITION LIST");
         let mut position_list = self.position_list.load_init()?;
         *position_list = PositionList { head: 0, bump };

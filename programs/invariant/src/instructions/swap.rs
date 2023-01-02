@@ -1,3 +1,4 @@
+use crate::errors::ErrorCode;
 use crate::interfaces::send_tokens::SendTokens;
 use crate::interfaces::take_ref_tokens::TakeRefTokens;
 use crate::interfaces::take_tokens::TakeTokens;
@@ -134,7 +135,7 @@ impl<'info> Swap<'info> {
         amount: u64,
         by_amount_in: bool, // whether amount specifies input or output
         sqrt_price_limit: u128,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         msg!("INVARIANT: SWAP");
         require!(amount != 0, ZeroAmount);
 

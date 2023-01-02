@@ -1,4 +1,3 @@
-use anchor_lang::__private::ErrorCode;
 use anchor_lang::__private::CLOSED_ACCOUNT_DISCRIMINATOR;
 use std::io::Write;
 
@@ -10,10 +9,7 @@ pub fn get_current_slot() -> u64 {
     Clock::get().unwrap().slot
 }
 
-pub fn close<'info>(
-    info: AccountInfo<'info>,
-    sol_destination: AccountInfo<'info>,
-) -> ProgramResult {
+pub fn close<'info>(info: AccountInfo<'info>, sol_destination: AccountInfo<'info>) -> Result<()> {
     // Transfer tokens from the account to the sol_destination.
     let dest_starting_lamports = sol_destination.lamports();
     **sol_destination.lamports.borrow_mut() =
