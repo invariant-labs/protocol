@@ -1,5 +1,6 @@
 use crate::decimals::{Liquidity, SecondsPerLiquidity};
 use anchor_lang::prelude::*;
+use invariant::size;
 #[account(zero_copy)]
 #[repr(packed)]
 #[derive(PartialEq, Default, Debug)]
@@ -10,3 +11,4 @@ pub struct UserStake {
     pub liquidity: Liquidity,
     pub bump: u8,
 }
+size!(UserStake);

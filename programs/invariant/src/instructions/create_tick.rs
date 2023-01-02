@@ -15,7 +15,7 @@ use anchor_spl::token::Mint;
 pub struct CreateTick<'info> {
     #[account(init,
         seeds = [b"tickv1", pool.key().as_ref(), &index.to_le_bytes()],
-        space = 20,
+        space = Tick::LEN,
         bump, payer = payer
     )]
     pub tick: AccountLoader<'info, Tick>,

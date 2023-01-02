@@ -23,7 +23,7 @@ pub struct CreatePosition<'info> {
         seeds = [b"positionv1",
         owner.key.as_ref(),
         &position_list.load()?.head.to_le_bytes()],
-        space = 20,
+        space = Position::LEN,
         bump, payer = payer,
     )]
     pub position: AccountLoader<'info, Position>,

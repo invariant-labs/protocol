@@ -1,6 +1,7 @@
 mod decimals;
 mod errors;
 mod instructions;
+mod macros;
 mod math;
 mod structs;
 mod uint;

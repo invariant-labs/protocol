@@ -19,7 +19,7 @@ pub struct CreatePool<'info> {
     pub state: AccountLoader<'info, State>,
     #[account(init,
         seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref(), &fee_tier.load()?.fee.v.to_le_bytes(), &fee_tier.load()?.tick_spacing.to_le_bytes()],
-        space = 20,
+        space = Pool::LEN,
         bump, payer = payer
     )]
     pub pool: AccountLoader<'info, Pool>,

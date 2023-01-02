@@ -7,7 +7,7 @@ pub struct CreatePositionList<'info> {
     #[account(init,
         seeds = [b"positionlistv1", owner.key().as_ref()],
         bump,
-        space = 20,
+        space = PositionList::LEN,
         payer = signer
     )]
     pub position_list: AccountLoader<'info, PositionList>,

@@ -30,6 +30,7 @@ pub struct Pool {
     pub oracle_initialized: bool,
     pub bump: u8,
 }
+size!(Pool);
 
 impl Pool {
     #[allow(unaligned_references)]

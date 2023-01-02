@@ -22,7 +22,7 @@ pub struct TransferPositionOwnership<'info> {
         seeds = [b"positionv1",
         recipient.key().as_ref(),
         &recipient_list.load()?.head.to_le_bytes()],
-        space = 20,
+        space = Position::LEN,
         bump, payer = owner,
     )]
     pub new_position: AccountLoader<'info, Position>,

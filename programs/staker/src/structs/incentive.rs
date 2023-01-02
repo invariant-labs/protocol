@@ -1,5 +1,6 @@
 use crate::decimals::{Seconds, TokenAmount};
 use anchor_lang::prelude::*;
+use invariant::size;
 
 #[account(zero_copy)]
 #[repr(packed)]
@@ -16,3 +17,4 @@ pub struct Incentive {
     pub pool: Pubkey,
     pub nonce: u8,
 }
+size!(Incentive);

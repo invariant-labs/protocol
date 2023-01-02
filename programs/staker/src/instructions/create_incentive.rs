@@ -16,7 +16,7 @@ const WEEK: u64 = 604_800; //week in sec
 #[derive(Accounts)]
 #[instruction(nonce: u8)]
 pub struct CreateIncentive<'info> {
-    #[account(init, space = 20, payer = founder)]
+    #[account(init, space = Incentive::LEN, payer = founder)]
     pub incentive: AccountLoader<'info, Incentive>,
     #[account(init,
         token::mint = incentive_token,

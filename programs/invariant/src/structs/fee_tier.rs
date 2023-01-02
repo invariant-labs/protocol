@@ -1,4 +1,4 @@
-use crate::decimals::FixedPoint;
+use crate::{decimals::FixedPoint, size};
 use anchor_lang::prelude::*;
 
 #[account(zero_copy)]
@@ -9,3 +9,4 @@ pub struct FeeTier {
     pub tick_spacing: u16,
     pub bump: u8,
 }
+size!(FeeTier);

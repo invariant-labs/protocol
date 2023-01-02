@@ -23,6 +23,7 @@ pub struct Position {
     pub tokens_owed_y: FixedPoint,
     pub bump: u8,
 }
+size!(Position);
 
 impl Position {
     pub fn modify(

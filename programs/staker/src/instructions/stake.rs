@@ -15,7 +15,7 @@ pub struct CreateUserStake<'info> {
     #[account(init,
         seeds = [b"staker", incentive.key().as_ref(), position.load()?.pool.as_ref(), &position.load()?.id.to_le_bytes() ],
         payer = signer,
-        space = 20,
+        space = UserStake::LEN,
         bump)]
     pub user_stake: AccountLoader<'info, UserStake>,
     #[account(
