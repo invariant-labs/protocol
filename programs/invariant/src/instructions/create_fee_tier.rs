@@ -10,6 +10,7 @@ use anchor_lang::solana_program::system_program;
 pub struct CreateFeeTier<'info> {
     #[account(init,
         seeds = [b"feetierv1", program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()],
+        space = FeeTier::LEN,
         bump, payer = admin
     )]
     pub fee_tier: AccountLoader<'info, FeeTier>,
@@ -18,12 +19,13 @@ pub struct CreateFeeTier<'info> {
     #[account(mut, constraint = &state.load()?.admin == admin.key @ InvalidAdmin)]
     pub admin: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
+    /// CHECK: safe as constant
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }
 
 impl<'info> CreateFeeTier<'info> {
-    pub fn handler(&self, fee: u128, tick_spacing: u16, bump: u8) -> ProgramResult {
+    pub fn handler(&self, fee: u128, tick_spacing: u16, bump: u8) -> Result<()> {
         msg!("INVARIANT: CREATE FEE TIER");
 
         require!(tick_spacing > 0, InvalidTickSpacing);

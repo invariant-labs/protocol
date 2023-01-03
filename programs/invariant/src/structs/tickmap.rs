@@ -1,6 +1,8 @@
 use anchor_lang::prelude::*;
 use std::convert::TryInto;
 
+use crate::size;
+
 pub const TICK_LIMIT: i32 = 44_364; // If you change it update length of array as well!
 pub const TICK_SEARCH_RANGE: i32 = 256;
 pub const MAX_TICK: i32 = 221_818; // log(1.0001, sqrt(2^64-1))
@@ -10,6 +12,7 @@ pub const MAX_TICK: i32 = 221_818; // log(1.0001, sqrt(2^64-1))
 pub struct Tickmap {
     pub bitmap: [u8; 11091], // Tick limit / 4
 }
+size!(Tickmap);
 
 impl Default for Tickmap {
     fn default() -> Self {

@@ -18,11 +18,12 @@ pub struct ChangeFeeReceiver<'info> {
     pub token_y: Account<'info, Mint>,
     #[account(constraint = &state.load()?.admin == admin.key @ InvalidAdmin)]
     pub admin: Signer<'info>,
+    /// CHECK: safe as instruction can be invoked by admin
     pub fee_receiver: AccountInfo<'info>,
 }
 
 impl<'info> ChangeFeeReceiver<'info> {
-    pub fn handler(&self) -> ProgramResult {
+    pub fn handler(&self) -> Result<()> {
         let mut pool = self.pool.load_mut()?;
         pool.fee_receiver = self.fee_receiver.key();
 

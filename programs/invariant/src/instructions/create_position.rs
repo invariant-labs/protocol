@@ -23,6 +23,7 @@ pub struct CreatePosition<'info> {
         seeds = [b"positionv1",
         owner.key.as_ref(),
         &position_list.load()?.head.to_le_bytes()],
+        space = Position::LEN,
         bump, payer = payer,
     )]
     pub position: AccountLoader<'info, Position>,
@@ -80,11 +81,14 @@ pub struct CreatePosition<'info> {
         constraint = reserve_y.key() == pool.load()?.token_y_reserve @ InvalidTokenAccount
     )]
     pub reserve_y: Box<Account<'info, TokenAccount>>,
+    /// CHECK: safe as read from state
     #[account(constraint = &state.load()?.authority == program_authority.key @ InvalidAuthority)]
     pub program_authority: AccountInfo<'info>,
+    /// CHECK: safe as constant
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
+    /// CHECK: safe as constant
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }
@@ -120,7 +124,7 @@ impl<'info> CreatePosition<'info> {
         slippage_limit_lower: Price,
         slippage_limit_upper: Price,
         bump: u8,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         msg!("INVARIANT: CREATE POSITION");
 
         let mut position = self.position.load_init()?;

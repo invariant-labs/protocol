@@ -1,6 +1,6 @@
 import { getStakerAddress, Network } from './network'
 import { Staker as StakerIdl, IDL } from './idl/staker'
-import { BN, Program, Provider } from '@project-serum/anchor'
+import { AnchorProvider, BN, Program } from '@project-serum/anchor'
 import { IWallet } from '.'
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { UpdateSecondsPerLiquidity, Market } from '@invariant-labs/sdk/lib/market'
@@ -36,7 +36,7 @@ export class Staker {
     this.wallet = wallet
     this.opts = opts
     this.programId = new PublicKey(getStakerAddress(network))
-    const provider = new Provider(connection, wallet, opts ?? Provider.defaultOptions())
+    const provider = new AnchorProvider(connection, wallet, opts ?? AnchorProvider.defaultOptions())
     const programAddress = new PublicKey(getStakerAddress(network))
 
     this.network = network
@@ -338,7 +338,7 @@ export class Staker {
 
   private async signAndSend(tx: Transaction, signers?: Keypair[], opts?: ConfirmOptions) {
     const blockhash = await this.connection.getRecentBlockhash(
-      this.opts?.commitment || Provider.defaultOptions().commitment
+      this.opts?.commitment || AnchorProvider.defaultOptions().commitment
     )
     tx.feePayer = this.wallet.publicKey
     tx.recentBlockhash = blockhash.blockhash
@@ -350,13 +350,13 @@ export class Staker {
     return await sendAndConfirmRawTransaction(
       this.connection,
       rawTx,
-      opts ?? Provider.defaultOptions()
+      opts ?? AnchorProvider.defaultOptions()
     )
   }
 
   private async signAndSendAll(txs: Transaction[], opts?: ConfirmOptions) {
     const blockhash = await this.connection.getRecentBlockhash(
-      this.opts?.commitment || Provider.defaultOptions().commitment
+      this.opts?.commitment || AnchorProvider.defaultOptions().commitment
     )
     txs.forEach(tx => {
       tx.feePayer = this.wallet.publicKey
@@ -372,7 +372,7 @@ export class Staker {
         await sendAndConfirmRawTransaction(
           this.connection,
           rawTx,
-          opts ?? Provider.defaultOptions()
+          opts ?? AnchorProvider.defaultOptions()
         )
       )
     }

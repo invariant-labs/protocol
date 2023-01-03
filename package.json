@@ -57,7 +57,7 @@
   },
   "dependencies": {
     "@ledgerhq/hw-transport-node-hid": "^6.2.0",
-    "@project-serum/anchor": "^0.21.0",
+    "@project-serum/anchor": "^0.25.0",
     "@project-serum/serum": "^0.13.58",
     "@solana/buffer-layout": "^4.0.0",
     "@solana/spl-token": "^0.1.8",

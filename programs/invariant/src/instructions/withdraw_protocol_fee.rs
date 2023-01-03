@@ -41,9 +41,12 @@ pub struct WithdrawProtocolFee<'info> {
     )]
     pub reserve_y: Account<'info, TokenAccount>,
     #[account(constraint = &pool.load()?.fee_receiver == authority.key @ InvalidAuthority)]
+    /// CHECK: safe as read from state
     pub authority: Signer<'info>,
+    /// CHECK: safe as read from state
     #[account(constraint = &state.load()?.authority == program_authority.key @ InvalidAuthority)]
     pub program_authority: AccountInfo<'info>,
+    /// CHECK: safe as constant
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
 }
@@ -73,7 +76,7 @@ impl<'info> SendTokens<'info> for WithdrawProtocolFee<'info> {
 }
 
 impl<'info> WithdrawProtocolFee<'info> {
-    pub fn handler(&self) -> ProgramResult {
+    pub fn handler(&self) -> Result<()> {
         msg!("INVARIANT: WITHDRAW PROTOCOL FEE");
 
         let state = self.state.load()?;

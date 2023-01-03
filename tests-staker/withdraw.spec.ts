@@ -1,12 +1,12 @@
 import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
+import { BN } from '@project-serum/anchor'
 import { Market, Pair, DENOMINATOR, sleep, PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 import { Network } from '../staker-sdk/src'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { createToken, getTime, signAndSend, almostEqual } from './testUtils'
 import { createToken as createTkn, initMarket } from '../tests/testUtils'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { STAKER_ERRORS, toDecimal } from '../staker-sdk/lib/utils'
+import { toDecimal } from '../staker-sdk/lib/utils'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier, RemovePosition } from '@invariant-labs/sdk/lib/market'
 import { InitPosition, Swap, UpdateSecondsPerLiquidity } from '@invariant-labs/sdk/src/market'
@@ -17,7 +17,7 @@ import { assertThrowsAsync } from '@invariant-labs/sdk/lib/utils'
 import { ERRORS } from '@invariant-labs/sdk/lib/utils'
 
 describe('Withdraw tests', () => {
-  const provider = Provider.local()
+  const provider = anchor.AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Account

@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{errors::ErrorCode, *};
 use anchor_lang::prelude::*;
 use decimals::*;
 
@@ -18,6 +18,7 @@ pub struct Tick {
     pub seconds_outside: u64,
     pub bump: u8,
 }
+size!(Tick);
 
 impl Tick {
     pub fn update(

@@ -15,6 +15,7 @@ use anchor_spl::token::Mint;
 pub struct CreateTick<'info> {
     #[account(init,
         seeds = [b"tickv1", pool.key().as_ref(), &index.to_le_bytes()],
+        space = Tick::LEN,
         bump, payer = payer
     )]
     pub tick: AccountLoader<'info, Tick>,
@@ -36,12 +37,13 @@ pub struct CreateTick<'info> {
     #[account(constraint = token_y.key() == pool.load()?.token_y @ InvalidTokenAccount)]
     pub token_y: Account<'info, Mint>,
     pub rent: Sysvar<'info, Rent>,
+    /// CHECK: safe as constant
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }
 
 impl<'info> CreateTick<'info> {
-    pub fn handler(&self, index: i32, bump: u8) -> ProgramResult {
+    pub fn handler(&self, index: i32, bump: u8) -> Result<()> {
         msg!("INVARIANT: CREATE_TICK");
 
         let mut tick = self.tick.load_init()?;

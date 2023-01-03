@@ -19,6 +19,7 @@ pub struct CreatePool<'info> {
     pub state: AccountLoader<'info, State>,
     #[account(init,
         seeds = [b"poolv1", token_x.to_account_info().key.as_ref(), token_y.to_account_info().key.as_ref(), &fee_tier.load()?.fee.v.to_le_bytes(), &fee_tier.load()?.tick_spacing.to_le_bytes()],
+        space = Pool::LEN,
         bump, payer = payer
     )]
     pub pool: AccountLoader<'info, Pool>,
@@ -45,16 +46,18 @@ pub struct CreatePool<'info> {
     pub token_y_reserve: Account<'info, TokenAccount>,
     #[account(mut)]
     pub payer: Signer<'info>,
+    /// CHECK: safe as read from state
     #[account(constraint = &state.load()?.authority == authority.key @ InvalidAuthority)]
     pub authority: AccountInfo<'info>,
     pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
+    /// CHECK: safe as constant
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }
 
 impl<'info> CreatePool<'info> {
-    pub fn handler(&self, init_tick: i32, bump: u8) -> ProgramResult {
+    pub fn handler(&self, init_tick: i32, bump: u8) -> Result<()> {
         msg!("INVARIANT: CREATE POOL");
 
         let token_x_address = &self.token_x.key();

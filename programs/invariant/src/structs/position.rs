@@ -1,4 +1,5 @@
 use crate::decimals::*;
+use crate::errors::ErrorCode;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::*;
@@ -22,6 +23,7 @@ pub struct Position {
     pub tokens_owed_y: FixedPoint,
     pub bump: u8,
 }
+size!(Position);
 
 impl Position {
     pub fn modify(

@@ -1,3 +1,4 @@
+use crate::errors::ErrorCode;
 use crate::interfaces::send_tokens::SendTokens;
 use crate::interfaces::take_ref_tokens::TakeRefTokens;
 use crate::interfaces::take_tokens::TakeTokens;
@@ -48,8 +49,10 @@ pub struct Swap<'info> {
     )]
     pub reserve_y: Box<Account<'info, TokenAccount>>,
     pub owner: Signer<'info>,
+    /// CHECK: safe as read from state
     #[account(constraint = &state.load()?.authority == program_authority.key @ InvalidAuthority)]
     pub program_authority: AccountInfo<'info>,
+    /// CHECK: safe as constant
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
 }
@@ -132,7 +135,7 @@ impl<'info> Swap<'info> {
         amount: u64,
         by_amount_in: bool, // whether amount specifies input or output
         sqrt_price_limit: u128,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         msg!("INVARIANT: SWAP");
         require!(amount != 0, ZeroAmount);
 
