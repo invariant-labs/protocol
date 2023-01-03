@@ -1,5 +1,5 @@
 import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
+import { BN } from '@project-serum/anchor'
 import { Market, Pair } from '@invariant-labs/sdk'
 import { Keypair, PublicKey, Transaction } from '@solana/web3.js'
 import { assert } from 'chai'
@@ -13,7 +13,7 @@ import { Network } from '../staker-sdk/lib'
 import { tou64 } from '@invariant-labs/sdk/src/utils'
 
 describe('Create incentive tests', () => {
-  const provider = Provider.local()
+  const provider = anchor.AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Account
