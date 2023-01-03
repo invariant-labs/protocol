@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{errors::InvariantErrorCode, *};
 use anchor_lang::prelude::*;
 use decimals::*;
 
@@ -30,6 +30,7 @@ pub struct Pool {
     pub oracle_initialized: bool,
     pub bump: u8,
 }
+size!(Pool);
 
 impl Pool {
     #[allow(unaligned_references)]
@@ -70,7 +71,7 @@ impl Pool {
     pub fn update_liquidity_safely(&mut self, liquidity_delta: Liquidity, add: bool) -> Result<()> {
         // validate in decrease liquidity case
         if !add && { self.liquidity } < liquidity_delta {
-            return Err(ErrorCode::InvalidPoolLiquidity.into());
+            return Err(InvariantErrorCode::InvalidPoolLiquidity.into());
         };
         // pool liquidity can cannot be negative
         self.liquidity = match add {

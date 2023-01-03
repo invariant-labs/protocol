@@ -10,7 +10,7 @@ import {
 } from '@solana/web3.js'
 import { Token, u64 } from '@solana/spl-token'
 import { TokenInstructions } from '@project-serum/serum'
-import { BN, Provider } from '@project-serum/anchor'
+import { BN } from '@project-serum/anchor'
 import { InitPosition, UpdateSecondsPerLiquidity, Market } from '@invariant-labs/sdk/src/market'
 import { DENOMINATOR, Pair } from '@invariant-labs/sdk'
 
@@ -38,7 +38,7 @@ export const signAndSend = async (
 ) => {
   tx.setSigners(...signers.map(s => s.publicKey))
   const blockhash = await connection.getRecentBlockhash(
-    opts?.commitment ?? Provider.defaultOptions().commitment
+    opts?.commitment ?? anchor.AnchorProvider.defaultOptions().commitment
   )
   tx.recentBlockhash = blockhash.blockhash
   tx.partialSign(...signers)
