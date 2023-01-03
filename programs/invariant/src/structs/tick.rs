@@ -1,4 +1,4 @@
-use crate::{errors::ErrorCode, *};
+use crate::{errors::InvariantErrorCode, *};
 use anchor_lang::prelude::*;
 use decimals::*;
 
@@ -59,7 +59,7 @@ impl Tick {
     ) -> Result<Liquidity> {
         // validate in decrease liquidity case
         if !sign && { self.liquidity_gross } < liquidity_delta {
-            return Err(ErrorCode::InvalidTickLiquidity.into());
+            return Err(InvariantErrorCode::InvalidTickLiquidity.into());
         }
         let new_liquidity = match sign {
             true => self.liquidity_gross + liquidity_delta,
@@ -67,7 +67,7 @@ impl Tick {
         };
         // validate in increase liquidity case
         if sign && new_liquidity >= max_liquidity_per_tick {
-            return Err(ErrorCode::InvalidTickLiquidity.into());
+            return Err(InvariantErrorCode::InvalidTickLiquidity.into());
         }
 
         Ok(new_liquidity)

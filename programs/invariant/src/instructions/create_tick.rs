@@ -1,11 +1,11 @@
 use crate::decimals::*;
+use crate::errors::InvariantErrorCode;
 use crate::math::calculate_price_sqrt;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::structs::tickmap::Tickmap;
 use crate::util::check_tick;
 use crate::util::get_current_timestamp;
-use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::Mint;
@@ -25,16 +25,16 @@ pub struct CreateTick<'info> {
     )]
     pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
-        constraint = tickmap.key() == pool.load()?.tickmap @ InvalidTickmap,
-        constraint = tickmap.to_account_info().owner == program_id @ InvalidTickmapOwner,
+        constraint = tickmap.key() == pool.load()?.tickmap @ InvariantErrorCode::InvalidTickmap,
+        constraint = tickmap.to_account_info().owner == program_id @ InvariantErrorCode::InvalidTickmapOwner,
     )]
     pub tickmap: AccountLoader<'info, Tickmap>,
     #[account(mut)]
     pub payer: Signer<'info>,
     #[account(
-        constraint = token_x.key() == pool.load()?.token_x @ InvalidTokenAccount)]
+        constraint = token_x.key() == pool.load()?.token_x @ InvariantErrorCode::InvalidTokenAccount)]
     pub token_x: Account<'info, Mint>,
-    #[account(constraint = token_y.key() == pool.load()?.token_y @ InvalidTokenAccount)]
+    #[account(constraint = token_y.key() == pool.load()?.token_y @ InvariantErrorCode::InvalidTokenAccount)]
     pub token_y: Account<'info, Mint>,
     pub rent: Sysvar<'info, Rent>,
     /// CHECK: safe as constant

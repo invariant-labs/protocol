@@ -1,4 +1,4 @@
-use crate::{errors::ErrorCode, *};
+use crate::{errors::InvariantErrorCode, *};
 use anchor_lang::prelude::*;
 use decimals::*;
 
@@ -71,7 +71,7 @@ impl Pool {
     pub fn update_liquidity_safely(&mut self, liquidity_delta: Liquidity, add: bool) -> Result<()> {
         // validate in decrease liquidity case
         if !add && { self.liquidity } < liquidity_delta {
-            return Err(ErrorCode::InvalidPoolLiquidity.into());
+            return Err(InvariantErrorCode::InvalidPoolLiquidity.into());
         };
         // pool liquidity can cannot be negative
         self.liquidity = match add {

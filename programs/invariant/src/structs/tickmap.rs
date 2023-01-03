@@ -21,10 +21,7 @@ impl Default for Tickmap {
 }
 
 fn tick_to_position(tick: i32, tick_spacing: u16) -> (usize, u8) {
-    assert!(
-        (tick % tick_spacing as i32) == 0,
-        "tick not divisible by spacing"
-    );
+    assert_eq!((tick % tick_spacing as i32), 0, "tick not divisible by spacing");
 
     let bitmap_index = tick
         .checked_div(tick_spacing.try_into().unwrap())

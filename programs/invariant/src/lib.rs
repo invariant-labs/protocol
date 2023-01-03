@@ -13,8 +13,7 @@ mod util;
 use anchor_lang::prelude::*;
 use anchor_spl::token;
 
-use crate::decimals::*;
-use errors::ErrorCode;
+use crate::{decimals::*, errors::InvariantErrorCode};
 use instructions::*;
 use math::*;
 use structs::{Pool, State};
@@ -143,12 +142,18 @@ pub mod invariant {
 
 fn admin(state_loader: &AccountLoader<State>, signer: &AccountInfo) -> Result<()> {
     let state = state_loader.load()?;
-    require!(signer.key.eq(&state.admin), Unauthorized);
+    require!(
+        signer.key.eq(&state.admin),
+        InvariantErrorCode::Unauthorized
+    );
     Ok(())
 }
 
 fn receiver(pool_loader: &AccountLoader<Pool>, signer: &AccountInfo) -> Result<()> {
     let pool = pool_loader.load()?;
-    require!(signer.key.eq(&pool.fee_receiver), Unauthorized);
+    require!(
+        signer.key.eq(&pool.fee_receiver),
+        InvariantErrorCode::Unauthorized
+    );
     Ok(())
 }

@@ -1,4 +1,4 @@
-use crate::errors::ErrorCode;
+use crate::errors::InvariantErrorCode;
 use crate::interfaces::send_tokens::SendTokens;
 use crate::interfaces::take_ref_tokens::TakeRefTokens;
 use crate::interfaces::take_tokens::TakeTokens;
@@ -8,7 +8,6 @@ use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::structs::tickmap::Tickmap;
 use crate::util::get_closer_limit;
-use crate::ErrorCode::*;
 use crate::*;
 use crate::{decimals::*, referral::whitelist::contains_owner};
 use anchor_lang::prelude::*;
@@ -24,33 +23,33 @@ pub struct Swap<'info> {
     )]
     pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
-        constraint = tickmap.to_account_info().key == &pool.load()?.tickmap @ InvalidTickmap,
-        constraint = tickmap.to_account_info().owner == program_id @ InvalidTickmapOwner
+        constraint = tickmap.to_account_info().key == &pool.load()?.tickmap @ InvariantErrorCode::InvalidTickmap,
+        constraint = tickmap.to_account_info().owner == program_id @ InvariantErrorCode::InvalidTickmapOwner
     )]
     pub tickmap: AccountLoader<'info, Tickmap>,
     #[account(mut,
-        constraint = &account_x.owner == owner.key @ InvalidOwner
+        constraint = &account_x.owner == owner.key @ InvariantErrorCode::InvalidOwner
     )]
     pub account_x: Account<'info, TokenAccount>,
     #[account(mut,
-        constraint = &account_y.owner == owner.key @ InvalidOwner
+        constraint = &account_y.owner == owner.key @ InvariantErrorCode::InvalidOwner
     )]
     pub account_y: Account<'info, TokenAccount>,
     #[account(mut,
-        constraint = reserve_x.mint == account_x.mint @ InvalidMint,
-        constraint = &reserve_x.owner == program_authority.key @ InvalidAuthority,
-        constraint = reserve_x.to_account_info().key == &pool.load()?.token_x_reserve @ InvalidTokenAccount
+        constraint = reserve_x.mint == account_x.mint @ InvariantErrorCode::InvalidMint,
+        constraint = &reserve_x.owner == program_authority.key @ InvariantErrorCode::InvalidAuthority,
+        constraint = reserve_x.to_account_info().key == &pool.load()?.token_x_reserve @ InvariantErrorCode::InvalidTokenAccount
     )]
     pub reserve_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = reserve_y.mint == account_y.mint @ InvalidMint,
-        constraint = &reserve_y.owner == program_authority.key @ InvalidAuthority,
-        constraint = reserve_y.to_account_info().key == &pool.load()?.token_y_reserve @ InvalidTokenAccount
+        constraint = reserve_y.mint == account_y.mint @ InvariantErrorCode::InvalidMint,
+        constraint = &reserve_y.owner == program_authority.key @ InvariantErrorCode::InvalidAuthority,
+        constraint = reserve_y.to_account_info().key == &pool.load()?.token_y_reserve @ InvariantErrorCode::InvalidTokenAccount
     )]
     pub reserve_y: Box<Account<'info, TokenAccount>>,
     pub owner: Signer<'info>,
     /// CHECK: safe as read from state
-    #[account(constraint = &state.load()?.authority == program_authority.key @ InvalidAuthority)]
+    #[account(constraint = &state.load()?.authority == program_authority.key @ InvariantErrorCode::InvalidAuthority)]
     pub program_authority: AccountInfo<'info>,
     /// CHECK: safe as constant
     #[account(address = token::ID)]
@@ -137,7 +136,7 @@ impl<'info> Swap<'info> {
         sqrt_price_limit: u128,
     ) -> Result<()> {
         msg!("INVARIANT: SWAP");
-        require!(amount != 0, ZeroAmount);
+        require!(amount != 0, InvariantErrorCode::ZeroAmount);
 
         let sqrt_price_limit = Price::new(sqrt_price_limit);
         let mut pool = ctx.accounts.pool.load_mut()?;
@@ -172,13 +171,13 @@ impl<'info> Swap<'info> {
             require!(
                 { pool.sqrt_price } > sqrt_price_limit
                     && sqrt_price_limit <= Price::new(MAX_SQRT_PRICE),
-                WrongLimit
+                InvariantErrorCode::WrongLimit
             );
         } else {
             require!(
                 { pool.sqrt_price } < sqrt_price_limit
                     && sqrt_price_limit >= Price::new(MIN_SQRT_PRICE),
-                WrongLimit
+                InvariantErrorCode::WrongLimit
             );
         }
 
@@ -224,7 +223,7 @@ impl<'info> Swap<'info> {
 
             // Fail if price would go over swap limit
             if { pool.sqrt_price } == sqrt_price_limit && !remaining_amount.is_zero() {
-                return Err(ErrorCode::PriceLimitReached.into());
+                return Err(InvariantErrorCode::PriceLimitReached.into());
             }
 
             // crossing tick
@@ -259,7 +258,7 @@ impl<'info> Swap<'info> {
                         .find(|account| *account.key == tick_address)
                     {
                         Some(account) => AccountLoader::<'_, Tick>::try_from(account).unwrap(),
-                        None => return Err(ErrorCode::TickNotFound.into()),
+                        None => return Err(InvariantErrorCode::TickNotFound.into()),
                     };
                     let mut tick = loader.load_mut().unwrap();
 
@@ -295,7 +294,7 @@ impl<'info> Swap<'info> {
         }
 
         if total_amount_out.0 == 0 {
-            return Err(ErrorCode::NoGainSwap.into());
+            return Err(InvariantErrorCode::NoGainSwap.into());
         }
 
         // Execute swap

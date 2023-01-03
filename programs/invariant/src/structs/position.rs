@@ -1,5 +1,5 @@
 use crate::decimals::*;
-use crate::errors::ErrorCode;
+use crate::errors::InvariantErrorCode;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::*;
@@ -84,7 +84,7 @@ impl Position {
     ) -> Result<()> {
         require!(
             liquidity_delta.v != 0 || self.liquidity.v != 0,
-            ErrorCode::EmptyPositionPokes
+            InvariantErrorCode::EmptyPositionPokes
         );
 
         // calculate accumulated fee
@@ -125,7 +125,7 @@ impl Position {
     ) -> Result<Liquidity> {
         // validate in decrease liquidity case
         if !sign && { self.liquidity } < liquidity_delta {
-            return Err(ErrorCode::InvalidPositionLiquidity.into());
+            return Err(InvariantErrorCode::InvalidPositionLiquidity.into());
         }
 
         Ok(match sign {

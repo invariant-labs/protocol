@@ -12,8 +12,11 @@ use crate::structs::tickmap::{get_search_limit, MAX_TICK, TICK_LIMIT};
 use crate::*;
 
 pub fn check_ticks(tick_lower: i32, tick_upper: i32, tick_spacing: u16) -> Result<()> {
-    // Check order
-    require!(tick_lower < tick_upper, InvalidTickIndex);
+    // Cherequireck order
+    require!(
+        tick_lower < tick_upper,
+        InvariantErrorCode::InvalidTickIndex,
+    );
 
     check_tick(tick_lower, tick_spacing)?;
     check_tick(tick_upper, tick_spacing)?;
@@ -25,15 +28,24 @@ pub fn check_tick(tick_index: i32, tick_spacing: u16) -> Result<()> {
     // Check order
     require!(
         tick_index.checked_rem(tick_spacing.into()) == Some(0),
-        InvalidTickIndex
+        InvariantErrorCode::InvalidTickIndex
     );
 
     let tickmap_index = tick_index.checked_div(tick_spacing.into()).unwrap();
 
-    require!(tickmap_index >= (-TICK_LIMIT), InvalidTickIndex);
-    require!(tickmap_index < TICK_LIMIT, InvalidTickIndex);
-    require!(tick_index >= (-MAX_TICK), InvalidTickIndex);
-    require!(tick_index <= MAX_TICK, InvalidTickIndex);
+    require!(
+        tickmap_index >= (-TICK_LIMIT),
+        InvariantErrorCode::InvalidTickIndex
+    );
+    require!(
+        tickmap_index < TICK_LIMIT,
+        InvariantErrorCode::InvalidTickIndex
+    );
+    require!(
+        tick_index >= (-MAX_TICK),
+        InvariantErrorCode::InvalidTickIndex
+    );
+    require!(tick_index <= MAX_TICK, InvariantErrorCode::InvalidTickIndex);
 
     Ok(())
 }
@@ -69,7 +81,7 @@ pub fn get_closer_limit(
             let index = get_search_limit(current_tick, tick_spacing, !x_to_y);
             let price = calculate_price_sqrt(index);
 
-            require!(current_tick != index, LimitReached);
+            require!(current_tick != index, InvariantErrorCode::LimitReached);
 
             // trunk-ignore(clippy/if_same_then_else)
             if x_to_y && price > sqrt_price_limit {

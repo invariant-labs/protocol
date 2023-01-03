@@ -1,6 +1,6 @@
+use crate::errors::InvariantErrorCode;
 use crate::structs::position::Position;
 use crate::structs::position_list::PositionList;
-use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 
@@ -15,7 +15,7 @@ pub struct TransferPositionOwnership<'info> {
     #[account(mut,
         seeds = [b"positionlistv1", recipient.key().as_ref()],
         bump = recipient_list.load()?.bump,
-        constraint = recipient_list.key() != owner_list.key() @ InvalidListOwner
+        constraint = recipient_list.key() != owner_list.key() @ InvariantErrorCode::InvalidListOwner
     )]
     pub recipient_list: AccountLoader<'info, PositionList>,
     #[account(init,

@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 #[error_code]
-pub enum ErrorCode {
+pub enum InvariantErrorCode {
     #[msg("Amount is zero")]
     ZeroAmount = 0, // 1770
     #[msg("Output would be zero")]

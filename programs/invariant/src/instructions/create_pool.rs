@@ -1,4 +1,5 @@
 use crate::decimals::*;
+use crate::errors::InvariantErrorCode;
 use crate::math::calculate_price_sqrt;
 use crate::structs::fee_tier::FeeTier;
 use crate::structs::pool::Pool;
@@ -6,7 +7,6 @@ use crate::structs::tickmap::Tickmap;
 use crate::structs::State;
 use crate::util::check_tick;
 use crate::util::get_current_timestamp;
-use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::Token;
@@ -47,7 +47,7 @@ pub struct CreatePool<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     /// CHECK: safe as read from state
-    #[account(constraint = &state.load()?.authority == authority.key @ InvalidAuthority)]
+    #[account(constraint = &state.load()?.authority == authority.key @ InvariantErrorCode::InvalidAuthority)]
     pub authority: AccountInfo<'info>,
     pub token_program: Program<'info, Token>,
     pub rent: Sysvar<'info, Rent>,
@@ -67,7 +67,7 @@ impl<'info> CreatePool<'info> {
                 .to_string()
                 .cmp(&token_y_address.to_string())
                 == Ordering::Less,
-            InvalidPoolTokenAddresses
+            InvariantErrorCode::InvalidPoolTokenAddresses
         );
 
         let pool = &mut self.pool.load_init()?;
