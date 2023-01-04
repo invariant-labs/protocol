@@ -1,13 +1,13 @@
 use crate::errors::InvariantErrorCode;
-use crate::math;
-use crate::structs::pool::Pool;
-use crate::structs::position::Position;
-use crate::structs::tick::Tick;
+
 use crate::util::{get_current_slot, get_current_timestamp};
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::Mint;
-use math::*;
+use invariant_core::{
+    math::*,
+    structs::{Pool, Position, Tick},
+};
 
 #[derive(Accounts)]
 #[instruction(lower_tick_index: i32, upper_tick_index: i32, index: i32)]

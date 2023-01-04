@@ -76,6 +76,8 @@ impl Tick {
 
 #[cfg(test)]
 mod tests {
+    use crate::math::calculate_max_liquidity_per_tick;
+
     use super::*;
 
     #[test]

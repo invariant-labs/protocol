@@ -1,9 +1,9 @@
 use crate::errors::InvariantErrorCode;
-use crate::structs::oracle::Oracle;
-use crate::structs::pool::Pool;
+
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use anchor_spl::token::Mint;
+use invariant_core::structs::{Oracle, Pool};
 
 #[derive(Accounts)]
 pub struct InitializeOracle<'info> {

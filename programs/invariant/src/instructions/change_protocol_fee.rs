@@ -1,8 +1,10 @@
-use crate::decimals::*;
 use crate::errors::InvariantErrorCode;
-use crate::structs::{Pool, State};
 use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
+use invariant_core::{
+    decimals::*,
+    structs::{Pool, State},
+};
 
 #[derive(Accounts)]
 pub struct ChangeProtocolFee<'info> {

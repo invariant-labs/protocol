@@ -1,11 +1,10 @@
-use crate::decimals::*;
 use crate::errors::InvariantErrorCode;
 use crate::interfaces::send_tokens::SendTokens;
-use crate::structs::pool::Pool;
-use crate::structs::position::Position;
-use crate::structs::position_list::PositionList;
-use crate::structs::tick::Tick;
-use crate::structs::tickmap::Tickmap;
+use invariant_core::{
+    decimals::*,
+    structs::{Pool, Position, PositionList, Tick, Tickmap},
+};
+
 use crate::util::{check_ticks, close};
 use crate::*;
 use anchor_lang::prelude::*;

@@ -1,14 +1,14 @@
-use crate::decimals::*;
 use crate::errors::InvariantErrorCode;
 use crate::interfaces::send_tokens::SendTokens;
-use crate::structs::pool::Pool;
-use crate::structs::position::Position;
-use crate::structs::tick::Tick;
 use crate::util::*;
 use crate::*;
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
+use invariant_core::{
+    decimals::{FixedPoint, Liquidity, TokenAmount},
+    structs::{Position, Tick},
+};
 
 #[derive(Accounts)]
 #[instruction( index: u32, lower_tick_index: i32, upper_tick_index: i32)]

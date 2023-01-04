@@ -1,11 +1,10 @@
 use crate::errors::InvariantErrorCode;
 use crate::interfaces::SendTokens;
-use crate::structs::pool::Pool;
-use crate::structs::state::State;
 use crate::SEED;
 use crate::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Mint, TokenAccount, Transfer};
+use invariant_core::structs::{Pool, State};
 
 #[derive(Accounts)]
 pub struct WithdrawProtocolFee<'info> {

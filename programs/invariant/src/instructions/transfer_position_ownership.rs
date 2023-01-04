@@ -1,8 +1,7 @@
 use crate::errors::InvariantErrorCode;
-use crate::structs::position::Position;
-use crate::structs::position_list::PositionList;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
+use invariant_core::structs::{Position, PositionList};
 
 #[derive(Accounts)]
 #[instruction( index: u32)]

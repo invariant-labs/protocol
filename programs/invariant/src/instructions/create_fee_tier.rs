@@ -1,9 +1,9 @@
-use crate::decimals::*;
 use crate::errors::InvariantErrorCode;
-use crate::structs::fee_tier::FeeTier;
 use crate::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
+use invariant_core::decimals::FixedPoint;
+use invariant_core::structs::FeeTier;
 
 #[derive(Accounts)]
 #[instruction(fee: u128, tick_spacing: u16)]

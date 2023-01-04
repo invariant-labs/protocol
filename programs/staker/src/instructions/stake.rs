@@ -7,7 +7,7 @@ use crate::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 use invariant::program::Invariant;
-use invariant::structs::Position;
+use invariant_core::structs::Position;
 
 #[derive(Accounts)]
 #[instruction(index: u32)]

@@ -1,6 +1,6 @@
-use crate::structs::state::State;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
+use invariant_core::structs::State;
 
 #[derive(Accounts)]
 #[instruction( nonce: u8)]

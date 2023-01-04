@@ -1,5 +1,6 @@
 use crate::decimals::*;
 use crate::errors::InvariantErrorCode;
+use crate::math::*;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::*;

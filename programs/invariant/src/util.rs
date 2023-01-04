@@ -4,12 +4,15 @@ use std::cell::RefMut;
 use std::convert::TryInto;
 use std::io::Write;
 
-use crate::math::calculate_price_sqrt;
-use crate::structs::pool::Pool;
-use crate::structs::tick::Tick;
-use crate::structs::tickmap::Tickmap;
-use crate::structs::tickmap::{get_search_limit, MAX_TICK, TICK_LIMIT};
 use crate::*;
+use invariant_core::{
+    decimals::*,
+    math::calculate_price_sqrt,
+    structs::{
+        tickmap::{get_search_limit, MAX_TICK, TICK_LIMIT},
+        Pool, Tick, Tickmap,
+    },
+};
 
 pub fn check_ticks(tick_lower: i32, tick_upper: i32, tick_spacing: u16) -> Result<()> {
     // Cherequireck order

@@ -1,15 +1,11 @@
 use crate::errors::InvariantErrorCode;
 use crate::interfaces::take_tokens::TakeTokens;
-use crate::structs::pool::Pool;
-use crate::structs::position::Position;
-use crate::structs::position_list::PositionList;
-use crate::structs::tick::Tick;
-use crate::structs::Tickmap;
 use crate::util::check_ticks;
 use crate::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
-use decimals::*;
+use invariant_core::decimals::*;
+use invariant_core::structs::{Pool, Position, PositionList, Tick, Tickmap};
 
 use anchor_spl::token;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};

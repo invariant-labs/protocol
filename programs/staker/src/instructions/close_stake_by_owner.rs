@@ -2,7 +2,7 @@ use crate::errors::ErrorCode;
 use crate::structs::{Incentive, UserStake};
 use crate::*;
 use anchor_lang::prelude::*;
-use invariant::structs::Position;
+use invariant_core::structs::Position;
 
 #[derive(Accounts)]
 #[instruction(index: u32)]

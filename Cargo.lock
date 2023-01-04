@@ -689,9 +689,17 @@ dependencies = [
  "anchor-spl",
  "decimal",
  "integer-sqrt",
+ "invariant-core",
  "num-traits",
- "spl-token",
  "uint",
+]
+
+[[package]]
+name = "invariant-core"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "decimal",
 ]
 
 [[package]]
@@ -1324,6 +1332,7 @@ dependencies = [
  "decimal",
  "integer-sqrt",
  "invariant",
+ "invariant-core",
  "uint",
 ]
 

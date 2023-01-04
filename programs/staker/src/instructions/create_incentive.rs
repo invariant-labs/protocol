@@ -7,7 +7,7 @@ use anchor_lang::solana_program::system_program;
 use anchor_spl::token::Mint;
 use anchor_spl::token::{self, TokenAccount, Transfer};
 use invariant::program::Invariant;
-use invariant::structs::Pool;
+use invariant_core::structs::Pool;
 
 const MAX_TIME_BEFORE_START: u64 = 3_600; //hour in sec
 const MAX_DURATION: u64 = 31_556_926; //year in sec

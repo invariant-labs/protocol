@@ -6,7 +6,7 @@ use crate::util::*;
 use crate::*;
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, TokenAccount, Transfer};
-use invariant::structs::Position;
+use invariant_core::structs::Position;
 
 #[derive(Accounts)]
 #[instruction(index: u32, nonce: u8)]

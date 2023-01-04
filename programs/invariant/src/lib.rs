@@ -1,22 +1,19 @@
-mod decimals;
 mod errors;
 mod instructions;
 mod interfaces;
 mod log;
 mod macros;
-mod math;
 mod referral;
-pub mod structs;
+mod structs;
 mod uint;
 mod util;
 
 use anchor_lang::prelude::*;
 use anchor_spl::token;
+pub use invariant_core::{decimals::*, structs::*};
 
-use crate::{decimals::*, errors::InvariantErrorCode};
+use crate::errors::InvariantErrorCode;
 use instructions::*;
-use math::*;
-use structs::{Pool, State};
 use util::*;
 
 use instructions::claim_fee::ClaimFee;

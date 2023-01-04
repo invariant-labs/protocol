@@ -1,6 +1,6 @@
-use crate::structs::position_list::PositionList;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
+use invariant_core::structs::PositionList;
 
 #[derive(Accounts)]
 pub struct CreatePositionList<'info> {
