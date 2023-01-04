@@ -1,4 +1,6 @@
 use crate::decimals::*;
+use crate::errors::InvariantErrorCode;
+use crate::math::*;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::*;
@@ -22,6 +24,7 @@ pub struct Position {
     pub tokens_owed_y: FixedPoint,
     pub bump: u8,
 }
+size!(Position);
 
 impl Position {
     pub fn modify(
@@ -82,7 +85,7 @@ impl Position {
     ) -> Result<()> {
         require!(
             liquidity_delta.v != 0 || self.liquidity.v != 0,
-            ErrorCode::EmptyPositionPokes
+            InvariantErrorCode::EmptyPositionPokes
         );
 
         // calculate accumulated fee
@@ -123,7 +126,7 @@ impl Position {
     ) -> Result<Liquidity> {
         // validate in decrease liquidity case
         if !sign && { self.liquidity } < liquidity_delta {
-            return Err(ErrorCode::InvalidPositionLiquidity.into());
+            return Err(InvariantErrorCode::InvalidPositionLiquidity.into());
         }
 
         Ok(match sign {

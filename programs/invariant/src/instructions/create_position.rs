@@ -1,15 +1,11 @@
+use crate::errors::InvariantErrorCode;
 use crate::interfaces::take_tokens::TakeTokens;
-use crate::structs::pool::Pool;
-use crate::structs::position::Position;
-use crate::structs::position_list::PositionList;
-use crate::structs::tick::Tick;
-use crate::structs::Tickmap;
 use crate::util::check_ticks;
-use crate::ErrorCode::*;
 use crate::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
-use decimals::*;
+use invariant_core::decimals::*;
+use invariant_core::structs::{Pool, Position, PositionList, Tick, Tickmap};
 
 use anchor_spl::token;
 use anchor_spl::token::{Mint, TokenAccount, Transfer};
@@ -23,6 +19,7 @@ pub struct CreatePosition<'info> {
         seeds = [b"positionv1",
         owner.key.as_ref(),
         &position_list.load()?.head.to_le_bytes()],
+        space = Position::LEN,
         bump, payer = payer,
     )]
     pub position: AccountLoader<'info, Position>,
@@ -50,41 +47,44 @@ pub struct CreatePosition<'info> {
     )]
     pub upper_tick: AccountLoader<'info, Tick>,
     #[account(mut,
-        constraint = tickmap.key() == pool.load()?.tickmap @ InvalidTickmap,
-        constraint = tickmap.to_account_info().owner == program_id @ InvalidTickmapOwner,
+        constraint = tickmap.key() == pool.load()?.tickmap @ InvariantErrorCode::InvalidTickmap,
+        constraint = tickmap.to_account_info().owner == program_id @ InvariantErrorCode::InvalidTickmapOwner,
     )]
     pub tickmap: AccountLoader<'info, Tickmap>,
-    #[account(constraint = token_x.key() == pool.load()?.token_x @ InvalidTokenAccount)]
+    #[account(constraint = token_x.key() == pool.load()?.token_x @ InvariantErrorCode::InvalidTokenAccount)]
     pub token_x: Account<'info, Mint>,
-    #[account(constraint = token_y.key() == pool.load()?.token_y @ InvalidTokenAccount)]
+    #[account(constraint = token_y.key() == pool.load()?.token_y @ InvariantErrorCode::InvalidTokenAccount)]
     pub token_y: Account<'info, Mint>,
     #[account(mut,
-        constraint = account_x.mint == token_x.key() @ InvalidMint,
-        constraint = &account_x.owner == owner.key @ InvalidOwner,
+        constraint = account_x.mint == token_x.key() @ InvariantErrorCode::InvalidMint,
+        constraint = &account_x.owner == owner.key @ InvariantErrorCode::InvalidOwner,
     )]
     pub account_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = account_y.mint == token_y.key() @ InvalidMint,
-        constraint = &account_y.owner == owner.key @ InvalidOwner
+        constraint = account_y.mint == token_y.key() @ InvariantErrorCode::InvalidMint,
+        constraint = &account_y.owner == owner.key @ InvariantErrorCode::InvalidOwner
     )]
     pub account_y: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = reserve_x.mint == token_x.key() @ InvalidMint,
-        constraint = &reserve_x.owner == program_authority.key @ InvalidOwner,
-        constraint = reserve_x.key() == pool.load()?.token_x_reserve @ InvalidTokenAccount
+        constraint = reserve_x.mint == token_x.key() @ InvariantErrorCode::InvalidMint,
+        constraint = &reserve_x.owner == program_authority.key @ InvariantErrorCode::InvalidOwner,
+        constraint = reserve_x.key() == pool.load()?.token_x_reserve @ InvariantErrorCode::InvalidTokenAccount
     )]
     pub reserve_x: Box<Account<'info, TokenAccount>>,
     #[account(mut,
-        constraint = reserve_y.mint == token_y.key() @ InvalidMint,
-        constraint = &reserve_y.owner == program_authority.key @ InvalidOwner,
-        constraint = reserve_y.key() == pool.load()?.token_y_reserve @ InvalidTokenAccount
+        constraint = reserve_y.mint == token_y.key() @ InvariantErrorCode::InvalidMint,
+        constraint = &reserve_y.owner == program_authority.key @ InvariantErrorCode::InvalidOwner,
+        constraint = reserve_y.key() == pool.load()?.token_y_reserve @ InvariantErrorCode::InvalidTokenAccount
     )]
     pub reserve_y: Box<Account<'info, TokenAccount>>,
-    #[account(constraint = &state.load()?.authority == program_authority.key @ InvalidAuthority)]
+    /// CHECK: safe as read from state
+    #[account(constraint = &state.load()?.authority == program_authority.key @ InvariantErrorCode::InvalidAuthority)]
     pub program_authority: AccountInfo<'info>,
+    /// CHECK: safe as constant
     #[account(address = token::ID)]
     pub token_program: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
+    /// CHECK: safe as constant
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }
@@ -120,7 +120,7 @@ impl<'info> CreatePosition<'info> {
         slippage_limit_lower: Price,
         slippage_limit_upper: Price,
         bump: u8,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         msg!("INVARIANT: CREATE POSITION");
 
         let mut position = self.position.load_init()?;
@@ -134,8 +134,14 @@ impl<'info> CreatePosition<'info> {
 
         // validate price
         let price = pool.sqrt_price;
-        require!(price >= slippage_limit_lower, PriceLimitReached);
-        require!(price <= slippage_limit_upper, PriceLimitReached);
+        require!(
+            price >= slippage_limit_lower,
+            InvariantErrorCode::PriceLimitReached
+        );
+        require!(
+            price <= slippage_limit_upper,
+            InvariantErrorCode::PriceLimitReached
+        );
 
         // validate ticks
         check_ticks(lower_tick.index, upper_tick.index, pool.tick_spacing)?;

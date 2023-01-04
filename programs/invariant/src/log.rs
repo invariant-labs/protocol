@@ -1,5 +1,6 @@
-use crate::decimals::*;
-use crate::math::calculate_price_sqrt;
+use invariant_core::math::calculate_price_sqrt;
+
+use invariant_core::decimals::*;
 
 const LOG2_SCALE: u8 = 32;
 const LOG2_DOUBLE_SCALE: u8 = 64;
@@ -132,7 +133,8 @@ pub fn get_tick_at_sqrt_price(sqrt_price_decimal: Price, tick_spacing: u16) -> i
 
 #[cfg(test)]
 mod tests {
-    use crate::structs::MAX_TICK;
+
+    use invariant_core::structs::MAX_TICK;
 
     use super::*;
 

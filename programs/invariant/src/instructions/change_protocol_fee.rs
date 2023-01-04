@@ -1,8 +1,10 @@
-use crate::decimals::*;
-use crate::structs::{Pool, State};
-use crate::ErrorCode::*;
+use crate::errors::InvariantErrorCode;
 use anchor_lang::prelude::*;
 use anchor_spl::token::Mint;
+use invariant_core::{
+    decimals::*,
+    structs::{Pool, State},
+};
 
 #[derive(Accounts)]
 pub struct ChangeProtocolFee<'info> {
@@ -13,21 +15,22 @@ pub struct ChangeProtocolFee<'info> {
         bump = pool.load()?.bump
     )]
     pub pool: AccountLoader<'info, Pool>,
-    #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x @ InvalidTokenAccount) ]
+    #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x @ InvariantErrorCode::InvalidTokenAccount) ]
     pub token_x: Account<'info, Mint>,
-    #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y @ InvalidTokenAccount)]
+    #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y @ InvariantErrorCode::InvalidTokenAccount)]
     pub token_y: Account<'info, Mint>,
-    #[account(constraint = &state.load()?.admin == admin.key @ InvalidAdmin)]
+    #[account(constraint = &state.load()?.admin == admin.key @ InvariantErrorCode::InvalidAdmin)]
     pub admin: Signer<'info>,
-    #[account(constraint = &state.load()?.authority == program_authority.key @ InvalidAuthority)]
+    /// CHECK: safe as read from state
+    #[account(constraint = &state.load()?.authority == program_authority.key @ InvariantErrorCode::InvalidAuthority)]
     pub program_authority: AccountInfo<'info>,
 }
 
 impl<'info> ChangeProtocolFee<'info> {
-    pub fn handler(&self, protocol_fee: FixedPoint) -> ProgramResult {
+    pub fn handler(&self, protocol_fee: FixedPoint) -> Result<()> {
         require!(
             protocol_fee <= FixedPoint::from_integer(1),
-            InvalidProtocolFee
+            InvariantErrorCode::InvalidProtocolFee
         );
         let pool = &mut self.pool.load_mut()?;
         pool.protocol_fee = protocol_fee;

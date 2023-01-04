@@ -1,8 +1,5 @@
-import { FeeTier, PoolStructure, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
-import { isInitialized, findClosestTicks, MAX_TICK, MIN_TICK } from '@invariant-labs/sdk/src/math'
-import { FEE_DENOMINATOR, parseLiquidityOnTicks } from '@invariant-labs/sdk/src/utils'
+import { PoolStructure, Tick } from '@invariant-labs/sdk/src/market'
 import { BN } from '@project-serum/anchor'
-import { count } from 'console'
 
 export const DECIMAL = 12
 export const DENOMINATOR = new BN(10).pow(new BN(DECIMAL))

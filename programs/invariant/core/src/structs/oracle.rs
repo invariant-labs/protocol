@@ -1,4 +1,4 @@
-use crate::decimals::*;
+use crate::{decimals::*, size};
 use anchor_lang::prelude::*;
 
 const SIZE: u16 = 256; // UPDATE IN ARRAYS AS WELL!
@@ -11,12 +11,14 @@ pub struct Oracle {
     pub amount: u16,
     pub size: u16,
 }
+size!(Oracle);
 
 #[zero_copy]
 pub struct Record {
     pub timestamp: u64,
     pub price: Price,
 }
+size!(Record);
 
 impl Oracle {
     pub fn add_record(&mut self, timestamp: u64, price: Price) {
