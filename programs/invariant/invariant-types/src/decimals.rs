@@ -26,7 +26,9 @@ pub struct Liquidity {
 
 #[decimal(24)]
 #[zero_copy]
-#[derive(Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(
+    Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord, AnchorSerialize, AnchorDeserialize,
+)]
 pub struct FeeGrowth {
     pub v: u128,
 }
