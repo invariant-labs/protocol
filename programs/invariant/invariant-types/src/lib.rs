@@ -1,3 +1,5 @@
+pub mod decimals;
+pub mod macros;
 pub mod structs;
 
 use anchor_lang::prelude::*;
