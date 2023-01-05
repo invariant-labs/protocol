@@ -1,10 +1,11 @@
 use crate::{decimals::FixedPoint, size};
 use anchor_lang::prelude::*;
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
 
 #[account(zero_copy)]
 #[repr(packed)]
-#[derive(PartialEq, Default, Debug, BorshDeserialize, BorshSerialize)]
+#[repr(C)]
+#[derive(PartialEq, Default, Debug, BorshDeserialize)]
 pub struct FeeTier {
     pub fee: FixedPoint,
     pub tick_spacing: u16,
