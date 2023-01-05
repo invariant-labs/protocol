@@ -3,7 +3,6 @@ use anchor_lang::prelude::*;
 
 #[account(zero_copy)]
 #[repr(packed)]
-// #[derive(PartialEq, Default, Debug, AnchorDeserialize, AnchorSerialize)]
 #[derive(PartialEq, Default, Debug, AnchorDeserialize)]
 pub struct FeeTier {
     pub fee: FixedPoint,
