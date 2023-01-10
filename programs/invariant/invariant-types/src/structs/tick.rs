@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 
 #[account(zero_copy)]
 #[repr(packed)]
-#[derive(PartialEq, Default, Debug)]
+#[derive(PartialEq, Default, Debug, AnchorDeserialize)]
 pub struct Tick {
     pub pool: Pubkey,
     pub index: i32,
