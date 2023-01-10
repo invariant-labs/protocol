@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 
 #[account(zero_copy)]
 #[repr(packed)]
-#[derive(Debug, AnchorDeserialize)]
+#[derive(AnchorDeserialize)]
 pub struct Tickmap {
     pub bitmap: [u8; 11091], // Tick limit / 4
 }

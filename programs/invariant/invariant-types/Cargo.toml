@@ -8,5 +8,7 @@ edition = "2018"
 
 [dependencies]
 anchor-lang = "0.25.0"
-borsh = "0.9.3"
+# borsh = "0.9.3"
+borsh = {version = "0.9.3", features = ["const-generics"]}
+# bytemuck = "1.11.0"
 decimal = { path = "../decimal" }
