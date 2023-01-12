@@ -1,5 +1,6 @@
 pub mod decimals;
 pub mod errors;
+pub mod log;
 pub mod macros;
 pub mod math;
 pub mod structs;

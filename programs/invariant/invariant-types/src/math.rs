@@ -1,11 +1,11 @@
-use std::convert::TryInto;
+use std::{cell::RefMut, convert::TryInto};
 
 use anchor_lang::*;
 
 use crate::{
     decimals::*,
     errors::InvariantErrorCode,
-    structs::{get_search_limit, Tickmap, MAX_TICK},
+    structs::{get_search_limit, Pool, Tick, Tickmap, MAX_TICK},
 };
 
 #[derive(PartialEq, Debug)]
@@ -367,4 +367,46 @@ fn get_next_sqrt_price_y_down(
         );
         price_sqrt - quotient
     }
+}
+
+pub fn is_enough_amount_to_push_price(
+    amount: TokenAmount,
+    current_price_sqrt: Price,
+    liquidity: Liquidity,
+    fee: FixedPoint,
+    by_amount_in: bool,
+    x_to_y: bool,
+) -> bool {
+    if liquidity.is_zero() {
+        return true;
+    }
+
+    let next_price_sqrt = if by_amount_in {
+        let amount_after_fee = amount.big_mul(FixedPoint::from_integer(1) - fee);
+        get_next_sqrt_price_from_input(current_price_sqrt, liquidity, amount_after_fee, x_to_y)
+    } else {
+        get_next_sqrt_price_from_output(current_price_sqrt, liquidity, amount, x_to_y)
+    };
+
+    current_price_sqrt.ne(&next_price_sqrt)
+}
+
+pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
+    tick.fee_growth_outside_x = pool
+        .fee_growth_global_x
+        .unchecked_sub(tick.fee_growth_outside_x);
+    tick.fee_growth_outside_y = pool
+        .fee_growth_global_y
+        .unchecked_sub(tick.fee_growth_outside_y);
+
+    // When going to higher tick net_liquidity should be added and for going lower subtracted
+    if (pool.current_tick_index >= tick.index) ^ tick.sign {
+        // trunk-ignore(clippy/assign_op_pattern)
+        pool.liquidity = pool.liquidity + tick.liquidity_change;
+    } else {
+        // trunk-ignore(clippy/assign_op_pattern)
+        pool.liquidity = pool.liquidity - tick.liquidity_change;
+    }
+
+    Ok(())
 }
