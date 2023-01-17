@@ -5,7 +5,7 @@ use anchor_lang::*;
 use crate::{
     decimals::*,
     errors::InvariantErrorCode,
-    structs::{get_search_limit, Pool, Tick, Tickmap, MAX_TICK},
+    structs::{get_search_limit, Pool, Tick, Tickmap, MAX_TICK, TICK_LIMIT},
 };
 
 #[derive(PartialEq, Debug)]
@@ -409,4 +409,24 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
     }
 
     Ok(())
+}
+
+pub fn get_max_sqrt_price(tick_spacing: u16) -> Price {
+    let limit_by_space = TICK_LIMIT
+        .checked_sub(1)
+        .unwrap()
+        .checked_mul(tick_spacing.into())
+        .unwrap();
+    let max_tick = limit_by_space.min(MAX_TICK);
+    calculate_price_sqrt(max_tick)
+}
+
+pub fn get_min_sqrt_price(tick_spacing: u16) -> Price {
+    let limit_by_space = (-TICK_LIMIT)
+        .checked_add(1)
+        .unwrap()
+        .checked_mul(tick_spacing.into())
+        .unwrap();
+    let min_tick = limit_by_space.max(-MAX_TICK);
+    calculate_price_sqrt(min_tick)
 }
