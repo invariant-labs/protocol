@@ -21,6 +21,8 @@ size!(Tickmap);
 pub const TICK_LIMIT: i32 = 44_364; // If you change it update length of array as well!
 pub const TICK_SEARCH_RANGE: i32 = 256;
 pub const MAX_TICK: i32 = 221_818; // log(1.0001, sqrt(2^64-1))
+pub const TICK_CROSSES_PER_IX: usize = 19;
+pub const TICKMAP_SIZE: i32 = 2 * TICK_LIMIT - 1;
 
 fn tick_to_position(tick: i32, tick_spacing: u16) -> (usize, u8) {
     assert_eq!(
