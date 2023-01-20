@@ -71,6 +71,7 @@ jobs:
         if: steps.cache-solana.outputs.cache-hit != 'true'
         run: |
           sh -c "$(curl -sSfL https://release.solana.com/v${{ env.solana_version }}/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
           export PATH="/home/runner/.local/share/solana/install/active_release/bin:$PATH"
           solana --version
       - name: setup solana
