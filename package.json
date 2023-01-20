@@ -70,6 +70,7 @@
     "ed25519-hd-key": "^1.2.0",
     "eslint-config-standard-with-typescript": "^21.0.1",
     "eslint-plugin-prettier": "^4.0.0",
+    "js-sha3": "^0.8.0",
     "secp256k1": "^5.0.0",
     "ts-mocha": "^8.0.0"
   },
