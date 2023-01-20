@@ -1106,22 +1106,6 @@ export type Invariant = {
       }
     },
     {
-      "name": "positionList",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "head",
-            "type": "u32"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
       "name": "position",
       "type": {
         "kind": "struct",
@@ -1194,6 +1178,22 @@ export type Invariant = {
       }
     },
     {
+      "name": "positionList",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "head",
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
       "name": "state",
       "type": {
         "kind": "struct",
@@ -1213,23 +1213,6 @@ export type Invariant = {
           {
             "name": "bump",
             "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "tickmap",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bitmap",
-            "type": {
-              "array": [
-                "u8",
-                11091
-              ]
-            }
           }
         ]
       }
@@ -1294,6 +1277,23 @@ export type Invariant = {
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "tickmap",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bitmap",
+            "type": {
+              "array": [
+                "u8",
+                11091
+              ]
+            }
           }
         ]
       }
@@ -1365,163 +1365,107 @@ export type Invariant = {
           }
         ]
       }
-    }
-  ],
-  "errors": [
-    {
-      "code": 6000,
-      "name": "ZeroAmount",
-      "msg": "Amount is zero"
     },
     {
-      "code": 6001,
-      "name": "ZeroOutput",
-      "msg": "Output would be zero"
-    },
-    {
-      "code": 6002,
-      "name": "WrongTick",
-      "msg": "Not the expected tick"
-    },
-    {
-      "code": 6003,
-      "name": "WrongLimit",
-      "msg": "Price limit is on the wrong side of price"
-    },
-    {
-      "code": 6004,
-      "name": "InvalidTickIndex",
-      "msg": "Tick index not divisible by spacing or over limit"
-    },
-    {
-      "code": 6005,
-      "name": "InvalidTickInterval",
-      "msg": "Invalid tick_lower or tick_upper"
-    },
-    {
-      "code": 6006,
-      "name": "NoMoreTicks",
-      "msg": "There is no more tick in that direction"
-    },
-    {
-      "code": 6007,
-      "name": "TickNotFound",
-      "msg": "Correct tick not found in context"
-    },
-    {
-      "code": 6008,
-      "name": "PriceLimitReached",
-      "msg": "Price would cross swap limit"
-    },
-    {
-      "code": 6009,
-      "name": "InvalidTickLiquidity",
-      "msg": "Invalid tick liquidity"
-    },
-    {
-      "code": 6010,
-      "name": "EmptyPositionPokes",
-      "msg": "Disable empty position pokes"
-    },
-    {
-      "code": 6011,
-      "name": "InvalidPositionLiquidity",
-      "msg": "Invalid tick liquidity"
-    },
-    {
-      "code": 6012,
-      "name": "InvalidPoolLiquidity",
-      "msg": "Invalid pool liquidity"
-    },
-    {
-      "code": 6013,
-      "name": "InvalidPositionIndex",
-      "msg": "Invalid position index"
-    },
-    {
-      "code": 6014,
-      "name": "PositionWithoutLiquidity",
-      "msg": "Position liquidity would be zero"
-    },
-    {
-      "code": 6015,
-      "name": "Unauthorized",
-      "msg": "You are not admin"
-    },
-    {
-      "code": 6016,
-      "name": "InvalidPoolTokenAddresses",
-      "msg": "Invalid pool token addresses"
-    },
-    {
-      "code": 6017,
-      "name": "NegativeTime",
-      "msg": "Time cannot be negative"
-    },
-    {
-      "code": 6018,
-      "name": "OracleAlreadyInitialized",
-      "msg": "Oracle is already initialized"
-    },
-    {
-      "code": 6019,
-      "name": "LimitReached",
-      "msg": "Absolute price limit was reached"
-    },
-    {
-      "code": 6020,
-      "name": "InvalidProtocolFee",
-      "msg": "Invalid protocol fee"
-    },
-    {
-      "code": 6021,
-      "name": "NoGainSwap",
-      "msg": "Swap amount out is 0"
-    },
-    {
-      "code": 6022,
-      "name": "InvalidTokenAccount",
-      "msg": "Provided token account is different than expected"
-    },
-    {
-      "code": 6023,
-      "name": "InvalidAdmin",
-      "msg": "Admin address is different than expected"
-    },
-    {
-      "code": 6024,
-      "name": "InvalidAuthority",
-      "msg": "Provided authority is different than expected"
-    },
-    {
-      "code": 6025,
-      "name": "InvalidOwner",
-      "msg": "Provided token owner is different than expected"
-    },
-    {
-      "code": 6026,
-      "name": "InvalidMint",
-      "msg": "Provided token account mint is different than expected mint token"
-    },
-    {
-      "code": 6027,
-      "name": "InvalidTickmap",
-      "msg": "Provided tickmap is different than expected"
-    },
-    {
-      "code": 6028,
-      "name": "InvalidTickmapOwner",
-      "msg": "Provided tickmap owner is different than program ID"
-    },
-    {
-      "code": 6029,
-      "name": "InvalidListOwner",
-      "msg": "Recipient list address and owner list address should be different"
-    },
-    {
-      "code": 6030,
-      "name": "InvalidTickSpacing",
-      "msg": "Invalid tick spacing"
+      "name": "InvariantErrorCode",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "ZeroAmount"
+          },
+          {
+            "name": "ZeroOutput"
+          },
+          {
+            "name": "WrongTick"
+          },
+          {
+            "name": "WrongLimit"
+          },
+          {
+            "name": "InvalidTickIndex"
+          },
+          {
+            "name": "InvalidTickInterval"
+          },
+          {
+            "name": "NoMoreTicks"
+          },
+          {
+            "name": "TickNotFound"
+          },
+          {
+            "name": "PriceLimitReached"
+          },
+          {
+            "name": "InvalidTickLiquidity"
+          },
+          {
+            "name": "EmptyPositionPokes"
+          },
+          {
+            "name": "InvalidPositionLiquidity"
+          },
+          {
+            "name": "InvalidPoolLiquidity"
+          },
+          {
+            "name": "InvalidPositionIndex"
+          },
+          {
+            "name": "PositionWithoutLiquidity"
+          },
+          {
+            "name": "Unauthorized"
+          },
+          {
+            "name": "InvalidPoolTokenAddresses"
+          },
+          {
+            "name": "NegativeTime"
+          },
+          {
+            "name": "OracleAlreadyInitialized"
+          },
+          {
+            "name": "LimitReached"
+          },
+          {
+            "name": "InvalidProtocolFee"
+          },
+          {
+            "name": "NoGainSwap"
+          },
+          {
+            "name": "InvalidTokenAccount"
+          },
+          {
+            "name": "InvalidAdmin"
+          },
+          {
+            "name": "InvalidAuthority"
+          },
+          {
+            "name": "InvalidOwner"
+          },
+          {
+            "name": "InvalidMint"
+          },
+          {
+            "name": "InvalidTickmap"
+          },
+          {
+            "name": "InvalidTickmapOwner"
+          },
+          {
+            "name": "InvalidListOwner"
+          },
+          {
+            "name": "InvalidTickSpacing"
+          }
+        ]
+      }
     }
   ]
 };
@@ -2634,22 +2578,6 @@ export const IDL: Invariant = {
       }
     },
     {
-      "name": "positionList",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "head",
-            "type": "u32"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
       "name": "position",
       "type": {
         "kind": "struct",
@@ -2722,6 +2650,22 @@ export const IDL: Invariant = {
       }
     },
     {
+      "name": "positionList",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "head",
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
       "name": "state",
       "type": {
         "kind": "struct",
@@ -2741,23 +2685,6 @@ export const IDL: Invariant = {
           {
             "name": "bump",
             "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "tickmap",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bitmap",
-            "type": {
-              "array": [
-                "u8",
-                11091
-              ]
-            }
           }
         ]
       }
@@ -2822,6 +2749,23 @@ export const IDL: Invariant = {
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "tickmap",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bitmap",
+            "type": {
+              "array": [
+                "u8",
+                11091
+              ]
+            }
           }
         ]
       }
@@ -2893,163 +2837,107 @@ export const IDL: Invariant = {
           }
         ]
       }
-    }
-  ],
-  "errors": [
-    {
-      "code": 6000,
-      "name": "ZeroAmount",
-      "msg": "Amount is zero"
     },
     {
-      "code": 6001,
-      "name": "ZeroOutput",
-      "msg": "Output would be zero"
-    },
-    {
-      "code": 6002,
-      "name": "WrongTick",
-      "msg": "Not the expected tick"
-    },
-    {
-      "code": 6003,
-      "name": "WrongLimit",
-      "msg": "Price limit is on the wrong side of price"
-    },
-    {
-      "code": 6004,
-      "name": "InvalidTickIndex",
-      "msg": "Tick index not divisible by spacing or over limit"
-    },
-    {
-      "code": 6005,
-      "name": "InvalidTickInterval",
-      "msg": "Invalid tick_lower or tick_upper"
-    },
-    {
-      "code": 6006,
-      "name": "NoMoreTicks",
-      "msg": "There is no more tick in that direction"
-    },
-    {
-      "code": 6007,
-      "name": "TickNotFound",
-      "msg": "Correct tick not found in context"
-    },
-    {
-      "code": 6008,
-      "name": "PriceLimitReached",
-      "msg": "Price would cross swap limit"
-    },
-    {
-      "code": 6009,
-      "name": "InvalidTickLiquidity",
-      "msg": "Invalid tick liquidity"
-    },
-    {
-      "code": 6010,
-      "name": "EmptyPositionPokes",
-      "msg": "Disable empty position pokes"
-    },
-    {
-      "code": 6011,
-      "name": "InvalidPositionLiquidity",
-      "msg": "Invalid tick liquidity"
-    },
-    {
-      "code": 6012,
-      "name": "InvalidPoolLiquidity",
-      "msg": "Invalid pool liquidity"
-    },
-    {
-      "code": 6013,
-      "name": "InvalidPositionIndex",
-      "msg": "Invalid position index"
-    },
-    {
-      "code": 6014,
-      "name": "PositionWithoutLiquidity",
-      "msg": "Position liquidity would be zero"
-    },
-    {
-      "code": 6015,
-      "name": "Unauthorized",
-      "msg": "You are not admin"
-    },
-    {
-      "code": 6016,
-      "name": "InvalidPoolTokenAddresses",
-      "msg": "Invalid pool token addresses"
-    },
-    {
-      "code": 6017,
-      "name": "NegativeTime",
-      "msg": "Time cannot be negative"
-    },
-    {
-      "code": 6018,
-      "name": "OracleAlreadyInitialized",
-      "msg": "Oracle is already initialized"
-    },
-    {
-      "code": 6019,
-      "name": "LimitReached",
-      "msg": "Absolute price limit was reached"
-    },
-    {
-      "code": 6020,
-      "name": "InvalidProtocolFee",
-      "msg": "Invalid protocol fee"
-    },
-    {
-      "code": 6021,
-      "name": "NoGainSwap",
-      "msg": "Swap amount out is 0"
-    },
-    {
-      "code": 6022,
-      "name": "InvalidTokenAccount",
-      "msg": "Provided token account is different than expected"
-    },
-    {
-      "code": 6023,
-      "name": "InvalidAdmin",
-      "msg": "Admin address is different than expected"
-    },
-    {
-      "code": 6024,
-      "name": "InvalidAuthority",
-      "msg": "Provided authority is different than expected"
-    },
-    {
-      "code": 6025,
-      "name": "InvalidOwner",
-      "msg": "Provided token owner is different than expected"
-    },
-    {
-      "code": 6026,
-      "name": "InvalidMint",
-      "msg": "Provided token account mint is different than expected mint token"
-    },
-    {
-      "code": 6027,
-      "name": "InvalidTickmap",
-      "msg": "Provided tickmap is different than expected"
-    },
-    {
-      "code": 6028,
-      "name": "InvalidTickmapOwner",
-      "msg": "Provided tickmap owner is different than program ID"
-    },
-    {
-      "code": 6029,
-      "name": "InvalidListOwner",
-      "msg": "Recipient list address and owner list address should be different"
-    },
-    {
-      "code": 6030,
-      "name": "InvalidTickSpacing",
-      "msg": "Invalid tick spacing"
+      "name": "InvariantErrorCode",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "ZeroAmount"
+          },
+          {
+            "name": "ZeroOutput"
+          },
+          {
+            "name": "WrongTick"
+          },
+          {
+            "name": "WrongLimit"
+          },
+          {
+            "name": "InvalidTickIndex"
+          },
+          {
+            "name": "InvalidTickInterval"
+          },
+          {
+            "name": "NoMoreTicks"
+          },
+          {
+            "name": "TickNotFound"
+          },
+          {
+            "name": "PriceLimitReached"
+          },
+          {
+            "name": "InvalidTickLiquidity"
+          },
+          {
+            "name": "EmptyPositionPokes"
+          },
+          {
+            "name": "InvalidPositionLiquidity"
+          },
+          {
+            "name": "InvalidPoolLiquidity"
+          },
+          {
+            "name": "InvalidPositionIndex"
+          },
+          {
+            "name": "PositionWithoutLiquidity"
+          },
+          {
+            "name": "Unauthorized"
+          },
+          {
+            "name": "InvalidPoolTokenAddresses"
+          },
+          {
+            "name": "NegativeTime"
+          },
+          {
+            "name": "OracleAlreadyInitialized"
+          },
+          {
+            "name": "LimitReached"
+          },
+          {
+            "name": "InvalidProtocolFee"
+          },
+          {
+            "name": "NoGainSwap"
+          },
+          {
+            "name": "InvalidTokenAccount"
+          },
+          {
+            "name": "InvalidAdmin"
+          },
+          {
+            "name": "InvalidAuthority"
+          },
+          {
+            "name": "InvalidOwner"
+          },
+          {
+            "name": "InvalidMint"
+          },
+          {
+            "name": "InvalidTickmap"
+          },
+          {
+            "name": "InvalidTickmapOwner"
+          },
+          {
+            "name": "InvalidListOwner"
+          },
+          {
+            "name": "InvalidTickSpacing"
+          }
+        ]
+      }
     }
   ]
 };

@@ -431,123 +431,83 @@ export type Staker = {
           }
         ]
       }
-    }
-  ],
-  "errors": [
-    {
-      "code": 6000,
-      "name": "NotStarted",
-      "msg": "The incentive didn't start yet!"
     },
     {
-      "code": 6001,
-      "name": "EmptyPositionPokes",
-      "msg": "Disable empty position pokes"
-    },
-    {
-      "code": 6002,
-      "name": "InvalidPositionLiquidity",
-      "msg": "Invalid tick liquidity"
-    },
-    {
-      "code": 6003,
-      "name": "ZeroAmount",
-      "msg": "Amount is zero"
-    },
-    {
-      "code": 6004,
-      "name": "TooLongDuration",
-      "msg": "Incentive duration is too long"
-    },
-    {
-      "code": 6005,
-      "name": "StartInPast",
-      "msg": "Start in past"
-    },
-    {
-      "code": 6006,
-      "name": "Ended",
-      "msg": "Incentive is over"
-    },
-    {
-      "code": 6007,
-      "name": "ZeroLiquidity",
-      "msg": "User have no liquidity"
-    },
-    {
-      "code": 6008,
-      "name": "SlotsAreNotEqual",
-      "msg": "Slots are not equal"
-    },
-    {
-      "code": 6009,
-      "name": "ZeroSecondsStaked",
-      "msg": "Zero seconds staked"
-    },
-    {
-      "code": 6010,
-      "name": "ZeroSecPerLiq",
-      "msg": "Seconds per liquidity is zero"
-    },
-    {
-      "code": 6011,
-      "name": "TooEarly",
-      "msg": "Incentive not ended"
-    },
-    {
-      "code": 6012,
-      "name": "StakeExist",
-      "msg": "Too early to remove incentive"
-    },
-    {
-      "code": 6013,
-      "name": "ZeroReward",
-      "msg": "Remaining reward is 0"
-    },
-    {
-      "code": 6014,
-      "name": "NoStakes",
-      "msg": "There is no any stakes"
-    },
-    {
-      "code": 6015,
-      "name": "InvalidFounder",
-      "msg": "Founder address is different than expected"
-    },
-    {
-      "code": 6016,
-      "name": "InvalidStake",
-      "msg": "Provided stake doesn't belong to incentive"
-    },
-    {
-      "code": 6017,
-      "name": "InvalidTokenAccount",
-      "msg": "Provided token account is different than expected"
-    },
-    {
-      "code": 6018,
-      "name": "InvalidIncentive",
-      "msg": "Incentive address is different than expected"
-    },
-    {
-      "code": 6019,
-      "name": "InvalidAuthority",
-      "msg": "Provided authority is different than expected"
-    },
-    {
-      "code": 6020,
-      "name": "InvalidOwner",
-      "msg": "Provided token owner is different than expected"
-    },
-    {
-      "code": 6021,
-      "name": "InvalidMint",
-      "msg": "Provided token account mint is different than expected mint token"
-    },
-    {
-      "code": 6022,
-      "name": "DifferentIncentivePool",
-      "msg": "Incentive pool is different from stake pool"
+      "name": "ErrorCode",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "NotStarted"
+          },
+          {
+            "name": "EmptyPositionPokes"
+          },
+          {
+            "name": "InvalidPositionLiquidity"
+          },
+          {
+            "name": "ZeroAmount"
+          },
+          {
+            "name": "TooLongDuration"
+          },
+          {
+            "name": "StartInPast"
+          },
+          {
+            "name": "Ended"
+          },
+          {
+            "name": "ZeroLiquidity"
+          },
+          {
+            "name": "SlotsAreNotEqual"
+          },
+          {
+            "name": "ZeroSecondsStaked"
+          },
+          {
+            "name": "ZeroSecPerLiq"
+          },
+          {
+            "name": "TooEarly"
+          },
+          {
+            "name": "StakeExist"
+          },
+          {
+            "name": "ZeroReward"
+          },
+          {
+            "name": "NoStakes"
+          },
+          {
+            "name": "InvalidFounder"
+          },
+          {
+            "name": "InvalidStake"
+          },
+          {
+            "name": "InvalidTokenAccount"
+          },
+          {
+            "name": "InvalidIncentive"
+          },
+          {
+            "name": "InvalidAuthority"
+          },
+          {
+            "name": "InvalidOwner"
+          },
+          {
+            "name": "InvalidMint"
+          },
+          {
+            "name": "DifferentIncentivePool"
+          }
+        ]
+      }
     }
   ]
 };
@@ -985,123 +945,83 @@ export const IDL: Staker = {
           }
         ]
       }
-    }
-  ],
-  "errors": [
-    {
-      "code": 6000,
-      "name": "NotStarted",
-      "msg": "The incentive didn't start yet!"
     },
     {
-      "code": 6001,
-      "name": "EmptyPositionPokes",
-      "msg": "Disable empty position pokes"
-    },
-    {
-      "code": 6002,
-      "name": "InvalidPositionLiquidity",
-      "msg": "Invalid tick liquidity"
-    },
-    {
-      "code": 6003,
-      "name": "ZeroAmount",
-      "msg": "Amount is zero"
-    },
-    {
-      "code": 6004,
-      "name": "TooLongDuration",
-      "msg": "Incentive duration is too long"
-    },
-    {
-      "code": 6005,
-      "name": "StartInPast",
-      "msg": "Start in past"
-    },
-    {
-      "code": 6006,
-      "name": "Ended",
-      "msg": "Incentive is over"
-    },
-    {
-      "code": 6007,
-      "name": "ZeroLiquidity",
-      "msg": "User have no liquidity"
-    },
-    {
-      "code": 6008,
-      "name": "SlotsAreNotEqual",
-      "msg": "Slots are not equal"
-    },
-    {
-      "code": 6009,
-      "name": "ZeroSecondsStaked",
-      "msg": "Zero seconds staked"
-    },
-    {
-      "code": 6010,
-      "name": "ZeroSecPerLiq",
-      "msg": "Seconds per liquidity is zero"
-    },
-    {
-      "code": 6011,
-      "name": "TooEarly",
-      "msg": "Incentive not ended"
-    },
-    {
-      "code": 6012,
-      "name": "StakeExist",
-      "msg": "Too early to remove incentive"
-    },
-    {
-      "code": 6013,
-      "name": "ZeroReward",
-      "msg": "Remaining reward is 0"
-    },
-    {
-      "code": 6014,
-      "name": "NoStakes",
-      "msg": "There is no any stakes"
-    },
-    {
-      "code": 6015,
-      "name": "InvalidFounder",
-      "msg": "Founder address is different than expected"
-    },
-    {
-      "code": 6016,
-      "name": "InvalidStake",
-      "msg": "Provided stake doesn't belong to incentive"
-    },
-    {
-      "code": 6017,
-      "name": "InvalidTokenAccount",
-      "msg": "Provided token account is different than expected"
-    },
-    {
-      "code": 6018,
-      "name": "InvalidIncentive",
-      "msg": "Incentive address is different than expected"
-    },
-    {
-      "code": 6019,
-      "name": "InvalidAuthority",
-      "msg": "Provided authority is different than expected"
-    },
-    {
-      "code": 6020,
-      "name": "InvalidOwner",
-      "msg": "Provided token owner is different than expected"
-    },
-    {
-      "code": 6021,
-      "name": "InvalidMint",
-      "msg": "Provided token account mint is different than expected mint token"
-    },
-    {
-      "code": 6022,
-      "name": "DifferentIncentivePool",
-      "msg": "Incentive pool is different from stake pool"
+      "name": "ErrorCode",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "NotStarted"
+          },
+          {
+            "name": "EmptyPositionPokes"
+          },
+          {
+            "name": "InvalidPositionLiquidity"
+          },
+          {
+            "name": "ZeroAmount"
+          },
+          {
+            "name": "TooLongDuration"
+          },
+          {
+            "name": "StartInPast"
+          },
+          {
+            "name": "Ended"
+          },
+          {
+            "name": "ZeroLiquidity"
+          },
+          {
+            "name": "SlotsAreNotEqual"
+          },
+          {
+            "name": "ZeroSecondsStaked"
+          },
+          {
+            "name": "ZeroSecPerLiq"
+          },
+          {
+            "name": "TooEarly"
+          },
+          {
+            "name": "StakeExist"
+          },
+          {
+            "name": "ZeroReward"
+          },
+          {
+            "name": "NoStakes"
+          },
+          {
+            "name": "InvalidFounder"
+          },
+          {
+            "name": "InvalidStake"
+          },
+          {
+            "name": "InvalidTokenAccount"
+          },
+          {
+            "name": "InvalidIncentive"
+          },
+          {
+            "name": "InvalidAuthority"
+          },
+          {
+            "name": "InvalidOwner"
+          },
+          {
+            "name": "InvalidMint"
+          },
+          {
+            "name": "DifferentIncentivePool"
+          }
+        ]
+      }
     }
   ]
 };
