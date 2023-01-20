@@ -56,7 +56,7 @@ jobs:
             'npm run test:max-tick-cross',
             'npm run test:close-stake',
             'cargo test',
-            'npm test:referral-default',
+            'npm run test:referral-default',
             'npm run test:referral-all',
             'npm run test:referral-none',
             'npm run test:referral-jupiter',
