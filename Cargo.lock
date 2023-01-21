@@ -896,7 +896,6 @@ dependencies = [
  "decimal",
  "integer-sqrt",
  "num-traits",
- "spl-token",
  "uint",
 ]
 

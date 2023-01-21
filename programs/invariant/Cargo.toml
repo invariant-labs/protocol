@@ -26,4 +26,3 @@ anchor-spl = "0.26.0"
 integer-sqrt = "0.1.5"
 uint = "0.9.1"
 num-traits = "0.2.14"
-spl-token = { version = "3.3.1", features = ["no-entrypoint"] }

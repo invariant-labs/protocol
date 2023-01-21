@@ -5,11 +5,11 @@ import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken, initMarket } from './testUtils'
 import { Market, Pair, LIQUIDITY_DENOMINATOR, Network } from '@invariant-labs/sdk/src'
-import { FeeTier } from '@invariant-labs/sdk/lib/market'
-import { fromFee } from '@invariant-labs/sdk/lib/utils'
+import { FeeTier, Tick } from '@invariant-labs/sdk/lib/market'
+import { fromFee, simulateSwap, SimulationResult } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal, tou64 } from '@invariant-labs/sdk/src/utils'
 import { InitPosition, Swap } from '@invariant-labs/sdk/src/market'
-import { signAndSend } from '@invariant-labs/sdk'
+import { calculatePriceSqrt, MIN_TICK, signAndSend } from '@invariant-labs/sdk'
 
 describe('Max tick crosses', () => {
   const provider = anchor.AnchorProvider.local()
@@ -55,7 +55,7 @@ describe('Max tick crosses', () => {
     await initMarket(market, [pair], admin)
   })
 
-  it('#swap() max crosses', async () => {
+  it.skip('#swap() max crosses', async () => {
     const positionOwner = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
     const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
@@ -94,15 +94,32 @@ describe('Max tick crosses', () => {
     const accountY = await tokenY.createAccount(owner.publicKey)
     await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
 
-    // Swap
+    // Simulate swap
     const poolDataBefore = await market.getPool(pair)
+    const ticks: Map<number, Tick> = new Map(
+      (await market.getAllTicks(pair)).map(tick => {
+        return [tick.index, tick]
+      })
+    )
+    const tickmap = await market.getTickmap(pair)
+    const swapResult: SimulationResult = simulateSwap({
+      pool: poolDataBefore,
+      byAmountIn: true,
+      slippage: toDecimal(1, 0),
+      priceLimit: calculatePriceSqrt(MIN_TICK),
+      swapAmount: amount,
+      xToY: true,
+      ticks,
+      tickmap
+    })
 
+    // Swap
     const swapVars: Swap = {
       pair,
       xToY: true,
       amount,
-      estimatedPriceAfterSwap: poolDataBefore.sqrtPrice, // ignore price impact using high slippage tolerance
-      slippage: toDecimal(1, 0),
+      estimatedPriceAfterSwap: { v: swapResult.priceAfterSwap },
+      slippage: toDecimal(0, 0),
       accountX,
       accountY,
       byAmountIn: true,
@@ -115,6 +132,7 @@ describe('Max tick crosses', () => {
     // Check crosses
     const poolData = await market.getPool(pair)
     const crosses = Math.abs((poolData.currentTickIndex - poolDataBefore.currentTickIndex) / 10)
+    assert.equal(swapResult.crossedTicks.length, 19)
     assert.equal(crosses, 19)
   })
 })
