@@ -1,4 +1,4 @@
-import { BN, Program, utils, Provider } from '@project-serum/anchor'
+import { BN, Program, utils, AnchorProvider } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import {
   Connection,
@@ -64,7 +64,7 @@ export class Market {
     this.connection = connection
     this.wallet = wallet
     const programAddress = new PublicKey(getMarketAddress(network))
-    const provider = new Provider(connection, wallet, Provider.defaultOptions())
+    const provider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions())
 
     this.network = network
     this.program = new Program(IDL, programAddress, provider)

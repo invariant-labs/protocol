@@ -1,5 +1,4 @@
 import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 import {
   assertThrowsAsync,
@@ -7,13 +6,13 @@ import {
   createTokensAndPool,
   createUserWithTokens
 } from './testUtils'
-import { Market, Network, sleep, PRICE_DENOMINATOR, INVARIANT_ERRORS } from '@invariant-labs/sdk'
+import { Market, Network, sleep } from '@invariant-labs/sdk'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { InitPosition } from '@invariant-labs/sdk/lib/market'
 import { toPrice } from '@invariant-labs/sdk/lib/utils'
 
 describe('Position Slippage', () => {
-  const provider = Provider.local()
+  const provider = anchor.AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair

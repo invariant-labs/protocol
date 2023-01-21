@@ -1,5 +1,5 @@
 import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
+import { BN } from '@project-serum/anchor'
 import { Keypair } from '@solana/web3.js'
 import { createTokensAndPool, createUserWithTokens } from './testUtils'
 import { Market, Network, sleep, calculatePriceSqrt, INVARIANT_ERRORS } from '@invariant-labs/sdk'
@@ -13,7 +13,7 @@ import { feeToTickSpacing, FEE_TIERS, PRICE_DENOMINATOR } from '@invariant-labs/
 import { Pair } from '@invariant-labs/sdk/lib/pair'
 
 describe('limits', () => {
-  const provider = Provider.local()
+  const provider = anchor.AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair

@@ -1,5 +1,5 @@
 import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
+import { BN } from '@project-serum/anchor'
 import {
   Market,
   Pair,
@@ -21,7 +21,7 @@ import { STAKER_ERRORS } from '../staker-sdk/src/utils'
 import { tou64 } from '@invariant-labs/sdk/src/utils'
 
 describe('Stake tests', () => {
-  const provider = Provider.local()
+  const provider = anchor.AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Account

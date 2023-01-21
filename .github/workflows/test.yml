@@ -8,8 +8,8 @@ on:
     branches:
       - master
 env:
-  solana_version: '1.14.9'
-  anchor_version: '0.21.0'
+  solana_version: '1.14.11'
+  anchor_version: '0.26.0'
 
 jobs:
   install:

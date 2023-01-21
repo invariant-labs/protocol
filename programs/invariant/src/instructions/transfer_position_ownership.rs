@@ -1,6 +1,6 @@
+use crate::errors::InvariantErrorCode;
 use crate::structs::position::Position;
 use crate::structs::position_list::PositionList;
-use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::system_program;
 
@@ -15,13 +15,14 @@ pub struct TransferPositionOwnership<'info> {
     #[account(mut,
         seeds = [b"positionlistv1", recipient.key().as_ref()],
         bump = recipient_list.load()?.bump,
-        constraint = recipient_list.key() != owner_list.key() @ InvalidListOwner
+        constraint = recipient_list.key() != owner_list.key() @ InvariantErrorCode::InvalidListOwner
     )]
     pub recipient_list: AccountLoader<'info, PositionList>,
     #[account(init,
         seeds = [b"positionv1",
         recipient.key().as_ref(),
         &recipient_list.load()?.head.to_le_bytes()],
+        space = Position::LEN,
         bump, payer = owner,
     )]
     pub new_position: AccountLoader<'info, Position>,
@@ -42,14 +43,16 @@ pub struct TransferPositionOwnership<'info> {
     pub last_position: AccountLoader<'info, Position>,
     #[account(mut)]
     pub owner: Signer<'info>,
+    /// CHECK: safe as possible to transfer position to anyone (required data to transfer position checked above)
     pub recipient: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
+    /// CHECK: safe as constant
     #[account(address = system_program::ID)]
     pub system_program: AccountInfo<'info>,
 }
 
 impl<'info> TransferPositionOwnership<'info> {
-    pub fn handler(&self, index: u32, bump: u8) -> ProgramResult {
+    pub fn handler(&self, index: u32, bump: u8) -> Result<()> {
         msg!("INVARIANT: TRANSFER POSITION");
 
         let mut owner_list = self.owner_list.load_mut()?;
