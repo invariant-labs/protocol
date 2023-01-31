@@ -252,11 +252,15 @@ export const fromFee = (fee: BN): BN => {
   return fee.mul(FEE_OFFSET)
 }
 
+// possibly refactor to map in future
 export const feeToTickSpacing = (fee: BN): number => {
   // linear relationship between fee and tickSpacing
   // tickSpacing = fee * 10^4
   if (fee.lte(fromFee(new BN(10)))) {
     return 1
+  }
+  if (fee.gt(fromFee(new BN(1000)))) {
+    return 5
   }
 
   const FEE_TO_SPACING_OFFSET = new BN(10).pow(new BN(DECIMAL - 4))
@@ -269,7 +273,10 @@ export const FEE_TIERS: FeeTier[] = [
   { fee: fromFee(new BN(50)) },
   { fee: fromFee(new BN(100)) },
   { fee: fromFee(new BN(300)) },
-  { fee: fromFee(new BN(1000)) }
+  { fee: fromFee(new BN(1000)) },
+  { fee: fromFee(new BN(5000)), tickSpacing: 5 },
+  { fee: fromFee(new BN(10000)), tickSpacing: 5 },
+  { fee: fromFee(new BN(50000)), tickSpacing: 5 }
 ]
 
 export const generateTicksArray = (start: number, stop: number, step: number) => {
