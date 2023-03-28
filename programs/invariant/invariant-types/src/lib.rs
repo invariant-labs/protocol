@@ -12,3 +12,4 @@ pub const SEED: &str = "Invariant";
 pub const STATE_SEED: &str = "statev1";
 pub const TICK_SEED: &str = "tickv1";
 pub const ANCHOR_DISCRIMINATOR_SIZE: usize = 8;
+pub const MAX_VIRTUAL_CROSS: u16 = 10;
