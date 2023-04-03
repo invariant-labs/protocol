@@ -1087,6 +1087,7 @@ export const getTicksFromSwapRange = (
   return { lower: null, upper: null }
 }
 
+// use differnet avg
 export const poolAPY = (params: ApyPoolParams): WeeklyData => {
   const {
     feeTier,
