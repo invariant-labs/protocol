@@ -1015,8 +1015,8 @@ export const calculateTokensRange = (
   const tokensPrevious = getTokensInRange(tickArrayPrevious, tickLower, tickUpper)
   const tokensCurrent = getTokensInRange(tickArrayCurrent, tickLower, tickUpper)
 
-  // geometric mean of tokensPrevious and tokensCurrent
-  const tokens = sqrt(tokensPrevious.mul(tokensCurrent))
+  // arithmetic mean of tokensPrevious and tokensCurrent
+  const tokens = tokensPrevious.add(tokensCurrent).divn(2)
 
   return {
     tokens,
@@ -1105,7 +1105,7 @@ export const poolAPY = (params: ApyPoolParams): WeeklyData => {
   let dailyTokens: BN = new BN(0)
   let dailyVolumeX: number = 0
   try {
-    const { tickLower, tickUpper } = calculateTokensRange(
+    const { tickLower, tickUpper, tokens: averageTokensFromRange } = calculateTokensRange(
       ticksPreviousSnapshot,
       ticksCurrentSnapshot,
       currentTickIndex
@@ -1114,9 +1114,11 @@ export const poolAPY = (params: ApyPoolParams): WeeklyData => {
     const previousSqrtPrice = calculatePriceSqrt(tickLower)
     const currentSqrtPrice = calculatePriceSqrt(tickUpper)
     const volume = getVolume(volumeX, volumeY, previousSqrtPrice, currentSqrtPrice)
-    dailyFactor = dailyFactorPool(activeTokens, volume, feeTier)
+    // arithmetical average of activeTokens and averageTokensFromRange
+    const avgTokens = activeTokens.add(averageTokensFromRange).divn(2)
+    dailyFactor = dailyFactorPool(avgTokens, volume, feeTier)
     dailyRange = { tickLower, tickUpper }
-    dailyTokens = activeTokens
+    dailyTokens = averageTokensFromRange
     dailyVolumeX = volumeX
   } catch (e: any) {
     dailyFactor = 0
