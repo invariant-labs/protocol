@@ -1025,7 +1025,7 @@ export const calculateTokensRange = (
   const tokensCurrent = getTokensInRange(tickArrayCurrent, tickLower, tickUpper)
 
   // arithmetic mean of tokensPrevious and tokensCurrent
-  const tokens = tokensPrevious.add(tokensCurrent).divn(2)
+  const tokens = arithmeticalAvg(tokensPrevious, tokensCurrent)
 
   return {
     tokens,
@@ -1096,7 +1096,6 @@ export const getTicksFromSwapRange = (
   return { lower: null, upper: null }
 }
 
-// use differnet avg
 export const poolAPY = (params: ApyPoolParams): WeeklyData => {
   const {
     feeTier,
@@ -1114,7 +1113,7 @@ export const poolAPY = (params: ApyPoolParams): WeeklyData => {
   let dailyTokens: BN = new BN(0)
   let dailyVolumeX: number = 0
   try {
-    const { tickLower, tickUpper, tokens: averageTokensFromRange } = calculateTokensRange(
+    const { tickLower, tickUpper, tokens: avgTokensFromRange } = calculateTokensRange(
       ticksPreviousSnapshot,
       ticksCurrentSnapshot,
       currentTickIndex
@@ -1123,11 +1122,10 @@ export const poolAPY = (params: ApyPoolParams): WeeklyData => {
     const previousSqrtPrice = calculatePriceSqrt(tickLower)
     const currentSqrtPrice = calculatePriceSqrt(tickUpper)
     const volume = getVolume(volumeX, volumeY, previousSqrtPrice, currentSqrtPrice)
-    // arithmetical average of activeTokens and averageTokensFromRange
-    const avgTokens = activeTokens.add(averageTokensFromRange).divn(2)
-    dailyFactor = dailyFactorPool(avgTokens, volume, feeTier)
+    const tokenAvgFactor = arithmeticalAvg(activeTokens, avgTokensFromRange)
+    dailyFactor = dailyFactorPool(tokenAvgFactor, volume, feeTier)
     dailyRange = { tickLower, tickUpper }
-    dailyTokens = averageTokensFromRange
+    dailyTokens = tokenAvgFactor
     dailyVolumeX = volumeX
   } catch (e: any) {
     dailyFactor = 0
