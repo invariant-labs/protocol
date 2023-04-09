@@ -242,7 +242,11 @@ export const sleep = async (ms: number) => {
   return await new Promise(resolve => setTimeout(resolve, ms))
 }
 
-export const arithmeticalAverage = <T extends BN>(...args: T[]): T => {
+export const arithmeticalAvg = <T extends BN>(...args: T[]): T => {
+  if (args.length === 0) {
+    throw new Error('requires at least one argument')
+  }
+
   const sum = args.reduce((acc, val) => acc.add(val), new BN(0))
   return sum.divn(args.length) as T
 }
