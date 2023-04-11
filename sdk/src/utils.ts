@@ -242,6 +242,15 @@ export const sleep = async (ms: number) => {
   return await new Promise(resolve => setTimeout(resolve, ms))
 }
 
+export const arithmeticalAvg = <T extends BN>(...args: T[]): T => {
+  if (args.length === 0) {
+    throw new Error('requires at least one argument')
+  }
+
+  const sum = args.reduce((acc, val) => acc.add(val), new BN(0))
+  return sum.divn(args.length) as T
+}
+
 export const tou64 = (amount: BN) => {
   // @ts-ignore
   return new u64(amount.toString())
@@ -1015,8 +1024,8 @@ export const calculateTokensRange = (
   const tokensPrevious = getTokensInRange(tickArrayPrevious, tickLower, tickUpper)
   const tokensCurrent = getTokensInRange(tickArrayCurrent, tickLower, tickUpper)
 
-  // geometric mean of tokensPrevious and tokensCurrent
-  const tokens = sqrt(tokensPrevious.mul(tokensCurrent))
+  // arithmetic mean of tokensPrevious and tokensCurrent
+  const tokens = arithmeticalAvg(tokensPrevious, tokensCurrent)
 
   return {
     tokens,
@@ -1104,7 +1113,7 @@ export const poolAPY = (params: ApyPoolParams): WeeklyData => {
   let dailyTokens: BN = new BN(0)
   let dailyVolumeX: number = 0
   try {
-    const { tickLower, tickUpper } = calculateTokensRange(
+    const { tickLower, tickUpper, tokens: avgTokensFromRange } = calculateTokensRange(
       ticksPreviousSnapshot,
       ticksCurrentSnapshot,
       currentTickIndex
@@ -1113,9 +1122,10 @@ export const poolAPY = (params: ApyPoolParams): WeeklyData => {
     const previousSqrtPrice = calculatePriceSqrt(tickLower)
     const currentSqrtPrice = calculatePriceSqrt(tickUpper)
     const volume = getVolume(volumeX, volumeY, previousSqrtPrice, currentSqrtPrice)
-    dailyFactor = dailyFactorPool(activeTokens, volume, feeTier)
+    const tokenAvgFactor = arithmeticalAvg(activeTokens, avgTokensFromRange)
+    dailyFactor = dailyFactorPool(tokenAvgFactor, volume, feeTier)
     dailyRange = { tickLower, tickUpper }
-    dailyTokens = activeTokens
+    dailyTokens = tokenAvgFactor
     dailyVolumeX = volumeX
   } catch (e: any) {
     dailyFactor = 0

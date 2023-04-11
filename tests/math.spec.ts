@@ -1,4 +1,4 @@
-import { assert } from 'chai'
+import { assert, expect } from 'chai'
 import { BN } from '@project-serum/anchor'
 import {
   calculatePriceSqrt,
@@ -59,7 +59,8 @@ import {
   ApyPositionRewardsParams,
   positionsRewardAPY,
   UserDailyRewardsParams,
-  calculateUserDailyRewards
+  calculateUserDailyRewards,
+  arithmeticalAvg
 } from '@invariant-labs/sdk/src/utils'
 import {
   createTickArray,
@@ -85,6 +86,28 @@ import { priceToTickInRange } from '@invariant-labs/sdk/src/tick'
 import { getLiquidity, U64_MAX } from '@invariant-labs/sdk/lib/math'
 
 describe('Math', () => {
+  describe('arithmeticalAvg', () => {
+    it('throws an error when called with 0 arguments', () => {
+      expect(() => arithmeticalAvg()).to.throw()
+    })
+    it('returns the correct average for 1 numbers', () => {
+      const sampleValue = new BN(32)
+      const result = arithmeticalAvg(sampleValue)
+      assert.ok(result.eq(sampleValue))
+    })
+    it('returns the correct average for 2 numbers', () => {
+      const result = arithmeticalAvg(new BN(10), new BN(12))
+      assert.ok(result.eq(new BN(11)))
+    })
+    it('returns the correct average for 3 numbers', () => {
+      const result = arithmeticalAvg(new BN(10), new BN(50), new BN(12))
+      assert.ok(result.eq(new BN(24)))
+    })
+    it('returns the correct average for 5 numbers', () => {
+      const result = arithmeticalAvg(new BN(10), new BN(50), new BN(12), new BN(10024), new BN(11479))
+      assert.ok(result.eq(new BN(4315)))
+    })
+  })
   describe('Test sqrt price calculation', () => {
     it('Test 20000', () => {
       const price = 20000
@@ -952,7 +975,7 @@ describe('Math', () => {
 
         assert.ok(result.v.eq(expectedResult.v))
       })
-      it('2', async () => {})
+      it('2', async () => { })
       const price: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('1')) }
       const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN('2')) }
       const amount: BN = new BN('3')
@@ -1028,7 +1051,7 @@ describe('Math', () => {
         }
         assert.ok(result.v.eq(expectedResult.v))
       })
-      it('2', async () => {})
+      it('2', async () => { })
       const price: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('1')) }
       const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN('2')) }
       const amount: BN = new BN('3')
