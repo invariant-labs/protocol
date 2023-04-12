@@ -165,4 +165,15 @@ impl Tickmap {
 
         (value) == 1
     }
+
+    pub fn flip(&mut self, value: bool, tick: i32, tick_spacing: u16) {
+        assert!(
+            self.get(tick, tick_spacing) != value,
+            "tick initialize tick again"
+        );
+
+        let (byte, bit) = tick_to_position(tick, tick_spacing);
+
+        self.bitmap[byte] ^= 1 << bit;
+    }
 }
