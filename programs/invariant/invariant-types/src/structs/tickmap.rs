@@ -212,5 +212,28 @@ mod tests {
                 }
             }
         }
+        // unintalized edges
+        for spacing in 1..=1000 {
+            let map = Tickmap::default();
+
+            for i in 0..5 {
+                let absolut_tick = i * spacing as i32;
+                for sign in 0..1 {
+                    let tick = match sign == 0 {
+                        true => absolut_tick,
+                        false => -absolut_tick,
+                    };
+
+                    let prev = map.prev_initialized(tick, spacing as u16);
+                    let next = map.next_initialized(tick, spacing as u16);
+                    if prev.is_some() {
+                        println!("found prev = {}", prev.unwrap());
+                    }
+                    if next.is_some() {
+                        println!("found next = {}", next.unwrap());
+                    }
+                }
+            }
+        }
     }
 }
