@@ -177,3 +177,40 @@ impl Tickmap {
         self.bitmap[byte] ^= 1 << bit;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_next_and_prev_initialized() {
+        // initalized edges
+        {
+            for init_spacing in 1..=10 {
+                // println!("init_spacing = {}", init_spacing);
+                let mut map = Tickmap::default();
+                let index = match init_spacing < 5 {
+                    true => TICK_LIMIT - init_spacing,
+                    false => (MAX_TICK / init_spacing) * init_spacing,
+                };
+                // println!("index = {}", index);
+
+                map.flip(true, index, init_spacing as u16);
+                map.flip(true, 0, init_spacing as u16);
+
+                let spacing = init_spacing;
+                for i in 0..5 {
+                    let absolut_tick = i * spacing as i32;
+                    for sign in 0..1 {
+                        let tick = match sign == 0 {
+                            true => absolut_tick,
+                            false => -absolut_tick,
+                        };
+                        map.prev_initialized(tick, spacing as u16);
+                        map.next_initialized(tick, spacing as u16);
+                    }
+                }
+            }
+        }
+    }
+}
