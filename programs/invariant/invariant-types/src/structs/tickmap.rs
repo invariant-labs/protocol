@@ -158,4 +158,11 @@ impl Tickmap {
 
         None
     }
+
+    pub fn get(&self, tick: i32, tick_spacing: u16) -> bool {
+        let (byte, bit) = tick_to_position(tick, tick_spacing);
+        let value = (self.bitmap[byte] >> bit) % 2;
+
+        (value) == 1
+    }
 }
