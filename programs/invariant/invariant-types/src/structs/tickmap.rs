@@ -217,23 +217,21 @@ mod tests {
         for spacing in 1..=1000 {
             let map = Tickmap::default();
 
-            for i in 0..5 {
-                let absolut_tick = i * spacing as i32;
-                for sign in 0..1 {
-                    let tick = match sign == 0 {
-                        true => absolut_tick,
-                        false => -absolut_tick,
-                    };
+            let max_index = match spacing < 5 {
+                true => TICK_LIMIT - spacing,
+                false => (MAX_TICK / spacing) * spacing,
+            };
+            let min_index = -max_index;
+            let tick_edge_diff = TICK_SEARCH_RANGE / spacing * spacing;
+            1000
+            let prev = map.prev_initialized(min_index + tick_edge_diff, spacing as u16);
+            let next = map.next_initialized(max_index - tick_edge_diff, spacing as u16);
 
-                    let prev = map.prev_initialized(tick, spacing as u16);
-                    let next = map.next_initialized(tick, spacing as u16);
-                    if prev.is_some() {
-                        println!("found prev = {}", prev.unwrap());
-                    }
-                    if next.is_some() {
-                        println!("found next = {}", next.unwrap());
-                    }
-                }
+            if prev.is_some() {
+                println!("found prev = {}", prev.unwrap());
+            }
+            if next.is_some() {
+                println!("found next = {}", next.unwrap());
             }
         }
     }
