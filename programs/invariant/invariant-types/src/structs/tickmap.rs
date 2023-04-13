@@ -116,7 +116,7 @@ impl Tickmap {
 
     pub fn prev_initialized(&self, tick: i32, tick_spacing: u16) -> Option<i32> {
         // don't subtract 1 to check the current tick
-        let limit = get_search_limit(tick, tick_spacing, false);
+        let limit = get_search_limit(tick, tick_spacing, false); // find_search_limit
         let (mut byte, mut bit) = tick_to_position(tick as i32, tick_spacing);
         let (limiting_byte, limiting_bit) = tick_to_position(limit, tick_spacing);
 
@@ -186,29 +186,30 @@ mod tests {
     fn test_next_and_prev_initialized() {
         // initalized edges
         {
-            for init_spacing in 1..=10 {
-                // println!("init_spacing = {}", init_spacing);
+            for spacing in 1..=10 {
+                println!("spacing = {}", spacing);
                 let mut map = Tickmap::default();
-                let index = match init_spacing < 5 {
-                    true => TICK_LIMIT - init_spacing,
-                    false => (MAX_TICK / init_spacing) * init_spacing,
+                let max_index = match spacing < 5 {
+                    true => TICK_LIMIT - spacing,
+                    false => (MAX_TICK / spacing) * spacing,
                 };
-                // println!("index = {}", index);
+                let min_index = -max_index;
+                println!("max_index = {}", max_index);
+                println!("min_index = {}", min_index);
 
-                map.flip(true, index, init_spacing as u16);
-                map.flip(true, 0, init_spacing as u16);
+                map.flip(true, max_index, spacing as u16);
+                map.flip(true, min_index, spacing as u16);
 
-                let spacing = init_spacing;
-                for i in 0..5 {
-                    let absolut_tick = i * spacing as i32;
-                    for sign in 0..1 {
-                        let tick = match sign == 0 {
-                            true => absolut_tick,
-                            false => -absolut_tick,
-                        };
-                        map.prev_initialized(tick, spacing as u16);
-                        map.next_initialized(tick, spacing as u16);
-                    }
+                let tick_edge_diff = TICK_SEARCH_RANGE / spacing * spacing;
+
+                let prev = map.prev_initialized(min_index + tick_edge_diff, spacing as u16);
+                let next = map.next_initialized(max_index - tick_edge_diff, spacing as u16);
+
+                if prev.is_some() {
+                    println!("found prev = {}", prev.unwrap());
+                }
+                if next.is_some() {
+                    println!("found next = {}", next.unwrap());
                 }
             }
         }
