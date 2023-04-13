@@ -120,7 +120,7 @@ impl Tickmap {
 
     pub fn prev_initialized(&self, tick: i32, tick_spacing: u16) -> Option<i32> {
         // don't subtract 1 to check the current tick
-        let limit = get_search_limit(tick, tick_spacing, false); // find_search_limit
+        let limit = get_search_limit(tick, tick_spacing, false);
         let (mut byte, mut bit) = tick_to_position(tick as i32, tick_spacing);
         let (limiting_byte, limiting_bit) = tick_to_position(limit, tick_spacing);
 
