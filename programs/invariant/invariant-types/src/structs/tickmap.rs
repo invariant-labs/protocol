@@ -107,7 +107,11 @@ impl Tickmap {
             }
 
             // go to the text byte
-            byte = byte.checked_add(1).unwrap();
+            if let Some(value) = byte.checked_add(1) {
+                byte = value;
+            } else {
+                return None;
+            }
             bit = 0;
         }
 
@@ -152,7 +156,11 @@ impl Tickmap {
             }
 
             // go to the text byte
-            byte = byte.checked_sub(1).unwrap();
+            if let Some(value) = byte.checked_sub(1) {
+                byte = value;
+            } else {
+                return None;
+            }
             bit = 7;
         }
 
@@ -223,7 +231,7 @@ mod tests {
             };
             let min_index = -max_index;
             let tick_edge_diff = TICK_SEARCH_RANGE / spacing * spacing;
-            1000
+
             let prev = map.prev_initialized(min_index + tick_edge_diff, spacing as u16);
             let next = map.next_initialized(max_index - tick_edge_diff, spacing as u16);
 
