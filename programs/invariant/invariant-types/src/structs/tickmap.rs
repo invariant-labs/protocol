@@ -43,9 +43,11 @@ fn tick_to_position(tick: i32, tick_spacing: u16) -> (usize, u8) {
     (byte, bit)
 }
 
+// tick_spacing - spacing already scaled by tick_spacing
 pub fn get_search_limit(tick: i32, tick_spacing: u16, up: bool) -> i32 {
     let index = tick / tick_spacing as i32;
 
+    // limit unsclaed
     let limit = if up {
         // ticks are limited by amount of space in the bitmap...
         let array_limit = TICK_LIMIT.checked_sub(1).unwrap();
@@ -63,6 +65,7 @@ pub fn get_search_limit(tick: i32, tick_spacing: u16, up: bool) -> i32 {
         array_limit.max(range_limit).max(price_limit)
     };
 
+    // scaled by tick_spacing
     limit.checked_mul(tick_spacing as i32).unwrap()
 }
 
@@ -118,23 +121,29 @@ impl Tickmap {
         None
     }
 
+    // tick_spacing - spacing already scaled by tick_spacing
     pub fn prev_initialized(&self, tick: i32, tick_spacing: u16) -> Option<i32> {
         // don't subtract 1 to check the current tick
-        let limit = get_search_limit(tick, tick_spacing, false);
+        let limit = get_search_limit(tick, tick_spacing, false); // limit scaled by tick_spacing
         let (mut byte, mut bit) = tick_to_position(tick as i32, tick_spacing);
         let (limiting_byte, limiting_bit) = tick_to_position(limit, tick_spacing);
 
         while byte > limiting_byte || (byte == limiting_byte && bit >= limiting_bit) {
-            let mut mask = 1u16.checked_shl(bit.try_into().unwrap()).unwrap();
+            // always safe due to limitated domain of bit variable
+            let mut mask = 1u16.checked_shl(bit.try_into().unwrap()).unwrap(); // left = MSB direction (increase value)
             let value = self.bitmap[byte] as u16;
 
+            // enter if some of previous bits are initialized in current byte
             if value.checked_rem(mask.checked_shl(1).unwrap()).unwrap() > 0 {
+                // skip uninitalized ticks
                 while value & mask == 0 {
                     mask >>= 1;
                     bit = bit.checked_sub(1).unwrap();
                 }
 
+                // return first initalized tick if limiit is not exceeded, otherswise return None
                 return if byte > limiting_byte || (byte == limiting_byte && bit >= limiting_bit) {
+                    // no possibility to overflow
                     let index: i32 = byte
                         .checked_mul(8)
                         .unwrap()
@@ -155,7 +164,7 @@ impl Tickmap {
                 };
             }
 
-            // go to the text byte
+            // go to the next byte
             if let Some(value) = byte.checked_sub(1) {
                 byte = value;
             } else {

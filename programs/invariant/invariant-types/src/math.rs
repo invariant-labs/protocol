@@ -92,10 +92,11 @@ pub fn calculate_price_sqrt(tick_index: i32) -> Price {
 pub fn get_closer_limit(
     sqrt_price_limit: Price,
     x_to_y: bool,
-    current_tick: i32,
+    current_tick: i32, // tick already scaled by tick_spacing
     tick_spacing: u16,
     tickmap: &Tickmap,
 ) -> Result<(Price, Option<(i32, bool)>)> {
+    // find initalized tick (None also for virtual tick limiated by search scope)
     let closes_tick_index = if x_to_y {
         tickmap.prev_initialized(current_tick, tick_spacing)
     } else {
@@ -135,10 +136,10 @@ pub fn get_closer_limit(
 pub fn compute_swap_step(
     current_price_sqrt: Price,
     target_price_sqrt: Price,
-    liquidity: Liquidity,
-    amount: TokenAmount,
+    liquidity: Liquidity, // pool.liquidity
+    amount: TokenAmount,  // reaming_amount (input or output depending on by_amount_in)
     by_amount_in: bool,
-    fee: FixedPoint,
+    fee: FixedPoint, // pool.fee
 ) -> SwapResult {
     if liquidity.is_zero() {
         return SwapResult {
@@ -156,6 +157,9 @@ pub fn compute_swap_step(
     let mut amount_out = TokenAmount(0);
 
     if by_amount_in {
+        // take fee in input_amount
+        // U256(2^64) * U256(1e12) - no overflow in intermediate operations
+        // no overflows in token_amount result
         let amount_after_fee = amount.big_mul(FixedPoint::from_integer(1u8) - fee);
 
         amount_in = if x_to_y {
@@ -242,7 +246,10 @@ pub fn get_delta_x(
         sqrt_price_b - sqrt_price_a
     };
 
-    // log(2,  2^16 * 10^24 * 2^128 / 10^6 ) = 203.7
+    // maximalize delta_price
+    // max_delta_price = price_at_tick(MAX_TICK) - price_at_limit(MAX_TICK, tick_spacing)
+    // price_at_limit(MAX_TICK, tick_spacing) = price_at_tick(MAX_TICK - 256)
+    // log(2,  2^16 * 10^24 * 2^128 / 10^6) = 203.7
     let nominator = delta_price.big_mul_to_value(liquidity);
     match up {
         true => Price::big_div_values_to_token_up(
