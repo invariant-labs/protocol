@@ -98,9 +98,17 @@ impl FixedPoint {
 
 impl Price {
     pub fn big_div_values_to_token(nominator: U256, denominator: U256) -> Option<TokenAmount> {
+        // ceil(log2(max_nominator)) = 224
+        // possible overflow: ceil(log2(max_nominator * 10^24)) = 304
+
+        let extended_nominator = nominator.checked_mul(Self::one::<U256>());
+
+        if extended_nominator.is_none() {
+            return None;
+        }
+
         Some(TokenAmount::new(
-            match nominator
-                .checked_mul(Self::one::<U256>())
+            match extended_nominator
                 .unwrap()
                 .checked_div(denominator)
                 .unwrap()
