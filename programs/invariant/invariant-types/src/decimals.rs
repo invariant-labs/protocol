@@ -101,25 +101,31 @@ impl Price {
         // ceil(log2(max_nominator)) = 224
         // possible overflow: ceil(log2(max_nominator * 10^24)) = 304
 
+        // min_denominator = 232835005780624
+
         let extended_nominator = nominator.checked_mul(Self::one::<U256>());
 
         if extended_nominator.is_none() {
             return None;
         }
 
-        Some(TokenAmount::new(
-            match extended_nominator
-                .unwrap()
-                .checked_div(denominator)
-                .unwrap()
-                .checked_div(Self::one::<U256>())
-                .unwrap()
-                .try_into()
-            {
-                Ok(v) => v,
-                Err(_) => return None,
-            },
-        ))
+        let a = extended_nominator
+            .unwrap()
+            .checked_div(denominator)
+            .unwrap()
+            .checked_div(Self::one::<U256>())
+            .unwrap();
+
+        let b: Option<u64> = match a.try_into() {
+            Ok(v) => Some(v),
+            Err(_) => None,
+        };
+
+        if b.is_none() {
+            return None;
+        }
+
+        Some(TokenAmount::new(b.unwrap()))
     }
 
     pub fn big_div_values_to_token_up(nominator: U256, denominator: U256) -> Option<TokenAmount> {
@@ -160,6 +166,8 @@ impl Price {
 
 #[cfg(test)]
 pub mod tests {
+    use crate::{math::calculate_price_sqrt, structs::MAX_TICK};
+
     use super::*;
 
     #[test]
@@ -275,5 +283,19 @@ pub mod tests {
         let expected_price = Price::new(48208000421189050674873214903955408904);
         assert_eq!(price.big_mul(liquidity), expected_price);
         assert_eq!(price.big_mul_up(liquidity), expected_price + Price::new(1));
+    }
+
+    #[test]
+    fn test_price_overflow() {
+        let max_sqrt_price = calculate_price_sqrt(MAX_TICK);
+
+        let result = max_sqrt_price.big_mul_to_value(max_sqrt_price);
+        let result_up = max_sqrt_price.big_mul_to_value_up(max_sqrt_price);
+        let expected_result = U256::from(4294886547443978352291489402946609u128);
+
+        // real:     4294841257.231131321329014894029466
+        // expected: 4294886547.443978352291489402946609
+        assert_eq!(result, expected_result);
+        assert_eq!(result_up, expected_result);
     }
 }
