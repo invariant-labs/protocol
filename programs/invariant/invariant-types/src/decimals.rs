@@ -287,15 +287,31 @@ pub mod tests {
 
     #[test]
     fn test_price_overflow() {
-        let max_sqrt_price = calculate_price_sqrt(MAX_TICK);
+        // max_sqrt_price
+        {
+            let max_sqrt_price = calculate_price_sqrt(MAX_TICK);
 
-        let result = max_sqrt_price.big_mul_to_value(max_sqrt_price);
-        let result_up = max_sqrt_price.big_mul_to_value_up(max_sqrt_price);
-        let expected_result = U256::from(4294886547443978352291489402946609u128);
+            let result = max_sqrt_price.big_mul_to_value(max_sqrt_price);
+            let result_up = max_sqrt_price.big_mul_to_value_up(max_sqrt_price);
+            let expected_result = U256::from(4294886547443978352291489402946609u128);
 
-        // real:     4294841257.231131321329014894029466
-        // expected: 4294886547.443978352291489402946609
-        assert_eq!(result, expected_result);
-        assert_eq!(result_up, expected_result);
+            // real:     4294841257.231131321329014894029466
+            // expected: 4294886547.443978352291489402946609
+            assert_eq!(result, expected_result);
+            assert_eq!(result_up, expected_result);
+        }
+        // min_sqrt_price
+        {
+            let min_sqrt_price = calculate_price_sqrt(-MAX_TICK);
+
+            let result = min_sqrt_price.big_mul_to_value(min_sqrt_price);
+            let result_up = min_sqrt_price.big_mul_to_value_up(min_sqrt_price);
+            let expected_result = U256::from(232835005780624u128);
+
+            // real:     0.000000000232835005780624
+            // expected: 0.000000000232835005780624
+            assert_eq!(result, expected_result);
+            assert_eq!(result_up, expected_result);
+        }
     }
 }
