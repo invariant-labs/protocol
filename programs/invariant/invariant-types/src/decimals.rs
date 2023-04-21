@@ -286,6 +286,17 @@ pub mod tests {
     }
 
     #[test]
+    fn test_big_div_values_to_token() {
+        // overflow due too large nominator
+        {
+            let max_nominator: U256 = U256::from(1) << 224;
+
+            let result = Price::big_div_values_to_token(max_nominator, U256::from(1));
+            assert!(result.is_none())
+        }
+    }
+
+    #[test]
     fn test_price_overflow() {
         // max_sqrt_price
         {
