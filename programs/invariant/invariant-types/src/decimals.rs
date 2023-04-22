@@ -109,23 +109,23 @@ impl Price {
             return None;
         }
 
-        let a = extended_nominator
+        let token_amount = extended_nominator
             .unwrap()
             .checked_div(denominator)
             .unwrap()
             .checked_div(Self::one::<U256>())
             .unwrap();
 
-        let b: Option<u64> = match a.try_into() {
+        let token_amount: Option<u64> = match token_amount.try_into() {
             Ok(v) => Some(v),
             Err(_) => None,
         };
 
-        if b.is_none() {
+        if token_amount.is_none() {
             return None;
         }
 
-        Some(TokenAmount::new(b.unwrap()))
+        Some(TokenAmount::new(token_amount.unwrap()))
     }
 
     pub fn big_div_values_to_token_up(nominator: U256, denominator: U256) -> Option<TokenAmount> {
@@ -287,11 +287,19 @@ pub mod tests {
 
     #[test]
     fn test_big_div_values_to_token() {
-        // overflow due too large nominator
+        let min_overflow_nominator: U256 =
+            U256::from_dec_str("115792089237316195423570985008687907853269984665640565").unwrap();
+
+        // overflow due too large nominator (max nominator)
         {
             let max_nominator: U256 = U256::from(1) << 224;
 
             let result = Price::big_div_values_to_token(max_nominator, U256::from(1));
+            assert!(result.is_none())
+        }
+        // overflow due too large nominator (min overflow nominator)
+        {
+            let result = Price::big_div_values_to_token(min_overflow_nominator, U256::from(1));
             assert!(result.is_none())
         }
     }
