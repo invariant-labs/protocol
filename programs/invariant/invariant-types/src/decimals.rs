@@ -302,6 +302,14 @@ pub mod tests {
             let result = Price::big_div_values_to_token(min_overflow_nominator, U256::from(1));
             assert!(result.is_none())
         }
+        // result will not fit into u64 type (without overflow)
+        {
+            let min_denominator: U256 = U256::from(232835005780624u128);
+
+            let result =
+                Price::big_div_values_to_token(min_overflow_nominator - 1, min_denominator);
+            assert!(result.is_none())
+        }
     }
 
     #[test]
