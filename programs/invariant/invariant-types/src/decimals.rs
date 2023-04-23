@@ -266,37 +266,39 @@ pub mod tests {
 
     #[test]
     fn test_big_div_values_to_token() {
-        let min_overflow_nominator: U256 =
-            U256::from_dec_str("115792089237316195423570985008687907853269984665640565").unwrap();
+        let max_sqrt_price = calculate_price_sqrt(MAX_TICK);
+        let almost_max_sqrt_price = calculate_price_sqrt(MAX_TICK - 1);
+
+        // DOMAIN:
+        // max_nominator =             22300535562308408361215204585786568048575995442267771385000000000000
+        // max_no_overflow_nominator = 115792089237316195423570985008687907853269984665640564
+        // min_denominator =           232835005780624
+        let max_nominator: U256 = U256::from(max_sqrt_price.v) * U256::from(u128::MAX);
+        let max_no_overflow_nominator: U256 = U256::MAX / Price::one::<U256>();
+        let min_denominator: U256 = U256::from(232835005780624u128);
 
         // overflow due too large nominator (max nominator)
         {
-            let max_nominator: U256 = U256::from(1) << 224;
-
-            let result = Price::big_div_values_to_token(max_nominator, U256::from(1));
+            let result = Price::big_div_values_to_token(max_nominator, min_denominator);
             assert!(result.is_none())
         }
         // overflow due too large nominator (min overflow nominator)
         {
-            let result = Price::big_div_values_to_token(min_overflow_nominator, U256::from(1));
+            let result =
+                Price::big_div_values_to_token(max_no_overflow_nominator + 1, min_denominator);
             assert!(result.is_none())
         }
         // result not fits into u64 type (without overflow)
         {
-            let min_denominator: U256 = U256::from(232835005780624u128);
-
-            let result =
-                Price::big_div_values_to_token(min_overflow_nominator - 1, min_denominator);
+            let result = Price::big_div_values_to_token(max_no_overflow_nominator, min_denominator);
             assert!(result.is_none())
         }
         // result fits intro u64 type (with max denominator)
         {
-            let max_sqrt_price_a = calculate_price_sqrt(MAX_TICK);
-            let max_sqrt_price_b = calculate_price_sqrt(MAX_TICK - 1);
-            let max_denominator = max_sqrt_price_a.big_mul_to_value_up(max_sqrt_price_b);
+            let max_denominator = max_sqrt_price.big_mul_to_value_up(almost_max_sqrt_price);
 
             let result =
-                Price::big_div_values_to_token(min_overflow_nominator / 2, max_denominator);
+                Price::big_div_values_to_token(max_no_overflow_nominator / 2, max_denominator);
             assert_eq!(result, Some(TokenAmount(13480900766318407300u64)));
         }
     }
