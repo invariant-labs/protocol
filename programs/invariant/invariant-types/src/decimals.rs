@@ -108,41 +108,16 @@ impl Price {
     }
 
     pub fn big_div_values_to_token_up(nominator: U256, denominator: U256) -> Option<TokenAmount> {
-        let extended_nominator = nominator.checked_mul(Self::one::<U256>());
-        // first overflow
-        if extended_nominator.is_none() {
-            return None;
-        }
+        let token_amount = nominator
+            .checked_mul(Self::one::<U256>())?
+            .checked_add(denominator - 1)?
+            .checked_div(denominator)?
+            .checked_add(Self::almost_one::<U256>())?
+            .checked_div(Self::one::<U256>())?
+            .try_into()
+            .ok()?;
 
-        let extended_nominator = extended_nominator.unwrap().checked_add(denominator - 1);
-        // second overflow
-        if extended_nominator.is_none() {
-            return None;
-        }
-
-        let extended_quotient = extended_nominator
-            .unwrap()
-            .checked_div(denominator)
-            .unwrap();
-
-        let extended_quotient = extended_quotient.checked_add(Self::almost_one::<U256>());
-        // no possible to overflow
-        if extended_quotient.is_none() {
-            return None;
-        }
-
-        let quotient = extended_quotient
-            .unwrap()
-            .checked_div(Self::one::<U256>())
-            .unwrap();
-
-        let token_amount: Option<u64> = quotient.try_into().ok();
-        // suit into u64
-        if token_amount.is_none() {
-            return None;
-        }
-
-        Some(TokenAmount::new(token_amount.unwrap()))
+        Some(TokenAmount::new(token_amount))
     }
 
     pub fn big_div_values_up(nominator: U256, denominator: U256) -> Price {
