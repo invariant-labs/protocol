@@ -266,16 +266,21 @@ pub mod tests {
 
     #[test]
     fn test_big_div_values_to_token() {
+        // base examples tested in up-level functions
         let max_sqrt_price = calculate_price_sqrt(MAX_TICK);
+        let min_sqrt_price = calculate_price_sqrt(-MAX_TICK);
         let almost_max_sqrt_price = calculate_price_sqrt(MAX_TICK - 1);
+        let almost_min_sqrt_price = calculate_price_sqrt(-MAX_TICK + 1);
 
         // DOMAIN:
-        // max_nominator =             22300535562308408361215204585786568048575995442267771385000000000000
-        // max_no_overflow_nominator = 115792089237316195423570985008687907853269984665640564
-        // min_denominator =           232835005780624
+        // max_nominator =             22300535562308408361215204585786568048575995442267771385000000000000 (< 2^224)
+        // max_no_overflow_nominator = 115792089237316195423570985008687907853269984665640564               (< 2^177)
+        // max_denominator =           4294671819208808709990254332190838                                   (< 2^112)
+        // min_denominator =           232846648345740                                                      (< 2^48)
         let max_nominator: U256 = U256::from(max_sqrt_price.v) * U256::from(u128::MAX);
         let max_no_overflow_nominator: U256 = U256::MAX / Price::one::<U256>();
-        let min_denominator: U256 = U256::from(232835005780624u128);
+        let min_denominator: U256 = min_sqrt_price.big_mul_to_value_up(almost_min_sqrt_price);
+        let max_denominator = max_sqrt_price.big_mul_to_value_up(almost_max_sqrt_price);
 
         // overflow due too large nominator (max nominator)
         {
@@ -295,8 +300,6 @@ pub mod tests {
         }
         // result fits intro u64 type (with max denominator)
         {
-            let max_denominator = max_sqrt_price.big_mul_to_value_up(almost_max_sqrt_price);
-
             let result =
                 Price::big_div_values_to_token(max_no_overflow_nominator / 2, max_denominator);
             assert_eq!(result, Some(TokenAmount(13480900766318407300u64)));
