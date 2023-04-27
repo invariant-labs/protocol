@@ -593,6 +593,19 @@ mod tests {
                 assert_eq!(Some(TokenAmount(0)), result);
             }
         }
+        // maximize denominator with maximum liquidity which fit into TokenAmount
+        {
+            let liquidity = Liquidity::new(max_liquidity.v >> 46);
+            {
+                let result: Option<TokenAmount> =
+                    get_delta_x(min_sqrt_price, almost_min_sqrt_price, liquidity, true);
+                assert_eq!(Some(TokenAmount(15845800777794838947)), result);
+            }
+            {
+                let result = get_delta_x(min_sqrt_price, almost_min_sqrt_price, liquidity, false);
+                assert_eq!(Some(TokenAmount(15845800777794838946)), result);
+            }
+        }
     }
 
     #[test]
