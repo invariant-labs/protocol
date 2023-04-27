@@ -440,7 +440,7 @@ mod tests {
 
     use crate::{
         decimals::{Liquidity, Price, TokenAmount},
-        math::{get_delta_x, get_max_sqrt_price, get_min_sqrt_price},
+        math::{get_delta_x, get_delta_y, get_max_sqrt_price, get_min_sqrt_price},
         structs::MAX_TICK,
     };
 
@@ -605,6 +605,82 @@ mod tests {
                 let result = get_delta_x(min_sqrt_price, almost_min_sqrt_price, liquidity, false);
                 assert_eq!(Some(TokenAmount(15845800777794838946)), result);
             }
+        }
+    }
+
+    #[test]
+    fn test_get_delta_y() {
+        // base samples
+        // zero at zero liquidity
+        {
+            let result = get_delta_y(
+                Price::from_integer(1),
+                Price::from_integer(1),
+                Liquidity::new(0),
+                false,
+            )
+            .unwrap();
+            assert_eq!(result, TokenAmount(0));
+        }
+        // equal at equal liquidity
+        {
+            let result = get_delta_y(
+                Price::from_integer(1),
+                Price::from_integer(2),
+                Liquidity::from_integer(2),
+                false,
+            )
+            .unwrap();
+            assert_eq!(result, TokenAmount(2));
+        }
+        // big numbers
+        {
+            let sqrt_price_a = Price::new(234__878_324_943_782_000000000000);
+            let sqrt_price_b = Price::new(87__854_456_421_658_000000000000);
+            let liquidity = Liquidity::new(983_983__249_092);
+
+            let result_down = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, false).unwrap();
+            let result_up = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, true).unwrap();
+
+            // 144669023.842474597804911408
+            assert_eq!(result_down, TokenAmount(144669023));
+            assert_eq!(result_up, TokenAmount(144669024));
+        }
+        // big
+        {
+            let sqrt_price_a = Price::from_integer(1u8);
+            let sqrt_price_b = Price::from_integer(2u8);
+            let liquidity = Liquidity::from_integer(2u128.pow(64) - 1);
+
+            let result_down = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, false).unwrap();
+            let result_up = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, true).unwrap();
+
+            assert_eq!(result_down, TokenAmount::from_decimal(liquidity));
+            assert_eq!(result_up, TokenAmount::from_decimal(liquidity));
+        }
+        // overflow
+        {
+            let sqrt_price_a = Price::from_integer(1u8);
+            let sqrt_price_b = Price::from_integer(2u8);
+            let liquidity = Liquidity::from_integer(2u128.pow(64));
+
+            let result_down = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, false);
+            let result_up = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, true);
+
+            assert!(result_down.is_none());
+            assert!(result_up.is_none());
+        }
+        // huge liquidity
+        {
+            let sqrt_price_a = Price::from_integer(1u8);
+            let sqrt_price_b = Price::new(Price::one()) + Price::new(1000000);
+            let liquidity = Liquidity::from_integer(2u128.pow(80));
+
+            let result_down = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, false);
+            let result_up = get_delta_y(sqrt_price_a, sqrt_price_b, liquidity, true);
+
+            assert!(result_down.is_some());
+            assert!(result_up.is_some());
         }
     }
 
