@@ -567,6 +567,19 @@ mod tests {
                 assert_eq!(Some(TokenAmount(0)), result);
             }
         }
+        // minimize denominator on maximize liquidity for overflow of TokenAmount
+        {
+            {
+                let result: Option<TokenAmount> =
+                    get_delta_x(min_sqrt_price, almost_min_sqrt_price, max_liquidity, true);
+                assert_eq!(None, result);
+            }
+            {
+                let result =
+                    get_delta_x(min_sqrt_price, almost_min_sqrt_price, max_liquidity, false);
+                assert_eq!(None, result);
+            }
+        }
     }
 
     #[test]
