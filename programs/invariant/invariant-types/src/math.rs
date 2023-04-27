@@ -541,6 +541,19 @@ mod tests {
                 assert_eq!(None, result);
             }
         }
+        // maximize denominator for overflow of TokenAmount -> maximize prices product
+        {
+            {
+                let result: Option<TokenAmount> =
+                    get_delta_x(max_sqrt_price, almost_max_sqrt_price, max_liquidity, true);
+                assert_eq!(None, result);
+            }
+            {
+                let result =
+                    get_delta_x(max_sqrt_price, almost_max_sqrt_price, max_liquidity, false);
+                assert_eq!(None, result);
+            }
+        }
     }
 
     #[test]
