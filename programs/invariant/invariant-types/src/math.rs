@@ -246,27 +246,8 @@ pub fn get_delta_x(
         sqrt_price_b - sqrt_price_a
     };
 
-    // maximalize delta_price = one price should be maximalize during second one should be minamize
-    // max_delta_price = price_at_tick(MAX_TICK) - price_at_limit(MAX_TICK, tick_spacing)
-    // price_at_limit(MAX_TICK, tick_spacing) = price_at_tick(MAX_TICK - 256 * tick_spacing) = price_at_tick(MAX_TICK - 256000)
-    // price_at_tick(MAX_TICK) = 65535383934512647000000000000
-    // price_at_tick(−34182) = 181044114632000000000000
-    // log2(max_delta_price) =  log2(65535202890398015000000000000) = log2(price_at_tick(MAX_TICK)) = 96
-    // max_liquidity_on_pool = MAX_U128
-    // alternatively ceil(log2(1.0001^(1/2*221818)*10^24)) = 96
-    // log2(max_nominator) = log2(2^96 * 2^128) = 224
-
-    // no possibility to overflow in intermaidate operations
-    // no possbility to overflow in result
     let nominator = delta_price.big_mul_to_value(liquidity);
     match up {
-        // maximalize denominator = MAX_PRICE^2
-
-        // U256::from(MAX_SQRT_PRICE) * U256::from(MAX_SQRT_PRICE)
-        // denominator: no possibility to overflow in intermaidate operations
-
-        // ceil(log2(max_denominator)) = ceil(log2(2^96*2^96 / 10^24)) = 113
-        // denominator: no possbility to overflow in result
         true => Price::big_div_values_to_token_up(
             nominator,
             sqrt_price_a.big_mul_to_value(sqrt_price_b),
@@ -460,12 +441,14 @@ mod tests {
     use crate::{
         decimals::{Liquidity, Price, TokenAmount},
         math::{get_delta_x, get_max_sqrt_price, get_min_sqrt_price},
+        structs::MAX_TICK,
     };
+
+    use super::calculate_price_sqrt;
 
     #[test]
     fn test_get_delta_x() {
         // validate base samples
-
         // zero at zero liquidity
         {
             let result = get_delta_x(
@@ -536,6 +519,27 @@ mod tests {
 
             assert!(result_down.is_some());
             assert!(result_up.is_some());
+        }
+
+        let max_sqrt_price = calculate_price_sqrt(MAX_TICK);
+        let min_sqrt_price = calculate_price_sqrt(-MAX_TICK);
+        let almost_max_sqrt_price = calculate_price_sqrt(MAX_TICK - 1);
+        let almost_min_sqrt_price = calculate_price_sqrt(-MAX_TICK + 1);
+
+        // DOMAIN:
+        let max_liquidity = Liquidity::new(u128::MAX);
+        let min_liquidity = Liquidity::new(1);
+
+        // maximize numerator for overflow of TokenAmount -> maximize delta_price and liquidity
+        {
+            {
+                let result = get_delta_x(max_sqrt_price, min_sqrt_price, max_liquidity, true);
+                assert_eq!(None, result);
+            }
+            {
+                let result = get_delta_x(max_sqrt_price, min_sqrt_price, max_liquidity, false);
+                assert_eq!(None, result);
+            }
         }
     }
 
