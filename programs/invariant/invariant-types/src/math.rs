@@ -580,6 +580,19 @@ mod tests {
                 assert_eq!(None, result);
             }
         }
+        // minimize denominator on minimize liquidity which fits into TokenAmount
+        {
+            {
+                let result: Option<TokenAmount> =
+                    get_delta_x(min_sqrt_price, almost_min_sqrt_price, min_liquidity, true);
+                assert_eq!(Some(TokenAmount(1)), result);
+            }
+            {
+                let result =
+                    get_delta_x(min_sqrt_price, almost_min_sqrt_price, min_liquidity, false);
+                assert_eq!(Some(TokenAmount(0)), result);
+            }
+        }
     }
 
     #[test]
