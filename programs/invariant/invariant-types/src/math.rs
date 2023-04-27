@@ -682,6 +682,22 @@ mod tests {
             assert!(result_down.is_some());
             assert!(result_up.is_some());
         }
+
+        // DOMAIN
+        let max_sqrt_price = calculate_price_sqrt(MAX_TICK);
+        let min_sqrt_price = calculate_price_sqrt(-MAX_TICK);
+        let max_liquidity = Liquidity::new(u128::MAX);
+        // maximize delta_price and liquidity
+        {
+            {
+                let result = get_delta_y(max_sqrt_price, min_sqrt_price, max_liquidity, true);
+                assert!(result.is_none());
+            }
+            {
+                let result = get_delta_y(max_sqrt_price, min_sqrt_price, max_liquidity, false);
+                assert!(result.is_none());
+            }
+        }
     }
 
     #[test]
