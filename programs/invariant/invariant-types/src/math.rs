@@ -440,7 +440,10 @@ mod tests {
 
     use crate::{
         decimals::{Liquidity, Price, TokenAmount},
-        math::{get_delta_x, get_delta_y, get_max_sqrt_price, get_min_sqrt_price},
+        math::{
+            get_delta_x, get_delta_y, get_max_sqrt_price, get_min_sqrt_price,
+            get_next_sqrt_price_x_up,
+        },
         structs::MAX_TICK,
     };
 
@@ -697,6 +700,84 @@ mod tests {
                 let result = get_delta_y(max_sqrt_price, min_sqrt_price, max_liquidity, false);
                 assert!(result.is_none());
             }
+        }
+    }
+
+    #[test]
+    fn test_get_next_sqrt_price_x_up() {
+        // basic samples
+        // Add
+        {
+            let price_sqrt = Price::from_integer(1);
+            let liquidity = Liquidity::from_integer(1);
+            let amount = TokenAmount(1);
+
+            let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
+
+            assert_eq!(result, Price::from_scale(5, 1));
+        }
+        {
+            let price_sqrt = Price::from_integer(1);
+            let liquidity = Liquidity::from_integer(2);
+            let amount = TokenAmount(3);
+
+            let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
+
+            assert_eq!(result, Price::from_scale(4, 1));
+        }
+        {
+            let price_sqrt = Price::from_integer(2);
+            let liquidity = Liquidity::from_integer(3);
+            let amount = TokenAmount(5);
+
+            let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
+
+            assert_eq!(
+                result,
+                Price::new(461538461538461538461539) // rounded up Decimal::from_integer(6).div(Decimal::from_integer(13))
+            );
+        }
+        {
+            let price_sqrt = Price::from_integer(24234);
+            let liquidity = Liquidity::from_integer(3000);
+            let amount = TokenAmount(5000);
+
+            let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
+
+            assert_eq!(
+                result,
+                Price::new(599985145205615112277488) // rounded up Decimal::from_integer(24234).div(Decimal::from_integer(40391))
+            );
+        }
+        // Subtract
+        {
+            let price_sqrt = Price::from_integer(1);
+            let liquidity = Liquidity::from_integer(2);
+            let amount = TokenAmount(1);
+
+            let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
+
+            assert_eq!(result, Price::from_integer(2));
+        }
+        {
+            let price_sqrt = Price::from_integer(100_000);
+            let liquidity = Liquidity::from_integer(500_000_000);
+            let amount = TokenAmount(4_000);
+
+            let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
+
+            assert_eq!(result, Price::from_integer(500_000));
+        }
+        {
+            let price_sqrt = Price::new(3_333333333333333333333333);
+            let liquidity = Liquidity::new(222_222222);
+            let amount = TokenAmount(37);
+
+            // expected 7.490636713462104974072145
+            // real     7.4906367134621049740721443...
+            let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
+
+            assert_eq!(result, Price::new(7490636713462104974072145));
         }
     }
 
