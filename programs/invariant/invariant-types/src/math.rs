@@ -783,6 +783,11 @@ mod tests {
 
     #[test]
     fn test_price_limitation() {
+        let global_max_price = calculate_price_sqrt(MAX_TICK);
+        assert_eq!(global_max_price, Price::new(65535383934512647000000000000)); // ceil(log2(this)) = 96
+        let global_min_price = calculate_price_sqrt(-MAX_TICK);
+        assert_eq!(global_min_price, Price::new(15258932000000000000)); // ceil(log2(this)) = 64
+
         let let_max_price = get_max_sqrt_price(1);
         assert_eq!(let_max_price, Price::new(9189293893553000000000000));
         let let_max_price = get_max_sqrt_price(2);
