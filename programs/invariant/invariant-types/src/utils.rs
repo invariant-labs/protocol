@@ -57,8 +57,23 @@ mod tests {
 
     use super::*;
 
+    fn value() -> TrackableResult<u64> {
+        Ok(10u64)
+    }
+
+    fn inner_fun() -> TrackableResult<u64> {
+        ok_or_mark_trace!(value())
+    }
+
+    fn outer_fun() -> TrackableResult<u64> {
+        ok_or_mark_trace!(inner_fun())
+    }
+
     fn trigger_error() -> TrackableResult<u64> {
-        error!("trigger error")
+        match outer_fun() {
+            Ok(_) => error!("trigger error"),
+            Err(err) => error!(err.as_str()),
+        }
     }
 
     fn inner_fun_err() -> TrackableResult<u64> {
@@ -70,8 +85,17 @@ mod tests {
     }
 
     #[test]
-    fn test_fun() {
-        let err = outer_fun_err().unwrap_err();
-        println!("{}", err);
+    fn test_trackable_result_type_flow() {
+        // ok
+        {
+            let value = outer_fun().unwrap();
+            assert_eq!(value, 10u64);
+        }
+        // error
+        {
+            let err = outer_fun_err();
+            assert!(err.is_err());
+            println!("{}", err.unwrap_err());
+        }
     }
 }
