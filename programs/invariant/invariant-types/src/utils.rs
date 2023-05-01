@@ -8,3 +8,9 @@ macro_rules! function {
         &name[..name.len() - 3]
     }};
 }
+
+macro_rules! get_location {
+    () => {{
+        format!("{}:{}:{}", file!(), function!(), line!())
+    }};
+}
