@@ -47,3 +47,27 @@ pub fn print_error(loc: &str, error: &str) -> String {
 pub fn propagate_error(loc: &str, deeper: String) -> String {
     format!("{} \n-> {}", deeper, loc)
 }
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    fn trigger_error() -> Result<u64, String> {
+        Err(error!("trigger error"))
+    }
+
+    fn inner_fun() -> Result<u64, String> {
+        ok_or_propagate!(trigger_error())
+    }
+
+    fn outer_fun() -> Result<u64, String> {
+        ok_or_propagate!(inner_fun())
+    }
+
+    #[test]
+    fn test_fun() {
+        let err = outer_fun().unwrap_err();
+        println!("{}", err);
+    }
+}
