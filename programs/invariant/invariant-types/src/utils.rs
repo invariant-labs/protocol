@@ -15,6 +15,19 @@ macro_rules! get_location {
     }};
 }
 
+macro_rules! error {
+    ($error:expr) => {{
+        print_error(&get_location!(), $error)
+    }};
+}
+
+macro_rules! propagate {
+    ($error:expr) => {{
+        propagate_error(&get_location!(), $error)
+    }};
+    () => {};
+}
+
 pub fn print_error(loc: &str, error: &str) -> String {
     format!(
         "ERROR CAUSED BY: {}\nINVARIANT STACK TRACE:\n-> {}",
