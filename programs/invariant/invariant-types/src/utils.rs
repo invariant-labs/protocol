@@ -14,3 +14,14 @@ macro_rules! get_location {
         format!("{}:{}:{}", file!(), function!(), line!())
     }};
 }
+
+pub fn print_error(loc: &str, error: &str) -> String {
+    format!(
+        "ERROR CAUSED BY: {}\nINVARIANT STACK TRACE:\n-> {}",
+        error, loc
+    )
+}
+
+pub fn propagate_error(loc: &str, deeper: String) -> String {
+    format!("{} \n-> {}", deeper, loc)
+}
