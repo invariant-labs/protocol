@@ -28,6 +28,15 @@ macro_rules! propagate {
     () => {};
 }
 
+macro_rules! ok_or_propagate {
+    ($op:expr) => {
+        match $op {
+            Ok(ok) => Ok(ok),
+            Err(err) => Err(propagate!(err)),
+        }
+    };
+}
+
 pub fn print_error(loc: &str, error: &str) -> String {
     format!(
         "ERROR CAUSED BY: {}\nINVARIANT STACK TRACE:\n-> {}",
