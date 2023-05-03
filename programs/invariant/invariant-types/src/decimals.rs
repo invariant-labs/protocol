@@ -4,6 +4,9 @@ pub use decimal::*;
 
 use anchor_lang::prelude::*;
 
+use crate::utils::TrackableResult;
+use crate::{err_msg, function, location};
+
 pub const PRICE_LIQUIDITY_DENOMINATOR: u128 = 1__0000_0000__0000_0000__00u128;
 
 #[decimal(24)]
@@ -132,6 +135,29 @@ impl Price {
                 .try_into()
                 .unwrap()
         })
+    }
+
+    pub fn checked_big_div_values_up(nominator: U256, denominator: U256) -> TrackableResult<Price> {
+        Ok(Price::new(
+            nominator
+                .checked_mul(Self::one::<U256>())
+                .ok_or_else(|| err_msg!("multiplication overflow"))?
+                .checked_add(
+                    denominator
+                        .checked_sub(U256::from(1u32))
+                        .ok_or_else(|| err_msg!("subtraction underflow"))?,
+                )
+                .ok_or_else(|| err_msg!("addition overflow"))?
+                .checked_div(denominator)
+                .ok_or_else(|| err_msg!("division overflow or division by zero"))?
+                .try_into()
+                .map_err(|_| {
+                    err_msg!(format!(
+                        "conversion to {} type failed",
+                        std::any::type_name::<Self>()
+                    ))
+                })?,
+        ))
     }
 }
 
