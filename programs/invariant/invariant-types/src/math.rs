@@ -6,6 +6,7 @@ use crate::{
     decimals::*,
     errors::InvariantErrorCode,
     structs::{get_search_limit, Pool, Tick, Tickmap, MAX_TICK, TICK_LIMIT},
+    utils::TrackableResult,
 };
 
 #[derive(PartialEq, Debug)]
@@ -140,14 +141,14 @@ pub fn compute_swap_step(
     amount: TokenAmount,  // reaming_amount (input or output depending on by_amount_in)
     by_amount_in: bool,
     fee: FixedPoint, // pool.fee
-) -> SwapResult {
+) -> TrackableResult<SwapResult> {
     if liquidity.is_zero() {
-        return SwapResult {
+        return Ok(SwapResult {
             next_price_sqrt: target_price_sqrt,
             amount_in: TokenAmount(0),
             amount_out: TokenAmount(0),
             fee_amount: TokenAmount(0),
-        };
+        });
     }
 
     let x_to_y = current_price_sqrt >= target_price_sqrt;
@@ -170,15 +171,24 @@ pub fn compute_swap_step(
         .unwrap_or(TokenAmount(u64::MAX));
 
         // if target price was hit it will be the next price
+        // it means
         if amount_after_fee >= amount_in {
             next_price_sqrt = target_price_sqrt
         } else {
+            // TODO: I should really check in which case this will be triggered
+            // amount_in > amount_after_fee
+
+            // DOMAIN:
+            // liquidity = U128::MAX
+            // amount_after_fee = U64::MAX
+            // current_price_sqrt = entire price space
             next_price_sqrt = get_next_sqrt_price_from_input(
                 current_price_sqrt,
                 liquidity,
                 amount_after_fee,
                 x_to_y,
             )
+            .unwrap()
         };
     } else {
         amount_out = if x_to_y {
@@ -193,6 +203,7 @@ pub fn compute_swap_step(
         } else {
             next_price_sqrt =
                 get_next_sqrt_price_from_output(current_price_sqrt, liquidity, amount, x_to_y)
+                    .unwrap()
         }
     }
 
@@ -225,14 +236,15 @@ pub fn compute_swap_step(
         amount_in.big_mul_up(fee)
     };
 
-    SwapResult {
+    Ok(SwapResult {
         next_price_sqrt,
         amount_in,
         amount_out,
         fee_amount,
-    }
+    })
 }
 
+// TODO: check domain
 // delta x = (L * delta_sqrt_price) / (lower_sqrt_price * higher_sqrt_price)
 pub fn get_delta_x(
     sqrt_price_a: Price,
@@ -259,6 +271,7 @@ pub fn get_delta_x(
     }
 }
 
+// TODO: check domain
 // delta y = L * delta_sqrt_price
 pub fn get_delta_y(
     sqrt_price_a: Price,
@@ -291,14 +304,19 @@ pub fn get_delta_y(
     }
 }
 
+// TODO: check domain
 fn get_next_sqrt_price_from_input(
     price_sqrt: Price,
     liquidity: Liquidity,
     amount: TokenAmount,
     x_to_y: bool,
-) -> Price {
+) -> TrackableResult<Price> {
     assert!(!price_sqrt.is_zero());
     assert!(!liquidity.is_zero());
+    // DOMAIN:
+    // price_sqrt <sqrt_price_at_min_tick, sqrt_price_at_max_tick>
+    // pool.liquidity <1, u128::MAX>
+    // amount <1, u64::MAX>
 
     if x_to_y {
         get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true)
@@ -312,7 +330,7 @@ fn get_next_sqrt_price_from_output(
     liquidity: Liquidity,
     amount: TokenAmount,
     x_to_y: bool,
-) -> Price {
+) -> TrackableResult<Price> {
     assert!(!price_sqrt.is_zero());
     assert!(!liquidity.is_zero());
 
@@ -323,52 +341,85 @@ fn get_next_sqrt_price_from_output(
     }
 }
 
+// TODO: check domain
 // L * price / (L +- amount * price)
 fn get_next_sqrt_price_x_up(
     price_sqrt: Price,
     liquidity: Liquidity,
     amount: TokenAmount,
     add: bool,
-) -> Price {
+) -> TrackableResult<Price> {
+    // DOMAIN:
+    // In case add always true
+    // pool.liquidity = U128::MAX
+    // amount = U64::MAX
+    // price_sqrt = entire price space
+
     if amount.is_zero() {
-        return price_sqrt;
+        return Ok(price_sqrt);
     };
 
+    // PRICE_LIQUIDITY_DENOMINATOR = 10 ^ (24 - 6)
+    // max_big_liquidity -> ceil(log2(2^128 * 10^18)) = 188
+    // no possibility of overflow here
     let big_liquidity = liquidity
         .here::<U256>()
-        .checked_mul(U256::from(PRICE_LIQUIDITY_DENOMINATOR))
+        .checked_mul(U256::from(PRICE_LIQUIDITY_DENOMINATOR)) // extends liquidity precision (operation on U256, so there is no dividing by denominator)
         .unwrap();
 
+    // max(price * amount)
+    // ceil(log2(max_price * 2^64))= 160
+    // U256::from(max_price) * U256::from(2^64) / U256::(1)
+    // so not possible to overflow here
     let denominator = match add {
+        // max_denominator = L + amount * price [maximize all parameters]
+        // max_denominator 2^128 + 2^64 * 2^96 = 2^161 <- no possible to overflow
+
+        // L - amount * price [minimize all parameters]
+        // possible to underflow should be checked from compute_swap_step invocation level
         true => big_liquidity.checked_add(price_sqrt.big_mul_to_value(amount)),
         false => big_liquidity.checked_sub(price_sqrt.big_mul_to_value(amount)),
     }
     .unwrap();
 
-    Price::big_div_values_up(price_sqrt.big_mul_to_value_up(liquidity), denominator)
+    // max_nominator = (U256::from(max_price) * U256::from(max_liquidity) + 10^6) / 10^6
+    // max_nominator = (2^96 * 2^128 + 10^6) / 10^6
+    // ceil(log2(2^96 * 2^128 + 10^6)) = 225
+    // ceil(log2((2^96 * 2^128 + 10^6)/10^6)) = 205
+    // ceil(lg2(max_nominator)) = 205
+    // no possibility of overflowing in the result or in intermediate calculations
+
+    // result = div_up(nominator, denominator) -> so maximizing nominator while minimizing denominator
+    // max_results = (max_nominator * Price::one + min_denominator) / min_denominator
+    // (2^205 * 10^24 + 1) / 1 = 2^285 <- possible to overflow in result
+
+    // maximize nominator -> (max_nominator * Price::one + max_denominator)
+    // 2^205 * 10^24 + 2^161 = 2^285 <- possible to overflow in intermediate operations
+    Price::checked_big_div_values_up(price_sqrt.big_mul_to_value_up(liquidity), denominator)
 }
 
+// TODO: check domain
 // price +- (amount / L)
 fn get_next_sqrt_price_y_down(
     price_sqrt: Price,
     liquidity: Liquidity,
     amount: TokenAmount,
     add: bool,
-) -> Price {
+) -> TrackableResult<Price> {
     if add {
         let quotient = Price::from_decimal(amount).big_div_by_number(
             U256::from(liquidity.get())
                 .checked_mul(U256::from(PRICE_LIQUIDITY_DENOMINATOR))
                 .unwrap(),
         );
-        price_sqrt + quotient
+        Ok(price_sqrt + quotient)
     } else {
         let quotient = Price::from_decimal(amount).big_div_by_number_up(
             U256::from(liquidity.get())
                 .checked_mul(U256::from(PRICE_LIQUIDITY_DENOMINATOR))
                 .unwrap(),
         );
-        price_sqrt - quotient
+        Ok(price_sqrt - quotient)
     }
 }
 
@@ -391,7 +442,8 @@ pub fn is_enough_amount_to_push_price(
         get_next_sqrt_price_from_output(current_price_sqrt, liquidity, amount, x_to_y)
     };
 
-    current_price_sqrt.ne(&next_price_sqrt)
+    // TODO: should do something with unwrap of next_price_sqrt
+    current_price_sqrt.ne(&next_price_sqrt.unwrap())
 }
 
 pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
@@ -714,7 +766,7 @@ mod tests {
 
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
 
-            assert_eq!(result, Price::from_scale(5, 1));
+            assert_eq!(result, Ok(Price::from_scale(5, 1)));
         }
         {
             let price_sqrt = Price::from_integer(1);
@@ -723,7 +775,7 @@ mod tests {
 
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
 
-            assert_eq!(result, Price::from_scale(4, 1));
+            assert_eq!(result, Ok(Price::from_scale(4, 1)));
         }
         {
             let price_sqrt = Price::from_integer(2);
@@ -734,7 +786,7 @@ mod tests {
 
             assert_eq!(
                 result,
-                Price::new(461538461538461538461539) // rounded up Decimal::from_integer(6).div(Decimal::from_integer(13))
+                Ok(Price::new(461538461538461538461539)) // rounded up Decimal::from_integer(6).div(Decimal::from_integer(13))
             );
         }
         {
@@ -746,7 +798,7 @@ mod tests {
 
             assert_eq!(
                 result,
-                Price::new(599985145205615112277488) // rounded up Decimal::from_integer(24234).div(Decimal::from_integer(40391))
+                Ok(Price::new(599985145205615112277488)) // rounded up Decimal::from_integer(24234).div(Decimal::from_integer(40391))
             );
         }
         // Subtract
@@ -757,7 +809,7 @@ mod tests {
 
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
 
-            assert_eq!(result, Price::from_integer(2));
+            assert_eq!(result, Ok(Price::from_integer(2)));
         }
         {
             let price_sqrt = Price::from_integer(100_000);
@@ -766,7 +818,7 @@ mod tests {
 
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
 
-            assert_eq!(result, Price::from_integer(500_000));
+            assert_eq!(result, Ok(Price::from_integer(500_000)));
         }
         {
             let price_sqrt = Price::new(3_333333333333333333333333);
@@ -777,7 +829,7 @@ mod tests {
             // real     7.4906367134621049740721443...
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
 
-            assert_eq!(result, Price::new(7490636713462104974072145));
+            assert_eq!(result, Ok(Price::new(7490636713462104974072145)));
         }
     }
 
