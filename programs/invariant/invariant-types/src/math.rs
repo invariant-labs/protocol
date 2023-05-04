@@ -831,6 +831,17 @@ mod tests {
 
             assert_eq!(result, Ok(Price::new(7490636713462104974072145)));
         }
+
+        // DOMAIN:
+        {
+            let max_liquidity = Liquidity::new(u128::MAX);
+            let max_price_sqrt = calculate_price_sqrt(MAX_TICK);
+            let max_amount = TokenAmount(u64::MAX);
+
+            let result = get_next_sqrt_price_x_up(max_price_sqrt, max_liquidity, max_amount, true);
+            let err = result.unwrap_err();
+            println!("{}", err);
+        }
     }
 
     #[test]
