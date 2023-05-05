@@ -251,6 +251,16 @@ export const arithmeticalAvg = <T extends BN>(...args: T[]): T => {
   return sum.divn(args.length) as T
 }
 
+export const weightedArithmeticAvg = <T extends BN>(...args: { val: T, weight: BN }[]): T => {
+  if (args.length === 0) {
+    throw new Error('requires at least one argument')
+  }
+  const sumOfWeights = args.reduce((acc, { weight }) => acc.add(weight), new BN(0))
+  const sum = args.reduce((acc, { val, weight }) => acc.add(val.mul(weight)), new BN(0))
+
+  return sum.div(sumOfWeights) as T
+}
+
 export const tou64 = (amount: BN) => {
   // @ts-ignore
   return new u64(amount.toString())
