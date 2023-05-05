@@ -60,7 +60,8 @@ import {
   positionsRewardAPY,
   UserDailyRewardsParams,
   calculateUserDailyRewards,
-  arithmeticalAvg
+  arithmeticalAvg,
+  weightedArithmeticAvg
 } from '@invariant-labs/sdk/src/utils'
 import {
   createTickArray,
@@ -106,6 +107,54 @@ describe('Math', () => {
     it('returns the correct average for 5 numbers', () => {
       const result = arithmeticalAvg(new BN(10), new BN(50), new BN(12), new BN(10024), new BN(11479))
       assert.ok(result.eq(new BN(4315)))
+    })
+  })
+  describe('weightedArithmeticAvg', () => {
+    it('throws an error when called with 0 arguments', () => {
+      expect(() => weightedArithmeticAvg()).to.throw()
+    })
+
+    it('returns the correct average for 1 value', () => {
+      const sampleValue = new BN(32)
+      const sampleWeight = new BN(15458215158)
+      const result = weightedArithmeticAvg({ val: sampleValue, weight: sampleWeight })
+      assert.ok(result.eq(sampleValue))
+    })
+
+    it('returns the correct average for 2 values with equal weights', () => {
+      const result = weightedArithmeticAvg(
+        { val: new BN(10), weight: new BN(12654) },
+        { val: new BN(12), weight: new BN(12654) }
+      )
+      assert.ok(result.eq(new BN(11)))
+    })
+
+    it('returns the correct average for 2 values with different weights', () => {
+      const result = weightedArithmeticAvg(
+        { val: new BN(10), weight: new BN(3) },
+        { val: new BN(12), weight: new BN(1) }
+      )
+      assert.ok(result.eq(new BN(10))) // average of 10.67 rounded down
+    })
+
+    it('returns the correct average for 3 values with different weights', () => {
+      const result = weightedArithmeticAvg(
+        { val: new BN(10), weight: new BN(2) },
+        { val: new BN(50), weight: new BN(3) },
+        { val: new BN(12), weight: new BN(1) }
+      )
+      assert.ok(result.eq(new BN(30))) // average of 30.(33) rounded down
+    })
+
+    it('returns the correct average for 5 values with different weights', () => {
+      const result = weightedArithmeticAvg(
+        { val: new BN(10), weight: new BN(1) },
+        { val: new BN(50), weight: new BN(2) },
+        { val: new BN(12), weight: new BN(3) },
+        { val: new BN(10024), weight: new BN(4) },
+        { val: new BN(11479), weight: new BN(5) }
+      )
+      assert.ok(result.eq(new BN(6509))) // average of 6509.1(3) rounded down
     })
   })
   describe('Test sqrt price calculation', () => {
