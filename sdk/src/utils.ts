@@ -289,9 +289,9 @@ export const FEE_TIERS: FeeTier[] = [
   { fee: fromFee(new BN(100)) },
   { fee: fromFee(new BN(300)) },
   { fee: fromFee(new BN(1000)) },
-  { fee: new BN(5000), tickSpacing: 5 },
-  { fee: new BN(10000), tickSpacing: 5 },
-  { fee: new BN(50000), tickSpacing: 5 }
+  { fee: fromFee(new BN(5000)), tickSpacing: 5 },
+  { fee: fromFee(new BN(10000)), tickSpacing: 5 },
+  { fee: fromFee(new BN(50000)), tickSpacing: 5 }
 ]
 
 export const generateTicksArray = (start: number, stop: number, step: number) => {
