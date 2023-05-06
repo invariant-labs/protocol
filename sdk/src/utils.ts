@@ -251,6 +251,16 @@ export const arithmeticalAvg = <T extends BN>(...args: T[]): T => {
   return sum.divn(args.length) as T
 }
 
+export const weightedArithmeticAvg = <T extends BN>(...args: { val: T, weight: BN }[]): T => {
+  if (args.length === 0) {
+    throw new Error('requires at least one argument')
+  }
+  const sumOfWeights = args.reduce((acc, { weight }) => acc.add(weight), new BN(0))
+  const sum = args.reduce((acc, { val, weight }) => acc.add(val.mul(weight)), new BN(0))
+
+  return sum.div(sumOfWeights) as T
+}
+
 export const tou64 = (amount: BN) => {
   // @ts-ignore
   return new u64(amount.toString())
@@ -278,7 +288,10 @@ export const FEE_TIERS: FeeTier[] = [
   { fee: fromFee(new BN(50)) },
   { fee: fromFee(new BN(100)) },
   { fee: fromFee(new BN(300)) },
-  { fee: fromFee(new BN(1000)) }
+  { fee: fromFee(new BN(1000)) },
+  { fee: new BN(5000), tickSpacing: 5 },
+  { fee: new BN(10000), tickSpacing: 5 },
+  { fee: new BN(50000), tickSpacing: 5 }
 ]
 
 export const generateTicksArray = (start: number, stop: number, step: number) => {
@@ -1122,7 +1135,7 @@ export const poolAPY = (params: ApyPoolParams): WeeklyData => {
     const previousSqrtPrice = calculatePriceSqrt(tickLower)
     const currentSqrtPrice = calculatePriceSqrt(tickUpper)
     const volume = getVolume(volumeX, volumeY, previousSqrtPrice, currentSqrtPrice)
-    const tokenAvgFactor = arithmeticalAvg(activeTokens, avgTokensFromRange)
+    const tokenAvgFactor = weightedArithmeticAvg({ val: activeTokens, weight: new BN(9) }, { val: avgTokensFromRange, weight: new BN(1) })
     dailyFactor = dailyFactorPool(tokenAvgFactor, volume, feeTier)
     dailyRange = { tickLower, tickUpper }
     dailyTokens = tokenAvgFactor
