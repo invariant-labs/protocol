@@ -1135,7 +1135,7 @@ export const poolAPY = (params: ApyPoolParams): WeeklyData => {
     const previousSqrtPrice = calculatePriceSqrt(tickLower)
     const currentSqrtPrice = calculatePriceSqrt(tickUpper)
     const volume = getVolume(volumeX, volumeY, previousSqrtPrice, currentSqrtPrice)
-    const tokenAvgFactor = arithmeticalAvg(activeTokens, avgTokensFromRange)
+    const tokenAvgFactor = weightedArithmeticAvg({ val: activeTokens, weight: new BN(9) }, { val: avgTokensFromRange, weight: new BN(1) })
     dailyFactor = dailyFactorPool(tokenAvgFactor, volume, feeTier)
     dailyRange = { tickLower, tickUpper }
     dailyTokens = tokenAvgFactor
