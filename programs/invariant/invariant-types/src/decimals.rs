@@ -141,23 +141,17 @@ impl Price {
         Ok(Price::new(
             nominator
                 .checked_mul(Self::one::<U256>())
-                .ok_or_else(|| err!("multiplication overflow"))?
+                .ok_or_else(|| err!(TrackableError::MUL))?
                 .checked_add(
                     denominator
                         .checked_sub(U256::from(1u32))
-                        .ok_or_else(|| err!("subtraction underflow"))?,
+                        .ok_or_else(|| err!(TrackableError::SUB))?,
                 )
-                .ok_or_else(|| err!("addition overflow"))?
+                .ok_or_else(|| err!(TrackableError::ADD))?
                 .checked_div(denominator)
-                .ok_or_else(|| err!("division overflow or division by zero"))?
+                .ok_or_else(|| err!(TrackableError::DIV))?
                 .try_into()
-                .map_err(|_| {
-                    err!(format!(
-                        "conversion to {} type failed",
-                        std::any::type_name::<Self>()
-                    )
-                    .as_str())
-                })?,
+                .map_err(|_| err!(TrackableError::cast::<Self>().as_str()))?,
         ))
     }
 }

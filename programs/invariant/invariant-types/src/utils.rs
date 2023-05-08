@@ -8,6 +8,7 @@ pub struct TrackableError {
     pub stack: Vec<String>,
 }
 
+// static error causes
 impl TrackableError {
     pub const ADD: &'static str = "addition overflow";
     pub const SUB: &'static str = "subtraction underflow";
@@ -16,7 +17,9 @@ impl TrackableError {
     pub fn cast<T: ?Sized>() -> String {
         format!("conversion to {} type failed", std::any::type_name::<T>())
     }
+}
 
+impl TrackableError {
     pub fn new(cause: &str, location: &str) -> Self {
         Self {
             cause: cause.to_string(),
