@@ -1,3 +1,5 @@
+use std::borrow::Borrow;
+
 pub type TrackableResult<T> = Result<T, TrackableError>;
 
 #[derive(Debug)]
@@ -18,12 +20,20 @@ impl TrackableError {
         self.stack.push(location.to_string());
     }
 
-    pub fn to_string(self) -> String {
+    pub fn to_string(&self) -> String {
         let stack_trace = self.stack.join("\n-> ");
 
         format!(
             "ERROR CAUSED BY: {}\nINVARIANT STACK TRACE:\n-> {}",
             self.cause, stack_trace
+        )
+    }
+
+    pub fn get(&self) -> (String, String, Vec<String>) {
+        (
+            self.to_string().clone(),
+            self.cause.clone(),
+            self.stack.clone(),
         )
     }
 }
@@ -113,9 +123,13 @@ mod tests {
         }
         // error
         {
-            let err = outer_fun_err();
-            assert!(err.is_err());
-            println!("{}", err.unwrap_err().to_string());
+            let result = outer_fun_err();
+            let err = result.unwrap_err();
+            let (format, cause, stack) = err.get();
+
+            println!("{}", format);
+            assert_eq!(stack.len(), 3);
+            assert_eq!(cause, "trigger error");
         }
     }
 }
