@@ -395,7 +395,8 @@ fn get_next_sqrt_price_x_up(
 
     // maximize nominator -> (max_nominator * Price::one + max_denominator)
     // 2^205 * 10^24 + 2^161 = 2^285 <- possible to overflow in intermediate operations
-    Price::checked_big_div_values_up(price_sqrt.big_mul_to_value_up(liquidity), denominator)
+    // Price::checked_big_div_values_up(price_sqrt.big_mul_to_value_up(liquidity), denominator)
+    Ok(Price::new(10))
 }
 
 // TODO: check domain
@@ -766,7 +767,7 @@ mod tests {
 
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
 
-            assert_eq!(result, Ok(Price::from_scale(5, 1)));
+            assert_eq!(result.unwrap(), Price::from_scale(5, 1));
         }
         {
             let price_sqrt = Price::from_integer(1);
@@ -775,7 +776,7 @@ mod tests {
 
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
 
-            assert_eq!(result, Ok(Price::from_scale(4, 1)));
+            assert_eq!(result.unwrap(), Price::from_scale(4, 1));
         }
         {
             let price_sqrt = Price::from_integer(2);
@@ -785,8 +786,8 @@ mod tests {
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
 
             assert_eq!(
-                result,
-                Ok(Price::new(461538461538461538461539)) // rounded up Decimal::from_integer(6).div(Decimal::from_integer(13))
+                result.unwrap(),
+                Price::new(461538461538461538461539) // rounded up Decimal::from_integer(6).div(Decimal::from_integer(13))
             );
         }
         {
@@ -797,8 +798,8 @@ mod tests {
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true);
 
             assert_eq!(
-                result,
-                Ok(Price::new(599985145205615112277488)) // rounded up Decimal::from_integer(24234).div(Decimal::from_integer(40391))
+                result.unwrap(),
+                Price::new(599985145205615112277488) // rounded up Decimal::from_integer(24234).div(Decimal::from_integer(40391))
             );
         }
         // Subtract
@@ -809,7 +810,7 @@ mod tests {
 
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
 
-            assert_eq!(result, Ok(Price::from_integer(2)));
+            assert_eq!(result.unwrap(), Price::from_integer(2));
         }
         {
             let price_sqrt = Price::from_integer(100_000);
@@ -818,7 +819,7 @@ mod tests {
 
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
 
-            assert_eq!(result, Ok(Price::from_integer(500_000)));
+            assert_eq!(result.unwrap(), Price::from_integer(500_000));
         }
         {
             let price_sqrt = Price::new(3_333333333333333333333333);
@@ -829,7 +830,7 @@ mod tests {
             // real     7.4906367134621049740721443...
             let result = get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false);
 
-            assert_eq!(result, Ok(Price::new(7490636713462104974072145)));
+            assert_eq!(result.unwrap(), Price::new(7490636713462104974072145));
         }
 
         // DOMAIN:
@@ -840,7 +841,7 @@ mod tests {
 
             let result = get_next_sqrt_price_x_up(max_price_sqrt, max_liquidity, max_amount, true);
             let err = result.unwrap_err();
-            println!("{}", err);
+            println!("{}", err.to_string());
         }
     }
 
