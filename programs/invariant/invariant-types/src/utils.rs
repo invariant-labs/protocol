@@ -9,6 +9,14 @@ pub struct TrackableError {
 }
 
 impl TrackableError {
+    pub const ADD: &'static str = "addition overflow";
+    pub const SUB: &'static str = "subtraction underflow";
+    pub const MUL: &'static str = "multiplication overflow";
+    pub const DIV: &'static str = "division overflow or division by zero";
+    pub fn cast<T: ?Sized>() -> String {
+        format!("conversion to {} type failed", std::any::type_name::<T>())
+    }
+
     pub fn new(cause: &str, location: &str) -> Self {
         Self {
             cause: cause.to_string(),
