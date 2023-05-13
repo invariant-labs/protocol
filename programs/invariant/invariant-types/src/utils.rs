@@ -125,12 +125,24 @@ mod tests {
         Err(err!("trigger error"))
     }
 
+    fn trigger_result_error() -> Result<u64, String> {
+        Err("trigger error [result])".to_string())
+    }
+
     fn inner_fun_err() -> TrackableResult<u64> {
         ok_or_mark_trace!(trigger_error())
     }
 
     fn outer_fun_err() -> TrackableResult<u64> {
         ok_or_mark_trace!(inner_fun_err())
+    }
+
+    fn inner_fun_from_result() -> TrackableResult<u64> {
+        from_result!(trigger_result_error())
+    }
+
+    fn outer_fun_from_result() -> TrackableResult<u64> {
+        ok_or_mark_trace!(inner_fun_from_result())
     }
 
     #[test]
@@ -149,6 +161,14 @@ mod tests {
             println!("{}", format);
             assert_eq!(stack.len(), 3);
             assert_eq!(cause, "trigger error");
+        }
+        // from_result
+        {
+            let err = outer_fun_from_result().unwrap_err();
+            let (format, cause, stack) = err.get();
+            println!("{}", format);
+            assert_eq!(stack.len(), 2);
+            assert_eq!(cause, "trigger error [result])");
         }
     }
 }
