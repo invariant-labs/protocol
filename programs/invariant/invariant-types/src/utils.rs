@@ -54,7 +54,7 @@ pub mod trackable_result {
         ($op:expr) => {
             match $op {
                 Ok(ok) => Ok(ok),
-                Err(err) => Err(TrackableError::new(&err, &location!())),
+                Err(err) => Err(err!(&err)),
             }
         };
     }
