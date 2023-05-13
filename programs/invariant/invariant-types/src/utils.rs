@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 pub type TrackableResult<T> = Result<T, TrackableError>;
 
 #[derive(Debug)]
@@ -51,6 +49,16 @@ impl TrackableError {
 
 #[macro_use]
 pub mod trackable_result {
+    #[macro_export]
+    macro_rules! from_result {
+        ($op:expr) => {
+            match $op {
+                Ok(ok) => Ok(ok),
+                Err(err) => Err(TrackableError::new(&err, &location!())),
+            }
+        };
+    }
+
     #[macro_export]
     macro_rules! err {
         ($error:expr) => {
