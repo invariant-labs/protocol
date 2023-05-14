@@ -1,3 +1,4 @@
+use crate::{err, from_result, function, location, ok_or_mark_trace, trace};
 use std::{cell::RefMut, convert::TryInto};
 
 use anchor_lang::*;
@@ -6,7 +7,7 @@ use crate::{
     decimals::*,
     errors::InvariantErrorCode,
     structs::{get_search_limit, Pool, Tick, Tickmap, MAX_TICK, TICK_LIMIT},
-    utils::TrackableResult,
+    utils::{TrackableError, TrackableResult},
 };
 
 #[derive(PartialEq, Debug)]
@@ -182,13 +183,12 @@ pub fn compute_swap_step(
             // liquidity = U128::MAX
             // amount_after_fee = U64::MAX
             // current_price_sqrt = entire price space
-            next_price_sqrt = get_next_sqrt_price_from_input(
+            next_price_sqrt = ok_or_mark_trace!(get_next_sqrt_price_from_input(
                 current_price_sqrt,
                 liquidity,
                 amount_after_fee,
                 x_to_y,
-            )
-            .unwrap()
+            ))?;
         };
     } else {
         amount_out = if x_to_y {
@@ -318,11 +318,14 @@ fn get_next_sqrt_price_from_input(
     // pool.liquidity <1, u128::MAX>
     // amount <1, u64::MAX>
 
-    if x_to_y {
+    let result = if x_to_y {
+        // checked
         get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true)
     } else {
+        // half checked
         get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true)
-    }
+    };
+    ok_or_mark_trace!(result)
 }
 
 fn get_next_sqrt_price_from_output(
@@ -395,8 +398,7 @@ fn get_next_sqrt_price_x_up(
 
     // maximize nominator -> (max_nominator * Price::one + max_denominator)
     // 2^205 * 10^24 + 2^161 = 2^285 <- possible to overflow in intermediate operations
-    // Price::checked_big_div_values_up(price_sqrt.big_mul_to_value_up(liquidity), denominator)
-    Ok(Price::new(10))
+    Price::checked_big_div_values_up(price_sqrt.big_mul_to_value_up(liquidity), denominator)
 }
 
 // TODO: check domain
@@ -407,14 +409,41 @@ fn get_next_sqrt_price_y_down(
     amount: TokenAmount,
     add: bool,
 ) -> TrackableResult<Price> {
+    // DOMAIN:
+    // price_sqrt <sqrt_price_at_min_tick, sqrt_price_at_max_tick>
+    // pool.liquidity <1, u128::MAX> (zero liquidity not possible)
+    // amount <1, u64::MAX>
+
+    // quotient= amount / L
+    // PRICE_LIQUIDITY_DENOMINATOR = 10 ^ (24 - 6)
+
     if add {
-        let quotient = Price::from_decimal(amount).big_div_by_number(
-            U256::from(liquidity.get())
-                .checked_mul(U256::from(PRICE_LIQUIDITY_DENOMINATOR))
-                .unwrap(),
-        );
-        Ok(price_sqrt + quotient)
+        // Price::from_scale(amount, TokenAmount::scale())
+        // max_nominator = max_amount * 10^24 => 2^144 so possible to overflow here
+
+        // max_denominator = max_liquidity
+        // max_denominator = U256(u128::MAX) * U256(10^18)
+        // max_denominator = U256(2^128 * 10^18) ~ 2^188 so no possible to overflow
+
+        // quotient - max quotient nominator
+        // quotient_max_nominator = U256(max_nominator) * U256(10^24)
+        // quotient_max_nominator = 2^128 * 10^24 ~ 2^208 so no possible to overflow in intermediate operations
+
+        // max_quotient = max_nominator / min_denominator
+        // max_quotient = 2^128 * 10^24 / 10^18 ~ 2^148 so possible to overflow in max_quote
+        let quotient = from_result!(Price::checked_from_decimal(amount)
+            .map_err(|err| err!(&err))? // TODO: add util macro to map str -> TrackableError
+            .checked_big_div_by_number(
+                U256::from(liquidity.get())
+                    .checked_mul(U256::from(PRICE_LIQUIDITY_DENOMINATOR))
+                    .unwrap(),
+            ))?;
+        // max_quotient = 2^128
+        // price_sqrt = 2^96
+        // possible to overflow in result
+        from_result!(price_sqrt.checked_add(quotient))
     } else {
+        // TODO: check this case
         let quotient = Price::from_decimal(amount).big_div_by_number_up(
             U256::from(liquidity.get())
                 .checked_mul(U256::from(PRICE_LIQUIDITY_DENOMINATOR))
@@ -489,18 +518,456 @@ pub fn get_min_sqrt_price(tick_spacing: u16) -> Price {
 
 #[cfg(test)]
 mod tests {
-    use decimal::{BetweenDecimals, Decimal, Factories};
+    use decimal::{BetweenDecimals, BigOps, Decimal, Factories};
 
     use crate::{
-        decimals::{Liquidity, Price, TokenAmount},
+        decimals::{FixedPoint, Liquidity, Price, TokenAmount},
         math::{
-            get_delta_x, get_delta_y, get_max_sqrt_price, get_min_sqrt_price,
-            get_next_sqrt_price_x_up,
+            compute_swap_step, get_delta_x, get_delta_y, get_max_sqrt_price, get_min_sqrt_price,
+            get_next_sqrt_price_x_up, get_next_sqrt_price_y_down, SwapResult,
         },
         structs::MAX_TICK,
     };
 
     use super::calculate_price_sqrt;
+
+    #[test]
+    fn test_compute_swap_step() {
+        // VALIDATE BASE SAMPLES
+        // one token by amount in
+        {
+            let price = Price::from_integer(1);
+            let target = Price::new(1004987562112089027021926);
+            let liquidity = Liquidity::from_integer(2000);
+            let amount = TokenAmount(1);
+            let fee = FixedPoint::from_scale(6, 4);
+
+            let result = compute_swap_step(price, target, liquidity, amount, true, fee).unwrap();
+
+            let expected_result = SwapResult {
+                next_price_sqrt: price,
+                amount_in: TokenAmount(0),
+                amount_out: TokenAmount(0),
+                fee_amount: TokenAmount(1),
+            };
+            assert_eq!(result, expected_result)
+        }
+        // amount out capped at target price
+        {
+            let price = Price::from_integer(1);
+            let target = Price::new(1004987562112089027021926);
+            let liquidity = Liquidity::from_integer(2000);
+            let amount = TokenAmount(20);
+            let fee = FixedPoint::from_scale(6, 4);
+
+            let result_in = compute_swap_step(price, target, liquidity, amount, true, fee).unwrap();
+            let result_out =
+                compute_swap_step(price, target, liquidity, amount, false, fee).unwrap();
+
+            let expected_result = SwapResult {
+                next_price_sqrt: target,
+                amount_in: TokenAmount(10),
+                amount_out: TokenAmount(9),
+                fee_amount: TokenAmount(1),
+            };
+            assert_eq!(result_in, expected_result);
+            assert_eq!(result_out, expected_result);
+        }
+        // amount in not capped
+        {
+            let price = Price::from_scale(101, 2);
+            let target = Price::from_integer(10);
+            let liquidity = Liquidity::from_integer(300000000);
+            let amount = TokenAmount(1000000);
+            let fee = FixedPoint::from_scale(6, 4);
+
+            let result = compute_swap_step(price, target, liquidity, amount, true, fee).unwrap();
+            let expected_result = SwapResult {
+                next_price_sqrt: Price::new(1013331333333_333333333333),
+                amount_in: TokenAmount(999400),
+                amount_out: TokenAmount(976487), // ((1.013331333333 - 1.01) * 300000000) / (1.013331333333 * 1.01)
+                fee_amount: TokenAmount(600),
+            };
+            assert_eq!(result, expected_result)
+        }
+        // amount out not capped
+        {
+            let price = Price::from_integer(101);
+            let target = Price::from_integer(100);
+            let liquidity = Liquidity::from_integer(5000000000000u128);
+            let amount = TokenAmount(2000000);
+            let fee = FixedPoint::from_scale(6, 4);
+
+            let result = compute_swap_step(price, target, liquidity, amount, false, fee).unwrap();
+            let expected_result = SwapResult {
+                next_price_sqrt: Price::new(100999999600000_000000000000),
+                amount_in: TokenAmount(197), // (5000000000000 * (101 - 100.9999996)) /  (101 * 100.9999996)
+                amount_out: amount,
+                fee_amount: TokenAmount(1),
+            };
+            assert_eq!(result, expected_result)
+        }
+        // empty swap step when price is at tick
+        {
+            let current_price_sqrt = Price::new(999500149965_000000000000);
+            let target_price_sqrt = Price::new(999500149965_000000000000);
+
+            let liquidity = Liquidity::new(20006000_000000);
+            let amount = TokenAmount(1_000_000);
+            let by_amount_in = true;
+            let fee = FixedPoint::from_scale(6, 4); // 0.0006 -> 0.06%
+
+            let result = compute_swap_step(
+                current_price_sqrt,
+                target_price_sqrt,
+                liquidity,
+                amount,
+                by_amount_in,
+                fee,
+            )
+            .unwrap();
+            let expected_result = SwapResult {
+                next_price_sqrt: current_price_sqrt,
+                amount_in: TokenAmount(0),
+                amount_out: TokenAmount(0),
+                fee_amount: TokenAmount(0),
+            };
+            assert_eq!(result, expected_result)
+        }
+        // empty swap step by amount out when price is at tick
+        {
+            let current_price_sqrt = Price::new(999500149965_000000000000);
+            let target_price_sqrt = Price::from_integer(1);
+            let liquidity = Liquidity::new(u128::MAX / 1_000000);
+            let amount = TokenAmount(1);
+            let by_amount_in = false;
+            let fee = FixedPoint::from_scale(6, 4); // 0.0006 -> 0.06%
+
+            let result = compute_swap_step(
+                current_price_sqrt,
+                target_price_sqrt,
+                liquidity,
+                amount,
+                by_amount_in,
+                fee,
+            )
+            .unwrap();
+            let expected_result = SwapResult {
+                next_price_sqrt: Price::new(999500149965_000000000001),
+                amount_in: TokenAmount(341),
+                amount_out: TokenAmount(1),
+                fee_amount: TokenAmount(1),
+            };
+            assert_eq!(result, expected_result)
+        }
+        // if liquidity is high, small amount in should not push price
+        {
+            let current_price_sqrt = Price::from_scale(999500149965u128, 12);
+            let target_price_sqrt = Price::from_scale(1999500149965u128, 12);
+            let liquidity = Liquidity::from_integer(100_000000000000_000000000000u128);
+            let amount = TokenAmount(10);
+            let by_amount_in = true;
+            let fee = FixedPoint::from_scale(6, 4); // 0.0006 -> 0.06%
+
+            let result = compute_swap_step(
+                current_price_sqrt,
+                target_price_sqrt,
+                liquidity,
+                amount,
+                by_amount_in,
+                fee,
+            )
+            .unwrap();
+            let expected_result = SwapResult {
+                next_price_sqrt: current_price_sqrt,
+                amount_in: TokenAmount(0),
+                amount_out: TokenAmount(0),
+                fee_amount: TokenAmount(10),
+            };
+            assert_eq!(result, expected_result)
+        }
+        // amount_in > u64 for swap to target price and when liquidity > 2^64
+        {
+            let current_price_sqrt = Price::from_integer(1);
+            let target_price_sqrt = Price::from_scale(100005, 5); // 1.00005
+            let liquidity = Liquidity::from_integer(368944000000_000000000000u128);
+            let amount = TokenAmount(1);
+            let by_amount_in = true;
+            let fee = FixedPoint::from_scale(6, 4); // 0.0006 -> 0.06%
+
+            let result = compute_swap_step(
+                current_price_sqrt,
+                target_price_sqrt,
+                liquidity,
+                amount,
+                by_amount_in,
+                fee,
+            )
+            .unwrap();
+            let expected_result = SwapResult {
+                next_price_sqrt: current_price_sqrt,
+                amount_in: TokenAmount(0),
+                amount_out: TokenAmount(0),
+                fee_amount: TokenAmount(1),
+            };
+            assert_eq!(result, expected_result)
+        }
+        // amount_out > u64 for swap to target price and when liquidity > 2^64
+        {
+            let current_price_sqrt = Price::from_integer(1);
+            let target_price_sqrt = Price::from_scale(100005, 5); // 1.00005
+            let liquidity = Liquidity::from_integer(368944000000_000000000000u128);
+            let amount = TokenAmount(1);
+            let by_amount_in = false;
+            let fee = FixedPoint::from_scale(6, 4); // 0.0006 -> 0.06%
+
+            let result = compute_swap_step(
+                current_price_sqrt,
+                target_price_sqrt,
+                liquidity,
+                amount,
+                by_amount_in,
+                fee,
+            )
+            .unwrap();
+            let expected_result = SwapResult {
+                next_price_sqrt: Price::new(1_000000000000_000000000003),
+                amount_in: TokenAmount(2),
+                amount_out: TokenAmount(1),
+                fee_amount: TokenAmount(1),
+            };
+            assert_eq!(result, expected_result)
+        }
+        // liquidity is zero and by amount_in should skip to target price
+        {
+            let current_price_sqrt = Price::from_integer(1);
+            let target_price_sqrt = Price::from_scale(100005, 5); // 1.00005
+            let liquidity = Liquidity::new(0);
+            let amount = TokenAmount(100000);
+            let by_amount_in = true;
+            let fee = FixedPoint::from_scale(6, 4); // 0.0006 -> 0.06%
+
+            let result = compute_swap_step(
+                current_price_sqrt,
+                target_price_sqrt,
+                liquidity,
+                amount,
+                by_amount_in,
+                fee,
+            )
+            .unwrap();
+            let expected_result = SwapResult {
+                next_price_sqrt: target_price_sqrt,
+                amount_in: TokenAmount(0),
+                amount_out: TokenAmount(0),
+                fee_amount: TokenAmount(0),
+            };
+            assert_eq!(result, expected_result)
+        }
+        // liquidity is zero and by amount_out should skip to target price
+        {
+            let current_price_sqrt = Price::from_integer(1);
+            let target_price_sqrt = Price::from_scale(100005, 5); // 1.00005
+            let liquidity = Liquidity::new(0);
+            let amount = TokenAmount(100000);
+            let by_amount_in = false;
+            let fee = FixedPoint::from_scale(6, 4); // 0.0006 -> 0.06%
+
+            let result = compute_swap_step(
+                current_price_sqrt,
+                target_price_sqrt,
+                liquidity,
+                amount,
+                by_amount_in,
+                fee,
+            )
+            .unwrap();
+            let expected_result = SwapResult {
+                next_price_sqrt: target_price_sqrt,
+                amount_in: TokenAmount(0),
+                amount_out: TokenAmount(0),
+                fee_amount: TokenAmount(0),
+            };
+            assert_eq!(result, expected_result)
+        }
+        // normal swap step but fee is set to 0
+        {
+            let current_price_sqrt = Price::from_scale(99995, 5); // 0.99995
+            let target_price_sqrt = Price::from_integer(1);
+            let liquidity = Liquidity::from_integer(50000000);
+            let amount = TokenAmount(1000);
+            let by_amount_in = true;
+            let fee = FixedPoint::new(0);
+
+            let result = compute_swap_step(
+                current_price_sqrt,
+                target_price_sqrt,
+                liquidity,
+                amount,
+                by_amount_in,
+                fee,
+            )
+            .unwrap();
+            let expected_result = SwapResult {
+                next_price_sqrt: Price::from_scale(99997, 5),
+                amount_in: TokenAmount(1000),
+                amount_out: TokenAmount(1000),
+                fee_amount: TokenAmount(0),
+            };
+            assert_eq!(result, expected_result)
+        }
+        // by_amount_out and x_to_y edge cases
+        {
+            let target_price_sqrt = calculate_price_sqrt(-10);
+            let current_price_sqrt = target_price_sqrt + Price::from_integer(1);
+            let liquidity = Liquidity::from_integer(340282366920938463463374607u128);
+            let one_token = TokenAmount(1);
+            let tokens_with_same_output = TokenAmount(85);
+            let zero_token = TokenAmount(0);
+            let by_amount_in = false;
+            let max_fee = FixedPoint::from_scale(9, 1);
+            let min_fee = FixedPoint::from_integer(0);
+
+            let one_token_result = compute_swap_step(
+                current_price_sqrt,
+                target_price_sqrt,
+                liquidity,
+                one_token,
+                by_amount_in,
+                max_fee,
+            )
+            .unwrap();
+            let tokens_with_same_output_result = compute_swap_step(
+                current_price_sqrt,
+                target_price_sqrt,
+                liquidity,
+                tokens_with_same_output,
+                by_amount_in,
+                max_fee,
+            )
+            .unwrap();
+            let zero_token_result = compute_swap_step(
+                current_price_sqrt,
+                target_price_sqrt,
+                liquidity,
+                zero_token,
+                by_amount_in,
+                min_fee,
+            )
+            .unwrap();
+            /*
+                86x -> [1, 85]y
+                rounding due to price accuracy
+                it does not matter if you want 1 or 85 y tokens, will take you the same input amount
+            */
+            let expected_one_token_result = SwapResult {
+                next_price_sqrt: current_price_sqrt - Price::new(1),
+                amount_in: TokenAmount(86),
+                amount_out: TokenAmount(1),
+                fee_amount: TokenAmount(78),
+            };
+            let expected_tokens_with_same_output_result = SwapResult {
+                next_price_sqrt: current_price_sqrt - Price::new(1),
+                amount_in: TokenAmount(86),
+                amount_out: TokenAmount(85),
+                fee_amount: TokenAmount(78),
+            };
+            let expected_zero_token_result = SwapResult {
+                next_price_sqrt: current_price_sqrt,
+                amount_in: TokenAmount(0),
+                amount_out: TokenAmount(0),
+                fee_amount: TokenAmount(0),
+            };
+            assert_eq!(one_token_result, expected_one_token_result);
+            assert_eq!(
+                tokens_with_same_output_result,
+                expected_tokens_with_same_output_result
+            );
+            assert_eq!(zero_token_result, expected_zero_token_result);
+        }
+    }
+
+    #[test]
+    fn test_get_next_sqrt_price_from_input() {
+        // TODO: VALIDATE DOMAIN
+    }
+
+    #[test]
+    fn test_get_next_sqrt_price_y_down() {
+        // VALIDATE BASE SAMPLES
+        {
+            let price_sqrt = Price::from_integer(1);
+            let liquidity = Liquidity::from_integer(1);
+            let amount = TokenAmount(1);
+
+            let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true).unwrap();
+
+            assert_eq!(result, Price::from_integer(2));
+        }
+        {
+            let price_sqrt = Price::from_integer(1);
+            let liquidity = Liquidity::from_integer(2);
+            let amount = TokenAmount(3);
+
+            let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true).unwrap();
+
+            assert_eq!(result, Price::from_scale(25, 1));
+        }
+        {
+            let price_sqrt = Price::from_integer(2);
+            let liquidity = Liquidity::from_integer(3);
+            let amount = TokenAmount(5);
+
+            let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true).unwrap();
+
+            assert_eq!(
+                result,
+                Price::from_integer(11).big_div(Price::from_integer(3))
+            );
+        }
+        {
+            let price_sqrt = Price::from_integer(24234);
+            let liquidity = Liquidity::from_integer(3000);
+            let amount = TokenAmount(5000);
+
+            let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true).unwrap();
+
+            assert_eq!(
+                result,
+                Price::from_integer(72707).big_div(Price::from_integer(3))
+            );
+        }
+        // bool = false
+        {
+            let price_sqrt = Price::from_integer(1);
+            let liquidity = Liquidity::from_integer(2);
+            let amount = TokenAmount(1);
+
+            let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, false).unwrap();
+
+            assert_eq!(result, Price::from_scale(5, 1));
+        }
+        {
+            let price_sqrt = Price::from_integer(100_000);
+            let liquidity = Liquidity::from_integer(500_000_000);
+            let amount = TokenAmount(4_000);
+
+            let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, false).unwrap();
+            assert_eq!(result, Price::new(99999999992000000_000000000000));
+        }
+        {
+            let price_sqrt = Price::from_integer(3);
+            let liquidity = Liquidity::from_integer(222);
+            let amount = TokenAmount(37);
+
+            let result = get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, false).unwrap();
+
+            // expected 2.833333333333
+            // real     2.999999999999833...
+            assert_eq!(result, Price::new(2833333333333_333333333333));
+        }
+        // TODO: VALIDATE DOMAIN
+    }
 
     #[test]
     fn test_get_delta_x() {
