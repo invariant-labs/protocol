@@ -5,7 +5,7 @@ pub trait Decimal {
 
     fn get(&self) -> Self::U;
     fn new(value: Self::U) -> Self;
-    fn max() -> Self;
+    fn max_instance() -> Self;
     fn max_value() -> Self::U;
     fn here<Y: TryFrom<Self::U>>(&self) -> Y;
     fn scale() -> u8;
@@ -58,4 +58,5 @@ pub trait ByNumber<B>: Sized {
 
 pub trait CheckedOps: Sized {
     fn checked_add(self, rhs: Self) -> std::result::Result<Self, String>;
+    fn checked_sub(self, rhs: Self) -> std::result::Result<Self, String>;
 }
