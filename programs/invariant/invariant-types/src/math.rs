@@ -161,7 +161,7 @@ pub fn compute_swap_step(
     if by_amount_in {
         // take fee in input_amount
         // U256(2^64) * U256(1e12) - no overflow in intermediate operations
-        // no overflows in token_amount result
+        // no overflow in token_amount result
         let amount_after_fee = amount.big_mul(FixedPoint::from_integer(1u8) - fee);
 
         amount_in = if x_to_y {
@@ -201,9 +201,12 @@ pub fn compute_swap_step(
         if amount >= amount_out {
             next_price_sqrt = target_price_sqrt
         } else {
-            next_price_sqrt =
-                get_next_sqrt_price_from_output(current_price_sqrt, liquidity, amount, x_to_y)
-                    .unwrap()
+            next_price_sqrt = ok_or_mark_trace!(get_next_sqrt_price_from_output(
+                current_price_sqrt,
+                liquidity,
+                amount,
+                x_to_y
+            ))?;
         }
     }
 
@@ -244,7 +247,6 @@ pub fn compute_swap_step(
     })
 }
 
-// TODO: check domain
 // delta x = (L * delta_sqrt_price) / (lower_sqrt_price * higher_sqrt_price)
 pub fn get_delta_x(
     sqrt_price_a: Price,
@@ -271,7 +273,6 @@ pub fn get_delta_x(
     }
 }
 
-// TODO: check domain
 // delta y = L * delta_sqrt_price
 pub fn get_delta_y(
     sqrt_price_a: Price,
@@ -322,24 +323,32 @@ fn get_next_sqrt_price_from_input(
         // checked
         get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, true)
     } else {
-        // half checked
+        // checked
         get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, true)
     };
     ok_or_mark_trace!(result)
 }
 
+// TODO: check domain
 fn get_next_sqrt_price_from_output(
     price_sqrt: Price,
     liquidity: Liquidity,
     amount: TokenAmount,
     x_to_y: bool,
 ) -> TrackableResult<Price> {
+    // DOMAIN:
+    // price_sqrt <sqrt_price_at_min_tick, sqrt_price_at_max_tick>
+    // pool.liquidity <1, u128::MAX>
+    // amount <1, u64::MAX>
+
     assert!(!price_sqrt.is_zero());
     assert!(!liquidity.is_zero());
 
     if x_to_y {
+        // TODO: check
         get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, false)
     } else {
+        // already checked
         get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false)
     }
 }
@@ -398,7 +407,10 @@ fn get_next_sqrt_price_x_up(
 
     // maximize nominator -> (max_nominator * Price::one + max_denominator)
     // 2^205 * 10^24 + 2^161 = 2^285 <- possible to overflow in intermediate operations
-    Price::checked_big_div_values_up(price_sqrt.big_mul_to_value_up(liquidity), denominator)
+    ok_or_mark_trace!(Price::checked_big_div_values_up(
+        price_sqrt.big_mul_to_value_up(liquidity),
+        denominator
+    ))
 }
 
 // TODO: check domain
@@ -443,13 +455,16 @@ fn get_next_sqrt_price_y_down(
         // possible to overflow in result
         from_result!(price_sqrt.checked_add(quotient))
     } else {
-        // TODO: check this case
-        let quotient = Price::from_decimal(amount).big_div_by_number_up(
-            U256::from(liquidity.get())
-                .checked_mul(U256::from(PRICE_LIQUIDITY_DENOMINATOR))
-                .unwrap(),
-        );
-        Ok(price_sqrt - quotient)
+        // Price::from_scale - same as case above
+        let quotient = from_result!(Price::checked_from_decimal(amount)
+            .map_err(|err| err!(&err))? // TODO: add util macro to map str -> TrackableError
+            .checked_big_div_by_number_up(
+                U256::from(liquidity.get())
+                    .checked_mul(U256::from(PRICE_LIQUIDITY_DENOMINATOR))
+                    .unwrap(),
+            ))?;
+
+        from_result!(price_sqrt.checked_sub(quotient))
     }
 }
 
