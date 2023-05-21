@@ -212,6 +212,7 @@ pub fn compute_swap_step(
 
     let not_max = target_price_sqrt != next_price_sqrt;
 
+    // TODO: checked it from top-level (possibility unwrap can panic)
     if x_to_y {
         if not_max || !by_amount_in {
             amount_in = get_delta_x(next_price_sqrt, current_price_sqrt, liquidity, true).unwrap()
@@ -233,9 +234,11 @@ pub fn compute_swap_step(
         amount_out = amount;
     }
 
+    // TODO: checked it from top-level
     let fee_amount = if by_amount_in && next_price_sqrt != target_price_sqrt {
         amount - amount_in
     } else {
+        // no possible to overflow in intermediate operations
         amount_in.big_mul_up(fee)
     };
 
@@ -542,6 +545,7 @@ mod tests {
             get_next_sqrt_price_x_up, get_next_sqrt_price_y_down, SwapResult,
         },
         structs::MAX_TICK,
+        utils::TrackableError,
     };
 
     use super::calculate_price_sqrt;
@@ -900,6 +904,8 @@ mod tests {
             );
             assert_eq!(zero_token_result, expected_zero_token_result);
         }
+
+        // TODO: VALIDATE DOMAIN
     }
 
     #[test]
@@ -1321,9 +1327,12 @@ mod tests {
             let max_price_sqrt = calculate_price_sqrt(MAX_TICK);
             let max_amount = TokenAmount(u64::MAX);
 
-            let result = get_next_sqrt_price_x_up(max_price_sqrt, max_liquidity, max_amount, true);
-            let err = result.unwrap_err();
-            println!("{}", err.to_string());
+            let result = get_next_sqrt_price_x_up(max_price_sqrt, max_liquidity, max_amount, true)
+                .unwrap_err();
+
+            let (_, cause, stack) = result.get();
+            assert_eq!(cause, TrackableError::MUL);
+            assert_eq!(stack.len(), 2)
         }
     }
 
