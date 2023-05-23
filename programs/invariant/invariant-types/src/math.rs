@@ -467,6 +467,7 @@ fn get_next_sqrt_price_y_down(
                     .unwrap(),
             ))?;
 
+        // TODO: underflow here's should be test in top-level
         from_result!(price_sqrt.checked_sub(quotient))
     }
 }
@@ -987,7 +988,30 @@ mod tests {
             // real     2.999999999999833...
             assert_eq!(result, Price::new(2833333333333_333333333333));
         }
-        // TODO: VALIDATE DOMAIN
+
+        // VALIDATE DOMAIN
+        let max_amount = TokenAmount::max_instance();
+        let min_price = Price::new(1);
+        let sample_liquidity = Liquidity::new(1);
+        // extension TokenAmount to Price decimal overflow
+        {
+            {
+                let result =
+                    get_next_sqrt_price_y_down(min_price, sample_liquidity, max_amount, true)
+                        .unwrap_err();
+                let (_, cause, stack) = result.get();
+                assert_eq!(cause, "checked_from_scale: (multiplier * base) overflow");
+                assert_eq!(stack.len(), 1);
+            }
+            {
+                let result =
+                    get_next_sqrt_price_y_down(min_price, sample_liquidity, max_amount, false)
+                        .unwrap_err();
+                let (_, cause, stack) = result.get();
+                assert_eq!(cause, "checked_from_scale: (multiplier * base) overflow");
+                assert_eq!(stack.len(), 1);
+            }
+        }
     }
 
     #[test]
@@ -1331,8 +1355,8 @@ mod tests {
                 .unwrap_err();
 
             let (_, cause, stack) = result.get();
+            assert_eq!(stack.len(), 2);
             assert_eq!(cause, TrackableError::MUL);
-            assert_eq!(stack.len(), 2)
         }
     }
 
