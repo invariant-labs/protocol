@@ -993,7 +993,8 @@ mod tests {
         let max_amount = TokenAmount::max_instance();
         let min_price = Price::new(1);
         let sample_liquidity = Liquidity::new(1);
-        // extension TokenAmount to Price decimal overflow
+        let min_overflow_token_amount = TokenAmount::new(340282366920939);
+        let one_liquidity: Liquidity = Liquidity::from_integer(1);
         {
             {
                 let result =
@@ -1010,6 +1011,48 @@ mod tests {
                 let (_, cause, stack) = result.get();
                 assert_eq!(cause, "checked_from_scale: (multiplier * base) overflow");
                 assert_eq!(stack.len(), 1);
+            }
+        }
+        // quotient overflow
+        {
+            {
+                {
+                    let result = get_next_sqrt_price_y_down(
+                        min_price,
+                        one_liquidity - Liquidity::new(1),
+                        min_overflow_token_amount - TokenAmount(1),
+                        true,
+                    )
+                    .unwrap_err();
+                    let (_, cause, stack) = result.get();
+                    assert_eq!(cause, "checked_big_div_by_number: can't convert to result");
+                    assert_eq!(stack.len(), 1);
+                }
+                {
+                    let result = get_next_sqrt_price_y_down(
+                        min_price,
+                        one_liquidity - Liquidity::new(1),
+                        min_overflow_token_amount - TokenAmount(1),
+                        false,
+                    )
+                    .unwrap_err();
+                    let (_, cause, stack) = result.get();
+                    assert_eq!(
+                        cause,
+                        "checked_big_div_by_number_up: can't convert to result"
+                    );
+                    assert_eq!(stack.len(), 1);
+                }
+            }
+            {
+                let result = get_next_sqrt_price_y_down(
+                    min_price,
+                    one_liquidity,
+                    min_overflow_token_amount - TokenAmount(1),
+                    true,
+                )
+                .unwrap();
+                assert_eq!(result, Price::new(340282366920938000000000000000000000001));
             }
         }
     }
