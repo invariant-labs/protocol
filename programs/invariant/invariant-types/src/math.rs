@@ -994,7 +994,9 @@ mod tests {
         let min_price = Price::new(1);
         let sample_liquidity = Liquidity::new(1);
         let min_overflow_token_amount = TokenAmount::new(340282366920939);
+        let max_price = calculate_price_sqrt(MAX_TICK);
         let one_liquidity: Liquidity = Liquidity::from_integer(1);
+        // extension TokenAmount to Price decimal overflow
         {
             {
                 let result =
@@ -1053,6 +1055,33 @@ mod tests {
                 )
                 .unwrap();
                 assert_eq!(result, Price::new(340282366920938000000000000000000000001));
+            }
+        }
+        // overflow in price difference
+        {
+            {
+                let result = get_next_sqrt_price_y_down(
+                    max_price,
+                    one_liquidity,
+                    min_overflow_token_amount - TokenAmount(1),
+                    true,
+                )
+                .unwrap_err();
+                let (_, cause, stack) = result.get();
+                assert_eq!(cause, "checked_add: (self + rhs) additional overflow");
+                assert_eq!(stack.len(), 1);
+            }
+            {
+                let result = get_next_sqrt_price_y_down(
+                    min_price,
+                    one_liquidity,
+                    min_overflow_token_amount - TokenAmount(1),
+                    false,
+                )
+                .unwrap_err();
+                let (_, cause, stack) = result.get();
+                assert_eq!(cause, "checked_sub: (self - rhs) subtraction underflow");
+                assert_eq!(stack.len(), 1);
             }
         }
     }
