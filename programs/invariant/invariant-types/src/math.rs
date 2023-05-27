@@ -308,7 +308,7 @@ pub fn get_delta_y(
     }
 }
 
-// TODO: check domain
+// TODO: validate trace works correctly
 fn get_next_sqrt_price_from_input(
     price_sqrt: Price,
     liquidity: Liquidity,
@@ -332,7 +332,7 @@ fn get_next_sqrt_price_from_input(
     ok_or_mark_trace!(result)
 }
 
-// TODO: check domain
+// TODO: validate trace works correctly
 fn get_next_sqrt_price_from_output(
     price_sqrt: Price,
     liquidity: Liquidity,
@@ -347,16 +347,14 @@ fn get_next_sqrt_price_from_output(
     assert!(!price_sqrt.is_zero());
     assert!(!liquidity.is_zero());
 
-    if x_to_y {
-        // TODO: check
+    let result = if x_to_y {
         get_next_sqrt_price_y_down(price_sqrt, liquidity, amount, false)
     } else {
-        // already checked
         get_next_sqrt_price_x_up(price_sqrt, liquidity, amount, false)
-    }
+    };
+    ok_or_mark_trace!(result)
 }
 
-// TODO: check domain
 // L * price / (L +- amount * price)
 fn get_next_sqrt_price_x_up(
     price_sqrt: Price,
@@ -416,7 +414,6 @@ fn get_next_sqrt_price_x_up(
     ))
 }
 
-// TODO: check domain
 // price +- (amount / L)
 fn get_next_sqrt_price_y_down(
     price_sqrt: Price,
