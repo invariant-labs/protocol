@@ -910,8 +910,10 @@ mod tests {
         let sample_current_price_sqrt = Price::from_integer(1);
         let sample_target_price_sqrt = Price::from_integer(2);
         let sample_liquidity = Liquidity::from_integer(1);
+        let max_liquidity = Liquidity::max_instance();
         let max_amount = TokenAmount::max_instance();
         let max_fee = FixedPoint::from_integer(1);
+        let min_fee = FixedPoint::new(0);
 
         // 100% fee | max_amount
         {
@@ -933,6 +935,22 @@ mod tests {
                     fee_amount: max_amount,
                 }
             )
+        }
+        // 0% fee | max_amount | max_liquidity | price slice
+        {
+            let (_, cause, stack) = compute_swap_step(
+                sample_current_price_sqrt,
+                sample_target_price_sqrt,
+                max_liquidity,
+                max_amount,
+                true,
+                min_fee,
+            )
+            .unwrap_err()
+            .get();
+
+            assert_eq!(cause, "get_delta_x overflow");
+            assert_eq!(stack.len(), 1);
         }
     }
 
