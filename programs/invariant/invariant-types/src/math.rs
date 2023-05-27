@@ -212,21 +212,24 @@ pub fn compute_swap_step(
 
     let not_max = target_price_sqrt != next_price_sqrt;
 
-    // TODO: checked it from top-level (possibility unwrap can panic)
     if x_to_y {
         if not_max || !by_amount_in {
-            amount_in = get_delta_x(next_price_sqrt, current_price_sqrt, liquidity, true).unwrap()
+            amount_in = get_delta_x(next_price_sqrt, current_price_sqrt, liquidity, true)
+                .ok_or_else(|| err!("get_delta_x overflow"))?;
         };
         if not_max || by_amount_in {
-            amount_out = get_delta_y(next_price_sqrt, current_price_sqrt, liquidity, false).unwrap()
+            amount_out = get_delta_y(next_price_sqrt, current_price_sqrt, liquidity, false)
+                .ok_or_else(|| err!("get_delta_y overflow"))?;
         }
     } else {
         if not_max || !by_amount_in {
-            amount_in = get_delta_y(current_price_sqrt, next_price_sqrt, liquidity, true).unwrap()
+            amount_in = get_delta_y(current_price_sqrt, next_price_sqrt, liquidity, true)
+                .ok_or_else(|| err!("get_delta_y overflow"))?;
         };
         if not_max || by_amount_in {
-            amount_out = get_delta_x(current_price_sqrt, next_price_sqrt, liquidity, false).unwrap()
-        }
+            amount_out = get_delta_x(current_price_sqrt, next_price_sqrt, liquidity, false)
+                .ok_or_else(|| err!("get_delta_x overflow"))?;
+        };
     }
 
     // Amount out can not exceed amount
