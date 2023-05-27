@@ -903,12 +903,34 @@ mod tests {
             assert_eq!(zero_token_result, expected_zero_token_result);
         }
 
-        // TODO: VALIDATE DOMAIN
-    }
+        // VALIDATE DOMAIN
+        let sample_current_price_sqrt = Price::from_integer(1);
+        let sample_target_price_sqrt = Price::from_integer(2);
+        let sample_liquidity = Liquidity::from_integer(1);
+        let max_amount = TokenAmount::max_instance();
+        let max_fee = FixedPoint::from_integer(1);
 
-    #[test]
-    fn test_get_next_sqrt_price_from_input() {
-        // TODO: VALIDATE DOMAIN
+        // 100% fee | max_amount
+        {
+            let result = compute_swap_step(
+                sample_current_price_sqrt,
+                sample_target_price_sqrt,
+                sample_liquidity,
+                max_amount,
+                true,
+                max_fee,
+            )
+            .unwrap();
+            assert_eq!(
+                result,
+                SwapResult {
+                    next_price_sqrt: Price::from_integer(1),
+                    amount_in: TokenAmount(0),
+                    amount_out: TokenAmount(0),
+                    fee_amount: max_amount,
+                }
+            )
+        }
     }
 
     #[test]
