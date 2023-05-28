@@ -237,10 +237,12 @@ pub fn compute_swap_step(
         amount_out = amount;
     }
 
-    // TODO: checked it from top-level
     let fee_amount = if by_amount_in && next_price_sqrt != target_price_sqrt {
+        // no possible to overflow in intermediate operations
+        // edge case occurs when the next_price is target_price (minimal distance to target)
         amount - amount_in
     } else {
+        // TODO: check this case
         // no possible to overflow in intermediate operations
         amount_in.big_mul_up(fee)
     };
@@ -907,9 +909,9 @@ mod tests {
         }
 
         // VALIDATE DOMAIN
-        let sample_current_price_sqrt = Price::from_integer(1);
-        let sample_target_price_sqrt = Price::from_integer(2);
-        let sample_liquidity = Liquidity::from_integer(1);
+        let one_current_price_sqrt = Price::from_integer(1);
+        let two_target_price_sqrt = Price::from_integer(2);
+        let one_liquidity = Liquidity::from_integer(1);
         let max_liquidity = Liquidity::max_instance();
         let max_amount = TokenAmount::max_instance();
         let max_fee = FixedPoint::from_integer(1);
@@ -918,9 +920,9 @@ mod tests {
         // 100% fee | max_amount
         {
             let result = compute_swap_step(
-                sample_current_price_sqrt,
-                sample_target_price_sqrt,
-                sample_liquidity,
+                one_current_price_sqrt,
+                two_target_price_sqrt,
+                one_liquidity,
                 max_amount,
                 true,
                 max_fee,
@@ -939,8 +941,8 @@ mod tests {
         // 0% fee | max_amount | max_liquidity | price slice
         {
             let (_, cause, stack) = compute_swap_step(
-                sample_current_price_sqrt,
-                sample_target_price_sqrt,
+                one_current_price_sqrt,
+                two_target_price_sqrt,
                 max_liquidity,
                 max_amount,
                 true,
@@ -952,6 +954,31 @@ mod tests {
             assert_eq!(cause, "get_delta_x overflow");
             assert_eq!(stack.len(), 1);
         }
+        // by_amount_in == true || close to target_price but not reached
+        {
+            let big_liquidity = Liquidity::from_integer(100_000_000_000_000u128);
+            let amount_pushing_price_to_target = TokenAmount(100000000000000);
+
+            let result = compute_swap_step(
+                one_current_price_sqrt,
+                two_target_price_sqrt,
+                big_liquidity,
+                amount_pushing_price_to_target - TokenAmount(1),
+                true,
+                min_fee,
+            )
+            .unwrap();
+            assert_eq!(
+                result,
+                SwapResult {
+                    next_price_sqrt: Price::new(1999999999999990000000000),
+                    amount_in: TokenAmount(99999999999999),
+                    amount_out: TokenAmount(49999999999999),
+                    fee_amount: TokenAmount(0)
+                }
+            )
+        }
+        //
     }
 
     #[test]
