@@ -242,8 +242,8 @@ pub fn compute_swap_step(
         // edge case occurs when the next_price is target_price (minimal distance to target)
         amount - amount_in
     } else {
-        // TODO: check this case
         // no possible to overflow in intermediate operations
+        // edge case when amount_in is maximum and fee is maximum
         amount_in.big_mul_up(fee)
     };
 
@@ -978,7 +978,28 @@ mod tests {
                 }
             )
         }
-        //
+        // maximize fee_amount || close to target_price but not reached
+        {
+            let non_fee_input = TokenAmount(340282367);
+            let result = compute_swap_step(
+                one_current_price_sqrt,
+                two_target_price_sqrt,
+                max_liquidity,
+                TokenAmount::max_instance(),
+                true,
+                max_fee - FixedPoint::new(19),
+            )
+            .unwrap();
+            assert_eq!(
+                result,
+                SwapResult {
+                    next_price_sqrt: one_current_price_sqrt + Price::new(1),
+                    amount_in: non_fee_input,
+                    amount_out: non_fee_input - TokenAmount(1),
+                    fee_amount: TokenAmount::max_instance() - non_fee_input,
+                }
+            )
+        }
     }
 
     #[test]
