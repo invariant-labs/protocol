@@ -395,7 +395,7 @@ fn get_next_sqrt_price_x_up(
         true => big_liquidity.checked_add(price_sqrt.big_mul_to_value(amount)),
         false => big_liquidity.checked_sub(price_sqrt.big_mul_to_value(amount)),
     }
-    .ok_or_else(|| "big_liquidity -/+ price_sqrt * amount"))?; // never should it be triggered
+    .ok_or_else(|| "big_liquidity -/+ price_sqrt * amount"))?; // never should be triggered
 
     // max_nominator = (U256::from(max_price) * U256::from(max_liquidity) + 10^6) / 10^6
     // max_nominator = (2^96 * 2^128 + 10^6) / 10^6
@@ -1000,10 +1000,6 @@ mod tests {
                 }
             )
         }
-        // TODO: validate following cases
-        // 1. get_next_sqrt_price_from_input (all cases)
-        // 2. get_next_sqrt_price_from_output (all cases)
-
         // get_next_sqrt_price_from_input -> get_next_sqrt_price_x_up
         {
             // by_amount_in == true
