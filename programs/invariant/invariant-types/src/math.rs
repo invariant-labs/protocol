@@ -909,19 +909,22 @@ mod tests {
         }
 
         // VALIDATE DOMAIN
-        let one_current_price_sqrt = Price::from_integer(1);
-        let two_target_price_sqrt = Price::from_integer(2);
+        let one_price_sqrt = Price::from_integer(1);
+        let two_price_sqrt = Price::from_integer(2);
+        let max_price_sqrt = calculate_price_sqrt(MAX_TICK);
+        let min_price_sqrt = calculate_price_sqrt(-MAX_TICK);
         let one_liquidity = Liquidity::from_integer(1);
         let max_liquidity = Liquidity::max_instance();
         let max_amount = TokenAmount::max_instance();
+        let max_amount_not_reached_target_price = TokenAmount(TokenAmount::max_value() - 1);
         let max_fee = FixedPoint::from_integer(1);
         let min_fee = FixedPoint::new(0);
 
         // 100% fee | max_amount
         {
             let result = compute_swap_step(
-                one_current_price_sqrt,
-                two_target_price_sqrt,
+                one_price_sqrt,
+                two_price_sqrt,
                 one_liquidity,
                 max_amount,
                 true,
@@ -941,8 +944,8 @@ mod tests {
         // 0% fee | max_amount | max_liquidity | price slice
         {
             let (_, cause, stack) = compute_swap_step(
-                one_current_price_sqrt,
-                two_target_price_sqrt,
+                one_price_sqrt,
+                two_price_sqrt,
                 max_liquidity,
                 max_amount,
                 true,
@@ -960,8 +963,8 @@ mod tests {
             let amount_pushing_price_to_target = TokenAmount(100000000000000);
 
             let result = compute_swap_step(
-                one_current_price_sqrt,
-                two_target_price_sqrt,
+                one_price_sqrt,
+                two_price_sqrt,
                 big_liquidity,
                 amount_pushing_price_to_target - TokenAmount(1),
                 true,
@@ -982,8 +985,8 @@ mod tests {
         {
             let non_fee_input = TokenAmount(340282367);
             let result = compute_swap_step(
-                one_current_price_sqrt,
-                two_target_price_sqrt,
+                one_price_sqrt,
+                two_price_sqrt,
                 max_liquidity,
                 TokenAmount::max_instance(),
                 true,
@@ -993,12 +996,36 @@ mod tests {
             assert_eq!(
                 result,
                 SwapResult {
-                    next_price_sqrt: one_current_price_sqrt + Price::new(1),
+                    next_price_sqrt: one_price_sqrt + Price::new(1),
                     amount_in: non_fee_input,
                     amount_out: non_fee_input - TokenAmount(1),
                     fee_amount: TokenAmount::max_instance() - non_fee_input,
                 }
             )
+        }
+        // TODO: validate following cases
+        // 1. get_next_sqrt_price_from_input (all cases)
+        // 2. get_next_sqrt_price_from_output (all cases)
+
+        // get_next_sqrt_price_from_input -> get_next_sqrt_price_x_up
+        {
+            // by_amount_in == true
+            // x_to_y == true => current_price_sqrt >= target_price_sqrt == true
+
+            // validate both: trace and panic possibilities
+            let (_, cause, stack) = compute_swap_step(
+                max_price_sqrt,
+                min_price_sqrt,
+                max_liquidity,
+                max_amount_not_reached_target_price,
+                true,
+                min_fee,
+            )
+            .unwrap_err()
+            .get();
+
+            assert_eq!(cause, "multiplication overflow");
+            assert_eq!(stack.len(), 4);
         }
     }
 
