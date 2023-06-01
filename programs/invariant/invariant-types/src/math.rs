@@ -1048,6 +1048,28 @@ mod tests {
                 assert_eq!(cause, "checked_from_scale: (multiplier * base) overflow");
                 assert_eq!(stack.len(), 3);
             }
+            // 2. checked_big_div - no possible to trigger from compute_swap_step
+            {
+                let min_overflow_token_amount = TokenAmount::new(340282366920939);
+                let result = compute_swap_step(
+                    min_price_sqrt,
+                    max_price_sqrt,
+                    one_liquidity - Liquidity::new(1),
+                    min_overflow_token_amount - TokenAmount(1),
+                    true,
+                    min_fee,
+                )
+                .unwrap();
+                assert_eq!(
+                    result,
+                    SwapResult {
+                        next_price_sqrt: max_price_sqrt,
+                        amount_in: TokenAmount(65536),
+                        amount_out: TokenAmount(65535),
+                        fee_amount: TokenAmount(0),
+                    }
+                )
+            }
         }
     }
 
