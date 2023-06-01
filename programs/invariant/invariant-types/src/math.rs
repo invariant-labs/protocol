@@ -1071,6 +1071,29 @@ mod tests {
                 )
             }
         }
+        // get_next_sqrt_price_from_output -> get_next_sqrt_price_x_up
+        {
+            // by_amount_in == false
+            // x_to_y == false => current_price_sqrt >= target_price_sqrt == false
+            // TRY TO UNWRAP IN SUBTRACTION
+
+            // min price different at maximum amount
+            {
+                let min_diff = 232_826_265_438_719_159_684u128;
+                let (_, cause, stack) = compute_swap_step(
+                    max_price_sqrt - Price::new(min_diff),
+                    max_price_sqrt,
+                    max_liquidity,
+                    TokenAmount(TokenAmount::max_value() - 1),
+                    false,
+                    min_fee,
+                )
+                .unwrap_err()
+                .get();
+                assert_eq!(cause, "multiplication overflow");
+                assert_eq!(stack.len(), 4);
+            }
+        }
     }
 
     #[test]
