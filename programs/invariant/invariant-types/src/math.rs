@@ -1093,7 +1093,7 @@ mod tests {
                 assert_eq!(cause, "multiplication overflow");
                 assert_eq!(stack.len(), 4);
             }
-            // min liquidity at maximum amount
+            // min price different at maximum amount
             {
                 let result = compute_swap_step(
                     min_price_sqrt,
@@ -1112,6 +1112,28 @@ mod tests {
                         amount_in: TokenAmount(18446709621273854098),
                         amount_out: TokenAmount(18446744073709551613),
                         fee_amount: TokenAmount(0)
+                    }
+                );
+            }
+            // min token change
+            {
+                let result = compute_swap_step(
+                    max_price_sqrt - Price::from_integer(1),
+                    max_price_sqrt,
+                    Liquidity::from_integer(100_000_000_00u128),
+                    TokenAmount(1),
+                    false,
+                    min_fee,
+                )
+                .unwrap();
+
+                assert_eq!(
+                    result,
+                    SwapResult {
+                        next_price_sqrt: Price::new(65534813412874974599766965330u128),
+                        amount_in: TokenAmount(4294783624),
+                        amount_out: TokenAmount(1),
+                        fee_amount: TokenAmount(0),
                     }
                 );
             }
