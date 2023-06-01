@@ -1093,6 +1093,28 @@ mod tests {
                 assert_eq!(cause, "multiplication overflow");
                 assert_eq!(stack.len(), 4);
             }
+            // min liquidity at maximum amount
+            {
+                let result = compute_swap_step(
+                    min_price_sqrt,
+                    max_price_sqrt,
+                    Liquidity::from_integer(281_477_613_507_675u128),
+                    TokenAmount(TokenAmount::max_value() - 1),
+                    false,
+                    min_fee,
+                )
+                .unwrap();
+
+                assert_eq!(
+                    result,
+                    SwapResult {
+                        next_price_sqrt: Price::new(65535263695369929348256523309),
+                        amount_in: TokenAmount(18446709621273854098),
+                        amount_out: TokenAmount(18446744073709551613),
+                        fee_amount: TokenAmount(0)
+                    }
+                );
+            }
         }
     }
 
