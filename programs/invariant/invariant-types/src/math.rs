@@ -1027,6 +1027,28 @@ mod tests {
             assert_eq!(cause, "multiplication overflow");
             assert_eq!(stack.len(), 4);
         }
+        // get_next_sqrt_price_from_input -> get_next_sqrt_price_y_down
+        {
+            // by_amount_in == true
+            // x_to_y == false => current_price_sqrt >= target_price_sqrt == false
+
+            // 1. scale - maximize amount_after_fee => (max_amount, min_fee) && not reached target
+            {
+                let (_, cause, stack) = compute_swap_step(
+                    min_price_sqrt,
+                    max_price_sqrt,
+                    max_liquidity,
+                    max_amount_not_reached_target_price,
+                    true,
+                    min_fee,
+                )
+                .unwrap_err()
+                .get();
+
+                assert_eq!(cause, "checked_from_scale: (multiplier * base) overflow");
+                assert_eq!(stack.len(), 3);
+            }
+        }
     }
 
     #[test]
