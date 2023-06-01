@@ -389,16 +389,13 @@ fn get_next_sqrt_price_x_up(
     // ceil(log2(max_price * 2^64))= 160
     // U256::from(max_price) * U256::from(2^64) / U256::(1)
     // so not possible to overflow here
-    let denominator = match add {
+    let denominator = from_result!(match add {
         // max_denominator = L + amount * price [maximize all parameters]
         // max_denominator 2^128 + 2^64 * 2^96 = 2^161 <- no possible to overflow
-
-        // L - amount * price [minimize all parameters]
-        // possible to underflow should be checked from compute_swap_step invocation level
         true => big_liquidity.checked_add(price_sqrt.big_mul_to_value(amount)),
         false => big_liquidity.checked_sub(price_sqrt.big_mul_to_value(amount)),
     }
-    .unwrap();
+    .ok_or_else(|| "big_liquidity -/+ price_sqrt * amount"))?; // never should it be triggered
 
     // max_nominator = (U256::from(max_price) * U256::from(max_liquidity) + 10^6) / 10^6
     // max_nominator = (2^96 * 2^128 + 10^6) / 10^6
@@ -1644,17 +1641,31 @@ mod tests {
         }
 
         // DOMAIN:
+        let max_liquidity = Liquidity::new(u128::MAX);
+        let min_liquidity = Liquidity::new(1);
+        let max_price_sqrt = calculate_price_sqrt(MAX_TICK);
+        let max_amount = TokenAmount(u64::MAX);
         {
-            let max_liquidity = Liquidity::new(u128::MAX);
-            let max_price_sqrt = calculate_price_sqrt(MAX_TICK);
-            let max_amount = TokenAmount(u64::MAX);
-
             let result = get_next_sqrt_price_x_up(max_price_sqrt, max_liquidity, max_amount, true)
                 .unwrap_err();
 
             let (_, cause, stack) = result.get();
             assert_eq!(stack.len(), 2);
             assert_eq!(cause, TrackableError::MUL);
+        }
+        // subtraction underflow (not possible from upper-level function)
+        {
+            let (_, cause, stack) = get_next_sqrt_price_x_up(
+                max_price_sqrt,
+                min_liquidity,
+                TokenAmount(u64::MAX),
+                false,
+            )
+            .unwrap_err()
+            .get();
+
+            assert_eq!(cause, "big_liquidity -/+ price_sqrt * amount");
+            assert_eq!(stack.len(), 1);
         }
     }
 
