@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::{decimals::*, size};
 
-#[account(zero_copy)]
+#[zero_copy]
 #[repr(packed)]
 #[derive(PartialEq, Default, Debug, AnchorDeserialize)]
 pub struct Pool {
