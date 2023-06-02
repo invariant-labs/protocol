@@ -547,7 +547,7 @@ mod tests {
         utils::TrackableError,
     };
 
-    use super::calculate_price_sqrt;
+    use super::{calculate_price_sqrt, is_enough_amount_to_push_price};
 
     #[test]
     fn test_compute_swap_step() {
@@ -1666,7 +1666,25 @@ mod tests {
 
     #[test]
     fn test_is_enough_amount_to_push_price() {
-        // TODO
+        // Validate traceable error
+        let min_liquidity = Liquidity::new(1);
+        let max_price_sqrt = calculate_price_sqrt(MAX_TICK);
+        let min_fee = FixedPoint::from_integer(0);
+        {
+            let (_, cause, stack) = is_enough_amount_to_push_price(
+                TokenAmount(u64::MAX),
+                max_price_sqrt,
+                min_liquidity,
+                min_fee,
+                false,
+                false,
+            )
+            .unwrap_err()
+            .get();
+
+            assert_eq!(cause, "big_liquidity -/+ price_sqrt * amount");
+            assert_eq!(stack.len(), 3);
+        }
     }
 
     #[test]
