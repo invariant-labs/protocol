@@ -172,13 +172,9 @@ pub fn compute_swap_step(
         .unwrap_or(TokenAmount(u64::MAX));
 
         // if target price was hit it will be the next price
-        // it means
         if amount_after_fee >= amount_in {
             next_price_sqrt = target_price_sqrt
         } else {
-            // TODO: I should really check in which case this will be triggered
-            // amount_in > amount_after_fee
-
             // DOMAIN:
             // liquidity = U128::MAX
             // amount_after_fee = U64::MAX
@@ -313,7 +309,6 @@ pub fn get_delta_y(
     }
 }
 
-// TODO: validate trace works correctly
 fn get_next_sqrt_price_from_input(
     price_sqrt: Price,
     liquidity: Liquidity,
@@ -337,7 +332,6 @@ fn get_next_sqrt_price_from_input(
     ok_or_mark_trace!(result)
 }
 
-// TODO: validate trace works correctly
 fn get_next_sqrt_price_from_output(
     price_sqrt: Price,
     liquidity: Liquidity,
@@ -465,8 +459,6 @@ fn get_next_sqrt_price_y_down(
                     .checked_mul(U256::from(PRICE_LIQUIDITY_DENOMINATOR))
                     .unwrap(),
             ))?;
-
-        // TODO: underflow here's should be test in top-level
         from_result!(price_sqrt.checked_sub(quotient))
     }
 }
