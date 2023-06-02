@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 
 #[zero_copy]
 #[repr(packed)]
-#[derive(PartialEq, Default, Debug, AnchorDeserialize)]
+#[derive(PartialEq, Default, Debug)]
 pub struct FeeTier {
     pub fee: FixedPoint,
     pub tick_spacing: u16,

@@ -5,7 +5,6 @@ use anchor_lang::prelude::*;
 
 #[zero_copy]
 #[repr(packed)]
-#[derive(AnchorDeserialize)]
 pub struct Tickmap {
     pub bitmap: [u8; 11091], // Tick limit / 4
 }
