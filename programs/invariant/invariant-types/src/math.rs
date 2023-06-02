@@ -478,20 +478,19 @@ pub fn is_enough_amount_to_push_price(
     fee: FixedPoint,
     by_amount_in: bool,
     x_to_y: bool,
-) -> bool {
+) -> TrackableResult<bool> {
     if liquidity.is_zero() {
-        return true;
+        return Ok(true);
     }
 
-    let next_price_sqrt = if by_amount_in {
+    let next_price_sqrt = ok_or_mark_trace!(if by_amount_in {
         let amount_after_fee = amount.big_mul(FixedPoint::from_integer(1) - fee);
         get_next_sqrt_price_from_input(current_price_sqrt, liquidity, amount_after_fee, x_to_y)
     } else {
         get_next_sqrt_price_from_output(current_price_sqrt, liquidity, amount, x_to_y)
-    };
+    })?;
 
-    // TODO: should do something with unwrap of next_price_sqrt
-    current_price_sqrt.ne(&next_price_sqrt.unwrap())
+    Ok(current_price_sqrt.ne(&next_price_sqrt))
 }
 
 pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
@@ -1663,6 +1662,11 @@ mod tests {
             assert_eq!(cause, "big_liquidity -/+ price_sqrt * amount");
             assert_eq!(stack.len(), 1);
         }
+    }
+
+    #[test]
+    fn test_is_enough_amount_to_push_price() {
+        // TODO
     }
 
     #[test]
