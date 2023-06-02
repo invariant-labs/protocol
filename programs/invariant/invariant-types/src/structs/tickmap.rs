@@ -3,7 +3,7 @@ use std::convert::TryInto;
 use crate::size;
 use anchor_lang::prelude::*;
 
-#[zero_copy]
+#[account(zero_copy)]
 #[repr(packed)]
 pub struct Tickmap {
     pub bitmap: [u8; 11091], // Tick limit / 4

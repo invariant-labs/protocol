@@ -1,7 +1,7 @@
 use crate::{decimals::FixedPoint, size};
 use anchor_lang::prelude::*;
 
-#[zero_copy]
+#[account(zero_copy)]
 #[repr(packed)]
 #[derive(PartialEq, Default, Debug)]
 pub struct FeeTier {
