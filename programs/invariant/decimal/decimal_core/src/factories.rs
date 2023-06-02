@@ -11,7 +11,10 @@ pub fn generate_factories(characteristics: DecimalCharacteristics) -> proc_macro
         ..
     } = characteristics;
 
-    let module_name = string_to_ident("tests_factories_", &struct_name.to_string());
+    let name_str = &struct_name.to_string();
+    let underlying_str = &underlying_type.to_string();
+
+    let module_name = string_to_ident("tests_factories_", &name_str);
 
     proc_macro::TokenStream::from(quote!(
 
@@ -27,8 +30,11 @@ pub fn generate_factories(characteristics: DecimalCharacteristics) -> proc_macro
         {
             fn from_integer(integer: T) -> Self {
                 Self::new({
-                    let base: #underlying_type = integer.try_into().unwrap_or_else(|_| std::panic!("integer too to create decimal"));
-                    base.checked_mul(Self::one()).unwrap()
+                    let base: #underlying_type = integer.try_into()
+                        .unwrap_or_else(|_| std::panic!("decimal: integer value can't fit into `{}` type in {}::from_integer()", #underlying_str, #name_str));
+                    base
+                        .checked_mul(Self::one())
+                        .unwrap_or_else(|| std::panic!("decimal: overflow while adjusting scale in method {}::from_integer()", #name_str))
                 })
             }
 
@@ -45,6 +51,22 @@ pub fn generate_factories(characteristics: DecimalCharacteristics) -> proc_macro
                         ).unwrap().try_into().unwrap_or_else(|_| std::panic!("decimal: can't convert value"))
                     }
                 )
+            }
+
+            fn checked_from_scale(val: T, scale: u8) -> std::result::Result<Self, String> {
+                Ok(Self::new(
+                    if #scale > scale {
+                        let base: #underlying_type = val.try_into().map_err(|_| "checked_from_scale: can't convert to base")?;
+                        let multiplier: u128 = 10u128.checked_pow((#scale - scale) as u32).ok_or_else(|| "checked_from_scale: multiplier overflow")?;
+                        base.checked_mul(multiplier.try_into().map_err(|_| "checked_from_scale: can't convert to multiplier")?).ok_or_else(|| "checked_from_scale: (multiplier * base) overflow")?
+                    } else {
+                        let denominator: u128 = 10u128.checked_pow((scale - #scale) as u32).ok_or_else(|| "checked_from_scale: denominator overflow")?;
+                         val.checked_div(
+                            &denominator.try_into().map_err(|_| "checked_from_scale: can't convert to denominator")?
+                        ).ok_or_else(|| "checked_from_scale: (base / denominator) overflow")?
+                        .try_into().map_err(|_| "checked_from_scale: can't convert to result")?
+                    }
+                ))
             }
 
             fn from_scale_up(val: T, scale: u8) -> Self {
@@ -77,6 +99,10 @@ pub fn generate_factories(characteristics: DecimalCharacteristics) -> proc_macro
                 Self::from_scale(other.get(), T::scale())
             }
 
+            fn checked_from_decimal(other: T) -> std::result::Result<Self, String> {
+                Self::checked_from_scale(other.get(), T::scale())
+            }
+
             fn from_decimal_up(other: T) -> Self {
                 Self::from_scale_up(other.get(), T::scale())
             }
@@ -95,6 +121,7 @@ pub fn generate_factories(characteristics: DecimalCharacteristics) -> proc_macro
                 );
             }
 
+            #[test]
             fn test_from_scale() {
                 assert_eq!(
                     #struct_name::from_scale(0, 0),
@@ -123,17 +150,6 @@ pub fn generate_factories(characteristics: DecimalCharacteristics) -> proc_macro
                     #struct_name::new(42)
                 );
 
-
-                assert_eq!(
-                    #struct_name::from_scale(42, #scale),
-                    #struct_name::new(42)
-                );
-                assert_eq!(
-                    #struct_name::from_scale_up(42, #scale),
-                    #struct_name::new(42)
-                );
-
-                let denominator = (10 as #underlying_type).checked_pow((#scale + 1) as u32).unwrap().checked_add(1).unwrap();
                 assert_eq!(
                     #struct_name::from_scale(42, #scale + 1),
                     #struct_name::new(4)
@@ -141,6 +157,36 @@ pub fn generate_factories(characteristics: DecimalCharacteristics) -> proc_macro
                 assert_eq!(
                     #struct_name::from_scale_up(42, #scale + 1),
                     #struct_name::new(5)
+                );
+
+            }
+
+            #[test]
+            fn test_checked_from_scale() {
+                assert_eq!(
+                    #struct_name::checked_from_scale(0, 0).unwrap(),
+                    #struct_name::new(0)
+                );
+
+                assert_eq!(
+                    #struct_name::checked_from_scale(0, 3).unwrap(),
+                    #struct_name::new(0)
+                );
+
+                assert_eq!(
+                    #struct_name::checked_from_scale(42, #scale).unwrap(),
+                    #struct_name::new(42)
+                );
+
+                assert_eq!(
+                    #struct_name::checked_from_scale(42, #scale + 1).unwrap(),
+                    #struct_name::new(4)
+                );
+
+                let max_val = #struct_name::max_value();
+                assert_eq!(
+                    #struct_name::checked_from_scale(max_val, 100_000).is_err(),
+                    true
                 );
 
             }

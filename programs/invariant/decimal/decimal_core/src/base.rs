@@ -28,6 +28,14 @@ pub fn generate_base(characteristics: DecimalCharacteristics) -> proc_macro::Tok
                 created
             }
 
+            fn max_value() -> Self::U {
+                Self::U::MAX
+            }
+
+            fn max_instance() -> Self {
+                Self::new(Self::max_value())
+            }
+
             fn here<T: TryFrom<Self::U>>(&self) -> T {
                 match T::try_from(self.#field_name) {
                     Ok(v) => v,
@@ -44,6 +52,12 @@ pub fn generate_base(characteristics: DecimalCharacteristics) -> proc_macro::Tok
                     Ok(v) => v,
                     Err(_) => std::panic!("denominator wouldn't fit into this type",),
                 }
+            }
+
+            fn checked_one<T: TryFrom<u128>>() -> std::result::Result<T, String> where
+                T::Error: std::fmt::Display,
+            {
+                T::try_from(#denominator).map_err(|err| format!("checked_one: can not get one to type {} : {}", std::any::type_name::<T>(), err.to_string()))
             }
 
             fn almost_one<T: TryFrom<u128>>() -> T {

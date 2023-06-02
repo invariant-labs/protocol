@@ -4,6 +4,9 @@ pub use decimal::*;
 
 use anchor_lang::prelude::*;
 
+use crate::utils::{TrackableError, TrackableResult};
+use crate::{err, function, location};
+
 pub const PRICE_LIQUIDITY_DENOMINATOR: u128 = 1__0000_0000__0000_0000__00u128;
 
 #[decimal(24)]
@@ -98,41 +101,26 @@ impl FixedPoint {
 
 impl Price {
     pub fn big_div_values_to_token(nominator: U256, denominator: U256) -> Option<TokenAmount> {
-        Some(TokenAmount::new(
-            match nominator
-                .checked_mul(Self::one::<U256>())
-                .unwrap()
-                .checked_div(denominator)
-                .unwrap()
-                .checked_div(Self::one::<U256>())
-                .unwrap()
-                .try_into()
-            {
-                Ok(v) => v,
-                Err(_) => return None,
-            },
-        ))
+        let token_amount = nominator
+            .checked_mul(Self::one::<U256>())?
+            .checked_div(denominator)?
+            .checked_div(Self::one::<U256>())?
+            .try_into()
+            .ok()?;
+        Some(TokenAmount::new(token_amount))
     }
 
     pub fn big_div_values_to_token_up(nominator: U256, denominator: U256) -> Option<TokenAmount> {
-        Some(TokenAmount::new({
-            match nominator
-                .checked_mul(Self::one::<U256>())
-                .unwrap()
-                .checked_add(denominator.checked_sub(U256::from(1u32)).unwrap())
-                .unwrap()
-                .checked_div(denominator)
-                .unwrap()
-                .checked_add(Self::almost_one::<U256>())
-                .unwrap()
-                .checked_div(Self::one::<U256>())
-                .unwrap()
-                .try_into()
-            {
-                Ok(v) => v,
-                Err(_) => return None,
-            }
-        }))
+        let token_amount = nominator
+            .checked_mul(Self::one::<U256>())?
+            .checked_add(denominator - 1)?
+            .checked_div(denominator)?
+            .checked_add(Self::almost_one::<U256>())?
+            .checked_div(Self::one::<U256>())?
+            .try_into()
+            .ok()?;
+
+        Some(TokenAmount::new(token_amount))
     }
 
     pub fn big_div_values_up(nominator: U256, denominator: U256) -> Price {
@@ -148,10 +136,30 @@ impl Price {
                 .unwrap()
         })
     }
+
+    pub fn checked_big_div_values_up(nominator: U256, denominator: U256) -> TrackableResult<Price> {
+        Ok(Price::new(
+            nominator
+                .checked_mul(Self::one::<U256>())
+                .ok_or_else(|| err!(TrackableError::MUL))?
+                .checked_add(
+                    denominator
+                        .checked_sub(U256::from(1u32))
+                        .ok_or_else(|| err!(TrackableError::SUB))?,
+                )
+                .ok_or_else(|| err!(TrackableError::ADD))?
+                .checked_div(denominator)
+                .ok_or_else(|| err!(TrackableError::DIV))?
+                .try_into()
+                .map_err(|_| err!(TrackableError::cast::<Self>().as_str()))?,
+        ))
+    }
 }
 
 #[cfg(test)]
 pub mod tests {
+    use crate::{math::calculate_price_sqrt, structs::MAX_TICK};
+
     use super::*;
 
     #[test]
@@ -267,5 +275,126 @@ pub mod tests {
         let expected_price = Price::new(48208000421189050674873214903955408904);
         assert_eq!(price.big_mul(liquidity), expected_price);
         assert_eq!(price.big_mul_up(liquidity), expected_price + Price::new(1));
+    }
+
+    #[test]
+    fn test_big_div_values_to_token() {
+        // base examples tested in up-level functions
+        let max_sqrt_price = calculate_price_sqrt(MAX_TICK);
+        let min_sqrt_price = calculate_price_sqrt(-MAX_TICK);
+        let almost_max_sqrt_price = calculate_price_sqrt(MAX_TICK - 1);
+        let almost_min_sqrt_price = calculate_price_sqrt(-MAX_TICK + 1);
+
+        // DOMAIN:
+        // max_nominator =             22300535562308408361215204585786568048575995442267771385000000000000 (< 2^224)
+        // max_no_overflow_nominator = 115792089237316195423570985008687907853269984665640564               (< 2^177)
+        // max_denominator =           4294671819208808709990254332190838                                   (< 2^112)
+        // min_denominator =           232846648345740                                                      (< 2^48)
+        let max_nominator: U256 = U256::from(max_sqrt_price.v) * U256::from(u128::MAX);
+        let max_no_overflow_nominator: U256 = U256::MAX / Price::one::<U256>();
+        let min_denominator: U256 = min_sqrt_price.big_mul_to_value_up(almost_min_sqrt_price);
+        let max_denominator = max_sqrt_price.big_mul_to_value_up(almost_max_sqrt_price);
+
+        // overflow due too large nominator (max nominator)
+        {
+            let result = Price::big_div_values_to_token(max_nominator, min_denominator);
+            assert!(result.is_none())
+        }
+        // overflow due too large nominator (min overflow nominator)
+        {
+            let result =
+                Price::big_div_values_to_token(max_no_overflow_nominator + 1, min_denominator);
+            assert!(result.is_none())
+        }
+        // result not fits into u64 type (without overflow)
+        {
+            let result = Price::big_div_values_to_token(max_no_overflow_nominator, min_denominator);
+            assert!(result.is_none())
+        }
+        // result fits intro u64 type (with max denominator)
+        {
+            let result =
+                Price::big_div_values_to_token(max_no_overflow_nominator / 2, max_denominator);
+            assert_eq!(result, Some(TokenAmount(13480900766318407300u64)));
+        }
+    }
+
+    #[test]
+    fn test_big_div_values_to_token_up() {
+        // base examples tested in up-level functions
+        let max_sqrt_price = calculate_price_sqrt(MAX_TICK);
+        let min_sqrt_price = calculate_price_sqrt(-MAX_TICK);
+        let almost_max_sqrt_price = calculate_price_sqrt(MAX_TICK - 1);
+        let almost_min_sqrt_price = calculate_price_sqrt(-MAX_TICK + 1);
+
+        // DOMAIN:
+        // max_nominator =             22300535562308408361215204585786568048575995442267771385000000000000 (< 2^224)
+        // max_no_overflow_nominator = 115792089237316195423570985008687907853269984665640564               (< 2^177)
+        // max_denominator =           4294671819208808709990254332190838                                   (< 2^112)
+        // min_denominator =           232846648345740                                                      (< 2^48)
+        let max_nominator: U256 = U256::from(max_sqrt_price.v) * U256::from(u128::MAX);
+        let max_no_overflow_nominator: U256 = U256::MAX / Price::one::<U256>();
+        let min_denominator: U256 = min_sqrt_price.big_mul_to_value(almost_min_sqrt_price);
+        let max_denominator = max_sqrt_price.big_mul_to_value(almost_max_sqrt_price);
+
+        // overflow due too large nominator (max nominator)
+        {
+            let result = Price::big_div_values_to_token_up(max_nominator, min_denominator);
+            assert!(result.is_none())
+        }
+        // overflow due too large nominator (min overflow nominator)
+        {
+            let result =
+                Price::big_div_values_to_token_up(max_no_overflow_nominator + 1, min_denominator);
+            assert!(result.is_none())
+        }
+        // overflow due too large denominator
+        {
+            let result =
+                Price::big_div_values_to_token_up(max_no_overflow_nominator, max_denominator);
+            assert!(result.is_none());
+        }
+        // result not fits into u64 type (without overflow)
+        {
+            let result =
+                Price::big_div_values_to_token_up(max_no_overflow_nominator, min_denominator);
+            assert!(result.is_none())
+        }
+        // result fits intro u64 type (with max denominator)
+        {
+            let result =
+                Price::big_div_values_to_token_up(max_no_overflow_nominator / 2, max_denominator);
+            assert_eq!(result, Some(TokenAmount(13480900766318407301u64)));
+        }
+    }
+
+    #[test]
+    fn test_price_overflow() {
+        // max_sqrt_price
+        {
+            let max_sqrt_price = calculate_price_sqrt(MAX_TICK);
+
+            let result = max_sqrt_price.big_mul_to_value(max_sqrt_price);
+            let result_up = max_sqrt_price.big_mul_to_value_up(max_sqrt_price);
+            let expected_result = U256::from(4294886547443978352291489402946609u128);
+
+            // real:     4294841257.231131321329014894029466
+            // expected: 4294886547.443978352291489402946609
+            assert_eq!(result, expected_result);
+            assert_eq!(result_up, expected_result);
+        }
+        // min_sqrt_price
+        {
+            let min_sqrt_price = calculate_price_sqrt(-MAX_TICK);
+
+            let result = min_sqrt_price.big_mul_to_value(min_sqrt_price);
+            let result_up = min_sqrt_price.big_mul_to_value_up(min_sqrt_price);
+            let expected_result = U256::from(232835005780624u128);
+
+            // real:     0.000000000232835005780624
+            // expected: 0.000000000232835005780624
+            assert_eq!(result, expected_result);
+            assert_eq!(result_up, expected_result);
+        }
     }
 }

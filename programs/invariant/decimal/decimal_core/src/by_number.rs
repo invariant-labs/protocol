@@ -27,6 +27,15 @@ pub fn generate_by_number(characteristics: DecimalCharacteristics) -> proc_macro
                 )
             }
 
+            fn checked_big_div_by_number(self, rhs: #big_type) -> std::result::Result<Self, String> {
+                Ok(Self::new(
+                    #big_type::try_from(self.get()).map_err(|_| "checked_big_div_by_number: can't convert self to big_type")?
+                    .checked_mul(Self::checked_one()?).ok_or_else(|| "checked_big_div_by_number: (self * Self::one()) multiplication overflow")?
+                    .checked_div(rhs).ok_or_else(|| "checked_big_div_by_number: ((self * Self::one()) / rhs) division overflow")?
+                    .try_into().map_err(|_| "checked_big_div_by_number: can't convert to result")?
+                ))
+            }
+
             fn big_div_by_number_up(self, rhs: #big_type) -> Self {
                 Self::new(
                     #big_type::try_from(self.get()).unwrap()
@@ -39,6 +48,18 @@ pub fn generate_by_number(characteristics: DecimalCharacteristics) -> proc_macro
                         .checked_div(rhs).unwrap()
                         .try_into().unwrap()
                 )
+            }
+
+            fn checked_big_div_by_number_up(self, rhs: #big_type) -> std::result::Result<Self, String> {
+                Ok(Self::new(
+                    #big_type::try_from(self.get()).map_err(|_| "checked_big_div_by_number_up: can't convert self to big_type")?
+                    .checked_mul(Self::checked_one()?).ok_or_else(|| "checked_big_div_by_number_up: (self * Self::one()) multiplication overflow")?
+                    .checked_add(
+                        rhs.checked_sub(#big_type::from(1u8)).ok_or_else(|| "checked_big_div_by_number_up: (rhs - 1) subtraction overflow")?
+                    ).ok_or_else(|| "checked_big_div_by_number_up: ((self * Self::one()) + (rhs - 1)) addition overflow")?
+                    .checked_div(rhs).ok_or_else(|| "checked_big_div_by_number_up: (((self * Self::one()) + (rhs - 1)) / rhs) division overflow")?
+                    .try_into().map_err(|_| "checked_big_div_by_number_up: can't convert to result")?
+                ))
             }
         }
 
@@ -81,6 +102,20 @@ pub fn generate_by_number(characteristics: DecimalCharacteristics) -> proc_macro
                 let b: #big_type = #struct_name::one();
                 assert_eq!(a.big_div_by_number(b), #struct_name::new(2));
                 assert_eq!(a.big_div_by_number_up(b), #struct_name::new(2));
+            }
+
+            #[test]
+            fn test_checked_big_div_by_number() {
+                let a = #struct_name::new(2);
+                let b: #big_type = #struct_name::one();
+                assert_eq!(a.checked_big_div_by_number(b), Ok(#struct_name::new(2)));
+            }
+
+            #[test]
+            fn checked_big_div_by_number_up() {
+                let a = #struct_name::new(2);
+                let b: #big_type = #struct_name::one();
+                assert_eq!(a.checked_big_div_by_number_up(b), Ok(#struct_name::new(2)));
             }
 
             #[test]
