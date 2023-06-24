@@ -1,4 +1,4 @@
-use crate::{err, from_result, function, location, ok_or_mark_trace, structs::tick, trace};
+use crate::{err, from_result, function, location, ok_or_mark_trace, trace};
 use std::{cell::RefMut, convert::TryInto};
 
 use anchor_lang::*;
@@ -540,8 +540,9 @@ mod tests {
     use crate::{
         decimals::{FixedPoint, Liquidity, Price, TokenAmount},
         math::{
-            compute_swap_step, get_delta_x, get_delta_y, get_max_sqrt_price, get_min_sqrt_price,
-            get_next_sqrt_price_x_up, get_next_sqrt_price_y_down, SwapResult,
+            compute_swap_step, get_delta_x, get_delta_y, get_max_sqrt_price, get_max_tick,
+            get_min_sqrt_price, get_min_tick, get_next_sqrt_price_x_up, get_next_sqrt_price_y_down,
+            SwapResult,
         },
         structs::MAX_TICK,
         utils::TrackableError,
@@ -1689,31 +1690,93 @@ mod tests {
 
     #[test]
     fn test_price_limitation() {
-        let global_max_price = calculate_price_sqrt(MAX_TICK);
-        assert_eq!(global_max_price, Price::new(65535383934512647000000000000)); // ceil(log2(this)) = 96
-        let global_min_price = calculate_price_sqrt(-MAX_TICK);
-        assert_eq!(global_min_price, Price::new(15258932000000000000)); // ceil(log2(this)) = 64
+        {
+            let global_max_price = calculate_price_sqrt(MAX_TICK);
+            assert_eq!(global_max_price, Price::new(65535383934512647000000000000)); // ceil(log2(this)) = 96
+            let global_min_price = calculate_price_sqrt(-MAX_TICK);
+            assert_eq!(global_min_price, Price::new(15258932000000000000)); // ceil(log2(this)) = 64
+        }
+        {
+            let max_price = get_max_sqrt_price(1);
+            let max_tick: i32 = get_max_tick(1);
+            assert_eq!(max_price, Price::new(9189293893553000000000000));
+            assert_eq!(
+                calculate_price_sqrt(max_tick),
+                Price::new(9189293893553000000000000)
+            );
 
-        let let_max_price = get_max_sqrt_price(1);
-        assert_eq!(let_max_price, Price::new(9189293893553000000000000));
-        let let_max_price = get_max_sqrt_price(2);
-        assert_eq!(let_max_price, Price::new(84443122262186000000000000));
-        let let_max_price = get_max_sqrt_price(5);
-        assert_eq!(let_max_price, Price::new(65525554855399275000000000000));
-        let let_max_price = get_max_sqrt_price(10);
-        assert_eq!(let_max_price, Price::new(65535383934512647000000000000));
-        let let_max_price = get_max_sqrt_price(100);
-        assert_eq!(let_max_price, Price::new(65535383934512647000000000000));
+            let max_price = get_max_sqrt_price(2);
+            let max_tick: i32 = get_max_tick(2);
+            assert_eq!(max_price, Price::new(84443122262186000000000000));
+            assert_eq!(
+                calculate_price_sqrt(max_tick),
+                Price::new(84443122262186000000000000)
+            );
 
-        let let_min_price = get_min_sqrt_price(1);
-        assert_eq!(let_min_price, Price::new(108822289458000000000000));
-        let let_min_price = get_min_sqrt_price(2);
-        assert_eq!(let_min_price, Price::new(11842290682000000000000));
-        let let_min_price = get_min_sqrt_price(5);
-        assert_eq!(let_min_price, Price::new(15261221000000000000));
-        let let_min_price = get_min_sqrt_price(10);
-        assert_eq!(let_min_price, Price::new(15258932000000000000));
-        let let_min_price = get_min_sqrt_price(100);
-        assert_eq!(let_min_price, Price::new(15258932000000000000));
+            let max_price = get_max_sqrt_price(5);
+            let max_tick: i32 = get_max_tick(5);
+            assert_eq!(max_price, Price::new(65525554855399275000000000000));
+            assert_eq!(
+                calculate_price_sqrt(max_tick),
+                Price::new(65525554855399275000000000000)
+            );
+
+            let max_price = get_max_sqrt_price(10);
+            let max_tick: i32 = get_max_tick(10);
+            assert_eq!(max_price, Price::new(65535383934512647000000000000));
+            assert_eq!(
+                calculate_price_sqrt(max_tick),
+                Price::new(65535383934512647000000000000)
+            );
+
+            let max_price = get_max_sqrt_price(100);
+            let max_tick: i32 = get_max_tick(100);
+            assert_eq!(max_price, Price::new(65535383934512647000000000000));
+            assert_eq!(
+                calculate_price_sqrt(max_tick),
+                Price::new(65535383934512647000000000000)
+            );
+        }
+        {
+            let min_price = get_min_sqrt_price(1);
+            let min_tick: i32 = get_min_tick(1);
+            assert_eq!(min_price, Price::new(108822289458000000000000));
+            assert_eq!(
+                calculate_price_sqrt(min_tick),
+                Price::new(108822289458000000000000)
+            );
+
+            let min_price = get_min_sqrt_price(2);
+            let min_tick: i32 = get_min_tick(2);
+            assert_eq!(min_price, Price::new(11842290682000000000000));
+            assert_eq!(
+                calculate_price_sqrt(min_tick),
+                Price::new(11842290682000000000000)
+            );
+
+            let min_price = get_min_sqrt_price(5);
+            let min_tick: i32 = get_min_tick(5);
+            assert_eq!(min_price, Price::new(15261221000000000000));
+            assert_eq!(
+                calculate_price_sqrt(min_tick),
+                Price::new(15261221000000000000)
+            );
+
+            let min_price = get_min_sqrt_price(10);
+            let min_tick: i32 = get_min_tick(10);
+            assert_eq!(min_price, Price::new(15258932000000000000));
+            assert_eq!(
+                calculate_price_sqrt(min_tick),
+                Price::new(15258932000000000000)
+            );
+
+            let min_price = get_min_sqrt_price(100);
+            let min_tick: i32 = get_min_tick(100);
+            assert_eq!(min_price, Price::new(15258932000000000000));
+            assert_eq!(
+                calculate_price_sqrt(min_tick),
+                Price::new(15258932000000000000)
+            );
+        }
     }
 }
