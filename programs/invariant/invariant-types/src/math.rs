@@ -1,4 +1,4 @@
-use crate::{err, from_result, function, location, ok_or_mark_trace, trace};
+use crate::{err, from_result, function, location, ok_or_mark_trace, structs::tick, trace};
 use std::{cell::RefMut, convert::TryInto};
 
 use anchor_lang::*;
@@ -505,23 +505,31 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
     Ok(())
 }
 
-pub fn get_max_sqrt_price(tick_spacing: u16) -> Price {
+pub fn get_max_tick(tick_spacing: u16) -> i32 {
     let limit_by_space = TICK_LIMIT
         .checked_sub(1)
         .unwrap()
         .checked_mul(tick_spacing.into())
         .unwrap();
-    let max_tick = limit_by_space.min(MAX_TICK);
-    calculate_price_sqrt(max_tick)
+    limit_by_space.min(MAX_TICK)
 }
 
-pub fn get_min_sqrt_price(tick_spacing: u16) -> Price {
+pub fn get_min_tick(tick_spacing: u16) -> i32 {
     let limit_by_space = (-TICK_LIMIT)
         .checked_add(1)
         .unwrap()
         .checked_mul(tick_spacing.into())
         .unwrap();
-    let min_tick = limit_by_space.max(-MAX_TICK);
+    limit_by_space.max(-MAX_TICK)
+}
+
+pub fn get_max_sqrt_price(tick_spacing: u16) -> Price {
+    let max_tick = get_max_tick(tick_spacing);
+    calculate_price_sqrt(max_tick)
+}
+
+pub fn get_min_sqrt_price(tick_spacing: u16) -> Price {
+    let min_tick = get_min_tick(tick_spacing);
     calculate_price_sqrt(min_tick)
 }
 
