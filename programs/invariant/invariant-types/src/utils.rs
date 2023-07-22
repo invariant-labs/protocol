@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 
 use anchor_lang::prelude::Pubkey;
 
-use crate::ID; // validate correct import
+use crate::ID;
 
 pub type TrackableResult<T> = Result<T, TrackableError>;
 
@@ -61,8 +61,8 @@ pub fn get_pool_address(
 ) -> Pubkey {
     let inverse = first_token.to_string().cmp(&second_token.to_string()) == Ordering::Less;
     let (token_x, token_y) = match inverse {
-        true => (second_token, first_token),
-        false => (first_token, second_token),
+        true => (first_token, second_token),
+        false => (second_token, first_token),
     };
 
     let (pool_address, _) = Pubkey::find_program_address(
@@ -70,8 +70,8 @@ pub fn get_pool_address(
             b"poolv1",
             token_x.as_ref(),
             token_y.as_ref(),
-            fee.to_le_bytes().as_ref(),
-            tick_spacing.to_le_bytes().as_ref(),
+            &fee.to_le_bytes(),
+            &tick_spacing.to_le_bytes(),
         ],
         &ID,
     );
@@ -136,7 +136,7 @@ pub mod trackable_result {
 }
 
 #[cfg(test)]
-mod tests {
+mod trackable_error_tests {
     use super::*;
 
     fn value() -> TrackableResult<u64> {
@@ -201,5 +201,26 @@ mod tests {
             assert_eq!(stack.len(), 2);
             assert_eq!(cause, "trigger error [result])");
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::str::FromStr;
+
+    #[test]
+    fn test_get_pool_address() {
+        use super::*;
+        let token_x = Pubkey::from_str("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v").unwrap();
+        let token_y = Pubkey::from_str("Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB").unwrap();
+        let fee = 10000000;
+        let tick_spacing = 1;
+
+        let pool_address_1 = get_pool_address(token_x, token_y, fee, tick_spacing);
+        let pool_address_2 = get_pool_address(token_y, token_x, fee, tick_spacing);
+        let expected = Pubkey::from_str("BRt1iVYDNoohkL1upEb8UfHE8yji6gEDAmuN9Y4yekyc").unwrap();
+
+        assert_eq!(pool_address_1, expected);
+        assert_eq!(pool_address_2, expected);
     }
 }
