@@ -1,3 +1,9 @@
+use std::cmp::Ordering;
+
+use anchor_lang::prelude::Pubkey;
+
+use crate::ID; // validate correct import
+
 pub type TrackableResult<T> = Result<T, TrackableError>;
 
 #[derive(Debug)]
@@ -45,6 +51,31 @@ impl TrackableError {
             self.stack.clone(),
         )
     }
+}
+
+pub fn get_pool_address(
+    first_token: Pubkey,
+    second_token: Pubkey,
+    fee: u128,
+    tick_spacing: u16,
+) -> Pubkey {
+    let inverse = first_token.to_string().cmp(&second_token.to_string()) == Ordering::Less;
+    let (token_x, token_y) = match inverse {
+        true => (second_token, first_token),
+        false => (first_token, second_token),
+    };
+
+    let (pool_address, _) = Pubkey::find_program_address(
+        &[
+            b"poolv1",
+            token_x.as_ref(),
+            token_y.as_ref(),
+            fee.to_le_bytes().as_ref(),
+            tick_spacing.to_le_bytes().as_ref(),
+        ],
+        &ID,
+    );
+    pool_address
 }
 
 #[macro_use]
