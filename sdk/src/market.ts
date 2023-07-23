@@ -909,6 +909,162 @@ export class Market {
     await signAndSend(transaction, [signer, ...signers], this.connection)
   }
 
+  async initPoolAndPositionSeparateTx(
+    {
+      pair,
+      owner,
+      userTokenX,
+      userTokenY,
+      lowerTick,
+      upperTick,
+      liquidityDelta,
+      initTick,
+      knownPrice,
+      slippage
+    }: InitPoolAndPosition,
+    payer?: Keypair
+  ) {
+
+    const payerPubkey = payer?.publicKey ?? this.wallet.publicKey
+    const bitmapKeypair = Keypair.generate()
+    const tokenXReserve = Keypair.generate()
+    const tokenYReserve = Keypair.generate()
+    const tick = initTick ?? 0
+
+    const setCuIx = computeUnitsInstruction(1_400_000, payerPubkey)
+    const { address: stateAddress } = await this.getStateAddress()
+
+    const [poolAddress] = await pair.getAddressAndBump(this.program.programId)
+    const { address: feeTierAddress } = await this.getFeeTierAddress(pair.feeTier)
+
+    const { positionListAddress } = await this.getPositionListAddress(payerPubkey)
+    const { tickAddress } = await this.getTickAddress(pair, lowerTick)
+    const { tickAddress: tickAddressUpper } = await this.getTickAddress(pair, upperTick)
+
+    const listExists = (await this.connection.getAccountInfo(positionListAddress)) !== null
+    const head = listExists ? (await this.getPositionList(payerPubkey)).head : 0
+
+    const { positionAddress } = await this.getPositionAddress(payerPubkey, head)
+
+    const createPoolTx = new Transaction({
+      feePayer: payerPubkey
+    })
+
+    createPoolTx
+      .add(setCuIx)
+      .add(
+        SystemProgram.createAccount({
+          fromPubkey: payerPubkey,
+          newAccountPubkey: bitmapKeypair.publicKey,
+          space: this.program.account.tickmap.size,
+          lamports: await this.connection.getMinimumBalanceForRentExemption(
+            this.program.account.tickmap.size
+          ),
+          programId: this.program.programId
+        })
+      )
+      .add(
+        this.program.instruction.createPool(tick, {
+          accounts: {
+            state: stateAddress,
+            pool: poolAddress,
+            feeTier: feeTierAddress,
+            tickmap: bitmapKeypair.publicKey,
+            tokenX: pair.tokenX,
+            tokenY: pair.tokenY,
+            tokenXReserve: tokenXReserve.publicKey,
+            tokenYReserve: tokenYReserve.publicKey,
+            authority: this.programAuthority,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            payer: payerPubkey,
+            rent: SYSVAR_RENT_PUBKEY,
+            systemProgram: SystemProgram.programId
+          }
+        })
+      )
+      .add(
+        this.program.instruction.createTick(lowerTick, {
+          accounts: {
+            tick: tickAddress,
+            pool: poolAddress,
+            tickmap: bitmapKeypair.publicKey,
+            payer: payerPubkey,
+            tokenX: pair.tokenX,
+            tokenY: pair.tokenY,
+            rent: SYSVAR_RENT_PUBKEY,
+            systemProgram: SystemProgram.programId
+          }
+        })
+      )
+      .add(
+        this.program.instruction.createTick(upperTick, {
+          accounts: {
+            tick: tickAddressUpper,
+            pool: poolAddress,
+            tickmap: bitmapKeypair.publicKey,
+            payer: payerPubkey,
+            tokenX: pair.tokenX,
+            tokenY: pair.tokenY,
+            rent: SYSVAR_RENT_PUBKEY,
+            systemProgram: SystemProgram.programId
+          }
+        })
+      )
+
+    const createPositionTx = new Transaction({
+      feePayer: payerPubkey
+    })
+
+    if (!listExists) createPositionTx.add(await this.createPositionListInstruction(payerPubkey))
+
+    const slippageLimitLower = calculatePriceAfterSlippage(knownPrice, slippage, false)
+    const slippageLimitUpper = calculatePriceAfterSlippage(knownPrice, slippage, true)
+
+    createPositionTx.add(
+      this.program.instruction.createPosition(
+        lowerTick,
+        upperTick,
+        liquidityDelta,
+        slippageLimitLower,
+        slippageLimitUpper,
+        {
+          accounts: {
+            state: this.stateAddress,
+            pool: poolAddress,
+            positionList: positionListAddress,
+            position: positionAddress,
+            tickmap: bitmapKeypair.publicKey,
+            owner: payerPubkey,
+            payer: payerPubkey,
+            lowerTick: tickAddress,
+            upperTick: tickAddressUpper,
+            tokenX: pair.tokenX,
+            tokenY: pair.tokenY,
+            accountX: userTokenX,
+            accountY: userTokenY,
+            reserveX: tokenXReserve.publicKey,
+            reserveY: tokenYReserve.publicKey,
+            programAuthority: this.programAuthority,
+            tokenProgram: TOKEN_PROGRAM_ID,
+            rent: SYSVAR_RENT_PUBKEY,
+            systemProgram: SystemProgram.programId
+          }
+        }
+      )
+    )
+
+    return {
+      createPoolTx: {
+        transaction: createPoolTx,
+        signers: [bitmapKeypair, tokenXReserve, tokenYReserve]
+      },
+      createPositionTx: {
+        transaction: createPositionTx,
+        signers: []
+      }
+    }
+  }
+
   async swapInstruction(swap: Swap) {
     const {
       pair,
