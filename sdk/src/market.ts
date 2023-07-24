@@ -951,7 +951,6 @@ export class Market {
     })
 
     createPoolTx
-      .add(setCuIx)
       .add(
         SystemProgram.createAccount({
           fromPubkey: payerPubkey,
@@ -1014,6 +1013,7 @@ export class Market {
     const createPositionTx = new Transaction({
       feePayer: payerPubkey
     })
+    createPositionTx.add(setCuIx)
 
     if (!listExists) createPositionTx.add(await this.createPositionListInstruction(payerPubkey))
 
