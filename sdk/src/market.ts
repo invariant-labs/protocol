@@ -83,6 +83,10 @@ export class Market {
     return instance
   }
 
+  async setWallet(wallet: IWallet) {
+    this.wallet = wallet
+  }
+
   async createPool(createPool: CreatePool) {
     const { transaction, signers } = await this.createPoolTx(createPool)
 
