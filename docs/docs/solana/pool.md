@@ -1,7 +1,7 @@
 ---
 title: Pool
 
-slug: /technical_side/pool
+slug: /solana/pool
 ---
 
 ### Structure of Pool

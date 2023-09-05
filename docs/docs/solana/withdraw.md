@@ -1,7 +1,7 @@
 ---
 title: Withdraw
 
-slug: /technical_side/withdraw
+slug: /solana/withdraw
 ---
 
 Withdrawing your position is analogous to their creation. Use following this code.

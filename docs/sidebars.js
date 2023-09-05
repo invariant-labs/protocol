@@ -48,23 +48,21 @@ module.exports = {
       type: 'category',
       label: 'Aleph Zero',
       collapsed: true,
-      items: [
-        'aleph_zero/test',
-      ]
+      items: ['aleph_zero/test']
     },
     {
       type: 'category',
-      label: 'Technical side',
+      label: 'Solana',
       collapsed: true,
       items: [
-        'technical_side/introduction',
-        'technical_side/quick_start',
-        'technical_side/pool',
-        'technical_side/minting_position',
-        'technical_side/position_list',
-        'technical_side/swap',
-        'technical_side/withdraw',
-        'technical_side/invariant_errors'
+        'solana/introduction',
+        'solana/quick_start',
+        'solana/pool',
+        'solana/minting_position',
+        'solana/position_list',
+        'solana/swap',
+        'solana/withdraw',
+        'solana/invariant_errors'
       ]
     },
     'faq',
