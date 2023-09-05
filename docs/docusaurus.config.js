@@ -22,7 +22,8 @@ module.exports = {
       logo: {
         alt: 'Invariant Logo',
         src: 'img/logo.png'
-      }
+      },
+      items: [{ to: '/docs/aleph_zero/test', label: 'Aleph Zero', position: 'left' }]
     },
     footer: {
       style: 'dark',

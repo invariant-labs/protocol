@@ -46,6 +46,14 @@ module.exports = {
     },
     {
       type: 'category',
+      label: 'Aleph Zero',
+      collapsed: true,
+      items: [
+        'aleph_zero/test',
+      ]
+    },
+    {
+      type: 'category',
       label: 'Technical side',
       collapsed: true,
       items: [
