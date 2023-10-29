@@ -251,7 +251,7 @@ export const arithmeticalAvg = <T extends BN>(...args: T[]): T => {
   return sum.divn(args.length) as T
 }
 
-export const weightedArithmeticAvg = <T extends BN>(...args: { val: T, weight: BN }[]): T => {
+export const weightedArithmeticAvg = <T extends BN>(...args: { val: T; weight: BN }[]): T => {
   if (args.length === 0) {
     throw new Error('requires at least one argument')
   }
@@ -283,8 +283,10 @@ export const feeToTickSpacing = (fee: BN): number => {
 }
 
 export const FEE_TIERS: FeeTier[] = [
-  { fee: fromFee(new BN(1)) },
-  { fee: fromFee(new BN(10)) },
+  { fee: fromFee(new BN(1)), tickSpacing: 1 },
+  { fee: fromFee(new BN(3)), tickSpacing: 1 },
+  { fee: fromFee(new BN(5)), tickSpacing: 1 },
+  { fee: fromFee(new BN(10)), tickSpacing: 1 },
   { fee: fromFee(new BN(50)) },
   { fee: fromFee(new BN(100)) },
   { fee: fromFee(new BN(300)) },
@@ -1126,16 +1128,19 @@ export const poolAPY = (params: ApyPoolParams): WeeklyData => {
   let dailyTokens: BN = new BN(0)
   let dailyVolumeX: number = 0
   try {
-    const { tickLower, tickUpper, tokens: avgTokensFromRange } = calculateTokensRange(
-      ticksPreviousSnapshot,
-      ticksCurrentSnapshot,
-      currentTickIndex
-    )
+    const {
+      tickLower,
+      tickUpper,
+      tokens: avgTokensFromRange
+    } = calculateTokensRange(ticksPreviousSnapshot, ticksCurrentSnapshot, currentTickIndex)
 
     const previousSqrtPrice = calculatePriceSqrt(tickLower)
     const currentSqrtPrice = calculatePriceSqrt(tickUpper)
     const volume = getVolume(volumeX, volumeY, previousSqrtPrice, currentSqrtPrice)
-    const tokenAvgFactor = weightedArithmeticAvg({ val: activeTokens, weight: new BN(9) }, { val: avgTokensFromRange, weight: new BN(1) })
+    const tokenAvgFactor = weightedArithmeticAvg(
+      { val: activeTokens, weight: new BN(9) },
+      { val: avgTokensFromRange, weight: new BN(1) }
+    )
     dailyFactor = dailyFactorPool(tokenAvgFactor, volume, feeTier)
     dailyRange = { tickLower, tickUpper }
     dailyTokens = tokenAvgFactor
