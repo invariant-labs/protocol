@@ -2052,7 +2052,7 @@ describe('Math', () => {
     it('case 1', async () => {
       const volume = 125000
       const tokenXamount = new BN(1000000)
-      const feeTier = FEE_TIERS[4] // 0.3%
+      const feeTier = FEE_TIERS[6] // 0.3%
 
       const result = dailyFactorPool(tokenXamount, volume, feeTier)
       assert.equal(result, 0.00037125)
