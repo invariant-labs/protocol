@@ -22,7 +22,11 @@ module.exports = {
       logo: {
         alt: 'Invariant Logo',
         src: 'img/logo.png'
-      }
+      },
+      items: [
+        { to: '/docs/solana/introduction', label: 'Solana', position: 'left' },
+        { to: '/docs/aleph_zero/entrypoints', label: 'Aleph Zero', position: 'left' }
+      ]
     },
     footer: {
       style: 'dark',

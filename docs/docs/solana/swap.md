@@ -1,7 +1,7 @@
 ---
 title: Swap
 
-slug: /technical_side/swap
+slug: /solana/swap
 ---
 
 Swaps are the most common interaction with the Invariant protocol. The following code shows you how to implement a single swap:

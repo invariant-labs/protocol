@@ -1,7 +1,7 @@
 ---
 title: Minting a Position
 
-slug: /technical_side/minting_position
+slug: /solana/minting_position
 ---
 
 After pool creation you can create position (see [`create_position.rs`](<(https://github.com/invariant-labs/protocol/blob/master/sdk/src/market.ts)>).
