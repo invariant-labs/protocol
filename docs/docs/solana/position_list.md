@@ -1,7 +1,7 @@
 ---
 title: Position
 
-slug: /technical_side/position_list
+slug: /solana/position_list
 ---
 
 To make adding, removing and finding all users position more clear, we create `PositionList` structure which helps to dynamically menage users positions.

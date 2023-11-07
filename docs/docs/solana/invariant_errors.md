@@ -1,7 +1,7 @@
 ---
 title: Invariant Errors
 
-slug: /technical_side/invariant_errors
+slug: /solana/invariant_errors
 ---
 
 ```ts

@@ -1,7 +1,7 @@
 ---
 title: Quick start
 
-slug: /technical_side/quick_start
+slug: /solana/quick_start
 ---
 
 ### Setting Up
