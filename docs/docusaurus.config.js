@@ -22,7 +22,15 @@ module.exports = {
       logo: {
         alt: 'Invariant Logo',
         src: 'img/logo.png'
+<<<<<<< Updated upstream
       }
+=======
+      },
+      items: [
+        { to: '/docs/solana/introduction', label: 'Solana', position: 'left' },
+        { to: '/docs/aleph_zero/project_structure', label: 'Aleph Zero', position: 'left' }
+      ]
+>>>>>>> Stashed changes
     },
     footer: {
       style: 'dark',
