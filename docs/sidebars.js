@@ -59,15 +59,12 @@ module.exports = {
         'technical_side/invariant_errors'
       ]
     },
-<<<<<<< Updated upstream
-=======
     {
       type: 'category',
       label: 'Aleph Zero',
       collapsed: true,
-      items: ["aleph_zero/project_structure", 'aleph_zero/entrypoints']
+      items: ["aleph_zero/project_structure"]
     },
->>>>>>> Stashed changes
     'faq',
     'resources',
     {
