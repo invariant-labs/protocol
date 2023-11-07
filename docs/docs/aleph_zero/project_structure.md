@@ -34,7 +34,7 @@ The "Math" directory serves as a repository for core mathematical functions, con
 Our "Test Helpers" directory is equipped with macros designed to streamline end-to-end testing processes. These macros are instrumental in simplifying and enhancing the efficiency of our testing procedures, ensuring the robustness of our contract.
 
 ### Token
-The "Token" directory is dedicated to the implementation of a fundamental PSP22 token. This token serves as a foundational element in our end-to-end tests, enabling us to simulate real-world token interactions and transactions.
+The "Token" directory is dedicated to the implementation of a fundamental PSP22 token. This token serves as a foundational element in our end-to-end tests, enabling us to simulate production-ready token interactions and transactions.
 
 ### Traceable Result
 In the "Traceable Result" directory, you will find a comprehensive library comprising data structures used in debugging processes. In the event of an error, this library generates a detailed stack trace, providing valuable insights that aid in the identification and resolution of issues, thereby promoting the reliability and stability of our contract.
