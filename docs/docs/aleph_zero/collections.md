@@ -24,13 +24,11 @@ This documentation should help users understand the purpose of the `Positions` s
 
 **Why Positions are Stored in State Instead of NFTs:**
 
-We've chosen to store positions in the state rather than using NFTs for several reasons:
+We have chosen to store positions in the state rather than using NFTs for several reasons:
 
-1. **Iterating Through NFTs**: Iterating through NFTs can be problematic and less efficient, especially when dealing with a large number of unique NFTs. Storing positions in a state makes it easier to manage and access them.
+1. **Optimal determining user's positions and iterating through them**: Main reason is independence from blockchain token indexer. Iterating through NFTs can be problematic and less efficient, especially when dealing with a large number of unique NFTs. Storing positions in a state makes it easier to manage and access them. Maintaining positions in the state can be more cost-effective in terms of gas fees and contract execution. NFTs can involve additional costs for minting, transferring, and managing unique tokens.
 
-2. **Cost Efficiency**: Maintaining positions in the state can be more cost-effective in terms of gas fees and contract execution. NFTs can involve additional costs for minting, transferring, and managing unique tokens.
-
-3. **Optimal Search**: Searching for and accessing specified positions is more optimal when positions are stored in the state. It simplifies the process of retrieving and managing positions for specific accounts.
+2. **Optimal Search**: Searching for and accessing specified positions is more optimal when positions are stored in the state. It simplifies the process of retrieving and managing positions for specific accounts.
 
 
 ### Functions within the `Positions` Struct
