@@ -4,6 +4,8 @@ title: Project Structure
 slug: /aleph_zero/project_structure
 ---
 
+## Simplified
+
 ```
 📦protocol-a0
  ┣ 📂contracts
@@ -15,6 +17,7 @@ slug: /aleph_zero/project_structure
  ┣ 📂token
  ┗ 📂traceable_result
 ```
+
 ### Contracts
 Within this directory, we house our contract structures, collections, and associated logic. These components are pivotal in facilitating the seamless operation of our contract.
 
@@ -38,3 +41,51 @@ The "Token" directory is dedicated to the implementation of a fundamental PSP22 
 
 ### Traceable Result
 In the "Traceable Result" directory, you will find a comprehensive library comprising data structures used in debugging processes. In the event of an error, this library generates a detailed stack trace, providing valuable insights that aid in the identification and resolution of issues, thereby promoting the reliability and stability of our contract.
+
+## Extended
+
+```
+📦protocol-a0
+ ┣ 📂contracts
+ ┃ ┣ 📂collections
+ ┃ ┃ ┣ 📜fee_tiers
+ ┃ ┃ ┣ 📜pools
+ ┃ ┃ ┣ 📜positions
+ ┃ ┃ ┗ 📜ticks
+ ┃ ┣ 📂logic
+ ┃ ┃ ┗ 📜math
+ ┃ ┗ 📂storage
+ ┃   ┣ 📜fee_tier
+ ┃   ┣ 📜oracle
+ ┃   ┣ 📜pool_key
+ ┃   ┣ 📜pool
+ ┃   ┣ 📜position
+ ┃   ┣ 📜state
+ ┃   ┣ 📜tick
+ ┃   ┗ 📜tickmap
+ ┣ 📂decimal
+ ┣ 📂math
+ ┃ ┣ 📂types
+ ┃ ┃ ┣ 📂sqrt_price
+ ┃ ┃ ┃ ┣ 📜log
+ ┃ ┃ ┃ ┗ 📜sqrt_price
+ ┃ ┃ ┣ 📜fee_growth
+ ┃ ┃ ┣ 📜fixed_point
+ ┃ ┃ ┣ 📜liquidity
+ ┃ ┃ ┣ 📜percentage
+ ┃ ┃ ┣ 📜seconds_per_liquidity
+ ┃ ┃ ┗ 📜token_amount
+ ┃ ┣ 📜consts
+ ┃ ┗ 📜math
+ ┣ 📂test_helpers
+ ┃ ┗ 📜lib
+ ┣ 📂token
+ ┃ ┣ 📜data
+ ┃ ┣ 📜errors
+ ┃ ┣ 📜lib
+ ┃ ┣ 📜testing
+ ┃ ┗ 📜traits
+ ┣ 📂traceable_result
+ ┃ ┗ 📜lib
+ ┗ 📜lib
+```
