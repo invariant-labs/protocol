@@ -63,7 +63,7 @@ module.exports = {
       type: 'category',
       label: 'Aleph Zero',
       collapsed: true,
-      items: ['aleph_zero/project_structure', 'aleph_zero/entrypoints','aleph_zero/types']
+      items: ['aleph_zero/project_structure', 'aleph_zero/entrypoints', 'aleph_zero/collections','aleph_zero/storage','aleph_zero/types']
     },
     'faq',
     'resources',
