@@ -38,7 +38,7 @@ pub struct PoolKey {
 pub struct Pool {
     pub liquidity: Liquidity,
     pub sqrt_price: SqrtPrice,
-    pub current_tick_index: i32, // nearest tick below the current sqrt_price
+    pub current_tick_index: i32,
     pub fee_growth_global_x: FeeGrowth,
     pub fee_growth_global_y: FeeGrowth,
     pub fee_protocol_token_x: TokenAmount,
@@ -168,20 +168,3 @@ pub struct Record {
 |-|-|-|
 |timestamp|u64| Last update|
 |price|SqrtPrice|Square root of price in the last update|
-
-
-
-
-<!-- ## Tickmap
-
-```rust
-#[derive(Debug)]
-#[ink::storage_item]
-pub struct Tickmap {
-    pub bitmap: Mapping<(u16, PoolKey), u64>,
-}
-```
-
-|Name|Type|Description|
-|-|-|-|
-|protocol_fee|Percentage|.| -->
