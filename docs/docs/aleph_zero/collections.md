@@ -41,7 +41,7 @@ We've chosen to store positions in the state rather than using NFTs for several 
 
 - **Description**: Adds a new position to the specified account.
 - **Parameters**: `account_id` (AccountId), `position` (Position)
-- **Edge Cases**: Position is already added.
+- **Edge Cases**: None
 
 ```rust
     pub fn update(
@@ -126,7 +126,7 @@ pub struct Ticks {
 |-|-|
 |A tuple of `PoolKey` and `i32` values, uniquely identifying a specific tick.| A `Tick` object associated with the key |
 
-The Ticks struct is designed to manage ticks associated between diffrent pools. It uses a mapping data structure, where each tick is identified by a tuple of PoolKey and i32, and a Tick object is stored as the associated value. The provided functions allow you to retrieve, add, update, and remove ticks associated with specific PoolKey values.
+The Ticks struct is designed to manage ticks associated between diffrent pools. It uses a mapping data structure, where each tick is identified by a tuple of PoolKey and i32 (tick index), and a Tick object is stored as the associated value. The provided functions allow you to retrieve, add, update, and remove ticks associated with specific PoolKey values.
 
 
 

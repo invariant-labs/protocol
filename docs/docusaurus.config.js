@@ -25,7 +25,7 @@ module.exports = {
       },
       items: [
         { to: '/docs/solana/introduction', label: 'Solana', position: 'left' },
-        { to: '/docs/aleph_zero/entrypoints', label: 'Aleph Zero', position: 'left' }
+        { to: '/docs/aleph_zero/project_structure', label: 'Aleph Zero', position: 'left' }
       ]
     },
     footer: {
