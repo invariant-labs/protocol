@@ -344,6 +344,28 @@ describe('swap with cross both side', () => {
     }
     await market.swap(swapCrossingIncreasingByAmountInVars, owner)
 
-    // TODO: validate state
+    const finalPool = await market.getPool(pair)
+    assert.equal(finalPool.currentTickIndex, -20)
+    assert.ok(finalPool.feeGrowthGlobalX.v.eq(new BN('2999100269919024292')))
+    assert.ok(finalPool.feeGrowthGlobalY.v.eq(new BN(0)))
+    assert.ok(finalPool.feeProtocolTokenX.eq(new BN(4)))
+    assert.ok(finalPool.feeProtocolTokenY.eq(new BN(2)))
+    assert.ok(finalPool.liquidity.v.eq(new BN('19996000399699901991603000000')))
+    assert.ok(finalPool.sqrtPrice.v.eq(new BN('999500149964999999999999')))
+
+    const finalLastTick = await market.getTick(pair, lastTick)
+    assert.ok(finalLastTick.feeGrowthOutsideX.v.eq(new BN(0)))
+    assert.ok(finalLastTick.feeGrowthOutsideY.v.eq(new BN(0)))
+    assert.ok(finalLastTick.liquidityChange.v.eq(new BN('19996000399699901991603000000')))
+
+    const finalLowerTick = await market.getTick(pair, lowerTick)
+    assert.ok(finalLowerTick.feeGrowthOutsideX.v.eq(new BN('2999100269919024292')))
+    assert.ok(finalLowerTick.feeGrowthOutsideY.v.eq(new BN(0)))
+    assert.ok(finalLowerTick.liquidityChange.v.eq(new BN(0)))
+
+    const finalUpperTick = await market.getTick(pair, upperTick)
+    assert.ok(finalUpperTick.feeGrowthOutsideX.v.eq(new BN(0)))
+    assert.ok(finalUpperTick.feeGrowthOutsideY.v.eq(new BN(0)))
+    assert.ok(finalUpperTick.liquidityChange.v.eq(new BN('20006000000000')))
   })
 })
