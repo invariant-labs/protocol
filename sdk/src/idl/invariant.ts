@@ -1106,22 +1106,6 @@ export type Invariant = {
       }
     },
     {
-      "name": "positionList",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "head",
-            "type": "u32"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
       "name": "position",
       "type": {
         "kind": "struct",
@@ -1194,6 +1178,22 @@ export type Invariant = {
       }
     },
     {
+      "name": "positionList",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "head",
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
       "name": "state",
       "type": {
         "kind": "struct",
@@ -1213,23 +1213,6 @@ export type Invariant = {
           {
             "name": "bump",
             "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "tickmap",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bitmap",
-            "type": {
-              "array": [
-                "u8",
-                11091
-              ]
-            }
           }
         ]
       }
@@ -1294,6 +1277,23 @@ export type Invariant = {
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "tickmap",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bitmap",
+            "type": {
+              "array": [
+                "u8",
+                11091
+              ]
+            }
           }
         ]
       }
@@ -2634,22 +2634,6 @@ export const IDL: Invariant = {
       }
     },
     {
-      "name": "positionList",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "head",
-            "type": "u32"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
       "name": "position",
       "type": {
         "kind": "struct",
@@ -2722,6 +2706,22 @@ export const IDL: Invariant = {
       }
     },
     {
+      "name": "positionList",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "head",
+            "type": "u32"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
       "name": "state",
       "type": {
         "kind": "struct",
@@ -2741,23 +2741,6 @@ export const IDL: Invariant = {
           {
             "name": "bump",
             "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "tickmap",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bitmap",
-            "type": {
-              "array": [
-                "u8",
-                11091
-              ]
-            }
           }
         ]
       }
@@ -2822,6 +2805,23 @@ export const IDL: Invariant = {
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "tickmap",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bitmap",
+            "type": {
+              "array": [
+                "u8",
+                11091
+              ]
+            }
           }
         ]
       }

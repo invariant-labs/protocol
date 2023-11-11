@@ -23,8 +23,9 @@ const provider = Provider.local('FILL ME', {
 
 const skipValidation = ['JCKjKab2Qj9fkVGDX1QH2TZDX5Y7YfihMwwyh2efy8tP']
 const onlyValidation = [
-  'BRt1iVYDNoohkL1upEb8UfHE8yji6gEDAmuN9Y4yekyc' // usdc-usdt 0.001%
-  // 'HbMbeaDH8xtB1a8WpwjNqcXBBGraKJjJ2xFkXEdAy1rY' // msol-stsol 0.01%
+  'BRt1iVYDNoohkL1upEb8UfHE8yji6gEDAmuN9Y4yekyc', // usdc-usdt 0.001%
+  'HbMbeaDH8xtB1a8WpwjNqcXBBGraKJjJ2xFkXEdAy1rY', // msol-stsol 0.01%
+  '7daJQUg9KVjCk6gBcfjLNf2zEFw2kp5b7hEjGCrgoJTh' // msol-stsol 0.001%
 ]
 
 const connection = provider.connection
