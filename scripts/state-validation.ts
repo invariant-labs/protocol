@@ -103,11 +103,11 @@ const main = async () => {
     )
 
     const pair = new Pair(pool.tokenX, pool.tokenY, {
-      fee: pool.fee.v
+      fee: pool.fee.v,
+      tickSpacing: pool.tickSpacing
     })
 
     const expectedAddress = await pair.getAddress(market.program.programId)
-
     assert.equal(expectedAddress.toString(), poolAccount.publicKey.toString())
 
     const ticks = await market.getClosestTicks(pair, Infinity)
@@ -125,11 +125,13 @@ const main = async () => {
       assert.ok(lastBelow, pool.liquidity.v.toString())
     }
 
-    // fetching position
-    const positions = await fetchAllPosition(
-      market,
-      await pair.getAddress(market.program.programId)
+    const getAllPositions = fetchAllPosition(market, poolAccount.publicKey)
+    const getReserveBalances = market.getReserveBalances(
+      pair,
+      new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, Keypair.generate()),
+      new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, Keypair.generate())
     )
+    const [positions, reserves] = await Promise.all([getAllPositions, getReserveBalances])
 
     ticks.forEach(({ index, liquidityChange, sign }) => {
       const positionsAbove = positions.filter(({ lowerTickIndex }) => lowerTickIndex === index)
@@ -175,11 +177,6 @@ const main = async () => {
 
     console.log('sumOfPositions:', ...sumOfPositions.map(i => i.toString()))
 
-    const reserves = await market.getReserveBalances(
-      pair,
-      new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, Keypair.generate()),
-      new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, Keypair.generate())
-    )
     console.log('reserve balances:', reserves.x.toString(), reserves.y.toString())
     assert.ok(sumOfPositions[0].lte(reserves.x))
     assert.ok(sumOfPositions[1].lte(reserves.y))
