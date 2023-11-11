@@ -21,6 +21,12 @@ const provider = Provider.local('FILL ME', {
   skipPreflight: true
 })
 
+const skipValidation = ['JCKjKab2Qj9fkVGDX1QH2TZDX5Y7YfihMwwyh2efy8tP']
+const onlyValidation = [
+  'BRt1iVYDNoohkL1upEb8UfHE8yji6gEDAmuN9Y4yekyc' // usdc-usdt 0.001%
+  // 'HbMbeaDH8xtB1a8WpwjNqcXBBGraKJjJ2xFkXEdAy1rY' // msol-stsol 0.01%
+]
+
 const connection = provider.connection
 
 const placeholderTick: Tick = {
@@ -96,6 +102,21 @@ const main = async () => {
 
   for (const poolAccount of pools) {
     const pool = poolAccount.account
+    const poolAddress = poolAccount.publicKey
+
+    if (
+      onlyValidation.length > 0 &&
+      !onlyValidation.find(address => poolAddress.equals(new PublicKey(address)))
+    ) {
+      continue
+    }
+
+    if (skipValidation.find(address => poolAddress.equals(new PublicKey(address))) !== undefined) {
+      console.log(`Skipping pool ${poolAddress.toString()}`)
+      continue
+    }
+
+    console.log(`Pool address: ${poolAccount.publicKey.toString()}`)
     console.log(
       `Checking pool ${pool.tokenX.toString()}/${pool.tokenY.toString()} at ${pool.fee.v
         .divn(1e7)
