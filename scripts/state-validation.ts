@@ -178,6 +178,12 @@ const main = async () => {
     console.log('sumOfPositions:', ...sumOfPositions.map(i => i.toString()))
 
     console.log('reserve balances:', reserves.x.toString(), reserves.y.toString())
+    if (!sumOfPositions[0].lte(reserves.x)) {
+      console.log('x is invalid')
+    }
+    if (!sumOfPositions[1].lte(reserves.y)) {
+      console.log('y is invalid')
+    }
     assert.ok(sumOfPositions[0].lte(reserves.x))
     assert.ok(sumOfPositions[1].lte(reserves.y))
   }
