@@ -1,7 +1,7 @@
 ---
 title: Collections
 
-slug: /aleph_zero/collecions
+slug: /aleph_zero/collections
 ---
 
 ## Positions
@@ -124,7 +124,7 @@ pub struct Ticks {
 |-|-|
 |A tuple of `PoolKey` and `i32` values, uniquely identifying a specific tick.| A `Tick` object associated with the key |
 
-The Ticks struct is designed to manage ticks associated between diffrent pools. It uses a mapping data structure, where each tick is identified by a tuple of PoolKey and i32 (tick index), and a Tick object is stored as the associated value. The provided functions allow you to retrieve, add, update, and remove ticks associated with specific PoolKey values.
+The Ticks struct is designed to manage ticks associated between different pools. It uses a mapping data structure, where each tick is identified by a tuple of PoolKey and i32 (tick index), and a Tick object is stored as the associated value. The provided functions allow you to retrieve, add, update, and remove ticks associated with specific PoolKey values.
 
 
 

@@ -53,7 +53,7 @@ pub struct Pool {
 ```
 |Name|Type|Description|
 |-|-|-|
-|liquidity|Liquidity|Amount of virtual liquidity that the position represented the last time this position was touched. The diffrence between virtual and actual liquidity reflect the increased capital efficiency in Invariant|
+|liquidity|Liquidity|Amount of virtual liquidity that the position represented the last time this position was touched. The difference between virtual and actual liquidity reflect the increased capital efficiency in Invariant|
 |sqrt_price|SqrtPrice|Square root of current price|
 |current_tick_index|i32|The nearest tick below the current price|
 |fee_growth_global_x|FeeGrowth|Amount of fees accumulated in token_x in per one integer unit of Liquidity|
@@ -115,8 +115,8 @@ pub struct Tick {
 |Name|Type|Description|
 |-|-|-|
 |index|i32|Index of tick|
-|sign|bool|Determine if the liquidity will be added or substracted on cross|
-|liquidity_change|Liquidity|Amount of virtaul liqidity to adjust while crossing|
+|sign|bool|Determine if the liquidity will be added or subtracted on cross|
+|liquidity_change|Liquidity|Amount of virtual liquidity to adjust while crossing|
 |liquidity_gross|Liquidity|Amount of virtual liquidity|
 |sqrt_price|SqrtPrice|Square root of tick price|
 |fee_growth_outside_x|FeeGrowth|Amount of Fees accumulated in token_x outside-range|
