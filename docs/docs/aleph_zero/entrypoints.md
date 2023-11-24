@@ -283,6 +283,28 @@ pub fn swap(
 |sqrt_price_limit|SqrtPrice|If the swap achieves this square root of the price, it will be canceled.|
 This function executes a swap based on the provided parameters. It transfers tokens from the user's address to the contract's address and vice versa. The swap will fail if the user does not have enough tokens, has not approved enough tokens, or if there is insufficient liquidity.
 
+### Swap Route
+```rust
+#[ink(message)]
+pub fn swap_route(
+    &mut self,
+    amount_in: TokenAmount,
+    expected_amount_out: TokenAmount,
+    slippage: Percentage,
+    swaps: Vec<SwapRouteParams>,
+) -> Result<(), ContractErrors>
+```
+#### Input parameters
+| Name                   | Type                   | Description                                                  |
+|------------------------|------------------------|--------------------------------------------------------------|
+| amount_in              | TokenAmount            | Amount of tokens you want to swap                             |
+| expected_amount_out    | TokenAmount            | Expected amount to receive as output                           |
+| slippage               | Percentage             | Percentage difference that can affect the price change        |
+| swaps                  | Vec&ltSwapRouteParams&gt   | Vector of pool keys and booleans identifying swap pool and direction |
+
+This function executes multiple swaps based on the provided parameters. It transfers tokens from the user's address to the contract's address and vice versa. The swap will fail if the user does not have enough tokens, has not approved enough tokens, or if there is insufficient liquidity.
+
+
 ### Quote
 ```rust
 #[ink(message)]
