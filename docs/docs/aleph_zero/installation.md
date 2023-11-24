@@ -4,6 +4,8 @@ title: Installation
 slug: /aleph_zero/installation
 ---
 
+This section provides detailed instructions on how to install the Aleph Zero smart contract, including prerequisites and steps for setting up the development environment.
+
 ## Prerequisites
 
 * Rust & Cargo ([rustup](https://www.rust-lang.org/tools/install))

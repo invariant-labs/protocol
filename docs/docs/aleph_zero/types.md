@@ -4,6 +4,7 @@ title: Types
 slug: /aleph_zero/types
 ---
 
+This segment introduces key data types integral to understanding and working with the Aleph Zero protocol. These types play a pivotal role in expressing and managing various aspects of the protocol's functionality.
 
 |Name|Description|
 |-|-|

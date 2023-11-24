@@ -4,6 +4,10 @@ title: Entrypoints
 slug: /aleph_zero/entrypoints
 ---
 
+This section outlines the core entrypoints for the Aleph Zero smart contract, providing developers with essential methods to interact with the protocol. These entrypoints cover various aspects of the contract, including protocol fee management, fee tier administration, pool creation and management, position handling, and swap functionality.
+
+
+
 ### Constructor
 ```rust
 #[ink(constructor)]

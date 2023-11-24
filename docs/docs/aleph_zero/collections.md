@@ -4,6 +4,8 @@ title: Collections
 slug: /aleph_zero/collections
 ---
 
+This segment explores key storage structures that manage various entities within the Aleph Zero protocol. Understanding these structures is crucial for developers and integrators engaging with the protocol's data.
+
 ## Positions
 
 ```rust
