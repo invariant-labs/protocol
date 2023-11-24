@@ -7,6 +7,7 @@ slug: /aleph_zero/types
 This segment introduces key data types integral to understanding and working with the Aleph Zero protocol. These types play a pivotal role in expressing and managing various aspects of the protocol's functionality.
 
 ### Defining Decimal:
+We have implemented a custom decimal system, which is detailed in our repository [here](https://github.com/invariant-labs/decimal). The structure of the decimal is outlined below in Rust syntax:
 ```rust
 #[decimal(#scale, #big_type)]
 pub struct DecimalName {
