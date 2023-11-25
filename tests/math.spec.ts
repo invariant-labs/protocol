@@ -105,7 +105,13 @@ describe('Math', () => {
       assert.ok(result.eq(new BN(24)))
     })
     it('returns the correct average for 5 numbers', () => {
-      const result = arithmeticalAvg(new BN(10), new BN(50), new BN(12), new BN(10024), new BN(11479))
+      const result = arithmeticalAvg(
+        new BN(10),
+        new BN(50),
+        new BN(12),
+        new BN(10024),
+        new BN(11479)
+      )
       assert.ok(result.eq(new BN(4315)))
     })
   })
@@ -1024,7 +1030,7 @@ describe('Math', () => {
 
         assert.ok(result.v.eq(expectedResult.v))
       })
-      it('2', async () => { })
+      it('2', async () => {})
       const price: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('1')) }
       const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN('2')) }
       const amount: BN = new BN('3')
@@ -1100,7 +1106,7 @@ describe('Math', () => {
         }
         assert.ok(result.v.eq(expectedResult.v))
       })
-      it('2', async () => { })
+      it('2', async () => {})
       const price: Decimal = { v: PRICE_DENOMINATOR.mul(new BN('1')) }
       const liquidity: Decimal = { v: LIQUIDITY_DENOMINATOR.mul(new BN('2')) }
       const amount: BN = new BN('3')
@@ -2052,7 +2058,7 @@ describe('Math', () => {
     it('case 1', async () => {
       const volume = 125000
       const tokenXamount = new BN(1000000)
-      const feeTier = FEE_TIERS[6] // 0.3%
+      const feeTier = FEE_TIERS[7] // 0.3%
 
       const result = dailyFactorPool(tokenXamount, volume, feeTier)
       assert.equal(result, 0.00037125)
