@@ -4,11 +4,11 @@ title: Project Structure
 slug: /aleph_zero/project_structure
 ---
 
-This section provides an overview of the structural organization of the Aleph Zero smart contract project. The project is meticulously structured to enhance readability, maintainability, and efficiency. The architecture is designed to consolidate data within a single contract, minimizing fees and simplifying interactions.
+This section provides an overview of the structural organization of the Invariant protocol smart contract project on Aleph Zero. The project is meticulously structured to enhance readability, maintainability, and efficiency. The architecture is designed to consolidate data within a single contract, minimizing fees and simplifying interactions.
 
 ## Contract Architecture
 
-In order to maintain minimal fees, we consolidate all data within a single contract. This streamlined approach significantly reduces the expenses associated with creating pools and positions. This efficiency not only minimizes costs but also simplifies the overall process, making it more accessible and user-friendly. By conducting all state changes and positioning all entrypoints exclusively within this one contract, we eliminate the complexities of interacting with and monitoring numerous external contracts. The vast majority of our data is intelligently stored using mapping, which not only preserves precious storage resources but also enhances the overall efficiency of our system.
+To optimize cost-effectiveness, we centralize data in a singular contract, reducing expenses tied to pool and position creation. This streamlined approach not only cuts costs but also simplifies processes, enhancing accessibility. By concentrating state changes and entrypoints within this central contract, we eliminate the intricacies of managing external contracts, while smart mapping intelligently conserves storage resources and bolsters system efficiency.
 
 ## Simplified
 
@@ -25,7 +25,7 @@ In order to maintain minimal fees, we consolidate all data within a single contr
 ```
 
 ### Contracts
-Within this directory, we house our contract structures, collections, and associated logic. These components are pivotal in facilitating the seamless operation of our contract. Source code can be found
+Within this directory, we house our contract structures, collections, and associated logic. These components are pivotal in facilitating the seamless operation of our contract.
 
 #### Storage
 The "Storage" directory is home to the essential data structures utilized for contract storage. These structures are instrumental in securely and efficiently storing critical information within our contract.
