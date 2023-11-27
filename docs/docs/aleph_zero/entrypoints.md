@@ -283,6 +283,27 @@ pub fn swap(
 |sqrt_price_limit|SqrtPrice|If the swap achieves this square root of the price, it will be canceled.|
 This function executes a swap based on the provided parameters. It transfers tokens from the user's address to the contract's address and vice versa. The swap will fail if the user does not have enough tokens, has not approved enough tokens, or if there is insufficient liquidity.
 
+### Swap Route
+```rust
+#[ink(message)]
+pub fn swap_route(
+    &mut self,
+    amount_in: TokenAmount,
+    expected_amount_out: TokenAmount,
+    slippage: Percentage,
+    swaps: Vec<SwapRouteParams>,
+) -> Result<(), ContractErrors>
+```
+#### Input parameters
+| Name                   | Type                   | Description                                                  |
+|------------------------|------------------------|--------------------------------------------------------------|
+| amount_in              | TokenAmount            | Amount of tokens you want to swap                             |
+| expected_amount_out    | TokenAmount            | Expected amount to receive as output calculated off-chain                           |
+| slippage               | Percentage             | Percentage difference influencing price change, emphasizing precision in the number of tokens received compared to the expected quantity        |
+| swaps                  | Vec&ltSwapRouteParams&gt   | Vector of pool keys and booleans identifying swap pool and direction |
+
+This function facilitates atomic swaps between the user's address and the contract's address, executing multiple swaps based on the provided parameters. Tokens are transferred bidirectionally, from the user to the contract and vice versa, all within a single transaction. The swap is designed to be atomic, ensuring that it either completes entirely or reverts entirely. The success of the swap depends on factors such as the user having sufficient tokens, having approved the necessary token amounts, and the presence of adequate liquidity. Any failure in meeting these conditions will result in the swap transaction being reverted.
+
 ### Quote
 ```rust
 #[ink(message)]
