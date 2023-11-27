@@ -4,6 +4,8 @@ title: Storage
 slug: /aleph_zero/storage
 ---
 
+This section provides an in-depth exploration of key data structures integral to the Aleph Zero protocol's storage mechanism. Understanding these structures is fundamental for developers and integrators working with the protocol.
+
 ## FeeTier
 
 ```rust

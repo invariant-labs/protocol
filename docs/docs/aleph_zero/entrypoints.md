@@ -4,6 +4,10 @@ title: Entrypoints
 slug: /aleph_zero/entrypoints
 ---
 
+This section outlines the core entrypoints for the Aleph Zero smart contract, providing developers with essential methods to interact with the protocol. These entrypoints cover various aspects of the contract, including protocol fee management, fee tier administration, pool creation and management, position handling, and swap functionality.
+
+
+
 ### Constructor
 ```rust
 #[ink(constructor)]
@@ -75,7 +79,7 @@ pub fn get_fee_tier(&self, key: FeeTierKey) -> Option<()>
 #### Output parameters
 |Type|Description|
 |-|-|
-|Option<()>|An option that may contain none or an empty unit if the fee tier exists.|
+|Option<()>|An option that may contain `None` or an empty unit if the fee tier exists.|
 This function is used to verify the existence of a specified fee tier.
 
 ### Remove fee tier
@@ -192,7 +196,7 @@ pub fn transfer_position(
 |Name|Type|Description|
 |-|-|-|
 |index|u32|Index of the position in the user's position list.|
-|receiver|i32|Address of the user who will receive the position.|
+|receiver|AccountId|Address of the user who will receive the position.|
 This function changes ownership of an existing position based on the position index in the user's position list. You can only change ownership of positions that you own; otherwise, it will return an error.
 
 ### Remove position
@@ -245,8 +249,8 @@ pub fn get_position(&mut self, index: u32) -> Option<Position>
 #### Output parameters
 |Type|Description|
 |-|-|
-|Option<Position\>|An option that may contain none or a position struct with data if it exists.|
-This function returns an option that contains none if the position index is out of range or a position if it actually exists.
+|Option<Position\>|An option that may contain `None` or a position struct with data if it exists.|
+This function returns an option that contains `None` if the position index is out of range or a position if it actually exists.
 
 ### Get all positions
 ```rust

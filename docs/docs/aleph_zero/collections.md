@@ -4,6 +4,8 @@ title: Collections
 slug: /aleph_zero/collections
 ---
 
+This segment explores key storage structures that manage various entities within the Aleph Zero protocol. Understanding these structures is crucial for developers and integrators engaging with the protocol's data.
+
 ## Positions
 
 ```rust
@@ -151,7 +153,7 @@ pub fn add_tick(&mut self, key: PoolKey, index: i32, tick: Tick) {}
 ```
 
 - **Description**: Adds a new tick associated with a specific PoolKey and index.
-- **Parameters**: key (PoolKey), index (i32)
+- **Parameters**: key (PoolKey), index (i32), tick (Tick)
 - **Edge Cases**: None
 
 ```rust
@@ -164,7 +166,7 @@ pub fn update_tick(
 ```
 
 - **Description**: Updates an existing tick associated with a specific PoolKey and index.
-- **Parameters**: key (PoolKey), index (i32)
+- **Parameters**: key (PoolKey), index (i32), tick: (&Tick)
 - **Edge Cases**: Returns an error if the specified tick does not exist.
 
 ## Pools
