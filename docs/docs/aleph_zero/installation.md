@@ -25,7 +25,7 @@ rustup component add rust-src && cargo install --force --locked cargo-contract
 
 ### substrate-contracts-node
 ```bash
-cargo install contracts-node
+cargo install contracts-node --git https://github.com/paritytech/substrate-contracts-node.git
 ```
 ## Installation
 
