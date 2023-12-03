@@ -1,5 +1,6 @@
 import { Provider, BN, utils } from '@project-serum/anchor'
 import {
+  ComputeBudgetProgram,
   ConfirmOptions,
   Connection,
   Keypair,
@@ -186,20 +187,10 @@ export interface CloserLimitResult {
   limitingTick: TickState | null
 }
 
-export const computeUnitsInstruction = (units: number, wallet: PublicKey) => {
-  const program = new PublicKey('ComputeBudget111111111111111111111111111111')
-  const params = { instruction: 0, units: units, additional_fee: 0 }
-  const layout = struct([u8('instruction') as any, u32('units'), u32('additional_fee')])
-  const data = Buffer.alloc(layout.span)
-  layout.encode(params, data)
-  const keys = [{ pubkey: wallet, isSigner: false, isWritable: false }]
-  const unitsIx = new TransactionInstruction({
-    keys,
-    programId: program,
-    data
-  })
-  return unitsIx
+export const computeUnitsInstruction = (units: number, wallet: PublicKey): TransactionInstruction => {
+  return ComputeBudgetProgram.setComputeUnitLimit({units})
 }
+
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {
     await fn
