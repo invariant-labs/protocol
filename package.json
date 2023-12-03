@@ -62,7 +62,7 @@
     "@project-serum/serum": "^0.13.58",
     "@solana/buffer-layout": "^4.0.0",
     "@solana/spl-token": "^0.1.8",
-    "@solana/web3.js": "^1.87.6",
+    "@solana/web3.js": "^1.18.0",
     "@types/node": "^16.0.0",
     "bip32": "^2.0.6",
     "bs58": "^4.0.1",
