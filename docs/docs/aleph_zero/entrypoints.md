@@ -11,12 +11,13 @@ This section outlines the core entrypoints for the Aleph Zero smart contract, pr
 ### Constructor
 ```rust
 #[ink(constructor)]
-pub fn new(protocol_fee: Percentage) -> Self
+pub fn new(protocol_fee: Percentage) -> Self;
 ```
 #### Input parameters
 |Name|Type|Description|
 |-|-|-|
 |protocol_fee|Percentage|The percentage for the protocol fee.|
+
 This constructor method initializes the contract with the specified protocol fee. The administrator role is assigned to the caller.
 
 ## Protocol fee
@@ -24,42 +25,64 @@ This constructor method initializes the contract with the specified protocol fee
 ### Get protocol fee
 ```rust
 #[ink(message)]
-pub fn get_protocol_fee(&self) -> Percentage
+pub fn get_protocol_fee(&self) -> Percentage;
 ```
 #### Output parameters
 |Type|Description|
 |-|-|
 |Percentage|The current protocol fee.|
-This method retrieves the current protocol fee percentage.
 
-### Change protocol fee
-```rust
-#[ink(message)]
-pub fn change_protocol_fee(&mut self, protocol_fee: Percentage) -> Result<(), ContractErrors>
-```
-#### Input parameters
-|Name|Type|Description|
-|-|-|-|
-|protocol_fee|Percentage|The new protocol fee percentage.|
-This function allows for the adjustment of the current protocol fee percentage. Note that this operation is restricted to administrators.
+This method retrieves the current protocol fee percentage.
 
 ### Withdraw protocol fee
 ```rust
 #[ink(message)]
-pub fn withdraw_protocol_fee(&mut self, pool_key: PoolKey) -> Result<(), ContractErrors>
+pub fn withdraw_protocol_fee(&mut self, pool_key: PoolKey) -> Result<(), InvariantError>;
 ```
 #### Input parameters
 |Name|Type|Description|
 |-|-|-|
 |pool_key|PoolKey|The pool key that corresponds to the withdrawal of fees from the associated pool.|
+
 This operation enables the withdrawal of protocol fees associated with a specific pool, based on the provided pool key. The withdrawn funds are sent to the administrator's wallet. Please note that this action can only be performed by administrators.
+
+
+### Change protocol fee
+```rust
+#[ink(message)]
+pub fn change_protocol_fee(&mut self, protocol_fee: Percentage) -> Result<(), InvariantError>;
+```
+#### Input parameters
+|Name|Type|Description|
+|-|-|-|
+|protocol_fee|Percentage|The new protocol fee percentage.|
+
+This function allows for the adjustment of the current protocol fee percentage. Note that this operation is restricted to administrators.
+
+### Change fee receiver
+```rust
+#[ink(message)]
+pub fn change_fee_receiver(
+    &mut self,
+    pool_key: PoolKey,
+    fee_receiver: AccountId,
+) -> Result<(), InvariantError>;
+```
+#### Input parameters
+|Name|Type|Description|
+|-|-|-|
+|pool_key|PoolKey|The pool key of the pool where the change is to be made.|
+|fee_receiver|AccountId|The new fee receiver's address of the pool.|
+
+This function allows for the modification of the fee receiver of a pool. Please note that this action is exclusively available to administrators.
+
 
 ## Fee tier
 
 ### Add fee tier
 ```rust
 #[ink(message)]
-pub fn add_fee_tier(&mut self, fee_tier: FeeTier) -> Result<(), ContractErrors>
+pub fn add_fee_tier(&mut self, fee_tier: FeeTier) -> Result<(), InvariantError>;
 ```
 #### Input parameters
 |Name|Type|Description|
@@ -67,10 +90,10 @@ pub fn add_fee_tier(&mut self, fee_tier: FeeTier) -> Result<(), ContractErrors>
 |fee_tier|FeeTier|The fee tier to be added.|
 This function enables the addition of a new fee tier, which users can subsequently utilize when creating pools. Please note that this action is restricted to administrators.
 
-### Get fee tier
+### Fee Tier exist
 ```rust
 #[ink(message)]
-pub fn get_fee_tier(&self, key: FeeTierKey) -> Option<()>
+pub fn fee_tier_exist(&self, key: FeeTierKey) -> bool;
 ```
 #### Input parameters
 |Name|Type|Description|
@@ -79,18 +102,36 @@ pub fn get_fee_tier(&self, key: FeeTierKey) -> Option<()>
 #### Output parameters
 |Type|Description|
 |-|-|
-|Option<()>|An option that may contain `None` or an empty unit if the fee tier exists.|
+|bool|boolean indicating if the fee tier is added.|
+
+This function is used to verify the existence of a specified fee tier.
+
+### Get fee tiers
+```rust
+#[ink(message)]
+pub fn get_fee_tiers(&self, key: FeeTierKey) -> Vec<FeeTier>;
+```
+#### Input parameters
+|Name|Type|Description|
+|-|-|-|
+|key|FeeTierKey|The key associated with the fee tier to be checked for existence.|
+#### Output parameters
+|Type|Description|
+|-|-|
+|Vec<FeeTier\>|Vector containing all fee tiers added to specified pool|
+
 This function is used to verify the existence of a specified fee tier.
 
 ### Remove fee tier
 ```rust
 #[ink(message)]
-pub fn remove_fee_tier(&mut self, key: FeeTierKey)
+pub fn remove_fee_tier(&mut self, key: FeeTierKey) -> Result<(), InvariantError>;
 ```
 #### Input parameters
 |Name|Type|Description|
 |-|-|-|
 |key|FeeTierKey|The key associated with the fee tier to be removed.|
+
 This function removes a fee tier based on the provided fee tier key. After removal, the fee tier will no longer be available for use in pool creation. It's important to note that existing pools with that fee tier will remain unaffected. This action is exclusively available to administrators.
 
 ## Pools
@@ -104,7 +145,7 @@ pub fn create_pool(
     token_1: AccountId,
     fee_tier: FeeTier,
     init_tick: i32,
-) -> Result<(), ContractErrors>
+) -> Result<(), InvariantError>;
 ```
 #### Input parameters
 |Name|Type|Description|
@@ -123,7 +164,7 @@ pub fn get_pool(
     token_0: AccountId,
     token_1: AccountId,
     fee_tier: FeeTier,
-) -> Result<Pool, ContractErrors> 
+) -> Result<Pool, InvariantError>;
 ```
 #### Input parameters
 |Name|Type|Description|
@@ -137,21 +178,21 @@ pub fn get_pool(
 |Pool|A struct containing pool data.|
 This function retrieves a pool based on two tokens and the specified fee tier. It returns an error if the pool does not exist.
 
-### Change fee receiver
+### Get pools
 ```rust
 #[ink(message)]
-pub fn change_fee_receiver(
-    &mut self,
-    pool_key: PoolKey,
-    fee_receiver: AccountId,
-) -> Result<(), ContractErrors>
+pub fn get_pools(
+    &self,
+) -> Vec<PoolKey>; 
 ```
-#### Input parameters
-|Name|Type|Description|
-|-|-|-|
-|pool_key|PoolKey|The pool key of the pool where the change is to be made.|
-|fee_receiver|AccountId|The new fee receiver's address of the pool.|
-This function allows for the modification of the fee receiver of a pool. Please note that this action is exclusively available to administrators.
+#### Output parameters
+|Type|Description|
+|-|-|
+|Vec<PoolKey\>|Vector with pool keys that indicates all pools listed.|
+
+This function retrieves a listed pool keys.
+
+
 
 ## Position
 
@@ -166,7 +207,7 @@ pub fn create_position(
     liquidity_delta: Liquidity,
     slippage_limit_lower: SqrtPrice,
     slippage_limit_upper: SqrtPrice,
-) -> Result<Position, ContractErrors>
+) -> Result<Position, InvariantError>;
 ```
 #### Input parameters
 |Name|Type|Description|
@@ -181,6 +222,7 @@ pub fn create_position(
 |Type|Description|
 |-|-|
 |Position|The position that was created.|
+
 This function creates a position based on the provided parameters. The amount of tokens specified in liquidity delta will be deducted from the user's token balances. Position creation will fail if the user does not have enough tokens or has not approved enough tokens.
 
 ### Transfer position
@@ -190,13 +232,14 @@ pub fn transfer_position(
     &mut self,
     index: u32,
     receiver: AccountId,
-) -> Result<(), ContractErrors>
+) -> Result<(), InvariantError>;
 ```
 #### Input parameters
 |Name|Type|Description|
 |-|-|-|
 |index|u32|Index of the position in the user's position list.|
 |receiver|AccountId|Address of the user who will receive the position.|
+
 This function changes ownership of an existing position based on the position index in the user's position list. You can only change ownership of positions that you own; otherwise, it will return an error.
 
 ### Remove position
@@ -205,7 +248,7 @@ This function changes ownership of an existing position based on the position in
 pub fn remove_position(
     &mut self,
     index: u32,
-) -> Result<(TokenAmount, TokenAmount), ContractErrors> 
+) -> Result<(TokenAmount, TokenAmount), InvariantError>; 
 ```
 #### Input parameters
 |Name|Type|Description|
@@ -216,6 +259,7 @@ pub fn remove_position(
 |-|-|
 |TokenAmount|Amount of token X sent to the user's wallet address.|
 |TokenAmount|Amount of token Y sent to the user's wallet address.|
+
 This function removes a position from the user's position list and transfers the tokens used to create the position to the user's address.
 
 ### Claim fee
@@ -224,7 +268,7 @@ This function removes a position from the user's position list and transfers the
 pub fn claim_fee(
     &mut self,
     index: u32,
-) -> Result<(TokenAmount, TokenAmount), ContractErrors>
+) -> Result<(TokenAmount, TokenAmount), InvariantError>;
 ```
 #### Input parameters
 |Name|Type|Description|
@@ -235,12 +279,13 @@ pub fn claim_fee(
 |-|-|
 |TokenAmount|Amount of token X sent to the user's wallet address.|
 |TokenAmount|Amount of token Y sent to the user's wallet address.|
+
 This function allows the user to claim fees from an existing position. Tokens will be sent to the user's address.
 
 ### Get position
 ```rust
 #[ink(message)]
-pub fn get_position(&mut self, index: u32) -> Option<Position> 
+pub fn get_position(&mut self, index: u32) -> Result<Position, InvariantError>; 
 ```
 #### Input parameters
 |Name|Type|Description|
@@ -249,18 +294,20 @@ pub fn get_position(&mut self, index: u32) -> Option<Position>
 #### Output parameters
 |Type|Description|
 |-|-|
-|Option<Position\>|An option that may contain `None` or a position struct with data if it exists.|
-This function returns an option that contains `None` if the position index is out of range or a position if it actually exists.
+|Result<Position, Invariatn Error\>|An Error that may be `PositionNotFound` or a position struct with data if it exists.|
+
+This function returns an result that contains `PositionNotFound` if the position cannot be found or a position if it actually exists.
 
 ### Get all positions
 ```rust
 #[ink(message)]
-pub fn get_all_positions(&mut self) -> Vec<Position>
+pub fn get_all_positions(&mut self) -> Vec<Position>;
 ```
 #### Output parameters
 |Type|Description|
 |-|-|
 |Vec<Position\>|A list containing the user's positions.|
+
 This function returns a list of positions owned by the caller. The list will be empty if you do not have any positions.
 
 ## Swap
@@ -275,7 +322,7 @@ pub fn swap(
     amount: TokenAmount,
     by_amount_in: bool,
     sqrt_price_limit: SqrtPrice,
-) -> Result<(), ContractErrors>
+) -> Result<CalculateSwapResult, InvariantError>;
 ```
 #### Input parameters
 |Name|Type|Description|
@@ -285,6 +332,12 @@ pub fn swap(
 |amount|TokenAmount|Amount of tokens you want to receive or give.|
 |by_amount_in|bool|Indicates whether the entered amount represents the tokens you wish to receive or give.|
 |sqrt_price_limit|SqrtPrice|If the swap achieves this square root of the price, it will be canceled.|
+
+#### Output parameters
+|Type|Description|
+|-|-|
+|CalculateSwapResult|A struct containing the amount in and amount out with starting and target square root of price, taken fee, pool and vector of crossed ticks.|
+
 This function executes a swap based on the provided parameters. It transfers tokens from the user's address to the contract's address and vice versa. The swap will fail if the user does not have enough tokens, has not approved enough tokens, or if there is insufficient liquidity.
 
 ### Swap Route
@@ -295,8 +348,8 @@ pub fn swap_route(
     amount_in: TokenAmount,
     expected_amount_out: TokenAmount,
     slippage: Percentage,
-    swaps: Vec<SwapRouteParams>,
-) -> Result<(), ContractErrors>
+    swaps: Vec<Hop>,
+) -> Result<(), InvariantError>;
 ```
 #### Input parameters
 | Name                   | Type                   | Description                                                  |
@@ -304,7 +357,7 @@ pub fn swap_route(
 | amount_in              | TokenAmount            | Amount of tokens you want to swap                             |
 | expected_amount_out    | TokenAmount            | Expected amount to receive as output calculated off-chain                           |
 | slippage               | Percentage             | Percentage difference influencing price change, emphasizing precision in the number of tokens received compared to the expected quantity        |
-| swaps                  | Vec&ltSwapRouteParams&gt   | Vector of pool keys and booleans identifying swap pool and direction |
+| swaps                  | Vec<Hop\>   | Vector of pool keys and booleans identifying swap pool and direction |
 
 This function facilitates atomic swaps between the user's address and the contract's address, executing multiple swaps based on the provided parameters. Tokens are transferred bidirectionally, from the user to the contract and vice versa, all within a single transaction. The swap is designed to be atomic, ensuring that it either completes entirely or reverts entirely. The success of the swap depends on factors such as the user having sufficient tokens, having approved the necessary token amounts, and the presence of adequate liquidity. Any failure in meeting these conditions will result in the swap transaction being reverted.
 
@@ -318,7 +371,7 @@ pub fn quote(
     amount: TokenAmount,
     by_amount_in: bool,
     sqrt_price_limit: SqrtPrice,
-) -> Result<(TokenAmount, TokenAmount, SqrtPrice, Vec<Tick>), ContractErrors>
+) -> Result<QuoteResult, InvariantError>;
 ```
 #### Input parameters
 |Name|Type|Description|
@@ -331,8 +384,80 @@ pub fn quote(
 #### Output parameters
 |Type|Description|
 |-|-|
-|TokenAmount|Amount of tokens received in the simulation.|
-|TokenAmount|Amount of tokens given in the simulation.|
-|SqrtPrice|Square root of price after the simulated swap.|
-|Vec<Tick\>|List of ticks that changed after the simulation.|
+|QuoteResult|A struct containing amount of tokens received, amount of tokens given, square root of price after the simulated swap and list of ticks that has been crossed durning the simulation|
+
 This function performs a simulation of a swap based on the provided parameters and returns the simulation results. It does not involve any actual token transfers.
+
+### Quote route
+```rust
+#[ink(message)]
+pub fn quote_route(
+    &self,
+    amount_in: TokenAmount,
+    swaps: Vec<Hop>,
+) -> Result<TokenAmount, InvariantError>;
+```
+#### Input parameters
+|Name|Type|Description|
+|-|-|-|
+|amount_in|TokenAmount|Amount of tokens you want to swap.|
+|swaps|Vec<Hop\>| A vector containing all parameters needed to identify separate swap steps.|
+
+#### Output parameters
+|Type|Description|
+|-|-|
+|TokenAmount|Amount of tokens received in the simulation.|
+
+This function performs a simulation of multiple swaps based on the provided parameters and returns the simulation results. It does not involve any actual token transfers.
+
+## Tick
+
+### Get tick
+```rust
+#[ink(message)]
+pub fn get_tick(
+    &self,
+    key: PoolKey,
+    index: i32
+) -> Result<Tick, InvariantError>;
+```
+
+#### Input parameters
+|Name|Type|Description|
+|-|-|-|
+|key|PoolKey|A unique key that identifies the specified pool.|
+|index|i32| The tick index in the tickmap.|
+
+#### Output parameters
+|Type|Description|
+|-|-|
+|Tick|A struct containing tick data.|
+
+Retrieves information about a tick at a specified index.
+
+
+### Is tick initialized
+
+```rust
+#[ink(message)]
+pub fn is_tick_initialized(
+    &self,
+    key: PoolKey,
+    index: i32
+) -> bool;
+```
+
+#### Input parameters
+|Name|Type|Description|
+|-|-|-|
+|key|PoolKey|A unique key that identifies the specified pool.|
+|index|i32| The tick index in the tickmap.|
+
+#### Output parameters
+|Type|Description|
+|-|-|
+|bool|boolean identifying if the tick is initialized in tickmap.|
+
+Retrieves information about a tick at a specified index.
+
+
