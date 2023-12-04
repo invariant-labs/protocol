@@ -49,8 +49,6 @@ pub struct Pool {
     pub start_timestamp: u64,
     pub last_timestamp: u64,
     pub fee_receiver: AccountId,
-    pub oracle_address: Oracle,
-    pub oracle_initialized: bool,
 }
 ```
 |Name|Type|Description|
@@ -66,8 +64,6 @@ pub struct Pool {
 |start_timestamp|u64|Time of initialization|
 |last_timestamp|u64|Last update|
 |fee_receiver|AccountId|Address of entity enabling to claim protocol fee. By default it's admin but can be change for specific pool|
-|oracle_address|Oracle|Oracle associated with Pool|
-|oracle_initialized|bool|Is oracle set for Pool|
 
 ## Position
 
@@ -138,35 +134,3 @@ pub struct State {
 |-|-|-|
 |admin|AccountId|Account address of pool admin|
 |protocol_fee|Percentage|Percentage of the fee collected upon every swap in the pool|
-
-## Oracle
-
-```rust
-pub struct Oracle {
-    pub data: Vec<Record>,
-    pub head: u16,
-    pub amount: u16,
-    pub size: u16,
-}
-```
-
-|Name|Type|Description|
-|-|-|-|
-|data|Vec Record |.|
-|head|u16|.|
-|amount|u16|.|
-|Size|u16|.|
-
-## Record
-
-```rust
-pub struct Record {
-    pub timestamp: u64,
-    pub price: SqrtPrice,
-}
-```
-
-|Name|Type|Description|
-|-|-|-|
-|timestamp|u64| Last update|
-|price|SqrtPrice|Square root of price in the last update|
