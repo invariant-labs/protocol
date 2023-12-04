@@ -45,12 +45,9 @@ pub struct Pool {
     pub fee_growth_global_y: FeeGrowth,
     pub fee_protocol_token_x: TokenAmount,
     pub fee_protocol_token_y: TokenAmount,
-    pub seconds_per_liquidity_global: SecondsPerLiquidity,
     pub start_timestamp: u64,
     pub last_timestamp: u64,
     pub fee_receiver: AccountId,
-    pub oracle_address: Oracle,
-    pub oracle_initialized: bool,
 }
 ```
 |Name|Type|Description|
@@ -62,12 +59,9 @@ pub struct Pool {
 |fee_growth_global_y|FeeGrowth|Amount of fees accumulated in token_y in per one integer unit of Liquidity|
 |fee_protocol_token_x|TokenAmount|Amount of protocol tokens accumulated in token_x in per one integer unit of Liquidity|
 |fee_protocol_token_y|TokenAmount|Amount of protocol tokens accumulated in token_y in per one integer unit of Liquidity|
-|seconds_per_liquidity_global|SecondsPerLiquidity|Cumulative seconds per liquidity-in-range value|
 |start_timestamp|u64|Time of initialization|
 |last_timestamp|u64|Last update|
 |fee_receiver|AccountId|Address of entity enabling to claim protocol fee. By default it's admin but can be change for specific pool|
-|oracle_address|Oracle|Oracle associated with Pool|
-|oracle_initialized|bool|Is oracle set for Pool|
 
 ## Position
 
@@ -79,7 +73,6 @@ pub struct Position {
     pub upper_tick_index: i32,
     pub fee_growth_inside_x: FeeGrowth,
     pub fee_growth_inside_y: FeeGrowth,
-    pub seconds_per_liquidity_inside: SecondsPerLiquidity,
     pub last_block_number: u64,
     pub tokens_owed_x: TokenAmount,
     pub tokens_owed_y: TokenAmount,
@@ -93,7 +86,6 @@ pub struct Position {
 |upper_tick_index|i32|Upper tick index of the Position|
 |fee_growth_inside_x|FeeGrowth|Amount of fees accumulated in token_x in-range|
 |fee_growth_inside_y|FeeGrowth|Amount of fees accumulated in token_y in-range|
-|seconds_per_liquidity_inside|SecondsPerLiquidity|Seconds spent in-range|
 |last_block_number|u64|Last update|
 |tokens_owed_x|TokenAmount|Amount of token_x that can be claimed|
 |tokens_owed_y|TokenAmount|Amount of token_y that can be claimed|
@@ -110,7 +102,6 @@ pub struct Tick {
     pub sqrt_price: SqrtPrice,
     pub fee_growth_outside_x: FeeGrowth,
     pub fee_growth_outside_y: FeeGrowth,
-    pub seconds_per_liquidity_outside: SecondsPerLiquidity,
     pub seconds_outside: u64,
 }
 ```
@@ -123,7 +114,6 @@ pub struct Tick {
 |sqrt_price|SqrtPrice|Square root of tick price|
 |fee_growth_outside_x|FeeGrowth|Amount of Fees accumulated in token_x outside-range|
 |fee_growth_outside_y|FeeGrowth|Amount of Fees accumulated in token_y outside-range|
-|seconds_per_liquidity_outside|SecondsPerLiquidity|Cumulative seconds per liquidity outside-range|
 |seconds_outside|u64|Seconds outside-range|
 
 ## State
@@ -138,35 +128,3 @@ pub struct State {
 |-|-|-|
 |admin|AccountId|Account address of pool admin|
 |protocol_fee|Percentage|Percentage of the fee collected upon every swap in the pool|
-
-## Oracle
-
-```rust
-pub struct Oracle {
-    pub data: Vec<Record>,
-    pub head: u16,
-    pub amount: u16,
-    pub size: u16,
-}
-```
-
-|Name|Type|Description|
-|-|-|-|
-|data|Vec Record |.|
-|head|u16|.|
-|amount|u16|.|
-|Size|u16|.|
-
-## Record
-
-```rust
-pub struct Record {
-    pub timestamp: u64,
-    pub price: SqrtPrice,
-}
-```
-
-|Name|Type|Description|
-|-|-|-|
-|timestamp|u64| Last update|
-|price|SqrtPrice|Square root of price in the last update|

@@ -12,7 +12,8 @@ This segment explores key storage structures that manage various entities within
 #[ink::storage_item]
 #[derive(Debug, Default)]
 pub struct Positions {
-    positions: Mapping<AccountId, (u32, Vec<Position>)>,
+    positions_length: Mapping<AccountId, u32>,
+    positions: Mapping<(AccountId, u32), Position>,
 }
 ```
 
@@ -49,7 +50,7 @@ We have chosen to store positions in the state rather than using NFTs for severa
         account_id: AccountId,
         index: u32,
         position: &Position,
-    ) -> Result<(), ContractErrors> {}
+    ) -> Result<(), InvariantError> {}
 ```
 - **Description**: Updates an existing position at a specific index for the specified account.
 - **Parameters**: `account_id` (AccountId), `index` (u32), `position` (Position)
@@ -60,7 +61,7 @@ We have chosen to store positions in the state rather than using NFTs for severa
         &mut self,
         account_id: AccountId,
         index: u32,
-    ) -> Result<Position, ContractErrors> {}
+    ) -> Result<Position, InvariantError> {}
 ```
 - **Description**: Removes a position at a specific index for the specified account.
 - **Parameters**: `account_id` (AccountId), `index` (u32)
@@ -72,7 +73,7 @@ We have chosen to store positions in the state rather than using NFTs for severa
         account_id: AccountId,
         index: u32,
         receiver: AccountId,
-    ) -> Result<(), ContractErrors> {}
+    ) -> Result<(), InvariantError> {}
 ```
 
 - **Description**: Transfers a position from one account to another.
@@ -102,14 +103,6 @@ We have chosen to store positions in the state rather than using NFTs for severa
 - **Parameters**: `account_id` (AccountId)
 - **Edge Cases**: None
 
-```rust
-    fn get_value(&self, account_id: AccountId) -> (u32, Vec<Position>) {}
-```
-- **Description**: Retrieves the tuple containing the number of positions and the vector of positions associated with the specified account.
-- **Parameters**: `account_id` (AccountId)
-- **Edge Cases**: None
-
-
 
 ## Ticks
 
@@ -133,15 +126,15 @@ The Ticks struct is designed to manage ticks associated between different pools.
 ### Functions within the `Ticks` Struct
 
 ```rust
-pub fn get_tick(&self, key: PoolKey, index: i32) -> Option<Tick> {}
+pub fn get(&self, key: PoolKey, index: i32) -> Result<Tick, InvariantError> {}
 ```
 
 - **Description**: Retrieves a Tick object associated with a specific PoolKey and index.
 - **Parameters**: key (PoolKey), index (i32)
-- **Edge Cases**: None
+- **Edge Cases**: Return an error if specified tick cannot be found
 
 ```rust
-pub fn remove_tick(&mut self, key: PoolKey, index: i32) -> Result<(), ContractErrors> {}
+pub fn remove(&mut self, key: PoolKey, index: i32) -> Result<(), InvariantError> {}
 ```
 
 - **Description**: Removes a tick associated with a specific PoolKey and index.
@@ -149,20 +142,20 @@ pub fn remove_tick(&mut self, key: PoolKey, index: i32) -> Result<(), ContractEr
 - **Edge Cases**: Returns an error if the specified tick does not exist.
 
 ```rust
-pub fn add_tick(&mut self, key: PoolKey, index: i32, tick: Tick) {}
+pub fn add(&mut self, key: PoolKey, index: i32, tick: &Tick) -> Result<(), InvariantError> {}
 ```
 
 - **Description**: Adds a new tick associated with a specific PoolKey and index.
 - **Parameters**: key (PoolKey), index (i32), tick (Tick)
-- **Edge Cases**: None
+- **Edge Cases**: Returns an error if tick already exist.
 
 ```rust
-pub fn update_tick(
+pub fn update(
     &mut self,
     key: PoolKey,
     index: i32,
     tick: &Tick,
-) -> Result<(), ContractErrors> {}
+) -> Result<(), InvariantError> {}
 ```
 
 - **Description**: Updates an existing tick associated with a specific PoolKey and index.
@@ -190,7 +183,7 @@ The `Pools` struct is designed to manage pools associated with different `PoolKe
 ### Functions within the `Pools` Struct
 
 ```rust
-    pub fn add(&mut self, pool_key: PoolKey, pool: &Pool) -> Result<(), ContractErrors> {}
+    pub fn add(&mut self, pool_key: PoolKey, pool: &Pool) -> Result<(), InvariantError> {}
 ```
 
 - **Description**: Adds a new pool associated with the specified `PoolKey`.
@@ -198,7 +191,7 @@ The `Pools` struct is designed to manage pools associated with different `PoolKe
 - **Edge Cases**: Returns an error if a pool with the same `PoolKey` already exists.
 
 ```rust
-    pub fn get(&self, pool_key: PoolKey) -> Result<Pool, ContractErrors> {}
+    pub fn get(&self, pool_key: PoolKey) -> Result<Pool, InvariantError> {}
 ```
 
 - **Description**: Retrieves a pool associated with the specified `PoolKey`.
@@ -206,7 +199,7 @@ The `Pools` struct is designed to manage pools associated with different `PoolKe
 - **Edge Cases**: Returns an error if the specified pool does not exist.
 
 ```rust
-    pub fn update(&mut self, pool_key: PoolKey, pool: &Pool) -> Result<(), ContractErrors> {}
+    pub fn update(&mut self, pool_key: PoolKey, pool: &Pool) -> Result<(), InvariantError> {}
 ```
 
 - **Description**: Updates an existing pool associated with the specified `PoolKey`.
@@ -214,7 +207,7 @@ The `Pools` struct is designed to manage pools associated with different `PoolKe
 - **Edge Cases**: Returns an error if the specified pool does not exist.
 
 ```rust
-    pub fn remove(&mut self, pool_key: PoolKey) -> Result<(), ContractErrors> {}
+    pub fn remove(&mut self, pool_key: PoolKey) -> Result<(), InvariantError> {}
 ```
 
 - **Description**: Removes a pool associated with the specified `PoolKey`.
@@ -228,52 +221,82 @@ The `Pools` struct is designed to manage pools associated with different `PoolKe
 #[ink::storage_item]
 #[derive(Debug, Default)]
 pub struct FeeTiers {
-    fee_tiers: Mapping<FeeTierKey, ()>,
+    fee_tiers: Vec<FeeTier>,
 }
 ```
 
-|Key|Value|
-|-|-|
-|`FeeTierKey` - A key comprised of `Percentage` and `u16`, uniquely identifying a fee tier| An empty tuple `()` as a placeholder |
-The `FeeTiers` struct is designed to manage fee tiers associated with different `FeeTierKey` values. It uses a mapping data structure, where each fee tier is identified by a `FeeTierKey`, and an empty tuple `()` serves as a placeholder for the associated value. The provided functions allow you to retrieve, add, and remove fee tiers based on specific `FeeTierKey` values.
+The `FeeTiers` struct is designed to manage fee tiers. It utilizes a vector (Vec) data structure, where each element corresponds to a different fee tier represented by a `FeeTier` object. The provided functions allow you to add, retrieve, update, and remove fee tiers within the collection. Each fee tier is uniquely identified within the vector, and you can perform operations on these fee tiers based on their positions in the vector.
 
 ### Functions within the `FeeTiers` Struct
 
 ```rust
-    pub fn get_fee_tier(&self, key: FeeTierKey) -> Option<()> {}
+    pub fn get_all(&self) -> Vec<FeeTier> {}
 ```
-- **Description**: Retrieves a fee tier associated with the specified `FeeTierKey`.
-- **Parameters**: `key` (FeeTierKey)
+- **Description**: Retrieves a  all fee tiers.
+- **Parameters**: `key` (FeeTier)
 - **Edge Cases**: None
 
 ```rust
-    pub fn add_fee_tier(&mut self, key: FeeTierKey) {}
+    pub fn contains(&self, key: FeeTier) -> bool {}
 ```
-- **Description**: Adds a new fee tier associated with the specified `FeeTierKey`.
-- **Parameters**: `key` (FeeTierKey)
+- **Description**: Verifies if specified `FeeTier` exist.
+- **Parameters**: `key` (FeeTier)
 - **Edge Cases**: None
 
 ```rust
-    pub fn remove_fee_tier(&mut self, key: FeeTierKey) {}
+    pub fn add(&mut self, key: FeeTier) -> Result<(), InvariantError> {}
 ```
-- **Description**: Removes a fee tier associated with the specified `FeeTierKey`.
-- **Parameters**: `key` (FeeTierKey)
-- **Edge Cases**: None
-
-## Pool Keys and Fee Tier Keys
+- **Description**: Adds a new fee tier associated with the specified `FeeTier`.
+- **Parameters**: `key` (FeeTier)
+- **Edge Cases**: Returns an error if fee tier already exist
 
 ```rust
-    #[ink(storage)]
-    #[derive(Default)]
-    pub struct Contract {
-        fee_tier_keys: Vec<FeeTierKey>,
-        pool_keys: Vec<PoolKey>,
-        ...
-    }
+    pub fn remove(&mut self, key: FeeTier) -> Result<(), InvariantError> {}
+```
+- **Description**: Removes a fee tier associated with the specified `FeeTier`.
+- **Parameters**: `key` (FeeTier)
+- **Edge Cases**: Returns an error if fee tier cannot be found
+
+## Pool Keys
+
+```rust
+#[ink::storage_item]
+#[derive(Debug, Default)]
+pub struct PoolKeys {
+    pool_keys: Vec<PoolKey>,
+}
 ```
 
-- `fee_tier_keys`: A `Vec` (vector) of `FeeTierKey` instances that define various fee tiers for the system.
+The `PoolKeys` struct is designed to manage pool keys. It utilizes a vector (Vec) data structure, where each element corresponds to a different pool key represented by a `PoolKey` object. The provided functions allow you to add, retrieve, update, and remove pool keys within the collection. Each pool key is uniquely identified within the vector, and you can perform operations on these pool keys based on their positions in the vector.
 
-- `pool_keys`: A `Vec` of `PoolKey` instances used to identify liquidity pools within the ecosystem.
 
-These collections play a pivotal role in ensuring the seamless operation and interaction within the system by allowing easy access to fee tier data and providing a store for supported tokens.
+### Functions within the `PoolKeys` Struct
+
+```rust
+    pub fn get_all(&self) -> Vec<FeeTier> {}
+```
+- **Description**: Retrieves all pool keys.
+- **Parameters**: `pool_key` (PoolKey)
+- **Edge Cases**: None
+
+```rust
+    pub fn contains(&self, pool_key: PoolKey) -> bool {}
+```
+- **Description**: Verifies if specified `PoolKey` exist.
+- **Parameters**: `pool_key` (PoolKey)
+- **Edge Cases**: None
+
+```rust
+    pub fn add(&mut self, pool_key: PoolKey) -> Result<(), InvariantError> {}
+```
+- **Description**: Adds a new pool key associated with the specified `PoolKey`.
+- **Parameters**: `pool_key` (PoolKey)
+- **Edge Cases**: Returns an error if pool key already exist
+
+```rust
+    pub fn remove(&mut self, pool_key: PoolKey) -> Result<(), InvariantError> {}
+```
+- **Description**: Removes a pool key associated with the specified `PoolKey`.
+- **Parameters**: `pool_key` (PoolKey)
+- **Edge Cases**: Returns an error if pool key cannot be found
+
