@@ -14,8 +14,9 @@
     "write-heading-ids": "docusaurus write-heading-ids"
   },
   "dependencies": {
-    "@docusaurus/core": "^2.0.0-beta.ff31de0ff",
-    "@docusaurus/preset-classic": "^2.0.0-beta.ff31de0ff",
+    "@docusaurus/core": "^2.4.3",
+    "@docusaurus/plugin-client-redirects": "^2.4.3",
+    "@docusaurus/preset-classic": "^2.4.3",
     "@mdx-js/react": "^1.6.21",
     "@solana/web3.js": "^1.21.0",
     "clsx": "^1.1.1",

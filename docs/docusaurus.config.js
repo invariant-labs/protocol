@@ -89,5 +89,34 @@ module.exports = {
       integrity: 'sha384-odtC+0UGzzFL/6PNoE8rX/SPcQDXBJ+uRepguP4QkPCm2LBxH3FA3y+fKSiJ+AmM',
       crossorigin: 'anonymous'
     }
-  ]
+  ],
+  plugins: [
+    [
+      '@docusaurus/plugin-client-redirects',
+      {
+        fromExtensions: ['html'],
+        toExtensions: ['html'], 
+        redirects: [
+          {
+            from: '/docs/aleph_zero/',
+            to: '/docs/aleph_zero/project_structure',
+          },
+          {
+            from: '/docs/solana/',
+            to: '/docs/solana/introduction',
+          },
+        ],
+        createRedirects(existingPath) {
+          if(existingPath === "/docs/aleph_zero/" ) { 
+            return "/docs/aleph_zero/project_structure";
+          }
+          if (existingPath === "/docs/solana/") {
+            return '/docs/solana/introduction';
+          }
+          // Path does not require a redirect.
+          return undefined;
+        },
+      },
+    ],
+  ],
 }
