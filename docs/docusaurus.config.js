@@ -94,8 +94,8 @@ module.exports = {
     [
       '@docusaurus/plugin-client-redirects',
       {
-        fromExtensions: ['html'], // /myPage.html -> /myPage
-        toExtensions: ['html'], // /myAsset -> /myAsset.zip (if latter exists)
+        fromExtensions: ['html'],
+        toExtensions: ['html'], 
         redirects: [
           {
             from: '/docs/aleph_zero/',
@@ -103,24 +103,18 @@ module.exports = {
           },
           {
             from: '/docs/solana/',
-            to: '/docs/aleph_zero/project_structure',
+            to: '/docs/solana/introduction',
           },
         ],
         createRedirects(existingPath) {
-          // if (existingPath.includes('/community')) {
-          //   // Redirect from /docs/team/X to /community/X and /docs/support/X to /community/X
-          //   return [
-          //     existingPath.replace('/community', '/docs/team'),
-          //     existingPath.replace('/community', '/docs/support'),
-          //   ];
-          // }
           if(existingPath === "/docs/aleph_zero/" ) { 
             return "/docs/aleph_zero/project_structure";
           }
           if (existingPath === "/docs/solana/") {
-            return ["/docs/aleph_zero/project_structure"];
+            return '/docs/solana/introduction';
           }
-          return undefined; // Return a falsy value: no redirect created
+          // Path does not require a redirect.
+          return undefined;
         },
       },
     ],
