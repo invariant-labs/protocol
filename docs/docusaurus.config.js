@@ -89,5 +89,40 @@ module.exports = {
       integrity: 'sha384-odtC+0UGzzFL/6PNoE8rX/SPcQDXBJ+uRepguP4QkPCm2LBxH3FA3y+fKSiJ+AmM',
       crossorigin: 'anonymous'
     }
-  ]
+  ],
+  plugins: [
+    [
+      '@docusaurus/plugin-client-redirects',
+      {
+        fromExtensions: ['html'], // /myPage.html -> /myPage
+        toExtensions: ['html'], // /myAsset -> /myAsset.zip (if latter exists)
+        redirects: [
+          {
+            from: '/docs/aleph_zero/',
+            to: '/docs/aleph_zero/project_structure',
+          },
+          {
+            from: '/docs/solana/',
+            to: '/docs/aleph_zero/project_structure',
+          },
+        ],
+        createRedirects(existingPath) {
+          // if (existingPath.includes('/community')) {
+          //   // Redirect from /docs/team/X to /community/X and /docs/support/X to /community/X
+          //   return [
+          //     existingPath.replace('/community', '/docs/team'),
+          //     existingPath.replace('/community', '/docs/support'),
+          //   ];
+          // }
+          if(existingPath === "/docs/aleph_zero/" ) { 
+            return "/docs/aleph_zero/project_structure";
+          }
+          if (existingPath === "/docs/solana/") {
+            return ["/docs/aleph_zero/project_structure"];
+          }
+          return undefined; // Return a falsy value: no redirect created
+        },
+      },
+    ],
+  ],
 }
