@@ -86,7 +86,6 @@ pub struct Position {
 |upper_tick_index|i32|Upper tick index of the Position|
 |fee_growth_inside_x|FeeGrowth|Amount of fees accumulated in token_x in-range|
 |fee_growth_inside_y|FeeGrowth|Amount of fees accumulated in token_y in-range|
-|seconds_per_liquidity_inside|SecondsPerLiquidity|Seconds spent in-range|
 |last_block_number|u64|Last update|
 |tokens_owed_x|TokenAmount|Amount of token_x that can be claimed|
 |tokens_owed_y|TokenAmount|Amount of token_y that can be claimed|
