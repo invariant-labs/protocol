@@ -45,7 +45,6 @@ pub struct Pool {
     pub fee_growth_global_y: FeeGrowth,
     pub fee_protocol_token_x: TokenAmount,
     pub fee_protocol_token_y: TokenAmount,
-    pub seconds_per_liquidity_global: SecondsPerLiquidity,
     pub start_timestamp: u64,
     pub last_timestamp: u64,
     pub fee_receiver: AccountId,
@@ -60,7 +59,6 @@ pub struct Pool {
 |fee_growth_global_y|FeeGrowth|Amount of fees accumulated in token_y in per one integer unit of Liquidity|
 |fee_protocol_token_x|TokenAmount|Amount of protocol tokens accumulated in token_x in per one integer unit of Liquidity|
 |fee_protocol_token_y|TokenAmount|Amount of protocol tokens accumulated in token_y in per one integer unit of Liquidity|
-|seconds_per_liquidity_global|SecondsPerLiquidity|Cumulative seconds per liquidity-in-range value|
 |start_timestamp|u64|Time of initialization|
 |last_timestamp|u64|Last update|
 |fee_receiver|AccountId|Address of entity enabling to claim protocol fee. By default it's admin but can be change for specific pool|
@@ -75,7 +73,6 @@ pub struct Position {
     pub upper_tick_index: i32,
     pub fee_growth_inside_x: FeeGrowth,
     pub fee_growth_inside_y: FeeGrowth,
-    pub seconds_per_liquidity_inside: SecondsPerLiquidity,
     pub last_block_number: u64,
     pub tokens_owed_x: TokenAmount,
     pub tokens_owed_y: TokenAmount,
@@ -106,7 +103,6 @@ pub struct Tick {
     pub sqrt_price: SqrtPrice,
     pub fee_growth_outside_x: FeeGrowth,
     pub fee_growth_outside_y: FeeGrowth,
-    pub seconds_per_liquidity_outside: SecondsPerLiquidity,
     pub seconds_outside: u64,
 }
 ```
@@ -119,7 +115,6 @@ pub struct Tick {
 |sqrt_price|SqrtPrice|Square root of tick price|
 |fee_growth_outside_x|FeeGrowth|Amount of Fees accumulated in token_x outside-range|
 |fee_growth_outside_y|FeeGrowth|Amount of Fees accumulated in token_y outside-range|
-|seconds_per_liquidity_outside|SecondsPerLiquidity|Cumulative seconds per liquidity outside-range|
 |seconds_outside|u64|Seconds outside-range|
 
 ## State

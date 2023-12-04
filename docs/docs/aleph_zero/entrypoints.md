@@ -57,8 +57,8 @@ This operation enables the withdrawal of protocol fees associated with a specifi
 |`NotFeeReceiver`|Reverts the call when the caller is unauthorized receiver.| 
 
 #### External Contracts
-|Standard|PSP22|
-|-|-|
+
+- PSP22
 
 ### Change protocol fee
 ```rust
@@ -298,8 +298,8 @@ This function creates a position based on the provided parameters. The amount of
 
  
 #### External Contracts
-|Standard|PSP22|
-|-|-|
+
+- PSP22
 
 
 ### Transfer position
@@ -347,8 +347,8 @@ This function removes a position from the user's position list and transfers the
 |`PositionNotFound`|Fails if Position cannot be found.| 
  
 #### External Contracts
-|Standard|PSP22|
-|-|-|
+
+- PSP22
 
 ### Claim fee
 ```rust
@@ -378,8 +378,8 @@ This function allows the user to claim fees from an existing position. Tokens wi
 |`PositionNotFound`|Fails if Position cannot be found.| 
  
 #### External Contracts
-|Standard|PSP22|
-|-|-|
+
+- PSP22
 
 ### Get position
 ```rust
@@ -458,8 +458,8 @@ This function executes a swap based on the provided parameters. It transfers tok
 |`PoolNotFound`|Fails if pool does not exist.| 
  
 #### External Contracts
-|Standard|PSP22|
-|-|-|
+
+- PSP22
 
 ### Swap Route
 ```rust
@@ -494,9 +494,8 @@ This function facilitates atomic swaps between the user's address and the contra
 |`PoolNotFound`|Fails if pool does not exist.| 
  
 #### External Contracts
-|Standard|PSP22|
-|-|-|
 
+- PSP22
 
 ### Quote
 ```rust
