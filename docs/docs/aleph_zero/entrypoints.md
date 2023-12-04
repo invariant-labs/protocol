@@ -454,7 +454,7 @@ This function executes a swap based on the provided parameters. It transfers tok
 |`PriceLimitReached`|Fails if the price has reached the specified price limit (or price associated with specified square root of price).| 
 |`NoGainSwap`|Fails if the user would receive zero tokens.| 
 |`TransferError`|Fails if the allowance is insufficient or the user balance transfer fails.| 
-|`TODO`|Fails if there is insufficient liquidity in pool.| 
+<!-- |`TODO`|Fails if there is insufficient liquidity in pool.|  -->
 |`PoolNotFound`|Fails if pool does not exist.| 
  
 #### External Contracts
@@ -490,7 +490,7 @@ This function facilitates atomic swaps between the user's address and the contra
 |`PriceLimitReached`|Fails if the price has reached the specified price limit (or price associated with specified square root of price).| 
 |`NoGainSwap`|Fails if the user would receive zero tokens.| 
 |`TransferError`|Fails if the allowance is insufficient or the user balance transfer fails.| 
-|`TODO`|Fails if there is insufficient liquidity in pool.| 
+<!-- |`TODO`|Fails if there is insufficient liquidity in pool.|  -->
 |`PoolNotFound`|Fails if pool does not exist.| 
  
 #### External Contracts
