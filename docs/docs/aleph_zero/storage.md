@@ -6,6 +6,20 @@ slug: /aleph_zero/storage
 
 This section provides an in-depth exploration of key data structures integral to the Aleph Zero protocol's storage mechanism. Understanding these structures is fundamental for developers and integrators working with the protocol.
 
+## Contract state
+
+```rust
+pub struct State {
+    pub admin: AccountId,
+    pub protocol_fee: Percentage,
+}
+```
+|Name|Type|Description|
+|-|-|-|
+|admin|AccountId|Account address of pool admin|
+|protocol_fee|Percentage|Percentage of the fee collected upon every swap in the pool|
+
+
 ## FeeTier
 
 ```rust
@@ -115,16 +129,3 @@ pub struct Tick {
 |fee_growth_outside_x|FeeGrowth|Amount of Fees accumulated in token_x outside-range|
 |fee_growth_outside_y|FeeGrowth|Amount of Fees accumulated in token_y outside-range|
 |seconds_outside|u64|Seconds outside-range|
-
-## State
-
-```rust
-pub struct State {
-    pub admin: AccountId,
-    pub protocol_fee: Percentage,
-}
-```
-|Name|Type|Description|
-|-|-|-|
-|admin|AccountId|Account address of pool admin|
-|protocol_fee|Percentage|Percentage of the fee collected upon every swap in the pool|
