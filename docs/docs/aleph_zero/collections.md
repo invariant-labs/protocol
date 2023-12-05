@@ -25,7 +25,7 @@ The `Positions` struct is designed to manage positions associated with different
 
 This documentation should help users understand the purpose of the `Positions` struct and how to use its functions effectively.
 
-**Why Positions are Stored in State Instead of NFTs:**
+**Why Positions are Stored in State Instead of NFTs?**
 
 We have chosen to store positions in the state rather than using NFTs for several reasons:
 
