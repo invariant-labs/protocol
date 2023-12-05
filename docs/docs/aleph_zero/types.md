@@ -40,11 +40,11 @@ In this example, the result of creation should be interpreted as 12.042, calcula
 |Name|Decimals|Primitive type|Big type|Description|
 |-|-|-|-|-|
 |SqrtPrice|24|u128|U256|Square root of price value|
-|FeeGrowth|28|u128|U256|Accumulated amount of fees|
+|FeeGrowth|28|u128|U256|Accumulated amount of fees per unit of liquidity|
 |FixedPoint|12|u128|U256|Number with fixed number of decimal places|
 |Liquidity|6|u128|U256|Amount of virtual liquidity|
-|Percentage|12|u64|U256|Represents values as fractions of 100|
-|SecondsPerLiquidity|24|u128|U256|Measures the time inside/outside liquidity|
+|Percentage|12|u64|U256|A numerical percentage value|
+|SecondsPerLiquidity|24|u128|U256|Measures the time in seconds per unit of liquidity|
 |TokenAmount|0|u128|U256|Quantity of specific token|
 
 ## Definitions

@@ -4,7 +4,7 @@ title: Installation
 slug: /aleph_zero/installation
 ---
 
-This section provides detailed instructions on how to install the Invariant protocol smart contract on Aleph Zero, including prerequisites and steps for setting up the development environment.
+This section provides detailed instructions on how to install the Invariant protocol on Aleph Zero, including prerequisites and steps for setting up the development environment. 
 
 ## Prerequisites
 
@@ -27,19 +27,19 @@ rustup component add rust-src && cargo install --force --locked cargo-contract
 ```bash
 cargo install contracts-node --git https://github.com/paritytech/substrate-contracts-node.git
 ```
-## Installation
+## Build protocol
 
 * Clone repository
 ```
 git clone git@github.com:invariant-labs/protocol-a0.git
 ```
 
-* Run tests
-```
-cargo test --features e2e-tests
-```
-
 * Build contract
 ```
 cargo contract build
+```
+
+* Run tests
+```
+cargo test --features e2e-tests
 ```
