@@ -17,9 +17,9 @@ pub struct Positions {
 }
 ```
 
-|Key|Value|
-|-|-|
-|Unique account identifier| A tuple containing the number of positions (u32) and a vector of `Position` objects |
+| Key                       | Value                                                                               |
+| ------------------------- | ----------------------------------------------------------------------------------- |
+| Unique account identifier | A tuple containing the number of positions (u32) and a vector of `Position` objects |
 
 The `Positions` struct is designed to manage positions associated with different accounts. It uses a mapping data structure, where each account is uniquely identified by its `AccountId`, and a tuple containing the number of positions and a vector of positions is stored as the associated value. The provided functions allow you to add, update, remove, transfer, and retrieve positions associated with specific accounts.
 
@@ -29,14 +29,13 @@ This documentation should help users understand the purpose of the `Positions` s
 
 We have chosen to store positions in the state rather than using NFTs for several reasons:
 
-1. **Optimal determining user's positions and iterating through them**: Main reason is independence from blockchain token indexer. Iterating through NFTs can be problematic and less efficient, especially when dealing with a large number of unique NFTs. Storing positions in a state makes it easier to manage and access them. Maintaining positions in the state can be more cost-effective in terms of gas fees and contract execution. NFTs can involve additional costs for minting, transferring, and managing unique tokens.
+1. **Efficient Search Operations**: One primary advantage is the enhanced efficiency in searching for and accessing specified positions. Independence from blockchain token indexers distinguishes this approach. Unlike the alternative, where determining a user's position may require iterating through all available NFTs, storing positions in the state streamlines the process of retrieving and managing positions for specific accounts. This makes it a more optimal choice when precision and speed are crucial.
 
-2. **Optimal Search**: Searching for and accessing specified positions is more optimal when positions are stored in the state. It simplifies the process of retrieving and managing positions for specific accounts.
-
+2. **Gas Cost Optimization**: Iterating through NFTs can pose challenges and inefficiencies, particularly with a substantial number of unique tokens. Storing positions in the state not only simplifies management and access but also proves to be more cost-effective in terms of gas fees and overall contract execution, leading to improved gas cost optimization. Unlike NFTs, which may incur additional costs for minting, transferring, and managing unique tokens, the state-based approach offers a more streamlined and economical solution.
 
 ### Functions within the `Positions` Struct
 
-```rust 
+```rust
     pub fn add(&mut self, account_id: AccountId, position: Position) {}
 ```
 
@@ -52,6 +51,7 @@ We have chosen to store positions in the state rather than using NFTs for severa
         position: &Position,
     ) -> Result<(), InvariantError> {}
 ```
+
 - **Description**: Updates an existing position at a specific index for the specified account.
 - **Parameters**: `account_id` (AccountId), `index` (u32), `position` (Position)
 - **Edge Cases**: Returns an error if the specified index is out of bounds.
@@ -63,6 +63,7 @@ We have chosen to store positions in the state rather than using NFTs for severa
         index: u32,
     ) -> Result<Position, InvariantError> {}
 ```
+
 - **Description**: Removes a position at a specific index for the specified account.
 - **Parameters**: `account_id` (AccountId), `index` (u32)
 - **Edge Cases**: Returns an error if the specified index is out of bounds.
@@ -99,10 +100,10 @@ We have chosen to store positions in the state rather than using NFTs for severa
 ```rust
     fn get_length(&self, account_id: AccountId) -> u32 {}
 ```
+
 - **Description**: Retrieves the number of positions associated with the specified account.
 - **Parameters**: `account_id` (AccountId)
 - **Edge Cases**: None
-
 
 ## Ticks
 
@@ -115,13 +116,11 @@ pub struct Ticks {
 
 ```
 
-|Key|Value|
-|-|-|
-|A tuple of `PoolKey` and `i32` values, uniquely identifying a specific tick.| A `Tick` object associated with the key |
+| Key                                                                          | Value                                   |
+| ---------------------------------------------------------------------------- | --------------------------------------- |
+| A tuple of `PoolKey` and `i32` values, uniquely identifying a specific tick. | A `Tick` object associated with the key |
 
 The Ticks struct is designed to manage ticks associated between different pools. It uses a mapping data structure, where each tick is identified by a tuple of PoolKey and i32 (tick index), and a Tick object is stored as the associated value. The provided functions allow you to retrieve, add, update, and remove ticks associated with specific PoolKey values.
-
-
 
 ### Functions within the `Ticks` Struct
 
@@ -173,12 +172,11 @@ pub struct Pools {
 }
 ```
 
-|Key|Value|
-|-|-|
-|A unique identifier for a pool| A `Pool` object associated with the key |
+| Key                            | Value                                   |
+| ------------------------------ | --------------------------------------- |
+| A unique identifier for a pool | A `Pool` object associated with the key |
 
 The `Pools` struct is designed to manage pools associated with different `PoolKey` values. It uses a mapping data structure, where each pool is identified by a unique `PoolKey`, and a `Pool` object is stored as the associated value. The provided functions allow you to add, retrieve, update, and remove pools associated with specific `PoolKey` values.
-
 
 ### Functions within the `Pools` Struct
 
@@ -214,7 +212,6 @@ The `Pools` struct is designed to manage pools associated with different `PoolKe
 - **Parameters**: `pool_key` (PoolKey)
 - **Edge Cases**: Returns an error if the specified pool does not exist.
 
-
 ## Fee Tiers
 
 ```rust
@@ -232,13 +229,15 @@ The `FeeTiers` struct is designed to manage fee tiers. It utilizes a vector (Vec
 ```rust
     pub fn get_all(&self) -> Vec<FeeTier> {}
 ```
-- **Description**: Retrieves a  all fee tiers.
+
+- **Description**: Retrieves a all fee tiers.
 - **Parameters**: `key` (FeeTier)
 - **Edge Cases**: None
 
 ```rust
     pub fn contains(&self, key: FeeTier) -> bool {}
 ```
+
 - **Description**: Verifies if specified `FeeTier` exist.
 - **Parameters**: `key` (FeeTier)
 - **Edge Cases**: None
@@ -246,6 +245,7 @@ The `FeeTiers` struct is designed to manage fee tiers. It utilizes a vector (Vec
 ```rust
     pub fn add(&mut self, key: FeeTier) -> Result<(), InvariantError> {}
 ```
+
 - **Description**: Adds a new fee tier associated with the specified `FeeTier`.
 - **Parameters**: `key` (FeeTier)
 - **Edge Cases**: Returns an error if fee tier already exist
@@ -253,6 +253,7 @@ The `FeeTiers` struct is designed to manage fee tiers. It utilizes a vector (Vec
 ```rust
     pub fn remove(&mut self, key: FeeTier) -> Result<(), InvariantError> {}
 ```
+
 - **Description**: Removes a fee tier associated with the specified `FeeTier`.
 - **Parameters**: `key` (FeeTier)
 - **Edge Cases**: Returns an error if fee tier cannot be found
@@ -269,12 +270,12 @@ pub struct PoolKeys {
 
 The `PoolKeys` struct is designed to manage pool keys. It utilizes a vector (Vec) data structure, where each element corresponds to a different pool key represented by a `PoolKey` object. The provided functions allow you to add, retrieve, update, and remove pool keys within the collection. Each pool key is uniquely identified within the vector, and you can perform operations on these pool keys based on their positions in the vector.
 
-
 ### Functions within the `PoolKeys` Struct
 
 ```rust
     pub fn get_all(&self) -> Vec<FeeTier> {}
 ```
+
 - **Description**: Retrieves all pool keys.
 - **Parameters**: `pool_key` (PoolKey)
 - **Edge Cases**: None
@@ -282,6 +283,7 @@ The `PoolKeys` struct is designed to manage pool keys. It utilizes a vector (Vec
 ```rust
     pub fn contains(&self, pool_key: PoolKey) -> bool {}
 ```
+
 - **Description**: Verifies if specified `PoolKey` exist.
 - **Parameters**: `pool_key` (PoolKey)
 - **Edge Cases**: None
@@ -289,6 +291,7 @@ The `PoolKeys` struct is designed to manage pool keys. It utilizes a vector (Vec
 ```rust
     pub fn add(&mut self, pool_key: PoolKey) -> Result<(), InvariantError> {}
 ```
+
 - **Description**: Adds a new pool key associated with the specified `PoolKey`.
 - **Parameters**: `pool_key` (PoolKey)
 - **Edge Cases**: Returns an error if pool key already exist
@@ -296,7 +299,7 @@ The `PoolKeys` struct is designed to manage pool keys. It utilizes a vector (Vec
 ```rust
     pub fn remove(&mut self, pool_key: PoolKey) -> Result<(), InvariantError> {}
 ```
+
 - **Description**: Removes a pool key associated with the specified `PoolKey`.
 - **Parameters**: `pool_key` (PoolKey)
 - **Edge Cases**: Returns an error if pool key cannot be found
-
