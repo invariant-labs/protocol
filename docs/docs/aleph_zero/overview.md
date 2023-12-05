@@ -1,5 +1,5 @@
 ---
-title: Project Structure
+title: Overview
 
 slug: /aleph_zero/project_structure
 ---
@@ -8,15 +8,20 @@ This section provides an overview of the structural organization of the Invarian
 
 ## Contract Architecture
 
-To optimize cost-effectiveness, we centralize data in a singular contract, reducing expenses tied to pool and position creation. This streamlined approach not only cuts costs but also simplifies processes, enhancing accessibility. By concentrating state changes and entrypoints within this central contract, we eliminate the intricacies of managing external contracts, while smart mapping intelligently conserves storage resources and bolsters system efficiency.
+To optimize gas usage, we centralize data and entrypoints in a singular contract, reducing expenses associated with pool and position creation. This streamlined approach not only cuts costs but also simplifies processes, enhancing accessibility. By concentrating state changes and entrypoints within this central contract, we eliminate the intricacies of managing external contracts, while smart mapping intelligently conserves storage resources and bolsters system efficiency.
 
-## Simplified
+## Project structure
+
+The following presents the project's overall structure, supplying insights into the logical segmentation into modules/
 
 ```
 📦protocol-a0
  ┣ 📂contracts
- ┃ ┣ 📜storage
- ┃ ┗ 📜collections
+ ┃ ┣ 📂collections
+ ┃ ┣ 📂logic
+ ┃ ┣ 📂storage
+ | ┗ 📜entrypoints
+ ┣ 📂e2e
  ┣ 📂decimal
  ┣ 📂math
  ┣ 📂test_helpers
@@ -49,9 +54,7 @@ In the "Traceable Result" directory, you will find a comprehensive library compr
 
 
 ### Source Code Access
-For a detailed exploration of our contract structures, collections, and associated logic, please refer to the corresponding [Source Code Repository](https://github.com/invariant-labs/protocol-a0). This repository contains the complete and up-to-date implementation of our contract architecture.
-
-## Extended
+For a detailed exploration of our contract structures, collections, and associated logic, please refer to the corresponding [Source Code Repository](https://github.com/invariant-labs/protocol-a0). This repository contains the complete and up-to-date implementation of our contract architecture. Here lies the comprehensive project structure, which can be represented as follows.
 
 ```
 📦protocol-a0
