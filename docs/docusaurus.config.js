@@ -25,7 +25,7 @@ module.exports = {
       },
       items: [
         { to: '/docs/solana/introduction', label: 'Solana', position: 'left' },
-        { to: '/docs/aleph_zero/project_structure', label: 'Aleph Zero', position: 'left' }
+        { to: '/docs/aleph_zero/installation', label: 'Aleph Zero', position: 'left' }
       ]
     },
     footer: {
@@ -99,7 +99,7 @@ module.exports = {
         redirects: [
           {
             from: '/docs/aleph_zero/',
-            to: '/docs/aleph_zero/project_structure',
+            to: '/docs/aleph_zero/installation',
           },
           {
             from: '/docs/solana/',
@@ -108,7 +108,7 @@ module.exports = {
         ],
         createRedirects(existingPath) {
           if(existingPath === "/docs/aleph_zero/" ) { 
-            return "/docs/aleph_zero/project_structure";
+            return "/docs/aleph_zero/installation";
           }
           if (existingPath === "/docs/solana/") {
             return '/docs/solana/introduction';
