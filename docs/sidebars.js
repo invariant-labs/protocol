@@ -63,7 +63,7 @@ module.exports = {
       type: 'category',
       label: 'Aleph Zero',
       collapsed: true,
-      items: ['aleph_zero/installation', 'aleph_zero/overview','aleph_zero/entrypoints', 'aleph_zero/collections','aleph_zero/storage','aleph_zero/types', 'aleph_zero/listing_pool_to_azero', 'aleph_zero/invariant_errors']
+      items: ['aleph_zero/installation', 'aleph_zero/overview', 'aleph_zero/types', 'aleph_zero/storage', 'aleph_zero/collections', 'aleph_zero/entrypoints', 'aleph_zero/invariant_errors', 'aleph_zero/listing_pool_to_azero',]
     },
     'faq',
     'resources',
