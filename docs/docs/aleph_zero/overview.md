@@ -111,7 +111,7 @@ For a detailed exploration of our contract structures, collections, and associat
 ┃ ┣ 📜snippets.rs
 ┃ ┣ 📜token.rs
 ┃ ┗ 📜entrypoints.rs
-┃ 📂tests
+┃ 📂e2e
 ┃ ┣ 📜add_fee_tier.rs
 ┃ ┣ 📜change_fee_receiver.rs
 ┃ ┣ 📜change_protocol_fee.rs
