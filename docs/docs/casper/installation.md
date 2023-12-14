@@ -34,18 +34,22 @@ cargo install cargo-odra --locked
 
 - Clone repository
 
-```
+```bash
 git clone git@github.com:invariant-labs/protocol-cspr.git
 ```
 
 - Build contract
 
-```
+```bash
 cargo odra build -b casper
 ```
 
 - Run tests
 
-```
+```bash
+# Run tests on MockVM
 cargo odra test
+
+# Run tests on Casper backend
+cargo odra test -b casper
 ```
