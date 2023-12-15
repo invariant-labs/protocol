@@ -4,7 +4,7 @@ title: Storage
 slug: /aleph_zero/storage
 ---
 
-This section provides an in-depth exploration of key data structures integral to the Invariant protocol's storage mechanism. Understanding these structures is crucial for developers and integrators working with the protocol's storage mechanism.
+This section provides an in-depth exploration of key data structures integral to the Invariant protocol's storage mechanism. These structs are specifically crafted to facilitate the sharing of the state of the exchange within the CLAMM model. These data structures play a pivotal role in maintaining and organizing information related to the exchange, ensuring efficient and organized handling of data.
 
 ## Contract state
 
