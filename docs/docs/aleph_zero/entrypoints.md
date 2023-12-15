@@ -4,7 +4,7 @@ title: Entrypoints
 slug: /aleph_zero/entrypoints
 ---
 
-This section outlines the core entrypoints for the Aleph Zero smart contract, providing developers with essential methods to interact with the protocol. These entrypoints cover various aspects of the contract, including protocol fee management, fee tier administration, pool creation and management, position handling, and swap functionality.
+This section outlines the core entrypoints for the Invariant smart contract, providing developers with essential methods to interact with the protocol. These entrypoints cover various aspects of the contract, including protocol fee management, fee tier administration, pool creation and management, position handling, and swap functionality.
 
 ### Constructor
 
@@ -45,7 +45,7 @@ This method retrieves the current protocol fee percentage.
 pub fn withdraw_protocol_fee(&mut self, pool_key: PoolKey) -> Result<(), InvariantError>;
 ```
 
-This operation enables the withdrawal of protocol fees associated with a specific pool, based on the provided pool key. The withdrawn funds are sent to the administrator's wallet. Please note that this action can only be performed by administrators.
+This operation enables the withdrawal of protocol fees associated with a specific pool, based on the provided pool key. The withdrawn funds are sent to the fee receiver wallet. Please note that this action can only be performed by fee receiver.
 
 #### Input parameters
 
