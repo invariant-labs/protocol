@@ -164,7 +164,7 @@ This function is used to verify the existence of a specified fee tier.
 pub fn get_fee_tiers(&self, key: FeeTierKey) -> Vec<FeeTier>;
 ```
 
-Retrieves added fee tiers.
+Retrieves available fee tiers.
 
 #### Input parameters
 
