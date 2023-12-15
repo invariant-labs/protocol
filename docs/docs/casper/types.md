@@ -29,7 +29,7 @@ pub struct DecimalName {
 Creating a custom decimal type with 3 decimal places:
 
 ```rust
-#[decimal(3,U256)]
+#[decimal(3, U256)]
 pub struct Decimal {
   pub v: U128
 }
