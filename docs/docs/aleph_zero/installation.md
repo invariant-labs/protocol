@@ -47,5 +47,5 @@ cargo contract build
 - Run tests
 
 ```
-cargo test --features e2e-tests
+cargo test
 ```
