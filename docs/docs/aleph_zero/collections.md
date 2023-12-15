@@ -4,7 +4,7 @@ title: Collections
 slug: /aleph_zero/collections
 ---
 
-This segment explores key storage structures that manage various entities within the Aleph Zero protocol. Understanding these structures is crucial for developers and integrators engaging with the protocol's data.
+This segment explores key storage structures that manage various entities within the Invariant protocol. These collections play a crucial role in organizing and managing data in a structured manner, enhancing the overall functionality and performance of our contract. Within our collection interface, we enforce a tightly defined set of operations available for all data collections. Each collection implements the same basic methods, allowing for consistent data management regardless of the underlying data structures (vectors or mappings).
 
 ## Positions
 
@@ -32,6 +32,8 @@ We have chosen to store positions in the state rather than using NFTs for severa
 1. **Efficient Search Operations**: One primary advantage is the enhanced efficiency in searching for and accessing specified positions. Independence from blockchain token indexers distinguishes this approach. Unlike the alternative, where determining a user's position may require iterating through all available NFTs, storing positions in the state streamlines the process of retrieving and managing positions for specific accounts. This makes it a more optimal choice when precision and speed are crucial.
 
 2. **Gas Cost Optimization**: Iterating through NFTs can pose challenges and inefficiencies, particularly with a substantial number of unique tokens. Storing positions in the state not only simplifies management and access but also proves to be more cost-effective in terms of gas fees and overall contract execution, leading to improved gas cost optimization. Unlike NFTs, which may incur additional costs for minting, transferring, and managing unique tokens, the state-based approach offers a more streamlined and economical solution.
+
+3. **Data Integrity and Recovery**: In scenarios where accidental deletion or burning of NFTs may occur, the state-based approach ensures the preservation of critical position data. This safeguards against potential data loss, offering an added layer of security and resilience to unforeseen circumstances.
 
 ### Functions within the `Positions` Struct
 
