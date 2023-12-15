@@ -4,13 +4,13 @@ title: Overview
 slug: /aleph_zero/project_structure
 ---
 
-This section provides an overview of the structural organization of the Invariant protocol smart contract project on Aleph Zero. The project is meticulously structured to enhance readability, maintainability, and efficiency. The architecture is designed to consolidate data within a single contract, minimizing fees and simplifying interactions.
+This section provides an overview of the structural organization of the Invariant Protocol smart contract project on Aleph Zero. The project is meticulously structured to enhance readability, maintainability, and efficiency. The architecture is designed to consolidate data within a single contract, minimizing fees and simplifying interactions.
 
 ## Contract Architecture
 
 To optimize gas usage, we centralize data and entrypoints in a singular contract, reducing expenses associated with pool and position creation. This streamlined approach not only cuts costs but also simplifies processes, enhancing accessibility. By concentrating state changes and entrypoints within this central contract, we eliminate the intricacies of managing external contracts, while smart mapping intelligently conserves storage resources and bolsters system efficiency.
 
-## Project structure
+## Project Structure
 
 The following presents the project's overall structure, supplying insights into the logical segmentation into modules:
 
@@ -19,8 +19,7 @@ The following presents the project's overall structure, supplying insights into 
  ┣ 📂contracts
  ┃ ┣ 📂collections
  ┃ ┣ 📂logic
- ┃ ┣ 📂storage
- | ┗ 📜entrypoints.rs
+ ┃ ┗ 📂storage
  ┣ 📂decimal
  ┣ 📂math
  ┣ 📂test_helpers
@@ -29,9 +28,9 @@ The following presents the project's overall structure, supplying insights into 
  ┗ 📂traceable_result
 ```
 
-### [Decimal](https://github.com/invariant-labs/decimal)
+### Decimal
 
-Contained within the "Decimal" directory is a specialized decimal library. This library serves as the foundation for creating custom data types and executing precise mathematical calculations, ensuring accuracy and reliability in our contract.
+Contained within the "Decimal" directory is a specialized decimal library. This library serves as the foundation for creating custom data types and executing precise mathematical calculations, ensuring accuracy and reliability in our contract. [Decimal](https://github.com/invariant-labs/decimal) is also an open-source project.
 
 ### Math
 
@@ -57,9 +56,9 @@ The "Logic" folder hosts a suite of mathematical calculations which are primaril
 
 The "Test Helpers" directory contains macros designed for efficient end-to-end testing. These macros abstract low-level calls and transaction building, allowing developers to focus solely on verifying expected logic during tests. This minimizes code repetition, simplifies the testing interface, and ensures a clear and concise testing environment.
 
-### e2e
+### E2E
 
-The "e2e" subfolder in our repository hosts an extensive suite of end-to-end (e2e) tests meticulously designed to validate and verify expected behaviors within our protocol. These tests cover entrypoints for both basic and edge cases, ensuring thorough examination of the protocol's functionality across a spectrum of scenarios.
+The "E2E" subfolder in our repository hosts an extensive suite of end-to-end (e2e) tests meticulously designed to validate and verify expected behaviors within our protocol. These tests cover entrypoints for both basic and edge cases, ensuring thorough examination of the protocol's functionality across a spectrum of scenarios.
 
 ### Token
 

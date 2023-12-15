@@ -12,39 +12,39 @@ This section provides detailed instructions on how to install the Invariant prot
 - cargo-contract ([cargo-contract](https://github.com/paritytech/cargo-contract))
 - substrate-contracts-node ([substrate-contracts-node](https://github.com/paritytech/substrate-contracts-node))
 
-### Rust & Cargo
+#### Install Rust & Cargo
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-### cargo-contract
+#### Install cargo-contract
 
 ```bash
 rustup component add rust-src && cargo install --force --locked cargo-contract
 ```
 
-### substrate-contracts-node
+#### Install substrate-contracts-node
 
 ```bash
 cargo install contracts-node --git https://github.com/paritytech/substrate-contracts-node.git
 ```
 
-## Build protocol
+## Build Protocol
 
-- Clone repository
+#### Clone repository
 
 ```
 git clone git@github.com:invariant-labs/protocol-a0.git
 ```
 
-- Build contract
+#### Build contract
 
 ```
 cargo contract build
 ```
 
-- Run tests
+#### Run tests
 
 ```
 cargo test
