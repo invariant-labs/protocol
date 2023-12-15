@@ -26,7 +26,7 @@ module.exports = {
       items: [
         { to: '/docs/solana/introduction', label: 'Solana', position: 'left' },
         { to: '/docs/aleph_zero/installation', label: 'Aleph Zero', position: 'left' },
-        { to: '/docs/casper/installation', label: 'Casper', position: 'left' }
+        { to: '/docs/casper/installation', label: 'Casper Network', position: 'left' }
       ]
     },
     footer: {

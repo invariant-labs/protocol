@@ -24,6 +24,12 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 sudo apt install wabt
 ```
 
+### add-target
+
+```bash
+rustup target add wasm32-unknown-unknown
+```
+
 ### cargo-odra
 
 ```bash
@@ -46,10 +52,14 @@ cargo odra build -b casper
 
 - Run tests
 
+To run tests, choose between the MockVM and Casper backend using the following commands:
+
 ```bash
 # Run tests on MockVM
 cargo odra test
+```
 
+```bash
 # Run tests on Casper backend
 cargo odra test -b casper
 ```

@@ -76,7 +76,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Casper',
+      label: 'Casper Network',
       collapsed: true,
       items: ['casper/installation']
     },
