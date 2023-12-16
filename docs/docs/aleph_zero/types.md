@@ -4,7 +4,7 @@ title: Types
 slug: /aleph_zero/types
 ---
 
-This segment introduces key data types essential for understanding and working with the Aleph Zero protocol. Additionally, it's important to note that these types are defined based on decimals, holding numerical values, and serving as fundamental types in the storage layer.
+This segment introduces key data types essential for understanding and working with the Invariant protocol. Additionally, it's important to note that these types are defined based on decimals, holding numerical values, and serving as fundamental types in the storage layer.
 
 ## Defining Decimal:
 
@@ -43,7 +43,7 @@ In this example, the result of creation should be interpreted as 12.042, calcula
 
 ## Definitions
 
-These decimal types are integral to the protocol, offering a granular level of precision for various calculations. They play key roles in pricing, fee accumulation, liquidity representation, percentage metrics, time measurements, and token quantity tracking, contributing to the robust functionality of the Aleph Zero protocol.
+These decimal types are integral to the protocol, offering a granular level of precision for various calculations. They play key roles in pricing, fee accumulation, liquidity representation, percentage metrics, time measurements, and token quantity tracking, contributing to the robust functionality of the Invariant protocol.
 
 | Name                | Decimals | Primitive type | Big type | Description                                        |
 | ------------------- | -------- | -------------- | -------- | -------------------------------------------------- |
