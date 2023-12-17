@@ -9,13 +9,15 @@ This segment explores key storage structures that manage various entities within
 ## Positions
 
 ```rust
+#[ink::storage_item]
+#[derive(Debug, Default)]
 pub struct Positions {
     positions_length: Mapping<AccountId, u32>,
     positions: Mapping<(AccountId, u32), Position>,
 }
 ```
 
-The `Positions` struct is designed to manage positions associated with different accounts. It uses a mapping data structure where each position is uniquely identified by the user's address and index. The provided functions allow you to add, update, remove, transfer, and retrieve positions and the number of positions associated with specific addresses.
+The `Positions` struct is designed to manage positions associated with different accounts. It uses a mapping data structure where each position is uniquely identified by the user's address and the index position within the user's position list. The provided functions allow you to add, update, remove, transfer, and retrieve positions and the number of positions associated with specific addresses.
 
 | Type                                | Key                                                              | Value                                        |
 | ----------------------------------- | ---------------------------------------------------------------- | -------------------------------------------- |
@@ -24,7 +26,7 @@ The `Positions` struct is designed to manage positions associated with different
 
 ### Position Storage Standard
 
-Why are positions stored in the state instead of NFTs? We have chosen to store positions in the state rather than using NFTs for several reasons:
+Why are positions stored in the state instead of NFTs? We have chosen to store positions in the contract state rather than using NFTs for several reasons:
 
 1. **Efficient Search Operations**: One primary advantage is the enhanced efficiency in searching for and accessing specified positions. Independence from blockchain token indexers distinguishes this approach. Unlike the alternative, where determining a user's position may require iterating through all available NFTs, storing positions in the state streamlines the process of retrieving and managing positions for specific accounts. This makes it a more optimal choice when precision and speed are crucial.
 
@@ -177,6 +179,8 @@ Retrieves the number of positions associated with the specified account.
 ## Ticks
 
 ```rust
+#[ink::storage_item]
+#[derive(Debug, Default)]
 pub struct Ticks {
     ticks: Mapping<(PoolKey, i32), Tick>,
 }
@@ -262,6 +266,8 @@ pub fn get(&self, key: PoolKey, index: i32) -> Result<Tick, InvariantError>;
 ## Pools
 
 ```rust
+#[ink::storage_item]
+#[derive(Debug, Default)]
 pub struct Pools {
     pools: Mapping<PoolKey, Pool>,
 }
@@ -340,6 +346,8 @@ Retrieves a pool associated with the specified pool key. Returns an error if the
 ## Fee Tiers
 
 ```rust
+#[ink::storage_item]
+#[derive(Debug, Default)]
 pub struct FeeTiers {
     fee_tiers: Vec<FeeTier>,
 }
@@ -412,6 +420,8 @@ Retrieves all fee tiers.
 ## Pool Keys
 
 ```rust
+#[ink::storage_item]
+#[derive(Debug, Default)]
 pub struct PoolKeys {
     pool_keys: Vec<PoolKey>,
 }
