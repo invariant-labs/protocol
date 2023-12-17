@@ -6,7 +6,7 @@ slug: /aleph_zero/entrypoints
 
 This section outlines the core entrypoints for the Invariant smart contract, providing developers with essential methods to interact with the protocol. These entrypoints cover various aspects of the contract, including protocol fee management, fee tier administration, pool creation and management, position handling, and swap functionality.
 
-### Constructor
+## Constructor
 
 ```rust
 #[ink(constructor)]
@@ -520,7 +520,7 @@ This function executes a swap based on the provided parameters. It transfers tok
 
 - PSP22
 
-### Swap Route
+### Swap route
 
 ```rust
 #[ink(message)]

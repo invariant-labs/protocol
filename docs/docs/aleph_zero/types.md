@@ -4,9 +4,9 @@ title: Types
 slug: /aleph_zero/types
 ---
 
-This segment introduces key data types essential for understanding and working with the Invariant protocol. Additionally, it's important to note that these types are defined based on decimals, holding numerical values, and serving as fundamental types in the storage layer.
+This segment introduces key data types essential for understanding and working with the Invariant Protocol. Additionally, it's important to note that these types are defined based on decimals, holding numerical values, and serving as fundamental types in the storage layer.
 
-## Defining Decimal:
+## Defining Decimal
 
 We have implemented a custom decimal system, which is detailed in our repository [here](https://github.com/invariant-labs/decimal). The structure of the decimal is outlined below in Rust syntax:
 
@@ -17,10 +17,12 @@ pub struct DecimalName {
 }
 ```
 
-- **#scale**: An `integer` that determines the number of decimal places.
-- **#big_type**: The type to which it will be extended in intermediate operations (default is U256).
-- **DecimalName**: The name of the struct.
-- **#underlying_type**: The underlying numeric type.
+| Name             | Description                                                                         |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| #scale           | An integer that determines the number of decimal places.                            |
+| #big_type        | The type to which it will be extended in intermediate operations (default is U256). |
+| DecimalName      | The name of the struct.                                                             |
+| #underlying_type | The underlying numeric type.                                                        |
 
 ### Examples
 
@@ -43,7 +45,7 @@ In this example, the result of creation should be interpreted as 12.042, calcula
 
 ## Definitions
 
-These decimal types are integral to the protocol, offering a granular level of precision for various calculations. They play key roles in pricing, fee accumulation, liquidity representation, percentage metrics, time measurements, and token quantity tracking, contributing to the robust functionality of the Invariant protocol.
+These decimal types are integral to the protocol, offering a granular level of precision for various calculations. They play key roles in pricing, fee accumulation, liquidity representation, percentage metrics, time measurements, and token quantity tracking, contributing to the robust functionality of the Invariant Protocol.
 
 | Name                | Decimals | Primitive type | Big type | Description                                        |
 | ------------------- | -------- | -------------- | -------- | -------------------------------------------------- |

@@ -70,7 +70,7 @@ module.exports = {
         'aleph_zero/storage',
         'aleph_zero/collections',
         'aleph_zero/entrypoints',
-        'aleph_zero/listing_pool_to_azero',
+        'aleph_zero/handling_azero',
         'aleph_zero/invariant_errors'
       ]
     },
