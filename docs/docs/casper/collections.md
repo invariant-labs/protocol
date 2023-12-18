@@ -8,7 +8,7 @@ This segment explores key storage structures that manage various entities within
 
 ## Removing elements from Mapping
 
-The ability to remove keys from the mapping is not available. Once a key is added, it remains in the mapping throughout its lifespan. The primary mechanism for "removing" a value associated with a key in the mapping is by using the Option<\> type. When you want to remove a value, we set the corresponding value in the Option<\> to None.
+The ability to remove keys from the mapping is not available. Once a key is added, it remains in the mapping throughout its lifespan. The primary mechanism for "removing" a value associated with a key in the mapping is by using the `Option<T\>` type. When you want to remove a value, we set the corresponding value in the `Option<T\>` to None.
 
 ## Positions
 
