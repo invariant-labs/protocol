@@ -61,11 +61,11 @@ An "Entrypoint" file consolidates all contract entrypoints within a single trait
 
 #### Events
 
-In the "Events" section, we define types of notifications that our contract sends out to external systems. These notifications, or events, help external parties keep track of what's happening in our protocol.
+In the "Events" section, we define types of notifications that our contract sends out to external systems. These notifications, or events, help external parties keep track of what's happening in our protocol. Events are designed to collect statistical data and enhance the responsiveness of front-end applications.
 
 #### Errors
 
-In the "Errors" section, we define different types of errors that might occur while our contract is running. Instead of just crashing, the contract reports these issues using clear error codes.
+In the "Errors" section, we define different types of errors that might occur while our contract is running. Instead of just inverting transactions on error, the contract reports these issues using clear error codes.
 
 ### e2e
 
