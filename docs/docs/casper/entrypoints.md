@@ -1,7 +1,7 @@
 ---
 title: Entrypoints
 
-slug: /aleph_zero/entrypoints
+slug: /casper/entrypoints
 ---
 
 This section outlines the core entrypoints for the Invariant smart contract, providing developers with essential methods to interact with the protocol. These entrypoints cover various aspects of the contract, including protocol fee management, fee tier administration, pool creation and management, position handling, and swap functionality.
@@ -9,8 +9,8 @@ This section outlines the core entrypoints for the Invariant smart contract, pro
 ## Constructor
 
 ```rust
-#[ink(constructor)]
-pub fn new(protocol_fee: Percentage) -> Self;
+#[odra(init)]
+pub fn init(protocol_fee: Percentage) -> Self;
 ```
 
 This constructor method initializes the contract with the specified protocol fee. The administrator role is assigned to the caller.
@@ -26,7 +26,6 @@ This constructor method initializes the contract with the specified protocol fee
 ### Get protocol fee
 
 ```rust
-#[ink(message)]
 pub fn get_protocol_fee(&self) -> Percentage;
 ```
 
@@ -41,7 +40,6 @@ This method retrieves the current protocol fee percentage.
 ### Withdraw protocol fee
 
 ```rust
-#[ink(message)]
 pub fn withdraw_protocol_fee(&mut self, pool_key: PoolKey) -> Result<(), InvariantError>;
 ```
 
@@ -61,12 +59,11 @@ This operation enables the withdrawal of protocol fees associated with a specifi
 
 #### External Contracts
 
-- PSP22
+- Erc20
 
 ### Change protocol fee
 
 ```rust
-#[ink(message)]
 pub fn change_protocol_fee(&mut self, protocol_fee: Percentage) -> Result<(), InvariantError>;
 ```
 
@@ -87,11 +84,10 @@ This function allows for the adjustment of the current protocol fee percentage. 
 ### Change fee receiver
 
 ```rust
-#[ink(message)]
 pub fn change_fee_receiver(
     &mut self,
     pool_key: PoolKey,
-    fee_receiver: AccountId,
+    fee_receiver: Address,
 ) -> Result<(), InvariantError>;
 ```
 
@@ -99,10 +95,10 @@ This function allows for the modification of the fee receiver of a pool. Please 
 
 #### Input parameters
 
-| Name         | Type      | Description                                              |
-| ------------ | --------- | -------------------------------------------------------- |
-| pool_key     | PoolKey   | The pool key of the pool where the change is to be made. |
-| fee_receiver | AccountId | The new fee receiver's address of the pool.              |
+| Name         | Type    | Description                                              |
+| ------------ | ------- | -------------------------------------------------------- |
+| pool_key     | PoolKey | The pool key of the pool where the change is to be made. |
+| fee_receiver | Address | The new fee receiver's address of the pool.              |
 
 #### Errors
 
@@ -115,7 +111,6 @@ This function allows for the modification of the fee receiver of a pool. Please 
 ### Add fee tier
 
 ```rust
-#[ink(message)]
 pub fn add_fee_tier(&mut self, fee_tier: FeeTier) -> Result<(), InvariantError>;
 ```
 
@@ -139,7 +134,6 @@ This function enables the addition of a new fee tier, which users can subsequent
 ### Fee Tier exist
 
 ```rust
-#[ink(message)]
 pub fn fee_tier_exist(&self, key: FeeTier) -> bool;
 ```
 
@@ -160,7 +154,6 @@ This function is used to verify the existence of a specified fee tier.
 ### Get fee tiers
 
 ```rust
-#[ink(message)]
 pub fn get_fee_tiers(&self, key: FeeTier) -> Vec<FeeTier>;
 ```
 
@@ -181,7 +174,6 @@ Retrieves available fee tiers.
 ### Remove fee tier
 
 ```rust
-#[ink(message)]
 pub fn remove_fee_tier(&mut self, key: FeeTier) -> Result<(), InvariantError>;
 ```
 
@@ -205,11 +197,10 @@ This function removes a fee tier based on the provided fee tier key. After remov
 ### Create pool
 
 ```rust
-#[ink(message)]
 pub fn create_pool(
     &mut self,
-    token_0: AccountId,
-    token_1: AccountId,
+    token_0: Address,
+    token_1: Address,
     fee_tier: FeeTier,
     init_sqrt_price: SqrtPrice
     init_tick: i32,
@@ -222,8 +213,8 @@ This function creates a pool based on a pair of tokens and the specified fee tie
 
 | Name            | Type      | Description                                                            |
 | --------------- | --------- | ---------------------------------------------------------------------- |
-| token_0         | AccountId | Address of the first PSP22 token in the pair.                          |
-| token_1         | AccountId | Address of the second PSP22 token in the pair.                         |
+| token_0         | Address   | Address of the first Erc20 token in the pair.                          |
+| token_1         | Address   | Address of the second Erc20 token in the pair.                         |
 | fee_tier        | FeeTier   | The fee tier to be applied.                                            |
 | init_sqrt_price | SqrtPrice | The square root of the price for the initial pool related to init_tick |
 | init_tick       | i32       | The initial tick value for the pool.                                   |
@@ -241,11 +232,10 @@ This function creates a pool based on a pair of tokens and the specified fee tie
 ### Get pool
 
 ```rust
-#[ink(message)]
 pub fn get_pool(
     &self,
-    token_0: AccountId,
-    token_1: AccountId,
+    token_0: Address,
+    token_1: Address,
     fee_tier: FeeTier,
 ) -> Result<Pool, InvariantError>;
 ```
@@ -254,11 +244,11 @@ This function retrieves a pool based on two tokens and the specified fee tier. I
 
 #### Input parameters
 
-| Name     | Type      | Description                                    |
-| -------- | --------- | ---------------------------------------------- |
-| token_0  | AccountId | Address of the first token in the pair.        |
-| token_1  | AccountId | Address of the second token in the pair.       |
-| fee_tier | FeeTier   | The fee tier of the pool you want to retrieve. |
+| Name     | Type    | Description                                    |
+| -------- | ------- | ---------------------------------------------- |
+| token_0  | Address | Address of the first token in the pair.        |
+| token_1  | Address | Address of the second token in the pair.       |
+| fee_tier | FeeTier | The fee tier of the pool you want to retrieve. |
 
 #### Output parameters
 
@@ -276,7 +266,6 @@ This function retrieves a pool based on two tokens and the specified fee tier. I
 ### Get pools
 
 ```rust
-#[ink(message)]
 pub fn get_pools(
     &self,
 ) -> Vec<PoolKey>;
@@ -295,7 +284,6 @@ This function retrieves a listed pool keys.
 ### Create position
 
 ```rust
-#[ink(message)]
 pub fn create_position(
     &mut self,
     pool_key: PoolKey,
@@ -338,16 +326,15 @@ This function creates a position based on the provided parameters. The amount of
 
 #### External Contracts
 
-- PSP22
+- Erc20
 
 ### Transfer position
 
 ```rust
-#[ink(message)]
 pub fn transfer_position(
     &mut self,
     index: u32,
-    receiver: AccountId,
+    receiver: Address,
 ) -> Result<(), InvariantError>;
 ```
 
@@ -355,15 +342,14 @@ This function changes ownership of an existing position based on the position in
 
 #### Input parameters
 
-| Name     | Type      | Description                                        |
-| -------- | --------- | -------------------------------------------------- |
-| index    | u32       | Index of the position in the user's position list. |
-| receiver | AccountId | Address of the user who will receive the position. |
+| Name     | Type    | Description                                        |
+| -------- | ------- | -------------------------------------------------- |
+| index    | u32     | Index of the position in the user's position list. |
+| receiver | Address | Address of the user who will receive the position. |
 
 ### Remove position
 
 ```rust
-#[ink(message)]
 pub fn remove_position(
     &mut self,
     index: u32,
@@ -393,12 +379,11 @@ This function removes a position from the user's position list and transfers the
 
 #### External Contracts
 
-- PSP22
+- Erc20
 
 ### Claim fee
 
 ```rust
-#[ink(message)]
 pub fn claim_fee(
     &mut self,
     index: u32,
@@ -428,12 +413,11 @@ This function allows the user to claim fees from an existing position. Tokens wi
 
 #### External Contracts
 
-- PSP22
+- Erc20
 
 ### Get position
 
 ```rust
-#[ink(message)]
 pub fn get_position(&mut self, index: u32) -> Result<Position, InvariantError>;
 ```
 
@@ -460,7 +444,6 @@ This function returns an result that contains error if the position cannot be fo
 ### Get all positions
 
 ```rust
-#[ink(message)]
 pub fn get_all_positions(&mut self) -> Vec<Position>;
 ```
 
@@ -477,7 +460,6 @@ This function returns a list of positions owned by the caller. The list will be 
 ### Swap
 
 ```rust
-#[ink(message)]
 pub fn swap(
     &mut self,
     pool_key: PoolKey,
@@ -518,12 +500,11 @@ This function executes a swap based on the provided parameters. It transfers tok
 
 #### External Contracts
 
-- PSP22
+- Erc20
 
 ### Swap route
 
 ```rust
-#[ink(message)]
 pub fn swap_route(
     &mut self,
     amount_in: TokenAmount,
@@ -556,12 +537,11 @@ This function facilitates atomic swaps between the user's address and the contra
 
 #### External Contracts
 
-- PSP22
+- Erc20
 
 ### Quote
 
 ```rust
-#[ink(message)]
 pub fn quote(
     &self,
     pool_key: PoolKey,
@@ -602,7 +582,6 @@ This function performs a simulation of a swap based on the provided parameters a
 ### Quote route
 
 ```rust
-#[ink(message)]
 pub fn quote_route(
     &self,
     amount_in: TokenAmount,
@@ -639,7 +618,6 @@ This function performs a simulation of multiple swaps based on the provided para
 ### Get tick
 
 ```rust
-#[ink(message)]
 pub fn get_tick(
     &self,
     key: PoolKey,
@@ -671,7 +649,6 @@ Retrieves information about a tick at a specified index.
 ### Is tick initialized
 
 ```rust
-#[ink(message)]
 pub fn is_tick_initialized(
     &self,
     key: PoolKey,
