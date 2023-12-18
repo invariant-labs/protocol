@@ -81,6 +81,8 @@ module.exports = {
       collapsed: true,
       items: [
         'casper/installation',
+        'casper/deployment',
+        'casper/overview',
         'casper/types',
         'casper/collections',
         'casper/invariant_errors'

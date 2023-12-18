@@ -1,10 +1,10 @@
 ---
 title: Overview
 
-slug: /aleph_zero/overview
+slug: /casper/overview
 ---
 
-This section provides an overview of the structural organization of the Invariant Protocol smart contract project on Aleph Zero. The project is meticulously structured to enhance readability, maintainability, and efficiency. The architecture is designed to consolidate data within a single contract, minimizing fees and simplifying interactions.
+This section provides an overview of the structural organization of the Invariant Protocol smart contract project on Casper. The project is meticulously structured to enhance readability, maintainability, and efficiency. The architecture is designed to consolidate data within a single contract, minimizing fees and simplifying interactions.
 
 ## Contract Architecture
 
@@ -15,7 +15,7 @@ To optimize gas usage, we centralize data and entrypoints in a singular contract
 The following presents the project's overall structure, supplying insights into the logical segmentation into modules:
 
 ```
-📦protocol-a0
+📦protocol-cspr
  ┣ 📂contracts
  ┃ ┣ 📂collections
  ┃ ┣ 📂logic
@@ -23,10 +23,9 @@ The following presents the project's overall structure, supplying insights into 
  ┃ ┗ 📜entrypoints.rs
  ┣ 📂decimal
  ┣ 📂math
- ┣ 📂test_helpers
  ┣ 📂e2e
- ┣ 📂token
  ┣ 📂traceable_result
+ ┣ 📜token.rs
  ┗ 📜lib.rs
 ```
 
@@ -58,17 +57,9 @@ The "Logic" folder hosts a suite of mathematical calculations which are primaril
 
 An "Entrypoint" file consolidates all contract entrypoints within a single trait, streamlining the organization of key functionalities. This modular approach enhances code clarity and accessibility, providing a centralized location for developers to locate and understand the various entrypoints available within the contract.
 
-### Test Helpers
-
-The "Test Helpers" directory contains macros designed for efficient end-to-end testing. These macros abstract low-level calls and transaction building, allowing developers to focus solely on verifying expected logic during tests. This minimizes code repetition, simplifies the testing interface, and ensures a clear and concise testing environment.
-
 ### e2e
 
 The "e2e" subfolder in our repository hosts an extensive suite of end-to-end (e2e) tests meticulously designed to validate and verify expected behaviors within our protocol. These tests cover entrypoints for both basic and edge cases, ensuring thorough examination of the protocol's functionality across a spectrum of scenarios.
-
-### Token
-
-The "Token" directory is solely for the implementation of a basic [PSP22 token](https://github.com/Cardinal-Cryptography/PSP22), serving as a key element in our end-to-end tests. It enables us to simulate production-ready token interactions and transactions, with the exchange operating specifically on PSP22 tokens. This detail is essential for implementing transfers in entrypoints and conducting thorough end-to-end tests to validate the protocol.
 
 ### Traceable Result
 
@@ -78,12 +69,16 @@ In the "Traceable Result" directory, you will find a comprehensive library compr
 
 For a detailed exploration of our contract structures, collections, and associated logic, please refer to the corresponding [Source Code Repository](https://github.com/invariant-labs/protocol-a0). This repository contains the complete and up-to-date implementation of our contract architecture. Here lies the comprehensive project structure, which can be represented as follows.
 
+### Token
+
+The "Token" file is solely for the implementation of a basic ERC-20 token, serving as a key element in our end-to-end tests. It enables us to simulate production-ready token interactions and transactions, with the exchange operating specifically on ERC-20 tokens. This detail is essential for implementing transfers in entrypoints and conducting thorough end-to-end tests to validate the protocol.
+
 ### Lib
 
 The "Lib" file comprises all entrypoints, storage, and essential logic, serving as the heart of our protocol's functionality.
 
 ```
-📦protocol-a0
+📦protocol-cspr
 ┣ 📂contracts
 ┃ ┣ 📂collections
 ┃ ┃ ┣ 📜fee_tiers.rs
@@ -101,6 +96,8 @@ The "Lib" file comprises all entrypoints, storage, and essential logic, serving 
 ┃ ┃ ┣ 📜state.rs
 ┃ ┃ ┣ 📜tick.rs
 ┃ ┃ ┗ 📜tickmap.rs
+┃ ┣ 📜events.rs
+┃ ┣ 📜errors.rs
 ┃ ┗ 📜entrypoints.rs
 ┣ 📂decimal
 ┣ 📂math
@@ -114,17 +111,12 @@ The "Lib" file comprises all entrypoints, storage, and essential logic, serving 
 ┃ ┃ ┗ 📜token_amount.rs
 ┃ ┣ 📜consts.rs
 ┃ ┣ 📜log.rs
+┃ ┣ 📜uints.rs
 ┃ ┗ 📜clamm.rs
-┃ 📂test_helpers
-┃ ┣ 📜lib.rs
-┃ ┣ 📜snippets.rs
-┃ ┣ 📜token.rs
-┃ ┗ 📜entrypoints.rs
 ┃ 📂e2e
 ┃ ┣ 📜add_fee_tier.rs
 ┃ ┣ 📜change_fee_receiver.rs
 ┃ ┣ 📜change_protocol_fee.rs
-┃ ┣ 📜claim.rs
 ┃ ┣ 📜constructor.rs
 ┃ ┣ 📜create_pool.rs
 ┃ ┣ 📜cross_both_side.rs
@@ -139,8 +131,7 @@ The "Lib" file comprises all entrypoints, storage, and essential logic, serving 
 ┃ ┣ 📜protocol_fee.rs
 ┃ ┣ 📜remove_fee_tier.rs
 ┃ ┣ 📜slippage.rs
-┃ ┣ 📜swap_route.rs
-┃ ┗ 📜swap.rs
+┃ ┗ 📜snippets.rs
 ┣ 📂token
 ┃ ┣ 📜data.rs
 ┃ ┣ 📜errors.rs
@@ -149,5 +140,6 @@ The "Lib" file comprises all entrypoints, storage, and essential logic, serving 
 ┃ ┗ 📜traits.rs
 ┣ 📂traceable_result
 ┃ ┗ 📜lib.rs
-┗ 📜lib.rs
+┣ 📜lib.rs
+┗ 📜token.rs
 ```
