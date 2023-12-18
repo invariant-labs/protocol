@@ -44,6 +44,12 @@ git clone git@github.com:invariant-labs/protocol-a0.git
 cargo contract build
 ```
 
+#### Build in release mode
+
+```
+cargo contract build --release
+```
+
 #### Run tests
 
 ```
