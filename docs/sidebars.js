@@ -78,7 +78,7 @@ module.exports = {
       type: 'category',
       label: 'Casper Network',
       collapsed: true,
-      items: ['casper/installation', 'casper/types', 'casper/invariant-errors']
+      items: ['casper/installation', 'casper/types', 'casper/invariant_errors']
     },
     'faq',
     'resources',
