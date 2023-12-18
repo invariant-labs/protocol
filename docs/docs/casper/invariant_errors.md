@@ -27,7 +27,7 @@ This section outlines error codes essential for maintaining the integrity of Inv
 | PoolKeyAlreadyExist           | Attempted to create a pool key that already exists.                                                                  |
 | UnauthorizedFeeReceiver       | Attempted to claim fee without being a fee receiver.                                                                 |
 | ZeroLiquidity                 | Attempted opening of a position with zero liquidity.                                                                 |
-| TransferError                 | PSP22 token transfer could not be performed.                                                                         |
+| TransferError                 | Erc20 token transfer could not be performed.                                                                         |
 | TokensAreSame                 | Attempted creation of a pool with exactly the same tokens.                                                           |
 | AmountUnderMinimumAmountOut   | Swap amount out will not fit into the next swap amount to achieve the specified amount out.                          |
 | InvalidFee                    | Attempted to create a fee tier with a fee over 100%.                                                                 |
