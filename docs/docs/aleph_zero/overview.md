@@ -54,6 +54,10 @@ Our "Collections" directory is dedicated to collections of data that leverage st
 
 The "Logic" folder hosts a suite of mathematical calculations which are primarily designed for conducting test calculations and supporting our SDK. It is noteworthy that optimization efforts for these calculations need not be exhaustive, as they are intended for off-chain use and will not be executed on the blockchain.
 
+#### Entrypoints
+
+An "Entrypoint" file consolidates all contract entrypoints within a single trait, streamlining the organization of key functionalities. This modular approach enhances code clarity and accessibility, providing a centralized location for developers to locate and understand the various entrypoints available within the contract.
+
 ### Test Helpers
 
 The "Test Helpers" directory contains macros designed for efficient end-to-end testing. These macros abstract low-level calls and transaction building, allowing developers to focus solely on verifying expected logic during tests. This minimizes code repetition, simplifies the testing interface, and ensures a clear and concise testing environment.
@@ -73,6 +77,10 @@ In the "Traceable Result" directory, you will find a comprehensive library compr
 ### Source Code Access
 
 For a detailed exploration of our contract structures, collections, and associated logic, please refer to the corresponding [Source Code Repository](https://github.com/invariant-labs/protocol-a0). This repository contains the complete and up-to-date implementation of our contract architecture. Here lies the comprehensive project structure, which can be represented as follows.
+
+### Lib
+
+The "Lib" file comprises all entrypoints, storage, and essential logic, serving as the heart of our protocol's functionality.
 
 ```
 📦protocol-a0
