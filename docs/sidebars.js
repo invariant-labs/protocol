@@ -85,7 +85,8 @@ module.exports = {
         'casper/overview',
         'casper/types',
         'casper/collections',
-        'casper/entrypoints'
+        'casper/entrypoints',
+        'casper/invariant_errors'
       ]
     },
     'faq',
