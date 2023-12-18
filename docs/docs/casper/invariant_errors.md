@@ -1,7 +1,7 @@
 ---
 title: Invariant Errors
 
-slug: /aleph_zero/invariant_errors
+slug: /casper/invariant_errors
 ---
 
 This section outlines error codes essential for maintaining the integrity of Invariant operations. These codes provide insights into specific issues encountered during interactions with the platform.
