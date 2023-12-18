@@ -17,16 +17,16 @@ pub struct DecimalName {
 }
 ```
 
-| Name             | Description                                                                         |
-| ---------------- | ----------------------------------------------------------------------------------- |
-| #scale           | An integer that determines the number of decimal places.                            |
-| #big_type        | The type to which it will be extended in intermediate operations (default is U256). |
-| DecimalName      | The name of the struct.                                                             |
-| #underlying_type | The underlying numeric type.                                                        |
+| Name             | Description                                                                |
+| ---------------- | -------------------------------------------------------------------------- |
+| #scale           | An integer that determines the number of decimal places.                   |
+| #big_type        | The type to which it will be extended in big operations (default is U256). |
+| DecimalName      | The name of the struct.                                                    |
+| #underlying_type | The underlying numeric type.                                               |
 
 ### Examples
 
-Creating a custom decimal type with 3 decimal places:
+Creating a custom decimal type with name "Decimal", 3 decimal places, u128 as underyling type and default big type (U256):
 
 ```rust
 #[decimal(3)]
@@ -123,7 +123,7 @@ pub struct FeeGrowth {
 
 ### SecondsPerLiquidity
 
-SecondsPerLiquidity represents the time difference denominated in seconds per liquidity unit.
+SecondsPerLiquidity represents the time difference measured in seconds per liquidity unit. This metric is employed to calculate the accumulated time during which the price was situated between any given ticks. While not essential for the core functionality of CLAMM, it serves a crucial role in constructing farms or incentives for token distribution across diverse models. For instance, it enables the prioritization of the most concentrated liquidity, fostering the development of farms and incentives that align with specific liquidity concentration preferences.
 
 ```rust
 #[decimal(24)]
