@@ -347,7 +347,7 @@ Retrieves a pool associated with the specified pool key. Returns an error if the
 ## Fee Tiers
 
 ```rust
-#[derive(OdraType, Default)]
+#[derive(OdraType)]
 pub struct FeeTiers {
     pub fee_tiers: Vec<FeeTier>,
 }
@@ -420,7 +420,7 @@ Retrieves all fee tiers.
 ## Pool Keys
 
 ```rust
-#[derive(OdraType, Default, Debug)]
+#[derive(OdraType)]
 pub struct PoolKeys {
     pub pool_keys: Vec<PoolKey>,
 }
