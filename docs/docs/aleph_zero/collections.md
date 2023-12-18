@@ -10,7 +10,6 @@ This segment explores key storage structures that manage various entities within
 
 ```rust
 #[ink::storage_item]
-#[derive(Debug, Default)]
 pub struct Positions {
     positions_length: Mapping<AccountId, u32>,
     positions: Mapping<(AccountId, u32), Position>,
@@ -180,7 +179,6 @@ Retrieves the number of positions associated with the specified account.
 
 ```rust
 #[ink::storage_item]
-#[derive(Debug, Default)]
 pub struct Ticks {
     ticks: Mapping<(PoolKey, i32), Tick>,
 }
@@ -267,7 +265,6 @@ pub fn get(&self, key: PoolKey, index: i32) -> Result<Tick, InvariantError>;
 
 ```rust
 #[ink::storage_item]
-#[derive(Debug, Default)]
 pub struct Pools {
     pools: Mapping<PoolKey, Pool>,
 }
@@ -347,7 +344,6 @@ Retrieves a pool associated with the specified pool key. Returns an error if the
 
 ```rust
 #[ink::storage_item]
-#[derive(Debug, Default)]
 pub struct FeeTiers {
     fee_tiers: Vec<FeeTier>,
 }
@@ -421,7 +417,6 @@ Retrieves all fee tiers.
 
 ```rust
 #[ink::storage_item]
-#[derive(Debug, Default)]
 pub struct PoolKeys {
     pool_keys: Vec<PoolKey>,
 }
