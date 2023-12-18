@@ -71,14 +71,21 @@ module.exports = {
         'aleph_zero/collections',
         'aleph_zero/entrypoints',
         'aleph_zero/handling_azero',
-        'aleph_zero/invariant_errors'
+        'aleph_zero/invariant_errors',
+        'aleph_zero/deployment'
       ]
     },
     {
       type: 'category',
       label: 'Casper Network',
       collapsed: true,
-      items: ['casper/installation', 'casper/overview', 'casper/types']
+      items: [
+        'casper/installation',
+        'casper/deployment',
+        'casper/overview',
+        'casper/types',
+        'casper/collections'
+      ]
     },
     'faq',
     'resources',

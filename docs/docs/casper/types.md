@@ -17,16 +17,16 @@ pub struct DecimalName {
 }
 ```
 
-| Name             | Description                                                      |
-| ---------------- | ---------------------------------------------------------------- |
-| #scale           | An integer that determines the number of decimal places.         |
-| #big_type        | The type to which it will be extended in intermediate operations |
-| DecimalName      | The name of the struct.                                          |
-| #underlying_type | The underlying numeric type.                                     |
+| Name             | Description                                              |
+| ---------------- | -------------------------------------------------------- |
+| #scale           | An integer that determines the number of decimal places. |
+| #big_type        | The type to which it will be extended in big operations. |
+| DecimalName      | The name of the struct.                                  |
+| #underlying_type | The underlying numeric type.                             |
 
 ### Examples
 
-Creating a custom decimal type with 3 decimal places:
+Creating a custom decimal type with name "Decimal", 3 decimal places, U128 as underyling type and U256 as big type:
 
 ```rust
 #[decimal(3, U256)]

@@ -1,27 +1,31 @@
 ---
 title: Collections
 
-slug: /aleph_zero/collections
+slug: /casper/collections
 ---
 
 This segment explores key storage structures that manage various entities within the Invariant Protocol. These collections play a crucial role in organizing and managing data in a structured manner, enhancing the overall functionality and performance of our contract. Within our collection interface, we enforce a tightly defined set of operations available for all data collections. Each collection implements the same basic methods, allowing for consistent data management regardless of the underlying data structures (vectors or mappings).
 
+## Removing elements from Mapping
+
+The ability to remove keys from the mapping is not available. Once a key is added, it remains in the mapping throughout its lifespan. The primary mechanism for "removing" a value associated with a key in the mapping is by using the `Option<T\>` type. When you want to remove a value, we set the corresponding value in the `Option<T\>` to None.
+
 ## Positions
 
 ```rust
-#[ink::storage_item]
+#[odra::module]
 pub struct Positions {
-    positions_length: Mapping<AccountId, u32>,
-    positions: Mapping<(AccountId, u32), Position>,
+    positions_length: Mapping<Address, u32>,
+    positions: Mapping<(Address, u32), Option<Position>>,
 }
 ```
 
 The `Positions` struct is designed to manage positions associated with different accounts. It uses a mapping data structure where each position is uniquely identified by the user's address and the index position within the user's position list. The provided functions allow you to add, update, remove, transfer, and retrieve positions and the number of positions associated with specific addresses.
 
-| Type                                | Key                                                              | Value                                        |
-| ----------------------------------- | ---------------------------------------------------------------- | -------------------------------------------- |
-| Mapping<AccountId, u32>             | User's address.                                                  | Number of the user's positions.              |
-| Mapping<(AccountId, u32), Position> | Tuple containing the user's address and the index of a position. | Position struct holding the position's data. |
+| Type                                        | Key                                                              | Value                                        |
+| ------------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------- |
+| Mapping<Address, u32\>                      | User's address.                                                  | Number of the user's positions.              |
+| Mapping<(Address, u32), Option<Position\>\> | Tuple containing the user's address and the index of a position. | Position struct holding the position's data. |
 
 ### Position Storage Standard
 
@@ -36,24 +40,24 @@ Why are positions stored in the state instead of NFTs? We have chosen to store p
 ### Add Position
 
 ```rust
-pub fn add(&mut self, account_id: AccountId, position: Position);
+pub fn add(&mut self, account_id: Address, position: &Position);
 ```
 
 Adds a new position to the specified account.
 
 #### Input parameters
 
-| Name       | Type      | Description                                            |
-| ---------- | --------- | ------------------------------------------------------ |
-| account_id | AccountId | The address of the user who will receive the position. |
-| position   | Position  | The Position struct with data.                         |
+| Name     | Type     | Description                                            |
+| -------- | -------- | ------------------------------------------------------ |
+| Address  | Address  | The address of the user who will receive the position. |
+| position | Position | The Position struct with data.                         |
 
 ### Update Position
 
 ```rust
 pub fn update(
     &mut self,
-    account_id: AccountId,
+    account_id: Address,
     index: u32,
     position: &Position,
 ) -> Result<(), InvariantError>;
@@ -63,18 +67,18 @@ Updates an existing position at a specific index for the specified account. Retu
 
 #### Input parameters
 
-| Name       | Type      | Description                                                            |
-| ---------- | --------- | ---------------------------------------------------------------------- |
-| account_id | AccountId | The address of the user whose position will be updated.                |
-| index      | u32       | The index of an existing position of the user.                         |
-| position   | Position  | The Position struct with data that will replace the existing position. |
+| Name       | Type     | Description                                                            |
+| ---------- | -------- | ---------------------------------------------------------------------- |
+| account_id | Address  | The address of the user whose position will be updated.                |
+| index      | u32      | The index of an existing position of the user.                         |
+| position   | Position | The Position struct with data that will replace the existing position. |
 
 ### Remove Position
 
 ```rust
 pub fn remove(
     &mut self,
-    account_id: AccountId,
+    account_id: Address,
     index: u32,
 ) -> Result<Position, InvariantError>;
 ```
@@ -83,10 +87,10 @@ Removes a position at a specific index for the specified account. Returns an err
 
 #### Input parameters
 
-| Name       | Type      | Description                                             |
-| ---------- | --------- | ------------------------------------------------------- |
-| account_id | AccountId | The address of the user whose position will be removed. |
-| index      | u32       | The index of an existing position of the user.          |
+| Name       | Type    | Description                                             |
+| ---------- | ------- | ------------------------------------------------------- |
+| account_id | Address | The address of the user whose position will be removed. |
+| index      | u32     | The index of an existing position of the user.          |
 
 #### Output parameters
 
@@ -101,33 +105,33 @@ Transfers a position from one account to another. Returns an error if the positi
 ```rust
 pub fn transfer(
     &mut self,
-    account_id: AccountId,
+    account_id: Address,
     index: u32,
-    receiver: AccountId,
+    receiver: Address,
 ) -> Result<(), InvariantError>;
 ```
 
 #### Input parameters
 
-| Name       | Type      | Description                                                 |
-| ---------- | --------- | ----------------------------------------------------------- |
-| account_id | AccountId | The address of the user whose position will be transferred. |
-| index      | u32       | The index of an existing position of the user.              |
-| receiver   | AccountId | The address of the user who will receive the position.      |
+| Name       | Type    | Description                                                 |
+| ---------- | ------- | ----------------------------------------------------------- |
+| account_id | Address | The address of the user whose position will be transferred. |
+| index      | u32     | The index of an existing position of the user.              |
+| receiver   | Address | The address of the user who will receive the position.      |
 
 ### Get All Positions
 
 ```rust
-pub fn get_all(&self, account_id: AccountId) -> Vec<Position>;
+pub fn get_all(&self, account_id: Address) -> Vec<Position>;
 ```
 
 Retrieves all positions associated with the specified account.
 
 #### Input parameters
 
-| Name       | Type      | Description                                               |
-| ---------- | --------- | --------------------------------------------------------- |
-| account_id | AccountId | The address of the user whose positions will be returned. |
+| Name       | Type    | Description                                               |
+| ---------- | ------- | --------------------------------------------------------- |
+| account_id | Address | The address of the user whose positions will be returned. |
 
 #### Output parameters
 
@@ -138,16 +142,16 @@ Retrieves all positions associated with the specified account.
 ### Get Position
 
 ```rust
-pub fn get(&mut self, account_id: AccountId, index: u32) -> Option<Position>;
+pub fn get(&mut self, account_id: Address, index: u32) -> Option<Position>;
 ```
 
 Retrieves a position at a specific index for the specified account. Returns none if the specified index is out of bounds.
 
 #### Input parameters
 
-| Name       | Type      | Description                                               |
-| ---------- | --------- | --------------------------------------------------------- |
-| account_id | AccountId | The address of the user whose positions will be returned. |
+| Name       | Type    | Description                                               |
+| ---------- | ------- | --------------------------------------------------------- |
+| account_id | Address | The address of the user whose positions will be returned. |
 
 #### Output parameters
 
@@ -158,16 +162,16 @@ Retrieves a position at a specific index for the specified account. Returns none
 ### Get Number Of Positions
 
 ```rust
-fn get_length(&self, account_id: AccountId) -> u32;
+fn get_length(&self, account_id: Address) -> u32;
 ```
 
 Retrieves the number of positions associated with the specified account.
 
 #### Input parameters
 
-| Name       | Type      | Description                                                         |
-| ---------- | --------- | ------------------------------------------------------------------- |
-| account_id | AccountId | The address of the user whose number of positions will be returned. |
+| Name       | Type    | Description                                                         |
+| ---------- | ------- | ------------------------------------------------------------------- |
+| account_id | Address | The address of the user whose number of positions will be returned. |
 
 #### Output parameters
 
@@ -178,17 +182,17 @@ Retrieves the number of positions associated with the specified account.
 ## Ticks
 
 ```rust
-#[ink::storage_item]
+#[odra::module]
 pub struct Ticks {
-    ticks: Mapping<(PoolKey, i32), Tick>,
+    ticks: Mapping<(PoolKey, i32), Option<Tick>>,
 }
 ```
 
 The `Ticks` struct is designed to manage ticks associated between different pools. It uses a mapping data structure, where each tick is identified by a tuple of `PoolKey` and `i32` (tick index), and a `Tick` object is stored as the associated value. The provided functions allow you to retrieve, add, update, and remove ticks associated with specific `PoolKey` values.
 
-| Type                          | Key                                                         | Value                                |
-| ----------------------------- | ----------------------------------------------------------- | ------------------------------------ |
-| Mapping<(PoolKey, i32), Tick> | Tuple containing the pool key and the tick index of a tick. | Tick struct holding the tick's data. |
+| Type                                    | Key                                                         | Value                                |
+| --------------------------------------- | ----------------------------------------------------------- | ------------------------------------ |
+| Mapping<(PoolKey, i32), Option<Tick\>\> | Tuple containing the pool key and the tick index of a tick. | Tick struct holding the tick's data. |
 
 ### Add tick
 
@@ -264,15 +268,15 @@ pub fn get(&self, key: PoolKey, index: i32) -> Result<Tick, InvariantError>;
 ## Pools
 
 ```rust
-#[ink::storage_item]
+#[odra::module]
 pub struct Pools {
-    pools: Mapping<PoolKey, Pool>,
+    pools: Mapping<PoolKey, Option<Pool>>,
 }
 ```
 
-| Type                   | Key                               | Value                                 |
-| ---------------------- | --------------------------------- | ------------------------------------- |
-| Mapping<PoolKey, Pool> | The pool key of a specified pool. | Pool struct holding the pools's data. |
+| Type                             | Key                               | Value                                 |
+| -------------------------------- | --------------------------------- | ------------------------------------- |
+| Mapping<PoolKey, Option<Pool\>\> | The pool key of a specified pool. | Pool struct holding the pools's data. |
 
 The `Pools` struct is designed to manage pools associated with different `PoolKey` values. It uses a mapping data structure, where each pool is identified by a unique `PoolKey`, and a `Pool` object is stored as the associated value. The provided functions allow you to add, retrieve, update, and remove pools associated with specific `PoolKey` values.
 
@@ -343,9 +347,9 @@ Retrieves a pool associated with the specified pool key. Returns an error if the
 ## Fee Tiers
 
 ```rust
-#[ink::storage_item]
+#[derive(OdraType)]
 pub struct FeeTiers {
-    fee_tiers: Vec<FeeTier>,
+    pub fee_tiers: Vec<FeeTier>,
 }
 ```
 
@@ -416,9 +420,9 @@ Retrieves all fee tiers.
 ## Pool Keys
 
 ```rust
-#[ink::storage_item]
+#[derive(OdraType)]
 pub struct PoolKeys {
-    pool_keys: Vec<PoolKey>,
+    pub pool_keys: Vec<PoolKey>,
 }
 ```
 

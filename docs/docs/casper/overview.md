@@ -1,7 +1,7 @@
 ---
 title: Overview
 
-slug: /casper/project_structure
+slug: /casper/overview
 ---
 
 This section provides an overview of the structural organization of the Invariant Protocol smart contract project on Casper. The project is meticulously structured to enhance readability, maintainability, and efficiency. The architecture is designed to consolidate data within a single contract, minimizing fees and simplifying interactions.
