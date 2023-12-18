@@ -78,7 +78,7 @@ module.exports = {
       type: 'category',
       label: 'Casper Network',
       collapsed: true,
-      items: ['casper/installation', 'casper/types', 'aleph_zero/entrypoints']
+      items: ['casper/installation', 'casper/types', 'casper/entrypoints']
     },
     'faq',
     'resources',
