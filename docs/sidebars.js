@@ -79,7 +79,13 @@ module.exports = {
       type: 'category',
       label: 'Casper Network',
       collapsed: true,
-      items: ['casper/installation', 'casper/deployment', 'casper/types', 'casper/collections']
+      items: [
+        'casper/installation',
+        'casper/deployment',
+        'casper/overview',
+        'casper/types',
+        'casper/collections'
+      ]
     },
     'faq',
     'resources',
