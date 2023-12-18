@@ -12,25 +12,25 @@ This section provides detailed instructions on how to install the Invariant prot
 - wasm-strip ([wabt](https://github.com/WebAssembly/wabt))
 - cargo-odra ([cargo-odra](https://github.com/odradev/cargo-odra))
 
-### Rust & Cargo
+#### Rust & Cargo
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
-### wasm-strip
+#### wasm-strip
 
 ```bash
 sudo apt install wabt
 ```
 
-### add-target
+#### Add WASM
 
 ```bash
 rustup target add wasm32-unknown-unknown
 ```
 
-### cargo-odra
+#### cargo-odra
 
 ```bash
 cargo install cargo-odra --locked
@@ -38,21 +38,21 @@ cargo install cargo-odra --locked
 
 ## Build protocol
 
-- Clone repository
+#### Clone repository
 
 ```bash
 git clone git@github.com:invariant-labs/protocol-cspr.git
 ```
 
-- Build contract
+#### Build contract
 
 ```bash
 cargo odra build -b casper
 ```
 
-- Run tests
+## Run tests
 
-To run tests, choose between the MockVM and Casper backend using the following commands:
+#### Run command
 
 ```bash
 # Run tests on MockVM
