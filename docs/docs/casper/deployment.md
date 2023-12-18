@@ -11,7 +11,7 @@ This section provides detailed instructions on how to deploy the Invariant proto
 - Rust & Cargo ([rustup](https://www.rust-lang.org/tools/install))
 - wasm-strip ([wabt](https://github.com/WebAssembly/wabt))
 - cargo-odra ([cargo-odra](https://github.com/odradev/cargo-odra))
-- Download & Build ([Installation](http://localhost:3000/docs/casper/installation))
+- Download & Build ([Installation](/docs/casper/installation))
 - casper-client ([casper-client](https://github.com/casper-ecosystem/casper-client-rs))
 
 #### Rust & Cargo
@@ -61,6 +61,14 @@ casper-client keygen ed25519-keys/
 
 #### Import it to Casper Wallet using secret key and claim [faucet](https://testnet.cspr.live/tools/faucet)
 
+#### Get protocol fee as bytes
+
+```rust
+let percentage = Percentage::new(U128::from(0));
+let bytes = percentage.to_bytes().unwrap();
+let hex = hex::encode(bytes);
+```
+
 #### Deploy protocol
 
 ```bash
@@ -74,5 +82,5 @@ casper-client put-deploy \
 --session-arg "odra_cfg_allow_key_override:bool:'false'" \
 --session-arg "odra_cfg_is_upgradable:bool:'true'" \
 --session-arg "odra_cfg_constructor:string:'init'" \
---session-arg "protocol_fee:u128:'protocol_fee:byte_array_15:'$PROTOCOL_FEE_STRUCT_TO_BYTES'"
+--session-arg "protocol_fee:u128:'protocol_fee:byte_array_15:'$PROTOCOL_FEE_AS_BYTES'"
 ```
