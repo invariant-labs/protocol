@@ -84,7 +84,8 @@ module.exports = {
         'casper/deployment',
         'casper/overview',
         'casper/types',
-        'casper/collections'
+        'casper/collections',
+        'casper/entrypoints'
       ]
     },
     'faq',
