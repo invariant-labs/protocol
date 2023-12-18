@@ -81,12 +81,14 @@ module.exports = {
       collapsed: true,
       items: [
         'casper/installation',
-        'casper/deployment',
         'casper/overview',
         'casper/types',
+        'casper/storage',
         'casper/collections',
         'casper/entrypoints',
-        'casper/invariant_errors'
+        'casper/handling_cspr',
+        'casper/invariant_errors',
+        'casper/deployment'
       ]
     },
     'faq',
