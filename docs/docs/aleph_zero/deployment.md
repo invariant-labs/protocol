@@ -20,6 +20,14 @@ cargo contract build --release
 
 ### Run Makefile
 
+#### Deploy on Testnet
+
+```bash
+make setup n=testnet
+```
+
+#### Deploy on Localhost
+
 Execute the following commands to stop, clean, and restart the Substrate Contracts Node:
 
 ```bash
@@ -31,7 +39,7 @@ make chain-restart
 Run the deployment script to deploy the Invariant contract:
 
 ```bash
-make setup
+make setup n=localhost
 ```
 
 ### Verify deployment
