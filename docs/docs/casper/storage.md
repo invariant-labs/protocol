@@ -1,7 +1,7 @@
 ---
 title: Storage
 
-slug: /aleph_zero/storage
+slug: /casper/storage
 ---
 
 This section provides an in-depth exploration of key data structures integral to the Invariant protocol's storage mechanism. These structs are specifically crafted to facilitate the sharing of the state of the exchange within the CLAMM model. These data structures play a pivotal role in maintaining and organizing information related to the exchange, ensuring efficient and organized handling of data.
@@ -9,30 +9,25 @@ This section provides an in-depth exploration of key data structures integral to
 ## Contract State
 
 ```rust
-#[ink::storage_item]
-#[derive(Debug)]
+#[derive(OdraType)]
 pub struct State {
-    pub admin: AccountId,
+    pub admin: Address,
     pub protocol_fee: Percentage,
 }
 ```
 
 | Name         | Type       | Description                                                                                                                                                                                 |
 | ------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| admin        | AccountId  | Account address of protocol admin. Admin is able to change fee, claim protocol fee or set the fee receiver, but cannot interfere with user positions or deposits and cannot close the pool. |
+| admin        | Address    | Account address of protocol admin. Admin is able to change fee, claim protocol fee or set the fee receiver, but cannot interfere with user positions or deposits and cannot close the pool. |
 | protocol_fee | Percentage | Percentage of the fee collected upon every swap in the pool that goes to the protocol, rest goes to LP.                                                                                     |
 
 ## FeeTier
 
 ```rust
-#[derive(scale::Decode, scale::Encode)]
-#[cfg_attr(
-    feature = "std",
-    derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
-)]
+#[derive(OdraType)]
 pub struct FeeTier {
     pub fee: Percentage,
-    pub tick_spacing: u16,
+    pub tick_spacing: u32,
 }
 ```
 
@@ -44,32 +39,24 @@ pub struct FeeTier {
 ## PoolKey
 
 ```rust
-#[derive(scale::Decode, scale::Encode, Debug, Copy, Clone, PartialEq)]
-#[cfg_attr(
-    feature = "std",
-    derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
-)]
+#[derive(OdraType)]
 pub struct PoolKey {
-    pub token_x: AccountId,
-    pub token_y: AccountId,
+    pub token_x: Address,
+    pub token_y: Address,
     pub fee_tier: FeeTier,
 }
 ```
 
-| Name     | Type      | Description                   |
-| -------- | --------- | ----------------------------- |
-| token_x  | AccountId | address of x token.           |
-| token_y  | AccountId | address of y token.           |
-| fee_tier | FeeTier   | FeeTier associated with pool. |
+| Name     | Type    | Description                   |
+| -------- | ------- | ----------------------------- |
+| token_x  | Address | address of x token.           |
+| token_y  | Address | address of y token.           |
+| fee_tier | FeeTier | FeeTier associated with pool. |
 
 ## Pool
 
 ```rust
-#[derive(scale::Decode, scale::Encode)]
-#[cfg_attr(
-    feature = "std",
-    derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
-)]
+#[derive(OdraType)]
 pub struct Pool {
     pub liquidity: Liquidity,
     pub sqrt_price: SqrtPrice,
@@ -80,7 +67,7 @@ pub struct Pool {
     pub fee_protocol_token_y: TokenAmount,
     pub start_timestamp: u64,
     pub last_timestamp: u64,
-    pub fee_receiver: AccountId,
+    pub fee_receiver: Address,
 }
 ```
 
@@ -95,16 +82,12 @@ pub struct Pool {
 | fee_protocol_token_y | TokenAmount | Amount of protocol tokens accumulated in y token that are available to claim.                                                                   |
 | start_timestamp      | u64         | Time of pool initialization.                                                                                                                    |
 | last_timestamp       | u64         | Last update of pool.                                                                                                                            |
-| fee_receiver         | AccountId   | Address of entity enabling to claim protocol fee. By default it's admin but can be change for specific pool.                                    |
+| fee_receiver         | Address     | Address of entity enabling to claim protocol fee. By default it's admin but can be change for specific pool.                                    |
 
 ## Position
 
 ```rust
-#[derive(scale::Decode, scale::Encode)]
-#[cfg_attr(
-    feature = "std",
-    derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
-)]
+#[derive(OdraType)]
 pub struct Position {
     pub pool_key: PoolKey,
     pub liquidity: Liquidity,
@@ -133,11 +116,7 @@ pub struct Position {
 ## Tick
 
 ```rust
-#[derive(scale::Decode, scale::Encode)]
-#[cfg_attr(
-    feature = "std",
-    derive(scale_info::TypeInfo, ink::storage::traits::StorageLayout)
-)]
+#[derive(OdraType)]
 pub struct Tick {
     pub index: i32,
     pub sign: bool,
