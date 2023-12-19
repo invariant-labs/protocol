@@ -27,7 +27,7 @@ pub struct State {
 #[derive(OdraType)]
 pub struct FeeTier {
     pub fee: Percentage,
-    pub tick_spacing: u16,
+    pub tick_spacing: u32,
 }
 ```
 
