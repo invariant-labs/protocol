@@ -11,7 +11,7 @@ This section provides an in-depth exploration of key data structures integral to
 ```rust
 #[ink::storage_item]
 #[derive(Debug)]
-pub struct State {
+pub struct InvariantConfig {
     pub admin: AccountId,
     pub protocol_fee: Percentage,
 }

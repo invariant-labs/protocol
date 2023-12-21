@@ -10,7 +10,7 @@ This section provides an in-depth exploration of key data structures integral to
 
 ```rust
 #[derive(OdraType)]
-pub struct State {
+pub struct InvariantConfig {
     pub admin: Address,
     pub protocol_fee: Percentage,
 }
