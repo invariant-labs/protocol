@@ -434,16 +434,17 @@ This function allows the user to claim fees from an existing position. Tokens wi
 
 ```rust
 #[ink(message)]
-pub fn get_position(&mut self, index: u32) -> Result<Position, InvariantError>;
+pub fn get_position(&mut self, owner_id:AccountId, index: u32) -> Result<Position, InvariantError>;
 ```
 
 This function returns an result that contains error if the position cannot be found or a position if it actually exists.
 
 #### Input parameters
 
-| Name  | Type | Description                                        |
-| ----- | ---- | -------------------------------------------------- |
-| index | u32  | Index of the position in the user's position list. |
+| Name     | Type      | Description                                              |
+| -------- | --------- | -------------------------------------------------------- |
+| owner_id | AccountId | An AccountId identifying the user who owns the position. |
+| index    | u32       | Index of the position in the user's position list.       |
 
 #### Output parameters
 
@@ -461,10 +462,16 @@ This function returns an result that contains error if the position cannot be fo
 
 ```rust
 #[ink(message)]
-pub fn get_all_positions(&mut self) -> Vec<Position>;
+pub fn get_all_positions(&mut self, owner_id: AccountId) -> Vec<Position>;
 ```
 
 This function returns a list of positions owned by the caller. The list will be empty if you do not have any positions.
+
+#### Input parameters
+
+| Name     | Type      | Description                                              |
+| -------- | --------- | -------------------------------------------------------- |
+| owner_id | AccountId | An AccountId identifying the user who own the positions. |
 
 #### Output parameters
 
