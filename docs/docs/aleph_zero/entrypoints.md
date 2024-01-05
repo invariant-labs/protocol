@@ -434,7 +434,7 @@ This function allows the user to claim fees from an existing position. Tokens wi
 
 ```rust
 #[ink(message)]
-pub fn get_position(&mut self, owner_id:AccountId, index: u32) -> Result<Position, InvariantError>;
+pub fn get_position(&mut self, owner_id: AccountId, index: u32) -> Result<Position, InvariantError>;
 ```
 
 This function returns an result that contains error if the position cannot be found or a position if it actually exists.
