@@ -700,3 +700,24 @@ Retrieves information about a tick at a specified index.
 | Type | Description                                                |
 | ---- | ---------------------------------------------------------- |
 | bool | boolean identifying if the tick is initialized in tickmap. |
+
+### Get all ticks
+
+```rust
+#[ink(message)]
+fn get_all_ticks(&self, pool_key: PoolKey) -> Vec<Tick>;
+```
+
+Retrieves all ticks for a specified pool.
+
+#### Input parameters
+
+| Name     | Type    | Description                                      |
+| -------- | ------- | ------------------------------------------------ |
+| pool_key | PoolKey | A unique key that identifies the specified pool. |
+
+#### Output parameters
+
+| Type       | Description                                    |
+| ---------- | ---------------------------------------------- |
+| Vec<Tick/> | Vector containing all ticks of specified pool. |
