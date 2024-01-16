@@ -66,6 +66,7 @@ module.exports = {
       items: [
         'aleph_zero/installation',
         'aleph_zero/overview',
+        'aleph_zero/sdk',
         'aleph_zero/types',
         'aleph_zero/storage',
         'aleph_zero/collections',
