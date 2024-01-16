@@ -705,19 +705,22 @@ Retrieves information about a tick at a specified index.
 
 ```rust
 #[ink(message)]
-fn get_all_ticks(&self, pool_key: PoolKey) -> Vec<Tick>;
+fn get_all_ticks(&self, pool_key: PoolKey, offset: i32, limit: u8) -> (Vec<Tick>, bool);
 ```
 
-Retrieves all ticks for a specified pool.
+Retrieves ticks for a specified pool.
 
 #### Input parameters
 
 | Name     | Type    | Description                                      |
 | -------- | ------- | ------------------------------------------------ |
 | pool_key | PoolKey | A unique key that identifies the specified pool. |
+| offset   | i32     | The offset from which ticks will be retrieved.   |
+| limit    | i32     | The maximum number of ticks to retrieve.         |
 
 #### Output parameters
 
-| Type       | Description                                    |
-| ---------- | ---------------------------------------------- |
-| Vec<Tick/> | Vector containing all ticks of specified pool. |
+| Type       | Description                                       |
+| ---------- | ------------------------------------------------- |
+| Vec<Tick/> | Vector containing ticks of specified pool.        |
+| bool       | Boolean indicating if tickmap was fully searched. |
