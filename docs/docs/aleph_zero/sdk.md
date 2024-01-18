@@ -6,43 +6,25 @@ slug: /aleph_zero/sdk
 
 SDK (Software Development Kit) can be used to interact with our DEX programatically. It provides an easy way to integrate your app with Invariant, PSP22 tokens and Wrapped AZERO.
 
-## Build
+## Installation
 
-### Installation
+### Download
 
-Clone repository
+Published package can be found here: [NPM](https://google.com/).
 
-```bash
-git clone git@github.com:invariant-labs/protocol-a0.git
-```
+### Build
 
-Install substrate-contracts-node
-
-```bash
-cargo install contracts-node --git https://github.com/paritytech/substrate-contracts-node.git
-```
-
-Run build script
-
-```bash
-./build.sh
-```
-
-Run test script
-
-```bash
-./tests.sh
-```
+You can find build steps here: [Installation](installation.md).
 
 ## Overview
 
 ### Structure
 
-Invariant SDK consists of 3 separate contracts: our DEX contract (Invariant), token contract (PSP22), contract that can be used to wrap native currency (Wrapped AZERO) and various helper functions. You can deploy your own or use existing address of any of those contracts.
+Invariant SDK consists of 3 separate contracts: our DEX contract (Invariant), token contract (PSP22), contract that can be used to wrap native currency (Wrapped AZERO), various values and helper functions. You can deploy your own or use an existing contract.
 
 ### Txs and Queries
 
-Network enum allows you to choose network you want to perform actions on. In order to make a contract call you have to use methods of classes of loaded or deployed contracts. First parameter will always be an account you want to use and rest of parameters will be an entrypoint parameters.
+After you load or deploy a contract you can start interacting with it. In order to make a contract call you have to use methods of class that represents specific contract. First parameter will always be an account you want to use and rest of parameters will be an entrypoint parameters.
 
 ### Event listeners
 
@@ -50,7 +32,36 @@ Invariant class has additional methods that allows you to attach event listeners
 
 ### Values and Helper functions
 
-SDK also contains all essential values that might be needed in your app like maximum tick, maximum price and many others. Also you can use helper functions that will simplify various calculations.
+SDK also contains all essential values and helper functions that might be needed in your app like maximum tick, maximum price, calculating price impact and many others that will simplify your calculations.
+
+## Files
+
+```
+📦sdk
+ ┣ 📂contracts
+ ┃ ┣ 📂invariant
+ ┃ ┣ 📂PSP22
+ ┃ ┗ 📂wrapped-azero
+ ┣ 📂math
+ ┣ 📂src
+ ┗ 📂tests
+```
+
+### Contracts
+
+Contracts folder contains deploy-ready contracts and metadata that is used to interact with them.
+
+### Math
+
+Math contains Rust structs and data from main Invariant contract exported using WASM.
+
+### Source
+
+Everything combined in easy-to-use interface.
+
+### Tests
+
+Tests folder with tests to make sure everything works right.
 
 ## Usage
 
@@ -71,11 +82,15 @@ main()
 ### Initialize DEX and tokens
 
 :::note Why "n" is at the end of every number
-Notice how we use "n" at the end of every number. "n" indicates that specified value is a BigInt, number with higher precision. We use it almost everywhere in our SDK.  
+Notice how we use "n" at the end of every number. "n" indicates that specified value is a BigInt, number with higher precision. Read more about BigInt here: [BigInt MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt).
+:::
+
+:::info Creating types
+You can create custom decimals with `toDecimal` syntax. First argument is an integer and second argument is a number of zeros. For example `toFee(3n, 2n)` will produce decimal equal to `0.03`. Read more about types here: [Types](types.md).
 :::
 
 :::warning Token sorting
-Tokens are sorted alphabetically when pool key is created, so make sure that you swap tokens in correct direction.
+Tokens are sorted alphabetically when pool key is created, so make sure that you swap tokens in correct direction. Read more about pool keys here: [PoolKey](storage#poolkey).
 :::
 
 ```typescript
@@ -83,11 +98,11 @@ const main = async () => {
   // --snip--
 
   // load invariant contract
-  const invariant = await Invariant.load(api, Network.Main, '0x_contract_address')
+  const invariant = await Invariant.load(api, Network.Main, INVARIANT_ADDRESS)
 
   // load token contracts
-  const token0 = await PSP22.load(api, Network.Main, '0x_token0_address') // token we want to give
-  const token1 = await PSP22.load(api, Network.Main, '0x_token0_address') // token we want to receive
+  const token0 = await PSP22.load(api, Network.Main, TOKEN0_ADDRESS) // token we want to give
+  const token1 = await PSP22.load(api, Network.Main, TOKEN1_ADDRESS) // token we want to receive
 
   // set fee tier and pool key, make sure that pool with specified parameters exists
   const feeTier = newFeeTier(toFee(1n, 2n), 1n) // fee: 0.01 = 1%, tick spacing: 1
@@ -98,14 +113,8 @@ const main = async () => {
   )
 
   // make sure that you swap in correct direction,
-  // here we check if token0 (token we want to give) is tokenX,
-  // if it is then set xToY param to true, otherwise set it to false
-  let xToY
-  if (isTokenX(token0.contract.address.toString(), token1.contract.address.toString())) {
-    xToY = true
-  } else {
-    xToY = false
-  }
+  // here we check if token0 (token we want to give) is tokenX
+  let xToY = isTokenX(token0.contract.address.toString(), token1.contract.address.toString())
 }
 
 main()
@@ -145,7 +154,7 @@ const main = async () => {
   const sqrtPriceLimit = calculateSqrtPriceAfterSlippage(pool.sqrtPrice, allowedSlippage, xToY)
 
   const result = await invariant.swap(account, poolKey, xToY, amount, true, priceLimit)
-  console.log(result.hash) // print hash of a transaction
+  console.log(result.hash) // print transaction hash
 }
 
 main()
@@ -217,7 +226,7 @@ const main = async () => {
   // --snip--
 
   // load wazero contract
-  const wazero = await WrappedAZERO.load(api, network, '0x_wazero_address')
+  const wazero = await WrappedAZERO.load(api, network, WAZERO_ADDRESS)
 
   // send AZERO using deposit method
   await wazero.deposit(1000n)
@@ -246,4 +255,132 @@ const main = async () => {
 }
 
 main()
+```
+
+## Types
+
+### Network
+
+Network allows you to choose network you want to perform actions on.
+
+```typescript
+enum Network {
+  Local = 'local',
+  Mainnet = 'mainnet',
+  Testnet = 'testnet'
+}
+```
+
+### Decimal
+
+Read more about decimals here: [Types](types.md)
+
+```typescript
+interface DecimalName {
+  v: bigint
+}
+
+// exception
+type TokenAmount = bigint
+```
+
+### Events
+
+```typescript
+interface CreatePositionEvent {
+  timestamp: bigint
+  address: string
+  pool: PoolKey
+  liquidity: Liquidity
+  lowerTick: bigint
+  upperTick: bigint
+  currentSqrtPrice: SqrtPrice
+}
+
+interface CrossTickEvent {
+  timestamp: bigint
+  address: string
+  pool: PoolKey
+  indexes: bigint[]
+}
+
+interface RemovePositionEvent {
+  timestamp: bigint
+  address: string
+  pool: PoolKey
+  liquidity: Liquidity
+  lowerTick: bigint
+  upperTick: bigint
+  currentSqrtPrice: SqrtPrice
+}
+
+interface SwapEvent {
+  timestamp: bigint
+  address: string
+  pool: PoolKey
+  amountIn: TokenAmount
+  amountOut: TokenAmount
+  fee: TokenAmount
+  startSqrtPrice: SqrtPrice
+  targetSqrtPrice: SqrtPrice
+  xToY: boolean
+}
+```
+
+### Storage
+
+Read more about storage here: [Storage](storage.md)
+
+```typescript
+interface InvariantConfig {
+  admin: string
+  protocolFee: Percentage
+}
+
+interface FeeTier {
+  fee: Percentage
+  tickSpacing: bigint
+}
+
+interface PoolKey {
+  tokenX: string
+  tokenY: string
+  feeTier: FeeTier
+}
+
+interface Pool {
+  liquidity: Liquidity
+  sqrtPrice: SqrtPrice
+  currentTickIndex: bigint
+  feeGrowthGlobalX: FeeGrowth
+  feeGrowthGlobalY: FeeGrowth
+  feeProtocolTokenX: TokenAmount
+  feeProtocolTokenY: TokenAmount
+  startTimestamp: bigint
+  lastTimestamp: bigint
+  feeReceiver: string
+}
+
+interface Position {
+  poolKey: PoolKey
+  liquidity: Liquidity
+  lowerTickIndex: bigint
+  upperTickIndex: bigint
+  feeGrowthInsideX: FeeGrowth
+  feeGrowthInsideY: FeeGrowth
+  lastBlockNumber: bigint
+  tokensOwedX: TokenAmount
+  tokensOwedY: TokenAmount
+}
+
+interface Tick {
+  index: bigint
+  sign: boolean
+  liquidityChange: Liquidity
+  liquidityGross: Liquidity
+  sqrtPrice: SqrtPrice
+  feeGrowthOutsideX: FeeGrowth
+  feeGrowthOutsideY: FeeGrowth
+  secondsOutside: bigint
+}
 ```
