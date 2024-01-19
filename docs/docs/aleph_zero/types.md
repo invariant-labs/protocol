@@ -12,9 +12,7 @@ We have implemented a custom decimal system, which is detailed in our repository
 
 ```rust
 #[decimal(#scale, #big_type)]
-pub struct DecimalName {
-  pub v: #underlying_type
-}
+pub struct DecimalName(pub #underlying_type)
 ```
 
 | Name             | Description                                                                |
@@ -30,9 +28,7 @@ Creating a custom decimal type with name "Decimal", 3 decimal places, u128 as un
 
 ```rust
 #[decimal(3)]
-pub struct Decimal {
-  pub v: u128
-}
+pub struct Decimal(pub u128)
 ```
 
 Creating a decimal value:
@@ -72,9 +68,7 @@ The SqrtPrice type stores the **square root** of the y-to-x token ratio.
 
 ```rust
 #[decimal(24)]
-pub struct SqrtPrice {
-    pub v: u128,
-}
+pub struct SqrtPrice(pub u128);
 ```
 
 ### FixedPoint
@@ -83,9 +77,7 @@ FixedPoint is a type used for precise arithmetic calculations, with half the acc
 
 ```rust
 #[decimal(12)]
-pub struct FixedPoint {
-    pub v: u128,
-}
+pub struct FixedPoint(pub u128);
 ```
 
 ### Liquidity
@@ -94,9 +86,7 @@ The liquidity type represents a value that indicates the ability to exchange. Li
 
 ```rust
 #[decimal(6)]
-pub struct Liquidity {
-    pub v: u128,
-}
+pub struct Liquidity(pub u128);
 ```
 
 ### Percentage
@@ -105,9 +95,7 @@ The type represents a percentage and is used to simplify interest calculations f
 
 ```rust
 #[decimal(12)]
-pub struct Percentage {
-    pub v: u64,
-}
+pub struct Percentage(pub u64);
 ```
 
 ### FeeGrowth
@@ -116,9 +104,7 @@ FeeGrowth is used to calculate the fee amount within a specified price range. Fe
 
 ```rust
 #[decimal(28)]
-pub struct FeeGrowth {
-    pub v: u128,
-}
+pub struct FeeGrowth(pub u128);
 ```
 
 ### SecondsPerLiquidity
@@ -127,7 +113,5 @@ SecondsPerLiquidity represents the time difference measured in seconds per liqui
 
 ```rust
 #[decimal(24)]
-pub struct SecondsPerLiquidity {
-    pub v: u128,
-}
+pub struct SecondsPerLiquidity(pub u128);
 ```
