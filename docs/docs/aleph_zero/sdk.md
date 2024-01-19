@@ -68,15 +68,11 @@ Tests folder with tests to make sure everything works right.
 ### Starting off
 
 ```typescript
-const main = async () => {
-  const api = await initPolkadotApi(Network.Main) // initialize api, use enum to specify the network
+const api = await initPolkadotApi(Network.Main) // initialize api, use enum to specify the network
 
-  // initialize account, you can use your own wallet by pasting mnemonic phase
-  const keyring = new Keyring({ type: 'sr25519' })
-  const account = await keyring.addFromUri('//Alice')
-}
-
-main()
+// initialize account, you can use your own wallet by pasting mnemonic phase
+const keyring = new Keyring({ type: 'sr25519' })
+const account = await keyring.addFromUri('//Alice')
 ```
 
 ### Initialize DEX and tokens
@@ -94,30 +90,70 @@ Tokens are sorted alphabetically when pool key is created, so make sure that you
 :::
 
 ```typescript
-const main = async () => {
-  // --snip--
+// --snip--
 
-  // load invariant contract
-  const invariant = await Invariant.load(api, Network.Main, INVARIANT_ADDRESS)
+// load invariant contract
+const invariant = await Invariant.load(api, Network.Local, INVARIANT_ADDRESS)
 
-  // load token contracts
-  const token0 = await PSP22.load(api, Network.Main, TOKEN0_ADDRESS) // token we want to give
-  const token1 = await PSP22.load(api, Network.Main, TOKEN1_ADDRESS) // token we want to receive
+// load token contract
+const psp22 = await PSP22.load(api, Network.Local, TOKEN0_ADDRESS)
+```
 
-  // set fee tier and pool key, make sure that pool with specified parameters exists
-  const feeTier = newFeeTier(toFee(1n, 2n), 1n) // fee: 0.01 = 1%, tick spacing: 1
-  const poolKey = newPoolKey(
-    token0.contract.address.toString(),
-    token1.contract.address.toString(),
-    feeTier
-  )
+### Create pool
 
-  // make sure that you swap in correct direction,
-  // here we check if token0 (token we want to give) is tokenX
-  let xToY = isTokenX(token0.contract.address.toString(), token1.contract.address.toString())
-}
+```typescript
+// --snip--
 
-main()
+// set fee tier, make sure that fee tier with specified parameters exists
+const feeTier = newFeeTier(toPercentage(1n, 2n), 1n) // fee: 0.01 = 1%, tick spacing: 1
+
+// set initial price of the pool, we set it to 1.00
+const initSqrtPrice = toSqrtPrice(1n, 0n)
+
+await invariant.createPool(account, TOKEN0_ADDRESS, TOKEN1_ADDRESS, feeTier, initSqrtPrice, 0n)
+```
+
+### Open position
+
+```typescript
+// token y has 12 decimals and we want to add 8 actual tokens to our position
+const tokenYAmount = 8n * 10n ** 12n
+
+// set lower and upper tick, we want to create position in range [-10, 10]
+const lowerTick = -10n
+const upperTick = 10n
+
+const liquidityResult = getLiquidityByX(tokenYAmount, lowerTick, upperTick, initSqrtPrice, true)
+const tokenXAmount = liquidityResult.amount
+const positionLiquidity = liquidityResult.l
+
+// print amount of token x and y we need to give to open position based on parameteres we passed
+console.log(tokenYAmount, tokenXAmount)
+
+// approve transfers of both tokens
+await psp22.approve(
+  account,
+  invariant.contract.address.toString(),
+  isTokenX(TOKEN0_ADDRESS, TOKEN1_ADDRESS) ? tokenYAmount : tokenXAmount
+)
+await psp22.setContractAddress(TOKEN1_ADDRESS)
+await psp22.approve(
+  account,
+  invariant.contract.address.toString(),
+  isTokenX(TOKEN0_ADDRESS, TOKEN1_ADDRESS) ? tokenXAmount : tokenYAmount
+)
+await psp22.setContractAddress(TOKEN0_ADDRESS)
+
+// open up position
+await invariant.createPosition(
+  account,
+  poolKey,
+  lowerTick,
+  upperTick,
+  positionLiquidity,
+  initSqrtPrice,
+  initSqrtPrice
+)
 ```
 
 ### Perform swap
@@ -129,86 +165,85 @@ Let's say some token has decimal of 12 and we want to swap 6 actual tokens. Here
 :::
 
 ```typescript
-const main = async () => {
-  // --snip--
+// --snip--
 
-  // here we want to swap 6 token0
-  // token0 has 12 decimals so we need to multiply it by 10^12
-  const amount = 6n * 10n ** 12n
+const poolKey = newPoolKey(TOKEN0_ADDRESS, TOKEN1_ADDRESS, feeTier)
 
-  // approve token0 transfer
-  await token0.approve(account, invariant.contract.address.toString(), amount)
+// make sure that you swap in correct direction,
+// here we check if token0 (token we want to give) is tokenX
+const xToY = isTokenX(TOKEN0_ADDRESS, TOKEN1_ADDRESS)
 
-  // slippage is a price change you are willing to accept,
-  // for examples if current price is 1 and your slippage is 1%, then price limit will be 1.01
-  const allowedSlippage = toPercentage(1n, 3n) // 0.001 = 0.1%
+// here we want to swap 6 token0
+// token0 has 12 decimals so we need to multiply it by 10^12
+const amount = 6n * 10n ** 12n
 
-  // swap message only accepts price limit so we have to calculate it in order to use slippage,
-  // here we are passing current price and allowed slippage to calculate price limit
-  const pool = await invariant.getPool(
-    account,
-    token0.contract.address.toString(),
-    token1.contract.address.toString(),
-    feeTier
-  )
-  const sqrtPriceLimit = calculateSqrtPriceAfterSlippage(pool.sqrtPrice, allowedSlippage, xToY)
+// approve token0 transfer
+await psp22.approve(account, invariant.contract.address.toString(), amount)
 
-  const result = await invariant.swap(account, poolKey, xToY, amount, true, priceLimit)
-  console.log(result.hash) // print transaction hash
-}
+// slippage is a price change you are willing to accept,
+// for examples if current price is 1 and your slippage is 1%, then price limit will be 1.01
+const allowedSlippage = toPercentage(1n, 3n) // 0.001 = 0.1%
 
-main()
+// swap message only accepts price limit so we have to calculate it in order to use slippage,
+// here we are passing current price and allowed slippage to calculate price limit
+const pool = await invariant.getPool(account, TOKEN0_ADDRESS, TOKEN1_ADDRESS, feeTier)
+const sqrtPriceLimit = calculateSqrtPriceAfterSlippage(pool.sqrtPrice, allowedSlippage, !xToY)
+
+const result = await invariant.swap(account, poolKey, xToY, amount, true, sqrtPriceLimit)
+console.log(result.hash) // print transaction hash
 ```
 
 ### Query state
 
 ```typescript
-const main = async () => {
-  // --snip--
+// --snip--
 
-  // get specific user address
-  const userAddress = account.address.toString()
+// query state
+const poolAfter = await invariant.getPool(account, TOKEN0_ADDRESS, TOKEN1_ADDRESS, feeTier)
+const positionAfter = await invariant.getPosition(account, account.address, 0n)
+const lowerTickAfter = await invariant.getTick(account, poolKey, positionAfter.lowerTickIndex)
+const upperTickAfter = await invariant.getTick(account, poolKey, positionAfter.upperTickIndex)
 
-  // retrieve positions of that user
-  const positions = invariant.getPositions(account, userAddress)
+// calculate unclaimed fees
+const unclaimedFees = simulateUnclaimedFees(
+  poolAfter,
+  positionAfter,
+  lowerTickAfter,
+  upperTickAfter
+)
 
-  const fees = new Map()
-
-  // loop through user's positions
-  positions.map(position => {
-    // get token x and y addresses
-    const tokenX = position.poolKey.tokenX
-    const tokenY = position.poolKey.tokenY
-
-    // add unclaimed fees to a map
-    map.set(tokenX, (map.get(tokenX) || 0) + position.tokensOwedX)
-    map.set(tokenY, (map.get(tokenY) || 0) + position.tokensOwedY)
-  })
-
-  // print total amount of fees of all positions
-  console.log(fees)
-}
-
-main()
+// print amount of unclaimed x and y token
+console.log(unclaimedFees)
 ```
 
 ### Claim fees
 
 ```typescript
-const main = async () => {
-  // --snip--
+// --snip--
 
-  // claim fees
-  // specify position id, positions are indexed from 0
-  const positionId = 0n
-  await invariant.claimFee(account, positionId)
+// claim fees
+// specify position id, positions are indexed from 0
+const positionId = 0n
+await invariant.claimFee(account, positionId)
 
-  // get balance of a specific token after claiming position fees and print it
-  const accountBalance = await token0.balanceOf(account, account.address)
-  console.log(accountBalance)
-}
+// get balance of a specific token after claiming position fees and print it
+const accountBalance = await psp22.balanceOf(account, account.address)
+console.log(accountBalance)
+```
 
-main()
+### Remove position
+
+```typescript
+// remove position
+invariant.removePosition(account, positionId)
+
+// get balance of a specific token after removing position
+const accountToken0Balance = await psp22.balanceOf(account, account.address)
+await psp22.setContractAddress(TOKEN1_ADDRESS)
+const accountToken1Balance = await psp22.balanceOf(account, account.address)
+
+// print balances
+console.log(accountToken0Balance, accountToken1Balance)
 ```
 
 ### Wrap AZERO
@@ -222,39 +257,31 @@ You should only use official Wrapped AZERO contract. This address represents off
 :::
 
 ```typescript
-const main = async () => {
-  // --snip--
+// --snip--
 
-  // load wazero contract
-  const wazero = await WrappedAZERO.load(api, network, WAZERO_ADDRESS)
+// load wazero contract
+const wazero = await WrappedAZERO.load(api, network, WAZERO_ADDRESS)
 
-  // send AZERO using deposit method
-  await wazero.deposit(1000n)
+// send AZERO using deposit method
+await wazero.deposit(1000n)
 
-  // you will receive WAZERO token which you can use as any other token,
-  // later you can exchange it back to AZERO at 1:1 ratio
-  const accountBalance = wazero.balanceOf(account, account.address)
-}
-
-main()
+// you will receive WAZERO token which you can use as any other token,
+// later you can exchange it back to AZERO at 1:1 ratio
+const accountBalance = wazero.balanceOf(account, account.address)
 ```
 
 ### Attach event listeners
 
 ```typescript
-const main = async () => {
-  // --snip--
+// --snip--
 
-  // attach event listener to invariant contract and listen for swap events
-  invariant.on(InvariantEvent.SwapEvent, (event: SwapEvent) => {
-    // checking if swap was made on a specific pool
-    if (event.poolKey === poolKey) {
-      // do action
-    }
-  })
-}
-
-main()
+// attach event listener to invariant contract and listen for swap events
+invariant.on(InvariantEvent.SwapEvent, (event: SwapEvent) => {
+  // checking if swap was made on a specific pool
+  if (event.poolKey === poolKey) {
+    // do action
+  }
+})
 ```
 
 ## Types

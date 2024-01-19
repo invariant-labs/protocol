@@ -36,12 +36,6 @@ cargo install contracts-node --git https://github.com/paritytech/substrate-contr
 sudo apt install --locked wasm-bindgen-cli
 ```
 
-#### Install JSON processor
-
-```bash
-sudo apt install -y jq
-```
-
 ## Build Protocol
 
 #### Clone repository
