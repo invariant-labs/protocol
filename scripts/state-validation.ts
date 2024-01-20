@@ -20,6 +20,28 @@ const provider = Provider.local('[FILL ME]', {
   skipPreflight: true
 })
 
+export const addressTickerMap: { [key: string]: string } = {
+  SOL: 'So11111111111111111111111111111111111111112',
+  USDC: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+  USDT: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
+  USDH: 'USDH1SM1ojwWUga67PGrgFWUHibbjqMvuMaDkRJTgkX',
+  mSOL: 'mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So',
+  bSOL: 'bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1',
+  stSOL: '7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj',
+  SNY: '4dmKkXNHdgYsXqBHCuMikNQWwVomZURhYvkkX5c4pQ7y',
+  ETH: '7vfCXTUXx5WJV5JADk17DUJ4ksgau7utNKj4b963voxs',
+  LFNTY: 'LFNTYraetVioAPnGJht4yNg2aUZFXR776cMeN9VMjXp',
+  JLP: '27G8MtK7VtTcCHkpASjSDdkWWYfoqT6ggEuKidVJidD4'
+}
+
+export const reversedAddressTickerMap = Object.fromEntries(
+  Object.entries(addressTickerMap).map(([key, value]) => [value, key])
+)
+
+export const addressToTicker = (address: string): string => {
+  return reversedAddressTickerMap[address] || address
+}
+
 const assertionOn = true
 const skipValidation = ['JCKjKab2Qj9fkVGDX1QH2TZDX5Y7YfihMwwyh2efy8tP']
 const onlyValidation = [
@@ -119,10 +141,11 @@ const main = async () => {
     }
 
     console.log(`Pool address: ${poolAccount.publicKey.toString()}`)
+
     console.log(
-      `Checking pool ${pool.tokenX.toString()}/${pool.tokenY.toString()} at ${pool.fee.v
-        .divn(1e7)
-        .toString()}`
+      `Token address: ${addressToTicker(pool.tokenX.toString())}/${addressToTicker(
+        pool.tokenY.toString()
+      )} at ${Number(pool.fee.v.divn(1e7).toString()) / 10e2}%`
     )
 
     const pair = new Pair(pool.tokenX, pool.tokenY, {
@@ -202,15 +225,20 @@ const main = async () => {
 
     console.log('reserve balances:', reserves.x.toString(), reserves.y.toString())
     if (!sumOfPositions[0].lte(reserves.x)) {
-      console.log('x is invalid')
+      console.log('**************')
+      console.log('*X IS INVALID*')
+      console.log('**************')
     }
     if (!sumOfPositions[1].lte(reserves.y)) {
-      console.log('y is invalid')
+      console.log('**************')
+      console.log('*Y IS INVALID*')
+      console.log('**************')
     }
     if (assertionOn) {
       assert.ok(sumOfPositions[0].lte(reserves.x))
       assert.ok(sumOfPositions[1].lte(reserves.y))
     }
+    console.log('---------------------\n')
   }
 }
 // trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
