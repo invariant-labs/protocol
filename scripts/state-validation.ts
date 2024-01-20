@@ -1,4 +1,4 @@
-import { Provider } from '@project-serum/anchor'
+import { BN, Provider } from '@project-serum/anchor'
 import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
 import { Network } from '@invariant-labs/sdk/src/network'
 import { Market, Pair } from '@invariant-labs/sdk/src'
@@ -6,7 +6,6 @@ import { calculateClaimAmount } from '@invariant-labs/sdk/src/utils'
 import { parseLiquidityOnTicks } from '@invariant-labs/sdk/lib/utils'
 import { bs58 } from '@project-serum/anchor/dist/cjs/utils/bytes'
 import { PoolStructure, Position } from '@invariant-labs/sdk/src/market'
-import { BN } from '../staker-sdk/lib'
 import { assert } from 'chai'
 import { getDeltaX } from '@invariant-labs/sdk/lib/math'
 import { calculatePriceSqrt } from '@invariant-labs/sdk'
@@ -17,15 +16,17 @@ import { Tick } from '@invariant-labs/sdk/lib/market'
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
-const provider = Provider.local('FILL ME', {
+const provider = Provider.local('[FILL ME]', {
   skipPreflight: true
 })
 
+const assertionOn = true
 const skipValidation = ['JCKjKab2Qj9fkVGDX1QH2TZDX5Y7YfihMwwyh2efy8tP']
 const onlyValidation = [
-  'BRt1iVYDNoohkL1upEb8UfHE8yji6gEDAmuN9Y4yekyc', // usdc-usdt 0.001%
-  'HbMbeaDH8xtB1a8WpwjNqcXBBGraKJjJ2xFkXEdAy1rY', // msol-stsol 0.01%
-  '7daJQUg9KVjCk6gBcfjLNf2zEFw2kp5b7hEjGCrgoJTh' // msol-stsol 0.001%
+  '5dX3tkVDmbHBWMCQMerAHTmd9wsRvmtKLoQt6qv9fHy7', // usdc-usdt 0.01%
+  '2SgUGxYDczrB6wUzXHPJH65pNhWkEzNMEx3km4xTYUTC', // usdc-wsol 0.01%
+  'A29rrFUrhwhvBtBATr1heqKVgzcdWncywTGeSb5jw4wQ', // usdc-jlp 0.1%
+  'AsScbbfavtP77F1Ybpe3Cdwhca9Yby6gDQLVh5uWsi3X' // msol-bsol 0.01%
 ]
 
 const connection = provider.connection
@@ -206,8 +207,10 @@ const main = async () => {
     if (!sumOfPositions[1].lte(reserves.y)) {
       console.log('y is invalid')
     }
-    assert.ok(sumOfPositions[0].lte(reserves.x))
-    assert.ok(sumOfPositions[1].lte(reserves.y))
+    if (assertionOn) {
+      assert.ok(sumOfPositions[0].lte(reserves.x))
+      assert.ok(sumOfPositions[1].lte(reserves.y))
+    }
   }
 }
 // trunk-ignore(eslint/@typescript-eslint/no-floating-promises)
