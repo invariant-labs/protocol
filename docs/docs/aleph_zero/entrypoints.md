@@ -700,3 +700,27 @@ Retrieves information about a tick at a specified index.
 | Type | Description                                                |
 | ---- | ---------------------------------------------------------- |
 | bool | boolean identifying if the tick is initialized in tickmap. |
+
+## Tickmap
+
+### Get tickmap
+
+```rust
+#[ink(message)]
+fn get_tickmap(&self, pool_key: PoolKey, center_tick: i32) -> Vec<(u16,u64)>;
+```
+
+Retrieves tickmap chunks for a specified pool.
+
+#### Input parameters
+
+| Name        | Type    | Description                                      |
+| ----------- | ------- | ------------------------------------------------ |
+| pool_key    | PoolKey | A unique key that identifies the specified pool. |
+| center_tick | i32     | Center tick index.                               |
+
+#### Output parameters
+
+| Type            | Description                                       |
+| --------------- | ------------------------------------------------- |
+| Vec<(u16,u64)/> | Vector containing tickmap chunks index and value. |
