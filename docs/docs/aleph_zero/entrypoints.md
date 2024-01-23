@@ -789,3 +789,27 @@ Retrieves the amount of liquidity ticks of a specified pool.
 | Type | Description                          |
 | ---- | ------------------------------------ |
 | u32  | Number of ticks on a specified pool. |
+
+## Tickmap
+
+### Get tickmap
+
+```rust
+#[ink(message)]
+fn get_tickmap(&self, pool_key: PoolKey, center_tick: i32) -> Vec<(u16,u64)>;
+```
+
+Retrieves tickmap chunks for a specified pool.
+
+#### Input parameters
+
+| Name        | Type    | Description                                      |
+| ----------- | ------- | ------------------------------------------------ |
+| pool_key    | PoolKey | A unique key that identifies the specified pool. |
+| center_tick | i32     | Center tick index.                               |
+
+#### Output parameters
+
+| Type            | Description                                       |
+| --------------- | ------------------------------------------------- |
+| Vec<(u16,u64)/> | Vector containing tickmap chunks index and value. |
