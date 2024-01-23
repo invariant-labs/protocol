@@ -753,9 +753,6 @@ fn get_liquidity_ticks(&self, pool_key: PoolKey, offset: u16) -> Vec<LiquidityTi
 
 Retrieves ticks of a specified pool.
 
-    /// - `pool_key`: A unique key that identifies the specified pool.
-    /// - `offset`: The offset from which ticks will be retrieved.
-
 #### Input parameters
 
 | Name     | Type    | Description                                      |
