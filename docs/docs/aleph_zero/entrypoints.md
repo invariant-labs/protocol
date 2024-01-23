@@ -707,7 +707,7 @@ Retrieves information about a tick at a specified index.
 
 ```rust
 #[ink(message)]
-fn get_tickmap(&self, pool_key: PoolKey, current_tick: i32) -> Vec<u64>;
+fn get_tickmap(&self, pool_key: PoolKey, center_tick: i32) -> Vec<(u16,u64)>;
 ```
 
 Retrieves tickmap chunks for a specified pool.
@@ -717,10 +717,10 @@ Retrieves tickmap chunks for a specified pool.
 | Name        | Type    | Description                                      |
 | ----------- | ------- | ------------------------------------------------ |
 | pool_key    | PoolKey | A unique key that identifies the specified pool. |
-| curent_tick | i32     | Current pool tick index.                         |
+| center_tick | i32     | Center tick index.                               |
 
 #### Output parameters
 
-| Type      | Description                       |
-| --------- | --------------------------------- |
-| Vec<u64/> | Vector containing tickmap chunks. |
+| Type            | Description                                       |
+| --------------- | ------------------------------------------------- |
+| Vec<(u16,u64)/> | Vector containing tickmap chunks index and value. |
