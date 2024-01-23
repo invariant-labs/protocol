@@ -701,26 +701,91 @@ Retrieves information about a tick at a specified index.
 | ---- | ---------------------------------------------------------- |
 | bool | boolean identifying if the tick is initialized in tickmap. |
 
-### Get all ticks
+### Get position ticks
 
 ```rust
 #[ink(message)]
-fn get_all_ticks(&self, pool_key: PoolKey, offset: i32, limit: u8) -> (Vec<Tick>, bool);
+fn get_position_ticks(&self, owner: AccountId, offset: u32) -> Vec<PositionTick>;
 ```
 
-Retrieves ticks for a specified pool.
+Retrieves list of lower and upper ticks of user positions.
+
+#### Input parameters
+
+| Name   | Type      | Description                                                |
+| ------ | --------- | ---------------------------------------------------------- |
+| owner  | AccountId | An `AccountId` identifying the user who owns the position. |
+| offset | u32       | The offset from the current position index.                |
+
+#### Output parameters
+
+| Type               | Description                                |
+| ------------------ | ------------------------------------------ |
+| Vec<PositionTick/> | Vector containing ticks of user positions. |
+
+### Get user positions amount
+
+```rust
+#[ink(message)]
+fn get_user_position_amount(&self, owner: AccountId) -> u32;
+```
+
+Retrieves the amount of positions held by the user.
+
+#### Input parameters
+
+| Name  | Type      | Description                                                |
+| ----- | --------- | ---------------------------------------------------------- |
+| owner | AccountId | An `AccountId` identifying the user who owns the position. |
+
+#### Output parameters
+
+| Type | Description               |
+| ---- | ------------------------- |
+| u32  | Number of user positions. |
+
+### Get liquidity ticks
+
+```rust
+#[ink(message)]
+fn get_liquidity_ticks(&self, pool_key: PoolKey, offset: u16) -> Vec<LiquidityTick>;
+```
+
+Retrieves ticks of a specified pool.
+
+    /// - `pool_key`: A unique key that identifies the specified pool.
+    /// - `offset`: The offset from which ticks will be retrieved.
 
 #### Input parameters
 
 | Name     | Type    | Description                                      |
 | -------- | ------- | ------------------------------------------------ |
 | pool_key | PoolKey | A unique key that identifies the specified pool. |
-| offset   | i32     | The offset from which ticks will be retrieved.   |
-| limit    | i32     | The maximum number of ticks to retrieve.         |
+| offset   | u16     | The offset from which ticks will be retrieved.   |
 
 #### Output parameters
 
-| Type       | Description                                       |
-| ---------- | ------------------------------------------------- |
-| Vec<Tick/> | Vector containing ticks of specified pool.        |
-| bool       | Boolean indicating if tickmap was fully searched. |
+| Type                | Description                                |
+| ------------------- | ------------------------------------------ |
+| Vec<LiquidityTick/> | Vector containing ticks of specified pool. |
+
+### Get liquidity ticks amount
+
+```rust
+#[ink(message)]
+fn get_liquidity_ticks_amount(&self, pool_key: PoolKey) -> u32;
+```
+
+Retrieves the amount of liquidity ticks of a specified pool.
+
+#### Input parameters
+
+| Name     | Type    | Description                                      |
+| -------- | ------- | ------------------------------------------------ |
+| pool_key | PoolKey | A unique key that identifies the specified pool. |
+
+#### Output parameters
+
+| Type | Description                          |
+| ---- | ------------------------------------ |
+| u32  | Number of ticks on a specified pool. |
