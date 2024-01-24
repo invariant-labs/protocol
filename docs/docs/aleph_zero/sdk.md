@@ -53,7 +53,7 @@ Contracts folder contains deploy-ready contracts and metadata that is used to in
 
 ### Math
 
-Math contains Rust structs and data from main Invariant contract exported using WASM.
+Math contains Rust structs and data exported to WASM using wasm_bindgen which allowed use to the same functions and data that is used in main Invariant contract.
 
 ### Source
 
@@ -68,7 +68,15 @@ Tests folder with tests to make sure everything works right.
 ### Starting off
 
 ```typescript
-const api = await initPolkadotApi(Network.Main) // initialize api, use enum to specify the network
+enum Network {
+  Local = 'local',
+  Mainnet = 'mainnet',
+  Testnet = 'testnet'
+}
+```
+
+```typescript
+const api = await initPolkadotApi(Network.Local) // initialize api, use enum to specify the network
 
 // initialize account, you can use your own wallet by pasting mnemonic phase
 const keyring = new Keyring({ type: 'sr25519' })
@@ -76,18 +84,6 @@ const account = await keyring.addFromUri('//Alice')
 ```
 
 ### Initialize DEX and tokens
-
-:::note Why "n" is at the end of every number
-Notice how we use "n" at the end of every number. "n" indicates that specified value is a BigInt, number with higher precision. Read more about BigInt here: [BigInt MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt).
-:::
-
-:::info Creating types
-You can create custom decimals with `toDecimal` syntax. First argument is an integer and second argument is a number of zeros. For example `toFee(3n, 2n)` will produce decimal equal to `0.03`. Read more about types here: [Types](types.md).
-:::
-
-:::warning Token sorting
-Tokens are sorted alphabetically when pool key is created, so make sure that you swap tokens in correct direction. Read more about pool keys here: [PoolKey](storage#poolkey).
-:::
 
 ```typescript
 // --snip--
@@ -101,6 +97,46 @@ const psp22 = await PSP22.load(api, Network.Local, TOKEN0_ADDRESS)
 
 ### Create pool
 
+:::info Creating types
+You can create custom decimals with `toDecimal` syntax. First argument is an integer and second argument is a number of zeros. For example `toFee(3n, 2n)` will produce decimal equal to `0.03`. Read more about types here: [Types](types.md).
+:::
+
+:::note Why "n" is at the end of every number
+Notice how we use "n" at the end of every number. "n" indicates that specified value is a BigInt, number with higher precision. Read more about BigInt here: [BigInt MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt).
+:::
+
+:::warning Token sorting
+Tokens are sorted alphabetically when pool key is created, so make sure that you swap tokens in correct direction. Read more about pool keys here: [PoolKey](storage#poolkey).
+:::
+
+```typescript
+type DecimalName = bigint
+
+interface FeeTier {
+  fee: Percentage
+  tickSpacing: bigint
+}
+
+interface PoolKey {
+  tokenX: string
+  tokenY: string
+  feeTier: FeeTier
+}
+
+interface Pool {
+  liquidity: Liquidity
+  sqrtPrice: SqrtPrice
+  currentTickIndex: bigint
+  feeGrowthGlobalX: FeeGrowth
+  feeGrowthGlobalY: FeeGrowth
+  feeProtocolTokenX: TokenAmount
+  feeProtocolTokenY: TokenAmount
+  startTimestamp: bigint
+  lastTimestamp: bigint
+  feeReceiver: string
+}
+```
+
 ```typescript
 // --snip--
 
@@ -108,14 +144,22 @@ const psp22 = await PSP22.load(api, Network.Local, TOKEN0_ADDRESS)
 const feeTier = newFeeTier(toPercentage(1n, 2n), 1n) // fee: 0.01 = 1%, tick spacing: 1
 
 // set initial price of the pool, we set it to 1.00
-const initSqrtPrice = toSqrtPrice(1n, 0n)
+// all endpoints only accept sqrt price so we need to convert it before passing it
+const price = toPrice(1n, 0n)
+const initSqrtPrice = priceToSqrtPrice(price)
 
-await invariant.createPool(account, TOKEN0_ADDRESS, TOKEN1_ADDRESS, feeTier, initSqrtPrice, 0n)
+// set pool key, make sure that pool with specified parameters does not exists
+const poolKey = newPoolKey(TOKEN0_ADDRESS, TOKEN1_ADDRESS, feeTier)
+
+const createPoolResult = await invariant.createPool(account, poolKey, initSqrtPrice)
+console.log(createPoolResult.hash) // print transaction hash
 ```
 
 ### Open position
 
 ```typescript
+// -- snip --
+
 // token y has 12 decimals and we want to add 8 actual tokens to our position
 const tokenYAmount = 8n * 10n ** 12n
 
@@ -123,37 +167,35 @@ const tokenYAmount = 8n * 10n ** 12n
 const lowerTick = -10n
 const upperTick = 10n
 
-const liquidityResult = getLiquidityByX(tokenYAmount, lowerTick, upperTick, initSqrtPrice, true)
-const tokenXAmount = liquidityResult.amount
-const positionLiquidity = liquidityResult.l
+// calculate amount of token x we need to give to open position
+const { amount: tokenXAmount, l: positionLiquidity } = getLiquidityByY(
+  tokenYAmount,
+  lowerTick,
+  upperTick,
+  initSqrtPrice,
+  true
+)
 
 // print amount of token x and y we need to give to open position based on parameteres we passed
-console.log(tokenYAmount, tokenXAmount)
+console.log(tokenXAmount, tokenYAmount)
 
 // approve transfers of both tokens
-await psp22.approve(
-  account,
-  invariant.contract.address.toString(),
-  isTokenX(TOKEN0_ADDRESS, TOKEN1_ADDRESS) ? tokenYAmount : tokenXAmount
-)
-await psp22.setContractAddress(TOKEN1_ADDRESS)
-await psp22.approve(
-  account,
-  invariant.contract.address.toString(),
-  isTokenX(TOKEN0_ADDRESS, TOKEN1_ADDRESS) ? tokenXAmount : tokenYAmount
-)
-await psp22.setContractAddress(TOKEN0_ADDRESS)
+await psp22.setContractAddress(poolKey.tokenX)
+await psp22.approve(account, invariant.contract.address.toString(), tokenXAmount)
+await psp22.setContractAddress(poolKey.tokenY)
+await psp22.approve(account, invariant.contract.address.toString(), tokenYAmount)
 
 // open up position
-await invariant.createPosition(
+const createPositionResult = await invariant.createPosition(
   account,
   poolKey,
   lowerTick,
   upperTick,
   positionLiquidity,
   initSqrtPrice,
-  initSqrtPrice
+  0n
 )
+console.log(createPositionResult.hash) // print transaction hash
 ```
 
 ### Perform swap
@@ -165,55 +207,87 @@ Let's say some token has decimal of 12 and we want to swap 6 actual tokens. Here
 :::
 
 ```typescript
+interface Position {
+  poolKey: PoolKey
+  liquidity: Liquidity
+  lowerTickIndex: bigint
+  upperTickIndex: bigint
+  feeGrowthInsideX: FeeGrowth
+  feeGrowthInsideY: FeeGrowth
+  lastBlockNumber: bigint
+  tokensOwedX: TokenAmount
+  tokensOwedY: TokenAmount
+}
+
+interface Tick {
+  index: bigint
+  sign: boolean
+  liquidityChange: Liquidity
+  liquidityGross: Liquidity
+  sqrtPrice: SqrtPrice
+  feeGrowthOutsideX: FeeGrowth
+  feeGrowthOutsideY: FeeGrowth
+  secondsOutside: bigint
+}
+```
+
+```typescript
 // --snip--
-
-const poolKey = newPoolKey(TOKEN0_ADDRESS, TOKEN1_ADDRESS, feeTier)
-
-// make sure that you swap in correct direction,
-// here we check if token0 (token we want to give) is tokenX
-const xToY = isTokenX(TOKEN0_ADDRESS, TOKEN1_ADDRESS)
 
 // here we want to swap 6 token0
 // token0 has 12 decimals so we need to multiply it by 10^12
 const amount = 6n * 10n ** 12n
 
-// approve token0 transfer
+// approve token x transfer
+await psp22.setContractAddress(poolKey.tokenX)
 await psp22.approve(account, invariant.contract.address.toString(), amount)
+
+// get estimated result of swap
+const quoteResult = await invariant.quote(account, poolKey, true, amount, true, getMinSqrtPrice())
+
+// throw an error if quote fails (it means that swap is not possible)
+if (!quoteResult.ok) {
+  throw new Error(`quote returned an error: ${quoteResult.err?.toString()}`)
+}
 
 // slippage is a price change you are willing to accept,
 // for examples if current price is 1 and your slippage is 1%, then price limit will be 1.01
 const allowedSlippage = toPercentage(1n, 3n) // 0.001 = 0.1%
 
-// swap message only accepts price limit so we have to calculate it in order to use slippage,
-// here we are passing current price and allowed slippage to calculate price limit
-const pool = await invariant.getPool(account, TOKEN0_ADDRESS, TOKEN1_ADDRESS, feeTier)
-const sqrtPriceLimit = calculateSqrtPriceAfterSlippage(pool.sqrtPrice, allowedSlippage, !xToY)
+// calculate sqrt price limit based on slippage
+const sqrtPriceLimit = calculateSqrtPriceAfterSlippage(
+  quoteResult.ok.targetSqrtPrice,
+  allowedSlippage,
+  false
+)
 
-const result = await invariant.swap(account, poolKey, xToY, amount, true, sqrtPriceLimit)
-console.log(result.hash) // print transaction hash
+const swapResult = await invariant.swap(account, poolKey, true, amount, true, sqrtPriceLimit)
+console.log(swapResult.hash) // print transaction hash
 ```
 
 ### Query state
+
+:::note Position indexing
+Remember that positions are indexed from 0. So if you create position, its id will be 0 and your next positions id will be 1.
+:::
 
 ```typescript
 // --snip--
 
 // query state
 const poolAfter = await invariant.getPool(account, TOKEN0_ADDRESS, TOKEN1_ADDRESS, feeTier)
+// last parameter here is position id, positions are indexed from 0
 const positionAfter = await invariant.getPosition(account, account.address, 0n)
 const lowerTickAfter = await invariant.getTick(account, poolKey, positionAfter.lowerTickIndex)
 const upperTickAfter = await invariant.getTick(account, poolKey, positionAfter.upperTickIndex)
 
-// calculate unclaimed fees
-const unclaimedFees = simulateUnclaimedFees(
-  poolAfter,
-  positionAfter,
-  lowerTickAfter,
-  upperTickAfter
-)
+// pools, ticks and positions have many fee growth fields that are used to calculate fees,
+// by doing that off chain we can save gas fees,
+// so in order to see how many tokens you can claim from fees you need to use calculate fee function
+const fees = calculateFee(poolAfter, positionAfter, lowerTickAfter, upperTickAfter)
 
 // print amount of unclaimed x and y token
-console.log(unclaimedFees)
+console.log(fees)
 ```
 
 ### Claim fees
@@ -224,7 +298,8 @@ console.log(unclaimedFees)
 // claim fees
 // specify position id, positions are indexed from 0
 const positionId = 0n
-await invariant.claimFee(account, positionId)
+const claimFeeResult = await invariant.claimFee(account, positionId)
+console.log(claimFeeResult.hash) // print transaction hash
 
 // get balance of a specific token after claiming position fees and print it
 const accountBalance = await psp22.balanceOf(account, account.address)
@@ -234,8 +309,11 @@ console.log(accountBalance)
 ### Remove position
 
 ```typescript
+// -- snip --
+
 // remove position
-invariant.removePosition(account, positionId)
+const removePositionResult = await invariant.removePosition(account, positionId)
+console.log(removePositionResult.hash) // print transaction hash
 
 // get balance of a specific token after removing position
 const accountToken0Balance = await psp22.balanceOf(account, account.address)
@@ -270,21 +348,97 @@ await wazero.deposit(1000n)
 const accountBalance = wazero.balanceOf(account, account.address)
 ```
 
-### Attach event listeners
+### PSP22 token
+
+```typescript
+// deploy token, it will return tokens address
+const TOKEN_X_ADDRESS = await PSP22.deploy(api, account, 500n, 'Coin', 'COIN', 12n)
+
+// load token by passing its address (you can use existing one), it allows you to interact with it
+const psp22 = await PSP22.load(api, Network.Local, TOKEN_X_ADDRESS)
+
+// interact with token x
+const tokenXBalance = await psp22.balanceOf(account, account.address)
+console.log(tokenXBalance)
+
+// if you want to interact with different token,
+// simply set different contract address
+await psp22.setContractAddress(TOKEN_Y_ADDRESS)
+
+// now we can interact with token y
+const tokenYBalance = await psp22.balanceOf(account, account.address)
+console.log(tokenYBalance)
+```
+
+### Event listeners
+
+```typescript
+interface CreatePositionEvent {
+  timestamp: bigint
+  address: string
+  pool: PoolKey
+  liquidity: Liquidity
+  lowerTick: bigint
+  upperTick: bigint
+  currentSqrtPrice: SqrtPrice
+}
+
+interface CrossTickEvent {
+  timestamp: bigint
+  address: string
+  pool: PoolKey
+  indexes: bigint[]
+}
+
+interface RemovePositionEvent {
+  timestamp: bigint
+  address: string
+  pool: PoolKey
+  liquidity: Liquidity
+  lowerTick: bigint
+  upperTick: bigint
+  currentSqrtPrice: SqrtPrice
+}
+
+interface SwapEvent {
+  timestamp: bigint
+  address: string
+  pool: PoolKey
+  amountIn: TokenAmount
+  amountOut: TokenAmount
+  fee: TokenAmount
+  startSqrtPrice: SqrtPrice
+  targetSqrtPrice: SqrtPrice
+  xToY: boolean
+}
+```
 
 ```typescript
 // --snip--
 
-// attach event listener to invariant contract and listen for swap events
-invariant.on(InvariantEvent.SwapEvent, (event: SwapEvent) => {
+const handler = (event: SwapEvent) => {
   // checking if swap was made on a specific pool
   if (event.poolKey === poolKey) {
     // do action
   }
-})
+}
+
+// attach event listener to invariant contract and listen for swap events
+invariant.on(InvariantEvent.SwapEvent, handler)
+
+// remove event listener when it is no longer needed
+invariant.off(InvariantEvent.SwapEvent, handler)
 ```
 
 ## Types
+
+### Decimal
+
+Read more about decimals here: [Types](types.md)
+
+```typescript
+type DecimalName = bigint
+```
 
 ### Network
 
@@ -296,19 +450,6 @@ enum Network {
   Mainnet = 'mainnet',
   Testnet = 'testnet'
 }
-```
-
-### Decimal
-
-Read more about decimals here: [Types](types.md)
-
-```typescript
-interface DecimalName {
-  v: bigint
-}
-
-// exception
-type TokenAmount = bigint
 ```
 
 ### Events
