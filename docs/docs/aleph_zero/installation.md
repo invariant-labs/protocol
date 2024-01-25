@@ -30,28 +30,47 @@ rustup component add rust-src && cargo install --force --locked cargo-contract
 cargo install contracts-node --git https://github.com/paritytech/substrate-contracts-node.git
 ```
 
+#### Install wasm-bindgen
+
+```bash
+sudo apt install --locked wasm-bindgen-cli
+```
+
 ## Build Protocol
 
 #### Clone repository
 
-```
+```bash
 git clone git@github.com:invariant-labs/protocol-a0.git
 ```
 
 #### Build contract
 
-```
+```bash
 cargo contract build
 ```
 
 #### Build in release mode
 
-```
+```bash
 cargo contract build --release
 ```
 
 #### Run tests
 
-```
+```bash
 cargo test
+```
+
+#### Build SDK
+
+```bash
+cd sdk
+./build.sh
+```
+
+#### Test SDK
+
+```bash
+./tests.sh
 ```
