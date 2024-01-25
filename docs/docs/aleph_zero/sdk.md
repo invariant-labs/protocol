@@ -80,7 +80,7 @@ const api = await initPolkadotApi(Network.Local) // initialize api, use enum to 
 
 // initialize account, you can use your own wallet by pasting mnemonic phase
 const keyring = new Keyring({ type: 'sr25519' })
-const account = await keyring.addFromUri('//Alice')
+const account = keyring.addFromUri('//Alice')
 ```
 
 ### Initialize DEX and tokens
@@ -243,12 +243,7 @@ await psp22.setContractAddress(poolKey.tokenX)
 await psp22.approve(account, invariant.contract.address.toString(), amount)
 
 // get estimated result of swap
-const quoteResult = await invariant.quote(account, poolKey, true, amount, true, getMinSqrtPrice())
-
-// throw an error if quote fails (it means that swap is not possible)
-if (!quoteResult.ok) {
-  throw new Error(`quote returned an error: ${quoteResult.err?.toString()}`)
-}
+const quoteResult = await invariant.quote(account, poolKey, true, amount, true)
 
 // slippage is a price change you are willing to accept,
 // for examples if current price is 1 and your slippage is 1%, then price limit will be 1.01
@@ -256,7 +251,7 @@ const allowedSlippage = toPercentage(1n, 3n) // 0.001 = 0.1%
 
 // calculate sqrt price limit based on slippage
 const sqrtPriceLimit = calculateSqrtPriceAfterSlippage(
-  quoteResult.ok.targetSqrtPrice,
+  quoteResult.targetSqrtPrice,
   allowedSlippage,
   false
 )
