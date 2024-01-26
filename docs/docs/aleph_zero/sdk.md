@@ -10,31 +10,17 @@ SDK (Software Development Kit) can be used to interact with our DEX programatica
 
 ### Download
 
-Published package can be found here: [NPM](https://google.com/).
+Published package can be found [here](https://google.com/).
 
 ### Build
 
-You can find build steps here: [Installation](installation.md).
+You can find build steps [here](installation.md).
 
 ## Overview
 
-### Structure
+### Project Structure
 
 Invariant SDK consists of 3 separate contracts: our DEX contract (Invariant), token contract (PSP22), contract that can be used to wrap native currency (Wrapped AZERO), various values and helper functions. You can deploy your own or use an existing contract.
-
-### Txs and Queries
-
-After you load or deploy a contract you can start interacting with it. In order to make a contract call you have to use methods of class that represents specific contract. First parameter will always be an account you want to use and rest of parameters will be an entrypoint parameters.
-
-### Event listeners
-
-Invariant class has additional methods that allows you to attach event listeners so you can run your own code based on contract activity.
-
-### Values and Helper functions
-
-SDK also contains all essential values and helper functions that might be needed in your app like maximum tick, maximum price, calculating price impact and many others that will simplify your calculations.
-
-## Files
 
 ```
 📦sdk
@@ -47,25 +33,41 @@ SDK also contains all essential values and helper functions that might be needed
  ┗ 📂tests
 ```
 
-### Contracts
+### Transactions and Queries
 
-Contracts folder contains deploy-ready contracts and metadata that is used to interact with them.
+When working with contracts, developers can seamlessly initiate interactions by calling methods from the corresponding contract class. The first parameter designates the account, and subsequent parameters act as entrypoint parameters, facilitating smooth contract interactions.
+
+### Listening to Events
+
+The Invariant class offers additional methods empowering developers to attach event listeners. This feature enables the execution of custom code based on contract activity, enhancing flexibility and customization in response to specific events.
+
+### Values and Helper functions
+
+The SDK includes fundamental values and utility functions for application development. These encompass parameters such as maximum tick, maximum price, and calculations for price impact. This suite of utility functions streamlines computational aspects, enhancing the efficiency of application logic.
+
+### Contracts Metadata
+
+Within the Contracts folder, developers can find deploy-ready contracts and metadata essential for interactions. This structure facilitates straightforward integration with the specified contracts, simplifying the development workflow.
 
 ### Math
 
-Math contains Rust structs and data exported to WASM using wasm_bindgen which allowed use to the same functions and data that is used in main Invariant contract.
+The Math folder contains Rust structs and data exported to WebAssembly using wasm_bindgen. This integration allows for the utilization of the same functions and data employed in the primary Invariant contract.
 
 ### Source
 
-Everything combined in easy-to-use interface.
+The Source directory consolidates all pieces into an easy-to-use interface. This organized structure simplifies the development process and provides developers with a centralized location for accessing essential resources.
 
 ### Tests
 
-Tests folder with tests to make sure everything works right.
+The Tests folder houses test suites to ensure the correct functioning of SDK.
 
-## Usage
+## Usage Guide
 
-### Starting off
+Follow a step-by-step example demonstrating how to effectively use the Invariant SDK, with each step accompanied by code snippets. The complete code for these examples is available [here](https://google.com), ensuring a hands-on and comprehensive understanding of the SDK's functionality.
+
+### Select Network
+
+Begin by specifying the network you intend to connect to using the Network enum. Identify your target network, whether it's the local development environment, the mainnet, or a testnet. The code is designed to work uniformly across all networks. Changing the network designation does not require any modifications to the code.
 
 ```typescript
 enum Network {
@@ -74,6 +76,8 @@ enum Network {
   Testnet = 'testnet'
 }
 ```
+
+Initiate the Polkadot API effortlessly with the provided `initPolkadotApi` function. Use the `Network` enum to specify your desired network, simplifying the process of connecting to the blockchain. Utilize the versatile `Keyring` class to easily create and manage accounts. Initialize an account using your preferred method, whether it's using a provided mnemonic phrase or integrating your existing wallet.
 
 ```typescript
 const api = await initPolkadotApi(Network.Local) // initialize api, use enum to specify the network
@@ -85,8 +89,10 @@ const account = keyring.addFromUri('//Alice')
 
 ### Initialize DEX and tokens
 
+Load the Invariant contract by providing the Polkadot API (`api`), specifying the network (e.g., `Network.Local` for local development), and indicating the Invariant contract address (`INVARIANT_ADDRESS`). Similarly, initialize the PSP22 token contract using the same approach. It's noteworthy that only a single instance of PSP22 is required to handle interactions with multiple tokens.
+
 ```typescript
-// --snip--
+// -- snip --
 
 // load invariant contract
 const invariant = await Invariant.load(api, Network.Local, INVARIANT_ADDRESS)
@@ -98,47 +104,21 @@ const psp22 = await PSP22.load(api, Network.Local, TOKEN0_ADDRESS)
 ### Create pool
 
 :::info Creating types
-You can create custom decimals with `toDecimal` syntax. First argument is an integer and second argument is a number of zeros. For example `toFee(3n, 2n)` will produce decimal equal to `0.03`. Read more about types here: [Types](types.md).
+You can create custom decimals using the `toDecimal` syntax, where the first argument represents the numerical value (A), and the second argument indicates the power of 10 (B) in the formula `A * 10^(-B)`. For example, `toDecimal(3n, 2n)` will result in a decimal equal to 0.03. For further details on supported types, please check the documentation [here](types.md).
 :::
 
 :::note Why "n" is at the end of every number
-Notice how we use "n" at the end of every number. "n" indicates that specified value is a BigInt, number with higher precision. Read more about BigInt here: [BigInt MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt).
+Notice how we use "n" at the end of every number. "n" indicates that specified value is a BigInt, number with higher precision. Read more about BigInt [here](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt).
 :::
 
 :::warning Token sorting
-Tokens are sorted alphabetically when pool key is created, so make sure that you swap tokens in correct direction. Read more about pool keys here: [PoolKey](storage#poolkey).
+Tokens are sorted alphabetically when pool key is created, so make sure that you swap tokens in correct direction. Read more about pool keys [here](storage#poolkey).
 :::
 
-```typescript
-type DecimalName = bigint
-
-interface FeeTier {
-  fee: Percentage
-  tickSpacing: bigint
-}
-
-interface PoolKey {
-  tokenX: string
-  tokenY: string
-  feeTier: FeeTier
-}
-
-interface Pool {
-  liquidity: Liquidity
-  sqrtPrice: SqrtPrice
-  currentTickIndex: bigint
-  feeGrowthGlobalX: FeeGrowth
-  feeGrowthGlobalY: FeeGrowth
-  feeProtocolTokenX: TokenAmount
-  feeProtocolTokenY: TokenAmount
-  startTimestamp: bigint
-  lastTimestamp: bigint
-  feeReceiver: string
-}
-```
+To create a new pool, a fee tier and pool key need to be prepared. The fee tier represents the desired fee for the pool, and the price needs to be converted to sqrt price because the entry points of the system accept it in this format. The pool key is constructed using the addresses of two tokens and the specified fee tier. Finally, the `createPool` function is called with the user's account, the pool key, and the initial square root price, resulting in the creation of a new pool. The transaction hash of the pool creation is then logged to the console.
 
 ```typescript
-// --snip--
+// -- snip --
 
 // set fee tier, make sure that fee tier with specified parameters exists
 const feeTier = newFeeTier(toPercentage(1n, 2n), 1n) // fee: 0.01 = 1%, tick spacing: 1
@@ -152,10 +132,15 @@ const initSqrtPrice = priceToSqrtPrice(price)
 const poolKey = newPoolKey(TOKEN0_ADDRESS, TOKEN1_ADDRESS, feeTier)
 
 const createPoolResult = await invariant.createPool(account, poolKey, initSqrtPrice)
-console.log(createPoolResult.hash) // print transaction hash
+
+// print transaction hash
+console.log(createPoolResult.hash)
+// Output: TODO
 ```
 
-### Open position
+### Create position
+
+To create a new position within a pool, certain steps need to be followed. The process involves preparing parameters such as the amount of tokens, tick indexes for the desired price range, and approving token transfers. Below is a breakdown of the process:
 
 ```typescript
 // -- snip --
@@ -163,21 +148,22 @@ console.log(createPoolResult.hash) // print transaction hash
 // token y has 12 decimals and we want to add 8 actual tokens to our position
 const tokenYAmount = 8n * 10n ** 12n
 
-// set lower and upper tick, we want to create position in range [-10, 10]
-const lowerTick = -10n
-const upperTick = 10n
+// set lower and upper tick indexes, we want to create position in range [-10, 10]
+const lowerTickIndex = -10n
+const upperTickIndex = 10n
 
-// calculate amount of token x we need to give to open position
+// calculate amount of token x we need to give to create position
 const { amount: tokenXAmount, l: positionLiquidity } = getLiquidityByY(
   tokenYAmount,
-  lowerTick,
-  upperTick,
+  lowerTickIndex,
+  upperTickIndex,
   initSqrtPrice,
   true
 )
 
-// print amount of token x and y we need to give to open position based on parameteres we passed
+// print amount of token x and y we need to give to create position based on parameteres we passed
 console.log(tokenXAmount, tokenYAmount)
+// Output: TODO
 
 // approve transfers of both tokens
 await psp22.setContractAddress(poolKey.tokenX)
@@ -185,20 +171,21 @@ await psp22.approve(account, invariant.contract.address.toString(), tokenXAmount
 await psp22.setContractAddress(poolKey.tokenY)
 await psp22.approve(account, invariant.contract.address.toString(), tokenYAmount)
 
-// open up position
+// create position
 const createPositionResult = await invariant.createPosition(
   account,
   poolKey,
-  lowerTick,
-  upperTick,
+  lowerTickIndex,
+  upperTickIndex,
   positionLiquidity,
   initSqrtPrice,
   0n
 )
 console.log(createPositionResult.hash) // print transaction hash
+// Output: TODO
 ```
 
-### Perform swap
+### Swap tokens
 
 :::info How to calculate input amount
 In order to calculate input amount, we have to multiply actual token amount you want to swap times 10 to the power of decimal.
@@ -231,10 +218,12 @@ interface Tick {
 }
 ```
 
-```typescript
-// --snip--
+Peforming a swap requires: specifying the amount of tokens to be swapped, approving the transfer of the token, estimating the result of the swap, determining the allowed slippage, calculating the square root price limit based on slippage, and finally, executing the swap. Here's a breakdown of the process:
 
-// here we want to swap 6 token0
+```typescript
+// -- snip --
+
+// we want to swap 6 token0
 // token0 has 12 decimals so we need to multiply it by 10^12
 const amount = 6n * 10n ** 12n
 
@@ -258,23 +247,97 @@ const sqrtPriceLimit = calculateSqrtPriceAfterSlippage(
 
 const swapResult = await invariant.swap(account, poolKey, true, amount, true, sqrtPriceLimit)
 console.log(swapResult.hash) // print transaction hash
+// Output: TODO
 ```
 
-### Query state
+### List of Queries and Interfaces:
 
-:::note Position indexing
-Remember that positions are indexed from 0. So if you create position, its id will be 0 and your next positions id will be 1.
-:::
+Here are some possible queries and their corresponding TypeScript interfaces:
+
+- Get Tick
 
 ```typescript
-// --snip--
+interface Tick {
+  index: bigint
+  sign: boolean
+  liquidityChange: Liquidity
+  liquidityGross: Liquidity
+  sqrtPrice: SqrtPrice
+  feeGrowthOutsideX: FeeGrowth
+  feeGrowthOutsideY: FeeGrowth
+  secondsOutside: bigint
+}
+
+const tickState: Tick = await invariant.getTick(signer, poolKey, tickIndex)
+```
+
+- Get Pool
+
+```typescript
+interface Pool {
+  liquidity: Liquidity
+  sqrtPrice: SqrtPrice
+  currentTickIndex: bigint
+  feeGrowthGlobalX: FeeGrowth
+  feeGrowthGlobalY: FeeGrowth
+  feeProtocolTokenX: TokenAmount
+  feeProtocolTokenY: TokenAmount
+  startTimestamp: bigint
+  lastTimestamp: bigint
+  feeReceiver: string
+}
+
+const poolState: Pool = await invariant.getPool(signer, TOKEN0_ADDRESS, TOKEN1_ADDRESS, feeTier)
+```
+
+- Get Pools
+
+```typescript
+const pools: Pool[] = await invariant.getPools(signer)
+```
+
+:::note Position indexing
+Remember that positions are indexed from 0. So if you create position, its index will be 0 and your next positions index will be 1.
+:::
+
+- Get Position
+
+```typescript
+interface Position {
+  poolKey: PoolKey
+  liquidity: Liquidity
+  lowerTickIndex: bigint
+  upperTickIndex: bigint
+  feeGrowthInsideX: FeeGrowth
+  feeGrowthInsideY: FeeGrowth
+  lastBlockNumber: bigint
+  tokensOwedX: TokenAmount
+  tokensOwedY: TokenAmount
+}
+
+const positionState: Position = await invariant.getPosition(signer, owner.address, positionIndex)
+```
+
+- Get Positions
+
+```typescript
+const positions: Position[] = await invariant.getPositions(
+  await invariant.getPositions(signer, owner.address)
+)
+```
+
+### Query states and Calculate Fee
+
+To query the state and calculate fees within the system, several functions are utilized. Positions, ticks, and pools are accessed to gather information about the state, and the calculateFee function is used to determine the amount of unclaimed tokens. The process is described below:
+
+```typescript
+// -- snip --
 
 // query state
-const poolAfter = await invariant.getPool(account, TOKEN0_ADDRESS, TOKEN1_ADDRESS, feeTier)
-// last parameter here is position id, positions are indexed from 0
-const positionAfter = await invariant.getPosition(account, account.address, 0n)
-const lowerTickAfter = await invariant.getTick(account, poolKey, positionAfter.lowerTickIndex)
-const upperTickAfter = await invariant.getTick(account, poolKey, positionAfter.upperTickIndex)
+const poolAfter: Pool = await invariant.getPool(account, TOKEN0_ADDRESS, TOKEN1_ADDRESS, feeTier)
+const positionAfter: Position = await invariant.getPosition(account, account.address, 0n)
+const lowerTickAfter: Tick = await invariant.getTick(account, poolKey, positionAfter.lowerTickIndex)
+const upperTickAfter: Tick = await invariant.getTick(account, poolKey, positionAfter.upperTickIndex)
 
 // pools, ticks and positions have many fee growth fields that are used to calculate fees,
 // by doing that off chain we can save gas fees,
@@ -283,32 +346,39 @@ const fees = calculateFee(poolAfter, positionAfter, lowerTickAfter, upperTickAft
 
 // print amount of unclaimed x and y token
 console.log(fees)
+// Output: TODO
 ```
 
 ### Claim fees
 
-```typescript
-// --snip--
+In the following code snippet, fees from a specific position are claimed without closing the position. This process involves specifying the position ID (indexed from 0), calling the claimFee function, and then checking the balance of a specific token after claiming the fees. The description is as follows:
 
-// claim fees
-// specify position id, positions are indexed from 0
+```typescript
+// -- snip --
+
+// specify position id
 const positionId = 0n
 const claimFeeResult = await invariant.claimFee(account, positionId)
 console.log(claimFeeResult.hash) // print transaction hash
+// Output: TODO
 
 // get balance of a specific token after claiming position fees and print it
 const accountBalance = await psp22.balanceOf(account, account.address)
 console.log(accountBalance)
+// Output: TODO
 ```
 
 ### Remove position
+
+Position is removed from the system, and fees associated with that position are automatically claimed in the background. Here's a detailed description of the process:
 
 ```typescript
 // -- snip --
 
 // remove position
 const removePositionResult = await invariant.removePosition(account, positionId)
-console.log(removePositionResult.hash) // print transaction hash
+console.log(removePositionResult.hash)
+// Output: TODO
 
 // get balance of a specific token after removing position
 const accountToken0Balance = await psp22.balanceOf(account, account.address)
@@ -317,9 +387,34 @@ const accountToken1Balance = await psp22.balanceOf(account, account.address)
 
 // print balances
 console.log(accountToken0Balance, accountToken1Balance)
+// Output: TODO
 ```
 
-### Wrap AZERO
+<!-- // TODO -->
+
+### Transfer position
+
+Position is removed from the system, and fees associated with that position are automatically claimed in the background. Here's a detailed description of the process:
+
+```typescript
+// -- snip --
+
+// remove position
+const removePositionResult = await invariant.removePosition(account, positionId)
+console.log(removePositionResult.hash)
+// Output: TODO
+
+// get balance of a specific token after removing position
+const accountToken0Balance = await psp22.balanceOf(account, account.address)
+await psp22.setContractAddress(TOKEN1_ADDRESS)
+const accountToken1Balance = await psp22.balanceOf(account, account.address)
+
+// print balances
+console.log(accountToken0Balance, accountToken1Balance)
+// Output: TODO
+```
+
+### Using AZERO via Wrapped AZERO
 
 :::note Why do you need to wrap AZERO
 In order to use native token you have to wrap it to PSP22 token using Wrapped AZERO contract. After sending AZERO you will receive the same amount as a PSP22 token which you can use in our DEX. You can feely exchange them at 1:1 ratio.
@@ -330,7 +425,7 @@ You should only use official Wrapped AZERO contract. This address represents off
 :::
 
 ```typescript
-// --snip--
+// -- snip --
 
 // load wazero contract
 const wazero = await WrappedAZERO.load(api, network, WAZERO_ADDRESS)
@@ -345,27 +440,33 @@ const accountBalance = wazero.balanceOf(account, account.address)
 
 ### PSP22 token
 
+In the following TypeScript code, we demonstrate approach deploying and initializing PSP22 token contracts using the `PSP22.deploy` method. Notably, a single instance of the PSP22 class proves sufficient for handling interactions with multiple tokens.
+
 ```typescript
 // deploy token, it will return tokens address
-const TOKEN_X_ADDRESS = await PSP22.deploy(api, account, 500n, 'Coin', 'COIN', 12n)
+const TOKEN0_ADDRESS = await PSP22.deploy(api, account, 500n, 'Coin', 'COIN', 12n)
 
 // load token by passing its address (you can use existing one), it allows you to interact with it
-const psp22 = await PSP22.load(api, Network.Local, TOKEN_X_ADDRESS)
+const psp22 = await PSP22.load(api, Network.Local, TOKEN0_ADDRESS)
 
-// interact with token x
-const tokenXBalance = await psp22.balanceOf(account, account.address)
-console.log(tokenXBalance)
+// interact with token 0
+const account0Balance = await psp22.balanceOf(account, account.address)
+console.log(account0Balance)
+// Output: TODO
 
 // if you want to interact with different token,
 // simply set different contract address
-await psp22.setContractAddress(TOKEN_Y_ADDRESS)
+await psp22.setContractAddress(TOKEN1_ADDRESS)
 
 // now we can interact with token y
-const tokenYBalance = await psp22.balanceOf(account, account.address)
-console.log(tokenYBalance)
+const account1Balance = await psp22.balanceOf(account, account.address)
+console.log(account1Balance)
+// Output: TODO
 ```
 
-### Event listeners
+### Listen to Event
+
+Invariant provides the capability to set up event listeners, allowing developers to respond to specific events within the contract. The event listener structs are detailed below, accompanied by a code snippet demonstrating how to set up listeners for each specific event type.
 
 ```typescript
 interface CreatePositionEvent {
@@ -408,8 +509,10 @@ interface SwapEvent {
 }
 ```
 
+Developers can define a handler function, such as the handler function in the code snippet, that takes an event parameter matching the structure of the respective event type (e.g., `SwapEvent`). This handler function enables developers to perform actions based on the event details.
+
 ```typescript
-// --snip--
+// -- snip --
 
 const handler = (event: SwapEvent) => {
   // checking if swap was made on a specific pool
@@ -417,10 +520,18 @@ const handler = (event: SwapEvent) => {
     // do action
   }
 }
+```
 
+The `invariant.on` method allows developers to subscribe to specific events, such as `SwapEvent`, by specifying the event type and providing the corresponding handler function.
+
+```typescript
 // attach event listener to invariant contract and listen for swap events
 invariant.on(InvariantEvent.SwapEvent, handler)
+```
 
+When event subscriptions are no longer needed, developers can use the `invariant.off` method to unsubscribe from specific events. This ensures efficient resource management and stops further notifications for the specified event type.
+
+```typescript
 // remove event listener when it is no longer needed
 invariant.off(InvariantEvent.SwapEvent, handler)
 ```
@@ -429,7 +540,7 @@ invariant.off(InvariantEvent.SwapEvent, handler)
 
 ### Decimal
 
-Read more about decimals here: [Types](types.md)
+This types are utilized to represent decimal values, and it is worth noting that these decimal types are exported from Rust through WebAssembly (Wasm) using wasm-bindgen. Read more about [decimals](types.md).
 
 ```typescript
 type DecimalName = bigint
@@ -437,7 +548,7 @@ type DecimalName = bigint
 
 ### Network
 
-Network allows you to choose network you want to perform actions on.
+Network serves as a convenient way to select the network on which various actions are performed. The enumeration includes options for 'local', 'mainnet', and 'testnet'. Users can switch between networks without the need of any code adjustments.
 
 ```typescript
 enum Network {
@@ -448,6 +559,8 @@ enum Network {
 ```
 
 ### Events
+
+Code snippet introduces several event interfaces related to the Invariant, providing structured information about various actions. These events can be subscribed to using the Invariant, enabling users to receive updates when specific actions occur within the contract.
 
 ```typescript
 interface CreatePositionEvent {
@@ -492,7 +605,7 @@ interface SwapEvent {
 
 ### Storage
 
-Read more about storage here: [Storage](storage.md)
+These interfaces are essential for managing various aspects of the Invariant's storage. It is important to note that these interfaces are exported from Rust to TypeScript using wasm-bindgen, providing seamless integration between the two languages. Read more about storage [here](storage.md).
 
 ```typescript
 interface InvariantConfig {
