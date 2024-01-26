@@ -18,9 +18,15 @@ You can find build steps [here](installation.md).
 
 ## Overview
 
-### Project Structure
+The Invariant SDK comprises three distinct contracts:
 
-Invariant SDK consists of 3 separate contracts: our DEX contract (Invariant), token contract (PSP22), contract that can be used to wrap native currency (Wrapped AZERO), various values and helper functions. You can deploy your own or use an existing contract.
+1. DEX Contract (Invariant): This is the core contract handling DEX functionality within the Invariant ecosystem.
+
+2. Token Contract (PSP22): This contract is responsible for managing and implementing the PSP22 token standard within the Invariant framework. Allows to deploy or load existing contracts.
+
+3. Wrapped Native Currency Contract (Wrapped AZERO): This contract allows users to wrap the native currency, providing compatibility and interoperability within the Invariant ecosystem.
+
+### Project Structure
 
 ```
 📦sdk
@@ -36,6 +42,10 @@ Invariant SDK consists of 3 separate contracts: our DEX contract (Invariant), to
 ### Transactions and Queries
 
 When working with contracts, developers can seamlessly initiate interactions by calling methods from the corresponding contract class. The first parameter designates the account, and subsequent parameters act as entrypoint parameters, facilitating smooth contract interactions.
+
+1. **Transactions**: These involve invoking methods that result in changes to the blockchain state. Transactions typically alter the data stored on the blockchain and may include operations like transferring assets, updating records, or executing specific actions.
+
+2. **Queries**: Unlike transactions, queries are read-only interactions with the contract. They allow developers to retrieve information from the blockchain without modifying its state. Queries are useful for obtaining current contract state, fetching data, or verifying certain conditions without making any changes to the blockchain.
 
 ### Listening to Events
 
@@ -134,8 +144,11 @@ const poolKey = newPoolKey(TOKEN0_ADDRESS, TOKEN1_ADDRESS, feeTier)
 const createPoolResult = await invariant.createPool(account, poolKey, initSqrtPrice)
 
 console.log(createPoolResult.hash)
-// Output: 0x4324eaff0c4da2d5082fa03c2ef0e0138ed60946525952645a9d8c4d50cb5ec2
 ```
+
+:::tip Output
+0x4324eaff0c4da2d5082fa03c2ef0e0138ed60946525952645a9d8c4d50cb5ec2
+:::
 
 ### Create position
 
@@ -162,7 +175,6 @@ const { amount: tokenXAmount, l: positionLiquidity } = getLiquidityByY(
 
 // print amount of token x and y we need to give to create position based on parameteres we passed
 console.log(tokenXAmount, tokenYAmount)
-// Output: 7999999999880n 8000000000000n
 
 // approve transfers of both tokens
 await psp22.setContractAddress(poolKey.tokenX)
@@ -181,8 +193,12 @@ const createPositionResult = await invariant.createPosition(
   0n
 )
 console.log(createPositionResult.hash)
-// Output: 0x652108bb36032bc386fec2eef3f483f29970db7bdbdc9a1a340e279abd626ee2
 ```
+
+:::tip Output
+7999999999880n 8000000000000n <br/>
+0x652108bb36032bc386fec2eef3f483f29970db7bdbdc9a1a340e279abd626ee2
+:::
 
 ### Swap tokens
 
@@ -221,8 +237,11 @@ const sqrtPriceLimit = calculateSqrtPriceAfterSlippage(
 
 const swapResult = await invariant.swap(account, poolKey, true, amount, true, sqrtPriceLimit)
 console.log(swapResult.hash)
-// Output: 0xd9cdfddb2c783f24a481811f0f9d7037e2f7202907f092986ecd98838db2b3cb
 ```
+
+:::tip Output
+0xd9cdfddb2c783f24a481811f0f9d7037e2f7202907f092986ecd98838db2b3cb
+:::
 
 ### List of Queries and Interfaces
 
@@ -320,8 +339,11 @@ const fees = calculateFee(poolAfter, positionAfter, lowerTickAfter, upperTickAft
 
 // print amount of unclaimed x and y token
 console.log(fees)
-// Output:  { x: 59999999999n, y: 0n }
 ```
+
+:::tip Output
+{x: 59999999999n, y: 0n }
+:::
 
 ### Claim fees
 
@@ -334,13 +356,16 @@ In the following code snippet, fees from a specific position are claimed without
 const positionId = 0n
 const claimFeeResult = await invariant.claimFee(account, positionId)
 console.log(claimFeeResult.hash)
-// Output: 0xead1fe084c904e7b1d0df2f3953c74d03cb90756caea46ae1e896c6956460105
 
 // get balance of a specific token after claiming position fees and print it
 const accountBalance = await psp22.balanceOf(account, account.address)
 console.log(accountBalance)
-// Output: 999999999999999986060000000119n
 ```
+
+:::tip Output
+0xead1fe084c904e7b1d0df2f3953c74d03cb90756caea46ae1e896c6956460105 <br/>
+999999999999999986060000000119n
+:::
 
 ### Transfer position
 
@@ -360,23 +385,26 @@ const receiverPosition = await invariant.getPosition(receiver, receiver.address,
 // ensure that the position are equal
 assert.deepEqual(positionToTransfer, receiverPosition)
 console.log(receiverPosition)
-/* Output: Position {
-    poolKey: {
-        tokenX: '5CfCkzb2YfGcBVVK5b1UNAyNYra7iAmPrPAZ7joeqbTpG77P',
-        tokenY: '5FAjg6DMbbFv9zo1QksGt9GtPGu2qwFXG6jYvdXgybrYJkmR',
-        feeTier: { fee: 10000000000n, tickSpacing: 1n }
-    },
-    liquidity: 16004800319759905588483n,
-    lowerTickIndex: -10n,
-    upperTickIndex: 10n,
-    feeGrowthInsideX: 37488752625000000000000n,
-    feeGrowthInsideY: 0n,
-    lastBlockNumber: 474n,
-    tokensOwedX: 0n,
-      tokensOwedY: 0n
-    }
-*/
 ```
+
+:::tip Output
+{<br/>
+&emsp; poolKey: {<br/>
+&emsp; &emsp; tokenX: '5CfCkzb2YfGcBVVK5b1UNAyNYra7iAmPrPAZ7joeqbTpG77P',<br/>
+&emsp; &emsp;tokenY: '5FAjg6DMbbFv9zo1QksGt9GtPGu2qwFXG6jYvdXgybrYJkmR',<br/>
+&emsp; &emsp;feeTier: { fee: 10000000000n, tickSpacing: 1n }<br/>
+&emsp; },<br/>
+&emsp; liquidity: 16004800319759905588483n,<br/>
+&emsp; lowerTickIndex: -10n,<br/>
+&emsp; upperTickIndex: 10n,<br/>
+&emsp; feeGrowthInsideX: 37488752625000000000000n,<br/>
+&emsp; feeGrowthInsideY: 0n,<br/>
+&emsp; lastBlockNumber: 474n,<br/>
+&emsp; tokensOwedX: 0n,<br/>
+&emsp; tokensOwedY: 0n<br/>
+}
+
+:::
 
 ### Remove position
 
@@ -388,7 +416,6 @@ Position is removed from the system, and fees associated with that position are 
 // remove position
 const removePositionResult = await invariant.removePosition(account, positionId)
 console.log(removePositionResult.hash)
-// Output: 0xe90dfeb5420b26c4f0ed2d5a77825a785a7e42106cc45f5a7d08c597f46c1171
 
 // get balance of a specific token after removing position
 const accountToken0Balance = await psp22.balanceOf(account, account.address)
@@ -397,8 +424,12 @@ const accountToken1Balance = await psp22.balanceOf(account, account.address)
 
 // print balances
 console.log(accountToken0Balance, accountToken1Balance)
-// Output: 999999999999999999999999999998n 999999999999999999999999999998n
 ```
+
+:::tip Output
+0xe90dfeb5420b26c4f0ed2d5a77825a785a7e42106cc45f5a7d08c597f46c1171 <br/>
+999999999999999999999999999998n 999999999999999999999999999998n <br/>
+:::
 
 ### Using AZERO via Wrapped AZERO
 
@@ -423,8 +454,11 @@ await wazero.deposit(account, 1000n)
 // later you can exchange it back to AZERO at 1:1 ratio
 const accountBalance = await wazero.balanceOf(account, account.address)
 console.log(accountBalance)
-// Output: 1000n
 ```
+
+:::tip Output
+1000n<br/>
+:::
 
 ### PSP22 token
 
@@ -440,7 +474,6 @@ const psp22 = await PSP22.load(api, Network.Local, TOKEN0_ADDRESS)
 // interact with token 0
 const account0Balance = await psp22.balanceOf(account, account.address)
 console.log(account0Balance)
-// Output: 500n
 
 // if you want to interact with different token,
 // simply set different contract address
@@ -449,8 +482,14 @@ await psp22.setContractAddress(TOKEN1_ADDRESS)
 // now we can interact with token y
 const account1Balance = await psp22.balanceOf(account, account.address)
 console.log(account1Balance)
-// Output: 999999999999999999999999999998n
 ```
+
+:::tip Output
+
+500n <br/>
+999999999999999999999999999998n
+
+:::
 
 ### Listen to Event
 
