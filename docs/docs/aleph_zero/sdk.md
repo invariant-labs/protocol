@@ -26,19 +26,6 @@ The Invariant SDK comprises three distinct contracts:
 
 3. Wrapped Native Currency Contract (Wrapped AZERO): This contract allows users to wrap the native currency, providing compatibility and interoperability within the Invariant ecosystem.
 
-### Project Structure
-
-```
-📦sdk
- ┣ 📂contracts
- ┃ ┣ 📂invariant
- ┃ ┣ 📂PSP22
- ┃ ┗ 📂wrapped-azero
- ┣ 📂math
- ┣ 📂src
- ┗ 📂tests
-```
-
 ### Transactions and Queries
 
 When working with contracts, developers can seamlessly initiate interactions by calling methods from the corresponding contract class. The first parameter designates the account, and subsequent parameters act as entrypoint parameters, facilitating smooth contract interactions.
@@ -70,6 +57,19 @@ The Source directory consolidates all pieces into an easy-to-use interface. This
 ### Tests
 
 The Tests folder houses test suites to ensure the correct functioning of SDK.
+
+### Project Structure
+
+```
+📦sdk
+ ┣ 📂contracts
+ ┃ ┣ 📂invariant
+ ┃ ┣ 📂PSP22
+ ┃ ┗ 📂wrapped-azero
+ ┣ 📂math
+ ┣ 📂src
+ ┗ 📂tests
+```
 
 ## Usage Guide
 
