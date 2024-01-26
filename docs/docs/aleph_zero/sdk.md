@@ -133,9 +133,8 @@ const poolKey = newPoolKey(TOKEN0_ADDRESS, TOKEN1_ADDRESS, feeTier)
 
 const createPoolResult = await invariant.createPool(account, poolKey, initSqrtPrice)
 
-// print transaction hash
 console.log(createPoolResult.hash)
-// Output: TODO
+// Output: 0x4324eaff0c4da2d5082fa03c2ef0e0138ed60946525952645a9d8c4d50cb5ec2
 ```
 
 ### Create position
@@ -163,7 +162,7 @@ const { amount: tokenXAmount, l: positionLiquidity } = getLiquidityByY(
 
 // print amount of token x and y we need to give to create position based on parameteres we passed
 console.log(tokenXAmount, tokenYAmount)
-// Output: TODO
+// Output: 7999999999880n 8000000000000n
 
 // approve transfers of both tokens
 await psp22.setContractAddress(poolKey.tokenX)
@@ -181,8 +180,8 @@ const createPositionResult = await invariant.createPosition(
   initSqrtPrice,
   0n
 )
-console.log(createPositionResult.hash) // print transaction hash
-// Output: TODO
+console.log(createPositionResult.hash)
+// Output: 0x652108bb36032bc386fec2eef3f483f29970db7bdbdc9a1a340e279abd626ee2
 ```
 
 ### Swap tokens
@@ -192,31 +191,6 @@ In order to calculate input amount, we have to multiply actual token amount you 
 Let's say some token has decimal of 12 and we want to swap 6 actual tokens. Here is how we can calculate input amount:
 6 \* 10^12 = 6000000000000.
 :::
-
-```typescript
-interface Position {
-  poolKey: PoolKey
-  liquidity: Liquidity
-  lowerTickIndex: bigint
-  upperTickIndex: bigint
-  feeGrowthInsideX: FeeGrowth
-  feeGrowthInsideY: FeeGrowth
-  lastBlockNumber: bigint
-  tokensOwedX: TokenAmount
-  tokensOwedY: TokenAmount
-}
-
-interface Tick {
-  index: bigint
-  sign: boolean
-  liquidityChange: Liquidity
-  liquidityGross: Liquidity
-  sqrtPrice: SqrtPrice
-  feeGrowthOutsideX: FeeGrowth
-  feeGrowthOutsideY: FeeGrowth
-  secondsOutside: bigint
-}
-```
 
 Peforming a swap requires: specifying the amount of tokens to be swapped, approving the transfer of the token, estimating the result of the swap, determining the allowed slippage, calculating the square root price limit based on slippage, and finally, executing the swap. Here's a breakdown of the process:
 
@@ -246,11 +220,11 @@ const sqrtPriceLimit = calculateSqrtPriceAfterSlippage(
 )
 
 const swapResult = await invariant.swap(account, poolKey, true, amount, true, sqrtPriceLimit)
-console.log(swapResult.hash) // print transaction hash
-// Output: TODO
+console.log(swapResult.hash)
+// Output: 0xd9cdfddb2c783f24a481811f0f9d7037e2f7202907f092986ecd98838db2b3cb
 ```
 
-### List of Queries and Interfaces:
+### List of Queries and Interfaces
 
 Here are some possible queries and their corresponding TypeScript interfaces:
 
@@ -346,7 +320,7 @@ const fees = calculateFee(poolAfter, positionAfter, lowerTickAfter, upperTickAft
 
 // print amount of unclaimed x and y token
 console.log(fees)
-// Output: TODO
+// Output:  { x: 59999999999n, y: 0n }
 ```
 
 ### Claim fees
@@ -359,13 +333,49 @@ In the following code snippet, fees from a specific position are claimed without
 // specify position id
 const positionId = 0n
 const claimFeeResult = await invariant.claimFee(account, positionId)
-console.log(claimFeeResult.hash) // print transaction hash
-// Output: TODO
+console.log(claimFeeResult.hash)
+// Output: 0xead1fe084c904e7b1d0df2f3953c74d03cb90756caea46ae1e896c6956460105
 
 // get balance of a specific token after claiming position fees and print it
 const accountBalance = await psp22.balanceOf(account, account.address)
 console.log(accountBalance)
-// Output: TODO
+// Output: 999999999999999986060000000119n
+```
+
+### Transfer position
+
+Position is removed from the system, and fees associated with that position are automatically claimed in the background. Here's a detailed description of the process:
+
+```typescript
+// -- snip --
+
+const positionToTransfer = await invariant.getPosition(account, account.address, 0n)
+
+// Transfer position from account (signer) to receiver
+await invariant.transferPosition(account, 0n, receiver.address)
+
+// load received position
+const receiverPosition = await invariant.getPosition(receiver, receiver.address, 0n)
+
+// ensure that the position are equal
+assert.deepEqual(positionToTransfer, receiverPosition)
+console.log(receiverPosition)
+/* Output: Position {
+    poolKey: {
+        tokenX: '5CfCkzb2YfGcBVVK5b1UNAyNYra7iAmPrPAZ7joeqbTpG77P',
+        tokenY: '5FAjg6DMbbFv9zo1QksGt9GtPGu2qwFXG6jYvdXgybrYJkmR',
+        feeTier: { fee: 10000000000n, tickSpacing: 1n }
+    },
+    liquidity: 16004800319759905588483n,
+    lowerTickIndex: -10n,
+    upperTickIndex: 10n,
+    feeGrowthInsideX: 37488752625000000000000n,
+    feeGrowthInsideY: 0n,
+    lastBlockNumber: 474n,
+    tokensOwedX: 0n,
+      tokensOwedY: 0n
+    }
+*/
 ```
 
 ### Remove position
@@ -378,7 +388,7 @@ Position is removed from the system, and fees associated with that position are 
 // remove position
 const removePositionResult = await invariant.removePosition(account, positionId)
 console.log(removePositionResult.hash)
-// Output: TODO
+// Output: 0xe90dfeb5420b26c4f0ed2d5a77825a785a7e42106cc45f5a7d08c597f46c1171
 
 // get balance of a specific token after removing position
 const accountToken0Balance = await psp22.balanceOf(account, account.address)
@@ -387,31 +397,7 @@ const accountToken1Balance = await psp22.balanceOf(account, account.address)
 
 // print balances
 console.log(accountToken0Balance, accountToken1Balance)
-// Output: TODO
-```
-
-<!-- // TODO -->
-
-### Transfer position
-
-Position is removed from the system, and fees associated with that position are automatically claimed in the background. Here's a detailed description of the process:
-
-```typescript
-// -- snip --
-
-// remove position
-const removePositionResult = await invariant.removePosition(account, positionId)
-console.log(removePositionResult.hash)
-// Output: TODO
-
-// get balance of a specific token after removing position
-const accountToken0Balance = await psp22.balanceOf(account, account.address)
-await psp22.setContractAddress(TOKEN1_ADDRESS)
-const accountToken1Balance = await psp22.balanceOf(account, account.address)
-
-// print balances
-console.log(accountToken0Balance, accountToken1Balance)
-// Output: TODO
+// Output: 999999999999999999999999999998n 999999999999999999999999999998n
 ```
 
 ### Using AZERO via Wrapped AZERO
@@ -431,11 +417,13 @@ You should only use official Wrapped AZERO contract. This address represents off
 const wazero = await WrappedAZERO.load(api, network, WAZERO_ADDRESS)
 
 // send AZERO using deposit method
-await wazero.deposit(1000n)
+await wazero.deposit(account, 1000n)
 
 // you will receive WAZERO token which you can use as any other token,
 // later you can exchange it back to AZERO at 1:1 ratio
-const accountBalance = wazero.balanceOf(account, account.address)
+const accountBalance = await wazero.balanceOf(account, account.address)
+console.log(accountBalance)
+// Output: 1000n
 ```
 
 ### PSP22 token
@@ -452,7 +440,7 @@ const psp22 = await PSP22.load(api, Network.Local, TOKEN0_ADDRESS)
 // interact with token 0
 const account0Balance = await psp22.balanceOf(account, account.address)
 console.log(account0Balance)
-// Output: TODO
+// Output: 500n
 
 // if you want to interact with different token,
 // simply set different contract address
@@ -461,7 +449,7 @@ await psp22.setContractAddress(TOKEN1_ADDRESS)
 // now we can interact with token y
 const account1Balance = await psp22.balanceOf(account, account.address)
 console.log(account1Balance)
-// Output: TODO
+// Output: 999999999999999999999999999998n
 ```
 
 ### Listen to Event
