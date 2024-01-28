@@ -20,15 +20,15 @@ You can find build steps [here](installation.md).
 
 The Invariant SDK comprises three distinct contracts:
 
-1. DEX Contract (Invariant): This is the core contract handling DEX functionality within the Invariant ecosystem.
+1. DEX Contract (Invariant): This is the contract handling DEX functionality within the Invariant ecosystem.
 
-2. Token Contract (PSP22): This contract is responsible for managing and implementing the PSP22 token standard within the Invariant framework. Allows to deploy or load existing contracts.
+2. Token Contract (PSP22): This contract is responsible for managing and implementing the PSP22 token standard within the Invariant protocol. Allows to deploy or load existing contracts.
 
-3. Wrapped Native Currency Contract (Wrapped AZERO): This contract allows users to wrap the native currency, providing compatibility and interoperability within the Invariant ecosystem.
+3. Wrapped Native Currency Contract (Wrapped AZERO): This contract allows users to wrap the native currency.
 
 ### Transactions and Queries
 
-When working with contracts, developers can seamlessly initiate interactions by calling methods from the corresponding contract class. The first parameter designates the account, and subsequent parameters act as entrypoint parameters, facilitating smooth contract interactions.
+When working with contracts, developers can initiate interactions by calling methods from the corresponding contract class. The first parameter designates the account, and subsequent parameters act as entrypoint parameters.
 
 1. **Transactions**: These involve invoking methods that result in changes to the blockchain state. Transactions typically alter the data stored on the blockchain and may include operations like transferring assets, updating records, or executing specific actions.
 
@@ -40,11 +40,11 @@ The Invariant class offers additional methods empowering developers to attach ev
 
 ### Values and Helper functions
 
-The SDK includes fundamental values and utility functions for application development. These encompass parameters such as maximum tick, maximum price, and calculations for price impact. This suite of utility functions streamlines computational aspects, enhancing the efficiency of application logic.
+The SDK includes fundamental values and utility functions for application development. These encompass parameters such as maximum tick, maximum price, and calculations for price impact.
 
 ### Contracts Metadata
 
-Within the Contracts folder, developers can find deploy-ready contracts and metadata essential for interactions. This structure facilitates straightforward integration with the specified contracts, simplifying the development workflow.
+Within the Contracts folder, developers can find deploy-ready contracts and metadata essential for interactions.
 
 ### Math
 
@@ -73,7 +73,7 @@ The Tests folder houses test suites to ensure the correct functioning of SDK.
 
 ## Usage Guide
 
-Follow a step-by-step example demonstrating how to effectively use the Invariant SDK, with each step accompanied by code snippets. The complete code for these examples is available [here](https://google.com), ensuring a hands-on and comprehensive understanding of the SDK's functionality.
+Follow a step-by-step example demonstrating how to use the Invariant SDK, with each step accompanied by code snippets. The complete code for these examples is available [here](https://google.com), ensuring a hands-on and comprehensive understanding of the SDK's functionality.
 
 ### Select Network
 
@@ -87,10 +87,11 @@ enum Network {
 }
 ```
 
-Initiate the Polkadot API effortlessly with the provided `initPolkadotApi` function. Use the `Network` enum to specify your desired network, simplifying the process of connecting to the blockchain. Utilize the versatile `Keyring` class to easily create and manage accounts. Initialize an account using your preferred method, whether it's using a provided mnemonic phrase or integrating your existing wallet.
+Initiate the Polkadot API effortlessly with the provided `initPolkadotApi` function. Use the `Network` enum to specify your desired network. Utilize the versatile `Keyring` class to easily create and manage accounts. Initialize an account using your preferred method, whether it's using a provided mnemonic phrase or integrating your existing wallet.
 
 ```typescript
-const api = await initPolkadotApi(Network.Local) // initialize api, use enum to specify the network
+// initialize api, use enum to specify the network
+const api = await initPolkadotApi(Network.Local)
 
 // initialize account, you can use your own wallet by pasting mnemonic phase
 const keyring = new Keyring({ type: 'sr25519' })
@@ -102,8 +103,6 @@ const account = keyring.addFromUri('//Alice')
 Load the Invariant contract by providing the Polkadot API (`api`), specifying the network (e.g., `Network.Local` for local development), and indicating the Invariant contract address (`INVARIANT_ADDRESS`). Similarly, initialize the PSP22 token contract using the same approach. It's noteworthy that only a single instance of PSP22 is required to handle interactions with multiple tokens.
 
 ```typescript
-// -- snip --
-
 // load invariant contract
 const invariant = await Invariant.load(api, Network.Local, INVARIANT_ADDRESS)
 
@@ -128,8 +127,6 @@ Tokens are sorted alphabetically when pool key is created, so make sure that you
 To create a new pool, a fee tier and pool key need to be prepared. The fee tier represents the desired fee for the pool, and the price needs to be converted to sqrt price because the entry points of the system accept it in this format. The pool key is constructed using the addresses of two tokens and the specified fee tier. Finally, the `createPool` function is called with the user's account, the pool key, and the initial square root price, resulting in the creation of a new pool. The transaction hash of the pool creation is then logged to the console.
 
 ```typescript
-// -- snip --
-
 // set fee tier, make sure that fee tier with specified parameters exists
 const feeTier = newFeeTier(toPercentage(1n, 2n), 1n) // fee: 0.01 = 1%, tick spacing: 1
 
@@ -152,11 +149,9 @@ console.log(createPoolResult.hash)
 
 ### Create position
 
-To create a new position within a pool, certain steps need to be followed. The process involves preparing parameters such as the amount of tokens, tick indexes for the desired price range, and approving token transfers. Below is a breakdown of the process:
+Creating position involves preparing parameters such as the amount of tokens, tick indexes for the desired price range, and approving token transfers.
 
 ```typescript
-// -- snip --
-
 // token y has 12 decimals and we want to add 8 actual tokens to our position
 const tokenYAmount = 8n * 10n ** 12n
 
@@ -208,11 +203,9 @@ Let's say some token has decimal of 12 and we want to swap 6 actual tokens. Here
 6 \* 10^12 = 6000000000000.
 :::
 
-Peforming a swap requires: specifying the amount of tokens to be swapped, approving the transfer of the token, estimating the result of the swap, determining the allowed slippage, calculating the square root price limit based on slippage, and finally, executing the swap. Here's a breakdown of the process:
+Peforming a swap requires: specifying the amount of tokens to be swapped, approving the transfer of the token, estimating the result of the swap, determining the allowed slippage, calculating the square root price limit based on slippage, and finally, executing the swap.
 
 ```typescript
-// -- snip --
-
 // we want to swap 6 token0
 // token0 has 12 decimals so we need to multiply it by 10^12
 const amount = 6n * 10n ** 12n
@@ -321,12 +314,10 @@ const positions: Position[] = await invariant.getPositions(
 
 ### Query states and Calculate Fee
 
-To query the state and calculate fees within the system, several functions are utilized. Positions, ticks, and pools are accessed to gather information about the state, and the calculateFee function is used to determine the amount of unclaimed tokens. The process is described below:
+Positions, ticks, and pools are accessed to gather information about the state, and the calculateFee function is used to determine the amount of unclaimed tokens.
 
 ```typescript
-// -- snip --
-
-// query state
+// query states
 const poolAfter: Pool = await invariant.getPool(account, TOKEN0_ADDRESS, TOKEN1_ADDRESS, feeTier)
 const positionAfter: Position = await invariant.getPosition(account, account.address, 0n)
 const lowerTickAfter: Tick = await invariant.getTick(account, poolKey, positionAfter.lowerTickIndex)
@@ -347,11 +338,9 @@ console.log(fees)
 
 ### Claim fees
 
-In the following code snippet, fees from a specific position are claimed without closing the position. This process involves specifying the position ID (indexed from 0), calling the claimFee function, and then checking the balance of a specific token after claiming the fees. The description is as follows:
+Fees from a specific position are claimed without closing the position. This process involves specifying the position ID (indexed from 0), calling the claimFee function, and then checking the balance of a specific token after claiming the fees.
 
 ```typescript
-// -- snip --
-
 // specify position id
 const positionId = 0n
 const claimFeeResult = await invariant.claimFee(account, positionId)
@@ -372,8 +361,6 @@ console.log(accountBalance)
 Position is removed from the system, and fees associated with that position are automatically claimed in the background. Here's a detailed description of the process:
 
 ```typescript
-// -- snip --
-
 const positionToTransfer = await invariant.getPosition(account, account.address, 0n)
 
 // Transfer position from account (signer) to receiver
@@ -408,11 +395,9 @@ console.log(receiverPosition)
 
 ### Remove position
 
-Position is removed from the system, and fees associated with that position are automatically claimed in the background. Here's a detailed description of the process:
+Position is removed from the protocol, and fees associated with that position are automatically claimed in the background. Here's a detailed description of the process:
 
 ```typescript
-// -- snip --
-
 // remove position
 const removePositionResult = await invariant.removePosition(account, positionId)
 console.log(removePositionResult.hash)
@@ -442,8 +427,6 @@ You should only use official Wrapped AZERO contract. This address represents off
 :::
 
 ```typescript
-// -- snip --
-
 // load wazero contract
 const wazero = await WrappedAZERO.load(api, network, WAZERO_ADDRESS)
 
@@ -539,8 +522,6 @@ interface SwapEvent {
 Developers can define a handler function, such as the handler function in the code snippet, that takes an event parameter matching the structure of the respective event type (e.g., `SwapEvent`). This handler function enables developers to perform actions based on the event details.
 
 ```typescript
-// -- snip --
-
 const handler = (event: SwapEvent) => {
   // checking if swap was made on a specific pool
   if (event.poolKey === poolKey) {
@@ -632,7 +613,7 @@ interface SwapEvent {
 
 ### Storage
 
-These interfaces are essential for managing various aspects of the Invariant's storage. It is important to note that these interfaces are exported from Rust to TypeScript using wasm-bindgen, providing seamless integration between the two languages. Read more about storage [here](storage.md).
+These interfaces are essential for managing various aspects of the Invariant's storage. It is important to note that these interfaces are exported from Rust to TypeScript using wasm-bindgen, providing integration between the two languages. Read more about storage [here](storage.md).
 
 ```typescript
 interface InvariantConfig {
