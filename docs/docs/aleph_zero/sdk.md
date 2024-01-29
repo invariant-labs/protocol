@@ -100,6 +100,11 @@ const account = keyring.addFromUri('//Alice')
 
 ### Initialize DEX and tokens
 
+:::note Deploying and loading psp22 contracts
+The deploy function serves as a one-stop solution for deploying PSP22 contracts. When invoked, returns a unique contract address. This address serves as a reference for the deployed contract.
+By providing the contract address returned during deployment, the load function dynamically adds all necessary methods to the specified contract. This dynamic loading capability ensures that the contract is equipped with the essential functionalities defined by the PSP22 standard.
+:::
+
 Load the Invariant contract by providing the Polkadot API (`api`), specifying the network (e.g., `Network.Local` for local development), and indicating the Invariant contract address (`INVARIANT_ADDRESS`). Similarly, initialize the PSP22 token contract using the same approach. It's noteworthy that only a single instance of PSP22 is required to handle interactions with multiple tokens.
 
 ```typescript
@@ -112,19 +117,19 @@ const psp22 = await PSP22.load(api, Network.Local, TOKEN0_ADDRESS)
 
 ### Create pool
 
-:::info Creating types
+:::info Big numbers
 You can create custom decimals using the `toDecimal` syntax, where the first argument represents the numerical value (A), and the second argument indicates the power of 10 (B) in the formula `A * 10^(-B)`. For example, `toDecimal(3n, 2n)` will result in a decimal equal to 0.03. For further details on supported types, please check the documentation [here](types.md).
 :::
 
 :::note Why "n" is at the end of every number
-Notice how we use "n" at the end of every number. "n" indicates that specified value is a BigInt, number with higher precision. Read more about BigInt [here](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt).
+Notice how we use "n" at the end of every number. "n" indicates that specified value is a BigInt, number with higher precision.
 :::
 
 :::warning Token sorting
 Tokens are sorted alphabetically when pool key is created, so make sure that you swap tokens in correct direction. Read more about pool keys [here](storage#poolkey).
 :::
 
-To create a new pool, a fee tier and pool key need to be prepared. The fee tier represents the desired fee for the pool, and the price needs to be converted to sqrt price because the entry points of the system accept it in this format. The pool key is constructed using the addresses of two tokens and the specified fee tier. Finally, the `createPool` function is called with the user's account, the pool key, and the initial square root price, resulting in the creation of a new pool. The transaction hash of the pool creation is then logged to the console.
+To create a new pool, a fee tier and pool key need to be prepared. The fee tier represents the desired fee for the pool, and the price needs to be converted to sqrt price because the entry points of the protocol accept it in this format. The pool key is constructed using the addresses of two tokens and the specified fee tier. Finally, the `createPool` function is called with the user's account, the pool key, and the initial square root price, resulting in the creation of a new pool. The transaction hash of the pool creation is then logged to the console.
 
 ```typescript
 // set fee tier, make sure that fee tier with specified parameters exists
@@ -149,10 +154,17 @@ console.log(createPoolResult.hash)
 
 ### Create position
 
-Creating position involves preparing parameters such as the amount of tokens, tick indexes for the desired price range, and approving token transfers.
+:::info How to calculate input amount
+In order to calculate input amount, we have to multiply actual token amount you want to swap times 10 to the power of decimal.
+Let's say some token has decimal of 12 and we want to swap 6 actual tokens. Here is how we can calculate input amount:
+6 \* 10^12 = 6000000000000.
+:::
+
+Creating position involves preparing parameters such as the amount of tokens, tick indexes for the desired price range, and approving token transfers. Create position always accept liquidity parameter. There is need to calculate desired liquidity based on specified token amounts.
+For this case there are provided functions `getLiquidityByX` or `getLiquidityByY`.
 
 ```typescript
-// token y has 12 decimals and we want to add 8 actual tokens to our position
+// token y has 12 decimals and we want to add 8 integer tokens to our position
 const tokenYAmount = 8n * 10n ** 12n
 
 // set lower and upper tick indexes, we want to create position in range [-10, 10]
@@ -197,13 +209,10 @@ console.log(createPositionResult.hash)
 
 ### Swap tokens
 
-:::info How to calculate input amount
-In order to calculate input amount, we have to multiply actual token amount you want to swap times 10 to the power of decimal.
-Let's say some token has decimal of 12 and we want to swap 6 actual tokens. Here is how we can calculate input amount:
-6 \* 10^12 = 6000000000000.
-:::
+Performing a swap requires: specifying the amount of tokens to be swapped or desired amount to receive from the swap (input token amount will be calculated durning the swap), approving the transfer of the token, estimating the result of the swap, direction, determining the allowed slippage, calculating the square root price limit based on slippage, and finally, executing the swap. Calcula
 
-Peforming a swap requires: specifying the amount of tokens to be swapped, approving the transfer of the token, estimating the result of the swap, determining the allowed slippage, calculating the square root price limit based on slippage, and finally, executing the swap.
+:::note Price impace and slippage
+:::
 
 ```typescript
 // we want to swap 6 token0
@@ -214,7 +223,7 @@ const amount = 6n * 10n ** 12n
 await psp22.setContractAddress(poolKey.tokenX)
 await psp22.approve(account, invariant.contract.address.toString(), amount)
 
-// get estimated result of swap
+// get simulated result of swap
 const quoteResult = await invariant.quote(account, poolKey, true, amount, true)
 
 // slippage is a price change you are willing to accept,
@@ -276,7 +285,7 @@ interface Pool {
 const poolState: Pool = await invariant.getPool(signer, TOKEN0_ADDRESS, TOKEN1_ADDRESS, feeTier)
 ```
 
-- Get Pools
+- Get All Pools
 
 ```typescript
 const pools: Pool[] = await invariant.getPools(signer)
@@ -307,26 +316,23 @@ const positionState: Position = await invariant.getPosition(signer, owner.addres
 - Get Positions
 
 ```typescript
-const positions: Position[] = await invariant.getPositions(
-  await invariant.getPositions(signer, owner.address)
-)
+const positions: Position[] = await invariant.getPositions(signer, owner.address)
 ```
 
 ### Query states and Calculate Fee
 
-Positions, ticks, and pools are accessed to gather information about the state, and the calculateFee function is used to determine the amount of unclaimed tokens.
+To query the state and calculate **unclaimed** fees **belonging to the position**, several functions are utilized. Positions, ticks, and pools are accessed to gather information about the state, and the calculateFee function is used to determine the amount of unclaimed tokens.
 
 ```typescript
 // query states
-const poolAfter: Pool = await invariant.getPool(account, TOKEN0_ADDRESS, TOKEN1_ADDRESS, feeTier)
-const positionAfter: Position = await invariant.getPosition(account, account.address, 0n)
-const lowerTickAfter: Tick = await invariant.getTick(account, poolKey, positionAfter.lowerTickIndex)
-const upperTickAfter: Tick = await invariant.getTick(account, poolKey, positionAfter.upperTickIndex)
+const pool: Pool = await invariant.getPool(account, TOKEN0_ADDRESS, TOKEN1_ADDRESS, feeTier)
+const position: Position = await invariant.getPosition(account, account.address, 0n)
+const lowerTick: Tick = await invariant.getTick(account, poolKey, position.lowerTickIndex)
+const upperTick: Tick = await invariant.getTick(account, poolKey, position.upperTickIndex)
 
 // pools, ticks and positions have many fee growth fields that are used to calculate fees,
-// by doing that off chain we can save gas fees,
 // so in order to see how many tokens you can claim from fees you need to use calculate fee function
-const fees = calculateFee(poolAfter, positionAfter, lowerTickAfter, upperTickAfter)
+const fees = calculateFee(pool, position, lowerTick, upperTick)
 
 // print amount of unclaimed x and y token
 console.log(fees)
@@ -358,7 +364,7 @@ console.log(accountBalance)
 
 ### Transfer position
 
-Position is removed from the system, and fees associated with that position are automatically claimed in the background. Here's a detailed description of the process:
+DESCRIPTION
 
 ```typescript
 const positionToTransfer = await invariant.getPosition(account, account.address, 0n)
