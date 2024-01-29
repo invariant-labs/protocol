@@ -77,20 +77,20 @@ End-to-end (E2E) tests are an essential component of our testing strategy. We ha
 
 These types are utilized to represent decimal values, and it is worth noting that these decimal types are already exported from Rust through WebAssembly (Wasm) using wasm-bindgen. Each type in this collection comes with associated decimal scales and functionalities, allowing for precise and reliable handling of decimal calculations. Read more about [decimals](types.md).
 
-````typescript
-export type TokenAmount = bigint;
+```typescript
+export type TokenAmount = bigint
 
-export type Liquidity = bigint;
+export type Liquidity = bigint
 
-export type FeeGrowth = bigint;
+export type FeeGrowth = bigint
 
-export type SqrtPrice = bigint;
+export type SqrtPrice = bigint
 
-export type Price = bigint;
+export type Price = bigint
 
-export type FixedPoint = bigint;
+export type FixedPoint = bigint
 
-export type Percentage = bigint;
+export type Percentage = bigint
 ```
 
 ### Network
@@ -103,7 +103,7 @@ enum Network {
   Mainnet = 'mainnet',
   Testnet = 'testnet'
 }
-````
+```
 
 ### Events
 
