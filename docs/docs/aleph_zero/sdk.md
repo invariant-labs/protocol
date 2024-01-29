@@ -32,7 +32,7 @@ When working with contracts, developers can initiate interactions by calling met
 
 1. **Transactions**: These involve invoking methods that result in changes to the blockchain state. Transactions typically alter the data stored on the blockchain and may include operations like transferring assets, updating records, or executing specific actions. Once the transaction will be confirmed it returns the hash. If the entrypoint has emitted any events, there will be also returned with the hash.
 
-2. **Queries**: Unlike transactions, queries are read-only interactions with the contract. They allow developers to retrieve information from the blockchain without modifying its state. Queries are useful for obtaining current contract state, fetching data, or verifying certain conditions without making any changes to the blockchain. Importantly, queries do not return a transaction hash; instead, they provide results in the form of structs from [storage](storage.md) or estimated results of transaction, allowing developers to access specific information from the smart contract."
+2. **Queries**: Queries are read-only interactions with the contract. They allow developers to retrieve information from the blockchain without modifying its state. Queries are useful for obtaining current contract state, or verifying certain conditions. Importantly, queries do not return a transaction hash; instead, they provide results in the form of structs from [storage](storage.md) or estimated results of transaction.
 
 ### Listening to Events
 
@@ -56,7 +56,7 @@ The Source directory consolidates all pieces into an easy-to-use interface. This
 
 ### Tests
 
-The Tests folder houses test suites to ensure the correct functioning of SDK.
+End-to-end (E2E) tests are an essential component of our testing strategy. We have adopted the ts-mocha framework for our end-to-end testing needs. For assertion and expectation handling, we rely on the Chai assertion library. Our end-to-end tests encompass a comprehensive examination of the entire protocol. This includes testing all entrypoints of every contract within our protocol, ensuring that each contract behaves as expected under various conditions. Additionally, we thoroughly test our SDK math utilities to guarantee their accuracy and reliability.
 
 ### Project Structure
 
@@ -75,10 +75,22 @@ The Tests folder houses test suites to ensure the correct functioning of SDK.
 
 ### Decimal
 
-This types are utilized to represent decimal values, and it is worth noting that these decimal types are exported from Rust through WebAssembly (Wasm) using wasm-bindgen. Read more about [decimals](types.md).
+These types are utilized to represent decimal values, and it is worth noting that these decimal types are already exported from Rust through WebAssembly (Wasm) using wasm-bindgen. Each type in this collection comes with associated decimal scales and functionalities, allowing for precise and reliable handling of decimal calculations. Read more about [decimals](types.md).
 
-```typescript
-type DecimalName = bigint
+````typescript
+export type TokenAmount = bigint;
+
+export type Liquidity = bigint;
+
+export type FeeGrowth = bigint;
+
+export type SqrtPrice = bigint;
+
+export type Price = bigint;
+
+export type FixedPoint = bigint;
+
+export type Percentage = bigint;
 ```
 
 ### Network
@@ -91,7 +103,7 @@ enum Network {
   Mainnet = 'mainnet',
   Testnet = 'testnet'
 }
-```
+````
 
 ### Events
 
@@ -279,7 +291,7 @@ CoinB BCOIN 12n<br/>
 
 :::
 
-### Initialize DEX and tokens
+### Load DEX and tokens
 
 :::note Deploying and loading psp22 contracts
 The deploy function serves as a one-stop solution for deploying PSP22 contracts. When invoked, returns a unique contract address. This address serves as a reference for the deployed contract.
@@ -341,8 +353,7 @@ Let's say some token has decimal of 12 and we want to swap 6 actual tokens. Here
 6 \* 10^12 = 6000000000000.
 :::
 
-Creating position involves preparing parameters such as the amount of tokens, tick indexes for the desired price range, and approving token transfers. Create position always accept liquidity parameter. There is need to calculate desired liquidity based on specified token amounts.
-For this case there are provided functions `getLiquidityByX` or `getLiquidityByY`.
+Creating position involves preparing parameters such as the amount of tokens, tick indexes for the desired price range, liquidity, slippage and approving token transfers. There is need to calculate desired liquidity based on specified token amounts. For this case there are provided functions `getLiquidityByX` or `getLiquidityByY`. The slippage parameter represents the acceptable price difference that can occur on the pool during the execution of the transaction.
 
 ```typescript
 // token y has 12 decimals and we want to add 8 integer tokens to our position
@@ -566,12 +577,16 @@ console.log(fees)
 Fees from a specific position are claimed without closing the position. This process involves specifying the position ID (indexed from 0), calling the claimFee function, and then checking the balance of a specific token after claiming the fees.
 
 ```typescript
-// specify position id
-const positionId = 0n
+// get balance of a specific token before claiming position fees and print it
 const accountBalanceBeforeClaim = await psp22.balanceOf(account, account.address)
 console.log(accountBalanceBeforeClaim)
+
+// specify position id
+const positionId = 0n
+// claim fee
 const claimFeeResult = await invariant.claimFee(account, positionId)
-console.log(claimFeeResult.hash) // print transaction hash
+// print transaction hash
+console.log(claimFeeResult.hash)
 
 // get balance of a specific token after claiming position fees and print it
 const accountBalanceAfterClaim = await psp22.balanceOf(account, account.address)
@@ -626,12 +641,13 @@ console.log(receiverPosition)
 Position is removed from the protocol, and fees associated with that position are automatically claimed in the background. Here's a detailed description of the process:
 
 ```typescript
-// remove position
+// fetch user balances before removal
 const accountToken0BalanceBeforeRemove = await psp22.balanceOf(account, account.address)
 await psp22.setContractAddress(TOKEN1_ADDRESS)
 const accountToken1BalanceBeforeRemove = await psp22.balanceOf(account, account.address)
 console.log(accountToken0BalanceBeforeRemove, accountToken1BalanceBeforeRemove)
 
+// remove position
 const removePositionResult = await invariant.removePosition(account, positionId)
 console.log(removePositionResult.hash)
 
@@ -665,6 +681,7 @@ You should only use official Wrapped AZERO contract. This address represents off
 // load wazero contract
 const wazero = await WrappedAZERO.load(api, network, WAZERO_ADDRESS)
 
+// get balance of account
 const accountBalanceBefore = await wazero.balanceOf(account, account.address)
 console.log(accountBalanceBefore)
 
