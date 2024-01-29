@@ -233,11 +233,12 @@ const account = keyring.addFromUri('//Alice')
 
 ### PSP22 token
 
-In the following TypeScript code, we demonstrate approach deploying and initializing PSP22 token contracts using the `PSP22.deploy` method. Notably, a single instance of the PSP22 class proves sufficient for handling interactions with multiple tokens.
+In the following TypeScript code, we demonstrate approach deploying and initializing a PSP22 token contracts using the `PSP22.deploy` method. Apart from the deployment and initialization, the code also demonstrates how to fetch token metadata. This can include details such as the token name, symbol, token decimal. Notably, a single instance of the PSP22 class proves sufficient for handling interactions with multiple tokens.
 
 ```typescript
 // deploy token, it will return tokens address
-const TOKEN0_ADDRESS = await PSP22.deploy(api, account, 500n, 'Coin', 'COIN', 12n)
+const TOKEN0_ADDRESS = await PSP22.deploy(api, account, 500n, 'CoinA', 'ACOIN', 12n)
+const TOKEN1_ADDRESS = await PSP22.deploy(api, account, 500n, 'CoinB', 'BCOIN', 12n)
 
 // load token by passing its address (you can use existing one), it allows you to interact with it
 const psp22 = await PSP22.load(api, Network.Local, TOKEN0_ADDRESS)
@@ -253,12 +254,28 @@ await psp22.setContractAddress(TOKEN1_ADDRESS)
 // now we can interact with token y
 const account1Balance = await psp22.balanceOf(account, account.address)
 console.log(account1Balance)
+
+// fetch token metadata for previously deployed token0
+await psp22.setContractAddress(TOKEN0_ADDRESS)
+const token0Name = await psp22.tokenName(account)
+const token0Symbol = await psp22.tokenSymbol(account)
+const token0Decimals = await psp22.tokenDecimals(account)
+console.log(token0Name, token0Symbol, token0Decimals)
+
+// load diffrent token and load its metadata
+await psp22.setContractAddress(TOKEN1_ADDRESS)
+const token1Name = await psp22.tokenName(account)
+const token1Symbol = await psp22.tokenSymbol(account)
+const token1Decimals = await psp22.tokenDecimals(account)
+console.log(token1Name, token1Symbol, token1Decimals)
 ```
 
 :::tip Output
 
 500n <br/>
-999999999999999999999999999998n
+500n<br/>
+CoinA ACOIN 12n<br/>
+CoinB BCOIN 12n<br/>
 
 :::
 
@@ -364,11 +381,27 @@ const createPositionResult = await invariant.createPosition(
   0n
 )
 console.log(createPositionResult.hash)
+console.log(createPositionResult.events)
 ```
 
 :::tip Output
 7999999999880n 8000000000000n <br/>
-0x652108bb36032bc386fec2eef3f483f29970db7bdbdc9a1a340e279abd626ee2
+0x652108bb36032bc386fec2eef3f483f29970db7bdbdc9a1a340e279abd626ee2<br/>
+[<br/>
+&emsp; {<br/>
+&emsp; timestamp: 1706518611808n,<br/>
+&emsp; address: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',<br/>
+&emsp; pool: {<br/>
+&emsp; &emsp; tokenX: '5EAYUj8RYow1MyDBGck67QsLZpeCe9AfZFADHxyobCzcySkm',<br/>
+&emsp; &emsp; tokenY: '5FErzMMHprtUWLoAW8zdQoyeAPiBRT4UTt8DRBAV9QxQtBkk',<br/>
+&emsp; &emsp; feeTier: [Object]<br/>
+&emsp; },<br/>
+&emsp; liquidity: 16004800319759905588483n,<br/>
+&emsp; lowerTick: -10n,<br/>
+&emsp; upperTick: 10n,<br/>
+&emsp; currentSqrtPrice: 1000000000000000000000000n<br/>
+&emsp; }<br/>
+]
 :::
 
 ### Swap tokens
@@ -408,10 +441,28 @@ const sqrtPriceLimit = calculateSqrtPriceAfterSlippage(
 
 const swapResult = await invariant.swap(account, poolKey, true, amount, true, sqrtPriceLimit)
 console.log(swapResult.hash)
+console.log(swapResult.events)
 ```
 
 :::tip Output
-0xd9cdfddb2c783f24a481811f0f9d7037e2f7202907f092986ecd98838db2b3cb
+0xd9cdfddb2c783f24a481811f0f9d7037e2f7202907f092986ecd98838db2b3cb <br/>
+[<br/>
+&emsp; {<br/>
+&emsp; timestamp: 1706518411849n,<br/>
+&emsp; address: '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',<br/>
+&emsp; pool: {<br/>
+&emsp; &emsp; tokenX: '5CnMbWx8h1YKeWtKEECHBdMNjtwvDoeMqku7eX7i4YXmpbBV',<br/>
+&emsp; &emsp; tokenY: '5ESbyMxcNAUBFfmNoHFFCzMkKRqKmY3jfaeqxfZa5mf75Bzx',<br/>
+&emsp; &emsp; feeTier: [Object]<br/>
+&emsp; },<br/>
+&emsp; amountIn: 6000000000000n,<br/>
+&emsp; amountOut: 5937796254308n,<br/>
+&emsp; fee: 60000000000n,<br/>
+&emsp; startSqrtPrice: 1000000000000000000000000n,<br/>
+&emsp; targetSqrtPrice: 999628999041807638582903n,<br/>
+&emsp; xToY: true<br/>
+&emsp;}
+]
 :::
 
 ### List of Queries and Interfaces
@@ -517,15 +568,18 @@ Fees from a specific position are claimed without closing the position. This pro
 ```typescript
 // specify position id
 const positionId = 0n
+const accountBalanceBeforeClaim = await psp22.balanceOf(account, account.address)
+console.log(accountBalanceBeforeClaim)
 const claimFeeResult = await invariant.claimFee(account, positionId)
-console.log(claimFeeResult.hash)
+console.log(claimFeeResult.hash) // print transaction hash
 
 // get balance of a specific token after claiming position fees and print it
-const accountBalance = await psp22.balanceOf(account, account.address)
-console.log(accountBalance)
+const accountBalanceAfterClaim = await psp22.balanceOf(account, account.address)
+console.log(accountBalanceAfterClaim)
 ```
 
 :::tip Output
+999999999999999986000000000120n <br/>
 0xead1fe084c904e7b1d0df2f3953c74d03cb90756caea46ae1e896c6956460105 <br/>
 999999999999999986060000000119n
 :::
@@ -573,19 +627,26 @@ Position is removed from the protocol, and fees associated with that position ar
 
 ```typescript
 // remove position
+const accountToken0BalanceBeforeRemove = await psp22.balanceOf(account, account.address)
+await psp22.setContractAddress(TOKEN1_ADDRESS)
+const accountToken1BalanceBeforeRemove = await psp22.balanceOf(account, account.address)
+console.log(accountToken0BalanceBeforeRemove, accountToken1BalanceBeforeRemove)
+
 const removePositionResult = await invariant.removePosition(account, positionId)
 console.log(removePositionResult.hash)
 
 // get balance of a specific token after removing position
-const accountToken0Balance = await psp22.balanceOf(account, account.address)
+await psp22.setContractAddress(TOKEN0_ADDRESS)
+const accountToken0BalanceAfterRemove = await psp22.balanceOf(account, account.address)
 await psp22.setContractAddress(TOKEN1_ADDRESS)
-const accountToken1Balance = await psp22.balanceOf(account, account.address)
+const accountToken1BalanceAfterRemove = await psp22.balanceOf(account, account.address)
 
 // print balances
-console.log(accountToken0Balance, accountToken1Balance)
+console.log(accountToken0BalanceAfterRemove, accountToken1BalanceAfterRemove)
 ```
 
 :::tip Output
+999999999999999986060000000119n 999999999999999986060000000119n <br/>
 0xe90dfeb5420b26c4f0ed2d5a77825a785a7e42106cc45f5a7d08c597f46c1171 <br/>
 999999999999999999999999999998n 999999999999999999999999999998n <br/>
 :::
@@ -604,16 +665,20 @@ You should only use official Wrapped AZERO contract. This address represents off
 // load wazero contract
 const wazero = await WrappedAZERO.load(api, network, WAZERO_ADDRESS)
 
+const accountBalanceBefore = await wazero.balanceOf(account, account.address)
+console.log(accountBalanceBefore)
+
 // send AZERO using deposit method
 await wazero.deposit(account, 1000n)
 
 // you will receive WAZERO token which you can use as any other token,
 // later you can exchange it back to AZERO at 1:1 ratio
-const accountBalance = await wazero.balanceOf(account, account.address)
-console.log(accountBalance)
+const accountBalanceAfter = await wazero.balanceOf(account, account.address)
+console.log(accountBalanceAfter)
 ```
 
 :::tip Output
+0n<br/>
 1000n<br/>
 :::
 
