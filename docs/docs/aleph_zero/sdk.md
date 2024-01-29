@@ -46,9 +46,9 @@ The SDK includes fundamental values and utility functions for application develo
 
 Within the Contracts folder, developers can find deploy-ready contracts and metadata essential for interactions.
 
-### Math
+### Wasm
 
-The Math folder contains Rust structs and data exported to WebAssembly using wasm_bindgen. This integration allows for the utilization of the same functions and data employed in the primary Invariant contract.
+The Wasm folder contains Rust structs and data exported to WebAssembly using wasm_bindgen. This integration allows for the utilization of the same functions and data employed in the primary Invariant contract.
 
 ### Source
 
@@ -66,7 +66,7 @@ End-to-end (E2E) tests are an essential component of our testing strategy. We ha
  ┃ ┣ 📂invariant
  ┃ ┣ 📂PSP22
  ┃ ┗ 📂wrapped-azero
- ┣ 📂math
+ ┣ 📂wasm
  ┣ 📂src
  ┗ 📂tests
 ```
@@ -99,9 +99,9 @@ Network serves as a convenient way to select the network on which various action
 
 ```typescript
 enum Network {
-  Local = 'local',
-  Mainnet = 'mainnet',
-  Testnet = 'testnet'
+  Local,
+  Testnet,
+  Mainnet
 }
 ```
 
@@ -218,9 +218,9 @@ Begin by specifying the network you intend to connect to using the Network enum.
 
 ```typescript
 enum Network {
-  Local = 'local',
-  Mainnet = 'mainnet',
-  Testnet = 'testnet'
+  Local,
+  Testnet,
+  Mainnet
 }
 ```
 
@@ -679,7 +679,7 @@ You should only use official Wrapped AZERO contract. This address represents off
 
 ```typescript
 // load wazero contract
-const wazero = await WrappedAZERO.load(api, network, WAZERO_ADDRESS)
+const wazero = await WrappedAZERO.load(api, Network.Local, WAZERO_ADDRESS)
 
 // get balance of account
 const accountBalanceBefore = await wazero.balanceOf(account, account.address)
