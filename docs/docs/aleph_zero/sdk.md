@@ -226,6 +226,10 @@ enum Network {
 
 ### Initlialize API
 
+:::note Running Web Assembly
+SDK utilizes Web Assembly. In order to run WASM files in Node.js you have to add `--experimental-wasm-modules` flag.
+:::
+
 Initiate the Polkadot API effortlessly with the provided `initPolkadotApi` function. Use the `Network` enum to specify your desired network.
 
 ```typescript
