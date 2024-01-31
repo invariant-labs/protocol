@@ -1,6 +1,7 @@
 import { BN, Program, utils, Provider } from '@project-serum/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import {
+  ComputeBudgetProgram,
   Connection,
   Keypair,
   PublicKey,
@@ -85,6 +86,14 @@ export class Market {
 
   async setWallet(wallet: IWallet) {
     this.wallet = wallet
+  }
+
+  async addPriorityFee(priorityRate: number, tx: Transaction): Promise<Transaction> {
+    const priorityFeeIx = ComputeBudgetProgram.setComputeUnitPrice({
+      microLamports: priorityRate
+    })
+
+    return tx.add(priorityFeeIx)
   }
 
   async createPool(createPool: CreatePool) {
