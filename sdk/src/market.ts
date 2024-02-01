@@ -92,8 +92,9 @@ export class Market {
     const priorityFeeIx = ComputeBudgetProgram.setComputeUnitPrice({
       microLamports: priorityRate
     })
+    tx.instructions.unshift(priorityFeeIx)
 
-    return tx.add(priorityFeeIx)
+    return tx
   }
 
   async createPool(createPool: CreatePool) {
