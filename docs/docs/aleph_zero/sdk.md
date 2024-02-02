@@ -4,13 +4,13 @@ title: SDK
 slug: /aleph_zero/sdk
 ---
 
-SDK (Software Development Kit) can be used to interact with our DEX programatically. It provides an easy way to integrate your app with Invariant, PSP22 tokens and Wrapped AZERO.
+SDK can be used to interact with our DEX programmatically. It provides an easy way to integrate your app with Invariant, PSP22 tokens and Wrapped AZERO.
 
 ## Installation
 
 ### Download
 
-Published package can be found [here](https://google.com/).
+Published package can be found [here](https://www.npmjs.com/package/@invariant-labs/a0-sdk).
 
 ### Build
 
