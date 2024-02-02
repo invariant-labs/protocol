@@ -64,12 +64,14 @@ cargo test
 
 ## Build SDK
 
+#### Build SDK with its associated dependencies
+
 ```bash
 cd sdk
 ./build.sh
 ```
 
-#### Test SDK
+#### Run e2e tests
 
 ```bash
 ./tests.sh
