@@ -62,7 +62,7 @@ cargo contract build --release
 cargo test
 ```
 
-#### Build SDK
+## Build SDK
 
 ```bash
 cd sdk
