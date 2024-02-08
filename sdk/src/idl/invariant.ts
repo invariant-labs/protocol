@@ -783,14 +783,6 @@ export type Invariant = {
       ],
       "args": [
         {
-          "name": "lowerTickIndex",
-          "type": "i32"
-        },
-        {
-          "name": "upperTickIndex",
-          "type": "i32"
-        },
-        {
           "name": "index",
           "type": "i32"
         }
@@ -2310,14 +2302,6 @@ export const IDL: Invariant = {
         }
       ],
       "args": [
-        {
-          "name": "lowerTickIndex",
-          "type": "i32"
-        },
-        {
-          "name": "upperTickIndex",
-          "type": "i32"
-        },
         {
           "name": "index",
           "type": "i32"

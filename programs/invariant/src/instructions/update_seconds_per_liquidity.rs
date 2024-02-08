@@ -10,7 +10,7 @@ use anchor_spl::token::Mint;
 use math::*;
 
 #[derive(Accounts)]
-#[instruction(lower_tick_index: i32, upper_tick_index: i32, index: i32)]
+#[instruction( index: i32)]
 pub struct UpdateSecondsPerLiquidity<'info> {
     #[account(mut,
         seeds = [b"poolv1", token_x.key().as_ref(), token_y.key().as_ref(), &pool.load()?.fee.v.to_le_bytes(), &pool.load()?.tick_spacing.to_le_bytes()],
@@ -18,15 +18,15 @@ pub struct UpdateSecondsPerLiquidity<'info> {
     )]
     pub pool: AccountLoader<'info, Pool>,
     #[account(
-        seeds = [b"tickv1", pool.key().as_ref(), &lower_tick_index.to_le_bytes()],
+        seeds = [b"tickv1", pool.key().as_ref(), &lower_tick.load()?.index.to_le_bytes()],
         bump = lower_tick.load()?.bump,
-        constraint = lower_tick_index == position.load()?.lower_tick_index @ WrongTick
+        constraint = lower_tick.load()?.index == position.load()?.lower_tick_index @ WrongTick
     )]
     pub lower_tick: AccountLoader<'info, Tick>,
     #[account(
-        seeds = [b"tickv1", pool.key().as_ref(), &upper_tick_index.to_le_bytes()],
+        seeds = [b"tickv1", pool.key().as_ref(), &upper_tick.load()?.index.to_le_bytes()],
         bump = upper_tick.load()?.bump,
-        constraint = upper_tick_index == position.load()?.upper_tick_index @ WrongTick
+        constraint = upper_tick.load()?.index == position.load()?.upper_tick_index @ WrongTick
     )]
     pub upper_tick: AccountLoader<'info, Tick>,
     #[account(mut,
