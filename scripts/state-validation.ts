@@ -1,15 +1,12 @@
 import { BN, Provider } from '@project-serum/anchor'
-import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
+import { Keypair, PublicKey } from '@solana/web3.js'
 import { Network } from '@invariant-labs/sdk/src/network'
 import { Market, Pair } from '@invariant-labs/sdk/src'
-import { calculateClaimAmount } from '@invariant-labs/sdk/src/utils'
+import { calculateClaimAmount, simulateWithdrawal } from '@invariant-labs/sdk/src/utils'
 import { parseLiquidityOnTicks } from '@invariant-labs/sdk/lib/utils'
 import { bs58 } from '@project-serum/anchor/dist/cjs/utils/bytes'
-import { PoolStructure, Position } from '@invariant-labs/sdk/src/market'
+import { Position } from '@invariant-labs/sdk/src/market'
 import { assert } from 'chai'
-import { getDeltaX } from '@invariant-labs/sdk/lib/math'
-import { calculatePriceSqrt } from '@invariant-labs/sdk'
-import { getDeltaY } from '@invariant-labs/sdk/src/math'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Tick } from '@invariant-labs/sdk/lib/market'
 
@@ -78,45 +75,6 @@ const fetchAllPosition = async (market: Market, poolAddress: PublicKey) => {
 
 const fetchAllPools = async (market: Market) => {
   return await market.program.account.pool.all([])
-}
-
-const simulateWithdrawal = (position: Position, pool: PoolStructure) => {
-  if (pool.currentTickIndex < position.lowerTickIndex) {
-    return [
-      getDeltaX(
-        calculatePriceSqrt(position.lowerTickIndex),
-        calculatePriceSqrt(position.upperTickIndex),
-        position.liquidity,
-        false
-      ) ?? new BN(0),
-      new BN(0)
-    ]
-  } else if (pool.currentTickIndex < position.upperTickIndex) {
-    return [
-      getDeltaX(
-        pool.sqrtPrice,
-        calculatePriceSqrt(position.upperTickIndex),
-        position.liquidity,
-        false
-      ) ?? new BN(0),
-      getDeltaY(
-        calculatePriceSqrt(position.lowerTickIndex),
-        pool.sqrtPrice,
-        position.liquidity,
-        false
-      ) ?? new BN(0)
-    ]
-  } else {
-    return [
-      new BN(0),
-      getDeltaY(
-        calculatePriceSqrt(position.lowerTickIndex),
-        calculatePriceSqrt(position.upperTickIndex),
-        position.liquidity,
-        false
-      ) ?? new BN(0)
-    ]
-  }
 }
 
 const main = async () => {
