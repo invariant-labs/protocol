@@ -19,13 +19,16 @@ import {
   Tick,
   PoolData,
   Errors,
-  PositionInitData
+  PositionInitData,
+  Position
 } from './market'
 import {
   calculateMinReceivedTokensByAmountIn,
   calculatePriceAfterSlippage,
   calculatePriceImpact,
   calculateSwapStep,
+  getDeltaX,
+  getDeltaY,
   getLiquidityByX,
   getLiquidityByY,
   getXfromLiquidity,
@@ -187,8 +190,11 @@ export interface CloserLimitResult {
   limitingTick: TickState | null
 }
 
-export const computeUnitsInstruction = (units: number, wallet: PublicKey): TransactionInstruction => {
-  return ComputeBudgetProgram.setComputeUnitLimit({units})
+export const computeUnitsInstruction = (
+  units: number,
+  wallet: PublicKey
+): TransactionInstruction => {
+  return ComputeBudgetProgram.setComputeUnitLimit({ units })
 }
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
@@ -1360,6 +1366,60 @@ export const getPositionIndex = async (
   }
 
   return index
+}
+
+export const simulateWithdrawal = (position: Position, pool: PoolStructure) => {
+  if (pool.currentTickIndex < position.lowerTickIndex) {
+    return [
+      getDeltaX(
+        calculatePriceSqrt(position.lowerTickIndex),
+        calculatePriceSqrt(position.upperTickIndex),
+        position.liquidity,
+        false
+      ) ?? new BN(0),
+      new BN(0)
+    ]
+  } else if (pool.currentTickIndex < position.upperTickIndex) {
+    return [
+      getDeltaX(
+        pool.sqrtPrice,
+        calculatePriceSqrt(position.upperTickIndex),
+        position.liquidity,
+        false
+      ) ?? new BN(0),
+      getDeltaY(
+        calculatePriceSqrt(position.lowerTickIndex),
+        pool.sqrtPrice,
+        position.liquidity,
+        false
+      ) ?? new BN(0)
+    ]
+  } else {
+    return [
+      new BN(0),
+      getDeltaY(
+        calculatePriceSqrt(position.lowerTickIndex),
+        calculatePriceSqrt(position.upperTickIndex),
+        position.liquidity,
+        false
+      ) ?? new BN(0)
+    ]
+  }
+}
+
+export const calculatePoolLiquidity = (
+  pool: PoolStructure,
+  positions: Position[]
+): { x: BN; y: BN } => {
+  return positions.reduce(
+    (acc, position) => {
+      const result = simulateWithdrawal(position, pool)
+
+      const { x, y } = acc
+      return { x: x.add(result[0]), y: y.add(result[1]) }
+    },
+    { x: new BN(0), y: new BN(0) }
+  )
 }
 
 export interface TokenData {
