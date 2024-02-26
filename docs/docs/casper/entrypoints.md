@@ -10,16 +10,16 @@ This section outlines the core entrypoints for the Invariant smart contract, pro
 
 ```rust
 #[odra(init)]
-pub fn init(protocol_fee: Percentage) -> Self;
+pub fn init(protocol_fee: U128) -> Self;
 ```
 
 This constructor method initializes the contract with the specified protocol fee. The administrator role is assigned to the caller.
 
 #### Input parameters
 
-| Name         | Type       | Description                          |
-| ------------ | ---------- | ------------------------------------ |
-| protocol_fee | Percentage | The percentage for the protocol fee. |
+| Name         | Type | Description                          |
+| ------------ | ---- | ------------------------------------ |
+| protocol_fee | U128 | The percentage for the protocol fee. |
 
 ## Protocol fee
 
@@ -40,16 +40,25 @@ This method retrieves the current protocol fee percentage.
 ### Withdraw protocol fee
 
 ```rust
-pub fn withdraw_protocol_fee(&mut self, pool_key: PoolKey) -> Result<(), InvariantError>;
+    fn withdraw_protocol_fee(
+        &mut self,
+        token_0: Address,
+        token_1: Address,
+        fee: U128,
+        tick_spacing: u32,
+    ) -> Result<(), InvariantError>;
 ```
 
 This operation enables the withdrawal of protocol fees associated with a specific pool, based on the provided pool key. The withdrawn funds are sent to the fee receiver wallet. Please note that this action can only be performed by fee receiver.
 
 #### Input parameters
 
-| Name     | Type    | Description                                                                       |
-| -------- | ------- | --------------------------------------------------------------------------------- |
-| pool_key | PoolKey | The pool key that corresponds to the withdrawal of fees from the associated pool. |
+| Name         | Type    | Description                                                 |
+| ------------ | ------- | ----------------------------------------------------------- |
+| token_0      | Address | Address of the first Erc20 token in the pair.               |
+| token_1      | Address | Address of the second Erc20 token in the pair.              |
+| fee          | U128    | A value identifying the pool fee determined in percentages. |
+| tick_spacing | u32     | The tick spacing for the specified fee tier.                |
 
 #### Errors
 
@@ -64,16 +73,16 @@ This operation enables the withdrawal of protocol fees associated with a specifi
 ### Change protocol fee
 
 ```rust
-pub fn change_protocol_fee(&mut self, protocol_fee: Percentage) -> Result<(), InvariantError>;
+pub fn change_protocol_fee(&mut self, protocol_fee: U128) -> Result<(), InvariantError>;
 ```
 
 This function allows for the adjustment of the current protocol fee percentage. Note that this operation is restricted to administrators.
 
 #### Input parameters
 
-| Name         | Type       | Description                      |
-| ------------ | ---------- | -------------------------------- |
-| protocol_fee | Percentage | The new protocol fee percentage. |
+| Name         | Type | Description                      |
+| ------------ | ---- | -------------------------------- |
+| protocol_fee | U128 | The new protocol fee percentage. |
 
 #### Errors
 
@@ -86,7 +95,10 @@ This function allows for the adjustment of the current protocol fee percentage. 
 ```rust
 pub fn change_fee_receiver(
     &mut self,
-    pool_key: PoolKey,
+    token_0: Address,
+    token_1: Address,
+    fee: U128,
+    tick_spacing: u32,
     fee_receiver: Address,
 ) -> Result<(), InvariantError>;
 ```
@@ -95,10 +107,13 @@ This function allows for the modification of the fee receiver of a pool. Please 
 
 #### Input parameters
 
-| Name         | Type    | Description                                              |
-| ------------ | ------- | -------------------------------------------------------- |
-| pool_key     | PoolKey | The pool key of the pool where the change is to be made. |
-| fee_receiver | Address | The new fee receiver's address of the pool.              |
+| Name         | Type    | Description                                                 |
+| ------------ | ------- | ----------------------------------------------------------- |
+| token_0      | Address | Address of the first Erc20 token in the pair.               |
+| token_1      | Address | Address of the second Erc20 token in the pair.              |
+| fee          | U128    | A value identifying the pool fee determined in percentages. |
+| tick_spacing | u32     | The tick spacing for the specified fee tier.                |
+| fee_receiver | Address | The new fee receiver's address of the pool.                 |
 
 #### Errors
 
@@ -111,16 +126,17 @@ This function allows for the modification of the fee receiver of a pool. Please 
 ### Add fee tier
 
 ```rust
-pub fn add_fee_tier(&mut self, fee_tier: FeeTier) -> Result<(), InvariantError>;
+pub fn add_fee_tier(&mut self, fee: U128, tick_spacing: u32) -> Result<(), InvariantError>;
 ```
 
 This function enables the addition of a new fee tier, which users can subsequently utilize when creating pools. Please note that this action is restricted to administrators.
 
 #### Input parameters
 
-| Name     | Type    | Description               |
-| -------- | ------- | ------------------------- |
-| fee_tier | FeeTier | The fee tier to be added. |
+| Name         | Type | Description                                                 |
+| ------------ | ---- | ----------------------------------------------------------- |
+| fee          | U128 | A value identifying the pool fee determined in percentages. |
+| tick_spacing | u32  | The tick spacing for the specified fee tier.                |
 
 #### Errors
 
@@ -134,16 +150,17 @@ This function enables the addition of a new fee tier, which users can subsequent
 ### Fee Tier exist
 
 ```rust
-pub fn fee_tier_exist(&self, key: FeeTier) -> bool;
+pub fn fee_tier_exist(&self, fee: U128, tick_spacing: u32) -> bool;
 ```
 
 This function is used to verify the existence of a specified fee tier.
 
 #### Input parameters
 
-| Name | Type    | Description                                                       |
-| ---- | ------- | ----------------------------------------------------------------- |
-| key  | FeeTier | The key associated with the fee tier to be checked for existence. |
+| Name         | Type | Description                                                 |
+| ------------ | ---- | ----------------------------------------------------------- |
+| fee          | U128 | A value identifying the pool fee determined in percentages. |
+| tick_spacing | u32  | The tick spacing for the specified fee tier.                |
 
 #### Output parameters
 
@@ -154,16 +171,10 @@ This function is used to verify the existence of a specified fee tier.
 ### Get fee tiers
 
 ```rust
-pub fn get_fee_tiers(&self, key: FeeTier) -> Vec<FeeTier>;
+pub fn get_fee_tiers(&self) -> Vec<FeeTier>;
 ```
 
 Retrieves available fee tiers.
-
-#### Input parameters
-
-| Name | Type    | Description                                                       |
-| ---- | ------- | ----------------------------------------------------------------- |
-| key  | FeeTier | The key associated with the fee tier to be checked for existence. |
 
 #### Output parameters
 
@@ -174,16 +185,17 @@ Retrieves available fee tiers.
 ### Remove fee tier
 
 ```rust
-pub fn remove_fee_tier(&mut self, key: FeeTier) -> Result<(), InvariantError>;
+pub fn remove_fee_tier(&mut self, fee: U128, tick_spacing: u32) -> Result<(), InvariantError>;
 ```
 
 This function removes a fee tier based on the provided fee tier key. After removal, the fee tier will no longer be available for use in pool creation. It's important to note that existing pools with that fee tier will remain unaffected. This action is exclusively available to administrators.
 
 #### Input parameters
 
-| Name | Type    | Description                                         |
-| ---- | ------- | --------------------------------------------------- |
-| key  | FeeTier | The key associated with the fee tier to be removed. |
+| Name         | Type | Description                                                 |
+| ------------ | ---- | ----------------------------------------------------------- |
+| fee          | U128 | A value identifying the pool fee determined in percentages. |
+| tick_spacing | u32  | The tick spacing for the specified fee tier.                |
 
 #### Errors
 
@@ -201,8 +213,9 @@ pub fn create_pool(
     &mut self,
     token_0: Address,
     token_1: Address,
-    fee_tier: FeeTier,
-    init_sqrt_price: SqrtPrice
+    fee: U128,
+    tick_spacing: u32
+    init_sqrt_price: U256
     init_tick: i32,
 ) -> Result<(), InvariantError>;
 ```
@@ -211,13 +224,14 @@ This function creates a pool based on a pair of tokens and the specified fee tie
 
 #### Input parameters
 
-| Name            | Type      | Description                                                            |
-| --------------- | --------- | ---------------------------------------------------------------------- |
-| token_0         | Address   | Address of the first Erc20 token in the pair.                          |
-| token_1         | Address   | Address of the second Erc20 token in the pair.                         |
-| fee_tier        | FeeTier   | The fee tier to be applied.                                            |
-| init_sqrt_price | SqrtPrice | The square root of the price for the initial pool related to init_tick |
-| init_tick       | i32       | The initial tick value for the pool.                                   |
+| Name            | Type    | Description                                                            |
+| --------------- | ------- | ---------------------------------------------------------------------- |
+| token_0         | Address | Address of the first Erc20 token in the pair.                          |
+| token_1         | Address | Address of the second Erc20 token in the pair.                         |
+| fee             | U128    | A value identifying the pool fee determined in percentages.            |
+| tick_spacing    | u32     | The tick spacing for the specified fee tier.                           |
+| init_sqrt_price | U256    | The square root of the price for the initial pool related to init_tick |
+| init_tick       | i32     | The initial tick value for the pool.                                   |
 
 #### Errors
 
@@ -236,7 +250,8 @@ pub fn get_pool(
     &self,
     token_0: Address,
     token_1: Address,
-    fee_tier: FeeTier,
+    fee: U128,
+    tick_spacing: u32
 ) -> Result<Pool, InvariantError>;
 ```
 
@@ -244,11 +259,12 @@ This function retrieves a pool based on two tokens and the specified fee tier. I
 
 #### Input parameters
 
-| Name     | Type    | Description                                    |
-| -------- | ------- | ---------------------------------------------- |
-| token_0  | Address | Address of the first token in the pair.        |
-| token_1  | Address | Address of the second token in the pair.       |
-| fee_tier | FeeTier | The fee tier of the pool you want to retrieve. |
+| Name         | Type    | Description                                                 |
+| ------------ | ------- | ----------------------------------------------------------- |
+| token_0      | Address | Address of the first token in the pair.                     |
+| token_1      | Address | Address of the second token in the pair.                    |
+| fee          | U128    | A value identifying the pool fee determined in percentages. |
+| tick_spacing | u32     | The tick spacing for the specified fee tier.                |
 
 #### Output parameters
 
@@ -286,12 +302,15 @@ This function retrieves a listed pool keys.
 ```rust
 pub fn create_position(
     &mut self,
-    pool_key: PoolKey,
+    token_0: Address,
+    token_1: Address,
+    fee: U128,
+    tick_spacing: u32,
     lower_tick: i32,
     upper_tick: i32,
-    liquidity_delta: Liquidity,
-    slippage_limit_lower: SqrtPrice,
-    slippage_limit_upper: SqrtPrice,
+    liquidity_delta: U256,
+    slippage_limit_lower: U128,
+    slippage_limit_upper: U128,
 ) -> Result<Position, InvariantError>;
 ```
 
@@ -299,14 +318,17 @@ This function creates a position based on the provided parameters. The amount of
 
 #### Input parameters
 
-| Name                 | Type      | Description                                                           |
-| -------------------- | --------- | --------------------------------------------------------------------- |
-| pool_key             | PoolKey   | The pool key for which you want to create a position.                 |
-| lower_tick           | i32       | The lower tick of your position.                                      |
-| upper_tick           | i32       | The upper tick of your position.                                      |
-| liquidity_delta      | Liquidity | The liquidity you want to provide.                                    |
-| slippage_limit_lower | SqrtPrice | The lower square root of price fluctuation you are willing to accept. |
-| slippage_limit_upper | SqrtPrice | The upper square root of price fluctuation you are willing to accept. |
+| Name                 | Type    | Description                                                           |
+| -------------------- | ------- | --------------------------------------------------------------------- |
+| token_0              | Address | Address of the first Erc20 token in the pair.                         |
+| token_1              | Address | Address of the second Erc20 token in the pair.                        |
+| fee                  | U128    | A value identifying the pool fee determined in percentages.           |
+| tick_spacing         | u32     | The tick spacing for the specified fee tier.                          |
+| lower_tick           | i32     | The lower tick of your position.                                      |
+| upper_tick           | i32     | The upper tick of your position.                                      |
+| liquidity_delta      | U256    | The liquidity you want to provide.                                    |
+| slippage_limit_lower | U128    | The lower square root of price fluctuation you are willing to accept. |
+| slippage_limit_upper | U128    | The upper square root of price fluctuation you are willing to accept. |
 
 #### Output parameters
 
@@ -469,11 +491,14 @@ This function returns a list of positions owned by the caller. The list will be 
 ```rust
 pub fn swap(
     &mut self,
-    pool_key: PoolKey,
+    token_0: Address,
+    token_1: Address,
+    fee: U128,
+    tick_spacing: u32,
     x_to_y: bool,
-    amount: TokenAmount,
+    amount: U256,
     by_amount_in: bool,
-    sqrt_price_limit: SqrtPrice,
+    sqrt_price_limit: U128,
 ) -> Result<CalculateSwapResult, InvariantError>;
 ```
 
@@ -481,13 +506,16 @@ This function executes a swap based on the provided parameters. It transfers tok
 
 #### Input parameters
 
-| Name             | Type        | Description                                                                             |
-| ---------------- | ----------- | --------------------------------------------------------------------------------------- |
-| pool_key         | PoolKey     | Pool key of the pool on which you wish to perform the swap.                             |
-| x_to_y           | bool        | Specifies the direction of the swap.                                                    |
-| amount           | TokenAmount | Amount of tokens you want to receive or give.                                           |
-| by_amount_in     | bool        | Indicates whether the entered amount represents the tokens you wish to receive or give. |
-| sqrt_price_limit | SqrtPrice   | If the swap achieves this square root of the price, it will be canceled.                |
+| Name             | Type    | Description                                                                             |
+| ---------------- | ------- | --------------------------------------------------------------------------------------- |
+| token_0          | Address | Address of the first Erc20 token in the pair.                                           |
+| token_1          | Address | Address of the second Erc20 token in the pair.                                          |
+| fee              | U128    | A value identifying the pool fee determined in percentages.                             |
+| tick_spacing     | u32     | The tick spacing for the specified fee tier.                                            |
+| x_to_y           | bool    | Specifies the direction of the swap.                                                    |
+| amount           | U256    | Amount of tokens you want to receive or give.                                           |
+| by_amount_in     | bool    | Indicates whether the entered amount represents the tokens you wish to receive or give. |
+| sqrt_price_limit | U128    | If the swap achieves this square root of the price, it will be canceled.                |
 
 #### Output parameters
 
@@ -514,9 +542,9 @@ This function executes a swap based on the provided parameters. It transfers tok
 ```rust
 pub fn swap_route(
     &mut self,
-    amount_in: TokenAmount,
-    expected_amount_out: TokenAmount,
-    slippage: Percentage,
+    amount_in: U256,
+    expected_amount_out: U256,
+    slippage: U128,
     swaps: Vec<SwapHop>,
 ) -> Result<(), InvariantError>;
 ```
@@ -527,9 +555,9 @@ This function facilitates atomic swaps between the user's address and the contra
 
 | Name                | Type          | Description                                                                                                                              |
 | ------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| amount_in           | TokenAmount   | Amount of tokens you want to swap                                                                                                        |
-| expected_amount_out | TokenAmount   | Expected amount to receive as output calculated off-chain                                                                                |
-| slippage            | Percentage    | Percentage difference influencing price change, emphasizing precision in the number of tokens received compared to the expected quantity |
+| amount_in           | U256          | Amount of tokens you want to swap                                                                                                        |
+| expected_amount_out | U256          | Expected amount to receive as output calculated off-chain                                                                                |
+| slippage            | U128          | Percentage difference influencing price change, emphasizing precision in the number of tokens received compared to the expected quantity |
 | swaps               | Vec<SwapHop\> | Vector of pool keys and booleans identifying swap pool and direction                                                                     |
 
 #### Errors
@@ -551,11 +579,14 @@ This function facilitates atomic swaps between the user's address and the contra
 ```rust
 pub fn quote(
     &self,
-    pool_key: PoolKey,
+    token_0: Address,
+    token_1: Address,
+    fee: U128,
+    tick_spacing: u32,
     x_to_y: bool,
-    amount: TokenAmount,
+    amount: U256,
     by_amount_in: bool,
-    sqrt_price_limit: SqrtPrice,
+    sqrt_price_limit: U128,
 ) -> Result<QuoteResult, InvariantError>;
 ```
 
@@ -563,13 +594,16 @@ This function performs a simulation of a swap based on the provided parameters a
 
 #### Input parameters
 
-| Name             | Type        | Description                                                                             |
-| ---------------- | ----------- | --------------------------------------------------------------------------------------- |
-| pool_key         | PoolKey     | Pool key of the pool on which you wish to perform the swap.                             |
-| x_to_y           | bool        | Specifies the direction of the swap.                                                    |
-| amount           | TokenAmount | Amount of tokens you want to receive or give.                                           |
-| by_amount_in     | bool        | Indicates whether the entered amount represents the tokens you wish to receive or give. |
-| sqrt_price_limit | SqrtPrice   | If the swap achieves this square root of the price, it will be canceled.                |
+| Name             | Type    | Description                                                                             |
+| ---------------- | ------- | --------------------------------------------------------------------------------------- |
+| token_0          | Address | Address of the first Erc20 token in the pair.                                           |
+| token_1          | Address | Address of the second Erc20 token in the pair.                                          |
+| fee              | U128    | A value identifying the pool fee determined in percentages.                             |
+| tick_spacing     | u32     | The tick spacing for the specified fee tier.                                            |
+| x_to_y           | bool    | Specifies the direction of the swap.                                                    |
+| amount           | U256    | Amount of tokens you want to receive or give.                                           |
+| by_amount_in     | bool    | Indicates whether the entered amount represents the tokens you wish to receive or give. |
+| sqrt_price_limit | U128    | If the swap achieves this square root of the price, it will be canceled.                |
 
 #### Output parameters
 
@@ -591,7 +625,7 @@ This function performs a simulation of a swap based on the provided parameters a
 ```rust
 pub fn quote_route(
     &self,
-    amount_in: TokenAmount,
+    amount_in: U256,
     swaps: Vec<SwapHop>,
 ) -> Result<TokenAmount, InvariantError>;
 ```
@@ -602,7 +636,7 @@ This function performs a simulation of multiple swaps based on the provided para
 
 | Name      | Type          | Description                                                                |
 | --------- | ------------- | -------------------------------------------------------------------------- |
-| amount_in | TokenAmount   | Amount of tokens you want to swap.                                         |
+| amount_in | U256          | Amount of tokens you want to swap.                                         |
 | swaps     | Vec<SwapHop\> | A vector containing all parameters needed to identify separate swap steps. |
 
 #### Output parameters
@@ -627,7 +661,10 @@ This function performs a simulation of multiple swaps based on the provided para
 ```rust
 pub fn get_tick(
     &self,
-    key: PoolKey,
+    token_0: Address,
+    token_1: Address,
+    fee: U128,
+    tick_spacing: u32,
     index: i32
 ) -> Result<Tick, InvariantError>;
 ```
@@ -636,10 +673,13 @@ Retrieves information about a tick at a specified index.
 
 #### Input parameters
 
-| Name  | Type    | Description                                      |
-| ----- | ------- | ------------------------------------------------ |
-| key   | PoolKey | A unique key that identifies the specified pool. |
-| index | i32     | The tick index in the tickmap.                   |
+| Name         | Type    | Description                                                 |
+| ------------ | ------- | ----------------------------------------------------------- |
+| token_0      | Address | Address of the first Erc20 token in the pair.               |
+| token_1      | Address | Address of the second Erc20 token in the pair.              |
+| fee          | U128    | A value identifying the pool fee determined in percentages. |
+| tick_spacing | u32     | The tick spacing for the specified fee tier.                |
+| index        | i32     | The tick index in the tickmap.                              |
 
 #### Output parameters
 
@@ -658,7 +698,10 @@ Retrieves information about a tick at a specified index.
 ```rust
 pub fn is_tick_initialized(
     &self,
-    key: PoolKey,
+    token_0: Address,
+    token_1: Address,
+    fee: U128,
+    tick_spacing: u32,
     index: i32
 ) -> bool;
 ```
@@ -667,10 +710,13 @@ Retrieves information about a tick at a specified index.
 
 #### Input parameters
 
-| Name  | Type    | Description                                      |
-| ----- | ------- | ------------------------------------------------ |
-| key   | PoolKey | A unique key that identifies the specified pool. |
-| index | i32     | The tick index in the tickmap.                   |
+| Name         | Type    | Description                                                 |
+| ------------ | ------- | ----------------------------------------------------------- |
+| token_0      | Address | Address of the first Erc20 token in the pair.               |
+| token_1      | Address | Address of the second Erc20 token in the pair.              |
+| fee          | U128    | A value identifying the pool fee determined in percentages. |
+| tick_spacing | u32     | The tick spacing for the specified fee tier.                |
+| index        | i32     | The tick index in the tickmap.                              |
 
 #### Output parameters
 
