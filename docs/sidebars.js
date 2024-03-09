@@ -83,6 +83,7 @@ module.exports = {
       items: [
         'casper/installation',
         'casper/overview',
+        'casper/sdk',
         'casper/types',
         'casper/storage',
         'casper/collections',

@@ -63,3 +63,18 @@ cargo odra test
 # Run tests on Casper backend
 cargo odra test -b casper
 ```
+
+## Build SDK
+
+#### Build SDK with its associated dependencies
+
+```bash
+cd sdk
+-
+```
+
+#### Run e2e tests
+
+```bash
+-
+```
