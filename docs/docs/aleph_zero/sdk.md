@@ -48,7 +48,7 @@ Within the Contracts folder, developers can find deploy-ready contracts and meta
 
 ### Wasm
 
-The Wasm folder contains Rust structs and data exported to WebAssembly using wasm_bindgen. This integration allows for the utilization of the same functions and data employed in the primary Invariant contract.
+The Wasm functionality is encapsulated within our custom npm package, which includes Rust structs and data exported to WebAssembly using wasm_bindgen. This integration facilitates the utilization of identical functions and data within the main Invariant contract.
 
 ### Source
 
@@ -64,9 +64,8 @@ End-to-end (E2E) tests are an essential component of our testing strategy. We ha
 📦sdk
  ┣ 📂contracts
  ┃ ┣ 📂invariant
- ┃ ┣ 📂PSP22
+ ┃ ┣ 📂psp22
  ┃ ┗ 📂wrapped-azero
- ┣ 📂wasm
  ┣ 📂src
  ┗ 📂tests
 ```
