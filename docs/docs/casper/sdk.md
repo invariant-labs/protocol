@@ -10,7 +10,7 @@ SDK can be used to interact with our DEX programmatically. It provides an easy w
 
 ### Download
 
-Published package can be found [here](https://google.com).
+Published package can be found [here](https://www.npmjs.com/package/@invariant-labs/cspr-sdk).
 
 ### Build
 
