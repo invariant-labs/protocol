@@ -26,7 +26,7 @@ The Invariant SDK comprises two distinct contracts:
 
 ### Transactions and Queries
 
-When working with contracts, developers can initiate interactions by calling methods from the corresponding contract class. The first parameter designates the account, and subsequent parameters act as entrypoint parameters.
+When working with contracts, developers can initiate interactions by calling methods from the corresponding contract class. The first parameter designates the account, and subsequent parameters act as transaction/query parameters.
 
 1. **Transactions**: These involve invoking methods that result in changes to the blockchain state. Transactions typically alter the data stored on the blockchain and may include operations like transferring assets, updating records, or executing specific actions. Once the transaction will be confirmed it returns the result.
 
@@ -214,6 +214,7 @@ const accountAddress = getAccountHashFromKey(account)
 In the following TypeScript code, we demonstrate approach deploying and initializing a ERC20 token contracts using the `Erc20.deploy` method. Apart from the deployment and initialization, the code also demonstrates how to fetch token metadata. This can include details such as the token name, symbol, token decimal.
 
 ```typescript
+// deploy tokens
 const [token0ContractPackage, token0ContractHash] = await Erc20.deploy(
   client,
   Network.Local,
@@ -269,7 +270,9 @@ console.log(token1Name, token1Symbol, token1Decimals)
 
 :::tip Output
 500n<br />
-CoinA ACOIN 12n
+500n<br />
+CoinA ACOIN 12n<br />
+CoinB BCOIN 12n
 :::
 
 ### Load DEX and tokens
@@ -283,16 +286,16 @@ Load the Invariant contract by providing the Casper Client (`client`), and indic
 
 ```typescript
 // load invariant contract
-const invariant = await Invariant.load(client, INVARIANT_CONTRACT_HASH, Network.Local)
+const invariant = await Invariant.load(client, invariantContractHash, Network.Local)
 
 // load token contract
-const erc20 = await Erc20.load(client, Network.Local, TOKEN_0_CONTRACT_HASH)
+const erc20 = await Erc20.load(client, Network.Local, token0ContractHash)
 ```
 
 ### Create pool
 
 :::info Big numbers
-You can create custom decimals using the `toDecimal` syntax, where the first argument represents the numerical value (A), and the second argument indicates the power of 10 (B) in the formula `A * 10^(-B)`. For example, `toDecimal(3n, 2n)` will result in a decimal equal to 0.03. For further details on supported types, please check the documentation [here](types.md).
+You can create custom decimals using the `toDecimal` syntax, where the first argument indicates type of a decimal, second represents the numerical value (A), and the third indicates the power of 10 (B) in the formula `A * 10^(-B)`. For example, `toDecimal(Decimal.Percentage, 3n, 2n)` will result in a percentage decimal equal to 0.03. For further details on supported types, please check the documentation [here](types.md).
 :::
 
 :::note Why "n" is at the end of every number
@@ -307,7 +310,7 @@ To create a new pool, a fee tier and pool key need to be prepared. The fee tier 
 
 ```typescript
 // set fee tier, make sture that fee tier with specified parameters exists
-const feeTier = await newFeeTier(toDecimal(Decimal.SqrtPrice, 1n, 2n), 1n) // fee: 0.01 = 1%, tick spacing: 1
+const feeTier = await newFeeTier(await toDecimal(Decimal.Percentage, 1n, 2n), 1n) // fee: 0.01 = 1%, tick spacing: 1
 
 // if the fee tier does not exist, you have to add it
 const isAdded = await invariant.feeTierExist(feeTier)
@@ -315,13 +318,16 @@ if (!isAdded) {
   await invariant.addFeeTier(account, feeTier)
 }
 
-// set initial price of the pool, we set it to 1.00, remember its square root of price
-const initSqrtPrice = { v: 1000000000000000000000000n }
+// set initial square root of price of the pool, we set it to 1.00
+const initSqrtPrice = await toDecimal(Decimal.SqrtPrice, 1n, 0n)
 
 // set pool key, make sure that pool with speecified parameters does not exists
-const poolKey = await newPoolKey(TOKEN_0_CONTRACT_PACKAGE, TOKEN_1_CONTRACT_PACKAGE, feeTier)
+const poolKey = await newPoolKey(token0ContractPackage, token1ContractPackage, feeTier)
 
 const createPoolResult = await invariant.createPool(account, poolKey, initSqrtPrice)
+
+// print transaction result
+console.log(createPoolResult.execution_results[0].result)
 ```
 
 :::tip Output
@@ -339,13 +345,6 @@ Let's say some token has decimal of 12 and we want to swap 6 actual tokens. Here
 Creating position involves preparing parameters such as the amount of tokens, tick indexes for the desired price range, liquidity, slippage and approving token transfers. There is need to calculate desired liquidity based on specified token amounts. For this case there are provided functions `getLiquidityByX` or `getLiquidityByY`. The slippage parameter represents the acceptable price difference that can occur on the pool during the execution of the transaction.
 
 ```typescript
-// token y has 12 decimals and we want to add 8 actual tokens to our position
-const tokenYAmount: TokenAmount = { v: 8n * 10n ** 12n }
-
-// set lower and upper tick indexes, we want to create position in range [-10, 10]
-const lowerTickIndex = -10n
-const upperTickIndex = 10n
-
 // calculate amount of token x we need to give to create position
 const { amount: tokenXAmount, l: positionLiquidity } = await getLiquidityByY(
   tokenYAmount,
@@ -358,18 +357,18 @@ const { amount: tokenXAmount, l: positionLiquidity } = await getLiquidityByY(
 // print amount of token x and y we need to give to create position based on parameters we passed
 console.log(tokenXAmount, tokenYAmount)
 
-const [TOKEN_X_CONTRACT_HASH, TOKEN_Y_CONTRACT_HASH] = (await isTokenX(
-  TOKEN_0_CONTRACT_PACKAGE,
-  TOKEN_1_CONTRACT_PACKAGE
-))
-  ? [TOKEN_0_CONTRACT_HASH, TOKEN_1_CONTRACT_HASH]
-  : [TOKEN_1_CONTRACT_HASH, TOKEN_0_CONTRACT_HASH]
+const [tokenXContractHash, tokenYContractHash] = await orderTokens(
+  token0ContractHash,
+  token1ContractPackage,
+  token0ContractHash,
+  token1ContractHash
+)
 
 // approve transfers of both tokens
-erc20.setContractHash(TOKEN_X_CONTRACT_HASH)
-await erc20.approve(account, Key.Hash, INVARIANT_CONTRACT_PACKAGE, tokenXAmount.v)
-erc20.setContractHash(TOKEN_Y_CONTRACT_HASH)
-await erc20.approve(account, Key.Hash, INVARIANT_CONTRACT_PACKAGE, tokenYAmount.v)
+erc20.setContractHash(tokenXContractHash)
+await erc20.approve(account, Key.Hash, invariantContractPackage, tokenXAmount.v)
+erc20.setContractHash(tokenYContractHash)
+await erc20.approve(account, Key.Hash, invariantContractPackage, tokenYAmount.v)
 
 // create position
 const createPositionResult = await invariant.createPosition(
@@ -379,9 +378,7 @@ const createPositionResult = await invariant.createPosition(
   upperTickIndex,
   positionLiquidity,
   initSqrtPrice,
-  {
-    v: 10000000000000000000000000n
-  }
+  sqrtPriceLimit
 )
 console.log(createPositionResult.execution_results[0].result) // print transaction result
 ```
@@ -398,15 +395,24 @@ Performing a swap requires: specifying the amount of tokens to be swapped or des
 ```typescript
 // we want to swap 6 token0
 // token0 has 12 deciamls so we need to multiply it by 10^12
-const amount: SqrtPrice = { v: 6n * 10n ** 12n }
+const amount: TokenAmount = { v: 6n * 10n ** 12n }
 
 // approve token x transfer
-erc20.setContractHash(TOKEN_X_CONTRACT_HASH)
-await erc20.approve(account, Key.Hash, INVARIANT_CONTRACT_PACKAGE, amount.v)
+erc20.setContractHash(tokenXContractHash)
+await erc20.approve(account, Key.Hash, invariantContractHash, amount.v)
 
-const swapResult = await invariant.swap(account, poolKey, true, amount, true, {
-  v: 0n
-})
+// slippage is a price change you are willing to accept,
+// for examples if current price is 1 and your slippage is 1%, then price limit will be 1.01
+const allowedSlippage = await toDecimal(Decimal.Percentage, 1n, 3n) // 0.001 = 0.1%
+
+// calculate sqrt price limit based on slippage
+const sqrtPriceLimit = await calculateSqrtPriceAfterSlippage(
+  TARGET_SQRT_PRICE,
+  allowedSlippage,
+  true
+)
+
+const swapResult = await invariant.swap(account, poolKey, true, amount, true, sqrtPriceLimit)
 console.log(swapResult.execution_results[0].result) // print transaction result
 ```
 
@@ -432,7 +438,7 @@ interface Tick {
   secondsOutside: bigint
 }
 
-const tickState: Tick = await invariant.getTick(signer, poolKey, tickIndex)
+const tickState: Tick = await invariant.getTick(poolKey, tickIndex)
 ```
 
 - Get Pool
@@ -558,7 +564,7 @@ Position is removed from the protocol, and fees associated with that position ar
 ```typescript
 // fetch user balances before removal
 const accountToken0BalanceBeforeRemove = await erc20.balanceOf(Key.Account, accountAddress)
-erc20.setContractHash(TOKEN_1_CONTRACT_HASH)
+erc20.setContractHash(token1ContractHash)
 const accountToken1BalanceBeforeRemove = await erc20.balanceOf(Key.Account, accountAddress)
 console.log(accountToken0BalanceBeforeRemove, accountToken1BalanceBeforeRemove)
 
@@ -567,9 +573,9 @@ const removePositionResult = await invariant.removePosition(account, 0n)
 console.log(removePositionResult.execution_results[0].result)
 
 // fetch user balances after removal
-erc20.setContractHash(TOKEN_0_CONTRACT_HASH)
+erc20.setContractHash(token0ContractHash)
 const accountToken0BalanceAfterRemove = await erc20.balanceOf(Key.Account, accountAddress)
-erc20.setContractHash(TOKEN_1_CONTRACT_HASH)
+erc20.setContractHash(token1ContractHash)
 const accountToken1BalanceAfterRemove = await erc20.balanceOf(Key.Account, accountAddress)
 
 // print balances
