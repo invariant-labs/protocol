@@ -140,6 +140,7 @@ interface Pool {
   startTimestamp: bigint
   lastTimestamp: bigint
   feeReceiver: string
+  oracleInitialized: boolean
 }
 
 interface Position {
