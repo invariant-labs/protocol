@@ -170,14 +170,6 @@ interface Tick {
 
 Follow a step-by-step example demonstrating how to use the Invariant SDK, with each step accompanied by code snippets. The complete code for these examples is available [here](https://google.com), ensuring a hands-on and comprehensive understanding of the SDK's functionality.
 
-```typescript
-enum Network {
-  Local,
-  Testnet,
-  Mainnet
-}
-```
-
 ### Select Network
 
 Begin by specifying the network you intend to connect to using the Network enum. Identify your target network, whether it's the local development environment, the mainnet, or a testnet. The code is designed to work uniformly across all networks. Changing the network designation does not require any modifications to the code.
@@ -242,7 +234,7 @@ const [token1ContractPackage, token1ContractHash] = await Erc20.deploy(
 const erc20 = await Erc20.load(client, Network.Local, token0ContractHash)
 
 // interact with token 0
-const account0Balance = await erc20.balanceOf(Key.Account, accountAddress)
+const account0Balance = await erc20.getBalanceOf(Key.Account, accountAddress)
 console.log(account0Balance)
 
 // if you want to interact with different token,
@@ -250,21 +242,21 @@ console.log(account0Balance)
 erc20.setContractHash(token1ContractHash)
 
 // now we can interact with token y
-const account1Balance = await erc20.balanceOf(Key.Account, accountAddress)
+const account1Balance = await erc20.getBalanceOf(Key.Account, accountAddress)
 console.log(account1Balance)
 
 // fetch token metadata for previously deployed token0
 erc20.setContractHash(token0ContractHash)
-const token0Name = await erc20.name()
-const token0Symbol = await erc20.symbol()
-const token0Decimals = await erc20.decimals()
+const token0Name = await erc20.getName()
+const token0Symbol = await erc20.getSymbol()
+const token0Decimals = await erc20.getDecimals()
 console.log(token0Name, token0Symbol, token0Decimals)
 
 // load diffrent token and load its metadata
 erc20.setContractHash(token1ContractHash)
-const token1Name = await erc20.name()
-const token1Symbol = await erc20.symbol()
-const token1Decimals = await erc20.decimals()
+const token1Name = await erc20.getName()
+const token1Symbol = await erc20.getSymbol()
+const token1Decimals = await erc20.getDecimals()
 console.log(token1Name, token1Symbol, token1Decimals)
 ```
 
@@ -345,6 +337,13 @@ Let's say some token has decimal of 12 and we want to swap 6 actual tokens. Here
 Creating position involves preparing parameters such as the amount of tokens, tick indexes for the desired price range, liquidity, slippage and approving token transfers. There is need to calculate desired liquidity based on specified token amounts. For this case there are provided functions `getLiquidityByX` or `getLiquidityByY`. The slippage parameter represents the acceptable price difference that can occur on the pool during the execution of the transaction.
 
 ```typescript
+// token y has 12 decimals and we want to add 8 actual tokens to our position
+const tokenYAmount: TokenAmount = { v: 8n * 10n ** 12n }
+
+// set lower and upper tick indexes, we want to create position in range [-10, 10]
+const lowerTickIndex = -10n
+const upperTickIndex = 10n
+
 // calculate amount of token x we need to give to create position
 const { amount: tokenXAmount, l: positionLiquidity } = await getLiquidityByY(
   tokenYAmount,
@@ -401,18 +400,22 @@ const amount: TokenAmount = { v: 6n * 10n ** 12n }
 erc20.setContractHash(tokenXContractHash)
 await erc20.approve(account, Key.Hash, invariantContractHash, amount.v)
 
+// ###
+const TARGET_SQRT_PRICE = await toDecimal(Decimal.SqrtPrice, 10n, 0n)
+// ###
+
 // slippage is a price change you are willing to accept,
 // for examples if current price is 1 and your slippage is 1%, then price limit will be 1.01
 const allowedSlippage = await toDecimal(Decimal.Percentage, 1n, 3n) // 0.001 = 0.1%
 
 // calculate sqrt price limit based on slippage
-const sqrtPriceLimit = await calculateSqrtPriceAfterSlippage(
+const slippageLimit = await calculateSqrtPriceAfterSlippage(
   TARGET_SQRT_PRICE,
   allowedSlippage,
-  true
+  false
 )
 
-const swapResult = await invariant.swap(account, poolKey, true, amount, true, sqrtPriceLimit)
+const swapResult = await invariant.swap(account, poolKey, true, amount, true, slippageLimit)
 console.log(swapResult.execution_results[0].result) // print transaction result
 ```
 
@@ -438,7 +441,7 @@ interface Tick {
   secondsOutside: bigint
 }
 
-const tickState: Tick = await invariant.getTick(poolKey, tickIndex)
+const tick: Tick = await invariant.getTick(poolKey, tickIndex)
 ```
 
 - Get Pool
@@ -455,9 +458,10 @@ interface Pool {
   startTimestamp: bigint
   lastTimestamp: bigint
   feeReceiver: string
+  oracleInitialized: boolean
 }
 
-const poolState: Pool = await invariant.getPool(poolKey)
+const pool: Pool = await invariant.getPool(poolKey)
 ```
 
 - Get All Pools
@@ -485,7 +489,7 @@ interface Position {
   tokensOwedY: TokenAmount
 }
 
-const positionState: Position = await invariant.getPosition(owner, positionIndex)
+const position: Position = await invariant.getPosition(owner, positionIndex)
 ```
 
 - Get Positions
@@ -522,7 +526,7 @@ Fees from a specific position are claimed without closing the position. This pro
 
 ```typescript
 // get balance of a specific token before claiming position fees and print it
-const accountBalanceBeforeClaim = await erc20.balanceOf(Key.Account, accountAddress)
+const accountBalanceBeforeClaim = await erc20.getBalanceOf(Key.Account, accountAddress)
 console.log(accountBalanceBeforeClaim)
 
 // specify position id
@@ -533,7 +537,7 @@ const claimFeeResult = await invariant.claimFee(account, positionId)
 console.log(claimFeeResult.execution_results[0].result)
 
 // get balance of a specific token after claiming position fees and print it
-const accountBalanceAfterClaim = await erc20.balanceOf(Key.Account, accountAddress)
+const accountBalanceAfterClaim = await erc20.getBalanceOf(Key.Account, accountAddress)
 console.log(accountBalanceAfterClaim)
 ```
 
@@ -563,9 +567,9 @@ Position is removed from the protocol, and fees associated with that position ar
 
 ```typescript
 // fetch user balances before removal
-const accountToken0BalanceBeforeRemove = await erc20.balanceOf(Key.Account, accountAddress)
+const accountToken0BalanceBeforeRemove = await erc20.getBalanceOf(Key.Account, accountAddress)
 erc20.setContractHash(token1ContractHash)
-const accountToken1BalanceBeforeRemove = await erc20.balanceOf(Key.Account, accountAddress)
+const accountToken1BalanceBeforeRemove = await erc20.getBalanceOf(Key.Account, accountAddress)
 console.log(accountToken0BalanceBeforeRemove, accountToken1BalanceBeforeRemove)
 
 // remove position
@@ -574,9 +578,9 @@ console.log(removePositionResult.execution_results[0].result)
 
 // fetch user balances after removal
 erc20.setContractHash(token0ContractHash)
-const accountToken0BalanceAfterRemove = await erc20.balanceOf(Key.Account, accountAddress)
+const accountToken0BalanceAfterRemove = await erc20.getBalanceOf(Key.Account, accountAddress)
 erc20.setContractHash(token1ContractHash)
-const accountToken1BalanceAfterRemove = await erc20.balanceOf(Key.Account, accountAddress)
+const accountToken1BalanceAfterRemove = await erc20.getBalanceOf(Key.Account, accountAddress)
 
 // print balances
 console.log(accountToken0BalanceAfterRemove, accountToken1BalanceAfterRemove)
