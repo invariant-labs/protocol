@@ -70,11 +70,11 @@ cargo odra test -b casper
 
 ```bash
 cd sdk
--
+./build.sh
 ```
 
 #### Run e2e tests
 
 ```bash
--
+./tests.sh
 ```
