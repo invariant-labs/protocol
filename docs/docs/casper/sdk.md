@@ -140,7 +140,6 @@ interface Pool {
   startTimestamp: bigint
   lastTimestamp: bigint
   feeReceiver: string
-  oracleInitialized: boolean
 }
 
 interface Position {
@@ -459,7 +458,6 @@ interface Pool {
   startTimestamp: bigint
   lastTimestamp: bigint
   feeReceiver: string
-  oracleInitialized: boolean
 }
 
 const pool: Pool = await invariant.getPool(poolKey)
