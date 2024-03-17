@@ -4,7 +4,7 @@ title: SDK
 slug: /casper/sdk
 ---
 
-SDK can be used to interact with our DEX programmatically. It provides an easy way to integrate your app with Invariant, ERC20 tokens.
+SDK can be used to interact with our DEX programmatically. It provides an easy way to integrate your app with Invariant and ERC20 tokens.
 
 ## Installation
 
@@ -26,11 +26,11 @@ The Invariant SDK comprises two distinct contracts:
 
 ### Transactions and Queries
 
-When working with contracts, developers can initiate interactions by calling methods from the corresponding contract class. The first parameter designates the account, and subsequent parameters act as transaction/query parameters.
+When working with contracts, developers can initiate interactions by calling methods from the corresponding contract class. The first parameter usually designates the account, and subsequent parameters act as transaction/query parameters.
 
 1. **Transactions**: These involve invoking methods that result in changes to the blockchain state. Transactions typically alter the data stored on the blockchain and may include operations like transferring assets, updating records, or executing specific actions. Once the transaction will be confirmed it returns the result.
 
-2. **Queries**: Queries are read-only interactions with the contract. They allow developers to retrieve information from the blockchain without modifying its state. Queries are useful for obtaining current contract state, or verifying certain conditions. Importantly, queries do not return a transaction hash; instead, they provide results in the form of structs from [storage](storage.md).
+2. **Queries**: Queries are read-only interactions with the contract. They allow developers to retrieve information from the blockchain without modifying its state. Queries are useful for obtaining current contract state, or verifying certain conditions. Importantly, queries do not return a result like transaction does; instead, they provide results in the form of structs from [storage](storage.md).
 
 ### Values and Helper functions
 
@@ -42,7 +42,7 @@ Within the Contracts folder, developers can find deploy-ready contracts essentia
 
 ### Wasm
 
-The Wasm functionality is encapsulated within our custom npm package, which includes Rust structs and data exported to WebAssembly using wasm_bindgen. This integration facilitates the utilization of identical functions and data within the main Invariant contract.
+The Wasm functionality is encapsulated in separate package, which includes Rust structs and data exported to WebAssembly using wasm_bindgen. This integration facilitates the utilization of identical functions and data within the main Invariant contract.
 
 ### Source
 
@@ -50,17 +50,16 @@ The Source directory consolidates all pieces into an easy-to-use interface. This
 
 ### Tests
 
-End-to-end (E2E) tests are an essential component of our testing strategy. We have adopted the Jest framework for our end-to-end testing needs. Our end-to-end tests encompass a comprehensive examination of the entire protocol. This includes testing all entrypoints of every contract within our protocol, ensuring that each contract behaves as expected under various conditions. Additionally, we thoroughly test our SDK math utilities to guarantee their accuracy and reliability.
+End-to-end (E2E) tests are an essential component of our testing strategy. We have adopted the ts-mocha framework for our end-to-end testing needs. For assertion and expectation handling, we rely on the Chai assertion library. Our end-to-end tests encompass a comprehensive examination of the entire protocol. This includes testing all entrypoints of every contract within our protocol, ensuring that each contract behaves as expected under various conditions. Additionally, we thoroughly test our SDK math utilities to guarantee their accuracy and reliability.
 
 ### Project Structure
 
 ```
 📦sdk
  ┣ 📂contracts
- ┃ ┣ 📜erc20.wasm
- ┃ ┗ 📜invariant.wasm
  ┣ 📂src
- ┗ 📂tests
+ ┣ 📂tests
+ ┗ 📂wasm
 ```
 
 ## Types
@@ -99,7 +98,7 @@ enum Network {
 
 ### Key
 
-Key determines the specific address. The enumeration includes options for 'account' and 'hash'. An account is a typical account that can be used to perform interactions, while a hash represents a contract, contract package, etc., deployed on the blockchain.
+The key serves as the determinant for the particular address in question. The enumeration encompasses choices such as 'account' and 'hash'. An 'account' refers to a standard user account capable of executing transactions, whereas a 'hash' signifies a deployed entity on the blockchain, be it a contract, contract package, or similar.
 
 ```typescript
 enum Key {
