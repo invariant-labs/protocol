@@ -418,11 +418,13 @@ Retrieves all fee tiers.
 ```rust
 #[ink::storage_item]
 pub struct PoolKeys {
-    pool_keys: Vec<PoolKey>,
+    pool_keys: Mapping<PoolKey, u16>,
+    pool_keys_by_index: Mapping<u16, PoolKey>,
+    pool_keys_length: u16,
 }
 ```
 
-The `PoolKeys` struct is designed to manage pool keys. It utilizes a vector (Vec) data structure, where each element corresponds to a different pool key represented by a `PoolKey` object. The provided functions allow you to add, retrieve, update, and remove pool keys within the collection. Each pool key is uniquely identified within the vector, and you can perform operations on these pool keys based on their positions in the vector.
+The `PoolKeys` struct is designed to manage pool keys. It utilizes a Mapping data structure, where each element corresponds to a different pool key represented by a `PoolKey` object. We have decided to choose a Mapping structure due to vector (Vec) size limitiation of `16kB`. The provided functions allow you to add, retrieve, update, and remove pool keys within the collection. Each pool key is uniquely identified within the mapping, and you can perform operations on these pool keys based on their positions in the map.
 
 ### Add pool key
 
@@ -471,6 +473,14 @@ Verifies if specified pool key exist.
 | Type | Description                                      |
 | ---- | ------------------------------------------------ |
 | bool | Bool value indicating if pool key exists or not. |
+
+### Get pool key index
+
+```rust
+pub fn get_index(&mut self, pool_key: PoolKey) -> Result<(), InvariantError>;
+```
+
+Retrives specified pool key index in mapping.
 
 ### Get all pool keys
 
