@@ -456,7 +456,7 @@ This function returns an result that contains error if the position cannot be fo
 
 | Type                               | Description                                           |
 | ---------------------------------- | ----------------------------------------------------- |
-| Result<Position, Invariatn Error\> | An Error or a position struct with data if it exists. |
+| Result<Position, Invariant Error\> | An Error or a position struct with data if it exists. |
 
 #### Errors
 
