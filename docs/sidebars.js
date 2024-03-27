@@ -22,10 +22,29 @@ module.exports = {
       label: 'Tutorial',
       collapsed: true,
       items: [
+        'tutorial/interface',
+        'tutorial/priority_fees',
+        'tutorial/rpc',
+        'tutorial/networks',
         'tutorial/how_to_connect_your_wallet',
         'tutorial/how_to_swap',
-        'tutorial/how_to_add_remove_liquidity',
-        'tutorial/uniform_concentration'
+        {
+          type: 'category',
+          label: 'How to add liquidity',
+          link: {
+            type: 'doc',
+            id: 'tutorial/how_to_add_liquidity'
+          },
+          items: [
+            'tutorial/how_to_add_liquidity/uniform_concentration',
+            'tutorial/how_to_add_liquidity/price_range'
+          ]
+        },
+        'tutorial/how_to_claim_fee',
+        'tutorial/how_to_remove_liquidity',
+        'tutorial/stats',
+        'tutorial/troubleshooting',
+        'tutorial/faq_tutorial'
       ]
     },
     {
