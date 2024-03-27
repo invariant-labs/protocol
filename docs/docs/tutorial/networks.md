@@ -1,10 +1,10 @@
 ---
-title: Solana networks
+title: Networks
 
 slug: /networks
 ---
 
-Solana networks refer to the different blockchain networks built on top of the Solana protocol or ecosystem. These networks serve various purposes, including testing, development, experimentation, and specialized use cases. Invariant supports most of them:
+Blockchain networks come in many forms. These networks serve a variety of purposes, including testing, development, experimentation, and specialized applications. Invariant offers support for a wide range of these networks:
 
 ![Networks](/img/docs/app/networks.png)
 
@@ -12,6 +12,4 @@ Solana networks refer to the different blockchain networks built on top of the S
 
 - **Devnet** - Devnets, or development networks, are similar to testnets but are specifically intended for developers to build and test applications in a controlled environment.
 
-- **Eclipse** - [Eclipse](https://eclipse.invariant.app/) Network is a separate blockchain project focused on Ethereum that leverages Solana's powerful Sealevel Virtual Machine (SVM) under the hood. This allows developers to build familiar Ethereum applications that run on the Eclipse network, essentially enjoying the benefits of Solana's speed and efficiency on the Ethereum blockchain. It acts like a bridge, using Solana's tech to streamline transactions on Ethereum without completely replacing the Ethereum network itself.
-
-Each network serves a particular purpose within the ecosystem, providing developers and users with options for testing, development, and innovation while maintaining interoperability with the broader Solana blockchain network.
+- **Eclipse** - [Eclipse](https://eclipse.invariant.app/) Network is a secure, high-performance Layer 2 (L2) blockchain network built on Ethereum, leveraging Solana Virtual Machine's (SVM) parallel processing for unmatched speeds, Ethereum's validating bridge for security, Celestia's data availability sampling for scalable verification, and acting as a shared platform for various applications to achieve cross-application composability.

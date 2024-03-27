@@ -14,11 +14,11 @@ In Invariant, you can choose your preferred RPC endpoint for interacting with th
 
 Here are the options available that **Invariant** supports:
 
-- **Nightly** 
+- **Nightly**
 - **Hello Moon**
-- **Alchemy** 
-- **QuickNode** 
+- **Alchemy**
+- **QuickNode**
 - **Solana**
-- **Custom RPC Address** 
+- **Custom RPC Address**
 
-Selecting the appropriate RPC endpoint is crucial for ensuring seamless communication with the Solana blockchain network, allowing you to access blockchain data, submit transactions, and interact with the **Invariant** platform efficiently. 
+Selecting the appropriate RPC endpoint is crucial for ensuring seamless communication with the Solana blockchain network, allowing you to access blockchain data, submit transactions, and interact with the **Invariant** platform efficiently.
