@@ -23,7 +23,7 @@ slug: /how_to_add_liquidity
 Invariant provides specific fee values that you can choose to create you position. For your better experience, wondering which fee should choose, for some positions we highlighted which option is most recommended.
 
 <blockquote>
-Fees for your liquidity position are deducted from the first token you deposit, regardless of the swap direction. For example, if you add SOL and USDC to a pool, fees are taken in SOL. Conversely, if you add USDC and SOL, fees are deducted from your USDC balance.
+The fees you earn on your liquidity position come from swaps initiated by other users on the platform, and the token you receive as a fee always corresponds to the token a user is giving up in their swap. For example, if you have a SOL/USDC liquidity position, you'll earn a fee in USDC when a user swaps USDC for SOL, and vice versa. This ensures your fees directly reflect the trading activity within your chosen pool.
 
 Users control the precision of their range orders. A tighter range (smaller difference between upper and lower limits) can generate higher fees if the price fluctuates within your set range. However, it also increases the risk of incomplete orders if the market price moves significantly before your entire range is filled. Conversely, a wider range (larger difference between upper and lower limits) results in lower fees but provides less control over the final execution price.
 
