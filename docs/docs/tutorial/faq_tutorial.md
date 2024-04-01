@@ -76,11 +76,21 @@ slug: /faq_tutorial
 
 <details id='6'>
   <summary>
-    Do I need to claim fees and close my pool position separately?{' '}
+    Do I need to claim fees and close my pool position separately?
     <a href='/docs/faq_tutorial#6'>#</a>
   </summary>
   <p>
     No, you can simply close your position, and the fees will be automatically claimed to your
     wallet.
+  </p>
+</details>
+
+<details id='7'>
+  <summary>
+    Does the Invariant have an independent security audit?
+    <a href='/docs/faq_tutorial#6'>#</a>
+  </summary>
+  <p>
+    Yes, the Invariant project underwent a security audit by the Soteria team. The audit focused on the Invariant Protocol v0.1.0 Solana smart contract program. Audit is available here: <b><a href='https://invariant.app/audit.pdf'>Invariant Protocol Audit.</a></b>
   </p>
 </details>
