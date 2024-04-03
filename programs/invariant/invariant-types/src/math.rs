@@ -1818,7 +1818,7 @@ mod tests {
             let ref_tick = RefCell::new(tick);
             let mut refmut_tick = ref_tick.borrow_mut();
 
-            cross_tick(&mut refmut_tick, &mut pool).ok();
+            cross_tick(&mut refmut_tick, &mut pool).unwrap();
 
             assert_eq!(*refmut_tick, result_tick);
             assert_eq!(pool, result_pool);
@@ -1855,7 +1855,7 @@ mod tests {
 
             let ref_tick = RefCell::new(tick);
             let mut refmut_tick = ref_tick.borrow_mut();
-            cross_tick(&mut refmut_tick, &mut pool).ok();
+            cross_tick(&mut refmut_tick, &mut pool).unwrap();
             assert_eq!(*refmut_tick, result_tick);
             assert_eq!(pool, result_pool);
         }
@@ -1892,7 +1892,7 @@ mod tests {
 
             let fef_tick = RefCell::new(tick);
             let mut refmut_tick = fef_tick.borrow_mut();
-            cross_tick(&mut refmut_tick, &mut pool).ok();
+            cross_tick(&mut refmut_tick, &mut pool).unwrap();
             assert_eq!(*refmut_tick, result_tick);
             assert_eq!(pool, result_pool);
         }
@@ -1929,7 +1929,7 @@ mod tests {
 
             let fef_tick = RefCell::new(tick);
             let mut refmut_tick = fef_tick.borrow_mut();
-            cross_tick(&mut refmut_tick, &mut pool).ok();
+            cross_tick(&mut refmut_tick, &mut pool).unwrap();
             assert_eq!(*refmut_tick, result_tick);
             assert_eq!(pool, result_pool);
         }
