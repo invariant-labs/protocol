@@ -1784,6 +1784,7 @@ mod tests {
 
     #[test]
     fn test_cross_tick() {
+        // add liquidity to pool
         {
             let mut pool = Pool {
                 fee_growth_global_x: FeeGrowth::new(45),
@@ -1931,6 +1932,41 @@ mod tests {
             cross_tick(&mut refmut_tick, &mut pool).unwrap();
             assert_eq!(*refmut_tick, result_tick);
             assert_eq!(pool, result_pool);
+        }
+        // inconsistent state test cases
+        {
+            // underflow of pool.liquidity during cross_tick
+            {
+                let mut pool = Pool {
+                    liquidity: Liquidity::from_integer(4),
+                    current_tick_index: 7,
+                    ..Default::default()
+                };
+                let tick = Tick {
+                    index: 10,
+                    liquidity_change: Liquidity::from_integer(5),
+                    ..Default::default()
+                };
+                // state of pool should not changed
+                let result_pool = Pool {
+                    liquidity: Liquidity::from_integer(4),
+                    current_tick_index: 7,
+                    ..Default::default()
+                };
+                // state of tick should not changed
+                let result_tick = Tick {
+                    index: 10,
+                    liquidity_change: Liquidity::from_integer(5),
+                    ..Default::default()
+                };
+
+                let ref_tick = RefCell::new(tick);
+                let mut refmut_tick = ref_tick.borrow_mut();
+
+                cross_tick(&mut refmut_tick, &mut pool).unwrap_err();
+                assert_eq!(*refmut_tick, result_tick);
+                assert_eq!(pool, result_pool);
+            }
         }
     }
 }
