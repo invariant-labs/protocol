@@ -494,14 +494,13 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
         .unchecked_sub(tick.fee_growth_outside_y);
 
     // When going to higher tick net_liquidity should be added and for going lower subtracted
-    if (pool.current_tick_index >= tick.index) ^ tick.sign {
-        // trunk-ignore(clippy/assign_op_pattern)
-        pool.liquidity = pool.liquidity + tick.liquidity_change;
+    let new_liquidity = if (pool.current_tick_index >= tick.index) ^ tick.sign {
+        pool.liquidity.checked_add(tick.liquidity_change)
     } else {
-        // trunk-ignore(clippy/assign_op_pattern)
-        pool.liquidity = pool.liquidity - tick.liquidity_change;
-    }
+        pool.liquidity.checked_sub(tick.liquidity_change)
+    };
 
+    pool.liquidity = new_liquidity.map_err(|_| InvariantErrorCode::InvalidPoolLiquidity)?;
     Ok(())
 }
 
@@ -535,21 +534,23 @@ pub fn get_min_sqrt_price(tick_spacing: u16) -> Price {
 
 #[cfg(test)]
 mod tests {
+    use std::cell::RefCell;
+
     use decimal::{BetweenDecimals, BigOps, Decimal, Factories};
 
     use crate::{
         decimals::{FixedPoint, Liquidity, Price, TokenAmount},
         math::{
-            compute_swap_step, get_delta_x, get_delta_y, get_max_sqrt_price, get_max_tick,
-            get_min_sqrt_price, get_min_tick, get_next_sqrt_price_x_up, get_next_sqrt_price_y_down,
-            SwapResult,
+            compute_swap_step, cross_tick, get_delta_x, get_delta_y, get_max_sqrt_price,
+            get_max_tick, get_min_sqrt_price, get_min_tick, get_next_sqrt_price_x_up,
+            get_next_sqrt_price_y_down, SwapResult,
         },
-        structs::MAX_TICK,
+        structs::{Pool, Tick, MAX_TICK},
         utils::TrackableError,
         MAX_SQRT_PRICE, MIN_SQRT_PRICE,
     };
 
-    use super::{calculate_price_sqrt, is_enough_amount_to_push_price};
+    use super::{calculate_price_sqrt, is_enough_amount_to_push_price, FeeGrowth};
 
     #[test]
     fn test_compute_swap_step() {
@@ -1778,6 +1779,185 @@ mod tests {
                 calculate_price_sqrt(min_tick),
                 Price::new(15258932000000000000)
             );
+        }
+    }
+
+    #[test]
+    fn test_cross_tick() {
+        // add liquidity to pool
+        {
+            let mut pool = Pool {
+                fee_growth_global_x: FeeGrowth::new(45),
+                fee_growth_global_y: FeeGrowth::new(35),
+                liquidity: Liquidity::from_integer(4),
+                current_tick_index: 7,
+                ..Default::default()
+            };
+            let tick = Tick {
+                fee_growth_outside_x: FeeGrowth::new(30),
+                fee_growth_outside_y: FeeGrowth::new(25),
+                index: 3,
+                liquidity_change: Liquidity::from_integer(1),
+                ..Default::default()
+            };
+            let result_pool = Pool {
+                fee_growth_global_x: FeeGrowth::new(45),
+                fee_growth_global_y: FeeGrowth::new(35),
+                liquidity: Liquidity::from_integer(5),
+                current_tick_index: 7,
+                ..Default::default()
+            };
+            let result_tick = Tick {
+                fee_growth_outside_x: FeeGrowth::new(15),
+                fee_growth_outside_y: FeeGrowth::new(10),
+                index: 3,
+                liquidity_change: Liquidity::from_integer(1),
+                ..Default::default()
+            };
+
+            let ref_tick = RefCell::new(tick);
+            let mut refmut_tick = ref_tick.borrow_mut();
+
+            cross_tick(&mut refmut_tick, &mut pool).unwrap();
+
+            assert_eq!(*refmut_tick, result_tick);
+            assert_eq!(pool, result_pool);
+        }
+        {
+            let mut pool = Pool {
+                fee_growth_global_x: FeeGrowth::new(68),
+                fee_growth_global_y: FeeGrowth::new(59),
+                liquidity: Liquidity::new(0),
+                current_tick_index: 4,
+                ..Default::default()
+            };
+            let tick = Tick {
+                fee_growth_outside_x: FeeGrowth::new(42),
+                fee_growth_outside_y: FeeGrowth::new(14),
+                index: 9,
+                liquidity_change: Liquidity::new(0),
+                ..Default::default()
+            };
+            let result_pool = Pool {
+                fee_growth_global_x: FeeGrowth::new(68),
+                fee_growth_global_y: FeeGrowth::new(59),
+                liquidity: Liquidity::new(0),
+                current_tick_index: 4,
+                ..Default::default()
+            };
+            let result_tick = Tick {
+                fee_growth_outside_x: FeeGrowth::new(26),
+                fee_growth_outside_y: FeeGrowth::new(45),
+                index: 9,
+                liquidity_change: Liquidity::from_integer(0),
+                ..Default::default()
+            };
+
+            let ref_tick = RefCell::new(tick);
+            let mut refmut_tick = ref_tick.borrow_mut();
+            cross_tick(&mut refmut_tick, &mut pool).unwrap();
+            assert_eq!(*refmut_tick, result_tick);
+            assert_eq!(pool, result_pool);
+        }
+        // fee_growth_outside should underflow
+        {
+            let mut pool = Pool {
+                fee_growth_global_x: FeeGrowth::new(3402),
+                fee_growth_global_y: FeeGrowth::new(3401),
+                liquidity: Liquidity::new(14),
+                current_tick_index: 9,
+                ..Default::default()
+            };
+            let tick = Tick {
+                fee_growth_outside_x: FeeGrowth::new(26584),
+                fee_growth_outside_y: FeeGrowth::new(1256588),
+                index: 45,
+                liquidity_change: Liquidity::new(10),
+                ..Default::default()
+            };
+            let result_pool = Pool {
+                fee_growth_global_x: FeeGrowth::new(3402),
+                fee_growth_global_y: FeeGrowth::new(3401),
+                liquidity: Liquidity::new(4),
+                current_tick_index: 9,
+                ..Default::default()
+            };
+            let result_tick = Tick {
+                fee_growth_outside_x: FeeGrowth::new(340282366920938463463374607431768188274),
+                fee_growth_outside_y: FeeGrowth::new(340282366920938463463374607431766958269),
+                index: 45,
+                liquidity_change: Liquidity::new(10),
+                ..Default::default()
+            };
+
+            let fef_tick = RefCell::new(tick);
+            let mut refmut_tick = fef_tick.borrow_mut();
+            cross_tick(&mut refmut_tick, &mut pool).unwrap();
+            assert_eq!(*refmut_tick, result_tick);
+            assert_eq!(pool, result_pool);
+        }
+        // seconds_per_liquidity_outside should underflow
+        {
+            let mut pool = Pool {
+                fee_growth_global_x: FeeGrowth::new(145),
+                fee_growth_global_y: FeeGrowth::new(364),
+                liquidity: Liquidity::new(14),
+                current_tick_index: 9,
+                ..Default::default()
+            };
+            let tick = Tick {
+                fee_growth_outside_x: FeeGrowth::new(99),
+                fee_growth_outside_y: FeeGrowth::new(256),
+                index: 45,
+                liquidity_change: Liquidity::new(10),
+                ..Default::default()
+            };
+            let result_pool = Pool {
+                fee_growth_global_x: FeeGrowth::new(145),
+                fee_growth_global_y: FeeGrowth::new(364),
+                liquidity: Liquidity::new(4),
+                current_tick_index: 9,
+                ..Default::default()
+            };
+            let result_tick = Tick {
+                fee_growth_outside_x: FeeGrowth::new(46),
+                fee_growth_outside_y: FeeGrowth::new(108),
+                index: 45,
+                liquidity_change: Liquidity::new(10),
+                ..Default::default()
+            };
+
+            let fef_tick = RefCell::new(tick);
+            let mut refmut_tick = fef_tick.borrow_mut();
+            cross_tick(&mut refmut_tick, &mut pool).unwrap();
+            assert_eq!(*refmut_tick, result_tick);
+            assert_eq!(pool, result_pool);
+        }
+        // inconsistent state test cases
+        {
+            // underflow of pool.liquidity during cross_tick
+            {
+                let mut pool = Pool {
+                    liquidity: Liquidity::from_integer(4),
+                    current_tick_index: 7,
+                    ..Default::default()
+                };
+                let tick = Tick {
+                    index: 10,
+                    liquidity_change: Liquidity::from_integer(5),
+                    ..Default::default()
+                };
+                // state of pool and tick be should unchanged
+                let result_pool = pool.clone();
+                let result_tick = tick.clone();
+
+                let ref_tick = RefCell::new(tick);
+                let mut refmut_tick = ref_tick.borrow_mut();
+
+                cross_tick(&mut refmut_tick, &mut pool).unwrap_err();
+                assert_eq!(*refmut_tick, result_tick);
+                assert_eq!(pool, result_pool);
+            }
         }
     }
 }
