@@ -495,11 +495,19 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
 
     // When going to higher tick net_liquidity should be added and for going lower subtracted
     if (pool.current_tick_index >= tick.index) ^ tick.sign {
-        // trunk-ignore(clippy/assign_op_pattern)
-        pool.liquidity = pool.liquidity + tick.liquidity_change;
+        match pool.liquidity.checked_add(tick.liquidity_change) {
+            Ok(liquidity) => pool.liquidity = liquidity,
+            Err(_) => {
+                return Err(InvariantErrorCode::InvalidPoolLiquidity.into());
+            }
+        }
     } else {
-        // trunk-ignore(clippy/assign_op_pattern)
-        pool.liquidity = pool.liquidity - tick.liquidity_change;
+        match pool.liquidity.checked_sub(tick.liquidity_change) {
+            Ok(liquidity) => pool.liquidity = liquidity,
+            Err(_) => {
+                return Err(InvariantErrorCode::InvalidPoolLiquidity.into());
+            }
+        }
     }
 
     Ok(())
