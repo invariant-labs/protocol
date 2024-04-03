@@ -1947,18 +1947,9 @@ mod tests {
                     liquidity_change: Liquidity::from_integer(5),
                     ..Default::default()
                 };
-                // state of pool should not changed
-                let result_pool = Pool {
-                    liquidity: Liquidity::from_integer(4),
-                    current_tick_index: 7,
-                    ..Default::default()
-                };
-                // state of tick should not changed
-                let result_tick = Tick {
-                    index: 10,
-                    liquidity_change: Liquidity::from_integer(5),
-                    ..Default::default()
-                };
+                // state of pool and tick be should unchanged
+                let result_pool = pool.clone();
+                let result_tick = tick.clone();
 
                 let ref_tick = RefCell::new(tick);
                 let mut refmut_tick = ref_tick.borrow_mut();
