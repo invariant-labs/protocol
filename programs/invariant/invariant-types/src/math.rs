@@ -494,22 +494,13 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
         .unchecked_sub(tick.fee_growth_outside_y);
 
     // When going to higher tick net_liquidity should be added and for going lower subtracted
-    if (pool.current_tick_index >= tick.index) ^ tick.sign {
-        match pool.liquidity.checked_add(tick.liquidity_change) {
-            Ok(liquidity) => pool.liquidity = liquidity,
-            Err(_) => {
-                return Err(InvariantErrorCode::InvalidPoolLiquidity.into());
-            }
-        }
+    let new_liquidity = if (pool.current_tick_index >= tick.index) ^ tick.sign {
+        pool.liquidity.checked_add(tick.liquidity_change)
     } else {
-        match pool.liquidity.checked_sub(tick.liquidity_change) {
-            Ok(liquidity) => pool.liquidity = liquidity,
-            Err(_) => {
-                return Err(InvariantErrorCode::InvalidPoolLiquidity.into());
-            }
-        }
-    }
+        pool.liquidity.checked_sub(tick.liquidity_change)
+    };
 
+    pool.liquidity = new_liquidity.map_err(|_| InvariantErrorCode::InvalidPoolLiquidity)?;
     Ok(())
 }
 
