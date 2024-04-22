@@ -27,7 +27,7 @@ module.exports = {
         { to: '/docs/solana/introduction', label: 'Solana', position: 'left' },
         { to: '/docs/aleph_zero/installation', label: 'Aleph Zero', position: 'left' },
         { to: '/docs/casper/installation', label: 'Casper Network', position: 'left' },
-        { to: '/docs/vara/installation', label: 'Vara', position: 'left' }
+        { to: '/docs/vara/installation', label: 'VARA', position: 'left' }
       ]
     },
     footer: {

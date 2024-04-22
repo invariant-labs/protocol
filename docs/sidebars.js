@@ -95,7 +95,7 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Vara',
+      label: 'VARA',
       collapsed: true,
       items: [
         'vara/installation',
