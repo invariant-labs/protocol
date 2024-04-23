@@ -93,6 +93,20 @@ module.exports = {
         'casper/deployment'
       ]
     },
+    {
+      type: 'category',
+      label: 'VARA',
+      collapsed: true,
+      items: [
+        'vara/installation',
+        'vara/overview',
+        'vara/types',
+        'vara/storage',
+        'vara/collections',
+        'vara/entrypoints',
+        'vara/invariant_errors'
+      ]
+    },
     'faq',
     'resources',
     {
