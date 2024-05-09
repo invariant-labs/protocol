@@ -78,6 +78,7 @@ import {
   ApyRewardsParams,
   calculateTokensAndLiquidity,
   FEE_TIERS,
+  fromFee,
   LIQUIDITY_DENOMINATOR,
   parseFeeGrowthAndLiquidityOnTicksMap,
   toDecimal,
@@ -2058,7 +2059,7 @@ describe('Math', () => {
     it('case 1', async () => {
       const volume = 125000
       const tokenXamount = new BN(1000000)
-      const feeTier = FEE_TIERS[7] // 0.3%
+      const feeTier = { fee: fromFee(new BN(300)) } // 0.3%
 
       const result = dailyFactorPool(tokenXamount, volume, feeTier)
       assert.equal(result, 0.00037125)
