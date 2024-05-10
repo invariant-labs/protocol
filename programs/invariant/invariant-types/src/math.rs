@@ -165,7 +165,7 @@ pub fn compute_swap_step(
         let amount_after_fee = amount.big_mul(
             FixedPoint::from_integer(1u8)
                 .checked_sub(fee)
-                .map_err(|_| err!("sub overflow"))?,
+                .map_err(|_| err!("sub underflow"))?,
         );
 
         amount_in = if x_to_y {
@@ -242,7 +242,7 @@ pub fn compute_swap_step(
         // edge case occurs when the next_price is target_price (minimal distance to target)
         amount
             .checked_sub(amount_in)
-            .map_err(|_| err!("sub overflow"))?
+            .map_err(|_| err!("sub underflow"))?
     } else {
         // no possible to overflow in intermediate operations
         // edge case when amount_in is maximum and fee is maximum
@@ -354,10 +354,10 @@ fn get_next_sqrt_price_from_output(
     // amount <1, u64::MAX>
 
     if liquidity.is_zero() {
-        return Err(err!("getting next price from input with zero liquidity"));
+        return Err(err!("getting next price from output with zero liquidity"));
     }
     if price_sqrt.is_zero() {
-        return Err(err!("getting next price from input with zero price"));
+        return Err(err!("getting next price from output with zero price"));
     }
 
     let result = if x_to_y {
@@ -493,7 +493,7 @@ pub fn is_enough_amount_to_push_price(
         let amount_after_fee = amount.big_mul(
             FixedPoint::from_integer(1)
                 .checked_sub(fee)
-                .map_err(|_| err!("sub overflow"))?,
+                .map_err(|_| err!("sub underflow"))?,
         );
         get_next_sqrt_price_from_input(current_price_sqrt, liquidity, amount_after_fee, x_to_y)
     } else {
@@ -525,7 +525,7 @@ pub fn cross_tick(tick: &mut RefMut<Tick>, pool: &mut Pool) -> Result<()> {
 pub fn get_max_tick(tick_spacing: u16) -> TrackableResult<i32> {
     let limit_by_space = TICK_LIMIT
         .checked_sub(1)
-        .ok_or_else(|| err!("sub overflow"))?
+        .ok_or_else(|| err!("sub underflow"))?
         .checked_mul(tick_spacing.into())
         .ok_or_else(|| err!("mul overflow"))?;
     Ok(limit_by_space.min(MAX_TICK))
@@ -534,7 +534,7 @@ pub fn get_max_tick(tick_spacing: u16) -> TrackableResult<i32> {
 pub fn get_min_tick(tick_spacing: u16) -> TrackableResult<i32> {
     let limit_by_space = (-TICK_LIMIT)
         .checked_add(1)
-        .ok_or_else(|| err!("sub overflow"))?
+        .ok_or_else(|| err!("add overflow"))?
         .checked_mul(tick_spacing.into())
         .ok_or_else(|| err!("mul overflow"))?;
     Ok(limit_by_space.max(-MAX_TICK))
@@ -560,8 +560,9 @@ mod tests {
         decimals::{FixedPoint, Liquidity, Price, TokenAmount},
         math::{
             compute_swap_step, cross_tick, get_delta_x, get_delta_y, get_max_sqrt_price,
-            get_max_tick, get_min_sqrt_price, get_min_tick, get_next_sqrt_price_x_up,
-            get_next_sqrt_price_y_down, SwapResult,
+            get_max_tick, get_min_sqrt_price, get_min_tick, get_next_sqrt_price_from_input,
+            get_next_sqrt_price_from_output, get_next_sqrt_price_x_up, get_next_sqrt_price_y_down,
+            SwapResult,
         },
         structs::{Pool, Tick, MAX_TICK},
         utils::TrackableError,
@@ -1150,6 +1151,43 @@ mod tests {
                     }
                 );
             }
+            //Fee above 1 && by_amount_in == true
+            {
+                let (_, cause, _) = compute_swap_step(
+                    max_price_sqrt - Price::from_integer(1),
+                    max_price_sqrt,
+                    Liquidity::from_integer(100_000_000_00u128),
+                    TokenAmount(1),
+                    true,
+                    FixedPoint::from_integer(1) + FixedPoint::new(1),
+                )
+                .unwrap_err()
+                .get();
+
+                assert_eq!(cause, "sub underflow");
+            }
+            //max fee that fits within u64 && by_amount_in == false
+            {
+                let result = compute_swap_step(
+                    max_price_sqrt - Price::from_integer(1),
+                    max_price_sqrt,
+                    Liquidity::from_integer(100_000_000_00u128),
+                    TokenAmount::new(u64::MAX),
+                    false,
+                    FixedPoint::from_integer(i32::MAX / 2),
+                )
+                .unwrap();
+
+                assert_eq!(
+                    result,
+                    SwapResult {
+                        next_price_sqrt: Price::new(65535383934512647000000000000),
+                        amount_in: TokenAmount(10000000000),
+                        amount_out: TokenAmount(2),
+                        fee_amount: TokenAmount(10737418230000000000)
+                    }
+                );
+            }
         }
     }
 
@@ -1235,6 +1273,18 @@ mod tests {
         let min_overflow_token_amount = TokenAmount::new(340282366920939);
         let max_price = calculate_price_sqrt(MAX_TICK);
         let one_liquidity: Liquidity = Liquidity::from_integer(1);
+        let max_liquidity = Liquidity::max_instance();
+        // max_liquidity
+        {
+            let result = get_next_sqrt_price_y_down(
+                max_price,
+                max_liquidity,
+                min_overflow_token_amount - TokenAmount(1),
+                false,
+            )
+            .unwrap();
+            assert_eq!(result, Price::new(65535383934512646999999000000));
+        }
         // extension TokenAmount to Price decimal overflow
         {
             {
@@ -1683,8 +1733,74 @@ mod tests {
             assert_eq!(cause, "big_liquidity -/+ price_sqrt * amount");
             assert_eq!(stack.len(), 1);
         }
+        // max_liquidity
+        {
+            let result = get_next_sqrt_price_y_down(
+                Price::from_integer(1),
+                max_liquidity,
+                TokenAmount(10000),
+                false,
+            )
+            .unwrap();
+            assert_eq!(result, Price::new(999999999999999999999999));
+        }
     }
 
+    #[test]
+    fn test_get_next_sqrt_price_from_input() {
+        {
+            let (_, cause, _) = get_next_sqrt_price_from_input(
+                Price::from_integer(1),
+                Liquidity::from_integer(0),
+                TokenAmount::from_integer(1),
+                false,
+            )
+            .unwrap_err()
+            .get();
+
+            assert_eq!(cause, "getting next price from input with zero liquidity")
+        }
+        {
+            let (_, cause, _) = get_next_sqrt_price_from_input(
+                Price::from_integer(0),
+                Liquidity::from_integer(1),
+                TokenAmount::from_integer(1),
+                false,
+            )
+            .unwrap_err()
+            .get();
+
+            assert_eq!(cause, "getting next price from input with zero price")
+        }
+    }
+
+    #[test]
+    fn test_get_next_sqrt_price_from_output() {
+        {
+            let (_, cause, _) = get_next_sqrt_price_from_output(
+                Price::from_integer(1),
+                Liquidity::from_integer(0),
+                TokenAmount::from_integer(1),
+                false,
+            )
+            .unwrap_err()
+            .get();
+
+            assert_eq!(cause, "getting next price from output with zero liquidity")
+        }
+        {
+            let (_, cause, _) = get_next_sqrt_price_from_output(
+                Price::from_integer(0),
+                Liquidity::from_integer(1),
+                TokenAmount::from_integer(1),
+                false,
+            )
+            .unwrap_err()
+            .get();
+
+            assert_eq!(cause, "getting next price from output with zero price")
+        }
+    }
     #[test]
     fn test_is_enough_amount_to_push_price() {
         // Validate traceable error
@@ -1706,6 +1822,20 @@ mod tests {
             assert_eq!(cause, "big_liquidity -/+ price_sqrt * amount");
             assert_eq!(stack.len(), 3);
         }
+        let fee_over_one = FixedPoint::from_integer(1) + FixedPoint::new(1);
+
+        let (_, cause, _) = is_enough_amount_to_push_price(
+            TokenAmount::new(1000),
+            calculate_price_sqrt(10),
+            Liquidity::new(1),
+            fee_over_one,
+            true,
+            false,
+        )
+        .unwrap_err()
+        .get();
+
+        assert_eq!(cause, "sub underflow")
     }
 
     #[test]
