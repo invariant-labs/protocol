@@ -1,27 +1,26 @@
 ---
 title: Collections
 
-slug: /aleph_zero/collections
+slug: /vara/collections
 ---
 
-This segment explores key storage structures that manage various entities within the Invariant Protocol. These collections play a crucial role in organizing and managing data in a structured manner, enhancing the overall functionality and performance of our contract. Within our collection interface, we enforce a tightly defined set of operations available for all data collections. Each collection implements the same basic methods, allowing for consistent data management regardless of the underlying data structures (vectors or mappings).
+This segment explores key storage structures that manage various entities within the Invariant Protocol. These collections play a crucial role in organizing and managing data in a structured manner, enhancing the overall functionality and performance of our contract. Within our collection interface, we enforce a tightly defined set of operations available for all data collections. Each collection implements the same basic methods, allowing for consistent data management regardless of the underlying data structures (vectors or HashMaps).
 
 ## Positions
 
 ```rust
-#[ink::storage_item]
 pub struct Positions {
-    positions_length: Mapping<AccountId, u32>,
-    positions: Mapping<(AccountId, u32), Position>,
+    positions_length: HashMap<ActorId, u32>,
+    positions: HashMap<(ActorId, u32), Position>,
 }
 ```
 
-The `Positions` struct is designed to manage positions associated with different accounts. It uses a mapping data structure where each position is uniquely identified by the user's address and the index position within the user's position list. The provided functions allow you to add, update, remove, transfer, and retrieve positions and the number of positions associated with specific addresses.
+The `Positions` struct is designed to manage positions associated with different accounts. It uses a HashMap data structure where each position is uniquely identified by the user's address and the index position within the user's position list. The provided functions allow you to add, update, remove, transfer, and retrieve positions and the number of positions associated with specific addresses.
 
 | Type                                | Key                                                              | Value                                        |
 | ----------------------------------- | ---------------------------------------------------------------- | -------------------------------------------- |
-| Mapping<AccountId, u32>             | User's address.                                                  | Number of the user's positions.              |
-| Mapping<(AccountId, u32), Position> | Tuple containing the user's address and the index of a position. | Position struct holding the position's data. |
+| HashMap<ActorId, u32>             | User's address.                                                  | Number of the user's positions.              |
+| HashMap<(ActorId, u32), Position> | Tuple containing the user's address and the index of a position. | Position struct holding the position's data. |
 
 ### Position Storage Standard
 
@@ -36,7 +35,7 @@ Why are positions stored in the state instead of NFTs? We have chosen to store p
 ### Add Position
 
 ```rust
-pub fn add(&mut self, account_id: AccountId, position: Position);
+pub fn add(&mut self, account_id: &ActorId, position: &Position);
 ```
 
 Adds a new position to the specified account.
@@ -45,7 +44,7 @@ Adds a new position to the specified account.
 
 | Name       | Type      | Description                                            |
 | ---------- | --------- | ------------------------------------------------------ |
-| account_id | AccountId | The address of the user who will receive the position. |
+| account_id | ActorId   | The address of the user who will receive the position. |
 | position   | Position  | The Position struct with data.                         |
 
 ### Update Position
@@ -53,7 +52,7 @@ Adds a new position to the specified account.
 ```rust
 pub fn update(
     &mut self,
-    account_id: AccountId,
+    account_id: &ActorId,
     index: u32,
     position: &Position,
 ) -> Result<(), InvariantError>;
@@ -65,7 +64,7 @@ Updates an existing position at a specific index for the specified account. Retu
 
 | Name       | Type      | Description                                                            |
 | ---------- | --------- | ---------------------------------------------------------------------- |
-| account_id | AccountId | The address of the user whose position will be updated.                |
+| account_id | ActorId   | The address of the user whose position will be updated.                |
 | index      | u32       | The index of an existing position of the user.                         |
 | position   | Position  | The Position struct with data that will replace the existing position. |
 
@@ -74,7 +73,7 @@ Updates an existing position at a specific index for the specified account. Retu
 ```rust
 pub fn remove(
     &mut self,
-    account_id: AccountId,
+    account_id: &ActorId,
     index: u32,
 ) -> Result<Position, InvariantError>;
 ```
@@ -85,7 +84,7 @@ Removes a position at a specific index for the specified account. Returns an err
 
 | Name       | Type      | Description                                             |
 | ---------- | --------- | ------------------------------------------------------- |
-| account_id | AccountId | The address of the user whose position will be removed. |
+| account_id | ActorId   | The address of the user whose position will be removed. |
 | index      | u32       | The index of an existing position of the user.          |
 
 #### Output parameters
@@ -101,24 +100,24 @@ Transfers a position from one account to another. Returns an error if the positi
 ```rust
 pub fn transfer(
     &mut self,
-    account_id: AccountId,
+    account_id: &ActorId,
     index: u32,
-    receiver: AccountId,
+    receiver_account_id: &ActorId,
 ) -> Result<(), InvariantError>;
 ```
 
 #### Input parameters
 
-| Name       | Type      | Description                                                 |
-| ---------- | --------- | ----------------------------------------------------------- |
-| account_id | AccountId | The address of the user whose position will be transferred. |
-| index      | u32       | The index of an existing position of the user.              |
-| receiver   | AccountId | The address of the user who will receive the position.      |
+| Name                   | Type      | Description                                                 |
+| ---------------------- | --------- | ----------------------------------------------------------- |
+| account_id             | ActorId   | The address of the user whose position will be transferred. |
+| index                  | u32       | The index of an existing position of the user.              |
+| receiver_account_id    | ActorId   | The address of the user who will receive the position.      |
 
 ### Get All Positions
 
 ```rust
-pub fn get_all(&self, account_id: AccountId) -> Vec<Position>;
+pub fn get_all(&self, account_id: &ActorId) -> Vec<Position>;
 ```
 
 Retrieves all positions associated with the specified account.
@@ -127,7 +126,7 @@ Retrieves all positions associated with the specified account.
 
 | Name       | Type      | Description                                               |
 | ---------- | --------- | --------------------------------------------------------- |
-| account_id | AccountId | The address of the user whose positions will be returned. |
+| account_id | ActorId   | The address of the user whose positions will be returned. |
 
 #### Output parameters
 
@@ -138,7 +137,7 @@ Retrieves all positions associated with the specified account.
 ### Get Position
 
 ```rust
-pub fn get(&mut self, account_id: AccountId, index: u32) -> Option<Position>;
+pub fn get(&'a self, account_id: &ActorId, index: u32) -> Result<&'a Position, InvariantError>;
 ```
 
 Retrieves a position at a specific index for the specified account. Returns none if the specified index is out of bounds.
@@ -147,7 +146,7 @@ Retrieves a position at a specific index for the specified account. Returns none
 
 | Name       | Type      | Description                                               |
 | ---------- | --------- | --------------------------------------------------------- |
-| account_id | AccountId | The address of the user whose positions will be returned. |
+| account_id | ActorId   | The address of the user whose positions will be returned. |
 
 #### Output parameters
 
@@ -158,7 +157,7 @@ Retrieves a position at a specific index for the specified account. Returns none
 ### Get Number Of Positions
 
 ```rust
-fn get_length(&self, account_id: AccountId) -> u32;
+fn get_length(&self, account_id: &ActorId) -> u32;
 ```
 
 Retrieves the number of positions associated with the specified account.
@@ -167,7 +166,7 @@ Retrieves the number of positions associated with the specified account.
 
 | Name       | Type      | Description                                                         |
 | ---------- | --------- | ------------------------------------------------------------------- |
-| account_id | AccountId | The address of the user whose number of positions will be returned. |
+| account_id | ActorId   | The address of the user whose number of positions will be returned. |
 
 #### Output parameters
 
@@ -178,17 +177,17 @@ Retrieves the number of positions associated with the specified account.
 ## Ticks
 
 ```rust
-#[ink::storage_item]
+
 pub struct Ticks {
-    ticks: Mapping<(PoolKey, i32), Tick>,
+    ticks: HashMap<(PoolKey, i32), Tick>,
 }
 ```
 
-The `Ticks` struct is designed to manage ticks associated between different pools. It uses a mapping data structure, where each tick is identified by a tuple of `PoolKey` and `i32` (tick index), and a `Tick` object is stored as the associated value. The provided functions allow you to retrieve, add, update, and remove ticks associated with specific `PoolKey` values.
+The `Ticks` struct is designed to manage ticks associated between different pools. It uses a HashMap data structure, where each tick is identified by a tuple of `PoolKey` and `i32` (tick index), and a `Tick` object is stored as the associated value. The provided functions allow you to retrieve, add, update, and remove ticks associated with specific `PoolKey` values.
 
 | Type                          | Key                                                         | Value                                |
 | ----------------------------- | ----------------------------------------------------------- | ------------------------------------ |
-| Mapping<(PoolKey, i32), Tick> | Tuple containing the pool key and the tick index of a tick. | Tick struct holding the tick's data. |
+| HashMap<(PoolKey, i32), Tick> | Tuple containing the pool key and the tick index of a tick. | Tick struct holding the tick's data. |
 
 ### Add tick
 
@@ -211,7 +210,7 @@ pub fn update(
     &mut self,
     key: PoolKey,
     index: i32,
-    tick: &Tick,
+    tick: Tick,
 ) -> Result<(), InvariantError>;
 ```
 
@@ -245,7 +244,7 @@ Removes a tick associated with a specific pool key and index. Returns an error i
 Retrieves a tick associated with a specific pool key and index. Return an error if specified tick cannot be found.
 
 ```rust
-pub fn get(&self, key: PoolKey, index: i32) -> Result<Tick, InvariantError>;
+pub fn get(&'a self, key: PoolKey, index: i32) -> Result<&'a Tick, InvariantError>;
 ```
 
 #### Input parameters
@@ -264,22 +263,22 @@ pub fn get(&self, key: PoolKey, index: i32) -> Result<Tick, InvariantError>;
 ## Pools
 
 ```rust
-#[ink::storage_item]
+
 pub struct Pools {
-    pools: Mapping<PoolKey, Pool>,
+    pools: HashMap<PoolKey, Pool>,
 }
 ```
 
 | Type                   | Key                               | Value                                 |
 | ---------------------- | --------------------------------- | ------------------------------------- |
-| Mapping<PoolKey, Pool> | The pool key of a specified pool. | Pool struct holding the pools's data. |
+| HashMap<PoolKey, Pool> | The pool key of a specified pool. | Pool struct holding the pools's data. |
 
-The `Pools` struct is designed to manage pools associated with different `PoolKey` values. It uses a mapping data structure, where each pool is identified by a unique `PoolKey`, and a `Pool` object is stored as the associated value. The provided functions allow you to add, retrieve, update, and remove pools associated with specific `PoolKey` values.
+The `Pools` struct is designed to manage pools associated with different `PoolKey` values. It uses a HashMap data structure, where each pool is identified by a unique `PoolKey`, and a `Pool` object is stored as the associated value. The provided functions allow you to add, retrieve, update, and remove pools associated with specific `PoolKey` values.
 
 ### Add pool
 
 ```rust
-pub fn add(&mut self, pool_key: PoolKey, pool: &Pool) -> Result<(), InvariantError>;
+pub fn add(&mut self, pool_key: &PoolKey, pool: &Pool) -> Result<(), InvariantError>;
 ```
 
 Adds a new pool associated with the specified pool key. Returns an error if a pool with the same pool key already exists.
@@ -294,7 +293,7 @@ Adds a new pool associated with the specified pool key. Returns an error if a po
 ### Update pool
 
 ```rust
-pub fn update(&mut self, pool_key: PoolKey, pool: &Pool) -> Result<(), InvariantError>;
+pub fn update(&mut self, pool_key: &PoolKey, pool: &Pool) -> Result<(), InvariantError>;
 ```
 
 Updates an existing pool associated with the specified pool key. Returns an error if the specified pool does not exist.
@@ -323,7 +322,7 @@ Removes a pool associated with the specified pool key. Returns an error if the s
 ### Get pool
 
 ```rust
-pub fn get(&self, pool_key: PoolKey) -> Result<Pool, InvariantError>;
+pub fn get(&self, pool_key: &PoolKey) -> Result<Pool, InvariantError>;
 ```
 
 Retrieves a pool associated with the specified pool key. Returns an error if the specified pool does not exist.
@@ -343,7 +342,7 @@ Retrieves a pool associated with the specified pool key. Returns an error if the
 ## Fee Tiers
 
 ```rust
-#[ink::storage_item]
+
 pub struct FeeTiers {
     fee_tiers: Vec<FeeTier>,
 }
@@ -354,7 +353,7 @@ The `FeeTiers` struct is designed to manage fee tiers. It utilizes a vector (Vec
 ### Add fee tier
 
 ```rust
-pub fn add(&mut self, key: FeeTier) -> Result<(), InvariantError>;
+pub fn add(&mut self, key: &FeeTier) -> Result<(), InvariantError>;
 ```
 
 Adds a new fee tier associated with the specified FeeTier. Returns an error if fee tier already exist.
@@ -368,7 +367,7 @@ Adds a new fee tier associated with the specified FeeTier. Returns an error if f
 ### Remove fee tier
 
 ```rust
-pub fn remove(&mut self, key: FeeTier) -> Result<(), InvariantError>;
+pub fn remove(&mut self, key: &FeeTier) -> Result<(), InvariantError>;
 ```
 
 Removes a fee tier associated with the specified FeeTier. Returns an error if fee tier cannot be found.
@@ -382,7 +381,7 @@ Removes a fee tier associated with the specified FeeTier. Returns an error if fe
 ### Contains fee tier
 
 ```rust
-pub fn contains(&self, key: FeeTier) -> bool;
+pub fn contains(&self, key: &FeeTier) -> bool;
 ```
 
 Verifies if specified fee tier exist.
@@ -416,20 +415,20 @@ Retrieves all fee tiers.
 ## Pool Keys
 
 ```rust
-#[ink::storage_item]
+
 pub struct PoolKeys {
-    pool_keys: Mapping<PoolKey, u16>,
-    pool_keys_by_index: Mapping<u16, PoolKey>,
+    pool_keys: HashMap<PoolKey, u16>,
+    pool_keys_by_index: HashMap<u16, PoolKey>,
     pool_keys_length: u16,
 }
 ```
 
-The `PoolKeys` struct is designed to manage pool keys. It utilizes a Mapping data structure, where each element corresponds to a different pool key represented by a `PoolKey` object. We have decided to choose a Mapping structure due to vector (Vec) size limitiation of `16kB`. The provided functions allow you to add, retrieve, update, and remove pool keys within the collection. Each pool key is uniquely identified within the mapping, and you can perform operations on these pool keys based on their positions in the map.
+The `PoolKeys` struct is designed to manage pool keys. It utilizes a HashMap data structure, where each element corresponds to a different pool key represented by a `PoolKey` object. We have decided to choose a HashMap structure due to vector (Vec) size limitiation of `16kB`. The provided functions allow you to add, retrieve, update, and remove pool keys within the collection. Each pool key is uniquely identified within the HashMap, and you can perform operations on these pool keys based on their positions in the map.
 
 ### Add pool key
 
 ```rust
-pub fn add(&mut self, pool_key: PoolKey) -> Result<(), InvariantError>;
+pub fn add(&mut self, pool_key: &PoolKey) -> Result<(), InvariantError>;
 ```
 
 Adds a new pool key. Returns an error if pool key already exist.
@@ -443,7 +442,7 @@ Adds a new pool key. Returns an error if pool key already exist.
 ### Remove pool key
 
 ```rust
-pub fn remove(&mut self, pool_key: PoolKey) -> Result<(), InvariantError>;
+pub fn remove(&mut self, pool_key: &PoolKey) -> Result<(), InvariantError>;
 ```
 
 Removes a pool key. Returns an error if pool key cannot be found.
@@ -457,7 +456,7 @@ Removes a pool key. Returns an error if pool key cannot be found.
 ### Contains pool key
 
 ```rust
-pub fn contains(&self, pool_key: PoolKey) -> bool;
+pub fn contains(&self, pool_key: &PoolKey) -> bool;
 ```
 
 Verifies if specified pool key exist.
@@ -477,18 +476,31 @@ Verifies if specified pool key exist.
 ### Get pool key index
 
 ```rust
-pub fn get_index(&mut self, pool_key: PoolKey) -> Result<(), InvariantError>;
+pub fn get_index(&mut self, pool_key: &PoolKey) -> Result<(), InvariantError>;
 ```
 
-Retrives specified pool key index in mapping.
+Retrieves specified pool key index in HashMap.
+
+#### Input parameters
+
+| Name     | Type    | Description                           |
+| -------- | ------- | ------------------------------------- |
+| pool_key | PoolKey | Pool key you want to check if exists. |
 
 ### Get all pool keys
 
 ```rust
-pub fn get_all(&self) -> Vec<PoolKey>;
+pub fn get_all(&self, size: u8, offset: u16) -> Vec<PoolKey>;
 ```
 
 Retrieves all pool keys.
+
+#### Input parameters
+
+| Name     | Type    | Description                           |
+| -------- | ------- | ------------------------------------- |
+| size     | u8      | Max size of returned vec              |
+| offset   | u16     | Offset to start listing PoolKeys from |
 
 #### Output parameters
 
