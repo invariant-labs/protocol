@@ -25,6 +25,7 @@ module.exports = {
       },
       items: [
         { to: '/docs/solana/introduction', label: 'Solana', position: 'left' },
+        { to: '/docs/eclipse/introduction', label: 'Eclipse', position: 'left' },
         { to: '/docs/aleph_zero/installation', label: 'Aleph Zero', position: 'left' },
         { to: '/docs/casper/installation', label: 'Casper Network', position: 'left' }
       ]
@@ -107,6 +108,10 @@ module.exports = {
             to: '/docs/solana/introduction'
           },
           {
+            from: '/docs/eclipse/',
+            to: '/docs/eclipse/introduction'
+          },
+          {
             from: '/docs/casper/',
             to: '/docs/casper/installation'
           }
@@ -120,6 +125,9 @@ module.exports = {
           }
           if (existingPath === '/docs/casper/') {
             return '/docs/casper/installation'
+          }
+          if (existingPath === '/docs/eclipse/') {
+            return '/docs/eclipse/introduction'
           }
           // Path does not require a redirect.
           return undefined

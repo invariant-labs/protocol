@@ -61,6 +61,21 @@ module.exports = {
     },
     {
       type: 'category',
+      label: 'Eclipse',
+      collapsed: true,
+      items: [
+        'eclipse/introduction',
+        'eclipse/quick_start',
+        'eclipse/pool',
+        'eclipse/minting_position',
+        'eclipse/position_list',
+        'eclipse/swap',
+        'eclipse/withdraw',
+        'eclipse/invariant_errors'
+      ]
+    },
+    {
+      type: 'category',
       label: 'Aleph Zero',
       collapsed: true,
       items: [
