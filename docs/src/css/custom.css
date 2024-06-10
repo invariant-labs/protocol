@@ -23,3 +23,24 @@
   margin: 0 calc(-1 * var(--ifm-pre-padding));
   padding: 0 var(--ifm-pre-padding);
 }
+
+details.alert--info {
+  background: none;
+  border-color: rgb(37, 194, 160, 0.2);
+  margin-bottom: 8px;
+
+  summary {
+    color: rgb(37, 194, 160);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    a {
+      color: inherit;
+    }
+  }
+
+  div {
+    border-top-color: rgb(37, 194, 160);
+  }
+}

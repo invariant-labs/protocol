@@ -209,7 +209,7 @@ interface Tick {
 
 ## Usage Guide
 
-Follow a step-by-step example demonstrating how to use the Invariant SDK, with each step accompanied by code snippets. The complete code for these examples is available [here](https://google.com), ensuring a hands-on and comprehensive understanding of the SDK's functionality.
+Follow a step-by-step example demonstrating how to use the Invariant SDK, with each step accompanied by code snippets. The complete code for these examples is available [here](https://github.com/invariant-labs/protocol-a0/blob/master/sdk/tests/example.test.ts), ensuring a hands-on and comprehensive understanding of the SDK's functionality.
 
 ### Select Network
 
