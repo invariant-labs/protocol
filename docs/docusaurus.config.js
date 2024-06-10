@@ -134,6 +134,9 @@ module.exports = {
           if (existingPath === '/docs/eclipse/') {
             return '/docs/eclipse/introduction'
           }
+          if (existingPath === '/docs/eclipse/user_guide') {
+            return '/docs/eclipse/user_guide/interface'
+          }
           if (existingPath === '/docs/vara/') {
             return '/docs/vara/installation'
           }
