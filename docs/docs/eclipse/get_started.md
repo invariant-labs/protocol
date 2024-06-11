@@ -4,13 +4,15 @@ title: Get Started
 slug: /eclipse/get_started
 ---
 
+This guide will walk you through the essential steps to get started on our [platform](https://eclipse.invariant.app/). From connecting your wallet and requesting an airdrop to adding a liquidity position, swapping tokens, claiming fees, and closing your position. If you encounter any issues or have questions, feel free to join our community on [Invariant's Discord](https://discord.gg/w6hTeWTJvG) for support. Please note that this walkthrough is on the testnet.
+
 ### Connect your wallet
 
 To begin using Invariant, you'll need to [connect your wallet](/docs/eclipse/user_guide/how_to_connect_your_wallet). Follow these steps:
 
 - Click on the "Connect wallet" button at the top right corner of the page.
 
-  ![wallet connection](/img/docs/app/connect_wallet.png)
+![wallet connection](/img/docs/app/eclipse_connect_wallet.png)
 
 - Select your wallet provider (e.g., Salmon).
 
@@ -22,11 +24,11 @@ To begin using Invariant, you'll need to [connect your wallet](/docs/eclipse/use
 
 ### Request airdrop
 
-- Click on the [Faucet](/docs/eclipse/user_guide/faucet) button in the header.
+- Click on the [Faucet](/docs/eclipse/user_guide/faucet) button in the header. A modal with a captcha will appear on the screen after clicking the button.
 
 ![Faucet](/img/docs/app/eclipse_faucet.png)
 
-- Solve captcha
+- Solve captcha in order to acquire airdrop
 
 ![Captcha](/img/docs/app/eclipse_captcha.png)
 
@@ -40,7 +42,7 @@ To begin using Invariant, you'll need to [connect your wallet](/docs/eclipse/use
 
 - Go to the Pool tab and click on Add Position button.
 
-![Add position button](/img/docs/app/add_position.png)
+![Add position button](/img/docs/app/eclipse_add_position_pool.png)
 
 - Choose the tokens you want to provide liquidity for.
 
@@ -57,6 +59,9 @@ To begin using Invariant, you'll need to [connect your wallet](/docs/eclipse/use
 ### Swap tokens
 
 - Navigate to [Swap](/docs/eclipse/user_guide/how_to_swap) page.
+
+![Swap navigate](/img/docs/app/eclipse_swap_navigate.png)
+
 - Select the token you want to swap from and the token you want to swap to.
 - Enter the amount you wish to swap.
 
@@ -70,7 +75,7 @@ As a liquidity provider, you can [claim your earned fees](/docs/eclipse/user_gui
 
 - Navigate to the "Pool" section and open the position from which you want to claim fees.
 
-![Position view](/img/docs/app/eclipse_position_view.png)
+![Position view](/img/docs/app/eclipse_position_navigate.png)
 
 - Click on "Claim Fee" to initiate the transaction.
 
@@ -83,7 +88,7 @@ As a liquidity provider, you can [claim your earned fees](/docs/eclipse/user_gui
 
 - Navigate to the "Pool" section and open the position which you want to [close](/docs/eclipse/user_guide/how_to_remove_liquidity).
 
-![Position view](/img/docs/app/eclipse_position_view.png)
+![Position view](/img/docs/app/eclipse_position_navigate.png)
 
 - Click "Close Position" and confirm the transaction in your wallet. Deposited tokens as well as unclaimed fees will be transferred to your wallet
 
