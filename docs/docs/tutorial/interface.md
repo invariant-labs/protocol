@@ -24,7 +24,7 @@ Below is a breakdown of the interface elements you'll encounter when using our p
 
 ![settings](/img/docs/app/settings.png)
 
-[**Fee**](/docs/transaction_priority) - This button allows you to adjust the transaction fee or priority level when making trades. Higher fees typically result in faster transactions.
+[**Fee**](/docs/priority_fees) - This button allows you to adjust the transaction fee or priority level when making trades. Higher fees typically result in faster transactions.
 
 [**RPC**](/docs/rpc) - You can switch between different RPC providers using this button.
 
