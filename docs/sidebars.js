@@ -115,6 +115,7 @@ module.exports = {
             'eclipse/user_guide/faq_tutorial'
           ]
         },
+        'eclipse/get_started',
         'eclipse/introduction',
         'eclipse/quick_start',
         'eclipse/pool',

@@ -30,4 +30,4 @@ Below is a breakdown of the interface elements you'll encounter when using our p
 
 [**Select Network**](/docs/eclipse/user_guide/networks) - You can switch between different blockchain networks using this feature. By default, the testnet is selected, but you can explore other networks as needed.
 
-[**Connect Wallet**](/docs/eclipse/user_guide/how_to_connect_your_wallet) - This button enables users to connect their cryptocurrency wallet to the Invariant, allowing to manage funds and interact with the platform seamlessly. After connecting your wallet, in this place will show up your wallet address."
+[**Connect Wallet**](/docs/eclipse/user_guide/how_to_connect_your_wallet) - This button enables users to connect their cryptocurrency wallet to the Invariant, allowing to manage funds and interact with the platform seamlessly. After connecting your wallet, in this place will show up your wallet address.

@@ -8,7 +8,7 @@ Before engaging with Invariant, it's imperative to initiate the process by conne
 
 1. Start by locating the **Connect wallet** button positioned at the top-right corner of the screen. You'll find this button displayed in other areas throughout the app where connecting the wallet is necessary.
 
-![wallet connection](/img/docs/app/connect_wallet.png)
+![wallet connection](/img/docs/app/eclipse_wallets.png)
 
 2. Upon clicking **Connect wallet**, you'll be prompted to choose a supported wallet that operates on the Eclipse blockchain. This ensures seamless integration with Invariant. You have the flexibility to select a wallet from the list of detected options or opt to scan the QR code provided by Nightly wallet, which we highly recommend.
 
@@ -16,10 +16,12 @@ Before engaging with Invariant, it's imperative to initiate the process by conne
 
 If you don't have a wallet yet, we recommend choosing one from the following options:
 
-- [Nightly Wallet](https://nightly.app/)
+<!-- - [Nightly Wallet](https://nightly.app/)
 - [Phantom Wallet](https://phantom.app/)
-- [Backpack Wallet](https://backpack.app/)
+- [Backpack Wallet](https://backpack.app/) -->
+
 - [Salmon Wallet](https://salmonwallet.io/)
+- [Eclipse Wallet](https://docs.eclipse.xyz/users/wallet#salmon-wallet)
 
 3. Once you've successfully connected your wallet, your wallet address will be prominently displayed at the top-right corner of the screen, giving you immediate access to your account information.
 

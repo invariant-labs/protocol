@@ -68,6 +68,6 @@ After some time you can observe **how price changes and take fees**, which you g
 
 ![line chart](/img/docs/app/not_existing_pool.png)
 
-It can happend that the pair of tokens that you have chosen not exist in any pool. In that case you can create it first. It's important to keep in mind, that estimated cost of creating a new pool is **0.1 SOL**
+It can happend that the pair of tokens that you have chosen not exist in any pool. In that case you can create it first. It's important to keep in mind, that estimated cost of creating a new pool is **0.001060009 ETH**
 
 The creation process for a new pool is similar to adding liquidity to an existing one, but with two key differences. First, you won't see a preview chart of the liquidity range. Second, **you'll need to specify the starting price ratio for your chosen token pair**. It's recommended to check the global market price to ensure an accurate value.
