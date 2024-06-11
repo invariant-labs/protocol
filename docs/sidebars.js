@@ -91,7 +91,7 @@ module.exports = {
             id: 'eclipse/user_guide'
           },
           items: [
-            'eclipse/user_guide/interface',
+            // 'eclipse/user_guide/interface',
             'eclipse/user_guide/networks',
             'eclipse/user_guide/how_to_connect_your_wallet',
             'eclipse/user_guide/faucet',
