@@ -12,5 +12,8 @@ members = ["programs/invariant", "programs/staker"]
 invariant = "HyaB3W9q6XdA5xwpU4XnSZV94htfmbmqJXZcEbRaJutt"
 staker = "MJ6WF1tpEJ7Gk8ULqejDJapRfqBwBEp1dH5QvAgYxu9"
 
+[programs.devnet]
+invariant = "D8Xd5VFXJeANivc4LXEzYqiE8q2CGVbjym5JiynPCP6J"
+
 [scripts]
 test = "ts-mocha -p ./tsconfig.json -t 1000000"
