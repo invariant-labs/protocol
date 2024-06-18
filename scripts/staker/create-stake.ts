@@ -22,7 +22,7 @@ const INCENTIVE: PublicKey = new PublicKey('8Bhd6me9j6AS9N6f6BxRZkgsY9nBaEBzq2ma
 const TOKEN_X: PublicKey = new PublicKey(MOCK_TOKENS.USDC)
 const TOKEN_Y: PublicKey = new PublicKey(MOCK_TOKENS.SOL)
 const POSITION_INDEX = 0
-const INVARIANT = new PublicKey('9aiirQKPZ2peE9QrXYmsbTtR7wSDJi2HkQdHuaMpTpei')
+const INVARIANT = new PublicKey('D8Xd5VFXJeANivc4LXEzYqiE8q2CGVbjym5JiynPCP6J')
 const FEE_TIER = FEE_TIERS[0]
 
 const main = async () => {
