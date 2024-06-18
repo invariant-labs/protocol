@@ -264,7 +264,7 @@ export const tou64 = (amount: BN) => {
 }
 
 export const fromFee = (fee: BN): BN => {
-  // e.g fee - BN(1) -> 0.001%
+  // 0.001%
   return fee.mul(FEE_OFFSET)
 }
 
@@ -280,21 +280,37 @@ export const feeToTickSpacing = (fee: BN): number => {
 }
 
 export const FEE_TIERS: FeeTier[] = [
+  // 0.001%
   { fee: fromFee(new BN(1)), tickSpacing: 1 },
+  // 0.003%
   { fee: fromFee(new BN(3)), tickSpacing: 1 },
+  // 0.005%
   { fee: fromFee(new BN(5)), tickSpacing: 1 },
+  // 0.01%
   { fee: fromFee(new BN(10)), tickSpacing: 1 },
+  // 0.02%
   { fee: fromFee(new BN(20)), tickSpacing: 5 },
+  // 0.05%
   { fee: fromFee(new BN(50)) },
+  // 0.1%
   { fee: fromFee(new BN(100)) },
+  // 0.2%
   { fee: fromFee(new BN(200)), tickSpacing: 5 },
+  // 0.3%
   { fee: fromFee(new BN(300)) },
+  // 0.5%
   { fee: fromFee(new BN(500)), tickSpacing: 5 },
+  // 1%
   { fee: fromFee(new BN(1000)) },
+  // 3%
   { fee: fromFee(new BN(3000)), tickSpacing: 5 },
+  // 5%
   { fee: fromFee(new BN(5000)), tickSpacing: 5 },
+  // 10%
   { fee: fromFee(new BN(10000)), tickSpacing: 5 },
+  // 25%
   { fee: fromFee(new BN(25000)), tickSpacing: 5 },
+  // 50%
   { fee: fromFee(new BN(50000)), tickSpacing: 5 }
 ]
 
