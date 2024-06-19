@@ -131,6 +131,7 @@ module.exports = {
       label: 'Aleph Zero',
       collapsed: true,
       items: [
+        'aleph_zero/get_started',
         'aleph_zero/installation',
         'aleph_zero/overview',
         'aleph_zero/sdk',
