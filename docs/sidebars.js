@@ -114,16 +114,16 @@ module.exports = {
             'eclipse/user_guide/troubleshooting',
             'eclipse/user_guide/faq_tutorial'
           ]
-        },
-        'eclipse/get_started',
-        'eclipse/introduction',
-        'eclipse/quick_start',
-        'eclipse/pool',
-        'eclipse/minting_position',
-        'eclipse/position_list',
-        'eclipse/swap',
-        'eclipse/withdraw',
-        'eclipse/invariant_errors'
+        }
+        // 'eclipse/get_started',
+        // 'eclipse/introduction',
+        // 'eclipse/quick_start',
+        // 'eclipse/pool',
+        // 'eclipse/minting_position',
+        // 'eclipse/position_list',
+        // 'eclipse/swap',
+        // 'eclipse/withdraw',
+        // 'eclipse/invariant_errors'
       ]
     },
     {
