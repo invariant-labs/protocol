@@ -15,9 +15,14 @@ This section provides detailed instructions on how to install the Invariant prot
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
-#### Add wasm32 target
+#### Install rust and add wasm32 target
 ```bash
-rustup target add wasm32-unknown-unknown
+rustup install 1.78
+rustup target add wasm32-unknown-unknown --toolchain 1.78 
+```
+#### Install wasm-opt
+```bash
+cargo install wasm-opt --locked
 ```
 
 ## Build Protocol
@@ -31,18 +36,33 @@ git clone git@github.com:invariant-labs/protocol-vara.git
 #### Build contract
 
 ```bash
-cargo build
+chmod +x ./build.sh
+./build.sh dev
 ```
 
 #### Build in release mode
 
 ```bash
-cargo contract build --release
+chmod +x ./build.sh
+./build.sh
 ```
 
 #### Run tests
 
 ```bash
+chmod +x ./tests.sh
 ./tests.sh
 ```
 
+## SDK
+To build SDK go to the dedicated folder [SDK](https://github.com/invariant-labs/protocol-vara/tree/master/sdk)
+#### Build sdk
+```bash
+chmod +x ./build.sh
+./build.sh
+```
+#### Run sdk tests
+```bash
+chmod +x ./tests.sh
+./tests.sh
+```
