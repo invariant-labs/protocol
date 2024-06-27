@@ -247,36 +247,35 @@ const admin = await GearKeyring.fromSuri('//Bob')
 In the following TypeScript code, we demonstrate approach deploying and initializing a GRC-20 token contracts using the `FungibleToken.deploy` method. Apart from the deployment and initialization, the code also demonstrates how to fetch token metadata. This can include details such as the token name, symbol, token decimal.
 
 ```typescript
-// deploy token, it will return token object
-const token0 = await FungibleToken.deploy(api, admin, 'CoinA', 'ACOIN', 12n)
-// token address can be accessed by calling programId method
-const token1Address = (
-  await FungibleToken.deploy(api, admin, 'CoinB', 'BCOIN', 12n)
-).programId()
+// deploy token, it will return token address
+const token0Address = await FungibleToken.deploy(api, admin, 'CoinA', 'ACOIN', 12n)
+const token1Address = await FungibleToken.deploy(api, admin, 'CoinB', 'BCOIN', 12n)
 
-// load token by passing its address (you can use existing one), it allows you to interact with it
-// eslint disable-next-line
-const token1 = await FungibleToken.load(api, token1Address)
+// loading token class, allows you to interact with token contracts
+const GRC20 = await FungibleToken.load(api)
+// set admin account if you want to mint or burn tokens
+// by default admin is set to the deployer of the contract
+GRC20.setAdmin(admin)
 
 // interact with token 0
-const admin0Balance = await token0.balanceOf(admin.addressRaw)
+const admin0Balance = await GRC20.balanceOf(admin.addressRaw, token0Address)
 console.log(admin0Balance)
 
 // if you want to interact with different token,
 // simply pass different contract address as an argument
-const admin1Balance = await token1.balanceOf(admin.addressRaw)
+const admin1Balance = await GRC20.balanceOf(admin.addressRaw, token1Address)
 console.log(admin1Balance)
 
 // fetch token metadata for previously deployed token0
-const token0Name = await token0.name()
-const token0Symbol = await token0.symbol()
-const token0Decimals = await token0.decimals()
+const token0Name = await GRC20.name(token0Address)
+const token0Symbol = await GRC20.symbol(token0Address)
+const token0Decimals = await GRC20.decimals(token0Address)
 console.log(token0Name, token0Symbol, token0Decimals)
 
 // load diffrent token and load its metadata
-const token1Name = await token1.name()
-const token1Symbol = await token1.symbol()
-const token1Decimals = await token1.decimals()
+const token1Name = await GRC20.name(token1Address)
+const token1Symbol = await GRC20.symbol(token1Address)
+const token1Decimals = await GRC20.decimals(token1Address)
 console.log(token1Name, token1Symbol, token1Decimals)
 ```
 
@@ -301,7 +300,7 @@ Load the Invariant contract by providing the Polkadot API (`api`), and indicatin
 const invariant = await Invariant.load(api, INVARIANT_ADDRESS)
 
 // load token contract
-const grc20 = await FungibleToken.load(api, TOKEN0_ADDRESS)
+const GRC20 = await FungibleToken.load(api)
 ```
 
 ### Create pool
@@ -330,7 +329,7 @@ const price = toPrice(1n, 0n)
 const initSqrtPrice = priceToSqrtPrice(price)
 
 // set pool key, make sure that pool with specified parameters does not exists
-const poolKey = newPoolKey(tokenX.programId(), TOKEN1_ADDRESS, feeTier)
+const poolKey = newPoolKey(token0Address, token1Address, feeTier)
 
 await invariant.createPool(account, poolKey, initSqrtPrice)
 ```
@@ -340,10 +339,10 @@ await invariant.createPool(account, poolKey, initSqrtPrice)
 These entrypoints allow for depositing tokens that will be used for the future operations within the DEX, it's necessary for making the contract atomic. After the operation has been performed tokens may be withdrawn or used in future operations. Return value of these entrypoints contains the amount of tokens deposited in the same order that they were provided.
 ```typescript 
 // deposit both tokens at once
-const depositResult = await invariant.depositTokenPair(admin, [tokenX.programId(), tokenXAmount], [tokenY.programId(), tokenYAmount])
+const depositResult = await invariant.depositTokenPair(admin, [tokenXAddress, tokenXAmount], [tokenYAddress, tokenYAmount])
 console.log(depositResult)
 // deposit single token
-const depositResult = await invariant.depositSingleToken(admin, tokenX.programId(), tokenXAmount)
+const depositResult = await invariant.depositSingleToken(admin, tokenXAddress, tokenXAmount)
 console.log(depositResult)
 ```
 
@@ -358,16 +357,16 @@ console.log(depositResult)
 These entrypoints allow for funds withdrawal after performing desired operations. `null` may be passed instead of the amount to withdraw the current balance without having to query the state. Return value of these entrypoints contains the amount of tokens withdrawn in the same order that they were provided.
 ```typescript
 // withdraw both tokens at once
-const withdrawResult = await invariant.withdrawTokenPair(admin, [tokenX.programId(), tokenXAmount], [tokenY.programId(), tokenYAmount])
+const withdrawResult = await invariant.withdrawTokenPair(admin, [tokenXAddress, tokenXAmount], [tokenYAddress, tokenYAmount])
 console.log(withdrawResult)
 // withdraw single token
-const withdrawResult = await invariant.withdrawSingleToken(admin, tokenX.programId(), tokenXAmount)
+const withdrawResult = await invariant.withdrawSingleToken(admin, tokenXAddress, tokenXAmount)
 console.log(withdrawResult)
 // withdraw both tokens at once without knowing the amount of the tokens in the contract
-const withdrawResult = await invariant.withdrawTokenPair(admin, [tokenX.programId(), null], [tokenY.programId(), null])
+const withdrawResult = await invariant.withdrawTokenPair(admin, [tokenXAddress, null], [tokenYAddress, null])
 console.log(withdrawResult)
 // withdraw single token without knowing the amount of the tokens in the contract
-const withdrawResult = await invariant.withdrawSingleToken(admin, tokenX.programId(), null)
+const withdrawResult = await invariant.withdrawSingleToken(admin, tokenXAddress, null)
 console.log(withdrawResult)
 ```
 
@@ -408,17 +407,24 @@ const { amount: tokenXAmount, l: positionLiquidity } = getLiquidityByY(
 
 // print amount of token x and y we need to give to create position based on parameteres we passed
 console.log(tokenXAmount, tokenYAmount)
-
 // approve transfers of both tokens
-await token0.approve(account, invariant.addressRaw, tokenXAmount)
-await token1.approve(account, invariant.addressRaw, tokenYAmount)
+await GRC20.approve(admin, invariant.programId(), tokenXAmount, poolKey.tokenX)
+await GRC20.approve(admin, invariant.programId(), tokenYAmount, poolKey.tokenY)
 
-// deposit both tokens at once
-await invariant.depositTokenPair(admin, [tokenX.programId(), tokenXAmount], [tokenY.programId(), tokenYAmount])
+// deposit tokens in the contract
+await invariant.depositTokenPair(
+  admin,
+  [poolKey.tokenX, tokenXAmount],
+  [poolKey.tokenY, tokenYAmount]
+)
+
+// check user balances before creating position
+const userBalances = await invariant.getUserBalances(admin.addressRaw)
+console.log(userBalances)
 
 // create position
 const createPositionResult = await invariant.createPosition(
-  account,
+  admin,
   poolKey,
   lowerTickIndex,
   upperTickIndex,
@@ -427,7 +433,7 @@ const createPositionResult = await invariant.createPosition(
   0n
 )
 
-console.log(createPositionResult)
+console.log(createPositionResult) // print transaction result
 
 // withdraw tokens from the contract
 // passing null will try to withdraw all tokens in case no tokens are deposited
@@ -442,10 +448,14 @@ console.log(withdrawResult)
 
 :::tip Output
 7999999999880n 8000000000000n <br/>
+Map(2) {<br/>
+&emsp; '0x476f15fb07f2c1fa3d2a8212496db9535e9911929760651840c335a48791af5b' => 8000000000000n, <br/>
+&emsp; '0x439d17e3bad34ca76cca21ec23c1e746673187a9d7da9d65988c55350c5292d1' => 7999999999880n <br/>
+}<br/>
 {<br/>
 &emsp; poolKey: {<br/>
-&emsp; &emsp; tokenX: '0x3e3d8e1e8508bbac3eb4d9a5f080a0bc05e01ed49851b63fa7e6ee27ae5ea412',<br/>
-&emsp; &emsp; tokenY: '0xe5131b8a771fe50e815b758f1a8f436247c4d8affcdcf0934f7701eb4a279a94',<br/>
+&emsp; &emsp; tokenX: '0x439d17e3bad34ca76cca21ec23c1e746673187a9d7da9d65988c55350c5292d1',<br/>
+&emsp; &emsp; tokenY: '0x476f15fb07f2c1fa3d2a8212496db9535e9911929760651840c335a48791af5b',<br/>
 &emsp; &emsp; feeTier: { fee: 6000000000n, tickSpacing: 10 }<br/>
 &emsp; },<br/>
 &emsp; liquidity: 1000000000000n,<br/>
@@ -477,7 +487,7 @@ While price impact focuses on the post-swap change in token price within the liq
 const amount = 6n * 10n ** 12n
 
 // approve token x transfer
-await tokenX.approve(admin, invariant.programId(), amount)
+await GRC20.approve(admin, invariant.programId(), amount, poolKey.tokenX)
 // deposit tokenX
 await invariant.depositSingleToken(admin, poolKey.tokenX, amount)
 
@@ -498,7 +508,7 @@ const sqrtPriceLimit = calculateSqrtPriceAfterSlippage(
 const swapResult = await invariant.swap(admin, poolKey, true, amount, true, sqrtPriceLimit)
 console.log(swapResult)
 
-await invariant.withdrawSingleToken(admin, poolKey.tokenX, null)
+await invariant.withdrawSingleToken(admin, poolKey.tokenY, null)
 ```
 :::tip Output
 {<br/>
@@ -619,7 +629,7 @@ Fees from a specific position are claimed without closing the position. This pro
 
 ```typescript
 // get balance of a specific token before claiming position fees and print it
-const adminBalanceBeforeClaim = await tokenX.balanceOf(admin.addressRaw)
+const adminBalanceBeforeClaim = await GRC20.balanceOf(admin.addressRaw, token0Address)
 console.log(adminBalanceBeforeClaim)
 
 // specify position id
@@ -631,7 +641,7 @@ const withdrawResult = await invariant.withdrawSingleToken(admin, poolKey.tokenX
 console.log(withdrawResult)
 
 // get balance of a specific token after claiming position fees and print it
-const adminBalanceAfterClaim = await tokenX.balanceOf(admin.addressRaw)
+const adminBalanceAfterClaim = await GRC20.balanceOf(admin.addressRaw, token0Address)
 console.log(adminBalanceAfterClaim)
 ```
 
@@ -648,11 +658,9 @@ console.log(adminBalanceAfterClaim)
 The entrypoint facilitates the seamless transfer of positions between users. This functionality streamlines the process of reassigning ownership of a specific position to another account. The entrypoint takes two parameters: index of position to transfer, address of account to receive the position.
 
 ```typescript
-const positionToTransfer = await invariant.getPosition(account.addressRaw, 0n)
-
-// Transfer position from account (signer) to receiver
-await invariant.transferPosition(account, 0n, receiver.addressRaw)
-
+const positionToTransfer = await invariant.getPosition(admin.addressRaw, 0n)
+// Transfer position from admin (signer) to receiver
+await invariant.transferPosition(admin, 0n, receiver.addressRaw)
 // load received position
 const receiverPosition = await invariant.getPosition(receiver.addressRaw, 0n)
 
@@ -684,21 +692,23 @@ console.log(receiverPosition)
 Position is removed from the protocol, and fees associated with that position are automatically claimed in the background. Here's a detailed description of the process:
 
 ```typescript
-    // fetch user balances before removal
-    const adminToken0BalanceBeforeRemove = await tokenX.balanceOf(admin.addressRaw)
-    const adminToken1BalanceBeforeRemove = await tokenY.balanceOf(admin.addressRaw)
-    console.log(adminToken0BalanceBeforeRemove, adminToken1BalanceBeforeRemove)
-    // remove position
-    const removePositionResult = await invariant.removePosition(admin, positionId)
-    console.log(removePositionResult)
+// fetch user balances before removal
+const adminToken0BalanceBeforeRemove = await GRC20.balanceOf(admin.addressRaw, token0Address)
+const adminToken1BalanceBeforeRemove = await GRC20.balanceOf(admin.addressRaw, token1Address)
+console.log(adminToken0BalanceBeforeRemove, adminToken1BalanceBeforeRemove)
+// remove position
 
-    await invariant.withdrawTokenPair(admin, [poolKey.tokenX, null], [poolKey.tokenY, null])
-    // get balance of a specific token after removing position
-    const adminToken0BalanceAfterRemove = await tokenX.balanceOf(admin.addressRaw)
-    const adminToken1BalanceAfterRemove = await tokenY.balanceOf(admin.addressRaw)
+const removePositionResult = await invariant.removePosition(admin, positionId)
+console.log(removePositionResult)
 
-    // print balances
-    console.log(adminToken0BalanceAfterRemove, adminToken1BalanceAfterRemove)
+await invariant.withdrawTokenPair(admin, [poolKey.tokenX, null], [poolKey.tokenY, null])
+
+// get balance of a specific token after removing position
+const adminToken0BalanceAfterRemove = await GRC20.balanceOf(admin.addressRaw, token0Address)
+const adminToken1BalanceAfterRemove = await GRC20.balanceOf(admin.addressRaw, token1Address)
+
+// print balances
+console.log(adminToken0BalanceAfterRemove, adminToken1BalanceAfterRemove)
 ```
 :::tip Output
 999999999999999986060000000119n 999999999999999997937796254308n <br/>
