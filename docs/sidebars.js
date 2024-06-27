@@ -167,6 +167,7 @@ module.exports = {
       items: [
         'vara/installation',
         'vara/overview',
+        'vara/sdk',
         'vara/types',
         'vara/storage',
         'vara/collections',
