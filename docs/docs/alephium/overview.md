@@ -10,6 +10,8 @@ This section provides an overview of the structural organization of the Invarian
 
 To optimize gas usage, we centralize entrypoints in a singular contract. This streamlined approach not only cuts costs but also simplifies processes, enhancing accessibility. By concentrating state changes and entrypoints within this central contract, we reduce the intricacies of managing external contracts, while smart mapping intelligently conserves storage resources and bolsters system efficiency.
 
+<!-- TODO: Showcase the actual architecture with Contracts and their relationship more -->
+
 ## Project Structure
 
 The following presents the project's overall structure, supplying insights into the logical segmentation into modules:
@@ -24,8 +26,7 @@ The following presents the project's overall structure, supplying insights into 
  ┃ ┣ 📂storage
  ┃ ┗ 📂token
  ┣ 📂src
- ┣ 📂test
- ┗ 📜tests.sh
+ ┗ 📂test
 ```
 
 ### Contracts
@@ -42,7 +43,7 @@ The "Storage" directory houses indispensable data structures crucial for contrac
 
 #### Collections
 
-Our "Collections" directory is dedicated to collections of data that leverage Ralph's [Map](https://docs.alephium.org/ralph/types#map) syntax, enhancing protection against unauthorized changes and following Ralph's design principles. These collections help us manage data in a structured manner. Within our collection interface, we enforce a tightly defined set of operations available for all data collections. Each collection is implemented as an [Abstract Contract](https://docs.alephium.org/ralph/contracts#inheritance), ensuring minimal inter-contract communication, which improves security and reduces gas prices.
+Our "Collections" directory is dedicated to collections of data that leverage Ralph's [Map](https://docs.alephium.org/ralph/types#map) syntax, enhancing protection against unauthorized changes and following Ralph's design principles. These collections help us manage data in a structured manner. Within our collection interface, we enforce a tightly defined set of operations available for all data collections. Each collection is implemented as an [Abstract Contract](https://docs.alephium.org/ralph/contracts#inheritance), ensuring minimal inter-contract communication, which improves security and reduces gas usage.
 
 #### Token
 
@@ -54,7 +55,8 @@ The "Scripts" directory contains all entrypoints, including ones used for e2e te
 
 ### Src
 
-The "Src" directory contains macros designed for efficient end-to-end testing. These macros abstract low-level calls and transaction building, allowing developers to focus solely on verifying expected logic during tests. This minimizes code repetition, simplifies the testing interface, and ensures a clear and concise testing environment.
+The "Src" directory contains the sdk package that can be used to interact with dex and macros designed for efficient end-to-end testing. A comprehensive description of the sdk package can be found [here](sdk.md).
+ Meanwhile the macros abstract low-level calls and transaction building, allowing developers to focus solely on verifying expected logic during tests. This minimizes code repetition, simplifies the testing interface, and ensures a clear and concise testing environment.
 
 ### Test
 
@@ -99,42 +101,45 @@ For a detailed exploration of our contract structures, collections, and associat
  ┃ ┣ ┣ 📜reserve.ral
  ┃ ┣ ┗ 📜tick.ral
  ┃ ┣ 📂token
- ┃ ┣ ┗ token.ral
+ ┃ ┣ ┗ 📜token.ral
  ┃ ┗ 📜invariant.ral
  ┣ 📂src
  ┃ ┣ 📜consts.ts
  ┃ ┣ 📜index.ts
+ ┃ ┣ 📜invariant.ts
  ┃ ┣ 📜math.ts
+ ┃ ┣ 📜network.ts
  ┃ ┣ 📜snippets.ts
  ┃ ┣ 📜testUtils.ts
  ┃ ┗ 📜utils.ts
- ┣ 📂test
- ┃ ┣ 📜add_fee_tier.test.ts
- ┃ ┣ 📜change_fee_receiver.test.ts
- ┃ ┣ 📜change_protocol_fee.test.ts
- ┃ ┣ 📜claim.test.ts
- ┃ ┣ 📜clamm.test.ts
- ┃ ┣ 📜create_pool.test.ts
- ┃ ┣ 📜cross_both_side.test.ts
- ┃ ┣ 📜cross.test.ts
- ┃ ┣ 📜interaction_with_pool_on_removed_fee_tier.test.ts
- ┃ ┣ 📜limits.test.ts
- ┃ ┣ 📜liquidity_gap.test.ts
- ┃ ┣ 📜log.test.ts
- ┃ ┣ 📜math.test.ts
- ┃ ┣ 📜max_tick_cross.test.ts
- ┃ ┣ 📜multiple_swap.test.ts
- ┃ ┣ 📜position_list.test.ts
- ┃ ┣ 📜position_slippage.test.ts
- ┃ ┣ 📜position.test.ts
- ┃ ┣ 📜protocol_fee.test.ts
- ┃ ┣ 📜remove_fee_tier.test.ts
- ┃ ┣ 📜reserve.test.ts
- ┃ ┣ 📜reserves.test.ts
- ┃ ┣ 📜slippage.test.ts
- ┃ ┣ 📜swap.test.ts
- ┃ ┣ 📜tickmap.test.ts
- ┃ ┣ 📜token.test.ts
- ┃ ┗ 📜uints.test.ts
- ┗ 📜tests.sh
+ ┗ 📂test
+   ┣ 📜add_fee_tier.test.ts
+   ┣ 📜change_fee_receiver.test.ts
+   ┣ 📜change_protocol_fee.test.ts
+   ┣ 📜claim.test.ts
+   ┣ 📜clamm.test.ts
+   ┣ 📜create_pool.test.ts
+   ┣ 📜cross_both_side.test.ts
+   ┣ 📜cross.test.ts
+   ┣ 📜interaction_with_pool_on_removed_fee_tier.test.ts
+   ┣ 📜invariant.test.ts
+   ┣ 📜limits.test.ts
+   ┣ 📜liquidity_gap.test.ts
+   ┣ 📜log.test.ts
+   ┣ 📜math.test.ts
+   ┣ 📜max_tick_cross.test.ts
+   ┣ 📜multiple_swap.test.ts
+   ┣ 📜position_list.test.ts
+   ┣ 📜position_slippage.test.ts
+   ┣ 📜position.test.ts
+   ┣ 📜protocol_fee.test.ts
+   ┣ 📜remove_fee_tier.test.ts
+   ┣ 📜reserve.test.ts
+   ┣ 📜reserves.test.ts
+   ┣ 📜slippage.test.ts
+   ┣ 📜swap.test.ts
+   ┣ 📜tickmap.test.ts
+   ┣ 📜token.test.ts
+   ┗ 📜uints.test.ts
+ 
 ```

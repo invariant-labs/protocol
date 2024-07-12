@@ -106,6 +106,10 @@ module.exports = {
             to: '/docs/aleph_zero/installation'
           },
           {
+            from: '/docs/alephium/',
+            to: '/docs/alephium/installation'
+          },
+          {
             from: '/docs/solana/',
             to: '/docs/solana/introduction'
           },
@@ -125,6 +129,9 @@ module.exports = {
         createRedirects(existingPath) {
           if (existingPath === '/docs/aleph_zero/') {
             return '/docs/aleph_zero/installation'
+          }
+          if (existingPath === '/docs/alephium/') {
+            return '/docs/alephium/installation'
           }
           if (existingPath === '/docs/solana/') {
             return '/docs/solana/introduction'

@@ -385,7 +385,7 @@ Adds a new pool key. Throws an exception if pool key already exists.
 
 | Name     | Type    | Description               |
 | -------- | ------- | ------------------------- |
-| originalCaller  | Address | Address of the user who wants to add a PoolKey. They pay the fee. |
+| originalCaller  | Address | Address of the user who wants to add a PoolKey. |
 | poolKey | PoolKey | Pool key you want to add. |
 
 
@@ -582,7 +582,7 @@ Retrieves the ids of `Reserve`s for both tokens. If a token isn't stored in a Re
 
 | Name  | Type    | Description           |
 | ----- | ------- | --------------------- |
-| caller   | Address | Address of the user who wants to know where the Token is stored. They pay the eventual fee.|
+| caller   | Address | Address of the user who wants to know where the Token is or will be stored. They are required to pay the initial fee.|
 | subPath | ByteVec     | Unique path to be used in case a new Reserve has to be created.|
 | tokenX | ByteVec     | Id of the first token.|
 | tokenY | ByteVec     | Id of the second token.|

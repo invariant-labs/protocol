@@ -150,7 +150,7 @@ struct TickmapBatch {
 
  Name                 | Type      | Description                                                                                                                                                                 |
 | -------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| chunks | [U256;9]      | Chunks stored in a single TickmapBatch. |
+| chunks | [U256;94]      | Chunks stored in a single TickmapBatch. |
 
 ## Reserve
 

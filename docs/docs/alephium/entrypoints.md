@@ -6,30 +6,40 @@ slug: /alephium/entrypoints
 
 This section outlines the core entrypoints for the Invariant smart contract, providing developers with essential methods to interact with the protocol. These entrypoints cover various aspects of the contract, including protocol fee management, fee tier administration, pool creation and management, position handling, and swap functionality.
 
-## Deployment
+## Constructor
 
 ```rust
-async function deployInvariant(
-  signer: SignerProvider,
-  protocolFee: bigint
-): Promise<InvariantInstance>;
+Contract Invariant(
+    mut config: InvariantConfig,
+    clamm: CLAMM,
+    reserveTemplateId: ByteVec,
+    mut lastReserveId: ByteVec,
+    mut feeTierCount: U256,
+    mut poolKeyCount: U256
+) extends PoolKeyHelper(), Decimal(), FeeTiers(), PoolKeys(),
+    Pools(clamm), Ticks(), Tickmap(), Positions(clamm), FeeTierHelper(), Reserves();
 ```
 
-This deployment method initializes the contract with the specified protocol fee. The administrator role is assigned to the signer.
+This constructor method initializes the contract with the specified protocol fee and administrator.
 
 #### Input parameters
 
 | Name         | Type       | Description                          |
 | ------------ | ---------- | ------------------------------------ |
-| signer | SignerProvider | The user who will get administrative access. |
-| protocolFee | bigint | The percentage for the protocol fee. |
+| config | InvariantConfig | Config struct defining the admin and protocol fee. |
+| clamm | CLAMM | ContractId of the CLAMM module. |
+| reserveTemplateId | ByteVec | ContractId of a Reserve Contract. |
+| lastReserveId | ByteVec | ContractId of the same Reserve Contract. |
+| feeTierCount | U256 | Should be initialized to 0. |
+| poolKeyCount | U256 | Should be initialized to 0. |
+
 
 ## Protocol fee
 
 ### Get protocol fee
 
 ```rust
-pub fn Invariant::getProtocolFee() -> U256;
+pub fn getProtocolFee() -> U256;
 ```
 
 This method retrieves the current protocol fee percentage.
@@ -43,7 +53,7 @@ This method retrieves the current protocol fee percentage.
 ### Withdraw protocol fee
 
 ```rust
-TxScript WithdrawProtocolFee(invariant: Invariant, poolKey: PoolKey);
+pub fn withdrawProtocolFee(poolKey: PoolKey) -> ();
 ```
 
 This operation enables the withdrawal of protocol fees associated with a specific pool, based on the provided pool key. The withdrawn funds are sent to the fee receiver wallet. Please note that this action can only be performed by fee receiver.
@@ -52,7 +62,6 @@ This operation enables the withdrawal of protocol fees associated with a specifi
 
 | Name     | Type    | Description                                                                       |
 | -------- | ------- | --------------------------------------------------------------------------------- |
-| invariant | Invariant | ContractId of Invariant. |
 | poolKey | PoolKey | The pool key that corresponds to the withdrawal of fees from the associated pool. |
 
 #### Errors
@@ -65,7 +74,8 @@ This operation enables the withdrawal of protocol fees associated with a specifi
 ### Change protocol fee
 
 ```rust
-TxScript ChangeProtocolFee(invariant: Invariant, newFee: U256);
+@using(updateFields = true)
+pub fn changeProtocolFee(newProtocolFee: U256) -> ();
 ```
 
 This function allows for the adjustment of the current protocol fee percentage. Note that this operation is restricted to administrators.
@@ -74,8 +84,7 @@ This function allows for the adjustment of the current protocol fee percentage. 
 
 | Name         | Type       | Description                      |
 | ------------ | ---------- | -------------------------------- |
-| invariant | Invariant | ContractId of Invariant. |
-| newFee | U256 | The new protocol fee percentage. |
+| newProtocolFee | U256 | The new protocol fee percentage. |
 
 #### Errors
 
@@ -87,7 +96,7 @@ This function allows for the adjustment of the current protocol fee percentage. 
 ### Change fee receiver
 
 ```rust
-TxScript ChangeFeeReceiver(invariant: Invariant, poolKey: PoolKey, newFeeReceiver: Address);
+pub fn changeFeeReceiver(poolKey: PoolKey, newFeeReceiver: Address) -> ();
 ```
 
 This function allows for the modification of the fee receiver of a pool. Please note that this action is exclusively available to administrators.
@@ -96,7 +105,6 @@ This function allows for the modification of the fee receiver of a pool. Please 
 
 | Name         | Type      | Description                                              |
 | ------------ | --------- | -------------------------------------------------------- |
-| invariant | Invariant | ContractId of Invariant. |
 | poolKey     | PoolKey   | The pool key of the pool where the change is to be made. |
 | newFeeReceiver | Address | The new fee receiver's address of the pool.              |
 
@@ -111,7 +119,8 @@ This function allows for the modification of the fee receiver of a pool. Please 
 ### Add fee tier
 
 ```rust
-TxScript AddFeeTier(invariant: Invariant, feeTier: FeeTier);
+@using(preapprovedAssets = true)
+pub fn addFeeTier(feeTier: FeeTier) -> ();
 ```
 
 This function enables the addition of a new fee tier, which users can subsequently utilize when creating pools. Please note that this action is restricted to administrators.
@@ -120,7 +129,6 @@ This function enables the addition of a new fee tier, which users can subsequent
 
 | Name     | Type    | Description               |
 | -------- | ------- | ------------------------- |
-| invariant | Invariant | ContractId of Invariant. |
 | feeTier | FeeTier | The fee tier to be added. |
 
 #### Errors
@@ -135,7 +143,7 @@ This function enables the addition of a new fee tier, which users can subsequent
 ### Fee Tier exists
 
 ```rust
-pub fn Invariant::feeTierExist(feeTier: FeeTier) -> Bool;
+pub fn feeTierExist(feeTier: FeeTier) -> Bool;
 ```
 
 This function is used to verify the existence of a specified fee tier.
@@ -155,7 +163,7 @@ This function is used to verify the existence of a specified fee tier.
 ### Get fee tiers
 
 ```rust
-pub fn Invariant::getFeeTiers() -> ByteVec
+pub fn getFeeTiers() -> ByteVec
 ```
 
 Retrieves available fee tiers.
@@ -169,7 +177,7 @@ Retrieves available fee tiers.
 ### Remove fee tier
 
 ```rust
-TxScript RemoveFeeTier(invariant: Invariant, feeTier: FeeTier);
+pub fn removeFeeTier(feeTier: FeeTier) -> ();
 ```
 
 This function removes a fee tier based on the provided fee tier key. After removal, the fee tier will no longer be available for use in pool creation. It's important to note that existing pools with that fee tier will remain unaffected. This action is exclusively available to administrators.
@@ -178,7 +186,6 @@ This function removes a fee tier based on the provided fee tier key. After remov
 
 | Name | Type    | Description                                         |
 | ---- | ------- | --------------------------------------------------- |
-| invariant | Invariant | ContractId of Invariant. |
 | feeTier  | FeeTier | The key associated with the fee tier to be removed. |
 
 #### Errors
@@ -193,7 +200,8 @@ This function removes a fee tier based on the provided fee tier key. After remov
 ### Create pool
 
 ```rust
-TxScript CreatePool(invariant: Invariant, token0: ByteVec, token1: ByteVec, feeTier: FeeTier, initSqrtPrice: U256, initTick: I256);
+@using(preapprovedAssets = true, checkExternalCaller = false)
+pub fn createPool(token0: ByteVec, token1: ByteVec, feeTier: FeeTier, initSqrtPrice: U256, initTick: I256) -> ()
 ```
 
 This function creates a pool based on a pair of tokens and the specified fee tier. The order of the tokens is irrelevant, and only one pool can exist with a specific combination of two tokens and a fee tier.
@@ -202,7 +210,6 @@ This function creates a pool based on a pair of tokens and the specified fee tie
 
 | Name            | Type      | Description                                                            |
 | --------------- | --------- | ---------------------------------------------------------------------- |
-| invariant | Invariant | ContractId of Invariant. |
 | token0         | AccountId | Address of the first PSP22 token in the pair.                          |
 | token1         | AccountId | Address of the second PSP22 token in the pair.                         |
 | feeTier        | FeeTier   | The fee tier to be applied.                                            |
@@ -223,7 +230,7 @@ This function creates a pool based on a pair of tokens and the specified fee tie
 ### Get pool
 
 ```rust
-pub fn Invariant::getPool(poolKey: PoolKey) -> (Bool, Pool);
+pub fn getPool(poolKey: PoolKey) -> (Bool, Pool);
 ```
 
 This function retrieves a pool based on PoolKey. It returns false as the first tuple variable if the pool does not exist.
@@ -244,7 +251,7 @@ This function retrieves a pool based on PoolKey. It returns false as the first t
 ### Get pools
 
 ```rust
-pub fn Invariant::getPools() -> ByteVec;
+pub fn getPools() -> ByteVec;
 ```
 
 This function retrieves listed pool keys.
@@ -260,15 +267,15 @@ This function retrieves listed pool keys.
 ### Create position
 
 ```rust
-TxScript CreatePosition(
-    invariant: Invariant,
+@using(preapprovedAssets = true, checkExternalCaller = false)
+pub fn createPosition(
     poolKey: PoolKey,
-    lowerTick: I256,
-    upperTick: I256,
+    lowerTickIndex: I256,
+    upperTickIndex: I256,
     liquidityDelta: U256,
     slippageLimitLower: U256,
     slippageLimitUpper: U256
-);
+    ) -> ()
 ```
 
 This function creates a position based on the provided parameters. The amount of tokens specified in liquidity delta will be deducted from the user's token balances. Position creation will fail if the user does not have enough tokens or has not approved enough tokens.
@@ -277,7 +284,6 @@ This function creates a position based on the provided parameters. The amount of
 
 | Name                 | Type      | Description                                                           |
 | -------------------- | --------- | --------------------------------------------------------------------- |
-| invariant | Invariant | ContractId of Invariant. |
 | poolKey             | PoolKey   | The pool key for which you want to create a position.                 |
 | lowerTick           | I256       | The lower tick index of your position.                                      |
 | upperTick           | I256       | The upper tick index of your position.                                      |
@@ -299,7 +305,8 @@ This function creates a position based on the provided parameters. The amount of
 ### Transfer position
 
 ```rust
-TxScript TransferPosition(invariant: Invariant, index: U256, recipient: Address);
+@using(preapprovedAssets = true, checkExternalCaller = false)
+pub fn transferPosition(index: U256, newOwner: Address) -> ()
 ```
 
 This function changes ownership of an existing position based on the position index in the user's position list. You can only change ownership of positions that you own; otherwise, it will return an error.
@@ -308,9 +315,8 @@ This function changes ownership of an existing position based on the position in
 
 | Name     | Type      | Description                                        |
 | -------- | --------- | -------------------------------------------------- |
-| invariant | Invariant | ContractId of Invariant. |
 | index    | U256       | Index of the position in the user's position list. |
-| receiver | Address | Address of the user who will receive the position. |
+| newOwner | Address | Address of the user who will receive the position. |
 
 #### Errors
 
@@ -321,7 +327,8 @@ This function changes ownership of an existing position based on the position in
 ### Remove position
 
 ```rust
-TxScript RemovePosition(invariant: Invariant, index: U256);
+@using(checkExternalCaller = false)
+pub fn removePosition(index: U256) -> () 
 ```
 
 This function removes a position from the user's position list and transfers the tokens used to create the position to the user's address.
@@ -330,7 +337,6 @@ This function removes a position from the user's position list and transfers the
 
 | Name  | Type | Description                                        |
 | ----- | ---- | -------------------------------------------------- |
-| invariant | Invariant | ContractId of Invariant. |
 | index | U256  | Index of the position in the user's position list. |
 
 #### Errors
@@ -342,7 +348,8 @@ This function removes a position from the user's position list and transfers the
 ### Claim fee
 
 ```rust
-TxScript ClaimFee(invariant: Invariant, index: U256);
+@using(checkExternalCaller = false)
+pub fn claimFee(index: U256) -> ()
 ```
 
 This function allows the user to claim fees from an existing position. Tokens will be sent to the user's address.
@@ -351,7 +358,6 @@ This function allows the user to claim fees from an existing position. Tokens wi
 
 | Name  | Type | Description                                        |
 | ----- | ---- | -------------------------------------------------- |
-| invariant | Invariant | ContractId of Invariant. |
 | index | U256  | Index of the position in the user's position list. |
 
 #### Errors
@@ -363,7 +369,7 @@ This function allows the user to claim fees from an existing position. Tokens wi
 ### Get position
 
 ```rust
-pub fn Invariant::getPosition(owner: Address, index: U256) -> (Bool, Position);
+pub fn getPosition(owner: Address, index: U256) -> (Bool, Position);
 ```
 
 This function returns false as the first tuple variable if the position does not exist.
@@ -408,8 +414,14 @@ This function returns a list of positions owned by the caller. The list will be 
 ### Swap
 
 ```rust
-TxScript Swap(invariant: Invariant, poolKey: PoolKey, xToY: Bool, amount: U256,
- byAmountIn: Bool, sqrtPriceLimit: U256);
+@using(preapprovedAssets = true, checkExternalCaller = false)
+pub fn swap(
+    poolKey: PoolKey,
+    xToY: Bool,
+    amount: U256,
+    byAmountIn: Bool,
+    sqrtPriceLimit: U256
+) -> CalculateSwapResult
 ```
 
 This function executes a swap based on the provided parameters. It transfers tokens from the user's address to the contract's address and vice versa. The swap will fail if the user does not have enough tokens, has not approved enough tokens, or if there is insufficient liquidity.
@@ -418,12 +430,17 @@ This function executes a swap based on the provided parameters. It transfers tok
 
 | Name             | Type        | Description                                                                             |
 | ---------------- | ----------- | --------------------------------------------------------------------------------------- |
-| invariant | Invariant | ContractId of Invariant. |
 | poolKey         | PoolKey     | Pool key of the pool on which you wish to perform the swap.                             |
 | xToY           | Bool        | Specifies the direction of the swap.                                                    |
 | amount           | U256 | Amount of tokens you want to receive or give.                                           |
 | byAmountIn     | Bool        | Indicates whether the entered amount represents the tokens you wish to receive or give. |
 | sqrtPriceLimit | U256   | If the swap achieves this square root of the price, it will be canceled.                |
+
+#### Output parameters
+
+| Type                | Description                                                                                                                                  |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| CalculateSwapResult | A struct containing the amount in and amount out with starting and target square root of price, taken fee, pool. |
 
 #### Errors
 
@@ -440,7 +457,7 @@ This function executes a swap based on the provided parameters. It transfers tok
 
 ```rust
     @using(checkExternalCaller = false)
-    pub fn Invariant::quote(
+    pub fn quote(
         poolKey: PoolKey,
         xToY: Bool,
         amount: U256,
@@ -483,7 +500,7 @@ This function performs a simulation of a swap based on the provided parameters a
 ### Get tick
 
 ```rust
-pub fn Invariant::getTick(poolKey: PoolKey, index: I256) -> (Bool, Tick);
+pub fn getTick(poolKey: PoolKey, index: I256) -> (Bool, Tick);
 ```
 
 Retrieves information about a tick at a specified index.
@@ -506,7 +523,7 @@ Retrieves information about a tick at a specified index.
 ### Is tick initialized
 
 ```rust
-pub fn Invariant::isTickInitialized(poolKey: PoolKey, index: I256) -> Bool;
+pub fn isTickInitialized(poolKey: PoolKey, index: I256) -> Bool;
 ```
 
 Retrieves information about a tick at a specified index.
