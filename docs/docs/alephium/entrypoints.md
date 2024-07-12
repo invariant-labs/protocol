@@ -1,0 +1,635 @@
+---
+title: Entrypoints
+
+slug: /alephium/entrypoints
+---
+
+This section outlines the core entrypoints for the Invariant smart contract, providing developers with essential methods to interact with the protocol. These entrypoints cover various aspects of the contract, including protocol fee management, fee tier administration, pool creation and management, position handling, and swap functionality.
+
+## Deployment
+
+```rust
+async function deployInvariant(
+  signer: SignerProvider,
+  protocolFee: bigint
+): Promise<InvariantInstance>;
+```
+
+This deployment method initializes the contract with the specified protocol fee. The administrator role is assigned to the signer.
+
+#### Input parameters
+
+| Name         | Type       | Description                          |
+| ------------ | ---------- | ------------------------------------ |
+| signer | SignerProvider | The user who will get administrative access. |
+| protocolFee | bigint | The percentage for the protocol fee. |
+
+## Protocol fee
+
+### Get protocol fee
+
+```rust
+pub fn Invariant::getProtocolFee() -> U256;
+```
+
+This method retrieves the current protocol fee percentage.
+
+#### Output parameters
+
+| Type       | Description               |
+| ---------- | ------------------------- |
+| U256 | The current protocol fee. |
+
+### Withdraw protocol fee
+
+```rust
+TxScript WithdrawProtocolFee(invariant: Invariant, poolKey: PoolKey);
+```
+
+This operation enables the withdrawal of protocol fees associated with a specific pool, based on the provided pool key. The withdrawn funds are sent to the fee receiver wallet. Please note that this action can only be performed by fee receiver.
+
+#### Input parameters
+
+| Name     | Type    | Description                                                                       |
+| -------- | ------- | --------------------------------------------------------------------------------- |
+| invariant | Invariant | ContractId of Invariant. |
+| poolKey | PoolKey | The pool key that corresponds to the withdrawal of fees from the associated pool. |
+
+#### Errors
+
+| Code             | Description                                                |
+| ---------------- | ---------------------------------------------------------- |
+| `PoolNotFound` | Reverts the call when a pool associated with the poolKey doesn't exist. |
+| `NotFeeReceiver` | Reverts the call when the caller is unauthorized receiver. |
+
+### Change protocol fee
+
+```rust
+TxScript ChangeProtocolFee(invariant: Invariant, newFee: U256);
+```
+
+This function allows for the adjustment of the current protocol fee percentage. Note that this operation is restricted to administrators.
+
+#### Input parameters
+
+| Name         | Type       | Description                      |
+| ------------ | ---------- | -------------------------------- |
+| invariant | Invariant | ContractId of Invariant. |
+| newFee | U256 | The new protocol fee percentage. |
+
+#### Errors
+
+| Code       | Description                                               |
+| ---------- | --------------------------------------------------------- |
+| `PoolNotFound` | Reverts the call when a pool associated with the poolKey doesn't exist. |
+| `NotAdmin` | Reverts the call when the caller is an unauthorized user. |
+
+### Change fee receiver
+
+```rust
+TxScript ChangeFeeReceiver(invariant: Invariant, poolKey: PoolKey, newFeeReceiver: Address);
+```
+
+This function allows for the modification of the fee receiver of a pool. Please note that this action is exclusively available to administrators.
+
+#### Input parameters
+
+| Name         | Type      | Description                                              |
+| ------------ | --------- | -------------------------------------------------------- |
+| invariant | Invariant | ContractId of Invariant. |
+| poolKey     | PoolKey   | The pool key of the pool where the change is to be made. |
+| newFeeReceiver | Address | The new fee receiver's address of the pool.              |
+
+#### Errors
+
+| Code       | Description                                            |
+| ---------- | ------------------------------------------------------ |
+| `NotAdmin` | Reverts the call when the caller is unauthorized user. |
+
+## Fee tier
+
+### Add fee tier
+
+```rust
+TxScript AddFeeTier(invariant: Invariant, feeTier: FeeTier);
+```
+
+This function enables the addition of a new fee tier, which users can subsequently utilize when creating pools. Please note that this action is restricted to administrators.
+
+#### Input parameters
+
+| Name     | Type    | Description               |
+| -------- | ------- | ------------------------- |
+| invariant | Invariant | ContractId of Invariant. |
+| feeTier | FeeTier | The fee tier to be added. |
+
+#### Errors
+
+| Code                  | Description                                                  |
+| --------------------- | ------------------------------------------------------------ |
+| `NotAdmin`            | Fails if an unauthorized user attempts to create a fee tier. |
+| `InvalidTickSpacing`  | Fails if the tick spacing is invalid.                        |
+| `FeeTierAlreadyExist` | Fails if the fee tier already exists.                        |
+| `InvalidFee`          | Fails if fee is invalid.                                     |
+
+### Fee Tier exists
+
+```rust
+pub fn Invariant::feeTierExist(feeTier: FeeTier) -> Bool;
+```
+
+This function is used to verify the existence of a specified fee tier.
+
+#### Input parameters
+
+| Name | Type    | Description                                                       |
+| ---- | ------- | ----------------------------------------------------------------- |
+| feeTier  | FeeTier | The key associated with the fee tier to be checked for existence. |
+
+#### Output parameters
+
+| Type | Description                                  |
+| ---- | -------------------------------------------- |
+| Bool | Boolean indicating if the fee tier exists. |
+
+### Get fee tiers
+
+```rust
+pub fn Invariant::getFeeTiers() -> ByteVec
+```
+
+Retrieves available fee tiers.
+
+#### Output parameters
+
+| Type          | Description                                             |
+| ------------- | ------------------------------------------------------- |
+| ByteVec | ByteVec containing all fee tiers. |
+
+### Remove fee tier
+
+```rust
+TxScript RemoveFeeTier(invariant: Invariant, feeTier: FeeTier);
+```
+
+This function removes a fee tier based on the provided fee tier key. After removal, the fee tier will no longer be available for use in pool creation. It's important to note that existing pools with that fee tier will remain unaffected. This action is exclusively available to administrators.
+
+#### Input parameters
+
+| Name | Type    | Description                                         |
+| ---- | ------- | --------------------------------------------------- |
+| invariant | Invariant | ContractId of Invariant. |
+| feeTier  | FeeTier | The key associated with the fee tier to be removed. |
+
+#### Errors
+
+| Code              | Description                                                  |
+| ----------------- | ------------------------------------------------------------ |
+| `NotAdmin`        | Fails if an unauthorized user attempts to create a fee tier. |
+| `FeeTierNotFound` | Fails if fee tier does not exist.                            |
+
+## Pools
+
+### Create pool
+
+```rust
+TxScript CreatePool(invariant: Invariant, token0: ByteVec, token1: ByteVec, feeTier: FeeTier, initSqrtPrice: U256, initTick: I256);
+```
+
+This function creates a pool based on a pair of tokens and the specified fee tier. The order of the tokens is irrelevant, and only one pool can exist with a specific combination of two tokens and a fee tier.
+
+#### Input parameters
+
+| Name            | Type      | Description                                                            |
+| --------------- | --------- | ---------------------------------------------------------------------- |
+| invariant | Invariant | ContractId of Invariant. |
+| token0         | AccountId | Address of the first PSP22 token in the pair.                          |
+| token1         | AccountId | Address of the second PSP22 token in the pair.                         |
+| feeTier        | FeeTier   | The fee tier to be applied.                                            |
+| initSqrtPrice | U256 | The square root of the price for the initial pool related to init_tick |
+| initTick       | I256       | The initial tick value for the pool.                                   |
+
+#### Errors
+
+| Code                   | Description                                                      |
+| ---------------------- | ---------------------------------------------------------------- |
+| `FeeTierNotFound`      | Fails if the specified fee tier cannot be found.                 |
+| `TokensAreSame`        | Fails if the user attempts to create a pool for the same tokens. |
+| `PoolKeyAlreadyExist`     | Fails if Pool with same tokens and fee tier already exist.       |
+| `InvalidTickSpacing`      | Fails if the init tick is not divisible by the tick spacing.     |
+| `InvalidTickIndex` | Fails if the init tick is outside of the Min <= Init <= Max tick index range. |
+| `TickAndSqrtPriceMismatch` | Fails if the init sqrt price is not related to the init tick.    |
+
+### Get pool
+
+```rust
+pub fn Invariant::getPool(poolKey: PoolKey) -> (Bool, Pool);
+```
+
+This function retrieves a pool based on PoolKey. It returns false as the first tuple variable if the pool does not exist.
+
+#### Input parameters
+
+| Name     | Type      | Description                                    |
+| -------- | --------- | ---------------------------------------------- |
+| poolKey | PoolKey   | The pool key of the pool you want to retrieve. |
+
+#### Output parameters
+
+| Type | Description                    |
+| ---- | ------------------------------ |
+| Bool | If true the pool was found and retrieved successfully, false otherwise.|
+| Pool | A struct containing pool data. |
+
+### Get pools
+
+```rust
+pub fn Invariant::getPools() -> ByteVec;
+```
+
+This function retrieves listed pool keys.
+
+#### Output parameters
+
+| Type          | Description                                            |
+| ------------- | ------------------------------------------------------ |
+| ByteVec | ByteVec containing all pool keys that indicate all pools listed. |
+
+## Position
+
+### Create position
+
+```rust
+TxScript CreatePosition(
+    invariant: Invariant,
+    poolKey: PoolKey,
+    lowerTick: I256,
+    upperTick: I256,
+    liquidityDelta: U256,
+    slippageLimitLower: U256,
+    slippageLimitUpper: U256
+);
+```
+
+This function creates a position based on the provided parameters. The amount of tokens specified in liquidity delta will be deducted from the user's token balances. Position creation will fail if the user does not have enough tokens or has not approved enough tokens.
+
+#### Input parameters
+
+| Name                 | Type      | Description                                                           |
+| -------------------- | --------- | --------------------------------------------------------------------- |
+| invariant | Invariant | ContractId of Invariant. |
+| poolKey             | PoolKey   | The pool key for which you want to create a position.                 |
+| lowerTick           | I256       | The lower tick index of your position.                                      |
+| upperTick           | I256       | The upper tick index of your position.                                      |
+| liquidityDelta      | U256 | The liquidity you want to provide.                                    |
+| slippageLimitLower | U256 | The lower square root of price fluctuation you are willing to accept. |
+| slippageLimitUpper | U256 | The upper square root of price fluctuation you are willing to accept. |
+
+
+#### Errors
+
+| Code                            | Description                                                                                |
+| ------------------------------- | ------------------------------------------------------------------------------------------ |
+| `ZeroLiquidity`                 | Fails if the user attempts to open a position with zero liquidity.                         |
+| `InvalidTickIndex` | Fails if the user attempts to create a position with invalid tick indexes. |
+| `InvalidTickSpacing` | Fails if the user attempts to create a position with invalid tick spacing. |
+| `PriceLimitReached`             | Fails if the price has reached the slippage limit.                                         |
+| `PoolNotFound`                  | Fails if pool does not exist.                                                              |
+
+### Transfer position
+
+```rust
+TxScript TransferPosition(invariant: Invariant, index: U256, recipient: Address);
+```
+
+This function changes ownership of an existing position based on the position index in the user's position list. You can only change ownership of positions that you own; otherwise, it will return an error.
+
+#### Input parameters
+
+| Name     | Type      | Description                                        |
+| -------- | --------- | -------------------------------------------------- |
+| invariant | Invariant | ContractId of Invariant. |
+| index    | U256       | Index of the position in the user's position list. |
+| receiver | Address | Address of the user who will receive the position. |
+
+#### Errors
+
+| Code                            | Description                                                                                |
+| ------------------------------- | ------------------------------------------------------------------------------------------ |
+| `PositionNotFound`                 | Fails if position does not exist.                        |
+
+### Remove position
+
+```rust
+TxScript RemovePosition(invariant: Invariant, index: U256);
+```
+
+This function removes a position from the user's position list and transfers the tokens used to create the position to the user's address.
+
+#### Input parameters
+
+| Name  | Type | Description                                        |
+| ----- | ---- | -------------------------------------------------- |
+| invariant | Invariant | ContractId of Invariant. |
+| index | U256  | Index of the position in the user's position list. |
+
+#### Errors
+
+| Code               | Description                        |
+| ------------------ | ---------------------------------- |
+| `PositionNotFound` | Fails if Position cannot be found. |
+
+### Claim fee
+
+```rust
+TxScript ClaimFee(invariant: Invariant, index: U256);
+```
+
+This function allows the user to claim fees from an existing position. Tokens will be sent to the user's address.
+
+#### Input parameters
+
+| Name  | Type | Description                                        |
+| ----- | ---- | -------------------------------------------------- |
+| invariant | Invariant | ContractId of Invariant. |
+| index | U256  | Index of the position in the user's position list. |
+
+#### Errors
+
+| Code               | Description                        |
+| ------------------ | ---------------------------------- |
+| `PositionNotFound` | Fails if Position cannot be found. |
+
+### Get position
+
+```rust
+pub fn Invariant::getPosition(owner: Address, index: U256) -> (Bool, Position);
+```
+
+This function returns false as the first tuple variable if the position does not exist.
+
+#### Input parameters
+
+| Name     | Type      | Description                                              |
+| -------- | --------- | -------------------------------------------------------- |
+| owner | Address | An Address identifying the user who owns the position. |
+| index    | U256       | Index of the position in the user's position list.       |
+
+#### Output parameters
+
+| Type                               | Description                                           |
+| ---------------------------------- | ----------------------------------------------------- |
+| Bool | If true the position was found and retrieved successfully, false otherwise.|
+| Position | A struct containing position data. |
+
+<!-- ### Get all positions
+
+```rust
+#[ink(message)]
+pub fn get_all_positions(&mut self, owner_id: AccountId) -> Vec<Position>;
+```
+
+This function returns a list of positions owned by the caller. The list will be empty if you do not have any positions.
+
+#### Input parameters
+
+| Name     | Type      | Description                                              |
+| -------- | --------- | -------------------------------------------------------- |
+| owner_id | AccountId | An AccountId identifying the user who own the positions. |
+
+#### Output parameters
+
+| Type           | Description                             |
+| -------------- | --------------------------------------- |
+| Vec<Position\> | A list containing the user's positions. | -->
+
+## Swap
+
+### Swap
+
+```rust
+TxScript Swap(invariant: Invariant, poolKey: PoolKey, xToY: Bool, amount: U256,
+ byAmountIn: Bool, sqrtPriceLimit: U256);
+```
+
+This function executes a swap based on the provided parameters. It transfers tokens from the user's address to the contract's address and vice versa. The swap will fail if the user does not have enough tokens, has not approved enough tokens, or if there is insufficient liquidity.
+
+#### Input parameters
+
+| Name             | Type        | Description                                                                             |
+| ---------------- | ----------- | --------------------------------------------------------------------------------------- |
+| invariant | Invariant | ContractId of Invariant. |
+| poolKey         | PoolKey     | Pool key of the pool on which you wish to perform the swap.                             |
+| xToY           | Bool        | Specifies the direction of the swap.                                                    |
+| amount           | U256 | Amount of tokens you want to receive or give.                                           |
+| byAmountIn     | Bool        | Indicates whether the entered amount represents the tokens you wish to receive or give. |
+| sqrtPriceLimit | U256   | If the swap achieves this square root of the price, it will be canceled.                |
+
+#### Errors
+
+| Code                | Description                                                                                                         |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `ZeroAmount`      | Fails if the user attempts to perform a swap with zero amounts.                                                     |
+| `WrongPriceLimit` | Fails if the square root of price or price limit is incorrect. |
+| `PriceLimitReached` | Fails if the price has reached the specified price limit (or price associated with specified square root of price). |
+| `TickLimitReached` | Fails if the tick index has reached the global tick limit. |
+| `NoGainSwap`        | Fails if the user would receive zero tokens.                                                                        |
+| `PoolNotFound`      | Fails if pool does not exist.                                                                                       |
+
+### Quote
+
+```rust
+    @using(checkExternalCaller = false)
+    pub fn Invariant::quote(
+        poolKey: PoolKey,
+        xToY: Bool,
+        amount: U256,
+        byAmountIn: Bool,
+        sqrtPriceLimit: U256
+    ) -> QuoteResult;
+```
+
+This function performs a simulation of a swap based on the provided parameters and returns the simulation results. It does not involve any actual token transfers.
+
+#### Input parameters
+
+| Name             | Type        | Description                                                                             |
+| ---------------- | ----------- | --------------------------------------------------------------------------------------- |
+| poolKey         | PoolKey     | Pool key of the pool on which you wish to perform the swap.                             |
+| xToY           | Bool        | Specifies the direction of the swap.                                                    |
+| amount           | U256 | Amount of tokens you want to receive or give.                                           |
+| byAmountIn     | Bool        | Indicates whether the entered amount represents the tokens you wish to receive or give. |
+| sqrtPriceLimit | U256   | If the swap achieves this square root of the price, it will be canceled.                |
+
+#### Output parameters
+
+| Type        | Description                                                                                                                                                                         |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| QuoteResult | A struct containing amount of tokens received, amount of tokens given and square root of price after the simulated swap. |
+
+#### Errors
+
+| Code                | Description                                                                                                         |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `ZeroAmount`      | Fails if the user attempts to perform a swap with zero amounts.                                                     |
+| `WrongPriceLimit` | Fails if the square root of price or price limit is incorrect. |
+| `PriceLimitReached` | Fails if the price has reached the specified price limit (or price associated with specified square root of price). |
+| `TickLimitReached` | Fails if the tick index has reached the global tick limit. |
+| `NoGainSwap`        | Fails if the user would receive zero tokens.                                                                        |
+| `PoolNotFound`      | Fails if pool does not exist.                                                                                       |
+
+## Tick
+
+### Get tick
+
+```rust
+pub fn Invariant::getTick(poolKey: PoolKey, index: I256) -> (Bool, Tick);
+```
+
+Retrieves information about a tick at a specified index.
+
+#### Input parameters
+
+| Name  | Type    | Description                                      |
+| ----- | ------- | ------------------------------------------------ |
+| poolKey   | PoolKey | A unique key that identifies the specified pool. |
+| index | I256     | The tick index in the tickmap.                   |
+
+#### Output parameters
+
+| Type | Description                    |
+| ---- | ------------------------------ |
+| Tick | A struct containing tick data. |
+| Bool | If true the tick was found and retrieved successfully, false otherwise.|
+
+
+### Is tick initialized
+
+```rust
+pub fn Invariant::isTickInitialized(poolKey: PoolKey, index: I256) -> Bool;
+```
+
+Retrieves information about a tick at a specified index.
+
+#### Input parameters
+
+| Name  | Type    | Description                                      |
+| ----- | ------- | ------------------------------------------------ |
+| poolKey   | PoolKey | A unique key that identifies the specified pool. |
+| index | I256     | The tick index in the tickmap.                   |
+
+#### Output parameters
+
+| Type | Description                                                |
+| ---- | ---------------------------------------------------------- |
+| Bool | boolean identifying if the tick is initialized in tickmap. |
+
+<!-- ### Get position ticks
+
+```rust
+#[ink(message)]
+fn get_position_ticks(&self, owner: AccountId, offset: u32) -> Vec<PositionTick>;
+```
+
+Retrieves list of lower and upper ticks of user positions.
+
+#### Input parameters
+
+| Name   | Type      | Description                                                |
+| ------ | --------- | ---------------------------------------------------------- |
+| owner  | AccountId | An `AccountId` identifying the user who owns the position. |
+| offset | u32       | The offset from the current position index.                |
+
+#### Output parameters
+
+| Type               | Description                                |
+| ------------------ | ------------------------------------------ |
+| Vec<PositionTick/> | Vector containing ticks of user positions. | -->
+
+<!-- ### Get user positions amount
+
+```rust
+#[ink(message)]
+fn get_user_position_amount(&self, owner: AccountId) -> u32;
+```
+
+Retrieves the amount of positions held by the user.
+
+#### Input parameters
+
+| Name  | Type      | Description                                                |
+| ----- | --------- | ---------------------------------------------------------- |
+| owner | AccountId | An `AccountId` identifying the user who owns the position. |
+
+#### Output parameters
+
+| Type | Description               |
+| ---- | ------------------------- |
+| u32  | Number of user positions. | -->
+
+<!-- ### Get liquidity ticks
+
+```rust
+#[ink(message)]
+fn get_liquidity_ticks(&self, pool_key: PoolKey, offset: u16) -> Vec<LiquidityTick>;
+```
+
+Retrieves ticks of a specified pool.
+
+#### Input parameters
+
+| Name     | Type    | Description                                      |
+| -------- | ------- | ------------------------------------------------ |
+| pool_key | PoolKey | A unique key that identifies the specified pool. |
+| offset   | u16     | The offset from which ticks will be retrieved.   |
+
+#### Output parameters
+
+| Type                | Description                                |
+| ------------------- | ------------------------------------------ |
+| Vec<LiquidityTick/> | Vector containing ticks of specified pool. | -->
+
+<!-- ### Get liquidity ticks amount
+
+```rust
+#[ink(message)]
+fn get_liquidity_ticks_amount(&self, pool_key: PoolKey) -> u32;
+```
+
+Retrieves the amount of liquidity ticks of a specified pool.
+
+#### Input parameters
+
+| Name     | Type    | Description                                      |
+| -------- | ------- | ------------------------------------------------ |
+| pool_key | PoolKey | A unique key that identifies the specified pool. |
+
+#### Output parameters
+
+| Type | Description                          |
+| ---- | ------------------------------------ |
+| u32  | Number of ticks on a specified pool. | -->
+<!-- 
+## Tickmap
+
+### Get tickmap
+
+```rust
+#[ink(message)]
+fn get_tickmap(&self, pool_key: PoolKey, center_tick: i32) -> Vec<(u16,u64)>;
+```
+
+Retrieves tickmap chunks for a specified pool.
+
+#### Input parameters
+
+| Name        | Type    | Description                                      |
+| ----------- | ------- | ------------------------------------------------ |
+| pool_key    | PoolKey | A unique key that identifies the specified pool. |
+| center_tick | i32     | Center tick index.                               |
+
+#### Output parameters
+
+| Type            | Description                                       |
+| --------------- | ------------------------------------------------- |
+| Vec<(u16,u64)/> | Vector containing tickmap chunks index and value. | -->

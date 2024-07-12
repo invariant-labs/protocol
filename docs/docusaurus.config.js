@@ -28,7 +28,8 @@ module.exports = {
         { to: '/docs/eclipse/introduction', label: 'Eclipse', position: 'left' },
         { to: '/docs/aleph_zero/installation', label: 'Aleph Zero', position: 'left' },
         { to: '/docs/casper/installation', label: 'Casper Network', position: 'left' },
-        { to: '/docs/vara/installation', label: 'VARA', position: 'left' }
+        { to: '/docs/vara/installation', label: 'VARA', position: 'left' },
+        { to: '/docs/alephium/installation', label: 'Alephium', position: 'left' }
       ]
     },
     footer: {
