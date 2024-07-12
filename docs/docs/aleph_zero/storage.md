@@ -58,8 +58,8 @@ pub struct PoolKey {
 
 | Name     | Type      | Description                   |
 | -------- | --------- | ----------------------------- |
-| token_x  | AccountId | address of x token.           |
-| token_y  | AccountId | address of y token.           |
+| token_x  | AccountId | The address of x token.           |
+| token_y  | AccountId | The address of y token.           |
 | fee_tier | FeeTier   | FeeTier associated with pool. |
 
 ## Pool

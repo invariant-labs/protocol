@@ -161,22 +161,16 @@ This function is used to verify the existence of a specified fee tier.
 
 ```rust
 #[ink(message)]
-pub fn get_fee_tiers(&self, key: FeeTier) -> Vec<FeeTier>;
+pub fn get_fee_tiers(&self) -> Vec<FeeTier>;
 ```
 
-Retrieves available fee tiers.
-
-#### Input parameters
-
-| Name | Type    | Description                                                       |
-| ---- | ------- | ----------------------------------------------------------------- |
-| key  | FeeTier | The key associated with the fee tier to be checked for existence. |
+Retrieves all available fee tiers.
 
 #### Output parameters
 
 | Type          | Description                                             |
 | ------------- | ------------------------------------------------------- |
-| Vec<FeeTier\> | Vector containing all fee tiers added to specified pool |
+| Vec<FeeTier\> | Vector containing all fee tiers. |
 
 ### Remove fee tier
 
