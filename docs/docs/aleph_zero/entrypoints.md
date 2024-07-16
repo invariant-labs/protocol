@@ -179,7 +179,7 @@ Retrieves all available fee tiers.
 pub fn remove_fee_tier(&mut self, key: FeeTier) -> Result<(), InvariantError>;
 ```
 
-This function removes a fee tier based on the provided fee tier key. After removal, the fee tier will no longer be available for use in pool creation. It's important to note that existing pools with that fee tier will remain unaffected. This action is exclusively available to administrators.
+This function removes a fee tier based on the provided fee tier key. After removal, the fee tier will no longer be available for use in pool creation. It is important to note that existing pools with that fee tier will remain unaffected. This action is exclusively available to administrators.
 
 #### Input parameters
 

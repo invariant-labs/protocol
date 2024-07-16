@@ -87,10 +87,7 @@ npm install
 #### Start a local devnet for testing and development
 
 ```bash
-(
-  cd alephium-stack
-  make start-devnet
-)
+  cd alephium-stack && make start-devnet
 ```
 
 #### Compile contracts

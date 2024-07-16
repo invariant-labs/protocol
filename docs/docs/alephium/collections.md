@@ -41,7 +41,7 @@ Adds a new position to the caller's account.
 | Name       | Type      | Description                                            |
 | ---------- | --------- | ------------------------------------------------------ |
 | caller | Address | The address of the user who will receive the position. |
-| payer | Address | The address of the user who will pay the deposit fee for the position. |
+| payer | Address | The address of the user who will pay for creating the contract (memory allocation). |
 | position   | Position  | The Position struct with data.                         |
 
 
@@ -67,7 +67,7 @@ Removes a position at a specific index for the specified account.
 fn wrappedTransferPosition(caller: Address, index: U256, newOwner: Address) -> ();
 ```
 
-Transfers a position from one account to another. The deposit fee is covered by the transferrer.
+Transfers a position from one account to another. The fee for creating the contract is covered by the transferrer.
 
 #### Input parameters
 
@@ -147,7 +147,7 @@ fn wrappedCreateTick(
     poolKey: PoolKey,
     index: I256,
     ...
-    ) -> (); 
+) -> ();
 ```
 
 Adds a new tick associated with a specific pool key and index.
@@ -237,7 +237,7 @@ fn addPool(
     originalCaller: Address,
     poolKey: PoolKey,
     ...
-    ) -> () 
+) -> ();
 ```
 
 Adds a new pool associated with the specified pool key. Throws an exception if a pool with the same pool key already exists.
@@ -435,7 +435,7 @@ Contract Invariant(...) extends Tickmap(), ...{
 }
 ```
 
-The `Tickmap` Abstract Contract is designed to aid efficient traversal over ticks in a Pool. It utilizes a mapping data structure where each pool is identified by a `PoolKey` and `TickmapBatch` index. Due to the data storage limits of a single Contract, a Pool's tickmap is divided into several `TickmapBatch`es and further divided into chunks. One batch currently consists of 94 chunks. The size of a `Tickmap` is affected by the `tickSpacing` parameter of the `FeeTier`. The higher the tick spacing the less Contracts the tickmap employs.
+The `Tickmap` Abstract Contract is designed to aid efficient traversal over ticks in a Pool. It utilizes a mapping data structure where each pool is identified by a `PoolKey` and `TickmapBatch` index. Due to the data storage limits of a single Contract, a Pool's tickmap is divided into several `TickmapBatch`es and further divided into chunks. One batch consists of 94 chunks, each storing information about the initialization state of 256 ticks. The maximum size of a `Tickmap` is affected by the `tickSpacing` parameter of the `FeeTier`. The higher the tick spacing the less Contracts the tickmap employs.
 
 | Type                   | Key                               | Value                                 |
 | ---------------------- | --------------------------------- | ------------------------------------- |
@@ -454,7 +454,7 @@ Calculates where tick's bit will be located.
 | Name  | Type    | Description           |
 | ----- | ------- | --------------------- |
 | tick   | I256 | Index of a tick.|
-| tickSpacing | U256     | The spacing between usable ticks.|
+| tickSpacing | U256     | The spacing between initializable ticks.|
 
 #### Output parameters
 
@@ -474,7 +474,7 @@ Retrieve chunk's data.
 
 | Name  | Type    | Description           |
 | ----- | ------- | --------------------- |
-| chunk   | I256 | Index of a tick.|
+| chunk   | U256 | Index of a chunk.|
 | poolKey | poolKey     | The pool key of a specified pool.|
 
 #### Output parameters
@@ -489,18 +489,18 @@ Retrieve chunk's data.
 fn flipBitAtPosition(value: U256, position: U256) -> U256;
 ```
 
-Flips bit at position.
+Flips bit in value at position.
 
 | Name  | Type    | Description           |
 | ----- | ------- | --------------------- |
 | value   | U256 | The value in which we flip a bit.|
-| position | U256     | The position of a bit to flip.|
+| position | U256     | The position of a bit to set.|
 
 #### Output parameters
 
 | Type | Description                 |
 | ---- | --------------------------- |
-| U256 | `value` variable with the specified bit flipped. |
+| U256 | `value` with the specified bit flipped. |
 
 ### Contains initialized tick
 
@@ -508,7 +508,7 @@ Flips bit at position.
 pub fn getBit(tick: I256, poolKey: PoolKey) -> Bool;
 ```
 
-Retrieves the state of the exact bit representing the tick.
+Retrieves the state of the exact bit representing the initialization state of a tick (1 - initialized, 0 - uninitialized).
 
 
 #### Input parameters
@@ -552,15 +552,13 @@ fn initReserve(caller: Address, reservePath: ByteVec, assetsToStore: U256) -> By
 
 Adds a new `Reserve` and instantly registers `assetsToStore` assets.
 
-
 #### Input parameters
 
 | Name  | Type    | Description           |
 | ----- | ------- | --------------------- |
-| caller   | Address | Address of the user who wants to know where the Token is stored. They pay the eventual fee.|
-| reservePath | ByteVec     | Unique path. Required by current implementation, not used anywhere else.|
-| assetsToStore | U256     | Number of assets that will be stored right away.|
-
+| caller   | Address | Address of the user who wants to create a reserve. They pay the allocation fee.|
+| reservePath | ByteVec     | Unique identifier to be used for the new Subcontract. Usually contractId of one of the tokens.|
+| assetsToStore | U256     | The number of assets that will be stored inside the reserve.|
 
 #### Output parameters
 
@@ -577,12 +575,13 @@ fn handleReserves(caller: Address, subPath: ByteVec, tokenX: ByteVec, tokenY: By
 
 Retrieves the ids of `Reserve`s for both tokens. If a token isn't stored in a Reserve yet allocates space for it.
 
+> **_NOTE:_** This function employs the token[X|Y] naming convention, indicating that arranging these tokens in ascending order by `contractId` is necessary.
 
 #### Input parameters
 
 | Name  | Type    | Description           |
 | ----- | ------- | --------------------- |
-| caller   | Address | Address of the user who wants to know where the Token is or will be stored. They are required to pay the initial fee.|
+| caller   | Address | Address of the user who wants to know where the Token is or will be stored. They are required to pay the eventual fee.|
 | subPath | ByteVec     | Unique path to be used in case a new Reserve has to be created.|
 | tokenX | ByteVec     | Id of the first token.|
 | tokenY | ByteVec     | Id of the second token.|

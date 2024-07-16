@@ -163,7 +163,7 @@ This function is used to verify the existence of a specified fee tier.
 ### Get fee tiers
 
 ```rust
-pub fn getFeeTiers() -> ByteVec
+pub fn getFeeTiers() -> ByteVec;
 ```
 
 Retrieves available fee tiers.
@@ -180,7 +180,7 @@ Retrieves available fee tiers.
 pub fn removeFeeTier(feeTier: FeeTier) -> ();
 ```
 
-This function removes a fee tier based on the provided fee tier key. After removal, the fee tier will no longer be available for use in pool creation. It's important to note that existing pools with that fee tier will remain unaffected. This action is exclusively available to administrators.
+This function removes a fee tier based on the provided fee tier key. After removal, the fee tier will no longer be available for use in pool creation. It is important to note that existing pools with that fee tier will remain unaffected. This action is exclusively available to administrators.
 
 #### Input parameters
 
@@ -201,19 +201,22 @@ This function removes a fee tier based on the provided fee tier key. After remov
 
 ```rust
 @using(preapprovedAssets = true, checkExternalCaller = false)
-pub fn createPool(token0: ByteVec, token1: ByteVec, feeTier: FeeTier, initSqrtPrice: U256, initTick: I256) -> ()
+pub fn createPool(token0: ByteVec, token1: ByteVec, feeTier: FeeTier, initSqrtPrice: U256, initTick: I256) -> ();
 ```
 
-This function creates a pool based on a pair of tokens and the specified fee tier. The order of the tokens is irrelevant, and only one pool can exist with a specific combination of two tokens and a fee tier.
+This function creates a pool based on a pair of tokens and the specified fee tier. Only one pool can exist with a specific combination of two tokens and a fee tier. The tokens are expected to use Alephium's [Fungible Token Standard](https://docs.alephium.org/dapps/standards/fungible-tokens#fungible-token-standard). **Anyone** can add a pool and **no permissions are needed**.
+
+> **_NOTE:_** This function employs the token[0|1] naming convention, indicating that arranging these tokens in ascending order by `contractId` is not necessary.
+
 
 #### Input parameters
 
 | Name            | Type      | Description                                                            |
 | --------------- | --------- | ---------------------------------------------------------------------- |
-| token0         | AccountId | Address of the first PSP22 token in the pair.                          |
-| token1         | AccountId | Address of the second PSP22 token in the pair.                         |
+| token0         | AccountId | Address of the first token in the pair.                          |
+| token1         | AccountId | Address of the second token in the pair.                         |
 | feeTier        | FeeTier   | The fee tier to be applied.                                            |
-| initSqrtPrice | U256 | The square root of the price for the initial pool related to init_tick |
+| initSqrtPrice | U256 | The square root of the price for the initial pool related to initTick. |
 | initTick       | I256       | The initial tick value for the pool.                                   |
 
 #### Errors
@@ -275,7 +278,7 @@ pub fn createPosition(
     liquidityDelta: U256,
     slippageLimitLower: U256,
     slippageLimitUpper: U256
-    ) -> ()
+) -> ();
 ```
 
 This function creates a position based on the provided parameters. The amount of tokens specified in liquidity delta will be deducted from the user's token balances. Position creation will fail if the user does not have enough tokens or has not approved enough tokens.
@@ -288,8 +291,8 @@ This function creates a position based on the provided parameters. The amount of
 | lowerTick           | I256       | The lower tick index of your position.                                      |
 | upperTick           | I256       | The upper tick index of your position.                                      |
 | liquidityDelta      | U256 | The liquidity you want to provide.                                    |
-| slippageLimitLower | U256 | The lower square root of price fluctuation you are willing to accept. |
-| slippageLimitUpper | U256 | The upper square root of price fluctuation you are willing to accept. |
+| slippageLimitLower | U256 | The lower limit determined by the square root of the price, which cannot be exceeded by the current `sqrtPrice` in the pool. |
+| slippageLimitUpper | U256 | The upper limit determined by the square root of the price, which cannot be exceeded by the current `sqrtPrice` in the pool. |
 
 
 #### Errors
@@ -306,7 +309,7 @@ This function creates a position based on the provided parameters. The amount of
 
 ```rust
 @using(preapprovedAssets = true, checkExternalCaller = false)
-pub fn transferPosition(index: U256, newOwner: Address) -> ()
+pub fn transferPosition(index: U256, newOwner: Address) -> ();
 ```
 
 This function changes ownership of an existing position based on the position index in the user's position list. You can only change ownership of positions that you own; otherwise, it will return an error.
@@ -328,10 +331,10 @@ This function changes ownership of an existing position based on the position in
 
 ```rust
 @using(checkExternalCaller = false)
-pub fn removePosition(index: U256) -> () 
+pub fn removePosition(index: U256) -> ();
 ```
 
-This function removes a position from the user's position list and transfers the tokens used to create the position to the user's address.
+This function removes a position from the user's position list and transfers the tokens in the position and all generated unclaimed fees to the user's address.
 
 #### Input parameters
 
@@ -349,7 +352,7 @@ This function removes a position from the user's position list and transfers the
 
 ```rust
 @using(checkExternalCaller = false)
-pub fn claimFee(index: U256) -> ()
+pub fn claimFee(index: U256) -> ();
 ```
 
 This function allows the user to claim fees from an existing position. Tokens will be sent to the user's address.
@@ -372,7 +375,7 @@ This function allows the user to claim fees from an existing position. Tokens wi
 pub fn getPosition(owner: Address, index: U256) -> (Bool, Position);
 ```
 
-This function returns false as the first tuple variable if the position does not exist.
+This function returns false as the first tuple variable and an empty `Position` as the second if the position does not exist.
 
 #### Input parameters
 
@@ -424,14 +427,14 @@ pub fn swap(
 ) -> CalculateSwapResult
 ```
 
-This function executes a swap based on the provided parameters. It transfers tokens from the user's address to the contract's address and vice versa. The swap will fail if the user does not have enough tokens, has not approved enough tokens, or if there is insufficient liquidity.
+This function executes a swap based on the provided parameters. It transfers tokens from the user's address to the contract's address and vice versa. The swap will fail if the user does not have enough tokens, the swap limit is exceeded, has not approved enough tokens, or if there is insufficient liquidity.
 
 #### Input parameters
 
 | Name             | Type        | Description                                                                             |
 | ---------------- | ----------- | --------------------------------------------------------------------------------------- |
 | poolKey         | PoolKey     | Pool key of the pool on which you wish to perform the swap.                             |
-| xToY           | Bool        | Specifies the direction of the swap.                                                    |
+| xToY           | Bool        | Specifies the direction of the swap. If `true` swap from the Token with lower `ContractId` to the one with higher, else the other way around.|
 | amount           | U256 | Amount of tokens you want to receive or give.                                           |
 | byAmountIn     | Bool        | Indicates whether the entered amount represents the tokens you wish to receive or give. |
 | sqrtPriceLimit | U256   | If the swap achieves this square root of the price, it will be canceled.                |
@@ -447,7 +450,7 @@ This function executes a swap based on the provided parameters. It transfers tok
 | Code                | Description                                                                                                         |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `ZeroAmount`      | Fails if the user attempts to perform a swap with zero amounts.                                                     |
-| `WrongPriceLimit` | Fails if the square root of price or price limit is incorrect. |
+| `WrongPriceLimit` | Fails if the square root of price or price limit is set incorrectly. Usually happens due to setting the wrong direction of the swap. |
 | `PriceLimitReached` | Fails if the price has reached the specified price limit (or price associated with specified square root of price). |
 | `TickLimitReached` | Fails if the tick index has reached the global tick limit. |
 | `NoGainSwap`        | Fails if the user would receive zero tokens.                                                                        |
@@ -473,7 +476,7 @@ This function performs a simulation of a swap based on the provided parameters a
 | Name             | Type        | Description                                                                             |
 | ---------------- | ----------- | --------------------------------------------------------------------------------------- |
 | poolKey         | PoolKey     | Pool key of the pool on which you wish to perform the swap.                             |
-| xToY           | Bool        | Specifies the direction of the swap.                                                    |
+| xToY           | Bool        | Specifies the direction of the swap. If `true` swap from the Token with lower `ContractId` to the one with higher, else the other way around.|
 | amount           | U256 | Amount of tokens you want to receive or give.                                           |
 | byAmountIn     | Bool        | Indicates whether the entered amount represents the tokens you wish to receive or give. |
 | sqrtPriceLimit | U256   | If the swap achieves this square root of the price, it will be canceled.                |
@@ -489,7 +492,7 @@ This function performs a simulation of a swap based on the provided parameters a
 | Code                | Description                                                                                                         |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `ZeroAmount`      | Fails if the user attempts to perform a swap with zero amounts.                                                     |
-| `WrongPriceLimit` | Fails if the square root of price or price limit is incorrect. |
+| `WrongPriceLimit` | Fails if the square root of price or price limit is set incorrectly. Usually happens due to setting the wrong direction of the swap. |
 | `PriceLimitReached` | Fails if the price has reached the specified price limit (or price associated with specified square root of price). |
 | `TickLimitReached` | Fails if the tick index has reached the global tick limit. |
 | `NoGainSwap`        | Fails if the user would receive zero tokens.                                                                        |
@@ -503,21 +506,21 @@ This function performs a simulation of a swap based on the provided parameters a
 pub fn getTick(poolKey: PoolKey, index: I256) -> (Bool, Tick);
 ```
 
-Retrieves information about a tick at a specified index.
+Retrieves information about a tick at a specified index. If the tick cannot be found a `(false, Tick)` tuple is returned with empty `Tick` in the second parameter.
 
 #### Input parameters
 
 | Name  | Type    | Description                                      |
 | ----- | ------- | ------------------------------------------------ |
 | poolKey   | PoolKey | A unique key that identifies the specified pool. |
-| index | I256     | The tick index in the tickmap.                   |
+| index | I256     | The tick index.                   |
 
 #### Output parameters
 
 | Type | Description                    |
 | ---- | ------------------------------ |
 | Tick | A struct containing tick data. |
-| Bool | If true the tick was found and retrieved successfully, false otherwise.|
+| Bool | If `true` the tick was found and retrieved successfully, false otherwise.|
 
 
 ### Is tick initialized
@@ -526,20 +529,20 @@ Retrieves information about a tick at a specified index.
 pub fn isTickInitialized(poolKey: PoolKey, index: I256) -> Bool;
 ```
 
-Retrieves information about a tick at a specified index.
+Retrieves the initialization state of a tick.
 
 #### Input parameters
 
 | Name  | Type    | Description                                      |
 | ----- | ------- | ------------------------------------------------ |
 | poolKey   | PoolKey | A unique key that identifies the specified pool. |
-| index | I256     | The tick index in the tickmap.                   |
+| index | I256     | The tick index.|
 
 #### Output parameters
 
 | Type | Description                                                |
 | ---- | ---------------------------------------------------------- |
-| Bool | boolean identifying if the tick is initialized in tickmap. |
+| Bool | If `true` - initialized, if `false` - uninitialized. |
 
 <!-- ### Get position ticks
 

@@ -4,13 +4,44 @@ title: Overview
 slug: /alephium/overview
 ---
 
-This section provides an overview of the structural organization of the Invariant Protocol smart contract project on Alephium. The project is meticulously structured to enhance readability, maintainability, and efficiency. The architecture is designed to consolidate data within a single contract where possible, minimizing fees and simplifying interactions.
+This section provides an overview of the structural organization of the Invariant Protocol smart contract project on Alephium. The project is meticulously structured to enhance readability, maintainability, and efficiency. The architecture is designed to handle user interactions in the main contract and perform computations in another, minimizing fees and simplifying interactions, all within the limits imposed by the Alephium blockchain. 
 
-## Contract Architecture
+## Contracts Architecture
 
+The runtime structure of Contracts is as follows:
+
+```
+📦protocol-alephium
+┣ 📜Invariant
+┃ ┣ 📜Reserve
+┃ ┣ 🗺️poolKeys
+┃ ┣ 🗺️pools
+┃ ┣ 🗺️ticks
+┃ ┣ 🗺️bitmap
+┃ ┣ 🗺️positions
+┃ ┣ 🗺️positionsCounter
+┃ ┗ 🗺️reserves
+┃ 📜CLAMM
+┗ 📜reserveTemplateId
+
+Legend:
+📜 - instantiated Contract
+🗺️ - mapping
+```
+
+### Invariant
 To optimize gas usage, we centralize entrypoints in a singular contract. This streamlined approach not only cuts costs but also simplifies processes, enhancing accessibility. By concentrating state changes and entrypoints within this central contract, we reduce the intricacies of managing external contracts, while smart mapping intelligently conserves storage resources and bolsters system efficiency.
 
-<!-- TODO: Showcase the actual architecture with Contracts and their relationship more -->
+### CLAMM
+The Concentrated Liquidity Automatic Market Maker (CLAMM) Contract's task is performing computations, it houses all the mathematical formulas related to logarithms, scrutinizingly optimized for our use-case, and other functionality required to perform an efficient swap that minimizes its price.
+
+### Reserve & reserveTemplateId
+Reserves are subcontracts of Invariant instantiated at runtime, designed to overcome the limitation of being able to only store up to 8 assets per Contract. Each different token type is considered an asset. An effort has been made so our protocol can scale to an arbitrary number of different tokens while maintaining the same performance. The [Reserves](collections.md#reserves) collection serves as an intermediary for when Invariant interacts with an [Reserve](storage.md#reserve).
+
+reserveTemplateId is a contractId of a special template Reserve that is deployed before the Invariant protocol, and thus not governed by it making it unfit for use as a storage. Its purpose is to serve as a template for Subcontracts, reducing the gas fee associated with their instantiation.
+
+### Other (🗺️)
+Mappings in itself are not `Contract`s, rather, they deploy and manage new subcontracts that are only simple data entries. Their explanation can be found in the [collections section](collections.md).
 
 ## Project Structure
 
@@ -47,7 +78,8 @@ Our "Collections" directory is dedicated to collections of data that leverage Ra
 
 #### Token
 
-The "Token" directory is solely for our end-to-end tests. It enables us to simulate production-ready token interactions and transactions, with the exchange operating on UTXO model. This detail is essential for implementing transfers in entrypoints and conducting thorough end-to-end tests to validate the protocol.
+Tokens used in our protocol adhere to the official Alephium's [Fungible Token Standard](https://docs.alephium.org/dapps/standards/fungible-tokens/#fungible-token-standard).
+Due to tokens being first world citizens in the Alephium ecosystem, the "Token" directory is solely for our end-to-end tests. It enables us to simulate production-ready token interactions and transactions, with the exchange operating on UTXO model. This detail is essential for implementing transfers in entrypoints and conducting thorough end-to-end tests to validate the protocol.
 
 #### Scripts
 
@@ -55,8 +87,8 @@ The "Scripts" directory contains all entrypoints, including ones used for e2e te
 
 ### Src
 
-The "Src" directory contains the sdk package that can be used to interact with dex and macros designed for efficient end-to-end testing. A comprehensive description of the sdk package can be found [here](sdk.md).
- Meanwhile the macros abstract low-level calls and transaction building, allowing developers to focus solely on verifying expected logic during tests. This minimizes code repetition, simplifies the testing interface, and ensures a clear and concise testing environment.
+The "Src" directory contains the sdk package that can be used to interact with dex and functions suite designed for efficient end-to-end testing. A comprehensive description of the sdk package can be found [here](sdk.md). 
+Meanwhile the functions suite simplifies transaction building, allowing developers to focus solely on verifying expected logic during tests. This minimizes code repetition, simplifies the testing interface, and ensures a clear and concise testing environment.
 
 ### Test
 
