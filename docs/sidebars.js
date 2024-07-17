@@ -175,6 +175,21 @@ module.exports = {
         'vara/invariant_errors'
       ]
     },
+    {
+      type: 'category',
+      label: 'Alephium',
+      collapsed: true,
+      items: [
+        'alephium/installation',
+        'alephium/overview',
+        // 'alephium/sdk',
+        'alephium/storage',
+        'alephium/collections',
+        'alephium/entrypoints',
+        'alephium/invariant_errors',
+        // 'alephium/deployment'
+      ]
+    },
     'faq',
     'resources',
     {

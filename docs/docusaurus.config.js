@@ -28,7 +28,8 @@ module.exports = {
         { to: '/docs/eclipse/introduction', label: 'Eclipse', position: 'left' },
         { to: '/docs/aleph_zero/installation', label: 'Aleph Zero', position: 'left' },
         { to: '/docs/casper/installation', label: 'Casper Network', position: 'left' },
-        { to: '/docs/vara/installation', label: 'VARA', position: 'left' }
+        { to: '/docs/vara/installation', label: 'VARA', position: 'left' },
+        { to: '/docs/alephium/installation', label: 'Alephium', position: 'left' }
       ]
     },
     footer: {
@@ -105,6 +106,10 @@ module.exports = {
             to: '/docs/aleph_zero/installation'
           },
           {
+            from: '/docs/alephium/',
+            to: '/docs/alephium/installation'
+          },
+          {
             from: '/docs/solana/',
             to: '/docs/solana/introduction'
           },
@@ -124,6 +129,9 @@ module.exports = {
         createRedirects(existingPath) {
           if (existingPath === '/docs/aleph_zero/') {
             return '/docs/aleph_zero/installation'
+          }
+          if (existingPath === '/docs/alephium/') {
+            return '/docs/alephium/installation'
           }
           if (existingPath === '/docs/solana/') {
             return '/docs/solana/introduction'

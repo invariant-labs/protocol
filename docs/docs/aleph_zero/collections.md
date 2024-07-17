@@ -96,8 +96,6 @@ Removes a position at a specific index for the specified account. Returns an err
 
 ### Transfer Position
 
-Transfers a position from one account to another. Returns an error if the position does not exist.
-
 ```rust
 pub fn transfer(
     &mut self,
@@ -106,6 +104,8 @@ pub fn transfer(
     receiver: AccountId,
 ) -> Result<(), InvariantError>;
 ```
+
+Transfers a position from one account to another. Returns an error if the position does not exist.
 
 #### Input parameters
 
@@ -147,7 +147,8 @@ Retrieves a position at a specific index for the specified account. Returns none
 
 | Name       | Type      | Description                                               |
 | ---------- | --------- | --------------------------------------------------------- |
-| account_id | AccountId | The address of the user whose positions will be returned. |
+| account_id | AccountId | The address of the user whose position will be returned. |
+| index | i32     | Index of a position.            |
 
 #### Output parameters
 
@@ -270,11 +271,11 @@ pub struct Pools {
 }
 ```
 
+The `Pools` struct is designed to manage pools associated with different `PoolKey` values. It uses a mapping data structure, where each pool is identified by a unique `PoolKey`, and a `Pool` object is stored as the associated value. The provided functions allow you to add, retrieve, update, and remove pools associated with specific `PoolKey` values.
+
 | Type                   | Key                               | Value                                 |
 | ---------------------- | --------------------------------- | ------------------------------------- |
-| Mapping<PoolKey, Pool> | The pool key of a specified pool. | Pool struct holding the pools's data. |
-
-The `Pools` struct is designed to manage pools associated with different `PoolKey` values. It uses a mapping data structure, where each pool is identified by a unique `PoolKey`, and a `Pool` object is stored as the associated value. The provided functions allow you to add, retrieve, update, and remove pools associated with specific `PoolKey` values.
+| Mapping<PoolKey, Pool> | The pool key of a specified pool. | Pool struct holding the pools' data. |
 
 ### Add pool
 
@@ -351,6 +352,11 @@ pub struct FeeTiers {
 
 The `FeeTiers` struct is designed to manage fee tiers. It utilizes a vector (Vec) data structure, where each element corresponds to a different fee tier represented by a `FeeTier` object. The provided functions allow you to add, retrieve, update, and remove fee tiers within the collection. Each fee tier is uniquely identified within the vector, and you can perform operations on these fee tiers based on their positions in the vector.
 
+
+| Type         | Description                                   |
+|--------------|-----------------------------------------------|
+| Vec<FeeTier\> | Vec holding the structs with fee tiers' data. |
+
 ### Add fee tier
 
 ```rust
@@ -424,7 +430,14 @@ pub struct PoolKeys {
 }
 ```
 
-The `PoolKeys` struct is designed to manage pool keys. It utilizes a Mapping data structure, where each element corresponds to a different pool key represented by a `PoolKey` object. We have decided to choose a Mapping structure due to vector (Vec) size limitiation of `16kB`. The provided functions allow you to add, retrieve, update, and remove pool keys within the collection. Each pool key is uniquely identified within the mapping, and you can perform operations on these pool keys based on their positions in the map.
+The `PoolKeys` struct is designed to manage pool keys. It utilizes a Mapping data structure, where each element corresponds to a different pool key represented by a `PoolKey` object. We have decided to choose a Mapping structure due to vector (Vec) size limitation of `16kB`. The provided functions allow you to add, retrieve, update, and remove pool keys within the collection. Each pool key is uniquely identified within the mapping, and you can perform operations on these pool keys based on their positions in the map.
+
+
+| Type                   | Key                               | Value                                 |
+| ---------------------- | --------------------------------- | ------------------------------------- |
+| Mapping<PoolKey, u16> | The pool key of a specified pool. | Unique id of a pool key. |
+| Mapping<u16, PoolKey> | Unique id of a pool key. | The pool key of a specified pool.|
+
 
 ### Add pool key
 
@@ -480,7 +493,7 @@ Verifies if specified pool key exist.
 pub fn get_index(&mut self, pool_key: PoolKey) -> Result<(), InvariantError>;
 ```
 
-Retrives specified pool key index in mapping.
+Retrieves specified pool key index in mapping.
 
 ### Get all pool keys
 

@@ -161,22 +161,16 @@ This function is used to verify the existence of a specified fee tier.
 
 ```rust
 #[ink(message)]
-pub fn get_fee_tiers(&self, key: FeeTier) -> Vec<FeeTier>;
+pub fn get_fee_tiers(&self) -> Vec<FeeTier>;
 ```
 
-Retrieves available fee tiers.
-
-#### Input parameters
-
-| Name | Type    | Description                                                       |
-| ---- | ------- | ----------------------------------------------------------------- |
-| key  | FeeTier | The key associated with the fee tier to be checked for existence. |
+Retrieves all available fee tiers.
 
 #### Output parameters
 
 | Type          | Description                                             |
 | ------------- | ------------------------------------------------------- |
-| Vec<FeeTier\> | Vector containing all fee tiers added to specified pool |
+| Vec<FeeTier\> | Vector containing all fee tiers. |
 
 ### Remove fee tier
 
@@ -185,7 +179,7 @@ Retrieves available fee tiers.
 pub fn remove_fee_tier(&mut self, key: FeeTier) -> Result<(), InvariantError>;
 ```
 
-This function removes a fee tier based on the provided fee tier key. After removal, the fee tier will no longer be available for use in pool creation. It's important to note that existing pools with that fee tier will remain unaffected. This action is exclusively available to administrators.
+This function removes a fee tier based on the provided fee tier key. After removal, the fee tier will no longer be available for use in pool creation. It is important to note that existing pools with that fee tier will remain unaffected. This action is exclusively available to administrators.
 
 #### Input parameters
 
