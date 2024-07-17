@@ -81,7 +81,9 @@ Transfers a position from one account to another. The fee for creating the contr
 ### Get Position
 
 :::info Option abstraction
+
 The `(Bool, Struct)` tuple fulfils the same role as Rust's `Option` abstraction. Bool's state indicates whether the second parameter "is some?", in the case it is not a default value is passed and should not be used.
+
 :::
 
 ```rust
@@ -196,7 +198,9 @@ Removes a tick associated with a specific pool key and index.
 ### Get tick
 
 :::info Option abstraction
+
 The `(Bool, Struct)` tuple fulfils the same role as Rust's `Option` abstraction. Bool's state indicates whether the second parameter "is some?", in the case it is not a default value is passed and should not be used.
+
 :::
 
 ```rust
@@ -261,7 +265,9 @@ Adds a new pool associated with the specified pool key. Throws an exception if a
 ### Get pool
 
 :::info Option abstraction
+
 The `(Bool, Struct)` tuple fulfils the same role as Rust's `Option` abstraction. Bool's state indicates whether the second parameter "is some?", in the case it is not a default value is passed and should not be used.
+
 :::
 
 ```rust
@@ -580,7 +586,9 @@ Adds a new `Reserve` and instantly registers `assetsToStore` assets.
 ### Get both reserves
 
 :::warning Token sorting
+
 This function employs the token[X|Y] naming convention, indicating that arranging these tokens in ascending order by `contractId` is necessary.
+
 :::
 
 ```rust

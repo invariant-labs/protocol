@@ -279,6 +279,12 @@ This function creates a pool based on a pair of tokens and the specified fee tie
 
 ### Get pool
 
+:::info Option abstraction
+
+The `(Bool, Struct)` tuple fulfils the same role as Rust's `Option` abstraction. Bool's state indicates whether the second parameter "is some?", in the case it is not a default value is passed and should not be used.
+
+:::
+
 ```rust
 pub fn getPool(poolKey: PoolKey) -> (Bool, Pool);
 ```
@@ -418,6 +424,12 @@ This function allows the user to claim fees from an existing position. Tokens wi
 
 ### Get position
 
+:::info Option abstraction
+
+The `(Bool, Struct)` tuple fulfils the same role as Rust's `Option` abstraction. Bool's state indicates whether the second parameter "is some?", in the case it is not a default value is passed and should not be used.
+
+:::
+
 ```rust
 pub fn getPosition(owner: Address, index: U256) -> (Bool, Position);
 ```
@@ -548,6 +560,12 @@ This function performs a simulation of a swap based on the provided parameters a
 ## Tick
 
 ### Get tick
+
+:::info Option abstraction
+
+The `(Bool, Struct)` tuple fulfils the same role as Rust's `Option` abstraction. Bool's state indicates whether the second parameter "is some?", in the case it is not a default value is passed and should not be used.
+
+:::
 
 ```rust
 pub fn getTick(poolKey: PoolKey, index: I256) -> (Bool, Tick);
