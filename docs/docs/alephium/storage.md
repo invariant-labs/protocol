@@ -46,8 +46,8 @@ struct PoolKey {
 
 | Name     | Type      | Description                   |
 | -------- | --------- | ----------------------------- |
-| tokenX  | ByteVec | The address of x token.           |
-| tokenY  | ByteVec | The address of y token.           |
+| tokenX  | ByteVec | The contract id of x token.           |
+| tokenY  | ByteVec | The contract id of y token.           |
 | feeTier | FeeTier   | FeeTier associated with the pool. |
 
 ## Pool

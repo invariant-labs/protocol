@@ -52,11 +52,17 @@ This method retrieves the current protocol fee percentage.
 
 ### Withdraw protocol fee
 
+:::note Fee receiver only
+
+This action is only available to the fee receiver.
+
+:::
+
 ```rust
 pub fn withdrawProtocolFee(poolKey: PoolKey) -> ();
 ```
 
-This operation enables the withdrawal of protocol fees associated with a specific pool, based on the provided pool key. The withdrawn funds are sent to the fee receiver wallet. Please note that this action can only be performed by fee receiver.
+This operation enables the withdrawal of protocol fees associated with a specific pool, based on the provided pool key. The withdrawn funds are sent to the fee receiver wallet.
 
 #### Input parameters
 
@@ -73,12 +79,18 @@ This operation enables the withdrawal of protocol fees associated with a specifi
 
 ### Change protocol fee
 
+:::note Administrator only
+
+This action is only available to the administrator.
+
+:::
+
 ```rust
 @using(updateFields = true)
 pub fn changeProtocolFee(newProtocolFee: U256) -> ();
 ```
 
-This function allows for the adjustment of the current protocol fee percentage. Note that this operation is restricted to administrators.
+This function allows for the adjustment of the current protocol fee percentage.
 
 #### Input parameters
 
@@ -95,11 +107,17 @@ This function allows for the adjustment of the current protocol fee percentage. 
 
 ### Change fee receiver
 
+:::note Administrator only
+
+This action is only available to the administrator.
+
+:::
+
 ```rust
 pub fn changeFeeReceiver(poolKey: PoolKey, newFeeReceiver: Address) -> ();
 ```
 
-This function allows for the modification of the fee receiver of a pool. Please note that this action is exclusively available to administrators.
+This function allows for the modification of the fee receiver of a pool.
 
 #### Input parameters
 
@@ -118,12 +136,18 @@ This function allows for the modification of the fee receiver of a pool. Please 
 
 ### Add fee tier
 
+:::note Administrator only
+
+This action is only available to the administrator.
+
+:::
+
 ```rust
 @using(preapprovedAssets = true)
 pub fn addFeeTier(feeTier: FeeTier) -> ();
 ```
 
-This function enables the addition of a new fee tier, which users can subsequently utilize when creating pools. Please note that this action is restricted to administrators.
+This function enables the addition of a new fee tier, which users can subsequently utilize when creating pools.
 
 #### Input parameters
 
@@ -176,11 +200,17 @@ Retrieves available fee tiers.
 
 ### Remove fee tier
 
+:::note Administrator only
+
+This action is only available to the administrator.
+
+:::
+
 ```rust
 pub fn removeFeeTier(feeTier: FeeTier) -> ();
 ```
 
-This function removes a fee tier based on the provided fee tier key. After removal, the fee tier will no longer be available for use in pool creation. It is important to note that existing pools with that fee tier will remain unaffected. This action is exclusively available to administrators.
+This function removes a fee tier based on the provided fee tier key. After removal, the fee tier will no longer be available for use in pool creation. It is important to note that existing pools with that fee tier will remain unaffected.
 
 #### Input parameters
 
@@ -199,15 +229,32 @@ This function removes a fee tier based on the provided fee tier key. After remov
 
 ### Create pool
 
+:::tip Permission-less
+
+_Anyone_ can add a pool and **no permissions are needed**.
+
+:::
+
+:::warning token standard
+
+The tokens are expected to use Alephium's [Fungible Token Standard](https://docs.alephium.org/dapps/standards/fungible-tokens#fungible-token-standard). 
+
+While not required, consider also adding them to the official [Token List](https://docs.alephium.org/dapps/standards/fungible-tokens/#token-list).
+
+:::
+
+:::info token sorting
+
+This function employs the token[0|1] naming convention, indicating that arranging these tokens in ascending order by `contractId` is not necessary.
+
+:::
+
 ```rust
 @using(preapprovedAssets = true, checkExternalCaller = false)
 pub fn createPool(token0: ByteVec, token1: ByteVec, feeTier: FeeTier, initSqrtPrice: U256, initTick: I256) -> ();
 ```
 
-This function creates a pool based on a pair of tokens and the specified fee tier. Only one pool can exist with a specific combination of two tokens and a fee tier. The tokens are expected to use Alephium's [Fungible Token Standard](https://docs.alephium.org/dapps/standards/fungible-tokens#fungible-token-standard). **Anyone** can add a pool and **no permissions are needed**.
-
-> **_NOTE:_** This function employs the token[0|1] naming convention, indicating that arranging these tokens in ascending order by `contractId` is not necessary.
-
+This function creates a pool based on a pair of tokens and the specified fee tier. Only one pool can exist with a specific combination of two tokens and a fee tier.
 
 #### Input parameters
 

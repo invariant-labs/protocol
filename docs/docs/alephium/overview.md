@@ -22,10 +22,11 @@ The runtime structure of Contracts is as follows:
 ┃ ┣ 🗺️positionsCounter
 ┃ ┗ 🗺️reserves
 ┃ 📜CLAMM
-┗ 📜reserveTemplateId
+┃ 📜Utils
+┗ 📜Reserve
 
 Legend:
-📜 - instantiated Contract
+📜 - Contract
 🗺️ - mapping
 ```
 
@@ -35,12 +36,15 @@ To optimize gas usage, we centralize entrypoints in a singular contract. This st
 ### CLAMM
 The Concentrated Liquidity Automatic Market Maker (CLAMM) Contract's task is performing computations, it houses all the mathematical formulas related to logarithms, scrutinizingly optimized for our use-case, and other functionality required to perform an efficient swap that minimizes its price.
 
-### Reserve & reserveTemplateId
+### Utils
+The Utils Contract is never instantiated, it doesn't contain any state and is used in an off-chain fashion. The contract contains functions that aid in calculations. They are an indispensable aid especially when deciding on the inputs to position creation or swap. Our SDK uses them internally.
+
+### Reserve
 Reserves are subcontracts of Invariant instantiated at runtime, designed to overcome the limitation of being able to only store up to 8 assets per Contract. Each different token type is considered an asset. An effort has been made so our protocol can scale to an arbitrary number of different tokens while maintaining the same performance. The [Reserves](collections.md#reserves) collection serves as an intermediary for when Invariant interacts with an [Reserve](storage.md#reserve).
 
-reserveTemplateId is a contractId of a special template Reserve that is deployed before the Invariant protocol, and thus not governed by it making it unfit for use as a storage. Its purpose is to serve as a template for Subcontracts, reducing the gas fee associated with their instantiation.
+The Reserve at the same level as Invariant and CLAMM is a special template that is deployed before the Invariant protocol, and thus not governed by it making it unfit for use as a storage. Its purpose is to serve as a template for Subcontracts, reducing the gas fee associated with their instantiation.
 
-### Other (🗺️)
+### Mapping
 Mappings in itself are not `Contract`s, rather, they deploy and manage new subcontracts that are only simple data entries. Their explanation can be found in the [collections section](collections.md).
 
 ## Project Structure
@@ -94,9 +98,6 @@ Meanwhile the functions suite simplifies transaction building, allowing develope
 
 The "test" subfolder in our repository hosts an extensive suite of end-to-end (e2e) tests meticulously designed to validate and verify expected behaviors within our protocol. These tests cover entrypoints for both basic and edge cases, ensuring thorough examination of the protocol's functionality across a spectrum of scenarios.
 
-### Tests.sh
-The "tests" file initiates the development network and executes all tests with a single bash command.
-
 ### Source Code Access
 
 For a detailed exploration of our contract structures, collections, and associated logic, please refer to the corresponding [Source Code Repository](https://github.com/invariant-labs/protocol-alephium). This repository contains the complete and up-to-date implementation of our contract architecture. Here lies the comprehensive project structure, which can be represented as follows.
@@ -115,7 +116,7 @@ For a detailed exploration of our contract structures, collections, and associat
  ┃ ┣ ┣ 📜tickmap.ral
  ┃ ┣ ┗ 📜ticks.ral
  ┃ ┣ 📂math
- ┃ ┣ ┣ 📜clam.ral
+ ┃ ┣ ┣ 📜clamm.ral
  ┃ ┣ ┣ 📜decimal.ral
  ┃ ┣ ┣ 📜log.ral
  ┃ ┣ ┣ 📜uints.ral

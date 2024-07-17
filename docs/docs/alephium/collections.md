@@ -80,6 +80,10 @@ Transfers a position from one account to another. The fee for creating the contr
 
 ### Get Position
 
+:::info Option abstraction
+The `(Bool, Struct)` tuple fulfils the same role as Rust's `Option` abstraction. Bool's state indicates whether the second parameter "is some?", in the case it is not a default value is passed and should not be used.
+:::
+
 ```rust
 fn wrappedGetPosition(owner: Address, index: U256) -> (Bool, Position);
 ```
@@ -191,6 +195,10 @@ Removes a tick associated with a specific pool key and index.
 
 ### Get tick
 
+:::info Option abstraction
+The `(Bool, Struct)` tuple fulfils the same role as Rust's `Option` abstraction. Bool's state indicates whether the second parameter "is some?", in the case it is not a default value is passed and should not be used.
+:::
+
 ```rust
 fn wrappedGetTick(poolKey: PoolKey, index: I256) -> (Bool, Tick);
 ```
@@ -251,6 +259,10 @@ Adds a new pool associated with the specified pool key. Throws an exception if a
 | ...  | Pool fields   | Refer to the [Pool struct](storage.md#pool). |
 
 ### Get pool
+
+:::info Option abstraction
+The `(Bool, Struct)` tuple fulfils the same role as Rust's `Option` abstraction. Bool's state indicates whether the second parameter "is some?", in the case it is not a default value is passed and should not be used.
+:::
 
 ```rust
 fn wrappedGetPool(poolKey: PoolKey) -> (Bool, Pool);
@@ -531,7 +543,6 @@ Abstract Contract Reserves() {...}
 
 Contract Invariant(...) extends Reserves(), ...{
     ...
-        // Key: TokenId, Value: ReserveId
     mapping[ByteVec, ByteVec] reserves
     ...
 }
@@ -568,14 +579,16 @@ Adds a new `Reserve` and instantly registers `assetsToStore` assets.
 
 ### Get both reserves
 
+:::warning Token sorting
+This function employs the token[X|Y] naming convention, indicating that arranging these tokens in ascending order by `contractId` is necessary.
+:::
+
 ```rust
 @using(updateFields = true, preapprovedAssets = true)
 fn handleReserves(caller: Address, subPath: ByteVec, tokenX: ByteVec, tokenY: ByteVec) -> (ByteVec, ByteVec);
 ```
 
 Retrieves the ids of `Reserve`s for both tokens. If a token isn't stored in a Reserve yet allocates space for it.
-
-> **_NOTE:_** This function employs the token[X|Y] naming convention, indicating that arranging these tokens in ascending order by `contractId` is necessary.
 
 #### Input parameters
 
