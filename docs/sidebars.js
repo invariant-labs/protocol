@@ -186,7 +186,8 @@ module.exports = {
         'alephium/storage',
         'alephium/collections',
         'alephium/entrypoints',
-        'alephium/invariant_errors',
+        'alephium/handling_alph',
+        'alephium/invariant_errors'
         // 'alephium/deployment'
       ]
     },
