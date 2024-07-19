@@ -593,7 +593,7 @@ This function employs the token[X|Y] naming convention, indicating that arrangin
 
 ```rust
 @using(updateFields = true, preapprovedAssets = true)
-fn handleReserves(caller: Address, subPath: ByteVec, tokenX: ByteVec, tokenY: ByteVec) -> (ByteVec, ByteVec);
+fn handleReserves(caller: Address, tokenX: ByteVec, tokenY: ByteVec) -> (ByteVec, ByteVec);
 ```
 
 Retrieves the ids of `Reserve`s for both tokens. If a token isn't stored in a Reserve yet allocates space for it.
@@ -603,7 +603,6 @@ Retrieves the ids of `Reserve`s for both tokens. If a token isn't stored in a Re
 | Name  | Type    | Description           |
 | ----- | ------- | --------------------- |
 | caller   | Address | Address of the user who wants to know where the Token is or will be stored. They are required to pay the eventual fee.|
-| subPath | ByteVec     | Unique path to be used in case a new Reserve has to be created.|
 | tokenX | ByteVec     | Id of the first token.|
 | tokenY | ByteVec     | Id of the second token.|
 
