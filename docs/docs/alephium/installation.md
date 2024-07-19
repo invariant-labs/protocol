@@ -69,8 +69,8 @@ sudo apt-get update
 sudo apt-get install docker-compose-plugin
 ```
 
-
-## Build Protocol
+## Protocol
+### Build 
 
 #### Clone repository
 
@@ -96,10 +96,24 @@ cd alephium-stack && make start-devnet
 npm run compile
 ```
 
-#### Run tests
+### Test
+
+##### All
 
 ```bash
 npm run test
+```
+
+##### Contracts
+
+```bash
+npm run test:contract
+```
+
+##### SDK
+
+```bash
+npm run test:sdk
 ```
 <!-- TODO-ALEPHIUM: describe SDK installation -->
 <!-- ## Build SDK

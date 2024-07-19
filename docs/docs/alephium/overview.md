@@ -96,7 +96,21 @@ Meanwhile the functions suite simplifies transaction building, allowing develope
 
 ### Test
 
-The "test" subfolder in our repository hosts an extensive suite of end-to-end (e2e) tests meticulously designed to validate and verify expected behaviors within our protocol. These tests cover entrypoints for both basic and edge cases, ensuring thorough examination of the protocol's functionality across a spectrum of scenarios.
+The "test" directory hosts an extensive suite of tests, and is further split into these subdirectories:
+
+```
+📂test
+ ┣ 📂contract
+ ┃ ┣ 📂e2e
+ ┃ ┗ 📂unit
+ ┗ 📂sdk
+   ┣ 📂e2e
+   ┗ 📂unit
+```
+
+The split into "contract" and "sdk" subdirectories is motivated by division of responsibility between different levels of abstraction in our protocol.  
+In the "contract" directory the tests anticipate even the most malicious behaviors meant to harm our contract, they are meant to validate behaviors in all cases. These tests cover entrypoints for both basic and edge cases, ensuring thorough examination of the protocol's functionality across a spectrum of scenarios. The "sdk" directory contains tests that validate and verify expected behaviors and edge cases pertaining to the usage of our SDK.  
+These directories are further split into "e2e" - a suite of end-to-end (e2e) tests that pertain to entry points users can directly interact with in a meaningful way, and "unit" - tests that focus on individual building blocks of the software, ensuring that each component functions correctly in isolation and indirectly supports user interactions.
 
 ### Source Code Access
 
@@ -108,7 +122,6 @@ For a detailed exploration of our contract structures, collections, and associat
  ┣ 📂alephium-stack
  ┣ 📂contracts
  ┃ ┣ 📂collections
- ┃ ┣ ┣ 📜fee_tiers.ral
  ┃ ┣ ┣ 📜pool_keys.ral
  ┃ ┣ ┣ 📜pools.ral
  ┃ ┣ ┣ 📜positions.ral
@@ -128,8 +141,8 @@ For a detailed exploration of our contract structures, collections, and associat
  ┃ ┣ 📂storage
  ┃ ┣ ┣ 📜batch.ral
  ┃ ┣ ┣ 📜fee_tier.ral
- ┃ ┣ ┣ 📜pool.ral
  ┃ ┣ ┣ 📜pool_key.ral
+ ┃ ┣ ┣ 📜pool.ral
  ┃ ┣ ┣ 📜position.ral
  ┃ ┣ ┣ 📜reserve.ral
  ┃ ┣ ┗ 📜tick.ral
@@ -138,6 +151,7 @@ For a detailed exploration of our contract structures, collections, and associat
  ┃ ┗ 📜invariant.ral
  ┣ 📂src
  ┃ ┣ 📜consts.ts
+ ┃ ┣ 📜fungible-token.ts
  ┃ ┣ 📜index.ts
  ┃ ┣ 📜invariant.ts
  ┃ ┣ 📜math.ts
@@ -146,33 +160,42 @@ For a detailed exploration of our contract structures, collections, and associat
  ┃ ┣ 📜testUtils.ts
  ┃ ┗ 📜utils.ts
  ┗ 📂test
-   ┣ 📜add_fee_tier.test.ts
-   ┣ 📜change_fee_receiver.test.ts
-   ┣ 📜change_protocol_fee.test.ts
-   ┣ 📜claim.test.ts
-   ┣ 📜clamm.test.ts
-   ┣ 📜create_pool.test.ts
-   ┣ 📜cross_both_side.test.ts
-   ┣ 📜cross.test.ts
-   ┣ 📜interaction_with_pool_on_removed_fee_tier.test.ts
-   ┣ 📜invariant.test.ts
-   ┣ 📜limits.test.ts
-   ┣ 📜liquidity_gap.test.ts
-   ┣ 📜log.test.ts
-   ┣ 📜math.test.ts
-   ┣ 📜max_tick_cross.test.ts
-   ┣ 📜multiple_swap.test.ts
-   ┣ 📜position_list.test.ts
-   ┣ 📜position_slippage.test.ts
-   ┣ 📜position.test.ts
-   ┣ 📜protocol_fee.test.ts
-   ┣ 📜remove_fee_tier.test.ts
-   ┣ 📜reserve.test.ts
-   ┣ 📜reserves.test.ts
-   ┣ 📜slippage.test.ts
-   ┣ 📜swap.test.ts
-   ┣ 📜tickmap.test.ts
-   ┣ 📜token.test.ts
-   ┗ 📜uints.test.ts
- 
+   ┣ 📂contract
+   ┃ ┣ 📂e2e
+   ┃ ┃ ┣ 📜add-fee-tier.test.ts
+   ┃ ┃ ┣ 📜change-fee-receiver.test.ts
+   ┃ ┃ ┣ 📜change-protocol-fee.test.ts
+   ┃ ┃ ┣ 📜claim.test.ts
+   ┃ ┃ ┣ 📜create-pool.test.ts
+   ┃ ┃ ┣ 📜cross-both-side.test.ts
+   ┃ ┃ ┣ 📜cross.test.ts
+   ┃ ┃ ┣ 📜interaction-with-pool-on-removed-fee-tier.test.ts
+   ┃ ┃ ┣ 📜limits.test.ts
+   ┃ ┃ ┣ 📜liquidity-gap.test.ts
+   ┃ ┃ ┣ 📜max-tick-cross.test.ts
+   ┃ ┃ ┣ 📜multiple-swap.test.ts
+   ┃ ┃ ┣ 📜position-list.test.ts
+   ┃ ┃ ┣ 📜position-slippage.test.ts
+   ┃ ┃ ┣ 📜position.test.ts
+   ┃ ┃ ┣ 📜protocol-fee.test.ts
+   ┃ ┃ ┣ 📜remove-fee-tier.test.ts
+   ┃ ┃ ┣ 📜reserves.test.ts
+   ┃ ┃ ┣ 📜slippage.test.ts
+   ┃ ┃ ┗ 📜swap.test.ts
+   ┃ ┗ 📂unit
+   ┃   ┣ 📜clamm.test.ts
+   ┃   ┣ 📜log.test.ts
+   ┃   ┣ 📜reserve.test.ts
+   ┃   ┣ 📜tickmap.test.ts
+   ┃   ┣ 📜token.test.ts
+   ┃   ┗ 📜uints.test.ts
+   ┗ 📂sdk
+     ┣ 📂e2e
+     ┃ ┣ 📜fungible-token.test.ts
+     ┃ ┣ 📜get-tickmap.test.ts
+     ┃ ┣ 📜invariant.test.ts
+     ┃ ┣ 📜pool-with-alph.test.ts
+     ┃ ┗ 📜query-on-pair.test.ts
+     ┗ 📂unit
+       ┗ 📜math.test.ts
 ```
