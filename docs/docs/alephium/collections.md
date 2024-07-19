@@ -292,19 +292,19 @@ Retrieves a pool associated with the specified pool key.
 ## Fee Tiers
 
 ```rust
-Abstract Contract FeeTiers() {...}
+struct FeeTiers {
+    mut feeTiers: [FeeTier; 32]
+}
 
-Contract Invariant(mut feeTierCount: U256) extends FeeTiers(), ...{
-    ...
-    mapping[U256, FeeTier] feeTiers
-    ...
+Contract Invariant(mut feeTiers: FeeTiers, feeTierCount: U256, ...){
+    const MaxFeeTiers = 32
 }
 ```
-The `FeeTiers` Abstract Contract is designed to manage fee tiers. It utilizes a mapping data structure, where each element corresponds to a different fee tier represented by a `FeeTier` object. The provided functions allow you to add, retrieve, update, and remove fee tiers within the collection. Each fee tier is uniquely identified within the mapping, and you can perform operations on these fee tiers based on their index. The current maximal index is stored in the `feeTierCount` variable.
+The `FeeTiers` struct is designed to manage fee tiers. It utilizes an array of `FeeTier` objects. The provided functions allow you to add, retrieve, update, and remove fee tiers within the collection. You can perform operations on these fee tiers based on their index. The current highest index is stored in the `feeTierCount` variable. Our protocol stores at most 32 active fee tiers.
 
-| Type                   | Key                               | Value                                 |
-| ---------------------- | --------------------------------- | ------------------------------------- |
-| mapping[PoolKey, Pool] | The pool key of a specified pool. | Pool struct holding the pool's data. |
+| Type                   | Value                                 |
+| ---------------------- | ------------------------------------- |
+| [FeeTier; 32] | FeeTier struct holding the fee tier's data. |
 
 ### Add fee tier
 
@@ -344,7 +344,7 @@ Removes a fee tier associated with the specified FeeTier. Throws an exception if
 pub fn containsFeeTier(feeTier: FeeTier) -> Bool;
 ```
 
-Verifies if specified fee tier exist.
+Verifies if specified fee tier exists.
 
 #### Input parameters
 

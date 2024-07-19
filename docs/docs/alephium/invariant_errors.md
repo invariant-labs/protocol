@@ -36,6 +36,7 @@ This section outlines error codes essential for maintaining the integrity of Inv
 | ChunkNotFound | 25 | Unable to retrieve the state of the specified chunk in tickmap. |
 | InvalidTickmapBit | 26 | An illegal operation on a tickmap bit has been requested. |
 | PositionNotFound | 27 | Unable to retrieve the state of the specified position. |
+| FeeTierLimitReached | 28 | The maximal number of fee tiers (32) already exists.|
 | SqrtPriceOutOfRange | 7001 | SqrtPrice not in the MinSqrtPrice <= sqrtPrice <= MaxSqrtPrice range. |
 
 <!-- | CastOverflow | 100001 | Internal overflow during cast from U512 to U256. |

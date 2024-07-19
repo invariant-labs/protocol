@@ -16,8 +16,8 @@ Contract Invariant(
     mut lastReserveId: ByteVec,
     mut feeTierCount: U256,
     mut poolKeyCount: U256
-) extends PoolKeyHelper(), Decimal(), FeeTiers(), PoolKeys(),
-    Pools(clamm), Ticks(), Tickmap(), Positions(clamm), FeeTierHelper(), Reserves();
+) extends PoolKeyHelper(), Decimal(), PoolKeys(), Pools(clamm),
+     Ticks(), Tickmap(), Positions(clamm), FeeTierHelper(), Reserves();
 ```
 
 This constructor method initializes the contract with the specified protocol fee and administrator.
@@ -143,11 +143,11 @@ This action is only available to the administrator.
 :::
 
 ```rust
-@using(preapprovedAssets = true)
+@using(preapprovedAssets = true, updateFields = true)
 pub fn addFeeTier(feeTier: FeeTier) -> ();
 ```
 
-This function enables the addition of a new fee tier, which users can subsequently utilize when creating pools.
+This function enables the addition of a new fee tier, which users can subsequently utilize when creating pools. Up to 32 fee tiers can exist.
 
 #### Input parameters
 
@@ -163,6 +163,8 @@ This function enables the addition of a new fee tier, which users can subsequent
 | `InvalidTickSpacing`  | Fails if the tick spacing is invalid.                        |
 | `FeeTierAlreadyExist` | Fails if the fee tier already exists.                        |
 | `InvalidFee`          | Fails if fee is invalid.                                     |
+| `FeeTierLimitReached` | Fails if the maximal number of fee tiers (32) already exists.|
+
 
 ### Fee Tier exists
 
