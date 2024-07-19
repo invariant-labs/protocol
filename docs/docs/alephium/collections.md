@@ -558,7 +558,7 @@ The `Reserves` Abstract Contract is designed to overcome the challenge of being 
 
 | Type                   | Key                               | Value                                 |
 | ---------------------- | --------------------------------- | ------------------------------------- |
-| mapping[ByteVec, ByteVec] | The ContractId of a given token. | The ContractId of the reserve containing the given token. |
+| mapping[ByteVec, ByteVec] | The ContractId of a given token. | The Contract ID of the reserve containing the given token. |
 
 ### Add reserve
 

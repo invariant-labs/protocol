@@ -256,14 +256,14 @@ This function employs the token[0|1] naming convention, indicating that arrangin
 pub fn createPool(token0: ByteVec, token1: ByteVec, feeTier: FeeTier, initSqrtPrice: U256, initTick: I256) -> ();
 ```
 
-This function creates a pool based on a pair of tokens and the specified fee tier. Only one pool can exist with a specific combination of two tokens and a fee tier.
+This function creates a pool based on a pair of tokens and the specified fee tier. Only one pool can exist with an unique combination of two tokens and a fee tier.
 
 #### Input parameters
 
 | Name            | Type      | Description                                                            |
 | --------------- | --------- | ---------------------------------------------------------------------- |
-| token0         | AccountId | Address of the first token in the pair.                          |
-| token1         | AccountId | Address of the second token in the pair.                         |
+| token0 | ByteVec   | Contract ID of the first token in the pair.|
+| token1         | ByteVec | Contract ID of the second token in the pair.                         |
 | feeTier        | FeeTier   | The fee tier to be applied.                                            |
 | initSqrtPrice | U256 | The square root of the price for the initial pool related to initTick. |
 | initTick       | I256       | The initial tick value for the pool.                                   |
@@ -306,19 +306,33 @@ This function retrieves a pool based on PoolKey. It returns false as the first t
 | Bool | If true the pool was found and retrieved successfully, false otherwise.|
 | Pool | A struct containing pool data. |
 
-### Get pools
+### Get pools for a token pair
+
+:::info token sorting
+
+This function employs the token[0|1] naming convention, indicating that arranging these tokens in ascending order by `contractId` is not necessary.
+
+:::
 
 ```rust
-pub fn getPools() -> ByteVec;
+pub fn getAllPoolsForPair(token0: ByteVec, token1: ByteVec) -> ByteVec;
 ```
 
-This function retrieves listed pool keys.
+This function retrieves all pools for the given token pair.
+
+#### Input parameters
+
+| Name     | Type      | Description                                    |
+| -------- | --------- | ---------------------------------------------- |
+| token0 | ByteVec   | Contract ID of the first token in the pair.|
+| token1 | ByteVec   | Contract ID of the second token in the pair.|
+
 
 #### Output parameters
 
 | Type          | Description                                            |
 | ------------- | ------------------------------------------------------ |
-| ByteVec | ByteVec containing all pool keys that indicate all pools listed. |
+| ByteVec | ByteVec containing all pools for a given key pair that indicate all pools listed. |
 
 ## Position
 
@@ -696,27 +710,28 @@ Retrieves the amount of liquidity ticks of a specified pool.
 | Type | Description                          |
 | ---- | ------------------------------------ |
 | u32  | Number of ticks on a specified pool. | -->
-<!-- 
+
 ## Tickmap
 
 ### Get tickmap
 
 ```rust
-#[ink(message)]
-fn get_tickmap(&self, pool_key: PoolKey, center_tick: i32) -> Vec<(u16,u64)>;
+pub fn getTickmapSlice(poolKey: PoolKey, lowerBatch: U256, upperBatch: U256, xToY: Bool) -> ByteVec
 ```
 
-Retrieves tickmap chunks for a specified pool.
+Retrieves a slice of tickmap batches for a specified pool. The value of `lowerBatch` should be less than `upperBatch`.
 
 #### Input parameters
 
 | Name        | Type    | Description                                      |
 | ----------- | ------- | ------------------------------------------------ |
 | pool_key    | PoolKey | A unique key that identifies the specified pool. |
-| center_tick | i32     | Center tick index.                               |
+| lowerBatch | U256     | Index of the lower tickmap batch.                |
+| upperBatch | U256     | Index of the upper tickmap batch.                |
+| xToY | Bool | If `xToY` is `true` return batches from `lowerBatch` to `upperBatch`, else the other way around.
 
 #### Output parameters
 
 | Type            | Description                                       |
 | --------------- | ------------------------------------------------- |
-| Vec<(u16,u64)/> | Vector containing tickmap chunks index and value. | -->
+| ByteVec| ByteVec containing tickmap chunk index and value. |
