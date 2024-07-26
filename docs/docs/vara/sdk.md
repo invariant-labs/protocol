@@ -573,10 +573,10 @@ interface Pool {
 const poolState: Pool = await invariant.getPool(TOKEN0_ADDRESS, TOKEN1_ADDRESS, feeTier)
 ```
 
-- Get All Pools
+- Get All PoolKeys
 
 ```typescript
-const pools: PoolKey[] = await invariant.getPools(1n, 0n)
+const poolKeys: PoolKey[] = await invariant.getAllPoolKeys()
 ```
 
 :::note Position indexing
