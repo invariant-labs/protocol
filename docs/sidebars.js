@@ -83,39 +83,39 @@ module.exports = {
       label: 'Eclipse',
       collapsed: true,
       items: [
-        // {
-        //   type: 'category',
-        //   label: 'User Guide',
-        //   link: {
-        //     type: 'doc',
-        //     id: 'eclipse/user_guide'
-        //   },
-        //   items: [
-        //     // 'eclipse/user_guide/interface',
-        //     'eclipse/user_guide/networks',
-        //     'eclipse/user_guide/how_to_connect_your_wallet',
-        //     'eclipse/user_guide/faucet',
-        //     'eclipse/user_guide/how_to_swap',
-        //     {
-        //       type: 'category',
-        //       label: 'How to add liquidity',
-        //       link: {
-        //         type: 'doc',
-        //         id: 'eclipse/user_guide/how_to_add_liquidity'
-        //       },
-        //       items: [
-        //         'eclipse/user_guide/how_to_add_liquidity/uniform_concentration',
-        //         'eclipse/user_guide/how_to_add_liquidity/price_range'
-        //       ]
-        //     },
-        //     'eclipse/user_guide/how_to_claim_fee',
-        //     'eclipse/user_guide/how_to_remove_liquidity',
-        //     'eclipse/user_guide/stats',
-        //     'eclipse/user_guide/troubleshooting',
-        //     'eclipse/user_guide/faq_tutorial'
-        //   ]
-        // },
-        // 'eclipse/get_started',
+        {
+          type: 'category',
+          label: 'User Guide',
+          link: {
+            type: 'doc',
+            id: 'eclipse/user_guide'
+          },
+          items: [
+            'eclipse/user_guide/interface',
+            'eclipse/user_guide/networks',
+            'eclipse/user_guide/how_to_connect_your_wallet',
+            'eclipse/user_guide/faucet',
+            'eclipse/user_guide/how_to_swap',
+            {
+              type: 'category',
+              label: 'How to add liquidity',
+              link: {
+                type: 'doc',
+                id: 'eclipse/user_guide/how_to_add_liquidity'
+              },
+              items: [
+                'eclipse/user_guide/how_to_add_liquidity/uniform_concentration',
+                'eclipse/user_guide/how_to_add_liquidity/price_range'
+              ]
+            },
+            'eclipse/user_guide/how_to_claim_fee',
+            'eclipse/user_guide/how_to_remove_liquidity',
+            'eclipse/user_guide/stats',
+            'eclipse/user_guide/troubleshooting',
+            'eclipse/user_guide/faq_tutorial'
+          ]
+        },
+        'eclipse/get_started',
         'eclipse/introduction',
         'eclipse/quick_start',
         'eclipse/pool',
