@@ -143,23 +143,23 @@ module.exports = {
         'aleph_zero/deployment'
       ]
     },
-    {
-      type: 'category',
-      label: 'Casper Network',
-      collapsed: true,
-      items: [
-        'casper/installation',
-        'casper/overview',
-        'casper/sdk',
-        'casper/types',
-        'casper/storage',
-        'casper/collections',
-        'casper/entrypoints',
-        'casper/handling_cspr',
-        'casper/invariant_errors',
-        'casper/deployment'
-      ]
-    },
+    // {
+    //   type: 'category',
+    //   label: 'Casper Network',
+    //   collapsed: true,
+    //   items: [
+    //     'casper/installation',
+    //     'casper/overview',
+    //     'casper/sdk',
+    //     'casper/types',
+    //     'casper/storage',
+    //     'casper/collections',
+    //     'casper/entrypoints',
+    //     'casper/handling_cspr',
+    //     'casper/invariant_errors',
+    //     'casper/deployment'
+    //   ]
+    // },
     {
       type: 'category',
       label: 'VARA',
