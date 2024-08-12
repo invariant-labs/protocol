@@ -26,7 +26,7 @@ The Invariant SDK mainly builds upon two distinct contracts:
 
 ### Transactions and Queries
 
-When working with contracts, developers can initiate interactions by calling methods from the corresponding contract class. 
+When working with contracts, developers can initiate interactions by calling methods from the corresponding contract class.
 
 1. **Transactions**: These involve invoking methods that result in changes to the blockchain state. Transactions typically alter the data stored on the blockchain and may include operations like transferring assets or updating records. Once a transaction will be executed it returns a result object containing information about its details. The first parameter designates the account, and subsequent parameters act as entrypoint parameters.
 
@@ -180,7 +180,7 @@ const token = await FungibleToken.load(Network.Local)
 
 // interact with token 0
 const account0Balance = await token.getBalanceOf(account.address, TOKEN0_ID)
- console.log(account0Balance)
+console.log(account0Balance)
 
 // if you want to interact with different token,
 // simply pass different contract address as an argument
@@ -215,6 +215,7 @@ CoinA CoinB<br/>
 ### Load DEX
 
 Load the Invariant contract by specifying the network (e.g., `Network.Local` for local development), and indicating the Invariant contract address (`INVARIANT_ADDRESS`).
+
 ```typescript
 // load invariant contract
 const invariant = await Invariant.load(INVARIANT_ADDRESS, Network.Local)
@@ -231,7 +232,7 @@ Notice how we use "n" at the end of every number. "n" indicates that specified v
 :::
 
 :::warning Token sorting
-Tokens are sorted alphabetically when pool key is created, so make sure that you swap tokens in correct direction. Read more about pool keys [here](storage#poolkey).
+Tokens are sorted alphabetically by their ids when pool key is created, so make sure that you swap tokens in correct direction. Read more about pool keys [here](storage#poolkey).
 :::
 
 To create a new pool, a fee tier and pool key need to be prepared. The fee tier represents the desired fee for the pool, and the price needs to be converted to sqrt price because the entry points of the protocol accept it in this format. The pool key is constructed using the addresses of two tokens and the specified fee tier. Finally, the `createPool` function is called with the user's account, the pool key, and the initial square root price, resulting in the creation of a new pool. The transaction id of the pool creation is then logged to the console.
@@ -320,24 +321,24 @@ console.log(await invariant.getPosition(account.address, 0n))
 ```
 
 :::tip Output
-Token X amount:  7999999999880n  Token Y amount:  8000000000000n <br/>
+Token X amount: 7999999999880n Token Y amount: 8000000000000n <br/>
 69226b27395a6820e99c761566439106d04f02dec3833301b25c5531262368d7<br/>
 {<br/>
-&emsp;  poolKey: {<br/>
-&emsp; &emsp;   tokenX: 'a9ec8420ab99aa433645da0a0462ebe07351f0e6cdd56e1f3149d68dc6783300',<br/>
-&emsp; &emsp;   tokenY: 'e697a8bc5ea2433eaa8c0ce05f2730f5a17d654e93dbb459f114c88359d3d800',<br/>
-&emsp; &emsp;   feeTier: { fee: [Object], tickSpacing: 1n }<br/>
-&emsp;  },<br/>
-&emsp;  liquidity: 1600480031975990558848n,<br/>
-&emsp;  lowerTickIndex: -10n,<br/>
-&emsp;  upperTickIndex: 10n,<br/>
-&emsp;  feeGrowthInsideX: 0n,<br/>
-&emsp;  feeGrowthInsideY: 0n,<br/>
-&emsp;  lastBlockNumber: 1723210526545n,<br/>
-&emsp;  tokensOwedX: 0n,<br/>
-&emsp;  tokensOwedY: 0n,<br/>
-&emsp;  owner: '13FgGApAthBNZGwrUiPApixwxaNdfSxvidNfbPPLdAbRm',<br/>
-&emsp;  exists: true<br/>
+&emsp; poolKey: {<br/>
+&emsp; &emsp; tokenX: 'a9ec8420ab99aa433645da0a0462ebe07351f0e6cdd56e1f3149d68dc6783300',<br/>
+&emsp; &emsp; tokenY: 'e697a8bc5ea2433eaa8c0ce05f2730f5a17d654e93dbb459f114c88359d3d800',<br/>
+&emsp; &emsp; feeTier: { fee: [Object], tickSpacing: 1n }<br/>
+&emsp; },<br/>
+&emsp; liquidity: 1600480031975990558848n,<br/>
+&emsp; lowerTickIndex: -10n,<br/>
+&emsp; upperTickIndex: 10n,<br/>
+&emsp; feeGrowthInsideX: 0n,<br/>
+&emsp; feeGrowthInsideY: 0n,<br/>
+&emsp; lastBlockNumber: 1723210526545n,<br/>
+&emsp; tokensOwedX: 0n,<br/>
+&emsp; tokensOwedY: 0n,<br/>
+&emsp; owner: '13FgGApAthBNZGwrUiPApixwxaNdfSxvidNfbPPLdAbRm',<br/>
+&emsp; exists: true<br/>
 }<br/>
 :::
 
@@ -361,7 +362,13 @@ const amount = toTokenAmount(6n, 12n)
 // get estimated result of swap - there are 2 ways to do it
 // 1. use the quote method
 // due to it being computed using blockchain, thus having a latency and being subjected to gas limit, we recommend the second method
-const quoteResult = await invariant.quote(poolKey, true, amount, true, await getMinSqrtPrice(feeTier.tickSpacing))
+const quoteResult = await invariant.quote(
+  poolKey,
+  true,
+  amount,
+  true,
+  await getMinSqrtPrice(feeTier.tickSpacing)
+)
 
 // 2. use local simulation of a swap [PREFERRED]
 // get the pool to have the current information about its state
@@ -413,20 +420,13 @@ const sqrtPriceLimit = calculateSqrtPriceAfterSlippage(
   false
 )
 
-const swapTransactionId = await invariant.swap(
-  account,
-  poolKey,
-  true,
-  amount,
-  true,
-  sqrtPriceLimit
-)
+const swapTransactionId = await invariant.swap(account, poolKey, true, amount, true, sqrtPriceLimit)
 // print swap transaction id
 console.log(swapTransactionId)
 ```
 
 :::tip Output
-Simulated swap result:  {<br/>
+Simulated swap result: {<br/>
 &emsp; amountIn: 6000000000000n,<br/>
 &emsp; amountOut: 5937796254308n,<br/>
 &emsp; startSqrtPrice: 1000000000000000000000000n,<br/>
@@ -578,7 +578,7 @@ The entrypoint facilitates the seamless transfer of positions between users. Thi
 
 ```typescript
 // remove the owner field, for comparison because it is going to change
-const {owner, ...positionToTransfer} = await invariant.getPosition(account.address, 0n)
+const { owner, ...positionToTransfer } = await invariant.getPosition(account.address, 0n)
 
 // transfer position from account (signer) to receiver
 await invariant.transferPosition(account, 0n, receiver.address)
@@ -587,6 +587,7 @@ const receiverPosition = await invariant.getPosition(receiver.address, 0n)
 expect(receiverPosition).toMatchObject(positionToTransfer)
 console.log(receiverPosition)
 ```
+
 :::tip Output
 {<br/>
 &emsp; poolKey: {<br/>
@@ -613,10 +614,7 @@ If Position is removed from the protocol, fees associated with that position are
 
 ```typescript
 // fetch user balances before removal
-const accountToken0BalanceBeforeRemove = await token.getBalanceOf(
-  account.address,
-  poolKey.tokenX
-)
+const accountToken0BalanceBeforeRemove = await token.getBalanceOf(account.address, poolKey.tokenX)
 const accountToken1BalanceBeforeRemove = await token.getBalanceOf(account.address, TOKEN1_ID)
 console.log(accountToken0BalanceBeforeRemove, accountToken1BalanceBeforeRemove)
 
@@ -638,7 +636,7 @@ console.log(accountToken0BalanceAfterRemove, accountToken1BalanceAfterRemove)
 999999999999999999999999999998n 999999999999999999999999999998n <br/>
 :::
 
-### Using AZERO
+### Using ALPH
 
 ```typescript
 // ALPH just like any other token has a Contract Id (Token Id), so it can be used in the same way
