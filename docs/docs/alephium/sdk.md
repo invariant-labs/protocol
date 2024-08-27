@@ -433,9 +433,9 @@ Simulated swap result: {<br/>
 &emsp; targetSqrtPrice: 999628999041807638582903n,<br/>
 &emsp; fee: 60000000000n,<br/>
 &emsp; crossedTicks: [],<br/>
-&emsp; globalInsufficientLiquidity: false,<br/>
+&emsp; insufficientLiquidity: false,<br/>
 &emsp; stateOutdated: false,<br/>
-&emsp; maxTicksCrossed: false<br/>
+&emsp; swapStepLimitReached: false<br/>
 }<br/>
 6ff454e5c6c23e2ed06cf2554b32a9c6ab2e6d196da347ffbf1ad93fa659d8dd<br/>
 :::
@@ -614,20 +614,20 @@ If Position is removed from the protocol, fees associated with that position are
 
 ```typescript
 // fetch user balances before removal
-const accountToken0BalanceBeforeRemove = await token.getBalanceOf(account.address, poolKey.tokenX)
-const accountToken1BalanceBeforeRemove = await token.getBalanceOf(account.address, TOKEN1_ID)
-console.log(accountToken0BalanceBeforeRemove, accountToken1BalanceBeforeRemove)
+const accountTokenXBalanceBeforeRemove = await token.getBalanceOf(account.address, poolKey.tokenX)
+const accountTokenYBalanceBeforeRemove = await token.getBalanceOf(account.address, poolKey.tokenY)
+console.log(accountTokenXBalanceBeforeRemove, accountTokenYBalanceBeforeRemove)
 
 // remove position
 const removePositionTransactionId = await invariant.removePosition(account, positionId)
 console.log(removePositionTransactionId)
 
 // get balance of a specific token after removing position
-const accountToken0BalanceAfterRemove = await token.getBalanceOf(account.address, TOKEN0_ID)
-const accountToken1BalanceAfterRemove = await token.getBalanceOf(account.address, TOKEN1_ID)
+const accountTokenXBalanceAfterRemove = await token.getBalanceOf(account.address, poolKey.tokenX)
+const accountTokenYBalanceAfterRemove = await token.getBalanceOf(account.address, poolKey.tokenY)
 
 // print balances
-console.log(accountToken0BalanceAfterRemove, accountToken1BalanceAfterRemove)
+console.log(accountTokenXBalanceAfterRemove, accountTokenYBalanceAfterRemove)
 ```
 
 :::tip Output
