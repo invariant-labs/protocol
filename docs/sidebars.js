@@ -131,6 +131,34 @@ module.exports = {
       label: 'Aleph Zero',
       collapsed: true,
       items: [
+        {
+          type: 'category',
+          label: 'User Guide',
+          items: [
+            'aleph_zero/user_guide/interface',
+            'aleph_zero/user_guide/networks',
+            'aleph_zero/user_guide/how_to_connect_your_wallet',
+            // 'aleph_zero/user_guide/faucet',
+            'aleph_zero/user_guide/how_to_swap',
+            {
+              type: 'category',
+              label: 'How to add liquidity',
+              link: {
+                type: 'doc',
+                id: 'aleph_zero/user_guide/how_to_add_liquidity'
+              },
+              items: [
+                'aleph_zero/user_guide/how_to_add_liquidity/uniform_concentration',
+                'aleph_zero/user_guide/how_to_add_liquidity/price_range'
+              ]
+            },
+            'aleph_zero/user_guide/how_to_claim_fee',
+            'aleph_zero/user_guide/how_to_remove_liquidity',
+            // 'aleph_zero/user_guide/stats',
+            'aleph_zero/user_guide/troubleshooting',
+            // 'aleph_zero/user_guide/faq_tutorial'
+          ]
+        },
         'aleph_zero/get_started',
         'aleph_zero/installation',
         'aleph_zero/overview',
