@@ -183,7 +183,8 @@ module.exports = {
       items: [
         'alephium/installation',
         'alephium/overview',
-        // 'alephium/sdk',
+        'alephium/sdk',
+        'alephium/types',
         'alephium/storage',
         'alephium/collections',
         'alephium/entrypoints',
