@@ -8,7 +8,7 @@ This guide will walk you through the essential steps to get started on our [plat
 
 ### Connect your wallet
 
-To begin using Invariant, you'll need to connect your wallet. Follow these steps:
+To begin using Invariant, you'll need to [connect your wallet](/docs/aleph_zero/user_guide/how_to_connect_your_wallet). Follow these steps:
 
 1. Click on the **"Connect wallet"** button at the top right corner of the page or or in the swap area.
    ![Connect wallet](/img/docs/app/a0/a0_connectwallet.png)
@@ -20,7 +20,7 @@ To begin using Invariant, you'll need to connect your wallet. Follow these steps
 
 ### Request airdrop from Aleph Zero Faucet
 
-To start interacting with the Invariant platform on the Aleph Zero testnet, you will need some test tokens. You can request these tokens from the Aleph Zero Faucet.
+To start interacting with the Invariant platform on the Aleph Zero testnet, you will need some [testnet tokens](/docs/aleph_zero/user_guide/faucet). You can request these tokens from the Aleph Zero Faucet.
 
 1. Open your web browser and navigate to the [Aleph Zero Faucet page](https://faucet.test.azero.dev/).
 
@@ -58,7 +58,7 @@ Now that you have testnet tokens to approve transactions on the Aleph Zero Testn
 
 ### Add liquidity
 
-Adding a liquidity position allows you to earn fees from trades on the Invariant DEX. To add a position follow these steps:
+Adding a liquidity position allows you to earn fees from trades on the Invariant DEX. To [add a position](/docs/aleph_zero/user_guide/how_to_add_liquidity) follow these steps:
 
 1. Go to the **"Liqudity"** tab and click on **"Add Position"** button.
 
@@ -84,7 +84,7 @@ Adding a liquidity position allows you to earn fees from trades on the Invariant
 
 ### Exchange tokens
 
-Now you can use testnet tokens, that you received form Airdrop. This point will show you how to perform swap with this tokens.
+Now you can use testnet tokens, that you received form Airdrop. This point will show you [how to perform swap](/docs/aleph_zero/user_guide/how_to_swap) with this tokens.
 
 1. Navigate to **"Exchange tab"**.
 
@@ -114,7 +114,7 @@ Now you can use testnet tokens, that you received form Airdrop. This point will 
 
 ### Claim fees
 
-As a liquidity provider, you can claim your earned fees. To claim fees:
+As a liquidity provider, you can [claim your earned fees](/docs/aleph_zero/user_guide/how_to_claim_fee). To claim fees:
 
 - Navigate to the **"Liquidity"** section and open the position from which you want to claim fees.
 
@@ -126,6 +126,8 @@ As a liquidity provider, you can claim your earned fees. To claim fees:
 - Your claimed fees will be added to your wallet balance.
 
 ### Close position
+
+If you want to [close your position](/docs/aleph_zero/user_guide/how_to_remove_liquidity) and remove liquidity, you can do this even if your fees are unclaimed. The fees after closing the position will be sent to your wallet along with the liquidity.
 
 - Navigate to the **"Liquidity"** section and open the position which you want to close.
 
