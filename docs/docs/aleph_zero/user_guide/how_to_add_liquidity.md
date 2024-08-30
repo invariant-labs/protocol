@@ -12,11 +12,15 @@ slug: /aleph_zero/user_guide/how_to_add_liquidity
 
 ![add position](/img/docs/app/a0/a0_addposition.png)
 
-2. Select pair of tokens. We have chosen as an example the **AZERO/USDC** pair.
+2. This will be your position identifier. It is called the **Market ID**.
+
+![marketid](/img/docs/app/a0/a0_marketid.png)
+
+3. Select pair of tokens. We have chosen as an example the **AZERO/USDC** pair.
 
 ![azerousdc](/img/docs/app/a0/a0_azerousdc.png)
 
-3. Select **fee tier**. The fee tier determines the percentage of tokens deducted from a user who makes a swap, thus defining the amount of fees you will earn when a user utilizes your liquidity in the swap. Each fee tier represents a different liquidity pool.
+4. Select **fee tier**. The fee tier determines the percentage of tokens deducted from a user who makes a swap, thus defining the amount of fees you will earn when a user utilizes your liquidity in the swap. Each fee tier represents a different liquidity pool.
 
 ![feetier](/img/docs/app/a0/a0_feetier.png)
 
@@ -31,9 +35,9 @@ When selecting a range for your orders, consider the characteristics of the asse
 
 </blockquote>
 
-4. Choose between two options for adding **concentrated liquidity** and setting up the pool range.
+5. Choose between two options for adding **concentrated liquidity** and setting up the pool range.
 
-5. Provide an amount of tokens. The amount of tokens is interdependent, as the result of multiplying them must always yield the same outcome.
+6. Provide an amount of tokens. The amount of tokens is interdependent, as the result of multiplying them must always yield the same outcome.
 
 - [**Uniform liquidity**](/docs/uniform_concentration) - Ideal for beginners, this option evenly distributes liquidity on both sides of the current price. It utilizes a simple slider to inform you about the potential increase in fees compared to the full range with the same amount of tokens
 
@@ -53,9 +57,9 @@ You can switch view between <b>Bar chart</b> and <b>Line chart</b>.
 
 </blockquote>
 
-6. Once you're ready, click **Add Liquidity** You'll then be prompted to confirm the transaction in your wallet. A small amount of **AZERO** will be deducted from your wallet as a deposit to create your liquidity pool and position. If the pool already exists, this fee is only for creating your position, not for pool creation itself. Most of this fee will be returned to you when you decide to close your position. However, currently, closing the entire pool is not possible.
+7. Once you're ready, click **Add Liquidity** You'll then be prompted to confirm the transaction in your wallet. A small amount of **AZERO** will be deducted from your wallet as a deposit to create your liquidity pool and position. If the pool already exists, this fee is only for creating your position, not for pool creation itself. Most of this fee will be returned to you when you decide to close your position. However, currently, closing the entire pool is not possible.
 
-7. In the **liquidity position list**, you can easily identify your active positions. These positions will have their fee highlighted in green, indicating that they are currently generating fees.
+8. In the **liquidity position list**, you can easily identify your active positions. These positions will have their fee highlighted in green, indicating that they are currently generating fees.
 
 ![positions](/img/docs/app/a0/a0_positions.png)
 
