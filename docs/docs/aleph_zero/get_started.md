@@ -20,7 +20,7 @@ To begin using Invariant, you'll need to [connect your wallet](/docs/aleph_zero/
 
 ### Request airdrop from Aleph Zero Faucet
 
-To start interacting with the Invariant platform on the Aleph Zero testnet, you will need some [testnet tokens](/docs/aleph_zero/user_guide/faucet). You can request these tokens from the Aleph Zero Faucet.
+To start interacting with the Invariant platform on the Aleph Zero testnet, you will need some [testnet tokens](/docs/aleph_zero/user_guide/faucet). You can request these tokens from the Aleph Zero Faucet. 
 
 1. Open your web browser and navigate to the [Aleph Zero Faucet page](https://faucet.test.azero.dev/).
 
@@ -30,15 +30,17 @@ To start interacting with the Invariant platform on the Aleph Zero testnet, you 
 
 ![Nightly wallet](/img/docs/app/a0/a0_wallet.png)
 
-3. Copy your wallet address to clipboard.
+3. Remember to switch your wallet to the Aleph Zero Testnet. You can find the full instructions on how to do it [here](/docs/aleph_zero/user_guide/faucet).
+
+4. Copy your wallet address to clipboard.
 
 ![Nightly wallet](/img/docs/app/a0/a0_walletadress.png)
 
-4. Paste your wallet address in Aleph Zero Faucet and solve the captcha.
+5. Paste your wallet address in Aleph Zero Faucet and solve the captcha.
 
 ![Paste adress](/img/docs/app/a0/a0_a0faucetadress.png)
 
-5. Click **“Make it rain”** button.
+6. Click **“Make it rain”** button.
 
 After few second, airdrop of testnet AZERO should be in your wallet.
 

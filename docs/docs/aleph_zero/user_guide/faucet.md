@@ -4,8 +4,32 @@ title: Faucet
 slug: /aleph_zero/user_guide/faucet
 ---
 
-To be able to claim an airdrop from the Invariant platform, we need to have TZERO (Testnet AZERO) to pay the network fee for the transaction. Therefore, we need to go through two steps to receive the airdrop.
+To be able to claim an airdrop from the Invariant platform, we need to have TZERO (Testnet AZERO) to pay the network fee for the transaction. Therefore, we need to go through three steps to receive the airdrop.
 
+# Changing network to testnet on your wallet 
+
+Before we request an airdrop from [Aleph Zero Faucet](https://faucet.test.azero.dev/), we should make sure that our wallet is switched to Aleph Zero Testnet. We will show how to do it, using [Nightly](https://nightly.app/) as an example.
+
+1. Open **menu** in [Nightly](https://nightly.app/) wallet.
+
+![Menu](/img/docs/app/a0/a0_menulight.png)
+
+2. Click on the **Settings** button.
+
+
+![Settings](/img/docs/app/a0/a0_menulight.png)
+
+3. Click on the **"Choose RPC"** button.
+
+
+![Choose RPC](/img/docs/app/a0/a0_chooserpc.png)
+
+
+4. Select **"Aleph Zero Testnet"** and click **"Confirm"** button.
+
+![Confirm](/img/docs/app/a0/a0_confirm.png)
+
+Now, your wallet is switched to the Aleph Zero testnet, and is ready to receive TZERO testnet tokens.
 
 # Aleph Zero Faucet
 
