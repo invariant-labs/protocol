@@ -8,6 +8,14 @@ module.exports = {
       items: [
         'what_is/the_birth_of_the_idea',
         'what_is/solana',
+      ]
+    },
+
+    {
+      type: 'category',
+      label: 'Concentrated Liquidity',
+      // collapsed: true,
+      items: [
         'what_is/concentrated_liquidity',
         'what_is/price_of_the_token',
         'what_is/single_token_lp',
@@ -15,36 +23,6 @@ module.exports = {
         'what_is/fees',
         'what_is/merge',
         'what_is/glossary'
-      ]
-    },
-    {
-      type: 'category',
-      label: 'Tutorial',
-      collapsed: true,
-      items: [
-        'tutorial/interface',
-        'tutorial/priority_fees',
-        'tutorial/rpc',
-        'tutorial/networks',
-        'tutorial/how_to_connect_your_wallet',
-        'tutorial/how_to_swap',
-        {
-          type: 'category',
-          label: 'How to add liquidity',
-          link: {
-            type: 'doc',
-            id: 'tutorial/how_to_add_liquidity'
-          },
-          items: [
-            'tutorial/how_to_add_liquidity/uniform_concentration',
-            'tutorial/how_to_add_liquidity/price_range'
-          ]
-        },
-        'tutorial/how_to_claim_fee',
-        'tutorial/how_to_remove_liquidity',
-        'tutorial/stats',
-        'tutorial/troubleshooting',
-        'tutorial/faq_tutorial'
       ]
     },
     {
@@ -57,25 +35,39 @@ module.exports = {
         'invariant_bonds/bond_example'
       ]
     },
+
     {
       type: 'category',
       label: 'Invariant Staker',
       // collapsed: true,
       items: ['invariant_staker/introduction', 'invariant_staker/calculation']
     },
+    
     {
       type: 'category',
       label: 'Solana',
       collapsed: true,
       items: [
-        'solana/introduction',
-        'solana/quick_start',
-        'solana/pool',
-        'solana/minting_position',
-        'solana/position_list',
-        'solana/swap',
-        'solana/withdraw',
-        'solana/invariant_errors'
+        {
+          type: 'category',
+          label: 'For developers',
+          link: {
+            type: 'doc',
+            id: 'solana/introduction'
+          },
+          items: [
+            'solana/introduction',
+            'solana/quick_start',
+            'solana/pool',
+            'solana/minting_position',
+            'solana/position_list',
+            'solana/swap',
+            'solana/withdraw',
+            'solana/invariant_errors'
+            
+          ]
+        },  
+        
       ]
     },
     {
@@ -83,6 +75,7 @@ module.exports = {
       label: 'Eclipse',
       collapsed: true,
       items: [
+        'eclipse/get_started',
         {
           type: 'category',
           label: 'User Guide',
@@ -115,15 +108,25 @@ module.exports = {
             'eclipse/user_guide/faq_tutorial'
           ]
         },
-        'eclipse/get_started',
-        'eclipse/introduction',
-        'eclipse/quick_start',
-        'eclipse/pool',
-        'eclipse/minting_position',
-        'eclipse/position_list',
-        'eclipse/swap',
-        'eclipse/withdraw',
-        'eclipse/invariant_errors'
+        {
+          type: 'category',
+          label: 'For developers',
+          link: {
+            type: 'doc',
+            id: 'eclipse/get_started'
+          },
+          items: [
+            'eclipse/introduction',
+            'eclipse/quick_start',
+            'eclipse/pool',
+            'eclipse/minting_position',
+            'eclipse/position_list',
+            'eclipse/swap',
+            'eclipse/withdraw',
+            'eclipse/invariant_errors'
+            
+          ]
+        },  
       ]
     },
     {
@@ -131,6 +134,7 @@ module.exports = {
       label: 'Aleph Zero',
       collapsed: true,
       items: [
+        'aleph_zero/get_started',
         {
           type: 'category',
           label: 'User Guide',
@@ -160,17 +164,28 @@ module.exports = {
             'aleph_zero/user_guide/faq_tutorial'
           ]
         },
-        'aleph_zero/get_started',
-        'aleph_zero/installation',
-        'aleph_zero/overview',
-        'aleph_zero/sdk',
-        'aleph_zero/types',
-        'aleph_zero/storage',
-        'aleph_zero/collections',
-        'aleph_zero/entrypoints',
-        'aleph_zero/handling_azero',
-        'aleph_zero/invariant_errors',
-        'aleph_zero/deployment'
+        {
+          type: 'category',
+          label: 'For developers',
+          link: {
+            type: 'doc',
+            id: 'aleph_zero/installation'
+          },
+          items: [
+            'aleph_zero/installation',
+            'aleph_zero/overview',
+            'aleph_zero/sdk',
+            'aleph_zero/types',
+            'aleph_zero/storage',
+            'aleph_zero/collections',
+            'aleph_zero/entrypoints',
+            'aleph_zero/handling_azero',
+            'aleph_zero/invariant_errors',
+            'aleph_zero/deployment'
+            
+          ]
+        },  
+        
       ]
     },
     // {
@@ -195,14 +210,25 @@ module.exports = {
       label: 'VARA',
       collapsed: true,
       items: [
-        'vara/installation',
-        'vara/overview',
-        'vara/sdk',
-        'vara/types',
-        'vara/storage',
-        'vara/collections',
-        'vara/entrypoints',
-        'vara/invariant_errors'
+        {
+          type: 'category',
+          label: 'For developers',
+          link: {
+            type: 'doc',
+            id: 'vara/installation'
+          },
+          items: [
+            'vara/installation',
+            'vara/overview',
+            'vara/sdk',
+            'vara/types',
+            'vara/storage',
+            'vara/collections',
+            'vara/entrypoints',
+            'vara/invariant_errors'
+            
+          ]
+        }, 
       ]
     },
     {
@@ -210,7 +236,15 @@ module.exports = {
       label: 'Alephium',
       collapsed: true,
       items: [
-        'alephium/installation',
+        {
+          type: 'category',
+          label: 'For developers',
+          link: {
+            type: 'doc',
+            id: 'alephium/installation'
+          },
+          items: [
+            'alephium/installation',
         'alephium/overview',
         'alephium/sdk',
         'alephium/types',
@@ -220,6 +254,9 @@ module.exports = {
         'alephium/handling_alph',
         'alephium/invariant_errors'
         // 'alephium/deployment'
+            ]
+        },  
+
       ]
     },
     'faq',
@@ -227,6 +264,11 @@ module.exports = {
     {
       href: 'https://twitter.com/invariant_labs',
       label: 'Twitter',
+      type: 'link'
+    },
+    {
+      href: 'https://www.youtube.com/@invariant_labs',
+      label: 'Youtube',
       type: 'link'
     },
     {
