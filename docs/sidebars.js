@@ -25,6 +25,23 @@ module.exports = {
         'what_is/glossary'
       ]
     },
+    {
+      type: 'category',
+      label: 'Invariant Bonds',
+      // collapsed: true,
+      items: [
+        'invariant_bonds/introduction',
+        'invariant_bonds/math',
+        'invariant_bonds/bond_example'
+      ]
+    },
+
+    {
+      type: 'category',
+      label: 'Invariant Staker',
+      // collapsed: true,
+      items: ['invariant_staker/introduction', 'invariant_staker/calculation']
+    },
     
     {
       type: 'category',
