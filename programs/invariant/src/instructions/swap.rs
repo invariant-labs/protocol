@@ -242,7 +242,7 @@ impl<'info> Swap<'info> {
         let ref_account = match ctx
             .remaining_accounts
             .iter()
-            .find(|account| *account.owner == token::ID)
+            .find(|account| *account.owner == token::ID || *account.owner == token_2022::ID)
         {
             Some(account) => match InterfaceAccount::<'info, TokenAccount>::try_from(account) {
                 Ok(token) => {
@@ -395,6 +395,8 @@ impl<'info> Swap<'info> {
 
         // Execute swap
         let signer: &[&[&[u8]]] = get_signer!(state.nonce);
+
+        msg!("Referal accounts is some {:?}", ref_account.is_some());
 
         // Both tokens are SPL
         if ctx.accounts.token_x_program.key() == token::ID

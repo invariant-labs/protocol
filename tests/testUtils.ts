@@ -19,14 +19,18 @@ import {
   feeToTickSpacing,
   FEE_TIERS,
   generateTicksArray,
-  tou64,
   getTokenProgramAddress
 } from '@invariant-labs/sdk/src/utils'
 import BN from 'bn.js'
-import { Pair, TICK_LIMIT, calculatePriceSqrt, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
+import {
+  Pair,
+  TICK_LIMIT,
+  calculatePriceSqrt,
+  LIQUIDITY_DENOMINATOR,
+  sleep
+} from '@invariant-labs/sdk'
 import { assert } from 'chai'
 import { getBalance } from '@invariant-labs/sdk/lib/utils'
-import { sleep } from '@invariant-labs/sdk'
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {
@@ -257,7 +261,7 @@ export const createPosition = async (
   const tokenXProgram = await getTokenProgramAddress(connection, pair.tokenX)
   const tokenYProgram = await getTokenProgramAddress(connection, pair.tokenY)
 
-  const mintAmount = tou64(new BN(10).pow(new BN(18)))
+  const mintAmount = new BN(10).pow(new BN(18))
   if ((await getBalance(connection, ownerTokenXAccount, tokenXProgram)).eq(new BN(0))) {
     await mintTo(
       connection,

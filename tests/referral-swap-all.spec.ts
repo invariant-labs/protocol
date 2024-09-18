@@ -18,7 +18,6 @@ import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { CreateTick, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 import { createAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 
-// TODO: fix this test
 describe('Referral swap', () => {
   const provider = AnchorProvider.local()
   const connection = provider.connection
@@ -96,7 +95,7 @@ describe('Referral swap', () => {
     const referralTokenXAccount = await createAssociatedTokenAccount(
       connection,
       admin,
-      pair.tokenY,
+      pair.tokenX,
       referralAccount.publicKey
     )
 
@@ -246,7 +245,6 @@ describe('Referral swap', () => {
 
     assert.ok(amountX.eqn(0))
     assert.ok(amountY.eq(expectedYTransferTo))
-    // TODO: fails
     assert.ok(reserveXDelta.eq(amount.sub(expectedXReferralFee)))
     assert.ok(referralXDelta.eq(expectedXReferralFee))
     assert.ok(reserveYDelta.eq(expectedYTransferTo))

@@ -1,4 +1,4 @@
-import { Provider, BN, utils, AnchorProvider } from '@coral-xyz/anchor'
+import { BN, utils, AnchorProvider } from '@coral-xyz/anchor'
 import {
   ComputeBudgetProgram,
   ConfirmOptions,
