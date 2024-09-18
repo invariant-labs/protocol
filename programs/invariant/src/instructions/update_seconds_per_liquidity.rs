@@ -5,7 +5,6 @@ use crate::structs::tick::Tick;
 use crate::util::{get_current_slot, get_current_timestamp};
 use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::system_program;
 use anchor_spl::token_interface::Mint;
 use math::*;
 
@@ -46,9 +45,7 @@ pub struct UpdateSecondsPerLiquidity<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
-    #[account(address = system_program::ID)]
-    /// CHECK: Ignore
-    pub system_program: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
 }
 impl<'info> UpdateSecondsPerLiquidity<'info> {
     pub fn handler(&self) -> Result<()> {

@@ -2,7 +2,6 @@ use crate::structs::position::Position;
 use crate::structs::position_list::PositionList;
 use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::system_program;
 
 #[derive(Accounts)]
 #[instruction( index: u32)]
@@ -46,9 +45,7 @@ pub struct TransferPositionOwnership<'info> {
     /// CHECK: Ignore
     pub recipient: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
-    #[account(address = system_program::ID)]
-    /// CHECK: Ignore
-    pub system_program: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 impl<'info> TransferPositionOwnership<'info> {

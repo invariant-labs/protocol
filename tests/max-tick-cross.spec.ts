@@ -1,19 +1,20 @@
 import * as anchor from '@coral-xyz/anchor'
-import { Provider, BN } from '@coral-xyz/anchor'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { Keypair, Transaction } from '@solana/web3.js'
+import { AnchorProvider, BN } from '@coral-xyz/anchor'
+
+import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken, initMarket } from './testUtils'
 import { Market, Pair, LIQUIDITY_DENOMINATOR, Network } from '@invariant-labs/sdk/src'
-import { FeeTier } from '@invariant-labs/sdk/lib/market'
+import { FeeTier, TICK_CROSSES_PER_IX } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal, tou64 } from '@invariant-labs/sdk/src/utils'
 import { InitPosition, Swap } from '@invariant-labs/sdk/src/market'
-import { computeUnitsInstruction, signAndSend } from '@invariant-labs/sdk'
+import { signAndSend, sleep } from '@invariant-labs/sdk'
+import { createAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 
 describe('Max tick crosses', () => {
   //const provider = Provider.local(undefined, { skipPreflight: true })
-  const provider = Provider.local()
+  const provider = AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
@@ -25,8 +26,6 @@ describe('Max tick crosses', () => {
   }
   let market: Market
   let pair: Pair
-  let tokenX: Token
-  let tokenY: Token
 
   before(async () => {
     market = await Market.build(
@@ -47,9 +46,7 @@ describe('Max tick crosses', () => {
       createToken(connection, wallet, mintAuthority)
     ])
 
-    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+    pair = new Pair(tokens[0], tokens[1], feeTier)
   })
 
   it('#init()', async () => {
@@ -59,12 +56,37 @@ describe('Max tick crosses', () => {
   it('#swap() max crosses', async () => {
     const positionOwner = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
-    const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
-    const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
+    await sleep(400)
+    const userTokenXAccount = await createAssociatedTokenAccount(
+      connection,
+      positionOwner,
+      pair.tokenX,
+      positionOwner.publicKey
+    )
+    const userTokenYAccount = await createAssociatedTokenAccount(
+      connection,
+      positionOwner,
+      pair.tokenY,
+      positionOwner.publicKey
+    )
     const mintAmount = tou64(new BN(10).pow(new BN(10)))
 
-    await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-    await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+    await mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      userTokenXAccount,
+      mintAuthority,
+      mintAmount
+    )
+    await mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      userTokenYAccount,
+      mintAuthority,
+      mintAmount
+    )
     const liquidityDelta = { v: new BN(10000000).mul(LIQUIDITY_DENOMINATOR) }
 
     await market.createPositionList(positionOwner.publicKey, positionOwner)
@@ -89,11 +111,21 @@ describe('Max tick crosses', () => {
     // Create owner
     const owner = Keypair.generate()
     await connection.requestAirdrop(owner.publicKey, 1e9)
-
-    const amount = new BN(95000)
-    const accountX = await tokenX.createAccount(owner.publicKey)
-    const accountY = await tokenY.createAccount(owner.publicKey)
-    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
+    await sleep(400)
+    const amount = new BN(85000)
+    const accountX = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      owner.publicKey
+    )
+    const accountY = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      owner.publicKey
+    )
+    await mintTo(connection, mintAuthority, pair.tokenX, accountX, mintAuthority, amount)
 
     // Swap
     const poolDataBefore = await market.getPool(pair)
@@ -116,6 +148,6 @@ describe('Max tick crosses', () => {
     // Check crosses
     const poolData = await market.getPool(pair)
     const crosses = Math.abs((poolData.currentTickIndex - poolDataBefore.currentTickIndex) / 10)
-    assert.equal(crosses, 19)
+    assert.equal(crosses, TICK_CROSSES_PER_IX)
   })
 })

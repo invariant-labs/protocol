@@ -165,7 +165,6 @@ describe('cross', () => {
     // Swap
     const poolDataBefore = await market.getPool(pair)
     const reservesBefore = await market.getReserveBalances(pair)
-    console.log('reservesBefore', reservesBefore)
 
     const swapVars: Swap = {
       pair,

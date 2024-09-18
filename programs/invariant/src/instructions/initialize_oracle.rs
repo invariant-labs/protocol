@@ -2,7 +2,6 @@ use crate::errors::ErrorCode::{self, *};
 use crate::structs::oracle::Oracle;
 use crate::structs::pool::Pool;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::system_program;
 use anchor_spl::token_interface::Mint;
 
 #[derive(Accounts)]
@@ -20,9 +19,7 @@ pub struct InitializeOracle<'info> {
     pub token_y: Box<InterfaceAccount<'info, Mint>>,
     pub payer: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
-    #[account(address = system_program::ID)]
-    /// CHECK: Ignore
-    pub system_program: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 impl<'info> InitializeOracle<'info> {

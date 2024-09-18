@@ -1,6 +1,5 @@
 use crate::structs::state::State;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::system_program;
 
 #[derive(Accounts)]
 #[instruction( nonce: u8)]
@@ -13,9 +12,7 @@ pub struct CreateState<'info> {
     /// CHECK: Ignore
     pub program_authority: AccountInfo<'info>,
     pub rent: Sysvar<'info, Rent>,
-    #[account(address = system_program::ID)]
-    /// CHECK: Ignore
-    pub system_program: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 pub fn handler(ctx: Context<CreateState>, nonce: u8) -> Result<()> {

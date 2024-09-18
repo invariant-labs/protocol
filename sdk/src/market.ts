@@ -45,7 +45,7 @@ const POSITION_SEED = 'positionv1'
 const TICK_SEED = 'tickv1'
 const POSITION_LIST_SEED = 'positionlistv1'
 const STATE_SEED = 'statev1'
-export const TICK_CROSSES_PER_IX = 19
+export const TICK_CROSSES_PER_IX = 17
 export const FEE_TIER = 'feetierv1'
 export const DEFAULT_PUBLIC_KEY = new PublicKey(0)
 

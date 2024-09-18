@@ -7,7 +7,6 @@ use crate::util::check_tick;
 use crate::util::get_current_timestamp;
 use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::system_program;
 use anchor_spl::token;
 use anchor_spl::token_2022;
 use anchor_spl::token_interface::{Mint, TokenInterface};
@@ -44,9 +43,7 @@ pub struct CreateTick<'info> {
     )]
     pub token_y: InterfaceAccount<'info, Mint>,
     pub rent: Sysvar<'info, Rent>,
-    #[account(address = system_program::ID)]
-    /// CHECK: Ignore
-    pub system_program: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
 
     #[account(constraint = token_x_program.key() == token::ID || token_x_program.key() == token_2022::ID)]
     pub token_x_program: Interface<'info, TokenInterface>,

@@ -70,6 +70,7 @@ describe('swap', () => {
 
     const positionOwner = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
+    await sleep(400)
     const userTokenXAccount = await createAssociatedTokenAccount(
       connection,
       positionOwner,

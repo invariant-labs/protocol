@@ -8,6 +8,7 @@ import {
   Pair,
   LIQUIDITY_DENOMINATOR,
   Network,
+  sleep,
   PRICE_DENOMINATOR
 } from '@invariant-labs/sdk'
 import { FeeTier, InitPosition, Swap } from '@invariant-labs/sdk/lib/market'
@@ -247,6 +248,7 @@ describe('compare', () => {
       byAmountIn: true
     }
     await market.swap(swapVars2, owner)
+    await sleep(1000)
 
     // Check pool
     const firstPoolData = await market.getPool(firstPair)

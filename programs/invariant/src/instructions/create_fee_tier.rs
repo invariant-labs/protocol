@@ -3,7 +3,6 @@ use crate::structs::fee_tier::FeeTier;
 use crate::ErrorCode::{self, *};
 use crate::*;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::system_program;
 
 #[derive(Accounts)]
 #[instruction(fee: u128, tick_spacing: u16)]
@@ -18,9 +17,7 @@ pub struct CreateFeeTier<'info> {
     #[account(mut, constraint = &state.load()?.admin == admin.key @ InvalidAdmin)]
     pub admin: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
-    #[account(address = system_program::ID)]
-    /// CHECK: Ignore
-    pub system_program: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 impl<'info> CreateFeeTier<'info> {

@@ -8,7 +8,6 @@ use crate::util::check_tick;
 use crate::util::get_current_timestamp;
 use crate::ErrorCode::{self, *};
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::system_program;
 use anchor_spl::token;
 use anchor_spl::token_2022;
 use anchor_spl::token_interface::{Mint, TokenAccount, TokenInterface};
@@ -66,9 +65,7 @@ pub struct CreatePool<'info> {
     #[account(constraint = token_y_program.key() == token::ID || token_y_program.key() == token_2022::ID)]
     pub token_y_program: Interface<'info, TokenInterface>,
     pub rent: Sysvar<'info, Rent>,
-    #[account(address = system_program::ID)]
-    /// CHECK: ignore
-    pub system_program: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 impl<'info> CreatePool<'info> {
