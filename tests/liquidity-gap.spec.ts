@@ -1,9 +1,8 @@
 import * as anchor from '@coral-xyz/anchor'
-import { Provider, BN } from '@coral-xyz/anchor'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { AnchorProvider, BN } from '@coral-xyz/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { assert } from 'chai'
-import { createToken } from './testUtils'
+import { createToken, assertThrowsAsync } from './testUtils'
 import {
   Market,
   Pair,
@@ -11,11 +10,12 @@ import {
   TICK_LIMIT,
   Network,
   calculatePriceSqrt,
+  sleep,
   PRICE_DENOMINATOR
 } from '@invariant-labs/sdk'
 import { Decimal, FeeTier } from '@invariant-labs/sdk/lib/market'
-import { assertThrowsAsync, fromFee } from '@invariant-labs/sdk/lib/utils'
-import { toDecimal, tou64 } from '@invariant-labs/sdk/src/utils'
+import { fromFee, getBalance } from '@invariant-labs/sdk/lib/utils'
+import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import {
   CreateFeeTier,
   CreatePool,
@@ -23,9 +23,10 @@ import {
   InitPosition,
   Swap
 } from '@invariant-labs/sdk/src/market'
+import { createAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 
 describe('Liquidity gap', () => {
-  const provider = Provider.local()
+  const provider = AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
@@ -44,8 +45,6 @@ describe('Liquidity gap', () => {
     tickSpacing: 10
   }
   let pair: Pair
-  let tokenX: Token
-  let tokenY: Token
 
   before(async () => {
     market = await Market.build(
@@ -66,9 +65,7 @@ describe('Liquidity gap', () => {
       createToken(connection, wallet, mintAuthority)
     ])
 
-    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+    pair = new Pair(tokens[0], tokens[1], feeTier)
 
     await market.createState(admin.publicKey, admin)
 
@@ -86,8 +83,8 @@ describe('Liquidity gap', () => {
     await market.createPool(createPoolVars)
 
     const createdPool = await market.getPool(pair)
-    assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
-    assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
+    assert.ok(createdPool.tokenX.equals(pair.tokenX))
+    assert.ok(createdPool.tokenY.equals(pair.tokenY))
     assert.ok(createdPool.fee.v.eq(feeTier.fee))
     assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
     assert.ok(createdPool.liquidity.v.eqn(0))
@@ -121,12 +118,37 @@ describe('Liquidity gap', () => {
     await market.createTick(createTickVars2, admin)
 
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
-    userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
-    userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
-    const mintAmount = tou64(new BN(10).pow(new BN(10)))
+    await sleep(400)
+    userTokenXAccount = await createAssociatedTokenAccount(
+      connection,
+      positionOwner,
+      pair.tokenX,
+      positionOwner.publicKey
+    )
+    userTokenYAccount = await createAssociatedTokenAccount(
+      connection,
+      positionOwner,
+      pair.tokenY,
+      positionOwner.publicKey
+    )
+    const mintAmount = new BN(10).pow(new BN(10))
 
-    await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-    await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+    await mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      userTokenXAccount,
+      mintAuthority,
+      mintAmount
+    )
+    await mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      userTokenYAccount,
+      mintAuthority,
+      mintAmount
+    )
     const liquidityDelta = { v: new BN(20006000).mul(LIQUIDITY_DENOMINATOR) }
 
     await market.createPositionList(positionOwner.publicKey, positionOwner)
@@ -149,16 +171,27 @@ describe('Liquidity gap', () => {
     // Create owner
     owner = Keypair.generate()
     await connection.requestAirdrop(owner.publicKey, 1e9)
+    await sleep(400)
 
     const amount = new BN(10067)
-    accountX = await tokenX.createAccount(owner.publicKey)
-    accountY = await tokenY.createAccount(owner.publicKey)
-    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
+    accountX = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      owner.publicKey
+    )
+    accountY = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      owner.publicKey
+    )
+    await mintTo(connection, mintAuthority, pair.tokenX, accountX, mintAuthority, amount)
 
     // Swap
     const poolDataBefore = await market.getPool(pair)
-    const reserveXBefore = (await tokenX.getAccountInfo(poolDataBefore.tokenXReserve)).amount
-    const reserveYBefore = (await tokenY.getAccountInfo(poolDataBefore.tokenYReserve)).amount
+    const reserveXBefore = await getBalance(connection, poolDataBefore.tokenXReserve)
+    const reserveYBefore = await getBalance(connection, poolDataBefore.tokenYReserve)
 
     const swapVars: Swap = {
       pair,
@@ -172,6 +205,7 @@ describe('Liquidity gap', () => {
       owner: owner.publicKey
     }
     await market.swap(swapVars, owner)
+    await sleep(1000)
 
     // Check pool
     const poolData = await market.getPool(pair)
@@ -183,10 +217,10 @@ describe('Liquidity gap', () => {
     assert.ok(poolData.sqrtPrice.v.eq(sqrtPriceAtTick.v))
 
     // Check amounts and fees
-    const amountX = (await tokenX.getAccountInfo(accountX)).amount
-    const amountY = (await tokenY.getAccountInfo(accountY)).amount
-    const reserveXAfter = (await tokenX.getAccountInfo(poolData.tokenXReserve)).amount
-    const reserveYAfter = (await tokenY.getAccountInfo(poolData.tokenYReserve)).amount
+    const amountX = await getBalance(connection, accountX)
+    const amountY = await getBalance(connection, accountY)
+    const reserveXAfter = await getBalance(connection, poolDataBefore.tokenXReserve)
+    const reserveYAfter = await getBalance(connection, poolDataBefore.tokenYReserve)
     const reserveXDelta = reserveXAfter.sub(reserveXBefore)
     const reserveYDelta = reserveYBefore.sub(reserveYAfter)
     const expectedYAmountOut = new BN(9999)
@@ -250,7 +284,7 @@ describe('Liquidity gap', () => {
     }
     await market.initPosition(initPositionAfterSwapVars, positionOwner)
     const nextSwapAmount = new BN(5000)
-    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(nextSwapAmount))
+    await mintTo(connection, mintAuthority, pair.tokenX, accountX, mintAuthority, nextSwapAmount)
 
     // const poolDataBefore = await market.getPool(pair)
     // const reserveXBefore = (await tokenX.getAccountInfo(poolDataBefore.tokenXReserve)).amount

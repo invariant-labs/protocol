@@ -5,7 +5,6 @@ import {
   Keypair,
   PublicKey,
   SystemProgram,
-  SYSVAR_RENT_PUBKEY,
   Transaction,
   TransactionInstruction
 } from '@solana/web3.js'
@@ -97,10 +96,10 @@ export class Market {
     return tx
   }
 
-  async createPool(createPool: CreatePool) {
+  async createPool(createPool: CreatePool): Promise<string> {
     const { transaction, signers } = await this.createPoolTx(createPool)
 
-    await signAndSend(transaction, [createPool.payer, ...signers], this.connection)
+    return await signAndSend(transaction, [createPool.payer, ...signers], this.connection)
   }
 
   async createPoolTx({ pair, payer, initTick }: CreatePoolTx) {
@@ -541,10 +540,10 @@ export class Market {
   }
 
   // Admin function
-  async createFeeTier(createFeeTier: CreateFeeTier, signer: Keypair) {
+  async createFeeTier(createFeeTier: CreateFeeTier, signer: Keypair): Promise<string> {
     const tx = await this.createFeeTierTransaction(createFeeTier)
 
-    await signAndSend(tx, [signer], this.connection)
+    return await signAndSend(tx, [signer], this.connection)
   }
 
   async createStateInstruction(admin?: PublicKey) {
@@ -567,10 +566,10 @@ export class Market {
     return new Transaction().add(ix)
   }
 
-  async createState(admin: PublicKey, signer: Keypair) {
+  async createState(admin: PublicKey, signer: Keypair): Promise<string> {
     const tx = await this.createStateTransaction(admin)
 
-    await signAndSend(tx, [signer], this.connection)
+    return await signAndSend(tx, [signer], this.connection)
   }
 
   getStateAddress() {
@@ -617,10 +616,10 @@ export class Market {
     return new Transaction().add(ix)
   }
 
-  async createTick(createTick: CreateTick, signer: Keypair) {
+  async createTick(createTick: CreateTick, signer: Keypair): Promise<string> {
     const tx = await this.createTickTransaction(createTick)
 
-    await signAndSend(tx, [signer], this.connection)
+    return await signAndSend(tx, [signer], this.connection)
   }
 
   async createPositionListInstruction(owner?: PublicKey) {
@@ -642,10 +641,10 @@ export class Market {
     return new Transaction().add(ix)
   }
 
-  async createPositionList(owner: PublicKey, signer: Keypair) {
+  async createPositionList(owner: PublicKey, signer: Keypair): Promise<string> {
     const tx = await this.createPositionListTransaction(owner)
 
-    await signAndSend(tx, [signer], this.connection)
+    return await signAndSend(tx, [signer], this.connection)
   }
 
   async initPositionInstruction(
@@ -768,10 +767,10 @@ export class Market {
     return tx.add(positionInstruction)
   }
 
-  async initPosition(initPosition: InitPosition, signer: Keypair) {
+  async initPosition(initPosition: InitPosition, signer: Keypair): Promise<string> {
     const tx = await this.initPositionTx(initPosition)
 
-    await signAndSend(tx, [signer], this.connection)
+    return await signAndSend(tx, [signer], this.connection)
   }
 
   async initPoolAndPositionTx(
@@ -878,6 +877,7 @@ export class Market {
           })
           .instruction()
       )
+
     if (!listExists) transaction.add(await this.createPositionListInstruction(payerPubkey))
 
     const slippageLimitLower = calculatePriceAfterSlippage(knownPrice, slippage, false)
@@ -921,10 +921,10 @@ export class Market {
     }
   }
 
-  async initPoolAndPosition(createPool: InitPoolAndPosition, signer: Keypair) {
+  async initPoolAndPosition(createPool: InitPoolAndPosition, signer: Keypair): Promise<string> {
     const { transaction, signers } = await this.initPoolAndPositionTx(createPool, signer)
 
-    await signAndSend(transaction, [signer, ...signers], this.connection)
+    return await signAndSend(transaction, [signer, ...signers], this.connection)
   }
 
   async swapInstruction(swap: Swap) {
@@ -1017,7 +1017,7 @@ export class Market {
     return new Transaction().add(setCuIx).add(swapIx)
   }
 
-  async swap(swap: Swap, signer: Keypair) {
+  async swap(swap: Swap, signer: Keypair): Promise<string> {
     const tx = await this.swapTransaction(swap)
 
     return await signAndSend(tx, [signer], this.connection)
@@ -1074,10 +1074,10 @@ export class Market {
     return new Transaction().add(ix)
   }
 
-  async claimFee(claimFee: ClaimFee, signer: Keypair) {
+  async claimFee(claimFee: ClaimFee, signer: Keypair): Promise<string> {
     const tx = await this.claimFeeTransaction(claimFee)
 
-    await signAndSend(tx, [signer], this.connection)
+    return await signAndSend(tx, [signer], this.connection)
   }
 
   async withdrawProtocolFeeInstruction(withdrawProtocolFee: WithdrawProtocolFee) {
@@ -1113,10 +1113,13 @@ export class Market {
   }
 
   // Admin function
-  async withdrawProtocolFee(withdrawProtocolFee: WithdrawProtocolFee, signer: Keypair) {
+  async withdrawProtocolFee(
+    withdrawProtocolFee: WithdrawProtocolFee,
+    signer: Keypair
+  ): Promise<string> {
     const tx = await this.withdrawProtocolFeeTransaction(withdrawProtocolFee)
 
-    await signAndSend(tx, [signer], this.connection)
+    return await signAndSend(tx, [signer], this.connection)
   }
 
   async removePositionInstruction(removePosition: RemovePosition): Promise<TransactionInstruction> {
@@ -1145,6 +1148,7 @@ export class Market {
         state: this.stateAddress,
         removedPosition: removedPositionAddress,
         positionList: positionListAddress,
+        payer: owner,
         owner: owner,
         lastPosition: lastPositionAddress,
         pool: pair.getAddress(this.program.programId),
@@ -1169,10 +1173,10 @@ export class Market {
     return new Transaction().add(ix)
   }
 
-  async removePosition(removePosition: RemovePosition, signer: Keypair) {
+  async removePosition(removePosition: RemovePosition, signer: Keypair): Promise<string> {
     const tx = await this.removePositionTransaction(removePosition)
 
-    await signAndSend(tx, [signer], this.connection)
+    return await signAndSend(tx, [signer], this.connection)
   }
 
   async transferPositionOwnershipInstruction(
@@ -1215,10 +1219,10 @@ export class Market {
   async transferPositionOwnership(
     transferPositionOwnership: TransferPositionOwnership,
     signer: Keypair
-  ) {
+  ): Promise<string> {
     const tx = await this.transferPositionOwnershipTransaction(transferPositionOwnership)
 
-    await signAndSend(tx, [signer], this.connection)
+    return await signAndSend(tx, [signer], this.connection)
   }
 
   async updateSecondsPerLiquidityInstruction(updateSecondsPerLiquidity: UpdateSecondsPerLiquidity) {
@@ -1253,16 +1257,18 @@ export class Market {
   async updateSecondsPerLiquidity(
     updateSecondsPerLiquidity: UpdateSecondsPerLiquidity,
     signer: Keypair
-  ) {
+  ): Promise<string> {
     const tx = await this.updateSecondsPerLiquidityTransaction(updateSecondsPerLiquidity)
 
-    await signAndSend(tx, [signer], this.connection)
+    return await signAndSend(tx, [signer], this.connection)
   }
 
   async initializeOracle({ pair, payer }: InitializeOracle) {
     const oracleKeypair = Keypair.generate()
 
-    return await this.program.methods
+    const initAccount = await this.program.account.oracle.createInstruction(oracleKeypair)
+
+    const initOracle = await this.program.methods
       .initializeOracle()
       .accountsPartial({
         pool: pair.getAddress(this.program.programId),
@@ -1271,7 +1277,11 @@ export class Market {
         tokenY: pair.tokenY,
         payer: payer.publicKey
       })
-      .rpc()
+      .instruction()
+
+    const tx = new Transaction().add(initAccount, initOracle)
+
+    return await signAndSend(tx, [payer, oracleKeypair], this.connection)
   }
 
   async getOracle(pair: Pair) {
@@ -1304,10 +1314,10 @@ export class Market {
     return new Transaction().add(ix)
   }
 
-  async changeProtocolFee(changeProtocolFee: ChangeProtocolFee, signer: Keypair) {
+  async changeProtocolFee(changeProtocolFee: ChangeProtocolFee, signer: Keypair): Promise<string> {
     const tx = await this.changeProtocolFeeTransaction(changeProtocolFee)
 
-    await signAndSend(tx, [signer], this.connection)
+    return await signAndSend(tx, [signer], this.connection)
   }
 
   async changeFeeReceiverInstruction(changeFeeReceiver: ChangeFeeReceiver) {
@@ -1336,10 +1346,10 @@ export class Market {
     return new Transaction().add(ix)
   }
 
-  async changeFeeReceiver(changeFeeReceiver: ChangeFeeReceiver, signer: Keypair) {
+  async changeFeeReceiver(changeFeeReceiver: ChangeFeeReceiver, signer: Keypair): Promise<string> {
     const tx = await this.changeFeeReceiverTransaction(changeFeeReceiver)
 
-    await signAndSend(tx, [signer], this.connection)
+    return await signAndSend(tx, [signer], this.connection)
   }
 
   async getWholeLiquidity(pair: Pair) {

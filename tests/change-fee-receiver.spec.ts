@@ -1,14 +1,14 @@
 import { Market, Pair, Network } from '@invariant-labs/sdk'
 import { ChangeFeeReceiver, FeeTier } from '@invariant-labs/sdk/lib/market'
-import { assertThrowsAsync, fromFee } from '@invariant-labs/sdk/lib/utils'
+import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import * as anchor from '@coral-xyz/anchor'
-import { Provider, BN } from '@coral-xyz/anchor'
+import { AnchorProvider, BN } from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
-import { createToken, initMarket } from './testUtils'
+import { createToken, initMarket, assertThrowsAsync } from './testUtils'
 
 describe('change-fee-receiver', () => {
-  const provider = Provider.local()
+  const provider = AnchorProvider.local()
   const connection = provider.connection
 
   // @ts-expect-error
@@ -43,7 +43,7 @@ describe('change-fee-receiver', () => {
       createToken(connection, wallet, mintAuthority)
     ])
 
-    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
+    pair = new Pair(tokens[0], tokens[1], feeTier)
   })
 
   it('#init()', async () => {

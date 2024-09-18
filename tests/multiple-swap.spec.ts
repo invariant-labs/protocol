@@ -1,18 +1,18 @@
 import * as anchor from '@coral-xyz/anchor'
-import { Provider, BN } from '@coral-xyz/anchor'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { AnchorProvider, BN } from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken, eqDecimal, initMarket } from './testUtils'
-import { Market, Pair, Network, PRICE_DENOMINATOR } from '@invariant-labs/sdk'
+import { Market, Pair, Network, PRICE_DENOMINATOR, sleep } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
-import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { simulateSwap, SimulationStatus, tou64 } from '@invariant-labs/sdk/src/utils'
+import { fromFee, getBalance } from '@invariant-labs/sdk/lib/utils'
+import { simulateSwap, SimulationStatus } from '@invariant-labs/sdk/src/utils'
 import { InitPosition } from '@invariant-labs/sdk/src/market'
 import { getLiquidity } from '@invariant-labs/sdk/src/math'
+import { createAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 
 describe('Multiple swap', () => {
-  const provider = Provider.local()
+  const provider = AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
@@ -26,8 +26,6 @@ describe('Multiple swap', () => {
   }
   let market: Market
   let pair: Pair
-  let tokenX: Token
-  let tokenY: Token
 
   before(async () => {
     // Request airdrops
@@ -52,9 +50,8 @@ describe('Multiple swap', () => {
       createToken(connection, wallet, mintAuthority),
       createToken(connection, wallet, mintAuthority)
     ])
-    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+    pair = new Pair(tokens[0], tokens[1], feeTier)
+
     await initMarket(market, [pair], admin, 0)
 
     // create position with the same amount of tokens (tick, -tick) when current price is 1
@@ -64,14 +61,21 @@ describe('Multiple swap', () => {
     const mintAmount = new BN(100)
 
     //// create user1 and mint 100 token X and 100 token Y to user1
-    const [user1AccountX, user1AccountY] = await Promise.all([
-      tokenX.createAccount(user1.publicKey),
-      tokenY.createAccount(user1.publicKey)
-    ])
-    await Promise.all([
-      tokenX.mintTo(user1AccountX, mintAuthority.publicKey, [mintAuthority], tou64(mintAmount)),
-      tokenY.mintTo(user1AccountY, mintAuthority.publicKey, [mintAuthority], tou64(mintAmount))
-    ])
+
+    const user1AccountX = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      user1.publicKey
+    )
+    const user1AccountY = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      user1.publicKey
+    )
+    await mintTo(connection, mintAuthority, pair.tokenX, user1AccountX, mintAuthority, mintAmount)
+    await mintTo(connection, mintAuthority, pair.tokenY, user1AccountY, mintAuthority, mintAmount)
 
     // calculate required liquidity based on token amount
     const { liquidity: liquidityDelta } = getLiquidity(
@@ -104,11 +108,20 @@ describe('Multiple swap', () => {
       byAmountIn: true,
       slippage: { v: new BN(0) }
     }
-    const [user2AccountX, user2AccountY] = await Promise.all([
-      tokenX.createAccount(user2.publicKey),
-      tokenY.createAccount(user2.publicKey)
-    ])
-    await tokenX.mintTo(user2AccountX, mintAuthority.publicKey, [mintAuthority], tou64(mintAmount))
+
+    const user2AccountX = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      user2.publicKey
+    )
+    const user2AccountY = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      user2.publicKey
+    )
+    await mintTo(connection, mintAuthority, pair.tokenX, user2AccountX, mintAuthority, mintAmount)
 
     for (let i = 0; i < 10; i++) {
       // fetch required data to simulate swap
@@ -141,7 +154,10 @@ describe('Multiple swap', () => {
         },
         user2
       )
+
+      await sleep(1000)
     }
+
     const {
       currentTickIndex,
       feeGrowthGlobalX,
@@ -164,14 +180,14 @@ describe('Multiple swap', () => {
     assert.ok(eqDecimal(sqrtPrice, { v: new BN('959803483698079499776690') }))
 
     // validate pool reserves
-    const reserveXAmount = (await tokenX.getAccountInfo(tokenXReserve)).amount
-    const reserveYAmount = (await tokenY.getAccountInfo(tokenYReserve)).amount
+    const reserveXAmount = await getBalance(connection, tokenXReserve)
+    const reserveYAmount = await getBalance(connection, tokenYReserve)
     assert.ok(reserveXAmount.eq(new BN(200)))
     assert.ok(reserveYAmount.eq(new BN(20)))
 
     // validate user2 balances
-    const user2XAmount = (await tokenX.getAccountInfo(user2AccountX)).amount
-    const user2YAmount = (await tokenY.getAccountInfo(user2AccountY)).amount
+    const user2XAmount = await getBalance(connection, user2AccountX)
+    const user2YAmount = await getBalance(connection, user2AccountY)
     assert.ok(user2XAmount.eq(new BN(0)))
     assert.ok(user2YAmount.eq(new BN(80)))
   })
@@ -181,9 +197,8 @@ describe('Multiple swap', () => {
       createToken(connection, wallet, mintAuthority),
       createToken(connection, wallet, mintAuthority)
     ])
-    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+    pair = new Pair(tokens[0], tokens[1], feeTier)
+
     await initMarket(market, [pair], admin, 0)
 
     // create position with the same amount of tokens (tick, -tick) when current price is 1
@@ -193,14 +208,21 @@ describe('Multiple swap', () => {
     const mintAmount = new BN(100)
 
     //// create user1 and mint 100 token X and 100 token Y to user1
-    const [user1AccountX, user1AccountY] = await Promise.all([
-      tokenX.createAccount(user1.publicKey),
-      tokenY.createAccount(user1.publicKey)
-    ])
-    await Promise.all([
-      tokenX.mintTo(user1AccountX, mintAuthority.publicKey, [mintAuthority], tou64(mintAmount)),
-      tokenY.mintTo(user1AccountY, mintAuthority.publicKey, [mintAuthority], tou64(mintAmount))
-    ])
+    const user1AccountX = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      user1.publicKey
+    )
+    const user1AccountY = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      user1.publicKey
+    )
+    await mintTo(connection, mintAuthority, pair.tokenX, user1AccountX, mintAuthority, mintAmount)
+    await mintTo(connection, mintAuthority, pair.tokenY, user1AccountY, mintAuthority, mintAmount)
+    await sleep(1000)
 
     // calculate required liquidity based on token amount
     const { liquidity: liquidityDelta } = getLiquidity(
@@ -224,6 +246,7 @@ describe('Multiple swap', () => {
       knownPrice: { v: PRICE_DENOMINATOR }, // initial price = 1.0
       slippage: { v: new BN(0) } // 0% slippage
     }
+
     await market.initPosition(initPositionVars, user1)
 
     // create user2 for swap and mint 100 X tokens
@@ -233,11 +256,21 @@ describe('Multiple swap', () => {
       byAmountIn: true,
       slippage: { v: new BN(0) }
     }
-    const [user2AccountX, user2AccountY] = await Promise.all([
-      tokenX.createAccount(user2.publicKey),
-      tokenY.createAccount(user2.publicKey)
-    ])
-    await tokenY.mintTo(user2AccountY, mintAuthority.publicKey, [mintAuthority], tou64(mintAmount))
+
+    const user2AccountX = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      user2.publicKey
+    )
+    const user2AccountY = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      user2.publicKey
+    )
+    await mintTo(connection, mintAuthority, pair.tokenY, user2AccountY, mintAuthority, mintAmount)
+    await sleep(1000)
 
     for (let i = 0; i < 10; i++) {
       // fetch required data to simulate swap
@@ -270,6 +303,7 @@ describe('Multiple swap', () => {
         },
         user2
       )
+      await sleep(1000)
     }
     const {
       currentTickIndex,
@@ -293,14 +327,14 @@ describe('Multiple swap', () => {
     assert.ok(eqDecimal(sqrtPrice, { v: new BN('1041879944160074453234060') }))
 
     // validate pool reserves
-    const reserveXAmount = (await tokenX.getAccountInfo(tokenXReserve)).amount
-    const reserveYAmount = (await tokenY.getAccountInfo(tokenYReserve)).amount
+    const reserveXAmount = await getBalance(connection, tokenXReserve)
+    const reserveYAmount = await getBalance(connection, tokenYReserve)
     assert.ok(reserveXAmount.eq(new BN(20)))
     assert.ok(reserveYAmount.eq(new BN(200)))
 
     // validate user2 balances
-    const user2XAmount = (await tokenX.getAccountInfo(user2AccountX)).amount
-    const user2YAmount = (await tokenY.getAccountInfo(user2AccountY)).amount
+    const user2XAmount = await getBalance(connection, user2AccountX)
+    const user2YAmount = await getBalance(connection, user2AccountY)
     assert.ok(user2XAmount.eq(new BN(80)))
     assert.ok(user2YAmount.eq(new BN(0)))
   })

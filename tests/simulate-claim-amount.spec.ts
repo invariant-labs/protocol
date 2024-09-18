@@ -1,18 +1,24 @@
 import * as anchor from '@coral-xyz/anchor'
-import { Provider, BN } from '@coral-xyz/anchor'
+import { AnchorProvider, BN } from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
-import { Network, Market, Pair, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import {
+  Network,
+  Market,
+  Pair,
+  LIQUIDITY_DENOMINATOR,
+  PRICE_DENOMINATOR,
+  sleep
+} from '@invariant-labs/sdk'
 import { createToken, initMarket } from './testUtils'
 import { assert } from 'chai'
-import { fromFee } from '@invariant-labs/sdk/lib/utils'
+import { fromFee, getBalance } from '@invariant-labs/sdk/lib/utils'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { calculateClaimAmount, toDecimal, tou64 } from '@invariant-labs/sdk/src/utils'
 import { ClaimFee, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
-import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
+import { createAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 
 describe('claim', () => {
-  const provider = Provider.local()
+  const provider = AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
@@ -25,8 +31,6 @@ describe('claim', () => {
   }
   let market: Market
   let pair: Pair
-  let tokenX: Token
-  let tokenY: Token
 
   before(async () => {
     market = await Market.build(
@@ -47,9 +51,7 @@ describe('claim', () => {
       createToken(connection, wallet, mintAuthority)
     ])
 
-    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+    pair = new Pair(tokens[0], tokens[1], feeTier)
   })
 
   it('#init()', async () => {
@@ -60,12 +62,36 @@ describe('claim', () => {
     const upperTick = 10
     const lowerTick = -20
 
-    const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
-    const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
+    const userTokenXAccount = await createAssociatedTokenAccount(
+      connection,
+      positionOwner,
+      pair.tokenX,
+      positionOwner.publicKey
+    )
+    const userTokenYAccount = await createAssociatedTokenAccount(
+      connection,
+      positionOwner,
+      pair.tokenY,
+      positionOwner.publicKey
+    )
     const mintAmount = tou64(new BN(10).pow(new BN(10)))
 
-    await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-    await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+    await mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      userTokenXAccount,
+      mintAuthority,
+      mintAmount
+    )
+    await mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      userTokenYAccount,
+      mintAuthority,
+      mintAmount
+    )
 
     const liquidityDelta = { v: new BN(1000000).mul(LIQUIDITY_DENOMINATOR) }
 
@@ -90,13 +116,23 @@ describe('claim', () => {
     await connection.requestAirdrop(swapper.publicKey, 1e9)
 
     const amount = new BN(1000)
-    const accountX = await tokenX.createAccount(swapper.publicKey)
-    const accountY = await tokenY.createAccount(swapper.publicKey)
+    const accountX = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      swapper.publicKey
+    )
+    const accountY = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      swapper.publicKey
+    )
 
-    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
+    await mintTo(connection, mintAuthority, pair.tokenX, accountX, mintAuthority, amount)
 
     const poolDataBefore = await market.getPool(pair)
-    const reservesBeforeSwap = await market.getReserveBalances(pair, tokenX, tokenY)
+    const reservesBeforeSwap = await market.getReserveBalances(pair)
 
     const swapVars: Swap = {
       pair,
@@ -110,15 +146,16 @@ describe('claim', () => {
       byAmountIn: true
     }
     await market.swap(swapVars, swapper)
+    await sleep(1000)
 
     const poolDataAfter = await market.getPool(pair)
     assert.ok(poolDataAfter.liquidity.v.eq(poolDataBefore.liquidity.v))
     assert.ok(poolDataAfter.currentTickIndex === lowerTick)
     assert.ok(poolDataAfter.sqrtPrice.v.lt(poolDataBefore.sqrtPrice.v))
 
-    const amountX = (await tokenX.getAccountInfo(accountX)).amount
-    const amountY = (await tokenY.getAccountInfo(accountY)).amount
-    const reservesAfterSwap = await market.getReserveBalances(pair, tokenX, tokenY)
+    const amountX = await getBalance(connection, accountX)
+    const amountY = await getBalance(connection, accountY)
+    const reservesAfterSwap = await market.getReserveBalances(pair)
     const reserveXDelta = reservesAfterSwap.x.sub(reservesBeforeSwap.x)
     const reserveYDelta = reservesBeforeSwap.y.sub(reservesAfterSwap.y)
 
@@ -148,8 +185,8 @@ describe('claim', () => {
       feeGrowthGlobalY: poolDataAfter.feeGrowthGlobalY
     })
 
-    const reservesBeforeClaim = await market.getReserveBalances(pair, tokenX, tokenY)
-    const userTokenXAccountBeforeClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
+    const reservesBeforeClaim = await market.getReserveBalances(pair)
+    const userTokenXAccountBeforeClaim = await getBalance(connection, userTokenXAccount)
     const claimFeeVars: ClaimFee = {
       pair,
       owner: positionOwner.publicKey,
@@ -159,9 +196,10 @@ describe('claim', () => {
     }
     await market.claimFee(claimFeeVars, positionOwner)
 
-    const userTokenXAccountAfterClaim = (await tokenX.getAccountInfo(userTokenXAccount)).amount
+    await sleep(1000)
+    const userTokenXAccountAfterClaim = await getBalance(connection, userTokenXAccount)
     const positionAfterClaim = await market.getPosition(positionOwner.publicKey, 0)
-    const reservesAfterClaim = await market.getReserveBalances(pair, tokenX, tokenY)
+    const reservesAfterClaim = await market.getReserveBalances(pair)
     const expectedTokensClaimed = 5
 
     assert.ok(reservesBeforeClaim.x.subn(expectedTokensClaimed).eq(reservesAfterClaim.x))

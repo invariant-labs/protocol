@@ -1,8 +1,8 @@
 import * as anchor from '@coral-xyz/anchor'
 import { AnchorProvider, BN } from '@coral-xyz/anchor'
-import { Keypair, PublicKey } from '@solana/web3.js'
+import { Keypair } from '@solana/web3.js'
 import { Network, Market, Pair, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { createAssociatedTokenAccount } from '@solana/spl-token'
 import { createPosition, createToken, initMarket, performSwap } from './testUtils'
 import { assert } from 'chai'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
@@ -24,8 +24,6 @@ describe('big-swap', () => {
   }
   let market: Market
   let pair: Pair
-  let tokenX: PublicKey
-  let tokenY: PublicKey
 
   before(async () => {
     market = await Market.build(
@@ -46,9 +44,7 @@ describe('big-swap', () => {
       createToken(connection, wallet, mintAuthority)
     ])
 
-    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-    tokenX = pair.tokenX
-    tokenY = pair.tokenY
+    pair = new Pair(tokens[0], tokens[1], feeTier)
   })
 
   it('#init()', async () => {
@@ -56,8 +52,18 @@ describe('big-swap', () => {
   })
 
   it('#swap()', async () => {
-    const userTokenX = await tokenX.createAccount(positionOwner.publicKey)
-    const userTokenY = await tokenY.createAccount(positionOwner.publicKey)
+    const userTokenX = await createAssociatedTokenAccount(
+      connection,
+      positionOwner,
+      pair.tokenX,
+      positionOwner.publicKey
+    )
+    const userTokenY = await createAssociatedTokenAccount(
+      connection,
+      positionOwner,
+      pair.tokenY,
+      positionOwner.publicKey
+    )
 
     const positionsInfo: Array<[ticks: [lower: number, upper: number], liquidity: BN]> = [
       [[0, 20], new BN(10000000000000).mul(LIQUIDITY_DENOMINATOR)],
@@ -74,14 +80,13 @@ describe('big-swap', () => {
 
     for (let i = 0; i < positionsInfo.length; i++) {
       await createPosition(
+        connection,
         positionsInfo[i][0][0],
         positionsInfo[i][0][1],
         positionsInfo[i][1],
         positionOwner,
         userTokenX,
         userTokenY,
-        tokenX,
-        tokenY,
         pair,
         market,
         wallet,
@@ -119,8 +124,6 @@ describe('big-swap', () => {
         true,
         connection,
         market,
-        tokenX,
-        tokenY,
         mintAuthority
       )
     }
@@ -170,6 +173,7 @@ describe('big-swap', () => {
       userTokenY,
       owner: positionOwner.publicKey
     }
+
     await market.removePosition(removePositionVars, positionOwner)
 
     const removePositionVars2: RemovePosition = {
@@ -180,7 +184,7 @@ describe('big-swap', () => {
       owner: positionOwner.publicKey
     }
     await market.removePosition(removePositionVars2, positionOwner)
-
+    console.log('position removed')
     const removePositionVars3: RemovePosition = {
       index: 2,
       pair,
@@ -189,7 +193,7 @@ describe('big-swap', () => {
       owner: positionOwner.publicKey
     }
     await market.removePosition(removePositionVars3, positionOwner)
-
+    console.log('position removed')
     const removePositionVars4: RemovePosition = {
       index: 3,
       pair,
@@ -198,7 +202,7 @@ describe('big-swap', () => {
       owner: positionOwner.publicKey
     }
     await market.removePosition(removePositionVars4, positionOwner)
-
+    console.log('position removed')
     const positionsInfo2: Array<[ticks: [lower: number, upper: number], liquidity: BN]> = [
       [[-30, 20], new BN(50000000000).mul(LIQUIDITY_DENOMINATOR)],
       [[-20, 10], new BN(90000000000).mul(LIQUIDITY_DENOMINATOR)],
@@ -219,14 +223,13 @@ describe('big-swap', () => {
 
     for (let i = 0; i < positionsInfo2.length; i++) {
       await createPosition(
+        connection,
         positionsInfo2[i][0][0],
         positionsInfo2[i][0][1],
         positionsInfo2[i][1],
         positionOwner,
         userTokenX,
         userTokenY,
-        tokenX,
-        tokenY,
         pair,
         market,
         wallet,
@@ -263,8 +266,6 @@ describe('big-swap', () => {
         true,
         connection,
         market,
-        tokenX,
-        tokenY,
         mintAuthority
       )
     }

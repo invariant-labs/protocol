@@ -1,16 +1,15 @@
-import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
-import { Network, Pair, Market } from '@invariant-labs/sdk'
+import { Network, Pair, Market, PRICE_DENOMINATOR } from '@invariant-labs/sdk'
 import { FeeTier, InitPosition } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import * as anchor from '@coral-xyz/anchor'
-import { Provider, BN } from '@coral-xyz/anchor'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { AnchorProvider, BN } from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken, initMarket } from './testUtils'
+import { createAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 
 describe('whole-liquidity', () => {
-  const provider = Provider.local()
+  const provider = AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
@@ -21,8 +20,6 @@ describe('whole-liquidity', () => {
   const feeTier: FeeTier = { fee: fromFee(new BN(600)), tickSpacing: 10 }
   let market: Market
   let pair: Pair
-  let tokenX: Token
-  let tokenY: Token
 
   before(async () => {
     market = await Market.build(
@@ -45,9 +42,7 @@ describe('whole-liquidity', () => {
       createToken(connection, wallet, mintAuthority)
     ])
 
-    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+    pair = new Pair(tokens[0], tokens[1], feeTier)
   })
 
   it('#init()', async () => {
@@ -59,17 +54,62 @@ describe('whole-liquidity', () => {
     const tick2 = 40
     const tick3 = -60
 
-    const positionOwner1AccountX = await tokenX.createAccount(positionOwner1.publicKey)
-    const positionOwner1AccountY = await tokenY.createAccount(positionOwner1.publicKey)
-    const positionOwner2AccountX = await tokenX.createAccount(positionOwner2.publicKey)
-    const positionOwner2AccountY = await tokenY.createAccount(positionOwner2.publicKey)
-
-    await Promise.all([
-      tokenX.mintTo(positionOwner1AccountX, mintAuthority, [mintAuthority], 1e9),
-      tokenX.mintTo(positionOwner2AccountX, mintAuthority, [mintAuthority], 1e9),
-      tokenY.mintTo(positionOwner1AccountY, mintAuthority, [mintAuthority], 1e9),
-      tokenY.mintTo(positionOwner2AccountY, mintAuthority, [mintAuthority], 1e9)
-    ])
+    const positionOwner1AccountX = await createAssociatedTokenAccount(
+      connection,
+      positionOwner1,
+      pair.tokenX,
+      positionOwner1.publicKey
+    )
+    const positionOwner1AccountY = await createAssociatedTokenAccount(
+      connection,
+      positionOwner1,
+      pair.tokenY,
+      positionOwner1.publicKey
+    )
+    const positionOwner2AccountX = await createAssociatedTokenAccount(
+      connection,
+      positionOwner2,
+      pair.tokenX,
+      positionOwner2.publicKey
+    )
+    const positionOwner2AccountY = await createAssociatedTokenAccount(
+      connection,
+      positionOwner2,
+      pair.tokenY,
+      positionOwner2.publicKey
+    )
+    await mintTo(
+      connection,
+      positionOwner1,
+      pair.tokenX,
+      positionOwner1AccountX,
+      mintAuthority,
+      1e9
+    )
+    await mintTo(
+      connection,
+      positionOwner1,
+      pair.tokenY,
+      positionOwner1AccountY,
+      mintAuthority,
+      1e9
+    )
+    await mintTo(
+      connection,
+      positionOwner2,
+      pair.tokenX,
+      positionOwner2AccountX,
+      mintAuthority,
+      1e9
+    )
+    await mintTo(
+      connection,
+      positionOwner2,
+      pair.tokenY,
+      positionOwner2AccountY,
+      mintAuthority,
+      1e9
+    )
 
     const initPositionVars: InitPosition = {
       lowerTick: tick1,

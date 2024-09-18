@@ -1,5 +1,5 @@
 import * as anchor from '@coral-xyz/anchor'
-import { Provider, BN } from '@coral-xyz/anchor'
+import { AnchorProvider, BN } from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assertThrowsAsync, createPoolWithLiquidity, createUserWithTokens } from './testUtils'
 import { Market, Network, sleep, PRICE_DENOMINATOR, INVARIANT_ERRORS } from '@invariant-labs/sdk'
@@ -8,7 +8,7 @@ import { Decimal, Swap } from '@invariant-labs/sdk/src/market'
 import { assert } from 'chai'
 
 describe('slippage', () => {
-  const provider = Provider.local()
+  const provider = AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair

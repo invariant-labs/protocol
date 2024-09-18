@@ -26,6 +26,7 @@ import BN from 'bn.js'
 import { Pair, TICK_LIMIT, calculatePriceSqrt, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
 import { assert } from 'chai'
 import { getBalance } from '@invariant-labs/sdk/lib/utils'
+import { sleep } from '@invariant-labs/sdk'
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {
@@ -38,10 +39,8 @@ export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
       err = e.toString()
     }
     if (word) {
-      const regex = new RegExp(`${word}$`)
-      if (!regex.test(err)) {
-        console.log(err)
-        throw new Error('Invalid Error message')
+      if (!err.includes(word)) {
+        throw new Error(`Invalid Error message: ${err as string}`)
       }
     }
     return
@@ -262,7 +261,7 @@ export const createPosition = async (
   if ((await getBalance(connection, ownerTokenXAccount, tokenXProgram)).eq(new BN(0))) {
     await mintTo(
       connection,
-      mintAuthority,
+      wallet,
       pair.tokenX,
       ownerTokenXAccount,
       mintAuthority,
@@ -275,9 +274,9 @@ export const createPosition = async (
   if ((await getBalance(connection, ownerTokenYAccount, tokenYProgram)).eq(new BN(0))) {
     await mintTo(
       connection,
-      mintAuthority,
+      wallet,
       pair.tokenY,
-      ownerTokenXAccount,
+      ownerTokenYAccount,
       mintAuthority,
       mintAmount,
       [mintAuthority],
@@ -313,6 +312,7 @@ export const performSwap = async (
 ) => {
   const swapper = Keypair.generate()
   await connection.requestAirdrop(swapper.publicKey, 1e12)
+  await sleep(1000)
   const tokenXProgram = await getTokenProgramAddress(connection, pair.tokenX)
   const tokenYProgram = await getTokenProgramAddress(connection, pair.tokenY)
 

@@ -1,16 +1,17 @@
 import * as anchor from '@coral-xyz/anchor'
-import { Provider, BN } from '@coral-xyz/anchor'
+import { AnchorProvider, BN } from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assertThrowsAsync, createToken, createTokensAndPool, initMarket } from './testUtils'
-import { Market, Pair, Network } from '@invariant-labs/sdk'
+import { Market, Pair, Network, sleep } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { feeToTickSpacing, fromFee, getMaxTick } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal, tou64 } from '@invariant-labs/sdk/src/utils'
 import { InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 import { getLiquidityByX } from '@invariant-labs/sdk/lib/math'
+import { createAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 
 describe('Compute units', () => {
-  const provider = Provider.local()
+  const provider = AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
@@ -42,7 +43,7 @@ describe('Compute units', () => {
       createToken(connection, wallet, mintAuthority)
     ])
 
-    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
+    pair = new Pair(tokens[0], tokens[1], feeTier)
   })
 
   it('#init()', async () => {
@@ -60,7 +61,7 @@ describe('Compute units', () => {
     const mintAmount = tou64(new BN(2).pow(new BN(64)).subn(1))
     const amountPerPosition = new BN(100000)
     const owner = Keypair.generate()
-    const { tokenX, tokenY, pair, mintAuthority } = await createTokensAndPool(
+    const { pair, mintAuthority } = await createTokensAndPool(
       market,
       connection,
       wallet,
@@ -69,10 +70,21 @@ describe('Compute units', () => {
     )
 
     await connection.requestAirdrop(owner.publicKey, 1e9)
-    const accountX = await tokenX.createAccount(owner.publicKey)
-    const accountY = await tokenY.createAccount(owner.publicKey)
-    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(mintAmount))
-    await tokenY.mintTo(accountY, mintAuthority.publicKey, [mintAuthority], tou64(mintAmount))
+    await sleep(400)
+    const accountX = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      owner.publicKey
+    )
+    const accountY = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      owner.publicKey
+    )
+    await mintTo(connection, mintAuthority, pair.tokenX, accountX, mintAuthority, mintAmount)
+    await mintTo(connection, mintAuthority, pair.tokenY, accountY, mintAuthority, mintAmount)
 
     const { sqrtPrice } = await market.getPool(pair)
 

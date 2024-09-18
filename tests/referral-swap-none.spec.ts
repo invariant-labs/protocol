@@ -1,6 +1,5 @@
 import * as anchor from '@coral-xyz/anchor'
-import { Provider, BN } from '@coral-xyz/anchor'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { AnchorProvider, BN } from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken, initMarket } from './testUtils'
@@ -10,15 +9,17 @@ import {
   LIQUIDITY_DENOMINATOR,
   Network,
   calculatePriceSqrt,
-  MIN_TICK
+  MIN_TICK,
+  sleep
 } from '@invariant-labs/sdk'
 import { FeeTier, Tick } from '@invariant-labs/sdk/lib/market'
-import { fromFee, simulateSwap, SimulationStatus } from '@invariant-labs/sdk/lib/utils'
+import { fromFee, getBalance, simulateSwap, SimulationStatus } from '@invariant-labs/sdk/lib/utils'
 import { toDecimal, tou64 } from '@invariant-labs/sdk/src/utils'
 import { CreateTick, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
+import { createAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 
 describe('Referral swap', () => {
-  const provider = Provider.local()
+  const provider = AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
@@ -30,8 +31,6 @@ describe('Referral swap', () => {
   }
   let market: Market
   let pair: Pair
-  let tokenX: Token
-  let tokenY: Token
 
   before(async () => {
     market = await Market.build(
@@ -52,9 +51,7 @@ describe('Referral swap', () => {
       createToken(connection, wallet, mintAuthority)
     ])
 
-    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+    pair = new Pair(tokens[0], tokens[1], feeTier)
   })
 
   it('#init()', async () => {
@@ -82,13 +79,44 @@ describe('Referral swap', () => {
     const positionOwner = Keypair.generate()
     const referralAccount = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
-    const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
-    const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
-    const referralTokenXAccount = await tokenX.createAccount(referralAccount.publicKey)
+    await sleep(400)
+    const userTokenXAccount = await createAssociatedTokenAccount(
+      connection,
+      positionOwner,
+      pair.tokenX,
+      positionOwner.publicKey
+    )
+    const userTokenYAccount = await createAssociatedTokenAccount(
+      connection,
+      positionOwner,
+      pair.tokenY,
+      positionOwner.publicKey
+    )
+    const referralTokenXAccount = await createAssociatedTokenAccount(
+      connection,
+      positionOwner,
+      pair.tokenX,
+      referralAccount.publicKey
+    )
     const mintAmount = tou64(new BN(10).pow(new BN(10)))
 
-    await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-    await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+    await mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      userTokenXAccount,
+      mintAuthority,
+      mintAmount
+    )
+    await mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      userTokenYAccount,
+      mintAuthority,
+      mintAmount
+    )
+
     const liquidityDelta = { v: new BN(1000000).mul(LIQUIDITY_DENOMINATOR) }
 
     const initPositionVars: InitPosition = {
@@ -121,17 +149,28 @@ describe('Referral swap', () => {
     // Create owner
     const owner = Keypair.generate()
     await connection.requestAirdrop(owner.publicKey, 1e9)
+    await sleep(400)
 
     const amount = new BN(100000)
-    const accountX = await tokenX.createAccount(owner.publicKey)
-    const accountY = await tokenY.createAccount(owner.publicKey)
-    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
+    const accountX = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      owner.publicKey
+    )
+    const accountY = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      owner.publicKey
+    )
+    await mintTo(connection, mintAuthority, pair.tokenX, accountX, mintAuthority, amount)
 
     // Swap
     const poolDataBefore = await market.getPool(pair)
-    const reserveXBefore = (await tokenX.getAccountInfo(poolDataBefore.tokenXReserve)).amount
-    const reserveYBefore = (await tokenY.getAccountInfo(poolDataBefore.tokenYReserve)).amount
-    const referralTokenXBefore = (await tokenX.getAccountInfo(referralTokenXAccount)).amount
+    const reserveXBefore = await getBalance(connection, poolDataBefore.tokenXReserve)
+    const reserveYBefore = await getBalance(connection, poolDataBefore.tokenYReserve)
+    const referralTokenXBefore = await getBalance(connection, referralTokenXAccount)
 
     // simulate swap before
     const ticks: Map<number, Tick> = new Map(
@@ -174,6 +213,7 @@ describe('Referral swap', () => {
       referralAccount: referralTokenXAccount
     }
     await market.swap(swapVars, owner)
+    await sleep(1000)
 
     // Check pool
     const poolData = await market.getPool(pair)
@@ -182,11 +222,11 @@ describe('Referral swap', () => {
     assert.ok(poolData.sqrtPrice.v.lt(poolDataBefore.sqrtPrice.v))
 
     // Check amounts and fees
-    const amountX = (await tokenX.getAccountInfo(accountX)).amount
-    const amountY = (await tokenY.getAccountInfo(accountY)).amount
-    const reserveXAfter = (await tokenX.getAccountInfo(poolData.tokenXReserve)).amount
-    const reserveYAfter = (await tokenY.getAccountInfo(poolData.tokenYReserve)).amount
-    const referralTokenXAfter = (await tokenX.getAccountInfo(referralTokenXAccount)).amount
+    const amountX = await getBalance(connection, accountX)
+    const amountY = await getBalance(connection, accountY)
+    const reserveXAfter = await getBalance(connection, poolData.tokenXReserve)
+    const reserveYAfter = await getBalance(connection, poolData.tokenYReserve)
+    const referralTokenXAfter = await getBalance(connection, referralTokenXAccount)
     const referralXDelta = referralTokenXAfter.sub(referralTokenXBefore)
     const reserveXDelta = reserveXAfter.sub(reserveXBefore)
     const reserveYDelta = reserveYBefore.sub(reserveYAfter)

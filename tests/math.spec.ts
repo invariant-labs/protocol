@@ -63,12 +63,7 @@ import {
   arithmeticalAvg,
   weightedArithmeticAvg
 } from '@invariant-labs/sdk/src/utils'
-import {
-  createTickArray,
-  jsonArrayToTicks,
-  setInitialized,
-  usdcUsdhPoolSnapshot
-} from './testUtils'
+import { createTickArray, setInitialized, usdcUsdhPoolSnapshot } from './testUtils'
 import { Decimal, Tick, Tickmap } from '@invariant-labs/sdk/src/market'
 import { getSearchLimit, tickToPosition } from '@invariant-labs/sdk/src/tickmap'
 import { Keypair } from '@solana/web3.js'
@@ -76,11 +71,9 @@ import { swapParameters } from './swap'
 import {
   ApyPoolParams,
   ApyRewardsParams,
-  calculateTokensAndLiquidity,
   FEE_TIERS,
   fromFee,
   LIQUIDITY_DENOMINATOR,
-  parseFeeGrowthAndLiquidityOnTicksMap,
   toDecimal,
   WeeklyData
 } from '@invariant-labs/sdk/lib/utils'

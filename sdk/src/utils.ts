@@ -195,26 +195,6 @@ export const computeUnitsInstruction = (
   return ComputeBudgetProgram.setComputeUnitLimit({ units })
 }
 
-export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
-  try {
-    await fn
-  } catch (e: any) {
-    let err
-    if (e.code) {
-      err = '0x' + e.code.toString(16)
-    } else {
-      err = e.toString()
-    }
-    if (word) {
-      if (!err.includes(word)) {
-        throw new Error(`Invalid Error message: ${err as string}`)
-      }
-    }
-    return
-  }
-  throw new Error('Function did not throw error')
-}
-
 export const signAndSend = async (
   tx: Transaction,
   signers: Keypair[],

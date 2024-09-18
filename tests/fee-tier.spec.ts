@@ -1,10 +1,11 @@
 import { Network, Market } from '@invariant-labs/sdk'
-import { sleep, assertThrowsAsync } from '@invariant-labs/sdk/lib/utils'
+import { sleep } from '@invariant-labs/sdk/lib/utils'
 import { CreateFeeTier, FeeTier } from '@invariant-labs/sdk/src/market'
 import { INVARIANT_ERRORS, fromFee } from '@invariant-labs/sdk/src/utils'
 import * as anchor from '@coral-xyz/anchor'
 import { BN } from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
+import { assertThrowsAsync } from './testUtils'
 
 describe('fee-tier', () => {
   const provider = anchor.AnchorProvider.local()
