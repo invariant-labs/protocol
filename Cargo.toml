@@ -1,5 +1,5 @@
 [workspace]
-members = ["programs/*", "programs/invariant/invariant-types"]
+members = ["programs/invariant", "programs/invariant/invariant-types"]
 [profile.test]
 overflow-checks = false
 
