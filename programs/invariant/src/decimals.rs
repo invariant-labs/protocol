@@ -1,3 +1,5 @@
+use crate::borsh::BorshDeserialize;
+use crate::borsh::BorshSerialize;
 use core::convert::TryFrom;
 use core::convert::TryInto;
 pub use decimal::*;
@@ -15,8 +17,8 @@ pub const PRICE_LIQUIDITY_DENOMINATOR: u128 = 1__0000_0000__0000_0000__00u128;
     Eq,
     PartialOrd,
     Ord,
-    AnchorSerialize,
-    AnchorDeserialize,
+    BorshSerialize,
+    BorshDeserialize,
     InitSpace,
 )]
 pub struct Price {
@@ -32,8 +34,8 @@ pub struct Price {
     Eq,
     PartialOrd,
     Ord,
-    AnchorSerialize,
-    AnchorDeserialize,
+    BorshSerialize,
+    BorshDeserialize,
     InitSpace,
 )]
 pub struct Liquidity {
@@ -56,8 +58,8 @@ pub struct FeeGrowth {
     Eq,
     PartialOrd,
     Ord,
-    AnchorSerialize,
-    AnchorDeserialize,
+    BorshSerialize,
+    BorshDeserialize,
     InitSpace,
 )]
 pub struct FixedPoint {

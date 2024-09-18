@@ -9,7 +9,7 @@ use anchor_lang::solana_program::system_program;
 #[instruction(fee: u128, tick_spacing: u16)]
 pub struct CreateFeeTier<'info> {
     #[account(init,
-        seeds = [b"feetierv1", __program_id.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()],
+        seeds = [b"feetierv1", crate::ID.as_ref(), &fee.to_le_bytes(), &tick_spacing.to_le_bytes()],
         bump, payer = admin, space = FeeTier::LEN
     )]
     pub fee_tier: AccountLoader<'info, FeeTier>,

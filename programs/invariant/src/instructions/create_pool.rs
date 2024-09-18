@@ -24,7 +24,7 @@ pub struct CreatePool<'info> {
     )]
     pub pool: AccountLoader<'info, Pool>,
     #[account(
-        seeds = [b"feetierv1", __program_id.as_ref(), &fee_tier.load()?.fee.v.to_le_bytes(), &fee_tier.load()?.tick_spacing.to_le_bytes()],
+        seeds = [b"feetierv1", crate::ID.as_ref(), &fee_tier.load()?.fee.v.to_le_bytes(), &fee_tier.load()?.tick_spacing.to_le_bytes()],
         bump = fee_tier.load()?.bump
     )]
     pub fee_tier: AccountLoader<'info, FeeTier>,

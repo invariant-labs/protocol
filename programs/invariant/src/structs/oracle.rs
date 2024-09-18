@@ -12,7 +12,7 @@ pub struct Oracle {
     pub size: u16,
 }
 
-#[zero_copy]
+#[zero_copy(unsafe)]
 pub struct Record {
     pub timestamp: u64,
     pub price: Price,

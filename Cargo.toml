@@ -3,10 +3,10 @@ members = ["programs/*", "programs/invariant/invariant-types"]
 [profile.test]
 overflow-checks = false
 
-# [profile.release]
+[profile.release]
 # lto = "fat"
 # codegen-units = 1
-# overflow-checks = false
+overflow-checks = true
 
 # [profile.release.build-override]
 # opt-level = 3
