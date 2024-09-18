@@ -1,11 +1,11 @@
 import { Staker, Network } from '../../../staker-sdk/src'
-import { Provider, Wallet } from '@project-serum/anchor'
+import { Provider, Wallet } from '@coral-xyz/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { getMarketAddress, Market, Pair } from '@invariant-labs/sdk'
 import { MAINNET_TOKENS } from '@invariant-labs/sdk/src/network'
 import { FEE_TIERS } from '@invariant-labs/sdk/src/utils'
 import { CloseStake } from '../../../staker-sdk/lib/staker'
-import { bs58 } from '@project-serum/anchor/dist/cjs/utils/bytes'
+import { bs58 } from '@coral-xyz/anchor/dist/cjs/utils/bytes'
 import { Position } from '@invariant-labs/sdk/lib/market'
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()

@@ -5,7 +5,7 @@ import { Decimal } from '@invariant-labs/sdk/lib/market'
 import { LIQUIDITY_SCALE } from '@invariant-labs/sdk/lib/utils'
 import { PRICE_SCALE } from '@invariant-labs/sdk/lib/utils'
 import { tou64 } from '@invariant-labs/sdk/src/utils'
-import { BN } from '@project-serum/anchor'
+import { BN } from '@coral-xyz/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Connection, Keypair } from '@solana/web3.js'
 

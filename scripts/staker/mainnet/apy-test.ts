@@ -1,4 +1,4 @@
-import { BN, Provider, Wallet } from '@project-serum/anchor'
+import { BN, Provider, Wallet } from '@coral-xyz/anchor'
 import { PublicKey } from '@solana/web3.js'
 import { MAINNET_TOKENS } from '@invariant-labs/sdk/lib/network'
 import { getMarketAddress, Market, Network, Pair } from '@invariant-labs/sdk/src'

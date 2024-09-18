@@ -1,6 +1,11 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js'
-import { TokenInstructions } from '@project-serum/serum'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import {
+  createAssociatedTokenAccount,
+  createMint,
+  mintTo,
+  TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID
+} from '@solana/spl-token'
 import { FeeTier, Market, Position, Tick } from '@invariant-labs/sdk/lib/market'
 import {
   CreateFeeTier,
@@ -14,12 +19,13 @@ import {
   feeToTickSpacing,
   FEE_TIERS,
   generateTicksArray,
-  tou64
+  tou64,
+  getTokenProgramAddress
 } from '@invariant-labs/sdk/src/utils'
 import BN from 'bn.js'
 import { Pair, TICK_LIMIT, calculatePriceSqrt, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
 import { assert } from 'chai'
-import { ApyPoolParams } from '@invariant-labs/sdk/lib/utils'
+import { getBalance } from '@invariant-labs/sdk/lib/utils'
 
 export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
   try {
@@ -51,17 +57,24 @@ export const createToken = async (
   connection: Connection,
   payer: Keypair,
   mintAuthority: Keypair,
-  decimals = 6
-) => {
-  const token = await Token.createMint(
+  decimals: number = 6,
+  freezeAuthority: PublicKey | null = null,
+  isToken2022: boolean = false
+): Promise<PublicKey> => {
+  const programId = isToken2022 ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID
+
+  const mint = await createMint(
     connection,
     payer,
     mintAuthority.publicKey,
-    null,
+    freezeAuthority,
     decimals,
-    TokenInstructions.TOKEN_PROGRAM_ID
+    undefined,
+    undefined,
+    programId
   )
-  return token
+
+  return mint
 }
 
 // do not compare bump
@@ -113,14 +126,10 @@ export const createTokensAndPool = async (
     connection.requestAirdrop(payer.publicKey, 1e9)
   ])
 
-  const pair = new Pair(promiseResults[0].publicKey, promiseResults[1].publicKey, feeTier)
-  const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, payer)
-  const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, payer)
-  const feeTierAccount = await connection.getAccountInfo(
-    (
-      await market.getFeeTierAddress(feeTier)
-    ).address
-  )
+  const pair = new Pair(promiseResults[0], promiseResults[1], feeTier)
+  const tokenX = pair.tokenX
+  const tokenY = pair.tokenY
+  const feeTierAccount = await connection.getAccountInfo(market.getFeeTierAddress(feeTier).address)
   if (feeTierAccount === null) {
     const createFeeTierVars: CreateFeeTier = {
       feeTier,
@@ -145,20 +154,52 @@ export const createUserWithTokens = async (
   mintAuthority: Keypair,
   mintAmount: BN = new BN(1e9)
 ) => {
-  const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, mintAuthority)
-  const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, mintAuthority)
-
   const owner = Keypair.generate()
-
+  const tokenXProgram = TOKEN_PROGRAM_ID
+  const tokenYProgram = TOKEN_PROGRAM_ID
   const [userAccountX, userAccountY] = await Promise.all([
-    tokenX.createAccount(owner.publicKey),
-    tokenY.createAccount(owner.publicKey),
+    createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      owner.publicKey,
+      undefined,
+      tokenXProgram
+    ),
+    createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      owner.publicKey,
+      undefined,
+      tokenYProgram
+    ),
     connection.requestAirdrop(owner.publicKey, 1e9)
   ])
 
   await Promise.all([
-    tokenX.mintTo(userAccountX, mintAuthority.publicKey, [mintAuthority], tou64(mintAmount)),
-    tokenY.mintTo(userAccountY, mintAuthority.publicKey, [mintAuthority], tou64(mintAmount))
+    mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      userAccountX,
+      mintAuthority,
+      mintAmount,
+      [],
+      undefined,
+      tokenXProgram
+    ),
+    mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      userAccountY,
+      mintAuthority,
+      mintAmount,
+      [],
+      undefined,
+      tokenYProgram
+    )
   ])
 
   return { owner, userAccountX, userAccountY }
@@ -202,25 +243,47 @@ export const setInitialized = (bitmap: number[], index: number) => {
 }
 
 export const createPosition = async (
+  connection: Connection,
   lowerTick: number,
   upperTick: number,
   liquidity: BN,
   owner: Keypair,
   ownerTokenXAccount: PublicKey,
   ownerTokenYAccount: PublicKey,
-  tokenX: Token,
-  tokenY: Token,
   pair: Pair,
   market: Market,
   wallet: Keypair,
   mintAuthority: Keypair
 ) => {
+  const tokenXProgram = await getTokenProgramAddress(connection, pair.tokenX)
+  const tokenYProgram = await getTokenProgramAddress(connection, pair.tokenY)
+
   const mintAmount = tou64(new BN(10).pow(new BN(18)))
-  if ((await tokenX.getAccountInfo(ownerTokenXAccount)).amount.eq(new BN(0))) {
-    await tokenX.mintTo(ownerTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+  if ((await getBalance(connection, ownerTokenXAccount, tokenXProgram)).eq(new BN(0))) {
+    await mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      ownerTokenXAccount,
+      mintAuthority,
+      mintAmount,
+      [mintAuthority],
+      undefined,
+      tokenXProgram
+    )
   }
-  if ((await tokenY.getAccountInfo(ownerTokenYAccount)).amount.eq(new BN(0))) {
-    await tokenY.mintTo(ownerTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+  if ((await getBalance(connection, ownerTokenYAccount, tokenYProgram)).eq(new BN(0))) {
+    await mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      ownerTokenXAccount,
+      mintAuthority,
+      mintAmount,
+      [mintAuthority],
+      undefined,
+      tokenYProgram
+    )
   }
 
   const initPositionVars: InitPosition = {
@@ -246,20 +309,54 @@ export const performSwap = async (
   byAmountIn: boolean,
   connection: Connection,
   market: Market,
-  tokenX: Token,
-  tokenY: Token,
   mintAuthority: Keypair
 ) => {
   const swapper = Keypair.generate()
   await connection.requestAirdrop(swapper.publicKey, 1e12)
+  const tokenXProgram = await getTokenProgramAddress(connection, pair.tokenX)
+  const tokenYProgram = await getTokenProgramAddress(connection, pair.tokenY)
 
-  const accountX = await tokenX.createAccount(swapper.publicKey)
-  const accountY = await tokenY.createAccount(swapper.publicKey)
+  const accountX = await createAssociatedTokenAccount(
+    connection,
+    swapper,
+    pair.tokenX,
+    swapper.publicKey,
+    undefined,
+    tokenXProgram
+  )
+  const accountY = await createAssociatedTokenAccount(
+    connection,
+    swapper,
+    pair.tokenY,
+    swapper.publicKey,
+    undefined,
+    tokenYProgram
+  )
 
   if (xToY) {
-    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
+    await mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      accountX,
+      mintAuthority,
+      amount,
+      [],
+      undefined,
+      tokenXProgram
+    )
   } else {
-    await tokenY.mintTo(accountY, mintAuthority.publicKey, [mintAuthority], tou64(amount))
+    await mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      accountY,
+      mintAuthority,
+      amount,
+      [],
+      undefined,
+      tokenYProgram
+    )
   }
 
   const swapVars: Swap = {
@@ -308,8 +405,8 @@ export const initMarket = async (
   } catch (e) {}
 
   const state = await market.getState()
-  const { bump } = await market.getStateAddress()
-  const { programAuthority, nonce } = await market.getProgramAuthority()
+  const { bump } = market.getStateAddress()
+  const { programAuthority, nonce } = market.getProgramAuthority()
   assert.ok(state.admin.equals(admin.publicKey))
   assert.ok(state.authority.equals(programAuthority))
   assert.ok(state.nonce === nonce)

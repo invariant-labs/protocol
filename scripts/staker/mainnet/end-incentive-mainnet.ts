@@ -1,5 +1,5 @@
 import { Staker, Network } from '../../../staker-sdk/lib'
-import { Provider, Wallet } from '@project-serum/anchor'
+import { Provider, Wallet } from '@coral-xyz/anchor'
 import { PublicKey } from '@solana/web3.js'
 import { EndIncentive } from '../../../staker-sdk/src/staker'
 import { MAINNET_TOKENS } from '@invariant-labs/sdk/lib/network'

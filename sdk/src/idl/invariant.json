@@ -1,10 +1,4 @@
-/**
- * Program IDL in camelCase format in order to be used in JS/TS.
- *
- * Note that this is only a type helper and is not the actual IDL. The original
- * IDL can be found at `target/idl/invariant.json`.
- */
-export type Invariant = {
+{
   "address": "HyaB3W9q6XdA5xwpU4XnSZV94htfmbmqJXZcEbRaJutt",
   "metadata": {
     "name": "invariant",
@@ -14,7 +8,7 @@ export type Invariant = {
   },
   "instructions": [
     {
-      "name": "changeFeeReceiver",
+      "name": "change_fee_receiver",
       "discriminator": [
         92,
         14,
@@ -63,11 +57,11 @@ export type Invariant = {
               },
               {
                 "kind": "account",
-                "path": "tokenX"
+                "path": "token_x"
               },
               {
                 "kind": "account",
-                "path": "tokenY"
+                "path": "token_y"
               },
               {
                 "kind": "account",
@@ -81,23 +75,23 @@ export type Invariant = {
           }
         },
         {
-          "name": "tokenX"
+          "name": "token_x"
         },
         {
-          "name": "tokenY"
+          "name": "token_y"
         },
         {
           "name": "admin",
           "signer": true
         },
         {
-          "name": "feeReceiver"
+          "name": "fee_receiver"
         }
       ],
       "args": []
     },
     {
-      "name": "changeProtocolFee",
+      "name": "change_protocol_fee",
       "discriminator": [
         16,
         252,
@@ -146,11 +140,11 @@ export type Invariant = {
               },
               {
                 "kind": "account",
-                "path": "tokenX"
+                "path": "token_x"
               },
               {
                 "kind": "account",
-                "path": "tokenY"
+                "path": "token_y"
               },
               {
                 "kind": "account",
@@ -164,32 +158,32 @@ export type Invariant = {
           }
         },
         {
-          "name": "tokenX"
+          "name": "token_x"
         },
         {
-          "name": "tokenY"
+          "name": "token_y"
         },
         {
           "name": "admin",
           "signer": true
         },
         {
-          "name": "programAuthority"
+          "name": "program_authority"
         }
       ],
       "args": [
         {
-          "name": "protocolFee",
+          "name": "protocol_fee",
           "type": {
             "defined": {
-              "name": "fixedPoint"
+              "name": "FixedPoint"
             }
           }
         }
       ]
     },
     {
-      "name": "claimFee",
+      "name": "claim_fee",
       "discriminator": [
         169,
         32,
@@ -238,11 +232,11 @@ export type Invariant = {
               },
               {
                 "kind": "account",
-                "path": "tokenX"
+                "path": "token_x"
               },
               {
                 "kind": "account",
-                "path": "tokenY"
+                "path": "token_y"
               },
               {
                 "kind": "account",
@@ -287,7 +281,7 @@ export type Invariant = {
           }
         },
         {
-          "name": "lowerTick",
+          "name": "lower_tick",
           "writable": true,
           "pda": {
             "seeds": [
@@ -308,13 +302,13 @@ export type Invariant = {
               },
               {
                 "kind": "arg",
-                "path": "lowerTickIndex"
+                "path": "lower_tick_index"
               }
             ]
           }
         },
         {
-          "name": "upperTick",
+          "name": "upper_tick",
           "writable": true,
           "pda": {
             "seeds": [
@@ -335,7 +329,7 @@ export type Invariant = {
               },
               {
                 "kind": "arg",
-                "path": "upperTickIndex"
+                "path": "upper_tick_index"
               }
             ]
           }
@@ -345,54 +339,54 @@ export type Invariant = {
           "signer": true
         },
         {
-          "name": "tokenX"
+          "name": "token_x"
         },
         {
-          "name": "tokenY"
+          "name": "token_y"
         },
         {
-          "name": "accountX",
+          "name": "account_x",
           "writable": true
         },
         {
-          "name": "accountY",
+          "name": "account_y",
           "writable": true
         },
         {
-          "name": "reserveX",
+          "name": "reserve_x",
           "writable": true
         },
         {
-          "name": "reserveY",
+          "name": "reserve_y",
           "writable": true
         },
         {
-          "name": "programAuthority"
+          "name": "program_authority"
         },
         {
-          "name": "tokenXProgram"
+          "name": "token_x_program"
         },
         {
-          "name": "tokenYProgram"
+          "name": "token_y_program"
         }
       ],
       "args": [
         {
-          "name": "index",
+          "name": "_index",
           "type": "u32"
         },
         {
-          "name": "lowerTickIndex",
+          "name": "_lower_tick_index",
           "type": "i32"
         },
         {
-          "name": "upperTickIndex",
+          "name": "_upper_tick_index",
           "type": "i32"
         }
       ]
     },
     {
-      "name": "createFeeTier",
+      "name": "create_fee_tier",
       "discriminator": [
         150,
         158,
@@ -405,7 +399,7 @@ export type Invariant = {
       ],
       "accounts": [
         {
-          "name": "feeTier",
+          "name": "fee_tier",
           "writable": true,
           "pda": {
             "seeds": [
@@ -466,7 +460,7 @@ export type Invariant = {
               },
               {
                 "kind": "arg",
-                "path": "tickSpacing"
+                "path": "tick_spacing"
               }
             ]
           }
@@ -500,7 +494,7 @@ export type Invariant = {
           "address": "SysvarRent111111111111111111111111111111111"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
@@ -510,13 +504,13 @@ export type Invariant = {
           "type": "u128"
         },
         {
-          "name": "tickSpacing",
+          "name": "tick_spacing",
           "type": "u16"
         }
       ]
     },
     {
-      "name": "createPool",
+      "name": "create_pool",
       "discriminator": [
         233,
         146,
@@ -565,25 +559,25 @@ export type Invariant = {
               },
               {
                 "kind": "account",
-                "path": "tokenX"
+                "path": "token_x"
               },
               {
                 "kind": "account",
-                "path": "tokenY"
+                "path": "token_y"
               },
               {
                 "kind": "account",
-                "path": "feeTier"
+                "path": "fee_tier"
               },
               {
                 "kind": "account",
-                "path": "feeTier"
+                "path": "fee_tier"
               }
             ]
           }
         },
         {
-          "name": "feeTier",
+          "name": "fee_tier",
           "pda": {
             "seeds": [
               {
@@ -639,11 +633,11 @@ export type Invariant = {
               },
               {
                 "kind": "account",
-                "path": "feeTier"
+                "path": "fee_tier"
               },
               {
                 "kind": "account",
-                "path": "feeTier"
+                "path": "fee_tier"
               }
             ]
           }
@@ -653,18 +647,18 @@ export type Invariant = {
           "writable": true
         },
         {
-          "name": "tokenX"
+          "name": "token_x"
         },
         {
-          "name": "tokenY"
+          "name": "token_y"
         },
         {
-          "name": "tokenXReserve",
+          "name": "token_x_reserve",
           "writable": true,
           "signer": true
         },
         {
-          "name": "tokenYReserve",
+          "name": "token_y_reserve",
           "writable": true,
           "signer": true
         },
@@ -677,29 +671,29 @@ export type Invariant = {
           "name": "authority"
         },
         {
-          "name": "tokenXProgram"
+          "name": "token_x_program"
         },
         {
-          "name": "tokenYProgram"
+          "name": "token_y_program"
         },
         {
           "name": "rent",
           "address": "SysvarRent111111111111111111111111111111111"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "initTick",
+          "name": "init_tick",
           "type": "i32"
         }
       ]
     },
     {
-      "name": "createPosition",
+      "name": "create_position",
       "discriminator": [
         48,
         215,
@@ -756,7 +750,7 @@ export type Invariant = {
               },
               {
                 "kind": "account",
-                "path": "positionList"
+                "path": "position_list"
               }
             ]
           }
@@ -779,11 +773,11 @@ export type Invariant = {
               },
               {
                 "kind": "account",
-                "path": "tokenX"
+                "path": "token_x"
               },
               {
                 "kind": "account",
-                "path": "tokenY"
+                "path": "token_y"
               },
               {
                 "kind": "account",
@@ -797,7 +791,7 @@ export type Invariant = {
           }
         },
         {
-          "name": "positionList",
+          "name": "position_list",
           "writable": true,
           "pda": {
             "seeds": [
@@ -837,7 +831,7 @@ export type Invariant = {
           "signer": true
         },
         {
-          "name": "lowerTick",
+          "name": "lower_tick",
           "writable": true,
           "pda": {
             "seeds": [
@@ -858,13 +852,13 @@ export type Invariant = {
               },
               {
                 "kind": "arg",
-                "path": "lowerTickIndex"
+                "path": "lower_tick_index"
               }
             ]
           }
         },
         {
-          "name": "upperTick",
+          "name": "upper_tick",
           "writable": true,
           "pda": {
             "seeds": [
@@ -885,7 +879,7 @@ export type Invariant = {
               },
               {
                 "kind": "arg",
-                "path": "upperTickIndex"
+                "path": "upper_tick_index"
               }
             ]
           }
@@ -895,82 +889,82 @@ export type Invariant = {
           "writable": true
         },
         {
-          "name": "tokenX"
+          "name": "token_x"
         },
         {
-          "name": "tokenY"
+          "name": "token_y"
         },
         {
-          "name": "accountX",
+          "name": "account_x",
           "writable": true
         },
         {
-          "name": "accountY",
+          "name": "account_y",
           "writable": true
         },
         {
-          "name": "reserveX",
+          "name": "reserve_x",
           "writable": true
         },
         {
-          "name": "reserveY",
+          "name": "reserve_y",
           "writable": true
         },
         {
-          "name": "programAuthority"
+          "name": "program_authority"
         },
         {
-          "name": "tokenXProgram"
+          "name": "token_x_program"
         },
         {
-          "name": "tokenYProgram"
+          "name": "token_y_program"
         },
         {
           "name": "rent",
           "address": "SysvarRent111111111111111111111111111111111"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "lowerTickIndex",
+          "name": "_lower_tick_index",
           "type": "i32"
         },
         {
-          "name": "upperTickIndex",
+          "name": "_upper_tick_index",
           "type": "i32"
         },
         {
-          "name": "liquidityDelta",
+          "name": "liquidity_delta",
           "type": {
             "defined": {
-              "name": "liquidity"
+              "name": "Liquidity"
             }
           }
         },
         {
-          "name": "slippageLimitLower",
+          "name": "slippage_limit_lower",
           "type": {
             "defined": {
-              "name": "price"
+              "name": "Price"
             }
           }
         },
         {
-          "name": "slippageLimitUpper",
+          "name": "slippage_limit_upper",
           "type": {
             "defined": {
-              "name": "price"
+              "name": "Price"
             }
           }
         }
       ]
     },
     {
-      "name": "createPositionList",
+      "name": "create_position_list",
       "discriminator": [
         135,
         165,
@@ -983,7 +977,7 @@ export type Invariant = {
       ],
       "accounts": [
         {
-          "name": "positionList",
+          "name": "position_list",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1026,14 +1020,14 @@ export type Invariant = {
           "address": "SysvarRent111111111111111111111111111111111"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
     },
     {
-      "name": "createState",
+      "name": "create_state",
       "discriminator": [
         214,
         211,
@@ -1071,7 +1065,7 @@ export type Invariant = {
           "signer": true
         },
         {
-          "name": "programAuthority",
+          "name": "program_authority",
           "pda": {
             "seeds": [
               {
@@ -1096,7 +1090,7 @@ export type Invariant = {
           "address": "SysvarRent111111111111111111111111111111111"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
@@ -1108,7 +1102,7 @@ export type Invariant = {
       ]
     },
     {
-      "name": "createTick",
+      "name": "create_tick",
       "discriminator": [
         227,
         158,
@@ -1164,11 +1158,11 @@ export type Invariant = {
               },
               {
                 "kind": "account",
-                "path": "tokenX"
+                "path": "token_x"
               },
               {
                 "kind": "account",
-                "path": "tokenY"
+                "path": "token_y"
               },
               {
                 "kind": "account",
@@ -1191,24 +1185,24 @@ export type Invariant = {
           "signer": true
         },
         {
-          "name": "tokenX"
+          "name": "token_x"
         },
         {
-          "name": "tokenY"
+          "name": "token_y"
         },
         {
           "name": "rent",
           "address": "SysvarRent111111111111111111111111111111111"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         },
         {
-          "name": "tokenXProgram"
+          "name": "token_x_program"
         },
         {
-          "name": "tokenYProgram"
+          "name": "token_y_program"
         }
       ],
       "args": [
@@ -1219,7 +1213,7 @@ export type Invariant = {
       ]
     },
     {
-      "name": "initializeOracle",
+      "name": "initialize_oracle",
       "discriminator": [
         144,
         223,
@@ -1249,11 +1243,11 @@ export type Invariant = {
               },
               {
                 "kind": "account",
-                "path": "tokenX"
+                "path": "token_x"
               },
               {
                 "kind": "account",
-                "path": "tokenY"
+                "path": "token_y"
               },
               {
                 "kind": "account",
@@ -1271,10 +1265,10 @@ export type Invariant = {
           "writable": true
         },
         {
-          "name": "tokenX"
+          "name": "token_x"
         },
         {
-          "name": "tokenY"
+          "name": "token_y"
         },
         {
           "name": "payer",
@@ -1285,14 +1279,14 @@ export type Invariant = {
           "address": "SysvarRent111111111111111111111111111111111"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
     },
     {
-      "name": "removePosition",
+      "name": "remove_position",
       "discriminator": [
         219,
         24,
@@ -1324,7 +1318,7 @@ export type Invariant = {
           }
         },
         {
-          "name": "removedPosition",
+          "name": "removed_position",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1355,7 +1349,7 @@ export type Invariant = {
           }
         },
         {
-          "name": "positionList",
+          "name": "position_list",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1386,7 +1380,7 @@ export type Invariant = {
           }
         },
         {
-          "name": "lastPosition",
+          "name": "last_position",
           "writable": true
         },
         {
@@ -1407,11 +1401,11 @@ export type Invariant = {
               },
               {
                 "kind": "account",
-                "path": "tokenX"
+                "path": "token_x"
               },
               {
                 "kind": "account",
-                "path": "tokenY"
+                "path": "token_y"
               },
               {
                 "kind": "account",
@@ -1429,7 +1423,7 @@ export type Invariant = {
           "writable": true
         },
         {
-          "name": "lowerTick",
+          "name": "lower_tick",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1450,13 +1444,13 @@ export type Invariant = {
               },
               {
                 "kind": "arg",
-                "path": "lowerTickIndex"
+                "path": "lower_tick_index"
               }
             ]
           }
         },
         {
-          "name": "upperTick",
+          "name": "upper_tick",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1477,7 +1471,7 @@ export type Invariant = {
               },
               {
                 "kind": "arg",
-                "path": "upperTickIndex"
+                "path": "upper_tick_index"
               }
             ]
           }
@@ -1492,35 +1486,35 @@ export type Invariant = {
           "signer": true
         },
         {
-          "name": "tokenX"
+          "name": "token_x"
         },
         {
-          "name": "tokenY"
+          "name": "token_y"
         },
         {
-          "name": "accountX",
+          "name": "account_x",
           "writable": true
         },
         {
-          "name": "accountY",
+          "name": "account_y",
           "writable": true
         },
         {
-          "name": "reserveX",
+          "name": "reserve_x",
           "writable": true
         },
         {
-          "name": "reserveY",
+          "name": "reserve_y",
           "writable": true
         },
         {
-          "name": "programAuthority"
+          "name": "program_authority"
         },
         {
-          "name": "tokenXProgram"
+          "name": "token_x_program"
         },
         {
-          "name": "tokenYProgram"
+          "name": "token_y_program"
         }
       ],
       "args": [
@@ -1529,11 +1523,11 @@ export type Invariant = {
           "type": "u32"
         },
         {
-          "name": "lowerTickIndex",
+          "name": "lower_tick_index",
           "type": "i32"
         },
         {
-          "name": "upperTickIndex",
+          "name": "upper_tick_index",
           "type": "i32"
         }
       ]
@@ -1610,25 +1604,25 @@ export type Invariant = {
           "writable": true
         },
         {
-          "name": "tokenX"
+          "name": "token_x"
         },
         {
-          "name": "tokenY"
+          "name": "token_y"
         },
         {
-          "name": "accountX",
+          "name": "account_x",
           "writable": true
         },
         {
-          "name": "accountY",
+          "name": "account_y",
           "writable": true
         },
         {
-          "name": "reserveX",
+          "name": "reserve_x",
           "writable": true
         },
         {
-          "name": "reserveY",
+          "name": "reserve_y",
           "writable": true
         },
         {
@@ -1636,18 +1630,18 @@ export type Invariant = {
           "signer": true
         },
         {
-          "name": "programAuthority"
+          "name": "program_authority"
         },
         {
-          "name": "tokenXProgram"
+          "name": "token_x_program"
         },
         {
-          "name": "tokenYProgram"
+          "name": "token_y_program"
         }
       ],
       "args": [
         {
-          "name": "xToY",
+          "name": "x_to_y",
           "type": "bool"
         },
         {
@@ -1655,17 +1649,17 @@ export type Invariant = {
           "type": "u64"
         },
         {
-          "name": "byAmountIn",
+          "name": "by_amount_in",
           "type": "bool"
         },
         {
-          "name": "sqrtPriceLimit",
+          "name": "sqrt_price_limit",
           "type": "u128"
         }
       ]
     },
     {
-      "name": "transferPositionOwnership",
+      "name": "transfer_position_ownership",
       "discriminator": [
         99,
         194,
@@ -1678,7 +1672,7 @@ export type Invariant = {
       ],
       "accounts": [
         {
-          "name": "ownerList",
+          "name": "owner_list",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1709,7 +1703,7 @@ export type Invariant = {
           }
         },
         {
-          "name": "recipientList",
+          "name": "recipient_list",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1740,7 +1734,7 @@ export type Invariant = {
           }
         },
         {
-          "name": "newPosition",
+          "name": "new_position",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1765,13 +1759,13 @@ export type Invariant = {
               },
               {
                 "kind": "account",
-                "path": "recipientList"
+                "path": "recipient_list"
               }
             ]
           }
         },
         {
-          "name": "removedPosition",
+          "name": "removed_position",
           "writable": true,
           "pda": {
             "seeds": [
@@ -1802,7 +1796,7 @@ export type Invariant = {
           }
         },
         {
-          "name": "lastPosition",
+          "name": "last_position",
           "writable": true
         },
         {
@@ -1818,7 +1812,7 @@ export type Invariant = {
           "address": "SysvarRent111111111111111111111111111111111"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
@@ -1830,7 +1824,7 @@ export type Invariant = {
       ]
     },
     {
-      "name": "updateSecondsPerLiquidity",
+      "name": "update_seconds_per_liquidity",
       "discriminator": [
         189,
         141,
@@ -1860,11 +1854,11 @@ export type Invariant = {
               },
               {
                 "kind": "account",
-                "path": "tokenX"
+                "path": "token_x"
               },
               {
                 "kind": "account",
-                "path": "tokenY"
+                "path": "token_y"
               },
               {
                 "kind": "account",
@@ -1878,7 +1872,7 @@ export type Invariant = {
           }
         },
         {
-          "name": "lowerTick",
+          "name": "lower_tick",
           "pda": {
             "seeds": [
               {
@@ -1898,13 +1892,13 @@ export type Invariant = {
               },
               {
                 "kind": "arg",
-                "path": "lowerTickIndex"
+                "path": "lower_tick_index"
               }
             ]
           }
         },
         {
-          "name": "upperTick",
+          "name": "upper_tick",
           "pda": {
             "seeds": [
               {
@@ -1924,7 +1918,7 @@ export type Invariant = {
               },
               {
                 "kind": "arg",
-                "path": "upperTickIndex"
+                "path": "upper_tick_index"
               }
             ]
           }
@@ -1961,10 +1955,10 @@ export type Invariant = {
           }
         },
         {
-          "name": "tokenX"
+          "name": "token_x"
         },
         {
-          "name": "tokenY"
+          "name": "token_y"
         },
         {
           "name": "owner"
@@ -1979,27 +1973,27 @@ export type Invariant = {
           "address": "SysvarRent111111111111111111111111111111111"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "lowerTickIndex",
+          "name": "_lower_tick_index",
           "type": "i32"
         },
         {
-          "name": "upperTickIndex",
+          "name": "_upper_tick_index",
           "type": "i32"
         },
         {
-          "name": "index",
+          "name": "_index",
           "type": "i32"
         }
       ]
     },
     {
-      "name": "withdrawProtocolFee",
+      "name": "withdraw_protocol_fee",
       "discriminator": [
         158,
         201,
@@ -2048,11 +2042,11 @@ export type Invariant = {
               },
               {
                 "kind": "account",
-                "path": "tokenX"
+                "path": "token_x"
               },
               {
                 "kind": "account",
-                "path": "tokenY"
+                "path": "token_y"
               },
               {
                 "kind": "account",
@@ -2066,25 +2060,25 @@ export type Invariant = {
           }
         },
         {
-          "name": "tokenX"
+          "name": "token_x"
         },
         {
-          "name": "tokenY"
+          "name": "token_y"
         },
         {
-          "name": "accountX",
+          "name": "account_x",
           "writable": true
         },
         {
-          "name": "accountY",
+          "name": "account_y",
           "writable": true
         },
         {
-          "name": "reserveX",
+          "name": "reserve_x",
           "writable": true
         },
         {
-          "name": "reserveY",
+          "name": "reserve_y",
           "writable": true
         },
         {
@@ -2092,13 +2086,13 @@ export type Invariant = {
           "signer": true
         },
         {
-          "name": "programAuthority"
+          "name": "program_authority"
         },
         {
-          "name": "tokenXProgram"
+          "name": "token_x_program"
         },
         {
-          "name": "tokenYProgram"
+          "name": "token_y_program"
         }
       ],
       "args": []
@@ -2106,7 +2100,7 @@ export type Invariant = {
   ],
   "accounts": [
     {
-      "name": "feeTier",
+      "name": "FeeTier",
       "discriminator": [
         56,
         75,
@@ -2119,7 +2113,7 @@ export type Invariant = {
       ]
     },
     {
-      "name": "oracle",
+      "name": "Oracle",
       "discriminator": [
         139,
         194,
@@ -2132,7 +2126,7 @@ export type Invariant = {
       ]
     },
     {
-      "name": "pool",
+      "name": "Pool",
       "discriminator": [
         241,
         154,
@@ -2145,7 +2139,7 @@ export type Invariant = {
       ]
     },
     {
-      "name": "position",
+      "name": "Position",
       "discriminator": [
         170,
         188,
@@ -2158,7 +2152,7 @@ export type Invariant = {
       ]
     },
     {
-      "name": "positionList",
+      "name": "PositionList",
       "discriminator": [
         32,
         7,
@@ -2171,7 +2165,7 @@ export type Invariant = {
       ]
     },
     {
-      "name": "state",
+      "name": "State",
       "discriminator": [
         216,
         146,
@@ -2184,7 +2178,7 @@ export type Invariant = {
       ]
     },
     {
-      "name": "tick",
+      "name": "Tick",
       "discriminator": [
         176,
         94,
@@ -2197,7 +2191,7 @@ export type Invariant = {
       ]
     },
     {
-      "name": "tickmap",
+      "name": "Tickmap",
       "discriminator": [
         236,
         6,
@@ -2213,168 +2207,168 @@ export type Invariant = {
   "errors": [
     {
       "code": 6000,
-      "name": "zeroAmount",
+      "name": "ZeroAmount",
       "msg": "Amount is zero"
     },
     {
       "code": 6001,
-      "name": "zeroOutput",
+      "name": "ZeroOutput",
       "msg": "Output would be zero"
     },
     {
       "code": 6002,
-      "name": "wrongTick",
+      "name": "WrongTick",
       "msg": "Not the expected tick"
     },
     {
       "code": 6003,
-      "name": "wrongLimit",
+      "name": "WrongLimit",
       "msg": "Price limit is on the wrong side of price"
     },
     {
       "code": 6004,
-      "name": "invalidTickIndex",
+      "name": "InvalidTickIndex",
       "msg": "Tick index not divisible by spacing or over limit"
     },
     {
       "code": 6005,
-      "name": "invalidTickInterval",
+      "name": "InvalidTickInterval",
       "msg": "Invalid tick_lower or tick_upper"
     },
     {
       "code": 6006,
-      "name": "noMoreTicks",
+      "name": "NoMoreTicks",
       "msg": "There is no more tick in that direction"
     },
     {
       "code": 6007,
-      "name": "tickNotFound",
+      "name": "TickNotFound",
       "msg": "Correct tick not found in context"
     },
     {
       "code": 6008,
-      "name": "priceLimitReached",
+      "name": "PriceLimitReached",
       "msg": "Price would cross swap limit"
     },
     {
       "code": 6009,
-      "name": "invalidTickLiquidity",
+      "name": "InvalidTickLiquidity",
       "msg": "Invalid tick liquidity"
     },
     {
       "code": 6010,
-      "name": "emptyPositionPokes",
+      "name": "EmptyPositionPokes",
       "msg": "Disable empty position pokes"
     },
     {
       "code": 6011,
-      "name": "invalidPositionLiquidity",
+      "name": "InvalidPositionLiquidity",
       "msg": "Invalid tick liquidity"
     },
     {
       "code": 6012,
-      "name": "invalidPoolLiquidity",
+      "name": "InvalidPoolLiquidity",
       "msg": "Invalid pool liquidity"
     },
     {
       "code": 6013,
-      "name": "invalidPositionIndex",
+      "name": "InvalidPositionIndex",
       "msg": "Invalid position index"
     },
     {
       "code": 6014,
-      "name": "positionWithoutLiquidity",
+      "name": "PositionWithoutLiquidity",
       "msg": "Position liquidity would be zero"
     },
     {
       "code": 6015,
-      "name": "unauthorized",
+      "name": "Unauthorized",
       "msg": "You are not admin"
     },
     {
       "code": 6016,
-      "name": "invalidPoolTokenAddresses",
+      "name": "InvalidPoolTokenAddresses",
       "msg": "Invalid pool token addresses"
     },
     {
       "code": 6017,
-      "name": "negativeTime",
+      "name": "NegativeTime",
       "msg": "Time cannot be negative"
     },
     {
       "code": 6018,
-      "name": "oracleAlreadyInitialized",
+      "name": "OracleAlreadyInitialized",
       "msg": "Oracle is already initialized"
     },
     {
       "code": 6019,
-      "name": "limitReached",
+      "name": "LimitReached",
       "msg": "Absolute price limit was reached"
     },
     {
       "code": 6020,
-      "name": "invalidProtocolFee",
+      "name": "InvalidProtocolFee",
       "msg": "Invalid protocol fee"
     },
     {
       "code": 6021,
-      "name": "noGainSwap",
+      "name": "NoGainSwap",
       "msg": "Swap amount out is 0"
     },
     {
       "code": 6022,
-      "name": "invalidTokenAccount",
+      "name": "InvalidTokenAccount",
       "msg": "Provided token account is different than expected"
     },
     {
       "code": 6023,
-      "name": "invalidAdmin",
+      "name": "InvalidAdmin",
       "msg": "Admin address is different than expected"
     },
     {
       "code": 6024,
-      "name": "invalidAuthority",
+      "name": "InvalidAuthority",
       "msg": "Provided authority is different than expected"
     },
     {
       "code": 6025,
-      "name": "invalidOwner",
+      "name": "InvalidOwner",
       "msg": "Provided token owner is different than expected"
     },
     {
       "code": 6026,
-      "name": "invalidMint",
+      "name": "InvalidMint",
       "msg": "Provided token account mint is different than expected mint token"
     },
     {
       "code": 6027,
-      "name": "invalidTickmap",
+      "name": "InvalidTickmap",
       "msg": "Provided tickmap is different than expected"
     },
     {
       "code": 6028,
-      "name": "invalidTickmapOwner",
+      "name": "InvalidTickmapOwner",
       "msg": "Provided tickmap owner is different than program ID"
     },
     {
       "code": 6029,
-      "name": "invalidListOwner",
+      "name": "InvalidListOwner",
       "msg": "Recipient list address and owner list address should be different"
     },
     {
       "code": 6030,
-      "name": "invalidTickSpacing",
+      "name": "InvalidTickSpacing",
       "msg": "Invalid tick spacing"
     },
     {
       "code": 6031,
-      "name": "invalidTokenProgram",
+      "name": "InvalidTokenProgram",
       "msg": "Invalid token program"
     }
   ],
   "types": [
     {
-      "name": "feeGrowth",
+      "name": "FeeGrowth",
       "serialization": "bytemuck",
       "repr": {
         "kind": "c"
@@ -2390,7 +2384,7 @@ export type Invariant = {
       }
     },
     {
-      "name": "feeTier",
+      "name": "FeeTier",
       "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "rust",
@@ -2403,12 +2397,12 @@ export type Invariant = {
             "name": "fee",
             "type": {
               "defined": {
-                "name": "fixedPoint"
+                "name": "FixedPoint"
               }
             }
           },
           {
-            "name": "tickSpacing",
+            "name": "tick_spacing",
             "type": "u16"
           },
           {
@@ -2419,7 +2413,7 @@ export type Invariant = {
       }
     },
     {
-      "name": "fixedPoint",
+      "name": "FixedPoint",
       "serialization": "bytemuck",
       "repr": {
         "kind": "c"
@@ -2435,7 +2429,7 @@ export type Invariant = {
       }
     },
     {
-      "name": "liquidity",
+      "name": "Liquidity",
       "serialization": "bytemuck",
       "repr": {
         "kind": "c"
@@ -2451,7 +2445,7 @@ export type Invariant = {
       }
     },
     {
-      "name": "oracle",
+      "name": "Oracle",
       "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "rust",
@@ -2466,7 +2460,7 @@ export type Invariant = {
               "array": [
                 {
                   "defined": {
-                    "name": "record"
+                    "name": "Record"
                   }
                 },
                 256
@@ -2489,7 +2483,7 @@ export type Invariant = {
       }
     },
     {
-      "name": "pool",
+      "name": "Pool",
       "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "rust",
@@ -2499,42 +2493,42 @@ export type Invariant = {
         "kind": "struct",
         "fields": [
           {
-            "name": "tokenX",
+            "name": "token_x",
             "type": "pubkey"
           },
           {
-            "name": "tokenY",
+            "name": "token_y",
             "type": "pubkey"
           },
           {
-            "name": "tokenXReserve",
+            "name": "token_x_reserve",
             "type": "pubkey"
           },
           {
-            "name": "tokenYReserve",
+            "name": "token_y_reserve",
             "type": "pubkey"
           },
           {
-            "name": "positionIterator",
+            "name": "position_iterator",
             "type": "u128"
           },
           {
-            "name": "tickSpacing",
+            "name": "tick_spacing",
             "type": "u16"
           },
           {
             "name": "fee",
             "type": {
               "defined": {
-                "name": "fixedPoint"
+                "name": "FixedPoint"
               }
             }
           },
           {
-            "name": "protocolFee",
+            "name": "protocol_fee",
             "type": {
               "defined": {
-                "name": "fixedPoint"
+                "name": "FixedPoint"
               }
             }
           },
@@ -2542,20 +2536,20 @@ export type Invariant = {
             "name": "liquidity",
             "type": {
               "defined": {
-                "name": "liquidity"
+                "name": "Liquidity"
               }
             }
           },
           {
-            "name": "sqrtPrice",
+            "name": "sqrt_price",
             "type": {
               "defined": {
-                "name": "price"
+                "name": "Price"
               }
             }
           },
           {
-            "name": "currentTickIndex",
+            "name": "current_tick_index",
             "type": "i32"
           },
           {
@@ -2563,55 +2557,55 @@ export type Invariant = {
             "type": "pubkey"
           },
           {
-            "name": "feeGrowthGlobalX",
+            "name": "fee_growth_global_x",
             "type": {
               "defined": {
-                "name": "feeGrowth"
+                "name": "FeeGrowth"
               }
             }
           },
           {
-            "name": "feeGrowthGlobalY",
+            "name": "fee_growth_global_y",
             "type": {
               "defined": {
-                "name": "feeGrowth"
+                "name": "FeeGrowth"
               }
             }
           },
           {
-            "name": "feeProtocolTokenX",
+            "name": "fee_protocol_token_x",
             "type": "u64"
           },
           {
-            "name": "feeProtocolTokenY",
+            "name": "fee_protocol_token_y",
             "type": "u64"
           },
           {
-            "name": "secondsPerLiquidityGlobal",
+            "name": "seconds_per_liquidity_global",
             "type": {
               "defined": {
-                "name": "fixedPoint"
+                "name": "FixedPoint"
               }
             }
           },
           {
-            "name": "startTimestamp",
+            "name": "start_timestamp",
             "type": "u64"
           },
           {
-            "name": "lastTimestamp",
+            "name": "last_timestamp",
             "type": "u64"
           },
           {
-            "name": "feeReceiver",
+            "name": "fee_receiver",
             "type": "pubkey"
           },
           {
-            "name": "oracleAddress",
+            "name": "oracle_address",
             "type": "pubkey"
           },
           {
-            "name": "oracleInitialized",
+            "name": "oracle_initialized",
             "type": "bool"
           },
           {
@@ -2622,7 +2616,7 @@ export type Invariant = {
       }
     },
     {
-      "name": "position",
+      "name": "Position",
       "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "rust",
@@ -2647,59 +2641,59 @@ export type Invariant = {
             "name": "liquidity",
             "type": {
               "defined": {
-                "name": "liquidity"
+                "name": "Liquidity"
               }
             }
           },
           {
-            "name": "lowerTickIndex",
+            "name": "lower_tick_index",
             "type": "i32"
           },
           {
-            "name": "upperTickIndex",
+            "name": "upper_tick_index",
             "type": "i32"
           },
           {
-            "name": "feeGrowthInsideX",
+            "name": "fee_growth_inside_x",
             "type": {
               "defined": {
-                "name": "feeGrowth"
+                "name": "FeeGrowth"
               }
             }
           },
           {
-            "name": "feeGrowthInsideY",
+            "name": "fee_growth_inside_y",
             "type": {
               "defined": {
-                "name": "feeGrowth"
+                "name": "FeeGrowth"
               }
             }
           },
           {
-            "name": "secondsPerLiquidityInside",
+            "name": "seconds_per_liquidity_inside",
             "type": {
               "defined": {
-                "name": "fixedPoint"
+                "name": "FixedPoint"
               }
             }
           },
           {
-            "name": "lastSlot",
+            "name": "last_slot",
             "type": "u64"
           },
           {
-            "name": "tokensOwedX",
+            "name": "tokens_owed_x",
             "type": {
               "defined": {
-                "name": "fixedPoint"
+                "name": "FixedPoint"
               }
             }
           },
           {
-            "name": "tokensOwedY",
+            "name": "tokens_owed_y",
             "type": {
               "defined": {
-                "name": "fixedPoint"
+                "name": "FixedPoint"
               }
             }
           },
@@ -2711,7 +2705,7 @@ export type Invariant = {
       }
     },
     {
-      "name": "positionList",
+      "name": "PositionList",
       "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "rust",
@@ -2732,7 +2726,7 @@ export type Invariant = {
       }
     },
     {
-      "name": "price",
+      "name": "Price",
       "serialization": "bytemuck",
       "repr": {
         "kind": "c"
@@ -2748,7 +2742,7 @@ export type Invariant = {
       }
     },
     {
-      "name": "record",
+      "name": "Record",
       "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "rust",
@@ -2765,7 +2759,7 @@ export type Invariant = {
             "name": "price",
             "type": {
               "defined": {
-                "name": "price"
+                "name": "Price"
               }
             }
           }
@@ -2773,7 +2767,7 @@ export type Invariant = {
       }
     },
     {
-      "name": "state",
+      "name": "State",
       "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "rust",
@@ -2802,7 +2796,7 @@ export type Invariant = {
       }
     },
     {
-      "name": "tick",
+      "name": "Tick",
       "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "rust",
@@ -2824,55 +2818,55 @@ export type Invariant = {
             "type": "bool"
           },
           {
-            "name": "liquidityChange",
+            "name": "liquidity_change",
             "type": {
               "defined": {
-                "name": "liquidity"
+                "name": "Liquidity"
               }
             }
           },
           {
-            "name": "liquidityGross",
+            "name": "liquidity_gross",
             "type": {
               "defined": {
-                "name": "liquidity"
+                "name": "Liquidity"
               }
             }
           },
           {
-            "name": "sqrtPrice",
+            "name": "sqrt_price",
             "type": {
               "defined": {
-                "name": "price"
+                "name": "Price"
               }
             }
           },
           {
-            "name": "feeGrowthOutsideX",
+            "name": "fee_growth_outside_x",
             "type": {
               "defined": {
-                "name": "feeGrowth"
+                "name": "FeeGrowth"
               }
             }
           },
           {
-            "name": "feeGrowthOutsideY",
+            "name": "fee_growth_outside_y",
             "type": {
               "defined": {
-                "name": "feeGrowth"
+                "name": "FeeGrowth"
               }
             }
           },
           {
-            "name": "secondsPerLiquidityOutside",
+            "name": "seconds_per_liquidity_outside",
             "type": {
               "defined": {
-                "name": "fixedPoint"
+                "name": "FixedPoint"
               }
             }
           },
           {
-            "name": "secondsOutside",
+            "name": "seconds_outside",
             "type": "u64"
           },
           {
@@ -2883,7 +2877,7 @@ export type Invariant = {
       }
     },
     {
-      "name": "tickmap",
+      "name": "Tickmap",
       "serialization": "bytemuckunsafe",
       "repr": {
         "kind": "rust",
@@ -2905,4 +2899,4 @@ export type Invariant = {
       }
     }
   ]
-};
+}

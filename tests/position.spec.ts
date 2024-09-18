@@ -1,4 +1,4 @@
-import * as anchor from '@project-serum/anchor'
+import * as anchor from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import {
@@ -8,7 +8,7 @@ import {
   LIQUIDITY_DENOMINATOR,
   Network
 } from '@invariant-labs/sdk'
-import { Provider, BN } from '@project-serum/anchor'
+import { Provider, BN } from '@coral-xyz/anchor'
 import { Token, u64, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createToken, eqDecimal, initMarket } from './testUtils'
 import { fromFee, assertThrowsAsync, tou64 } from '@invariant-labs/sdk/src/utils'

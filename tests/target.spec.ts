@@ -1,5 +1,5 @@
-import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
+import * as anchor from '@coral-xyz/anchor'
+import { Provider, BN } from '@coral-xyz/anchor'
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'

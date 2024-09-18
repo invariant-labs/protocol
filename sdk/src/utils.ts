@@ -1,4 +1,4 @@
-import { Provider, BN, utils } from '@project-serum/anchor'
+import { Provider, BN, utils, AnchorProvider } from '@coral-xyz/anchor'
 import {
   ComputeBudgetProgram,
   ConfirmOptions,
@@ -33,13 +33,11 @@ import {
   getLiquidityByY,
   getXfromLiquidity,
   isEnoughAmountToPushPrice,
-  MIN_TICK,
-  sqrt
+  MIN_TICK
 } from './math'
 import { alignTickToSpacing, getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
-import { struct, u32, u8 } from '@solana/buffer-layout'
-import { u64 } from '@solana/spl-token'
+import { getAccount, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { TokenInfo, TokenListContainer, TokenListProvider } from '@solana/spl-token-registry'
 
 export const SEED = 'Invariant'
@@ -208,10 +206,8 @@ export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
       err = e.toString()
     }
     if (word) {
-      const regex = new RegExp(`${word}$`)
-      if (!regex.test(err)) {
-        console.log(err)
-        throw new Error('Invalid Error message')
+      if (!err.includes(word)) {
+        throw new Error(`Invalid Error message: ${err as string}`)
       }
     }
     return
@@ -227,12 +223,16 @@ export const signAndSend = async (
 ) => {
   tx.setSigners(...signers.map(s => s.publicKey))
   const blockhash = await connection.getRecentBlockhash(
-    opts?.commitment ?? Provider.defaultOptions().commitment
+    opts?.commitment ?? AnchorProvider.defaultOptions().commitment
   )
   tx.recentBlockhash = blockhash.blockhash
   tx.partialSign(...signers)
   const rawTx = tx.serialize()
-  return await sendAndConfirmRawTransaction(connection, rawTx, opts ?? Provider.defaultOptions())
+  return await sendAndConfirmRawTransaction(
+    connection,
+    rawTx,
+    opts ?? AnchorProvider.defaultOptions()
+  )
 }
 
 export const sleep = async (ms: number) => {
@@ -248,7 +248,7 @@ export const arithmeticalAvg = <T extends BN>(...args: T[]): T => {
   return sum.divn(args.length) as T
 }
 
-export const weightedArithmeticAvg = <T extends BN>(...args: { val: T; weight: BN }[]): T => {
+export const weightedArithmeticAvg = <T extends BN>(...args: Array<{ val: T; weight: BN }>): T => {
   if (args.length === 0) {
     throw new Error('requires at least one argument')
   }
@@ -258,9 +258,9 @@ export const weightedArithmeticAvg = <T extends BN>(...args: { val: T; weight: B
   return sum.div(sumOfWeights) as T
 }
 
+// TODO: Not needed
 export const tou64 = (amount: BN) => {
-  // @ts-ignore
-  return new u64(amount.toString())
+  return amount.toString()
 }
 
 export const fromFee = (fee: BN): BN => {
@@ -329,10 +329,10 @@ export const generateTicksArray = (start: number, stop: number, step: number) =>
   return ticks
 }
 
-export const getFeeTierAddress = async ({ fee, tickSpacing }: FeeTier, programId: PublicKey) => {
+export const getFeeTierAddress = ({ fee, tickSpacing }: FeeTier, programId: PublicKey) => {
   const ts = tickSpacing ?? feeToTickSpacing(fee)
 
-  const [address, bump] = await PublicKey.findProgramAddress(
+  const [address, bump] = PublicKey.findProgramAddressSync(
     [
       Buffer.from(utils.bytes.utf8.encode(FEE_TIER)),
       programId.toBuffer(),
@@ -1357,11 +1357,11 @@ export const getPrice = (sqrtPrice: Decimal, decimalDiff: number): Decimal => {
   return { v: priceWithCorrectPrecision }
 }
 
-export const getPositionIndex = async (
+export const getPositionIndex = (
   expectedAddress: PublicKey,
   invariantAddress: PublicKey,
   owner: PublicKey
-): Promise<number> => {
+): number => {
   let index: number = -1
   let counter: number = 0
   let found: Boolean = false
@@ -1370,11 +1370,12 @@ export const getPositionIndex = async (
     const indexBuffer = Buffer.alloc(4)
     indexBuffer.writeInt32LE(counter)
 
-    const [positionAddress, positionBump] = await PublicKey.findProgramAddress(
+    const [positionAddress] = PublicKey.findProgramAddressSync(
       [Buffer.from(utils.bytes.utf8.encode('positionv1')), owner.toBuffer(), indexBuffer],
       invariantAddress
     )
 
+    // TODO: Check if it is validate
     if (positionAddress.toString() == expectedAddress.toString()) {
       found = true
       index = counter
@@ -1439,6 +1440,25 @@ export const calculatePoolLiquidity = (
   )
 }
 
+export const getBalance = async (
+  connection: Connection,
+  ata: PublicKey,
+  programId: PublicKey = TOKEN_PROGRAM_ID
+): Promise<BN> => {
+  const acc = await getAccount(connection, ata, 'confirmed', programId)
+  return new BN(acc.amount.toString())
+}
+
+export const getTokenProgramAddress = async (
+  connection: Connection,
+  mint: PublicKey
+): Promise<PublicKey> => {
+  const info = await connection.getAccountInfo(mint)
+  if (!info) {
+    throw new Error("Couldn't retrieve token program address")
+  }
+  return info.owner
+}
 export interface TokenData {
   id: string
   decimals: number

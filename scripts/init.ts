@@ -1,7 +1,7 @@
 import { Market, Network } from '@invariant-labs/sdk/src'
 import { CreateFeeTier } from '@invariant-labs/sdk/src/market'
 import { FEE_TIERS } from '@invariant-labs/sdk/src/utils'
-import { Provider } from '@project-serum/anchor'
+import { Provider } from '@coral-xyz/anchor'
 import { clusterApiUrl, Keypair } from '@solana/web3.js'
 import { MINTER } from './minter'
 

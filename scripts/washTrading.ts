@@ -1,5 +1,5 @@
 import * as fs from 'fs'
-import { BN, Provider } from '@project-serum/anchor'
+import { BN, Provider } from '@coral-xyz/anchor'
 import { clusterApiUrl, Connection, Keypair, PublicKey } from '@solana/web3.js'
 import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
 import { MINTER } from './minter'

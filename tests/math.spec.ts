@@ -1,5 +1,5 @@
 import { assert, expect } from 'chai'
-import { BN } from '@project-serum/anchor'
+import { BN } from '@coral-xyz/anchor'
 import {
   calculatePriceSqrt,
   DENOMINATOR,

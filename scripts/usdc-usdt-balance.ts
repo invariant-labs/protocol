@@ -1,4 +1,4 @@
-import { BN, Provider } from '@project-serum/anchor'
+import { BN, Provider } from '@coral-xyz/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { Network } from '@invariant-labs/sdk/src/network'
 import { Market, Pair } from '@invariant-labs/sdk/src'

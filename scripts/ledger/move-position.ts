@@ -1,5 +1,5 @@
 import { Market, Network } from '@invariant-labs/sdk/src'
-import { Provider } from '@project-serum/anchor'
+import { Provider } from '@coral-xyz/anchor'
 import { PublicKey } from '@solana/web3.js'
 import { getLedgerWallet, signAndSendLedger } from '../walletProvider/wallet'
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)

@@ -1,5 +1,4 @@
-import { BN, Program, utils, Provider } from '@project-serum/anchor'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { BN, Program, utils, AnchorProvider } from '@coral-xyz/anchor'
 import {
   ComputeBudgetProgram,
   Connection,
@@ -22,10 +21,12 @@ import {
   calculateClaimAmount,
   computeUnitsInstruction,
   feeToTickSpacing,
+  getBalance,
   getFeeTierAddress,
   getMaxTick,
   getMinTick,
   getPrice,
+  getTokenProgramAddress,
   getTokens,
   getTokensData,
   isActive,
@@ -35,10 +36,11 @@ import {
   SimulateClaim,
   TokenData
 } from './utils'
-import { Invariant, IDL } from './idl/invariant'
+import { Invariant } from './idl/invariant'
+import IDL from './idl/invariant.json'
 import { DENOMINATOR, IWallet, Pair, signAndSend } from '.'
-import { getMarketAddress, Network } from './network'
-import { bs58 } from '@project-serum/anchor/dist/cjs/utils/bytes'
+import { Network } from './network'
+import { bs58 } from '@coral-xyz/anchor/dist/cjs/utils/bytes'
 
 const POSITION_SEED = 'positionv1'
 const TICK_SEED = 'tickv1'
@@ -64,11 +66,9 @@ export class Market {
   ) {
     this.connection = connection
     this.wallet = wallet
-    const programAddress = new PublicKey(getMarketAddress(network))
-    const provider = new Provider(connection, wallet, Provider.defaultOptions())
-
+    const provider = new AnchorProvider(connection, wallet, AnchorProvider.defaultOptions())
     this.network = network
-    this.program = new Program(IDL, programAddress, provider)
+    this.program = new Program<Invariant>(IDL as Invariant, provider)
   }
 
   public static async build(
@@ -78,8 +78,8 @@ export class Market {
     programId?: PublicKey
   ): Promise<Market> {
     const instance = new Market(network, wallet, connection, programId)
-    instance.stateAddress = (await instance.getStateAddress()).address
-    instance.programAuthority = (await instance.getProgramAuthority()).programAuthority
+    instance.stateAddress = instance.getStateAddress().address
+    instance.programAuthority = instance.getProgramAuthority().programAuthority
 
     return instance
   }
@@ -109,14 +109,16 @@ export class Market {
     const tokenXReserve = Keypair.generate()
     const tokenYReserve = Keypair.generate()
     const tick = initTick ?? 0
+    const tokenXProgram = await getTokenProgramAddress(this.connection, pair.tokenX)
+    const tokenYProgram = await getTokenProgramAddress(this.connection, pair.tokenY)
+    const { address: stateAddress } = this.getStateAddress()
 
-    const { address: stateAddress } = await this.getStateAddress()
+    const [poolAddress] = pair.getAddressAndBump(this.program.programId)
+    const { address: feeTierAddress } = this.getFeeTierAddress(pair.feeTier)
 
-    const [poolAddress] = await pair.getAddressAndBump(this.program.programId)
-    const { address: feeTierAddress } = await this.getFeeTierAddress(pair.feeTier)
-
-    const createIx = this.program.instruction.createPool(tick, {
-      accounts: {
+    const createIx = await this.program.methods
+      .createPool(tick)
+      .accountsPartial({
         state: stateAddress,
         pool: poolAddress,
         feeTier: feeTierAddress,
@@ -126,12 +128,11 @@ export class Market {
         tokenXReserve: tokenXReserve.publicKey,
         tokenYReserve: tokenYReserve.publicKey,
         authority: this.programAuthority,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        payer: payerPubkey,
-        rent: SYSVAR_RENT_PUBKEY,
-        systemProgram: SystemProgram.programId
-      }
-    })
+        tokenXProgram,
+        tokenYProgram,
+        payer: payerPubkey
+      })
+      .instruction()
 
     const transaction = new Transaction({
       feePayer: payerPubkey
@@ -155,8 +156,8 @@ export class Market {
     }
   }
 
-  async getProgramAuthority() {
-    const [programAuthority, nonce] = await PublicKey.findProgramAddress(
+  getProgramAuthority() {
+    const [programAuthority, nonce] = PublicKey.findProgramAddressSync(
       [Buffer.from(SEED)],
       this.program.programId
     )
@@ -168,12 +169,12 @@ export class Market {
   }
 
   async getFeeTier(feeTier: FeeTier) {
-    const { address } = await this.getFeeTierAddress(feeTier)
+    const { address } = this.getFeeTierAddress(feeTier)
     return (await this.program.account.feeTier.fetch(address)) as FeeTierStructure
   }
 
   async getPool(pair: Pair) {
-    const address = await pair.getAddress(this.program.programId)
+    const address = pair.getAddress(this.program.programId)
     return (await this.program.account.pool.fetch(address)) as PoolStructure
   }
 
@@ -187,7 +188,7 @@ export class Market {
     feeTier: FeeTier,
     fn: (poolStructure: PoolStructure) => void
   ) {
-    const poolAddress = await new Pair(tokenX, tokenY, feeTier).getAddress(this.program.programId)
+    const poolAddress = new Pair(tokenX, tokenY, feeTier).getAddress(this.program.programId)
 
     this.program.account.pool
       .subscribe(poolAddress, 'singleGossip') // REVIEW use recent commitment + allow overwrite via props
@@ -197,7 +198,7 @@ export class Market {
   }
 
   public async onTickChange(pair: Pair, index: number, fn: (tick: Tick) => void) {
-    const { tickAddress } = await this.getTickAddress(pair, index)
+    const { tickAddress } = this.getTickAddress(pair, index)
 
     this.program.account.tick
       .subscribe(tickAddress, 'singleGossip') // REVIEW use recent commitment + allow overwrite via props
@@ -207,7 +208,7 @@ export class Market {
   }
 
   public async unsubscribeTick(pair: Pair, index: number): Promise<void> {
-    const { tickAddress } = await this.getTickAddress(pair, index)
+    const { tickAddress } = this.getTickAddress(pair, index)
     return await this.program.account.tick.unsubscribe(tickAddress)
   }
 
@@ -219,8 +220,8 @@ export class Market {
       })
   }
 
-  async getFeeTierAddress(feeTier: FeeTier) {
-    return await getFeeTierAddress(feeTier, this.program.programId)
+  getFeeTierAddress(feeTier: FeeTier) {
+    return getFeeTierAddress(feeTier, this.program.programId)
   }
 
   async getTickmap(pair: Pair) {
@@ -236,12 +237,12 @@ export class Market {
   }
 
   async getTick(pair: Pair, index: number) {
-    const { tickAddress } = await this.getTickAddress(pair, index)
+    const { tickAddress } = this.getTickAddress(pair, index)
     return (await this.program.account.tick.fetch(tickAddress)) as Tick
   }
 
   async getTickByPool(poolAddress: PublicKey, index: number) {
-    const { tickAddress } = await this.getTickAddressByPool(poolAddress, index)
+    const { tickAddress } = this.getTickAddressByPool(poolAddress, index)
     return (await this.program.account.tick.fetch(tickAddress)) as Tick
   }
 
@@ -272,7 +273,7 @@ export class Market {
   }
 
   async getAllTicks(pair: Pair) {
-    const poolPublicKey = await pair.getAddress(this.program.programId)
+    const poolPublicKey = pair.getAddress(this.program.programId)
     return (
       await this.program.account.tick.all([
         {
@@ -414,12 +415,12 @@ export class Market {
   }
 
   async getPositionList(owner: PublicKey) {
-    const { positionListAddress } = await this.getPositionListAddress(owner)
+    const { positionListAddress } = this.getPositionListAddress(owner)
     return (await this.program.account.positionList.fetch(positionListAddress)) as PositionList
   }
 
   async getPosition(owner: PublicKey, index: number) {
-    const { positionAddress } = await this.getPositionAddress(owner, index)
+    const { positionAddress } = this.getPositionAddress(owner, index)
     return (await this.program.account.position.fetch(positionAddress)) as Position
   }
 
@@ -442,12 +443,12 @@ export class Market {
     }
   }
 
-  async getTickAddress(pair: Pair, index: number) {
-    const poolAddress = await pair.getAddress(this.program.programId)
+  getTickAddress(pair: Pair, index: number) {
+    const poolAddress = pair.getAddress(this.program.programId)
     const indexBuffer = Buffer.alloc(4)
     indexBuffer.writeInt32LE(index)
 
-    const [tickAddress, tickBump] = await PublicKey.findProgramAddress(
+    const [tickAddress, tickBump] = PublicKey.findProgramAddressSync(
       [Buffer.from(utils.bytes.utf8.encode(TICK_SEED)), poolAddress.toBuffer(), indexBuffer],
       this.program.programId
     )
@@ -458,11 +459,11 @@ export class Market {
     }
   }
 
-  async getTickAddressByPool(poolAddress: PublicKey, index: number) {
+  getTickAddressByPool(poolAddress: PublicKey, index: number) {
     const indexBuffer = Buffer.alloc(4)
     indexBuffer.writeInt32LE(index)
 
-    const [tickAddress, tickBump] = await PublicKey.findProgramAddress(
+    const [tickAddress, tickBump] = PublicKey.findProgramAddressSync(
       [Buffer.from(utils.bytes.utf8.encode(TICK_SEED)), poolAddress.toBuffer(), indexBuffer],
       this.program.programId
     )
@@ -473,8 +474,8 @@ export class Market {
     }
   }
 
-  async getPositionListAddress(owner: PublicKey) {
-    const [positionListAddress, positionListBump] = await PublicKey.findProgramAddress(
+  getPositionListAddress(owner: PublicKey) {
+    const [positionListAddress, positionListBump] = PublicKey.findProgramAddressSync(
       [Buffer.from(utils.bytes.utf8.encode(POSITION_LIST_SEED)), owner.toBuffer()],
       this.program.programId
     )
@@ -485,11 +486,11 @@ export class Market {
     }
   }
 
-  async getPositionAddress(owner: PublicKey, index: number) {
+  getPositionAddress(owner: PublicKey, index: number) {
     const indexBuffer = Buffer.alloc(4)
     indexBuffer.writeInt32LE(index)
 
-    const [positionAddress, positionBump] = await PublicKey.findProgramAddress(
+    const [positionAddress, positionBump] = PublicKey.findProgramAddressSync(
       [Buffer.from(utils.bytes.utf8.encode(POSITION_SEED)), owner.toBuffer(), indexBuffer],
       this.program.programId
     )
@@ -502,7 +503,7 @@ export class Market {
 
   async getNewPositionAddress(owner: PublicKey) {
     const positionList = await this.getPositionList(owner)
-    return await this.getPositionAddress(owner, positionList.head)
+    return this.getPositionAddress(owner, positionList.head)
   }
 
   async getPositionsForPool(pool: PublicKey) {
@@ -521,18 +522,17 @@ export class Market {
   async createFeeTierInstruction({ feeTier, admin }: CreateFeeTier) {
     admin = admin ?? this.wallet.publicKey
     const { fee, tickSpacing } = feeTier
-    const { address } = await this.getFeeTierAddress(feeTier)
+    const { address } = this.getFeeTierAddress(feeTier)
     const ts = tickSpacing ?? feeToTickSpacing(fee)
 
-    return this.program.instruction.createFeeTier(fee, ts, {
-      accounts: {
+    return await this.program.methods
+      .createFeeTier(fee, ts)
+      .accountsPartial({
         state: this.stateAddress,
         feeTier: address,
-        admin,
-        rent: SYSVAR_RENT_PUBKEY,
-        systemProgram: SystemProgram.programId
-      }
-    })
+        admin
+      })
+      .instruction()
   }
 
   async createFeeTierTransaction(createFeeTier: CreateFeeTier) {
@@ -549,18 +549,17 @@ export class Market {
 
   async createStateInstruction(admin?: PublicKey) {
     admin = admin ?? this.wallet.publicKey
-    const { programAuthority, nonce } = await this.getProgramAuthority()
-    const { address } = await this.getStateAddress()
+    const { programAuthority, nonce } = this.getProgramAuthority()
+    const { address } = this.getStateAddress()
 
-    return this.program.instruction.createState(nonce, {
-      accounts: {
+    return await this.program.methods
+      .createState(nonce)
+      .accountsPartial({
         state: address,
         admin,
-        programAuthority: programAuthority,
-        rent: SYSVAR_RENT_PUBKEY,
-        systemProgram: SystemProgram.programId
-      }
-    })
+        programAuthority
+      })
+      .instruction()
   }
 
   async createStateTransaction(admin?: PublicKey) {
@@ -574,8 +573,8 @@ export class Market {
     await signAndSend(tx, [signer], this.connection)
   }
 
-  async getStateAddress() {
-    const [address, bump] = await PublicKey.findProgramAddress(
+  getStateAddress() {
+    const [address, bump] = PublicKey.findProgramAddressSync(
       [Buffer.from(utils.bytes.utf8.encode(STATE_SEED))],
       this.program.programId
     )
@@ -587,27 +586,30 @@ export class Market {
   }
 
   async getState() {
-    const address = (await this.getStateAddress()).address
+    const address = this.getStateAddress().address
     return (await this.program.account.state.fetch(address)) as State
   }
 
   async createTickInstruction({ pair, index, payer }: CreateTick) {
     payer = payer ?? this.wallet.publicKey
     const state = await this.getPool(pair)
-    const { tickAddress } = await this.getTickAddress(pair, index)
+    const tokenXProgram = await getTokenProgramAddress(this.connection, pair.tokenX)
+    const tokenYProgram = await getTokenProgramAddress(this.connection, pair.tokenY)
+    const { tickAddress } = this.getTickAddress(pair, index)
 
-    return this.program.instruction.createTick(index, {
-      accounts: {
+    return await this.program.methods
+      .createTick(index)
+      .accountsPartial({
         tick: tickAddress,
-        pool: await pair.getAddress(this.program.programId),
+        pool: pair.getAddress(this.program.programId),
         tickmap: state.tickmap,
         payer,
         tokenX: state.tokenX,
         tokenY: state.tokenY,
-        rent: SYSVAR_RENT_PUBKEY,
-        systemProgram: SystemProgram.programId
-      }
-    })
+        tokenXProgram,
+        tokenYProgram
+      })
+      .instruction()
   }
 
   async createTickTransaction(createTick: CreateTick) {
@@ -623,17 +625,16 @@ export class Market {
 
   async createPositionListInstruction(owner?: PublicKey) {
     owner = owner ?? this.wallet.publicKey
-    const { positionListAddress } = await this.getPositionListAddress(owner)
+    const { positionListAddress } = this.getPositionListAddress(owner)
 
-    return this.program.instruction.createPositionList({
-      accounts: {
+    return await this.program.methods
+      .createPositionList()
+      .accountsPartial({
         positionList: positionListAddress,
         owner,
-        signer: owner,
-        rent: SYSVAR_RENT_PUBKEY,
-        systemProgram: SystemProgram.programId
-      }
-    })
+        signer: owner
+      })
+      .instruction()
   }
 
   async createPositionListTransaction(owner?: PublicKey) {
@@ -663,6 +664,8 @@ export class Market {
   ) {
     const state = await this.getPool(pair)
     owner = owner ?? this.wallet.publicKey
+    const tokenXProgram = await getTokenProgramAddress(this.connection, pair.tokenX)
+    const tokenYProgram = await getTokenProgramAddress(this.connection, pair.tokenY)
 
     const slippageLimitLower = calculatePriceAfterSlippage(knownPrice, slippage, false)
     const slippageLimitUpper = calculatePriceAfterSlippage(knownPrice, slippage, true)
@@ -670,7 +673,6 @@ export class Market {
     const upperTickIndex = upperTick !== Infinity ? upperTick : getMaxTick(pair.tickSpacing)
     const lowerTickIndex = lowerTick !== -Infinity ? lowerTick : getMinTick(pair.tickSpacing)
 
-    // maybe in the future index cloud be store at market
     const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTickIndex)
     const { tickAddress: upperTickAddress } = await this.getTickAddress(pair, upperTickIndex)
     const { positionAddress } = await this.getPositionAddress(
@@ -680,36 +682,35 @@ export class Market {
     const { positionListAddress } = await this.getPositionListAddress(owner)
     const poolAddress = await pair.getAddress(this.program.programId)
 
-    return this.program.instruction.createPosition(
-      lowerTickIndex,
-      upperTickIndex,
-      liquidityDelta,
-      slippageLimitLower,
-      slippageLimitUpper,
-      {
-        accounts: {
-          state: this.stateAddress,
-          pool: poolAddress,
-          positionList: positionListAddress,
-          position: positionAddress,
-          tickmap: state.tickmap,
-          owner,
-          payer: owner,
-          lowerTick: lowerTickAddress,
-          upperTick: upperTickAddress,
-          tokenX: pair.tokenX,
-          tokenY: pair.tokenY,
-          accountX: userTokenX,
-          accountY: userTokenY,
-          reserveX: state.tokenXReserve,
-          reserveY: state.tokenYReserve,
-          programAuthority: this.programAuthority,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          rent: SYSVAR_RENT_PUBKEY,
-          systemProgram: SystemProgram.programId
-        }
-      }
-    )
+    return await this.program.methods
+      .createPosition(
+        lowerTickIndex,
+        upperTickIndex,
+        liquidityDelta,
+        slippageLimitLower,
+        slippageLimitUpper
+      )
+      .accountsPartial({
+        state: this.stateAddress,
+        pool: poolAddress,
+        positionList: positionListAddress,
+        position: positionAddress,
+        tickmap: state.tickmap,
+        owner,
+        payer: owner,
+        lowerTick: lowerTickAddress,
+        upperTick: upperTickAddress,
+        tokenX: pair.tokenX,
+        tokenY: pair.tokenY,
+        accountX: userTokenX,
+        accountY: userTokenY,
+        reserveX: state.tokenXReserve,
+        reserveY: state.tokenYReserve,
+        programAuthority: this.programAuthority,
+        tokenXProgram,
+        tokenYProgram
+      })
+      .instruction()
   }
 
   async initPositionTx(initPosition: InitPosition) {
@@ -793,21 +794,23 @@ export class Market {
     const tokenXReserve = Keypair.generate()
     const tokenYReserve = Keypair.generate()
     const tick = initTick ?? 0
+    const tokenXProgram = await getTokenProgramAddress(this.connection, pair.tokenX)
+    const tokenYProgram = await getTokenProgramAddress(this.connection, pair.tokenY)
 
     const setCuIx = computeUnitsInstruction(1_400_000, payerPubkey)
-    const { address: stateAddress } = await this.getStateAddress()
+    const { address: stateAddress } = this.getStateAddress()
 
-    const [poolAddress] = await pair.getAddressAndBump(this.program.programId)
-    const { address: feeTierAddress } = await this.getFeeTierAddress(pair.feeTier)
+    const [poolAddress] = pair.getAddressAndBump(this.program.programId)
+    const { address: feeTierAddress } = this.getFeeTierAddress(pair.feeTier)
 
-    const { positionListAddress } = await this.getPositionListAddress(payerPubkey)
-    const { tickAddress } = await this.getTickAddress(pair, lowerTick)
-    const { tickAddress: tickAddressUpper } = await this.getTickAddress(pair, upperTick)
+    const { positionListAddress } = this.getPositionListAddress(payerPubkey)
+    const { tickAddress } = this.getTickAddress(pair, lowerTick)
+    const { tickAddress: tickAddressUpper } = this.getTickAddress(pair, upperTick)
 
     const listExists = (await this.connection.getAccountInfo(positionListAddress)) !== null
     const head = listExists ? (await this.getPositionList(payerPubkey)).head : 0
 
-    const { positionAddress } = await this.getPositionAddress(payerPubkey, head)
+    const { positionAddress } = this.getPositionAddress(payerPubkey, head)
 
     const transaction = new Transaction({
       feePayer: payerPubkey
@@ -827,8 +830,9 @@ export class Market {
         })
       )
       .add(
-        this.program.instruction.createPool(tick, {
-          accounts: {
+        await this.program.methods
+          .createPool(tick)
+          .accountsPartial({
             state: stateAddress,
             pool: poolAddress,
             feeTier: feeTierAddress,
@@ -838,40 +842,41 @@ export class Market {
             tokenXReserve: tokenXReserve.publicKey,
             tokenYReserve: tokenYReserve.publicKey,
             authority: this.programAuthority,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            payer: payerPubkey,
-            rent: SYSVAR_RENT_PUBKEY,
-            systemProgram: SystemProgram.programId
-          }
-        })
+            tokenXProgram,
+            tokenYProgram,
+            payer: payerPubkey
+          })
+          .instruction()
       )
       .add(
-        this.program.instruction.createTick(lowerTick, {
-          accounts: {
+        await this.program.methods
+          .createTick(lowerTick)
+          .accountsPartial({
             tick: tickAddress,
             pool: poolAddress,
             tickmap: bitmapKeypair.publicKey,
             payer: payerPubkey,
             tokenX: pair.tokenX,
             tokenY: pair.tokenY,
-            rent: SYSVAR_RENT_PUBKEY,
-            systemProgram: SystemProgram.programId
-          }
-        })
+            tokenXProgram,
+            tokenYProgram
+          })
+          .instruction()
       )
       .add(
-        this.program.instruction.createTick(upperTick, {
-          accounts: {
+        await this.program.methods
+          .createTick(upperTick)
+          .accountsPartial({
             tick: tickAddressUpper,
             pool: poolAddress,
             tickmap: bitmapKeypair.publicKey,
             payer: payerPubkey,
             tokenX: pair.tokenX,
             tokenY: pair.tokenY,
-            rent: SYSVAR_RENT_PUBKEY,
-            systemProgram: SystemProgram.programId
-          }
-        })
+            tokenXProgram,
+            tokenYProgram
+          })
+          .instruction()
       )
     if (!listExists) transaction.add(await this.createPositionListInstruction(payerPubkey))
 
@@ -879,36 +884,35 @@ export class Market {
     const slippageLimitUpper = calculatePriceAfterSlippage(knownPrice, slippage, true)
 
     transaction.add(
-      this.program.instruction.createPosition(
-        lowerTick,
-        upperTick,
-        liquidityDelta,
-        slippageLimitLower,
-        slippageLimitUpper,
-        {
-          accounts: {
-            state: this.stateAddress,
-            pool: poolAddress,
-            positionList: positionListAddress,
-            position: positionAddress,
-            tickmap: bitmapKeypair.publicKey,
-            owner: payerPubkey,
-            payer: payerPubkey,
-            lowerTick: tickAddress,
-            upperTick: tickAddressUpper,
-            tokenX: pair.tokenX,
-            tokenY: pair.tokenY,
-            accountX: userTokenX,
-            accountY: userTokenY,
-            reserveX: tokenXReserve.publicKey,
-            reserveY: tokenYReserve.publicKey,
-            programAuthority: this.programAuthority,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            rent: SYSVAR_RENT_PUBKEY,
-            systemProgram: SystemProgram.programId
-          }
-        }
-      )
+      await this.program.methods
+        .createPosition(
+          lowerTick,
+          upperTick,
+          liquidityDelta,
+          slippageLimitLower,
+          slippageLimitUpper
+        )
+        .accountsPartial({
+          state: this.stateAddress,
+          pool: poolAddress,
+          positionList: positionListAddress,
+          position: positionAddress,
+          tickmap: bitmapKeypair.publicKey,
+          owner: payerPubkey,
+          payer: payerPubkey,
+          lowerTick: tickAddress,
+          upperTick: tickAddressUpper,
+          tokenX: pair.tokenX,
+          tokenY: pair.tokenY,
+          accountX: userTokenX,
+          accountY: userTokenY,
+          reserveX: tokenXReserve.publicKey,
+          reserveY: tokenYReserve.publicKey,
+          programAuthority: this.programAuthority,
+          tokenXProgram,
+          tokenYProgram
+        })
+        .instruction()
     )
 
     return {
@@ -937,10 +941,11 @@ export class Market {
     } = swap
     const owner = swap.owner ?? this.wallet.publicKey
 
-    const [pool, tickmap, poolAddress] = await Promise.all([
+    const [pool, tickmap, tokenXProgram, tokenYProgram] = await Promise.all([
       this.getPool(pair),
       this.getTickmap(pair),
-      pair.getAddress(this.program.programId)
+      getTokenProgramAddress(this.connection, pair.tokenX),
+      getTokenProgramAddress(this.connection, pair.tokenY)
     ])
 
     const priceLimit = calculatePriceAfterSlippage(estimatedPriceAfterSwap, slippage, !xToY).v
@@ -965,7 +970,7 @@ export class Market {
 
     const remainingAccounts = await Promise.all(
       indexesInDirection.concat(indexesInReverse).map(async index => {
-        const { tickAddress } = await this.getTickAddress(pair, index)
+        const { tickAddress } = this.getTickAddress(pair, index)
         return tickAddress
       })
     )
@@ -982,21 +987,26 @@ export class Market {
 
     const tx: Transaction = new Transaction()
 
-    const swapIx = this.program.instruction.swap(xToY, amount, byAmountIn, priceLimit, {
-      remainingAccounts: ra,
-      accounts: {
+    const swapIx = await this.program.methods
+      .swap(xToY, amount, byAmountIn, priceLimit)
+      .accountsPartial({
         state: this.stateAddress,
-        pool: poolAddress,
+        pool: pair.getAddress(this.program.programId),
         tickmap: pool.tickmap,
         reserveX: pool.tokenXReserve,
         reserveY: pool.tokenYReserve,
         owner,
+        tokenX: pair.tokenX,
+        tokenY: pair.tokenY,
         accountX,
         accountY,
         programAuthority: this.programAuthority,
-        tokenProgram: TOKEN_PROGRAM_ID
-      }
-    })
+        tokenXProgram,
+        tokenYProgram
+      })
+      .remainingAccounts(ra)
+      .instruction()
+
     tx.add(swapIx)
     return tx
   }
@@ -1013,15 +1023,15 @@ export class Market {
     return await signAndSend(tx, [signer], this.connection)
   }
 
-  async getReserveBalances(pair: Pair, tokenX: Token, tokenY: Token) {
+  async getReserveBalances(pair: Pair) {
     const state = await this.getPool(pair)
 
-    const accounts = await Promise.all([
-      tokenX.getAccountInfo(state.tokenXReserve),
-      tokenY.getAccountInfo(state.tokenYReserve)
+    const [x, y] = await Promise.all([
+      getBalance(this.connection, state.tokenXReserve),
+      getBalance(this.connection, state.tokenYReserve)
     ])
 
-    return { x: accounts[0].amount, y: accounts[1].amount }
+    return { x, y }
   }
 
   async claimFeeInstruction(claimFee: ClaimFee) {
@@ -1029,40 +1039,34 @@ export class Market {
     const owner = claimFee.owner ?? this.wallet.publicKey
 
     const state = await this.getPool(pair)
-    const { positionAddress } = await this.getPositionAddress(owner, index)
     const position = await this.getPosition(owner, index)
-    const { tickAddress: lowerTickAddress } = await this.getTickAddress(
-      pair,
-      position.lowerTickIndex
-    )
-    const { tickAddress: upperTickAddress } = await this.getTickAddress(
-      pair,
-      position.upperTickIndex
-    )
+    const tokenXProgram = await getTokenProgramAddress(this.connection, pair.tokenX)
+    const tokenYProgram = await getTokenProgramAddress(this.connection, pair.tokenY)
 
-    return this.program.instruction.claimFee(
-      index,
-      position.lowerTickIndex,
-      position.upperTickIndex,
-      {
-        accounts: {
-          state: this.stateAddress,
-          pool: await pair.getAddress(this.program.programId),
-          position: positionAddress,
-          lowerTick: lowerTickAddress,
-          upperTick: upperTickAddress,
-          owner,
-          tokenX: pair.tokenX,
-          tokenY: pair.tokenY,
-          accountX: userTokenX,
-          accountY: userTokenY,
-          reserveX: state.tokenXReserve,
-          reserveY: state.tokenYReserve,
-          programAuthority: this.programAuthority,
-          tokenProgram: TOKEN_PROGRAM_ID
-        }
-      }
-    )
+    const { positionAddress } = this.getPositionAddress(owner, index)
+    const { tickAddress: lowerTickAddress } = this.getTickAddress(pair, position.lowerTickIndex)
+    const { tickAddress: upperTickAddress } = this.getTickAddress(pair, position.upperTickIndex)
+
+    return await this.program.methods
+      .claimFee(index, position.lowerTickIndex, position.upperTickIndex)
+      .accountsPartial({
+        state: this.stateAddress,
+        pool: pair.getAddress(this.program.programId),
+        position: positionAddress,
+        lowerTick: lowerTickAddress,
+        upperTick: upperTickAddress,
+        owner,
+        tokenX: pair.tokenX,
+        tokenY: pair.tokenY,
+        accountX: userTokenX,
+        accountY: userTokenY,
+        reserveX: state.tokenXReserve,
+        reserveY: state.tokenYReserve,
+        programAuthority: this.programAuthority,
+        tokenXProgram,
+        tokenYProgram
+      })
+      .instruction()
   }
 
   async claimFeeTransaction(claimFee: ClaimFee) {
@@ -1081,11 +1085,14 @@ export class Market {
     const admin = withdrawProtocolFee.admin ?? this.wallet.publicKey
 
     const pool = await this.getPool(pair)
+    const tokenXProgram = await getTokenProgramAddress(this.connection, pair.tokenX)
+    const tokenYProgram = await getTokenProgramAddress(this.connection, pair.tokenY)
 
-    return this.program.instruction.withdrawProtocolFee({
-      accounts: {
+    return await this.program.methods
+      .withdrawProtocolFee()
+      .accountsPartial({
         state: this.stateAddress,
-        pool: await pair.getAddress(this.program.programId),
+        pool: pair.getAddress(this.program.programId),
         tokenX: pool.tokenX,
         tokenY: pool.tokenY,
         reserveX: pool.tokenXReserve,
@@ -1094,9 +1101,10 @@ export class Market {
         accountY,
         authority: admin,
         programAuthority: this.programAuthority,
-        tokenProgram: TOKEN_PROGRAM_ID
-      }
-    })
+        tokenXProgram,
+        tokenYProgram
+      })
+      .instruction()
   }
 
   async withdrawProtocolFeeTransaction(withdrawProtocolFee: WithdrawProtocolFee) {
@@ -1114,53 +1122,46 @@ export class Market {
   async removePositionInstruction(removePosition: RemovePosition): Promise<TransactionInstruction> {
     const { pair, index, userTokenX, userTokenY } = removePosition
     const owner = removePosition.owner ?? this.wallet.publicKey
-
     const positionList = await this.getPositionList(owner)
-    const { positionListAddress } = await this.getPositionListAddress(owner)
-    const { positionAddress: removedPositionAddress } = await this.getPositionAddress(owner, index)
-    const { positionAddress: lastPositionAddress } = await this.getPositionAddress(
+    const { positionAddress: lastPositionAddress } = this.getPositionAddress(
       owner,
       positionList.head - 1
     )
+    const { positionListAddress } = this.getPositionListAddress(owner)
+    const { positionAddress: removedPositionAddress } = this.getPositionAddress(owner, index)
 
     const state = await this.getPool(pair)
     const position = await this.getPosition(owner, index)
 
-    const { tickAddress: lowerTickAddress } = await this.getTickAddress(
-      pair,
-      position.lowerTickIndex
-    )
-    const { tickAddress: upperTickAddress } = await this.getTickAddress(
-      pair,
-      position.upperTickIndex
-    )
+    const { tickAddress: lowerTickAddress } = this.getTickAddress(pair, position.lowerTickIndex)
+    const { tickAddress: upperTickAddress } = this.getTickAddress(pair, position.upperTickIndex)
 
-    return this.program.instruction.removePosition(
-      index,
-      position.lowerTickIndex,
-      position.upperTickIndex,
-      {
-        accounts: {
-          state: this.stateAddress,
-          owner: owner,
-          removedPosition: removedPositionAddress,
-          positionList: positionListAddress,
-          lastPosition: lastPositionAddress,
-          pool: await pair.getAddress(this.program.programId),
-          tickmap: state.tickmap,
-          lowerTick: lowerTickAddress,
-          upperTick: upperTickAddress,
-          tokenX: pair.tokenX,
-          tokenY: pair.tokenY,
-          accountX: userTokenX,
-          accountY: userTokenY,
-          reserveX: state.tokenXReserve,
-          reserveY: state.tokenYReserve,
-          programAuthority: this.programAuthority,
-          tokenProgram: TOKEN_PROGRAM_ID
-        }
-      }
-    )
+    const tokenXProgram = await getTokenProgramAddress(this.connection, pair.tokenX)
+    const tokenYProgram = await getTokenProgramAddress(this.connection, pair.tokenY)
+
+    return await this.program.methods
+      .removePosition(index, position.lowerTickIndex, position.upperTickIndex)
+      .accountsPartial({
+        state: this.stateAddress,
+        removedPosition: removedPositionAddress,
+        positionList: positionListAddress,
+        owner: owner,
+        lastPosition: lastPositionAddress,
+        pool: pair.getAddress(this.program.programId),
+        lowerTick: lowerTickAddress,
+        upperTick: upperTickAddress,
+        tickmap: state.tickmap,
+        tokenX: pair.tokenX,
+        tokenY: pair.tokenY,
+        accountX: userTokenX,
+        accountY: userTokenY,
+        reserveX: state.tokenXReserve,
+        reserveY: state.tokenYReserve,
+        programAuthority: this.programAuthority,
+        tokenXProgram,
+        tokenYProgram
+      })
+      .instruction()
   }
 
   async removePositionTransaction(removePosition: RemovePosition) {
@@ -1181,30 +1182,29 @@ export class Market {
     const owner = transferPositionOwnership.owner ?? this.wallet.publicKey
     const recipient = transferPositionOwnership.recipient ?? this.wallet.publicKey
 
-    const { positionListAddress: ownerList } = await this.getPositionListAddress(owner)
-    const { positionListAddress: recipientList } = await this.getPositionListAddress(recipient)
+    const { positionListAddress: ownerList } = this.getPositionListAddress(owner)
+    const { positionListAddress: recipientList } = this.getPositionListAddress(recipient)
 
     const ownerPositionList = await this.getPositionList(owner)
-    const { positionAddress: removedPosition } = await this.getPositionAddress(owner, index)
-    const { positionAddress: lastPosition } = await this.getPositionAddress(
+    const { positionAddress: removedPosition } = this.getPositionAddress(owner, index)
+    const { positionAddress: lastPosition } = this.getPositionAddress(
       owner,
       ownerPositionList.head - 1
     )
     const { positionAddress: newPosition } = await this.getNewPositionAddress(recipient)
 
-    return this.program.instruction.transferPositionOwnership(index, {
-      accounts: {
+    return await this.program.methods
+      .transferPositionOwnership(index)
+      .accountsPartial({
         owner,
         recipient,
         ownerList,
         recipientList,
         lastPosition,
         removedPosition,
-        newPosition,
-        rent: SYSVAR_RENT_PUBKEY,
-        systemProgram: SystemProgram.programId
-      }
-    })
+        newPosition
+      })
+      .instruction()
   }
 
   async transferPositionOwnershipTransaction(transferPositionOwnership: TransferPositionOwnership) {
@@ -1225,30 +1225,24 @@ export class Market {
     const { pair, signer, lowerTickIndex, upperTickIndex, index } = updateSecondsPerLiquidity
     const owner = updateSecondsPerLiquidity.owner ?? this.wallet.publicKey
 
-    const { tickAddress: lowerTickAddress } = await this.getTickAddress(pair, lowerTickIndex)
-    const { tickAddress: upperTickAddress } = await this.getTickAddress(pair, upperTickIndex)
-    const poolAddress = await pair.getAddress(this.program.programId)
-    const { positionAddress } = await this.getPositionAddress(owner, index)
+    const { tickAddress: lowerTickAddress } = this.getTickAddress(pair, lowerTickIndex)
+    const { tickAddress: upperTickAddress } = this.getTickAddress(pair, upperTickIndex)
+    const poolAddress = pair.getAddress(this.program.programId)
+    const { positionAddress } = this.getPositionAddress(owner, index)
 
-    return this.program.instruction.updateSecondsPerLiquidity(
-      lowerTickIndex,
-      upperTickIndex,
-      index,
-      {
-        accounts: {
-          pool: poolAddress,
-          lowerTick: lowerTickAddress,
-          upperTick: upperTickAddress,
-          position: positionAddress,
-          tokenX: pair.tokenX,
-          tokenY: pair.tokenY,
-          owner,
-          signer: signer ?? owner,
-          rent: SYSVAR_RENT_PUBKEY,
-          systemProgram: SystemProgram.programId
-        }
-      }
-    )
+    return await this.program.methods
+      .updateSecondsPerLiquidity(lowerTickIndex, upperTickIndex, index)
+      .accountsPartial({
+        pool: poolAddress,
+        lowerTick: lowerTickAddress,
+        upperTick: upperTickAddress,
+        position: positionAddress,
+        tokenX: pair.tokenX,
+        tokenY: pair.tokenY,
+        owner,
+        signer: signer ?? owner
+      })
+      .instruction()
   }
 
   async updateSecondsPerLiquidityTransaction(updateSecondsPerLiquidity: UpdateSecondsPerLiquidity) {
@@ -1267,21 +1261,17 @@ export class Market {
 
   async initializeOracle({ pair, payer }: InitializeOracle) {
     const oracleKeypair = Keypair.generate()
-    const poolAddress = await pair.getAddress(this.program.programId)
 
-    return await this.program.rpc.initializeOracle({
-      accounts: {
-        pool: poolAddress,
+    return await this.program.methods
+      .initializeOracle()
+      .accountsPartial({
+        pool: pair.getAddress(this.program.programId),
         oracle: oracleKeypair.publicKey,
         tokenX: pair.tokenX,
         tokenY: pair.tokenY,
-        payer: payer.publicKey,
-        rent: SYSVAR_RENT_PUBKEY,
-        systemProgram: SystemProgram.programId
-      },
-      signers: [payer, oracleKeypair],
-      instructions: [await this.program.account.oracle.createInstruction(oracleKeypair)]
-    })
+        payer: payer.publicKey
+      })
+      .rpc()
   }
 
   async getOracle(pair: Pair) {
@@ -1293,19 +1283,20 @@ export class Market {
     let { pair, admin, protocolFee } = changeProtocolFee
     admin = admin ?? this.wallet.publicKey
 
-    const { address: stateAddress } = await this.getStateAddress()
-    const poolAddress = await pair.getAddress(this.program.programId)
+    const { address: stateAddress } = this.getStateAddress()
+    const poolAddress = pair.getAddress(this.program.programId)
 
-    return this.program.instruction.changeProtocolFee(protocolFee, {
-      accounts: {
+    return await this.program.methods
+      .changeProtocolFee(protocolFee)
+      .accountsPartial({
         state: stateAddress,
         pool: poolAddress,
         tokenX: pair.tokenX,
         tokenY: pair.tokenY,
         admin,
         programAuthority: this.programAuthority
-      }
-    })
+      })
+      .instruction()
   }
 
   async changeProtocolFeeTransaction(changeProtocolFee: ChangeProtocolFee) {
@@ -1322,19 +1313,21 @@ export class Market {
   async changeFeeReceiverInstruction(changeFeeReceiver: ChangeFeeReceiver) {
     const { pair, feeReceiver } = changeFeeReceiver
     const adminPubkey = changeFeeReceiver.admin ?? this.wallet.publicKey
-    const { address: stateAddress } = await this.getStateAddress()
-    const poolAddress = await pair.getAddress(this.program.programId)
 
-    return this.program.instruction.changeFeeReceiver({
-      accounts: {
+    const { address: stateAddress } = this.getStateAddress()
+    const poolAddress = pair.getAddress(this.program.programId)
+
+    return await this.program.methods
+      .changeFeeReceiver()
+      .accountsPartial({
         state: stateAddress,
         pool: poolAddress,
         tokenX: pair.tokenX,
         tokenY: pair.tokenY,
         admin: adminPubkey,
         feeReceiver: feeReceiver
-      }
-    })
+      })
+      .instruction()
   }
 
   async changeFeeReceiverTransaction(changeFeeReceiver: ChangeFeeReceiver) {
@@ -1350,7 +1343,7 @@ export class Market {
   }
 
   async getWholeLiquidity(pair: Pair) {
-    const poolPublicKey = await pair.getAddress(this.program.programId)
+    const poolPublicKey = pair.getAddress(this.program.programId)
     const positions: Position[] = (
       await this.program.account.position.all([
         {

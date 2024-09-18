@@ -1,5 +1,5 @@
-import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
+import * as anchor from '@coral-xyz/anchor'
+import { Provider, BN } from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
 import { createTokensAndPool, createUserWithTokens } from './testUtils'
 import { Market, Network, sleep, calculatePriceSqrt, INVARIANT_ERRORS } from '@invariant-labs/sdk'

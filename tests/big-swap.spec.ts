@@ -1,8 +1,8 @@
-import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
-import { Keypair } from '@solana/web3.js'
+import * as anchor from '@coral-xyz/anchor'
+import { AnchorProvider, BN } from '@coral-xyz/anchor'
+import { Keypair, PublicKey } from '@solana/web3.js'
 import { Network, Market, Pair, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { createPosition, createToken, initMarket, performSwap } from './testUtils'
 import { assert } from 'chai'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
@@ -11,7 +11,7 @@ import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { calculateFeeGrowthInside } from '@invariant-labs/sdk/src/math'
 
 describe('big-swap', () => {
-  const provider = Provider.local()
+  const provider = AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
@@ -24,8 +24,8 @@ describe('big-swap', () => {
   }
   let market: Market
   let pair: Pair
-  let tokenX: Token
-  let tokenY: Token
+  let tokenX: PublicKey
+  let tokenY: PublicKey
 
   before(async () => {
     market = await Market.build(
@@ -47,8 +47,8 @@ describe('big-swap', () => {
     ])
 
     pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+    tokenX = pair.tokenX
+    tokenY = pair.tokenY
   })
 
   it('#init()', async () => {

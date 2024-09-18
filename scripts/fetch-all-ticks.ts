@@ -1,4 +1,4 @@
-import { Provider } from '@project-serum/anchor'
+import { Provider } from '@coral-xyz/anchor'
 import { clusterApiUrl, PublicKey } from '@solana/web3.js'
 import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
 import { Market, Pair } from '@invariant-labs/sdk/src'

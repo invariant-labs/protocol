@@ -1,7 +1,7 @@
 import { WalletProviderFactory } from './factory'
 import { DERIVATION_PATH } from './localStorage'
 import { LedgerWalletProvider } from './ledger'
-import { Provider } from '@project-serum/anchor'
+import { Provider } from '@coral-xyz/anchor'
 import {
   Transaction,
   Connection,

@@ -1,5 +1,5 @@
 import { Market, Network } from '@invariant-labs/sdk/src'
-import { Provider } from '@project-serum/anchor'
+import { Provider } from '@coral-xyz/anchor'
 import { clusterApiUrl, PublicKey } from '@solana/web3.js'
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()

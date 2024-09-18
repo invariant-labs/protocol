@@ -1,4 +1,4 @@
-import { Provider } from '@project-serum/anchor'
+import { Provider } from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
 import { createToken } from '../tests/testUtils'
 import { MINTER } from './minter'
