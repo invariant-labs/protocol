@@ -52,7 +52,7 @@
     "test:position-change": "anchor test --skip-build tests-staker/position-change.spec.ts",
     "build:invariant": "cd sdk && npm run build",
     "build:staker": "cd staker-sdk && npm run build",
-    "build:all": "npm run build:invariant && npm run build:staker",
+    "build:all": "npm run build:invariant",
     "program:jupiter": "anchor build -- --features \"jupiter\"",
     "program:all": "anchor build -- --features \"all\"",
     "program:none": "anchor build -- --features \"none\""
