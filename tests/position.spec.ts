@@ -6,8 +6,7 @@ import {
   Pair,
   calculatePriceSqrt,
   LIQUIDITY_DENOMINATOR,
-  Network,
-  sleep
+  Network
 } from '@invariant-labs/sdk'
 import { AnchorProvider, BN } from '@coral-xyz/anchor'
 import { createToken, eqDecimal, initMarket, assertThrowsAsync } from './testUtils'

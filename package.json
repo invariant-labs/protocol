@@ -39,6 +39,7 @@
     "test:fee-tier": "anchor test --skip-build tests/fee-tier.spec.ts",
     "test:big-swap": "anchor test --skip-build tests/big-swap.spec.ts",
     "test:cu": "anchor test --skip-build tests/cu.spec.ts",
+    "test:token2022": "anchor test --skip-build tests/token2022.spec.ts",
     "test:init-both": "anchor test --skip-build tests/init-pool-and-position.spec.ts",
     "test:change-protocol-fee": "anchor test --skip-build tests/change-protocol-fee.spec.ts",
     "test:tickmap": "anchor test --skip-build tests/tickmap.spec.ts",

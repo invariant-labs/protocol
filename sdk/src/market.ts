@@ -1025,10 +1025,12 @@ export class Market {
 
   async getReserveBalances(pair: Pair) {
     const state = await this.getPool(pair)
+    const tokenXProgram = await getTokenProgramAddress(this.connection, pair.tokenX)
+    const tokenYProgram = await getTokenProgramAddress(this.connection, pair.tokenY)
 
     const [x, y] = await Promise.all([
-      getBalance(this.connection, state.tokenXReserve),
-      getBalance(this.connection, state.tokenYReserve)
+      getBalance(this.connection, state.tokenXReserve, tokenXProgram),
+      getBalance(this.connection, state.tokenYReserve, tokenYProgram)
     ])
 
     return { x, y }
