@@ -1,12 +1,13 @@
 use crate::decimals::*;
 use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
+use crate::ErrorCode::{self};
 use crate::*;
 use anchor_lang::prelude::*;
 
-#[account(zero_copy)]
+#[account(zero_copy(unsafe))]
 #[repr(packed)]
-#[derive(PartialEq, Default, Debug)]
+#[derive(PartialEq, Default, Debug, InitSpace)]
 pub struct Position {
     pub owner: Pubkey,
     pub pool: Pubkey,
@@ -22,6 +23,8 @@ pub struct Position {
     pub tokens_owed_y: FixedPoint,
     pub bump: u8,
 }
+
+account_size!(Position);
 
 impl Position {
     pub fn modify(

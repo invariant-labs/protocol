@@ -1,8 +1,8 @@
 use crate::decimals::*;
 use crate::structs::{Pool, State};
-use crate::ErrorCode::*;
+use crate::ErrorCode::{self, *};
 use anchor_lang::prelude::*;
-use anchor_spl::token::Mint;
+use anchor_spl::token_interface::Mint;
 
 #[derive(Accounts)]
 pub struct ChangeProtocolFee<'info> {
@@ -14,20 +14,21 @@ pub struct ChangeProtocolFee<'info> {
     )]
     pub pool: AccountLoader<'info, Pool>,
     #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x @ InvalidTokenAccount) ]
-    pub token_x: Account<'info, Mint>,
+    pub token_x: InterfaceAccount<'info, Mint>,
     #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y @ InvalidTokenAccount)]
-    pub token_y: Account<'info, Mint>,
+    pub token_y: InterfaceAccount<'info, Mint>,
     #[account(constraint = &state.load()?.admin == admin.key @ InvalidAdmin)]
     pub admin: Signer<'info>,
     #[account(constraint = &state.load()?.authority == program_authority.key @ InvalidAuthority)]
+    /// CHECK: Ignore
     pub program_authority: AccountInfo<'info>,
 }
 
 impl<'info> ChangeProtocolFee<'info> {
-    pub fn handler(&self, protocol_fee: FixedPoint) -> ProgramResult {
+    pub fn handler(&self, protocol_fee: FixedPoint) -> Result<()> {
         require!(
             protocol_fee <= FixedPoint::from_integer(1),
-            InvalidProtocolFee
+            ErrorCode::InvalidProtocolFee
         );
         let pool = &mut self.pool.load_mut()?;
         pool.protocol_fee = protocol_fee;

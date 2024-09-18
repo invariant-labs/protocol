@@ -6,7 +6,9 @@ cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [workspace]
-members = ["programs/invariant", "programs/staker"]
+members = ["programs/invariant",
+#  "programs/staker"
+ ]
 
 [programs.localnet]
 invariant = "HyaB3W9q6XdA5xwpU4XnSZV94htfmbmqJXZcEbRaJutt"

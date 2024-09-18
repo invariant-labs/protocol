@@ -1,7 +1,7 @@
 use crate::structs::{Pool, State};
 use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
-use anchor_spl::token::Mint;
+use anchor_spl::token_interface::Mint;
 
 #[derive(Accounts)]
 pub struct ChangeFeeReceiver<'info> {
@@ -13,16 +13,17 @@ pub struct ChangeFeeReceiver<'info> {
     )]
     pub pool: AccountLoader<'info, Pool>,
     #[account(constraint = token_x.to_account_info().key == &pool.load()?.token_x @ InvalidTokenAccount) ]
-    pub token_x: Account<'info, Mint>,
+    pub token_x: InterfaceAccount<'info, Mint>,
     #[account(constraint = token_y.to_account_info().key == &pool.load()?.token_y @ InvalidTokenAccount)]
-    pub token_y: Account<'info, Mint>,
+    pub token_y: InterfaceAccount<'info, Mint>,
     #[account(constraint = &state.load()?.admin == admin.key @ InvalidAdmin)]
     pub admin: Signer<'info>,
+    /// CHECK: Ignore
     pub fee_receiver: AccountInfo<'info>,
 }
 
 impl<'info> ChangeFeeReceiver<'info> {
-    pub fn handler(&self) -> ProgramResult {
+    pub fn handler(&self) -> Result<()> {
         let mut pool = self.pool.load_mut()?;
         pool.fee_receiver = self.fee_receiver.key();
 
