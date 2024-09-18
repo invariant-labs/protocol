@@ -60,6 +60,7 @@ jobs:
             'npm run test:referral-all',
             'npm run test:referral-none',
             'npm run test:referral-jupiter',
+            'npm run test:token2022',
             'cargo test --features "all"',
             'cargo test --features "none"',
             'cargo test --features "jupiter"'
@@ -107,7 +108,7 @@ jobs:
           node-version: '18'
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
+          toolchain: 1.79
           override: true
       - name: install global mocha
         run: |
