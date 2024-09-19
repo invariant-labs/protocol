@@ -25,6 +25,17 @@ module.exports = {
         'what_is/glossary'
       ]
     },
+
+    {
+      type: 'category',
+      label: 'Practical Guides',
+      // collapsed: true,
+      items: [
+        'practical_guides/howtolisttoken',
+  
+      ]
+    },
+
     {
       type: 'category',
       label: 'Invariant Bonds',
