@@ -1,16 +1,15 @@
-import { BN, Provider } from '@coral-xyz/anchor'
+import { AnchorProvider, BN } from '@coral-xyz/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { Network } from '@invariant-labs/sdk/src/network'
 import { Market, Pair } from '@invariant-labs/sdk/src'
-import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID, u64 } from '@solana/spl-token'
+import { fromFee, getBalance } from '@invariant-labs/sdk/lib/utils'
+import { getAssociatedTokenAddressSync } from '@solana/spl-token'
 import { PoolStructure, PositionStructure } from '@invariant-labs/sdk/lib/market'
-import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
-import { DENOMINATOR } from '@invariant-labs/sdk'
+import { PRICE_DENOMINATOR, DENOMINATOR } from '@invariant-labs/sdk'
 
 // ***********FILE FIELDS**************
 const owner = new PublicKey('-----------------')
-const provider = Provider.local('-----------------', {
+const provider = AnchorProvider.local('-----------------', {
   skipPreflight: true
 })
 // ************************************
@@ -58,7 +57,7 @@ const calculateBalance = (
       return { positionSumX: sumX, positionSumY: sumY }
     },
     { positionSumX: new BN(0), positionSumY: new BN(0) }
-  ) as { positionSumX: u64; positionSumY: u64 }
+  ) as { positionSumX: BN; positionSumY: BN }
   const [positionSumUSDC, positionSumUSDT] = isUSDCTokenX
     ? [positionSumX, positionSumY]
     : [positionSumY, positionSumX]
@@ -102,16 +101,10 @@ const getAllPositionsForPair = async (
   )
 }
 
-const getTokenBalance = async (token: PublicKey, owner: PublicKey): Promise<u64> => {
+const getTokenBalance = async (token: PublicKey, owner: PublicKey): Promise<BN> => {
   try {
-    const usdcAssociatedTokenAddress = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      token,
-      owner
-    )
-    const usdc = new Token(connection, token, TOKEN_PROGRAM_ID, wallet)
-    return (await usdc.getAccountInfo(usdcAssociatedTokenAddress)).amount
+    const usdcAssociatedTokenAddress = getAssociatedTokenAddressSync(token, owner)
+    return await getBalance(connection, usdcAssociatedTokenAddress)
   } catch (e) {
     return new BN(0)
   }

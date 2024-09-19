@@ -1,10 +1,10 @@
 import { Market, Network } from '@invariant-labs/sdk/src'
-import { Provider } from '@coral-xyz/anchor'
+import { AnchorProvider } from '@coral-xyz/anchor'
 import { clusterApiUrl, PublicKey } from '@solana/web3.js'
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
-const provider = Provider.local(clusterApiUrl('mainnet-beta'), {
+const provider = AnchorProvider.local(clusterApiUrl('mainnet-beta'), {
   skipPreflight: true
 })
 

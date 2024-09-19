@@ -1,11 +1,11 @@
 import { Market, Network } from '@invariant-labs/sdk/src'
-import { Provider } from '@coral-xyz/anchor'
+import { AnchorProvider } from '@coral-xyz/anchor'
 import { PublicKey } from '@solana/web3.js'
 import { getLedgerWallet, signAndSendLedger } from '../walletProvider/wallet'
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
-const provider = Provider.local('https://api.mainnet-beta.solana.com', {
+const provider = AnchorProvider.local('https://api.mainnet-beta.solana.com', {
   skipPreflight: true
 })
 

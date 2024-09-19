@@ -1,6 +1,6 @@
 import { Market, Network, Pair } from '@invariant-labs/sdk/src'
 import { FEE_TIERS } from '@invariant-labs/sdk/src/utils'
-import { Provider } from '@coral-xyz/anchor'
+import { AnchorProvider } from '@coral-xyz/anchor'
 import { PublicKey } from '@solana/web3.js'
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
@@ -12,7 +12,7 @@ const WSOL = new PublicKey('So11111111111111111111111111111111111111112')
 const UXD = new PublicKey('7kbnvuGBxxj8AG9qp8Scn56muWGaRaFqxg1FsRp3PaFT')
 const MSOL = new PublicKey('mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So')
 
-const provider = Provider.local('https://api.mainnet-beta.solana.com', {
+const provider = AnchorProvider.local('https://api.mainnet-beta.solana.com', {
   skipPreflight: true
 })
 

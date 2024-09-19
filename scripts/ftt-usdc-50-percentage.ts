@@ -1,12 +1,12 @@
 import { FeeTier, Tick } from '@invariant-labs/sdk/lib/market'
 import { Market, Network, Pair } from '@invariant-labs/sdk/src'
-import { simulateSwap, toDecimal } from '@invariant-labs/sdk/src/utils'
-import { BN, Provider } from '@coral-xyz/anchor'
+import { simulateSwap } from '@invariant-labs/sdk/src/utils'
+import { BN, AnchorProvider } from '@coral-xyz/anchor'
 import { PublicKey } from '@solana/web3.js'
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
-const provider = Provider.local(
+const provider = AnchorProvider.local(
   'https://solana-mainnet.g.alchemy.com/v2/olFft01iKDVd2zzpVgTiCc2oKQnic3vs',
   {
     skipPreflight: true

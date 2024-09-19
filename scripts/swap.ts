@@ -1,9 +1,9 @@
 import * as anchor from '@coral-xyz/anchor'
-import { Provider } from '@coral-xyz/anchor'
+import { AnchorProvider } from '@coral-xyz/anchor'
 import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
 import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
 import { MINTER } from './minter'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { createAssociatedTokenAccount, mintTo, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Market, Pair } from '@invariant-labs/sdk/src'
 import { FEE_TIERS, fromFee, tou64 } from '@invariant-labs/sdk/src/utils'
 import { Swap } from '@invariant-labs/sdk/src/market'
@@ -11,7 +11,7 @@ import { Swap } from '@invariant-labs/sdk/src/market'
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
-const provider = Provider.local(clusterApiUrl('devnet'), {
+const provider = AnchorProvider.local(clusterApiUrl('devnet'), {
   skipPreflight: true
 })
 
@@ -28,14 +28,37 @@ const main = async () => {
     new PublicKey(MOCK_TOKENS.USDT),
     FEE_TIERS[0]
   )
-  const usdc = new Token(connection, new PublicKey(MOCK_TOKENS.USDC), TOKEN_PROGRAM_ID, wallet)
-  const usdt = new Token(connection, new PublicKey(MOCK_TOKENS.USDT), TOKEN_PROGRAM_ID, wallet)
-  const minterUsdc = await usdc.createAccount(MINTER.publicKey)
-  const minterUsdt = await usdt.createAccount(MINTER.publicKey)
+
+  const minterUsdc = await createAssociatedTokenAccount(
+    connection,
+    wallet,
+    new PublicKey(MOCK_TOKENS.USDC),
+    MINTER.publicKey
+  )
+  const minterUsdt = await createAssociatedTokenAccount(
+    connection,
+    wallet,
+    new PublicKey(MOCK_TOKENS.USDT),
+    MINTER.publicKey
+  )
   const amount = 10 ** 4
 
-  await usdc.mintTo(minterUsdc, MINTER, [], tou64(2 * amount))
-  await usdt.mintTo(minterUsdt, MINTER, [], tou64(2 * amount))
+  await mintTo(
+    connection,
+    MINTER,
+    new PublicKey(MOCK_TOKENS.USDC),
+    minterUsdc,
+    MINTER.publicKey,
+    2 * amount
+  )
+  await mintTo(
+    connection,
+    MINTER,
+    new PublicKey(MOCK_TOKENS.USDT),
+    minterUsdt,
+    MINTER.publicKey,
+    2 * amount
+  )
 
   const pool = await market.getPool(pair)
 

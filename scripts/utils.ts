@@ -1,12 +1,8 @@
-import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
-import { LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
-import { Pair } from '@invariant-labs/sdk'
+import { PRICE_DENOMINATOR, LIQUIDITY_DENOMINATOR, Pair } from '@invariant-labs/sdk'
 import { Decimal } from '@invariant-labs/sdk/lib/market'
-import { LIQUIDITY_SCALE } from '@invariant-labs/sdk/lib/utils'
-import { PRICE_SCALE } from '@invariant-labs/sdk/lib/utils'
-import { tou64 } from '@invariant-labs/sdk/src/utils'
+import { LIQUIDITY_SCALE, PRICE_SCALE } from '@invariant-labs/sdk/lib/utils'
 import { BN } from '@coral-xyz/anchor'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { getOrCreateAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 import { Connection, Keypair } from '@solana/web3.js'
 
 export const handleMint = async (
@@ -15,18 +11,25 @@ export const handleMint = async (
   mintAmount: BN,
   payer: Keypair
 ) => {
-  const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, payer)
-  const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, payer)
-
-  const accountXData = await tokenX.getOrCreateAssociatedAccountInfo(payer.publicKey)
-  const accountYData = await tokenY.getOrCreateAssociatedAccountInfo(payer.publicKey)
+  const accountXData = await getOrCreateAssociatedTokenAccount(
+    connection,
+    payer,
+    pair.tokenX,
+    payer.publicKey
+  )
+  const accountYData = await getOrCreateAssociatedAccountInfo(
+    connection,
+    payer,
+    pair.tokenY,
+    payer.publicKey
+  )
   const accountX = accountXData.address
   const accountY = accountYData.address
 
   if (accountXData.amount.lt(mintAmount))
-    await tokenX.mintTo(accountX, payer, [], tou64(mintAmount.sub(accountXData.amount)))
+    mintTo(connection, payer, pair.tokenX, accountX, payer, mintAmount.sub(accountXData.amount))
   if (accountYData.amount.lt(mintAmount))
-    await tokenY.mintTo(accountY, payer, [], tou64(mintAmount.sub(accountYData.amount)))
+    mintTo(connection, payer, pair.tokenY, accountY, payer, mintAmount.sub(accountXData.amount))
 
   return { accountX, accountY }
 }

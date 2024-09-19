@@ -1,4 +1,4 @@
-import { Provider } from '@coral-xyz/anchor'
+import { AnchorProvider } from '@coral-xyz/anchor'
 import { clusterApiUrl, PublicKey } from '@solana/web3.js'
 import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
 import { Market, Pair } from '@invariant-labs/sdk/src'
@@ -8,7 +8,7 @@ import { parseLiquidityOnTicks } from '@invariant-labs/sdk/lib/utils'
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
-const provider = Provider.local(clusterApiUrl('devnet'), {
+const provider = AnchorProvider.local(clusterApiUrl('devnet'), {
   skipPreflight: true
 })
 

@@ -1,19 +1,18 @@
-import { Provider, BN } from '@coral-xyz/anchor'
+import { AnchorProvider, BN } from '@coral-xyz/anchor'
 import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
 import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
 import { MINTER } from './minter'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Market, Pair } from '@invariant-labs/sdk/src'
 import { feeToTickSpacing, FEE_TIERS } from '@invariant-labs/sdk/src/utils'
 import { MAX_TICK } from '@invariant-labs/sdk'
 import { getLiquidityByY } from '@invariant-labs/sdk/lib/math'
 import { InitPosition } from '@invariant-labs/sdk/src/market'
-import { tou64 } from '@invariant-labs/sdk/lib/utils'
+import { createAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
-const provider = Provider.local(clusterApiUrl('devnet'), {
+const provider = AnchorProvider.local(clusterApiUrl('devnet'), {
   skipPreflight: true
 })
 
@@ -42,18 +41,15 @@ const usdtUsdcCreatePosition = async (market: Market) => {
     throw new Error('tokens are in reverse order, ticks should be opposite')
   }
 
-  const tokenX = new Token(connection, new PublicKey(pair.tokenX), TOKEN_PROGRAM_ID, wallet)
-  const tokenY = new Token(connection, new PublicKey(pair.tokenY), TOKEN_PROGRAM_ID, wallet)
-
   const [minterX, minterY] = await Promise.all([
-    tokenX.createAccount(MINTER.publicKey),
-    tokenY.createAccount(MINTER.publicKey)
+    createAssociatedTokenAccount(connection, wallet, pair.tokenX, MINTER.publicKey),
+    createAssociatedTokenAccount(connection, wallet, pair.tokenY, MINTER.publicKey)
   ])
 
   console.log('minting tokens...')
   await Promise.all([
-    // tokenX.mintTo(minterX, MINTER, [], amount),
-    tokenY.mintTo(minterY, MINTER, [], tou64(amount))
+    // mintTo(connection, MINTER, pair.tokenX, minterX, MINTER.publicKey, amount)
+    mintTo(connection, MINTER, pair.tokenY, minterY, MINTER.publicKey, amount)
   ])
 
   console.log('calculating position...')

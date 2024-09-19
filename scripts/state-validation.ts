@@ -1,4 +1,4 @@
-import { BN, Provider } from '@coral-xyz/anchor'
+import { BN, AnchorProvider } from '@coral-xyz/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { Network } from '@invariant-labs/sdk/src/network'
 import { Market, Pair } from '@invariant-labs/sdk/src'
@@ -7,13 +7,12 @@ import { parseLiquidityOnTicks } from '@invariant-labs/sdk/lib/utils'
 import { bs58 } from '@coral-xyz/anchor/dist/cjs/utils/bytes'
 import { Position } from '@invariant-labs/sdk/src/market'
 import { assert } from 'chai'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Tick } from '@invariant-labs/sdk/lib/market'
 
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
-const provider = Provider.local('[FILL ME]', {
+const provider = AnchorProvider.local('[FILL ME]', {
   skipPreflight: true
 })
 
@@ -130,11 +129,7 @@ const main = async () => {
     }
 
     const getAllPositions = fetchAllPosition(market, poolAccount.publicKey)
-    const getReserveBalances = market.getReserveBalances(
-      pair,
-      new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, Keypair.generate()),
-      new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, Keypair.generate())
-    )
+    const getReserveBalances = market.getReserveBalances(pair)
     const [positions, reserves] = await Promise.all([getAllPositions, getReserveBalances])
 
     ticks.forEach(({ index, liquidityChange, sign }) => {

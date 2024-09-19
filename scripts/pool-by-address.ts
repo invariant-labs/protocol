@@ -1,4 +1,4 @@
-import { Provider } from '@coral-xyz/anchor'
+import { AnchorProvider } from '@coral-xyz/anchor'
 import { PublicKey } from '@solana/web3.js'
 import { Network } from '@invariant-labs/sdk/src/network'
 import { Market } from '@invariant-labs/sdk/src'
@@ -7,7 +7,7 @@ import { PoolStructure } from '@invariant-labs/sdk/lib/market'
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
-const provider = Provider.local(
+const provider = AnchorProvider.local(
   'https://solana-mainnet.g.alchemy.com/v2/olFft01iKDVd2zzpVgTiCc2oKQnic3vs',
   {
     skipPreflight: true

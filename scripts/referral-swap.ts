@@ -1,4 +1,4 @@
-import { Provider } from '@coral-xyz/anchor'
+import { AnchorProvider } from '@coral-xyz/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
 import { Network } from '@invariant-labs/sdk/src/network'
 import { Market, Pair } from '@invariant-labs/sdk/src'
@@ -9,7 +9,7 @@ import { simulateSwap } from '@invariant-labs/sdk/lib/utils'
 import { signAndSend } from '@invariant-labs/sdk'
 import { associatedAddress } from '@coral-xyz/anchor/dist/cjs/utils/token'
 
-const provider = Provider.local(
+const provider = AnchorProvider.local(
   'https://tame-ancient-mountain.solana-mainnet.quiknode.pro/6a9a95bf7bbb108aea620e7ee4c1fd5e1b67cc62',
   {
     skipPreflight: true
