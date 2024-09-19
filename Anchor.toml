@@ -19,8 +19,3 @@ invariant = "5KLfYtAYvUchvTg8jb27eYgeRXLjPPsa9DqwjJJuYGQJ"
 
 [scripts]
 test = "ts-mocha -p ./tsconfig.json -t 1000000"
-
-#  anchor idl init --filepath target/idl/invariant.json 5KLfYtAYvUchvTg8jb27eYgeRXLjPPsa9DqwjJJuYGQJ --provider.cluster devnet
-#  solana program deploy target/deploy/invariant.so --program-id target/deploy/invariant-keypair.json --buffer recover.json
-
-# IDL ACCOUNT CREATED: Csb9q272KtvcvQa1SHNxVnpwrMV6Urirp4ds5N47kwtW
