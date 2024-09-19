@@ -16,7 +16,6 @@ import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { burn, createAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 import { getBalance } from '@invariant-labs/sdk/lib/utils'
 
-// TODO: fix
 describe('position', () => {
   const provider = AnchorProvider.local()
   const connection = provider.connection

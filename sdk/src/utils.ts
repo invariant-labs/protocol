@@ -1355,8 +1355,7 @@ export const getPositionIndex = (
       invariantAddress
     )
 
-    // TODO: Check if it is validate
-    if (positionAddress.toString() == expectedAddress.toString()) {
+    if (positionAddress.toString() === expectedAddress.toString()) {
       found = true
       index = counter
     }
