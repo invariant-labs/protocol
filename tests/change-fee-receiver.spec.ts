@@ -1,4 +1,4 @@
-import { Market, Pair, Network } from '@invariant-labs/sdk'
+import { Market, Pair, Network, sleep } from '@invariant-labs/sdk'
 import { ChangeFeeReceiver, FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import * as anchor from '@coral-xyz/anchor'
@@ -53,7 +53,7 @@ describe('change-fee-receiver', () => {
   it('#changeFeeReceiver()', async () => {
     const newFeeReceiver = Keypair.generate()
     await connection.requestAirdrop(newFeeReceiver.publicKey, 1e12)
-
+    await sleep(1000)
     const changeFeeReceiverVars: ChangeFeeReceiver = {
       pair,
       feeReceiver: newFeeReceiver.publicKey,
@@ -68,7 +68,7 @@ describe('change-fee-receiver', () => {
   it('#changeFeeReceiver() Non-admin', async () => {
     const newFeeReceiver = Keypair.generate()
     await connection.requestAirdrop(newFeeReceiver.publicKey, 1e12)
-
+    await sleep(1000)
     const changeFeeReceiverVars: ChangeFeeReceiver = {
       pair,
       feeReceiver: newFeeReceiver.publicKey,

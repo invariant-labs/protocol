@@ -63,6 +63,7 @@ describe('compare', () => {
   it('#swap() within a tick', async () => {
     const positionOwner = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
+    await sleep(1000)
     const userTokenXAccount = await createAssociatedTokenAccount(
       connection,
       mintAuthority,
@@ -156,6 +157,7 @@ describe('compare', () => {
     // Create owner
     const owner = Keypair.generate()
     await connection.requestAirdrop(owner.publicKey, 1e9)
+    await sleep(1000)
     const accountX = await createAssociatedTokenAccount(
       connection,
       mintAuthority,

@@ -118,7 +118,7 @@ describe('Liquidity gap', () => {
     await market.createTick(createTickVars2, admin)
 
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
-    await sleep(400)
+    await sleep(1000)
     userTokenXAccount = await createAssociatedTokenAccount(
       connection,
       positionOwner,
@@ -171,7 +171,7 @@ describe('Liquidity gap', () => {
     // Create owner
     owner = Keypair.generate()
     await connection.requestAirdrop(owner.publicKey, 1e9)
-    await sleep(400)
+    await sleep(1000)
 
     const amount = new BN(10067)
     accountX = await createAssociatedTokenAccount(

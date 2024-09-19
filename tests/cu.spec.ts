@@ -70,7 +70,7 @@ describe('Compute units', () => {
     )
 
     await connection.requestAirdrop(owner.publicKey, 1e9)
-    await sleep(400)
+    await sleep(1000)
     const accountX = await createAssociatedTokenAccount(
       connection,
       mintAuthority,

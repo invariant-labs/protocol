@@ -71,7 +71,7 @@ describe('swap', () => {
       owner.publicKey
     )
     await connection.requestAirdrop(owner.publicKey, 1e9)
-    await sleep(400)
+    await sleep(1000)
 
     await mintTo(connection, mintAuthority, pair.tokenX, userTokenX, mintAuthority, 1e9)
     await mintTo(connection, mintAuthority, pair.tokenY, userTokenY, mintAuthority, 1e9)
@@ -120,7 +120,7 @@ describe('swap', () => {
       owner.publicKey
     )
     await connection.requestAirdrop(owner.publicKey, 1e9)
-    await sleep(400)
+    await sleep(1000)
 
     await mintTo(connection, mintAuthority, pair.tokenX, userTokenX, mintAuthority, 1e9)
     await mintTo(connection, mintAuthority, pair.tokenY, userTokenY, mintAuthority, 1e9)

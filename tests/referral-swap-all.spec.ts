@@ -79,7 +79,7 @@ describe('Referral swap', () => {
     const positionOwner = Keypair.generate()
     const referralAccount = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
-    await sleep(400)
+    await sleep(1000)
     const userTokenXAccount = await createAssociatedTokenAccount(
       connection,
       positionOwner,
@@ -149,6 +149,7 @@ describe('Referral swap', () => {
     // Create owner
     const owner = Keypair.generate()
     await connection.requestAirdrop(owner.publicKey, 1e9)
+    await sleep(1000)
 
     const amount = new BN(100000)
     const accountX = await createAssociatedTokenAccount(

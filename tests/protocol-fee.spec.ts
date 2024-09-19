@@ -132,7 +132,7 @@ describe('protocol-fee', () => {
   it('#swap()', async () => {
     const swapper = Keypair.generate()
     await connection.requestAirdrop(swapper.publicKey, 1e9)
-
+    await sleep(1000)
     const amount = new BN(1000)
     const accountX = await createAssociatedTokenAccount(
       connection,
@@ -240,7 +240,9 @@ describe('protocol-fee', () => {
   })
   it('Non-Admin #withdrawProtocolFee()', async () => {
     const user = Keypair.generate()
-    await Promise.all([await connection.requestAirdrop(user.publicKey, 1e9)])
+    await connection.requestAirdrop(user.publicKey, 1e9)
+    await sleep(1000)
+
     const userAccountX = await createAssociatedTokenAccount(
       connection,
       mintAuthority,

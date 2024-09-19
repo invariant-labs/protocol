@@ -70,7 +70,7 @@ describe('swap', () => {
 
     const positionOwner = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
-    await sleep(400)
+    await sleep(1000)
     const userTokenXAccount = await createAssociatedTokenAccount(
       connection,
       positionOwner,
@@ -123,7 +123,7 @@ describe('swap', () => {
     // Create owner
     const owner = Keypair.generate()
     await connection.requestAirdrop(owner.publicKey, 1e9)
-
+    await sleep(1000)
     const amount = new BN(1000)
     const accountX = await createAssociatedTokenAccount(
       connection,

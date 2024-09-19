@@ -115,7 +115,7 @@ describe('token2022', () => {
 
     const swapper = Keypair.generate()
     await connection.requestAirdrop(swapper.publicKey, 1e9)
-
+    await sleep(1000)
     const amount = new BN(1000)
     const accountX = await createAssociatedTokenAccount(
       connection,
@@ -388,7 +388,7 @@ describe('token2022', () => {
 
     const swapper = Keypair.generate()
     await connection.requestAirdrop(swapper.publicKey, 1e9)
-
+    await sleep(1000)
     const amount = new BN(1000)
     const accountX = await createAssociatedTokenAccount(
       connection,
@@ -688,7 +688,7 @@ describe('token2022', () => {
 
     const swapper = Keypair.generate()
     await connection.requestAirdrop(swapper.publicKey, 1e9)
-
+    await sleep(1000)
     const amount = new BN(1000)
     const accountX = await createAssociatedTokenAccount(
       connection,

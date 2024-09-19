@@ -121,7 +121,7 @@ describe('swap with cross both side', () => {
 
     const positionOwner = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
-    await sleep(400)
+    await sleep(1000)
 
     const userTokenXAccount = await createAssociatedTokenAccount(
       connection,
@@ -196,7 +196,7 @@ describe('swap with cross both side', () => {
     // Create owner
     const owner = Keypair.generate()
     await connection.requestAirdrop(owner.publicKey, 1e9)
-    await sleep(400)
+    await sleep(1000)
     const limitWithoutCrossTickAmount = new BN(10068)
     const notCrossAmount = new BN(1)
     const minAmountToCrossFromTickPrice = new BN(3)

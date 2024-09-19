@@ -114,6 +114,7 @@ describe('claim', () => {
 
     const swapper = Keypair.generate()
     await connection.requestAirdrop(swapper.publicKey, 1e9)
+    await sleep(1000)
 
     const amount = new BN(1000)
     const accountX = await createAssociatedTokenAccount(
