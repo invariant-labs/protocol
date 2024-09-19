@@ -221,6 +221,42 @@ module.exports = {
       label: 'VARA',
       collapsed: true,
       items: [
+
+        'vara/get_started',
+
+        {
+          type: 'category',
+          label: 'User Guide',
+          link: {
+            type: 'doc',
+            id: 'vara/installation'
+          },
+          items: [
+            'vara/user_guide/interface',
+            'vara/user_guide/networks',
+            'vara/user_guide/how_to_connect_your_wallet',
+            'vara/user_guide/faucet',
+            'vara/user_guide/how_to_swap',
+            {
+              type: 'category',
+              label: 'How to add liquidity',
+              link: {
+                type: 'doc',
+                id: 'vara/user_guide/how_to_add_liquidity'
+              },
+              items: [
+                'vara/user_guide/how_to_add_liquidity/uniform_concentration',
+                'vara/user_guide/how_to_add_liquidity/price_range'
+              ]
+            },
+            'vara/user_guide/how_to_claim_fee',
+            'vara/user_guide/how_to_remove_liquidity',
+            // 'aleph_zero/user_guide/stats',
+            'vara/user_guide/troubleshooting',
+            'vara/user_guide/faq_tutorial'
+          ]
+        }, 
+
         {
           type: 'category',
           label: 'For developers',
