@@ -38,7 +38,7 @@ import {
 import { Invariant } from './idl/invariant'
 import IDL from './idl/invariant.json'
 import { DENOMINATOR, IWallet, Pair, signAndSend } from '.'
-import { Network } from './network'
+import { getMarketAddress, Network } from './network'
 import { bs58 } from '@coral-xyz/anchor/dist/cjs/utils/bytes'
 
 const POSITION_SEED = 'positionv1'

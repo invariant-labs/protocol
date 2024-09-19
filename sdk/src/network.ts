@@ -9,7 +9,7 @@ export const getMarketAddress = (network: Network) => {
     case Network.LOCAL:
       return 'HyaB3W9q6XdA5xwpU4XnSZV94htfmbmqJXZcEbRaJutt'
     case Network.DEV:
-      return 'D8Xd5VFXJeANivc4LXEzYqiE8q2CGVbjym5JiynPCP6J'
+      return '5KLfYtAYvUchvTg8jb27eYgeRXLjPPsa9DqwjJJuYGQJ'
     case Network.MAIN:
       return 'HyaB3W9q6XdA5xwpU4XnSZV94htfmbmqJXZcEbRaJutt'
     default:

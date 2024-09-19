@@ -11,6 +11,7 @@ require('dotenv').config()
 const provider = AnchorProvider.local(clusterApiUrl('devnet'), {
   skipPreflight: true
 })
+
 const createStandardFeeTiers = async (market: Market, payer: Keypair) => {
   await Promise.all(
     FEE_TIERS.map(async feeTier => {
