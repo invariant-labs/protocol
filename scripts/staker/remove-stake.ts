@@ -1,5 +1,5 @@
 import { Staker, Network } from '../../staker-sdk/src'
-import { Provider, Wallet } from '@project-serum/anchor'
+import { Provider, Wallet } from '@coral-xyz/anchor'
 import { clusterApiUrl, PublicKey } from '@solana/web3.js'
 import { Market } from '@invariant-labs/sdk/lib/market'
 import { MINTER } from '../minter'

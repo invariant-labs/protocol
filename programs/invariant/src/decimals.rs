@@ -1,3 +1,5 @@
+use crate::borsh::BorshDeserialize;
+use crate::borsh::BorshSerialize;
 use core::convert::TryFrom;
 use core::convert::TryInto;
 pub use decimal::*;
@@ -9,7 +11,15 @@ pub const PRICE_LIQUIDITY_DENOMINATOR: u128 = 1__0000_0000__0000_0000__00u128;
 #[decimal(24)]
 #[zero_copy]
 #[derive(
-    Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord, AnchorSerialize, AnchorDeserialize,
+    Default,
+    std::fmt::Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    BorshSerialize,
+    BorshDeserialize,
+    InitSpace,
 )]
 pub struct Price {
     pub v: u128,
@@ -18,7 +28,15 @@ pub struct Price {
 #[decimal(6)]
 #[zero_copy]
 #[derive(
-    Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord, AnchorSerialize, AnchorDeserialize,
+    Default,
+    std::fmt::Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    BorshSerialize,
+    BorshDeserialize,
+    InitSpace,
 )]
 pub struct Liquidity {
     pub v: u128,
@@ -26,7 +44,7 @@ pub struct Liquidity {
 
 #[decimal(24)]
 #[zero_copy]
-#[derive(Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord, InitSpace)]
 pub struct FeeGrowth {
     pub v: u128,
 }
@@ -34,7 +52,15 @@ pub struct FeeGrowth {
 #[decimal(12)]
 #[zero_copy]
 #[derive(
-    Default, std::fmt::Debug, PartialEq, Eq, PartialOrd, Ord, AnchorSerialize, AnchorDeserialize,
+    Default,
+    std::fmt::Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    BorshSerialize,
+    BorshDeserialize,
+    InitSpace,
 )]
 pub struct FixedPoint {
     pub v: u128,

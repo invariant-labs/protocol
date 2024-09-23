@@ -1,4 +1,4 @@
-import { Provider } from '@project-serum/anchor'
+import { AnchorProvider } from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
 import { createToken } from '../tests/testUtils'
 import { MINTER } from './minter'
@@ -6,7 +6,7 @@ import { MINTER } from './minter'
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
-const provider = Provider.local('https://api.devnet.solana.com', {
+const provider = AnchorProvider.local('https://api.devnet.solana.com', {
   // preflightCommitment: 'max',
   skipPreflight: true
 })

@@ -5,12 +5,12 @@ use crate::structs::tick::Tick;
 use crate::util::{get_current_slot, get_current_timestamp};
 use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::system_program;
-use anchor_spl::token::Mint;
+use anchor_spl::token_interface::Mint;
 use math::*;
 
 #[derive(Accounts)]
 #[instruction(lower_tick_index: i32, upper_tick_index: i32, index: i32)]
+
 pub struct UpdateSecondsPerLiquidity<'info> {
     #[account(mut,
         seeds = [b"poolv1", token_x.key().as_ref(), token_y.key().as_ref(), &pool.load()?.fee.v.to_le_bytes(), &pool.load()?.tick_spacing.to_le_bytes()],
@@ -37,19 +37,18 @@ pub struct UpdateSecondsPerLiquidity<'info> {
     )]
     pub position: AccountLoader<'info, Position>,
     #[account(constraint = token_x.key() == pool.load()?.token_x @ InvalidTokenAccount)]
-    pub token_x: Account<'info, Mint>,
+    pub token_x: InterfaceAccount<'info, Mint>,
     #[account(constraint = token_y.key() == pool.load()?.token_y @ InvalidTokenAccount)]
-    pub token_y: Account<'info, Mint>,
+    pub token_y: InterfaceAccount<'info, Mint>,
+    /// CHECK: Ignore
     pub owner: AccountInfo<'info>,
     #[account(mut)]
     pub signer: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
-    #[account(address = system_program::ID)]
-    pub system_program: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
 }
-
 impl<'info> UpdateSecondsPerLiquidity<'info> {
-    pub fn handler(&self) -> ProgramResult {
+    pub fn handler(&self) -> Result<()> {
         msg!("INVARIANT: UPDATE SECOND PER LIQUIDITY");
 
         let pool = &mut self.pool.load_mut()?;

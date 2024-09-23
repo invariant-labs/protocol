@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "test:invariant-all": "npm run test:swap && npm run test:multiple-swap && npm run test:cross && npm run test:cross-both-side && npm run test:liquidity-gap && npm run test:reversed && npm run test:position && npm run test:math && npm run test:withdraw && npm run test:position-list && npm run test:claim && npm run test:protocol-fee && npm run test:target && npm run test:slippage && npm run test:position-slippage && npm run test:fee-tier && npm run test:simulate-swap && npm run test:simulate-claim-amount && npm run test:oracle && npm run test:limits && npm run test:big-swap && npm run test:compare && npm run test:tickmap && npm run test:change-fee-receiver && npm run test:random && npm run test:change-protocol-fee && npm run test:whole-liquidity && npm run test:cu && npm run test:referral-default && npm run test:referral-all && npm run test:referral-none && npm run test:referral-jupiter && npm run test:max-tick-cross",
+    "test:invariant-all": "npm run test:swap && npm run test:multiple-swap && npm run test:cross && npm run test:cross-both-side && npm run test:liquidity-gap && npm run test:reversed && npm run test:position && npm run test:math && npm run test:withdraw && npm run test:position-list && npm run test:claim && npm run test:protocol-fee && npm run test:target && npm run test:slippage && npm run test:position-slippage && npm run test:fee-tier && npm run test:simulate-swap && npm run test:simulate-claim-amount && npm run test:oracle && npm run test:limits && npm run test:big-swap && npm run test:compare && npm run test:tickmap && npm run test:change-fee-receiver && npm run test:random && npm run test:change-protocol-fee && npm run test:whole-liquidity && npm run test:cu && npm run test:referral-default && npm run test:referral-all && npm run test:referral-none && npm run test:referral-jupiter && npm run test:max-tick-cross && npm run test:token2022",
     "test:staker-all": "npm run test:create && npm run test:stake && npm run test:withdraw-staker && npm run test:multicall && npm run test:position-change && npm run test:math-staker && npm run test:close-stake",
     "test:all": "npm run test:invariant-all && npm run test:staker-all",
     "test:swap": "anchor test --skip-build tests/swap.spec.ts",
@@ -39,6 +39,7 @@
     "test:fee-tier": "anchor test --skip-build tests/fee-tier.spec.ts",
     "test:big-swap": "anchor test --skip-build tests/big-swap.spec.ts",
     "test:cu": "anchor test --skip-build tests/cu.spec.ts",
+    "test:token2022": "anchor test --skip-build tests/token2022.spec.ts",
     "test:init-both": "anchor test --skip-build tests/init-pool-and-position.spec.ts",
     "test:change-protocol-fee": "anchor test --skip-build tests/change-protocol-fee.spec.ts",
     "test:tickmap": "anchor test --skip-build tests/tickmap.spec.ts",
@@ -51,18 +52,17 @@
     "test:position-change": "anchor test --skip-build tests-staker/position-change.spec.ts",
     "build:invariant": "cd sdk && npm run build",
     "build:staker": "cd staker-sdk && npm run build",
-    "build:all": "npm run build:invariant && npm run build:staker",
+    "build:all": "npm run build:invariant",
     "program:jupiter": "anchor build -- --features \"jupiter\"",
     "program:all": "anchor build -- --features \"all\"",
     "program:none": "anchor build -- --features \"none\""
   },
   "dependencies": {
     "@ledgerhq/hw-transport-node-hid": "^6.2.0",
-    "@project-serum/anchor": "^0.21.0",
-    "@project-serum/serum": "^0.13.58",
+    "@coral-xyz/anchor": "0.30.1",
     "@solana/buffer-layout": "^4.0.0",
-    "@solana/spl-token": "^0.1.8",
-    "@solana/web3.js": "^1.87.6",
+    "@solana/spl-token": "^0.4.8",
+    "@solana/web3.js": "^1.95.2",
     "@types/node": "^16.0.0",
     "bip32": "^2.0.6",
     "bs58": "^4.0.1",
@@ -80,6 +80,6 @@
     "mocha": "^8.0.0",
     "prettier": "^2.3.2",
     "prettier-config-standard": "^4.0.0",
-    "typescript": "^4.5.4"
+    "typescript": "^5.4.5"
   }
 }

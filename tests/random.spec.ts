@@ -1,5 +1,5 @@
-import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
+import * as anchor from '@coral-xyz/anchor'
+import { AnchorProvider, BN } from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
 import { createStandardFeeTiers, createTokensAndPool, createUserWithTokens } from './testUtils'
 import {
@@ -16,7 +16,7 @@ import { beforeEach } from 'mocha'
 import { FEE_TIERS } from '@invariant-labs/sdk/lib/utils'
 
 describe('random', () => {
-  const provider = Provider.local()
+  const provider = AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair

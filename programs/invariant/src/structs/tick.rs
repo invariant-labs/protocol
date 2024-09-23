@@ -1,10 +1,11 @@
+use crate::ErrorCode::{self};
 use crate::*;
 use anchor_lang::prelude::*;
 use decimals::*;
 
-#[account(zero_copy)]
+#[account(zero_copy(unsafe))]
 #[repr(packed)]
-#[derive(PartialEq, Default, Debug)]
+#[derive(PartialEq, Default, Debug, InitSpace)]
 pub struct Tick {
     pub pool: Pubkey,
     pub index: i32,
@@ -18,6 +19,8 @@ pub struct Tick {
     pub seconds_outside: u64,
     pub bump: u8,
 }
+
+account_size!(Tick);
 
 impl Tick {
     pub fn update(

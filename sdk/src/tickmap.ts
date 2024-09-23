@@ -1,4 +1,4 @@
-import { BN } from '@project-serum/anchor'
+import { BN } from '@coral-xyz/anchor'
 import { MAX_TICK, TICK_LIMIT, TICK_SEARCH_RANGE } from '.'
 import { Tickmap, TickPosition } from './market'
 

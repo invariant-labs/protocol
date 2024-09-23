@@ -1,10 +1,11 @@
+use crate::ErrorCode::{self};
 use crate::*;
 use anchor_lang::prelude::*;
 use decimals::*;
 
-#[account(zero_copy)]
+#[account(zero_copy(unsafe))]
 #[repr(packed)]
-#[derive(PartialEq, Default, Debug)]
+#[derive(PartialEq, Default, Debug, InitSpace)]
 pub struct Pool {
     pub token_x: Pubkey,
     pub token_y: Pubkey,
@@ -31,8 +32,10 @@ pub struct Pool {
     pub bump: u8,
 }
 
+account_size!(Pool);
+
 impl Pool {
-    #[allow(unaligned_references)]
+    // #[allow(unaligned_references)]
     pub fn add_fee(
         &mut self,
         amount: TokenAmount,

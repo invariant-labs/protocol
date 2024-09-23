@@ -1,12 +1,12 @@
 import { Market, Network, Pair } from '@invariant-labs/sdk/src'
 import { MOCK_TOKENS } from '@invariant-labs/sdk/src/network'
 import { FEE_TIERS } from '@invariant-labs/sdk/src/utils'
-import { Provider } from '@project-serum/anchor'
+import { AnchorProvider } from '@coral-xyz/anchor'
 import { clusterApiUrl, PublicKey } from '@solana/web3.js'
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
-const provider = Provider.local(clusterApiUrl('devnet'), {
+const provider = AnchorProvider.local(clusterApiUrl('devnet'), {
   skipPreflight: true
 })
 
