@@ -21,6 +21,86 @@ This constructor method initializes the contract with the specified protocol fee
 | ------------ | ---------- | ------------------------------------ |
 | protocol_fee | Percentage | The percentage for the protocol fee. |
 
+
+## Set code
+```rust
+#[ink(message)]
+fn set_code(&mut self, code_hash: Hash) -> Result<(), InvariantError>
+```
+Updates code of the contract. Ensure that the new code has the same memory layout for the types used in storage. Please note that this action is restricted to administrators
+
+#### Input parameters
+
+| Name         | Type | Description                        |
+| ------------ | ---- | ---------------------------------- |
+| code_hash    | Hash | The hash of the new contract code. |
+
+#### Errors
+
+| Code               | Description                                               |
+| ------------------ | --------------------------------------------------------- |
+| `NotAdmin`         | Reverts the call when the caller is an unauthorized user. |
+| `SetCodeHashError` | Unable to set provided CodeHash.                          |
+
+## Admin
+
+### Get Admin
+```rust
+#[ink(message)]
+fn get_admin(&self) -> AccountId
+```
+Returns admin accountId.
+
+#### Output parameters
+
+| Type      | Description      |
+| ----------| ---------------- |
+| AccountId | Admin accountId. |
+
+### Change Admin
+```rust
+#[ink(message)]
+fn change_admin(&mut self, new_admin: AccountId) -> Result<(), InvariantError>
+```
+Updates admin accountId. Please note that this action is restricted to administrators.
+
+#### Input parameters
+
+| Name         | Type      | Description                         |
+| ------------ | --------- | ----------------------------------- |
+| new_admin    | AccountId | Account that will be the new admin. |
+
+#### Errors
+
+| Code       | Description                                               |
+| ---------- | --------------------------------------------------------- |
+| `NotAdmin` | Reverts the call when the caller is an unauthorized user. |
+
+## Withdraw all wAZERO
+```rust 
+#[ink(message)]
+fn withdraw_all_wazero(&self, address: AccountId) -> Result<(), InvariantError>
+```
+Unwraps wAZERO tokens on behalf of the caller by transferring all the balance
+from the users account to the contract, withdrawing all wAZERO, and transferring AZERO back to the user.
+
+#### Input parameters
+
+| Name       | Type      | Description                     |
+| ---------- | --------- | ------------------------------- |
+| address    | AccountId | Address of the wAZERO contract. |
+
+#### Errors 
+| Code                  | Description                                    |
+| --------------------- | ---------------------------------------------- |
+| `TransferError`       | Fails if any of the transfers fail.            |
+| `WAZEROWithdrawError` | Fails if the contract fails to withdraw AZERO. |
+
+#### External Contracts
+
+- PSP22
+- wAZERO
+
 ## Protocol fee
 
 ### Get protocol fee
@@ -267,22 +347,28 @@ This function retrieves a pool based on two tokens and the specified fee tier. I
 | `PoolNotFound`  | Fails if there is no pool associated with created key.           |
 | `TokensAreSame` | Fails if the user attempts to create a pool for the same tokens. |
 
-### Get pools
+### Get pool keys
 
 ```rust
 #[ink(message)]
-pub fn get_pools(
-    &self,
-) -> Vec<PoolKey>;
+fn get_pool_keys(&self, size: u16, offset: u16) -> Result<(Vec<PoolKey>, u16), InvariantError>
 ```
 
 This function retrieves a listed pool keys.
+
+#### Input parameters
+
+| Name     | Type  | Description                                                |
+| -------- | ----- | ---------------------------------------------------------- |
+| size     | u16   | Max pool keys count. up to `MAX_POOL_KEYS_RETURNED` (910). |
+| offset   | u16   | Offset from which the query should start.                  |
 
 #### Output parameters
 
 | Type          | Description                                            |
 | ------------- | ------------------------------------------------------ |
 | Vec<PoolKey\> | Vector with pool keys that indicates all pools listed. |
+| u16           | Total pool keys count.                                 |
 
 ## Position
 
@@ -333,6 +419,60 @@ This function creates a position based on the provided parameters. The amount of
 #### External Contracts
 
 - PSP22
+
+### Change liquidity
+
+```rust
+#[ink(message)]
+fn change_liquidity(
+    &mut self,
+    index: u32,
+    delta_liquidity: Liquidity,
+    add_liquidity: bool,
+    slippage_limit_lower: SqrtPrice,
+    slippage_limit_upper: SqrtPrice,
+) -> Result<(), InvariantError>
+```
+This entrypoint changes the liquidity of an existing position. If the liquidity is added tokens corresponding to the liquidity amount will be deducted from user's balance. Removing liquidity results in tokens being returned to the user.
+
+#### Input parameters
+
+| Name                 | Type      | Description                                                           |
+| -------------------- | --------- | --------------------------------------------------------------------- |
+| index                | u32       | Index of the position you want to change.                             |
+| add_liquidity        | bool      | Flag indicating whether the liquidity should be added or removed.     |
+| liquidity_delta      | Liquidity | The liquidity you want to provide.                                    |
+| slippage_limit_lower | SqrtPrice | The lower square root of price fluctuation you are willing to accept. |
+| slippage_limit_upper | SqrtPrice | The upper square root of price fluctuation you are willing to accept. |
+
+#### Errors
+
+| Code                            | Description                                                                                |
+| ------------------------------- | ------------------------------------------------------------------------------------------ |
+| `AmountIsZero`                  | Fails if the amount of tokens transferred would be zero.                                   |
+| `ZeroLiquidity`                 | Fails if the user attempts to remove all liquidity from the position.                      |
+| `LiquidityChangeZero`           | Fails if liquidity delta is zero.                                                          |
+| `PriceLimitReached`             | Fails if the price has reached the slippage limit.                                         |
+| `TransferError`                 | Fails if the allowance is insufficient or the user balance transfer fails.                 |
+| `PoolNotFound`                  | Fails if pool does not exist.                                                              |
+| `PositionNotFound`              | Fails if position does not exist.                                                          |
+
+#### External Contracts
+
+- PSP22
+
+### Update position seconds per liquidity 
+```rust
+#[ink(message)]
+fn update_position_seconds_per_liquidity(&mut self, index: u32) -> Result<(), InvariantError>
+```
+Updates seconds per liquidity parameter for a given position.
+
+#### Input parameters
+
+| Name                 | Type      | Description                               |
+| -------------------- | --------- | ----------------------------------------- |
+| index                | u32       | Index of the position you want to update. |
 
 ### Transfer position
 
@@ -695,28 +835,6 @@ Retrieves information about a tick at a specified index.
 | ---- | ---------------------------------------------------------- |
 | bool | boolean identifying if the tick is initialized in tickmap. |
 
-### Get position ticks
-
-```rust
-#[ink(message)]
-fn get_position_ticks(&self, owner: AccountId, offset: u32) -> Vec<PositionTick>;
-```
-
-Retrieves list of lower and upper ticks of user positions.
-
-#### Input parameters
-
-| Name   | Type      | Description                                                |
-| ------ | --------- | ---------------------------------------------------------- |
-| owner  | AccountId | An `AccountId` identifying the user who owns the position. |
-| offset | u32       | The offset from the current position index.                |
-
-#### Output parameters
-
-| Type               | Description                                |
-| ------------------ | ------------------------------------------ |
-| Vec<PositionTick/> | Vector containing ticks of user positions. |
-
 ### Get user positions amount
 
 ```rust
@@ -742,17 +860,21 @@ Retrieves the amount of positions held by the user.
 
 ```rust
 #[ink(message)]
-fn get_liquidity_ticks(&self, pool_key: PoolKey, offset: u16) -> Vec<LiquidityTick>;
+fn get_liquidity_ticks(
+    &self,
+    pool_key: PoolKey,
+    tick_indexes: Vec<i32>,
+) -> Result<Vec<LiquidityTick>, InvariantError>
 ```
 
 Retrieves ticks of a specified pool.
 
 #### Input parameters
 
-| Name     | Type    | Description                                      |
-| -------- | ------- | ------------------------------------------------ |
-| pool_key | PoolKey | A unique key that identifies the specified pool. |
-| offset   | u16     | The offset from which ticks will be retrieved.   |
+| Name           | Type      | Description                                      |
+| -------------- | --------- | ------------------------------------------------ |
+| pool_key       | PoolKey   | A unique key that identifies the specified pool. |
+| tick_indexes   | Vec<i32\> | Indexes of the ticks that should be returned.    |
 
 #### Output parameters
 
@@ -760,26 +882,10 @@ Retrieves ticks of a specified pool.
 | ------------------- | ------------------------------------------ |
 | Vec<LiquidityTick/> | Vector containing ticks of specified pool. |
 
-### Get liquidity ticks amount
-
-```rust
-#[ink(message)]
-fn get_liquidity_ticks_amount(&self, pool_key: PoolKey) -> u32;
-```
-
-Retrieves the amount of liquidity ticks of a specified pool.
-
-#### Input parameters
-
-| Name     | Type    | Description                                      |
-| -------- | ------- | ------------------------------------------------ |
-| pool_key | PoolKey | A unique key that identifies the specified pool. |
-
-#### Output parameters
-
-| Type | Description                          |
-| ---- | ------------------------------------ |
-| u32  | Number of ticks on a specified pool. |
+#### Errors 
+| Code               | Description                                                                               |
+| ------------------ | ----------------------------------------------------------------------------------------- |
+| `TickLimitReached` | Fails if the length of the provided tickmap is greater than `LIQUIDITY_TICK_LIMIT` (780). |
 
 ## Tickmap
 
@@ -787,20 +893,79 @@ Retrieves the amount of liquidity ticks of a specified pool.
 
 ```rust
 #[ink(message)]
-fn get_tickmap(&self, pool_key: PoolKey, center_tick: i32) -> Vec<(u16,u64)>;
+    fn get_tickmap(
+        &self,
+        pool_key: PoolKey,
+        start_tick_index: i32,
+        end_tick_index: i32,
+        x_to_y: bool,
+    ) -> Result<Vec<(u16, u64)>, InvariantError>;
 ```
 
 Retrieves tickmap chunks for a specified pool.
+Query will return early if `MAX_TICKMAP_QUERY_SIZE` (1642) is reached.
 
 #### Input parameters
 
-| Name        | Type    | Description                                      |
-| ----------- | ------- | ------------------------------------------------ |
-| pool_key    | PoolKey | A unique key that identifies the specified pool. |
-| center_tick | i32     | Center tick index.                               |
+| Name             | Type    | Description                                      |
+| ---------------- | ------- | ------------------------------------------------ |
+| pool_key         | PoolKey | A unique key that identifies the specified pool. |
+| start_tick_index | i32     | Index to start querying from.                    |
+| end_tick_index   | i32     | Limiting index for the query.                    |
+| x_to_y           | bool    | Order in which the ticks should be returned.     |
 
 #### Output parameters
 
 | Type            | Description                                       |
 | --------------- | ------------------------------------------------- |
 | Vec<(u16,u64)/> | Vector containing tickmap chunks index and value. |
+
+## Combined queries
+### Get all pools for pair
+
+```rust
+#[ink(message)]
+fn get_all_pools_for_pair(&self, token0: AccountId, token1: AccountId) -> Result<Vec<(FeeTier, Pool)>, InvariantError>
+```
+This function retrieves a list of pools and fee tiers for the given token pair.
+
+#### Input parameters
+| Name     | Type      | Description                                    |
+| -------- | --------- | ---------------------------------------------- |
+| token0   | AccountId | Address of the first token in the pair.        |
+| token1   | AccountId | Address of the second token in the pair.       |
+
+#### Output parameters
+
+| Type                  | Description                                                       |
+| --------------------- | ----------------------------------------------------------------- |
+| Vec<(FeeTier, Pool)\> | Vector with pools and fee tiers for the given token pair.         |
+
+```rust
+#[ink(message)]
+fn get_position_with_associates(
+    &self,
+    owner: AccountId,
+    index: u32,
+) -> Result<(Position, Pool, Tick, Tick), InvariantError>
+```
+Returns position with corresponding ticks and pool
+
+#### Input parameters
+| Name     | Type      | Description                                    |
+| -------- | --------- | ---------------------------------------------- |
+| owner    | AccountId | Address of the position owner.                 |
+| index    | u32       | Index of the position.                         |
+
+#### Output parameters
+
+| Type                         | Description                                                       |
+| ---------------------------- | ----------------------------------------------------------------- |
+| (Position, Pool, Tick, Tick) | Position with associated structures                               |
+
+#### Errors
+| Code               | Description                        |
+| ------------------ | ---------------------------------- |
+| `TickNotFound`     | Fails if tick cannot be found.     |
+| `PositionNotFound` | Fails if position cannot be found. |
+| `PoolNotFound`     | Fails if the pool cannot be found. |

@@ -81,21 +81,23 @@ pub struct Pool {
     pub start_timestamp: u64,
     pub last_timestamp: u64,
     pub fee_receiver: AccountId,
+    pub seconds_per_liquidity_global: SecondsPerLiquidity,
 }
 ```
 
-| Name                 | Type        | Description                                                                                                                                     |
-| -------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| liquidity            | Liquidity   | Amount of virtual liquidity on pool. The difference between virtual and actual liquidity reflect the increased capital efficiency in Invariant. |
-| sqrt_price           | SqrtPrice   | Square root of current price.                                                                                                                   |
-| current_tick_index   | i32         | The nearest tick below the current price.                                                                                                       |
-| fee_growth_global_x  | FeeGrowth   | Amount of fees accumulated in x token in per one integer unit of Liquidity since pool initialization.                                           |
-| fee_growth_global_y  | FeeGrowth   | Amount of fees accumulated in y token in per one integer unit of Liquidity since pool initialization.                                           |
-| fee_protocol_token_x | TokenAmount | Amount of protocol tokens accumulated in x token that are available to claim.                                                                   |
-| fee_protocol_token_y | TokenAmount | Amount of protocol tokens accumulated in y token that are available to claim.                                                                   |
-| start_timestamp      | u64         | Time of pool initialization.                                                                                                                    |
-| last_timestamp       | u64         | Last update of pool.                                                                                                                            |
-| fee_receiver         | AccountId   | Address of entity enabling to claim protocol fee. By default it's admin but can be change for specific pool.                                    |
+| Name                         | Type                | Description                                                                                                                                     |
+| --------------------         | -----------         | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| liquidity                    | Liquidity           | Amount of virtual liquidity on pool. The difference between virtual and actual liquidity reflect the increased capital efficiency in Invariant. |
+| sqrt_price                   | SqrtPrice           | Square root of current price.                                                                                                                   |
+| current_tick_index           | i32                 | The nearest tick below the current price.                                                                                                       |
+| fee_growth_global_x          | FeeGrowth           | Amount of fees accumulated in x token in per one integer unit of Liquidity since pool initialization.                                           |
+| fee_growth_global_y          | FeeGrowth           | Amount of fees accumulated in y token in per one integer unit of Liquidity since pool initialization.                                           |
+| fee_protocol_token_x         | TokenAmount         | Amount of protocol tokens accumulated in x token that are available to claim.                                                                   |
+| fee_protocol_token_y         | TokenAmount         | Amount of protocol tokens accumulated in y token that are available to claim.                                                                   |
+| start_timestamp              | u64                 | Time of pool initialization.                                                                                                                    |
+| last_timestamp               | u64                 | Last update of pool.                                                                                                                            |
+| fee_receiver                 | AccountId           | Address of entity enabling to claim protocol fee. By default it's admin but can be change for specific pool.                                    |
+| seconds_per_liquidity_global | SecondsPerLiquidity | The amount of time the pool existed divided by pools liquidity                                                                                  |
 
 ## Position
 
@@ -115,20 +117,24 @@ pub struct Position {
     pub last_block_number: u64,
     pub tokens_owed_x: TokenAmount,
     pub tokens_owed_y: TokenAmount,
+    pub seconds_per_liquidity_inside: SecondsPerLiquidity,
+    pub created_at: u64,
 }
 ```
 
-| Name                | Type        | Description                                                                                                                             |
-| ------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| pool_key            | PoolKey     | Pool key identificating on which Pool the position has been opened.                                                                     |
-| liquidity           | Liquidity   | Amount of immutable virtual liquidity that the position represents.                                                                     |
-| lower_tick_index    | i32         | Lower tick index of the Position.                                                                                                       |
-| upper_tick_index    | i32         | Upper tick index of the Position.                                                                                                       |
-| fee_growth_inside_x | FeeGrowth   | Amount of fees accumulated in x token per one integer unit of Liquidity in-range. It is used to determine the shares of collected fees. |
-| fee_growth_inside_y | FeeGrowth   | Amount of fees accumulated in y token per one integer unit of Liquidity in-range. It is used to determine the shares of collected fees. |
-| last_block_number   | u64         | Last update of position expressed in block number.                                                                                      |
-| tokens_owed_x       | TokenAmount | The quantity of x tokens collected in fees that is available for claiming.                                                              |
-| tokens_owed_y       | TokenAmount | The quantity of y tokens collected in fees that is available for claiming.                                                              |
+| Name                               | Type                | Description                                                                                                                             |
+| ---------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| pool_key                           | PoolKey             | Pool key indicating on which Pool the position has been opened.                                                                         |
+| liquidity                          | Liquidity           | Amount of immutable virtual liquidity that the position represents.                                                                     |
+| lower_tick_index                   | i32                 | Lower tick index of the Position.                                                                                                       |
+| upper_tick_index                   | i32                 | Upper tick index of the Position.                                                                                                       |
+| fee_growth_inside_x                | FeeGrowth           | Amount of fees accumulated in x token per one integer unit of Liquidity in-range. It is used to determine the shares of collected fees. |
+| fee_growth_inside_y                | FeeGrowth           | Amount of fees accumulated in y token per one integer unit of Liquidity in-range. It is used to determine the shares of collected fees. |
+| last_block_number                  | u64                 | Last update of position expressed in block number.                                                                                      |
+| tokens_owed_x                      | TokenAmount         | The quantity of x tokens collected in fees that is available for claiming.                                                              |
+| tokens_owed_y                      | TokenAmount         | The quantity of y tokens collected in fees that is available for claiming.                                                              |
+| seconds_per_liquidity_inside       | SecondsPerLiquidity | Amount of time that the price was within liquidity range of the position divided by positions liquidity                                 |
+| created_at                         | u64                 | Creation timestamp.                                                                                                                     |
 
 ## Tick
 
@@ -147,16 +153,18 @@ pub struct Tick {
     pub fee_growth_outside_x: FeeGrowth,
     pub fee_growth_outside_y: FeeGrowth,
     pub seconds_outside: u64,
+    pub seconds_per_liquidity_outside: SecondsPerLiquidity,
 }
 ```
 
-| Name                 | Type      | Description                                                                                                                                                                 |
-| -------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| index                | i32       | Index of tick.                                                                                                                                                              |
-| sign                 | bool      | Determine if the liquidity will be added or subtracted on cross.                                                                                                            |
-| liquidity_change     | Liquidity | Amount of virtual liquidity to adjust while. crossing.                                                                                                                      |
-| liquidity_gross      | Liquidity | Amount of virtual liquidity to be added on the tick, excluding liquidity taken on that tick. It is used to impose the maximum liquidity that can be place on a single tick. |
-| sqrt_price           | SqrtPrice | Square root of tick price.                                                                                                                                                  |
-| fee_growth_outside_x | FeeGrowth | Amount of Fees accumulated in x token outside-range.                                                                                                                        |
-| fee_growth_outside_y | FeeGrowth | Amount of Fees accumulated in y token outside-range.                                                                                                                        |
-| seconds_outside      | u64       | Seconds outside-range.                                                                                                                                                      |
+| Name                               | Type                | Description                                                                                                                                                                 |
+| ---------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| index                              | i32                 | Index of tick.                                                                                                                                                              |
+| sign                               | bool                | Determine if the liquidity will be added or subtracted on cross.                                                                                                            |
+| liquidity_change                   | Liquidity           | Amount of virtual liquidity to adjust while. crossing.                                                                                                                      |
+| liquidity_gross                    | Liquidity           | Amount of virtual liquidity to be added on the tick, excluding liquidity taken on that tick. It is used to impose the maximum liquidity that can be place on a single tick. |
+| sqrt_price                         | SqrtPrice           | Square root of tick price.                                                                                                                                                  |
+| fee_growth_outside_x               | FeeGrowth           | Amount of Fees accumulated in x token outside-range.                                                                                                                        |
+| fee_growth_outside_y               | FeeGrowth           | Amount of Fees accumulated in y token outside-range.                                                                                                                        |
+| seconds_outside                    | u64                 | Seconds outside-range.                                                                                                                                                      |
+| seconds_per_liquidity_outside      | SecondsPerLiquidity | Amount of time that the price was past the index divided by pools liquidity.                                                                                                |

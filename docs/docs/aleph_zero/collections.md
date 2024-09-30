@@ -36,7 +36,7 @@ Why are positions stored in the state instead of NFTs? We have chosen to store p
 ### Add Position
 
 ```rust
-pub fn add(&mut self, account_id: AccountId, position: Position);
+pub fn add(&mut self, account_id: AccountId, position: &Position);
 ```
 
 Adds a new position to the specified account.
@@ -118,16 +118,18 @@ Transfers a position from one account to another. Returns an error if the positi
 ### Get All Positions
 
 ```rust
-pub fn get_all(&self, account_id: AccountId) -> Vec<Position>;
+pub fn get_all(&self, account_id: AccountId, size: u32, offset: u32) -> Vec<Position>;
 ```
 
 Retrieves all positions associated with the specified account.
 
 #### Input parameters
 
-| Name       | Type      | Description                                               |
-| ---------- | --------- | --------------------------------------------------------- |
-| account_id | AccountId | The address of the user whose positions will be returned. |
+| Name       | Type      | Description                                                  |
+| ---------- | --------- | ------------------------------------------------------------ |
+| account_id | AccountId | The address of the user whose positions will be returned.    |
+| size       | u32       | Max size of the query, up to `MAX_POSITIONS_RETURNED` (143). |
+| offset     | u32       | Index to start querying from.                                |
 
 #### Output parameters
 
@@ -498,13 +500,147 @@ Retrieves specified pool key index in mapping.
 ### Get all pool keys
 
 ```rust
-pub fn get_all(&self) -> Vec<PoolKey>;
+pub fn get_all(&self, size: u16, offset: u16) -> Vec<PoolKey>;
 ```
 
 Retrieves all pool keys.
+
+#### Input parameters
+
+| Name     | Type    | Description                                           |
+| -------- | ------- | ----------------------------------------------------- |
+| size     | u16     | Max query size, up to `MAX_POOL_KEYS_RETURNED` (910). |
+| offset   | u16     | Index to start querying from.                         |
 
 #### Output parameters
 
 | Type          | Description                    |
 | ------------- | ------------------------------ |
 | Vec<PoolKey\> | A vector containing pool keys. |
+
+
+## Tickmap
+```rust
+#[ink::storage_item]
+pub struct Tickmap {
+    pub chunk_lookups: Mapping<(u16, PoolKey), u64>,
+    pub bitmap: Mapping<(u16, PoolKey), u64>,
+}
+```
+`Tickmap` struct stores the positions of active ticks. It's done by storing active chunks in `bitmap` mapping. A chunk contains information about 64 ticks which reduces the cost of searching drastically. Additionally `chunk_lookups` mapping is used to allow for queries to be even more efficient. Functionality of this struct allows you to efficiently query and update information about tick state.
+
+### Next initialized
+```rust
+pub fn next_initialized(&self, tick: i32, tick_spacing: u16, pool_key: PoolKey) -> Option<i32> 
+```
+
+Returns the index of the next initialized tick.
+
+#### Input parameters
+
+| Name          | Type    | Description                                                      |
+| ------------- | ------- | ---------------------------------------------------------------- |
+| tick          | i32     | Tick index to start searching from.                              |
+| tick_spacing  | u16     | Distance between valid ticks.                                    |
+| pool_key      | PoolKey | Key identifying the pool in which the tick should be looked for. |
+
+#### Output parameters
+
+| Type          | Description                                                                     |
+| ------------- | ------------------------------------------------------------------------------- |
+| Option<i32\>  | Index of the next initialized tick, if it exists within the SEARCH_LIMIT (256). |
+
+### Prev initialized
+```rust
+pub fn prev_initialized(&self, tick: i32, tick_spacing: u16, pool_key: PoolKey) -> Option<i32> 
+```
+
+Returns the index of the previous initialized tick.
+
+#### Input parameters
+
+| Name          | Type    | Description                                                      |
+| ------------- | ------- | ---------------------------------------------------------------- |
+| tick          | i32     | Tick index to start searching from.                              |
+| tick_spacing  | u16     | Distance between valid ticks.                                    |
+| pool_key      | PoolKey | Key identifying the pool in which the tick should be looked for. |
+
+#### Output parameters
+
+| Type          | Description                                                                         |
+| ------------- | ----------------------------------------------------------------------------------- |
+| Option<i32\>  | Index of the previous initialized tick, if it exists within the SEARCH_LIMIT (256). |
+
+
+```rust
+pub fn get_closer_limit(
+    &self,
+    sqrt_price_limit: SqrtPrice,
+    x_to_y: bool,
+    current_tick: i32,
+    tick_spacing: u16,
+    pool_key: PoolKey,
+) -> Result<(SqrtPrice, Option<(i32, bool)>), InvariantError>
+```
+
+Finds closest initialized tick in direction specified,
+returns error if the initial and limiting ticks are identical.
+
+#### Input parameters
+
+| Name                  | Type      | Description                                                      |
+| --------------------- | -------   | ---------------------------------------------------------------- |
+| tick                  | i32       | Tick index to start searching from.                              |
+| tick_spacing          | u16       | Distance between valid ticks.                                    |
+| pool_key              | PoolKey   | Key identifying the pool in which the tick should be looked for. |
+| x_to_y                | bool      | Direction of the search.                                         |
+| sqrt_price_limit      | SqrtPrice | Price limit of the search.                                       |
+
+#### Output parameters
+
+| Type                                          | Description                                                                                            |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Result\<(SqrtPrice, Option\<(i32, bool)\>)\>  | Result of the search.                                                                                  |
+| Result.0 (SqrtPrice)                          | Price corresponding to the tick that was found.                                                        |
+| Result.1 (Option<(i32, bool)\>)               | Option containing the tick index, and a flag that signals if the tick with that index was initialized. |
+
+### Get
+
+```rust
+pub fn get(&self, tick: i32, tick_spacing: u16, pool_key: PoolKey) -> bool
+```
+Returns the state of the tick.
+
+#### Input parameters
+
+| Name         | Type      | Description                                                      |
+| -------------| -------   | ---------------------------------------------------------------- |
+| tick         | i32       | Tick index to check.                                             |
+| tick_spacing | u16       | Distance between valid ticks.                                    |
+| pool_key     | PoolKey   | Key identifying the pool in which the tick should be looked for. |
+
+#### Output parameters
+
+| Type  | Description                                 |
+| ----- | ------------------------------------------- |
+| bool  | Flag indicating whether the tick is active. |
+
+```rust
+pub fn flip(&mut self, value: bool, tick: i32, tick_spacing: u16, pool_key: PoolKey) 
+```
+Changes the state of the tick.
+
+#### Input parameters
+
+| Name         | Type    | Description                                                      |
+| -------------| ------- | ---------------------------------------------------------------- |
+| value        | bool    | Value that the tick will be set to.                              |
+| tick         | i32     | Tick index to update.                                            |
+| tick_spacing | u16     | Distance between valid ticks.                                    |
+| pool_key     | PoolKey | Key identifying the pool in which the tick should be looked for. |
+
+#### Output parameters
+
+| Type  | Description                                 |
+| ----- | ------------------------------------------- |
+| bool  | Flag indicating whether the tick is active. |

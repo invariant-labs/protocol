@@ -34,3 +34,10 @@ This section outlines error codes essential for maintaining the integrity of Inv
 | NotEmptyTickDeinitialization  | Attempted to remove a tick with liquidity on it.                                                                     |
 | InvalidInitTick               | Attempted to create a pool with invalid init tick.                                                                   |
 | InvalidInitSqrtPrice          | Attempted to create a pool with invalid init sqrt price.                                                             |
+| SetCodeHashError              | Unable to set provided CodeHash                                                                                      |
+| AddOverflow(u128, u128)       | Overflow while adding two provided numbers                                                                           |
+| SubUnderflow(u128, u128)      | Underflow while subtracting two provided numbers                                                                     |
+| MulOverflow                   | Overflow while multiplying                                                                                           |
+| DivByZero                     | Attempt to divide by zero                                                                                            |
+| WAZEROWithdrawError           | Error during wAZERO withdraw call                                                                                    |
+| LiquidityChangeZero           | Attempted to change liquidity by 0                                                                                   |

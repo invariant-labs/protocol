@@ -47,10 +47,10 @@ These decimal types are integral to the protocol, offering a granular level of p
 | ------------------- | -------- | -------------- | -------- | -------------------------------------------------- |
 | TokenAmount         | 0        | u128           | U256     | Quantity of specific token                         |
 | SqrtPrice           | 24       | u128           | U256     | Square root of price value                         |
-| FixedPoint          | 12       | u128           | U256     | Number with fixed number of decimal places         |
+| FixedPoint          | 24       | U256           | U512     | Number with fixed number of decimal places         |
 | Liquidity           | 6        | u128           | U256     | Amount of virtual liquidity                        |
 | Percentage          | 12       | u64            | U256     | A numerical percentage value                       |
-| FeeGrowth           | 28       | u128           | U256     | Accumulated amount of fees per unit of liquidity   |
+| FeeGrowth           | 28       | U256           | U512     | Accumulated amount of fees per unit of liquidity   |
 | SecondsPerLiquidity | 24       | u128           | U256     | Measures the time in seconds per unit of liquidity |
 
 ### TokenAmount
@@ -73,11 +73,11 @@ pub struct SqrtPrice(pub u128);
 
 ### FixedPoint
 
-FixedPoint is a type used for precise arithmetic calculations, with half the accuracy of SqrtPrice.
+FixedPoint is a helper type used for calculating SqrtPrice. The only difference is it has U256 type to avoid additional type casting.
 
 ```rust
-#[decimal(12)]
-pub struct FixedPoint(pub u128);
+#[decimal(24)]
+pub struct FixedPoint(pub U256);
 ```
 
 ### Liquidity
@@ -104,7 +104,7 @@ FeeGrowth is used to calculate the fee amount within a specified price range. Fe
 
 ```rust
 #[decimal(28)]
-pub struct FeeGrowth(pub u128);
+pub struct FeeGrowth(pub U256);
 ```
 
 ### SecondsPerLiquidity
