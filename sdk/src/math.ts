@@ -523,14 +523,14 @@ export const getLiquidity = (
     }
   }
 
-  const { liquidity: liquidityByY, x: estimatedX } = getLiquidityByYPrice(
+  const { liquidity: liquidityByY, x: _estimatedX } = getLiquidityByYPrice(
     y,
     lowerSqrtPrice,
     upperSqrtPrice,
     currentSqrtPrice,
     roundingUp
   )
-  const { liquidity: liquidityByX, y: estimatedY } = getLiquidityByXPrice(
+  const { liquidity: liquidityByX, y: _estimatedY } = getLiquidityByXPrice(
     x,
     lowerSqrtPrice,
     upperSqrtPrice,
