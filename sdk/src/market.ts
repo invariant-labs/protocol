@@ -60,7 +60,7 @@ export class Market {
     network: Network,
     wallet: IWallet,
     connection: Connection,
-    programId?: PublicKey
+    _programId?: PublicKey
   ) {
     this.connection = connection
     this.wallet = wallet
@@ -305,7 +305,7 @@ export class Market {
       )
   }
 
-  async getAllPositions(owner: PublicKey) {
+  async getAllPositions(_owner: PublicKey) {
     return (await this.program.account.position.all()).map(({ account }) => account) as Position[]
   }
 
@@ -776,7 +776,7 @@ export class Market {
   async initPoolAndPositionTx(
     {
       pair,
-      owner,
+      // owner,
       userTokenX,
       userTokenY,
       lowerTick,

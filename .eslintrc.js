@@ -16,5 +16,6 @@ module.exports = {
     '@typescript-eslint/prefer-nullish-coalescing': 'off',
     'spaced-comment': 'off',
     'prettier/prettier': ['error']
-  }
+  },
+  '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }]
 }
