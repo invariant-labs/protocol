@@ -1,5 +1,5 @@
-import * as anchor from '@project-serum/anchor'
-import { Provider } from '@project-serum/anchor'
+import * as anchor from '@coral-xyz/anchor'
+import { AnchorProvider } from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { assertThrowsAsync, createPoolWithLiquidity } from './testUtils'
@@ -7,7 +7,7 @@ import { Market, Pair, TICK_LIMIT, Network, sleep } from '@invariant-labs/sdk'
 import { DEFAULT_PUBLIC_KEY, InitializeOracle } from '@invariant-labs/sdk/src/market'
 
 describe('oracle', () => {
-  const provider = Provider.local()
+  const provider = AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair

@@ -5,7 +5,7 @@ import {
   PRICE_SCALE,
   SimulateSwapInterface
 } from '@invariant-labs/sdk/lib/utils'
-import { BN } from '@project-serum/anchor'
+import { BN } from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
 
 const ticks: Map<number, Tick> = new Map([

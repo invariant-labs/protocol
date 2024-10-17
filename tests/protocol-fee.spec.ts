@@ -1,23 +1,24 @@
-import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
+import * as anchor from '@coral-xyz/anchor'
+import { BN } from '@coral-xyz/anchor'
 import { Keypair, PublicKey } from '@solana/web3.js'
-import { Market, Network, Pair, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
-import { FeeTier } from '@invariant-labs/sdk/lib/market'
-import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { createToken, initMarket } from './testUtils'
-import { assert } from 'chai'
 import {
-  assertThrowsAsync,
-  INVARIANT_ERRORS,
-  toDecimal,
-  tou64
-} from '@invariant-labs/sdk/src/utils'
+  Market,
+  Network,
+  Pair,
+  LIQUIDITY_DENOMINATOR,
+  PRICE_DENOMINATOR,
+  sleep
+} from '@invariant-labs/sdk'
+import { FeeTier } from '@invariant-labs/sdk/lib/market'
+import { fromFee, getBalance } from '@invariant-labs/sdk/lib/utils'
+import { createToken, initMarket, assertThrowsAsync } from './testUtils'
+import { assert } from 'chai'
+import { INVARIANT_ERRORS, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { CreateTick, InitPosition, Swap, WithdrawProtocolFee } from '@invariant-labs/sdk/src/market'
-import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
+import { createAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 
 describe('protocol-fee', () => {
-  const provider = Provider.local()
+  const provider = anchor.AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
@@ -31,8 +32,6 @@ describe('protocol-fee', () => {
   let market: Market
   const lowerTick = -20
   let pair: Pair
-  let tokenX: Token
-  let tokenY: Token
   let userTokenXAccount: PublicKey
   let userTokenYAccount: PublicKey
 
@@ -55,9 +54,7 @@ describe('protocol-fee', () => {
       createToken(connection, wallet, mintAuthority)
     ])
 
-    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+    pair = new Pair(tokens[0], tokens[1], feeTier)
   })
 
   it('#init()', async () => {
@@ -82,12 +79,36 @@ describe('protocol-fee', () => {
     }
     await market.createTick(createTickVars2, admin)
 
-    userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
-    userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
-    const mintAmount = tou64(new BN(10).pow(new BN(10)))
+    userTokenXAccount = await createAssociatedTokenAccount(
+      connection,
+      positionOwner,
+      pair.tokenX,
+      positionOwner.publicKey
+    )
+    userTokenYAccount = await createAssociatedTokenAccount(
+      connection,
+      positionOwner,
+      pair.tokenY,
+      positionOwner.publicKey
+    )
+    const mintAmount = new BN(10).pow(new BN(10))
 
-    await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-    await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+    await mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      userTokenXAccount,
+      mintAuthority,
+      mintAmount
+    )
+    await mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      userTokenYAccount,
+      mintAuthority,
+      mintAmount
+    )
 
     const liquidityDelta = { v: new BN(1000000).mul(LIQUIDITY_DENOMINATOR) }
 
@@ -111,15 +132,25 @@ describe('protocol-fee', () => {
   it('#swap()', async () => {
     const swapper = Keypair.generate()
     await connection.requestAirdrop(swapper.publicKey, 1e9)
-
+    await sleep(1000)
     const amount = new BN(1000)
-    const accountX = await tokenX.createAccount(swapper.publicKey)
-    const accountY = await tokenY.createAccount(swapper.publicKey)
+    const accountX = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      swapper.publicKey
+    )
+    const accountY = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      swapper.publicKey
+    )
 
-    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(amount))
+    await mintTo(connection, mintAuthority, pair.tokenX, accountX, mintAuthority, amount)
 
     const poolDataBefore = await market.getPool(pair)
-    const reservesBeforeSwap = await market.getReserveBalances(pair, tokenX, tokenY)
+    const reservesBeforeSwap = await market.getReserveBalances(pair)
 
     const swapVars: Swap = {
       pair,
@@ -133,15 +164,17 @@ describe('protocol-fee', () => {
       byAmountIn: true
     }
     await market.swap(swapVars, swapper)
+    await sleep(1000)
 
     const poolDataAfter = await market.getPool(pair)
     assert.ok(poolDataAfter.liquidity.v.eq(poolDataBefore.liquidity.v))
     assert.ok(poolDataAfter.currentTickIndex === lowerTick)
     assert.ok(poolDataAfter.sqrtPrice.v.lt(poolDataBefore.sqrtPrice.v))
 
-    const amountX = (await tokenX.getAccountInfo(accountX)).amount
-    const amountY = (await tokenY.getAccountInfo(accountY)).amount
-    const reservesAfterSwap = await market.getReserveBalances(pair, tokenX, tokenY)
+    const amountX = await getBalance(connection, accountX)
+    const amountY = await getBalance(connection, accountY)
+
+    const reservesAfterSwap = await market.getReserveBalances(pair)
     const reserveXDelta = reservesAfterSwap.x.sub(reservesBeforeSwap.x)
     const reserveYDelta = reservesBeforeSwap.y.sub(reservesAfterSwap.y)
     const expectedProtocolFeeX = 1
@@ -162,13 +195,24 @@ describe('protocol-fee', () => {
 
   it('Admin #withdrawProtocolFee()', async () => {
     const expectedProtocolFeeX = 1
-    const adminAccountX = await tokenX.createAccount(admin.publicKey)
-    const adminAccountY = await tokenY.createAccount(admin.publicKey)
-    await tokenX.mintTo(adminAccountX, mintAuthority.publicKey, [mintAuthority], 1e9)
-    await tokenY.mintTo(adminAccountY, mintAuthority.publicKey, [mintAuthority], 1e9)
+    const adminAccountX = await createAssociatedTokenAccount(
+      connection,
+      admin,
+      pair.tokenX,
+      admin.publicKey
+    )
+    const adminAccountY = await createAssociatedTokenAccount(
+      connection,
+      admin,
+      pair.tokenY,
+      admin.publicKey
+    )
 
-    const reservesBeforeClaim = await market.getReserveBalances(pair, tokenX, tokenY)
-    const adminAccountXBeforeClaim = (await tokenX.getAccountInfo(adminAccountX)).amount
+    await mintTo(connection, mintAuthority, pair.tokenX, adminAccountX, mintAuthority, new BN(1e9))
+    await mintTo(connection, mintAuthority, pair.tokenY, adminAccountY, mintAuthority, new BN(1e9))
+
+    const reservesBeforeClaim = await market.getReserveBalances(pair)
+    const adminAccountXBeforeClaim = await getBalance(connection, adminAccountX)
 
     const withdrawProtocolFeeVars: WithdrawProtocolFee = {
       pair,
@@ -177,9 +221,10 @@ describe('protocol-fee', () => {
       admin: admin.publicKey
     }
     await market.withdrawProtocolFee(withdrawProtocolFeeVars, admin)
+    await sleep(1000)
 
-    const adminAccountXAfterClaim = (await tokenX.getAccountInfo(adminAccountX)).amount
-    const reservesAfterClaim = await market.getReserveBalances(pair, tokenX, tokenY)
+    const adminAccountXAfterClaim = await getBalance(connection, adminAccountX)
+    const reservesAfterClaim = await market.getReserveBalances(pair)
 
     const poolData = await market.getPool(pair)
     assert.equal(
@@ -195,11 +240,23 @@ describe('protocol-fee', () => {
   })
   it('Non-Admin #withdrawProtocolFee()', async () => {
     const user = Keypair.generate()
-    await Promise.all([await connection.requestAirdrop(user.publicKey, 1e9)])
-    const userAccountX = await tokenX.createAccount(user.publicKey)
-    const userAccountY = await tokenY.createAccount(user.publicKey)
-    await tokenX.mintTo(userAccountX, mintAuthority.publicKey, [mintAuthority], 1e9)
-    await tokenY.mintTo(userAccountY, mintAuthority.publicKey, [mintAuthority], 1e9)
+    await connection.requestAirdrop(user.publicKey, 1e9)
+    await sleep(1000)
+
+    const userAccountX = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      user.publicKey
+    )
+    const userAccountY = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      user.publicKey
+    )
+    await mintTo(connection, mintAuthority, pair.tokenX, userAccountX, mintAuthority, 1e9)
+    await mintTo(connection, mintAuthority, pair.tokenY, userAccountY, mintAuthority, 1e9)
 
     const withdrawProtocolFeeVars: WithdrawProtocolFee = {
       pair,

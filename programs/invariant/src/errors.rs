@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-#[error]
+#[error_code]
 pub enum ErrorCode {
     #[msg("Amount is zero")]
     ZeroAmount = 0, // 1770
@@ -64,4 +64,6 @@ pub enum ErrorCode {
     InvalidListOwner = 29, // 178d
     #[msg("Invalid tick spacing")]
     InvalidTickSpacing = 30, // 178e
+    #[msg("Invalid token program")]
+    InvalidTokenProgram = 31, // 178f
 }

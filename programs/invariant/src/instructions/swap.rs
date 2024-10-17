@@ -7,11 +7,14 @@ use crate::structs::pool::Pool;
 use crate::structs::tick::Tick;
 use crate::structs::tickmap::Tickmap;
 use crate::util::get_closer_limit;
-use crate::ErrorCode::*;
+use crate::ErrorCode::{self, *};
 use crate::*;
 use crate::{decimals::*, referral::whitelist::contains_owner};
 use anchor_lang::prelude::*;
-use anchor_spl::token::{TokenAccount, Transfer};
+use anchor_spl::token;
+use anchor_spl::token_2022;
+use anchor_spl::token_interface::TokenInterface;
+use anchor_spl::token_interface::{Mint, TokenAccount};
 
 #[derive(Accounts)]
 pub struct Swap<'info> {
@@ -24,41 +27,53 @@ pub struct Swap<'info> {
     pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
         constraint = tickmap.to_account_info().key == &pool.load()?.tickmap @ InvalidTickmap,
-        constraint = tickmap.to_account_info().owner == program_id @ InvalidTickmapOwner
+        constraint = tickmap.to_account_info().owner == __program_id @ InvalidTickmapOwner
     )]
     pub tickmap: AccountLoader<'info, Tickmap>,
+    #[account(constraint = token_x.key() == pool.load()?.token_x @ InvalidTokenAccount, mint::token_program = token_x_program)]
+    pub token_x: Box<InterfaceAccount<'info, Mint>>,
+    #[account(constraint = token_y.key() == pool.load()?.token_y @ InvalidTokenAccount, mint::token_program = token_y_program)]
+    pub token_y: Box<InterfaceAccount<'info, Mint>>,
     #[account(mut,
-        constraint = &account_x.owner == owner.key @ InvalidOwner
+        constraint = &account_x.owner == owner.key @ InvalidOwner,
+        token::token_program = token_x_program,
     )]
-    pub account_x: Account<'info, TokenAccount>,
+    pub account_x: InterfaceAccount<'info, TokenAccount>,
     #[account(mut,
-        constraint = &account_y.owner == owner.key @ InvalidOwner
+        constraint = &account_y.owner == owner.key @ InvalidOwner,
+        token::token_program = token_y_program
     )]
-    pub account_y: Account<'info, TokenAccount>,
+    pub account_y: InterfaceAccount<'info, TokenAccount>,
     #[account(mut,
         constraint = reserve_x.mint == account_x.mint @ InvalidMint,
         constraint = &reserve_x.owner == program_authority.key @ InvalidAuthority,
-        constraint = reserve_x.to_account_info().key == &pool.load()?.token_x_reserve @ InvalidTokenAccount
+        constraint = reserve_x.to_account_info().key == &pool.load()?.token_x_reserve @ InvalidTokenAccount,
+        token::token_program = token_x_program
     )]
-    pub reserve_x: Box<Account<'info, TokenAccount>>,
+    pub reserve_x: Box<InterfaceAccount<'info, TokenAccount>>,
     #[account(mut,
         constraint = reserve_y.mint == account_y.mint @ InvalidMint,
         constraint = &reserve_y.owner == program_authority.key @ InvalidAuthority,
-        constraint = reserve_y.to_account_info().key == &pool.load()?.token_y_reserve @ InvalidTokenAccount
+        constraint = reserve_y.to_account_info().key == &pool.load()?.token_y_reserve @ InvalidTokenAccount,
+        token::token_program = token_y_program
     )]
-    pub reserve_y: Box<Account<'info, TokenAccount>>,
+    pub reserve_y: Box<InterfaceAccount<'info, TokenAccount>>,
     pub owner: Signer<'info>,
     #[account(constraint = &state.load()?.authority == program_authority.key @ InvalidAuthority)]
+    /// CHECK: Ignore
     pub program_authority: AccountInfo<'info>,
-    #[account(address = token::ID)]
-    pub token_program: AccountInfo<'info>,
+
+    #[account(constraint = token_x_program.key() == token::ID || token_x_program.key() == token_2022::ID)]
+    pub token_x_program: Interface<'info, TokenInterface>,
+    #[account(constraint = token_y_program.key() == token::ID || token_y_program.key() == token_2022::ID)]
+    pub token_y_program: Interface<'info, TokenInterface>,
 }
 
 impl<'info> TakeTokens<'info> for Swap<'info> {
-    fn take_x(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+    fn take_x(&self) -> CpiContext<'_, '_, '_, 'info, token::Transfer<'info>> {
         CpiContext::new(
-            self.token_program.to_account_info(),
-            Transfer {
+            self.token_x_program.to_account_info(),
+            token::Transfer {
                 from: self.account_x.to_account_info(),
                 to: self.reserve_x.to_account_info(),
                 authority: self.owner.to_account_info().clone(),
@@ -66,10 +81,33 @@ impl<'info> TakeTokens<'info> for Swap<'info> {
         )
     }
 
-    fn take_y(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+    fn take_y(&self) -> CpiContext<'_, '_, '_, 'info, token::Transfer<'info>> {
         CpiContext::new(
-            self.token_program.to_account_info(),
-            Transfer {
+            self.token_y_program.to_account_info(),
+            token::Transfer {
+                from: self.account_y.to_account_info(),
+                to: self.reserve_y.to_account_info(),
+                authority: self.owner.to_account_info().clone(),
+            },
+        )
+    }
+    fn take_x_2022(&self) -> CpiContext<'_, '_, '_, 'info, token_2022::TransferChecked<'info>> {
+        CpiContext::new(
+            self.token_x_program.to_account_info(),
+            token_2022::TransferChecked {
+                mint: self.token_x.to_account_info(),
+                from: self.account_x.to_account_info(),
+                to: self.reserve_x.to_account_info(),
+                authority: self.owner.to_account_info().clone(),
+            },
+        )
+    }
+
+    fn take_y_2022(&self) -> CpiContext<'_, '_, '_, 'info, token_2022::TransferChecked<'info>> {
+        CpiContext::new(
+            self.token_y_program.to_account_info(),
+            token_2022::TransferChecked {
+                mint: self.token_y.to_account_info(),
                 from: self.account_y.to_account_info(),
                 to: self.reserve_y.to_account_info(),
                 authority: self.owner.to_account_info().clone(),
@@ -78,10 +116,10 @@ impl<'info> TakeTokens<'info> for Swap<'info> {
     }
 }
 impl<'info> SendTokens<'info> for Swap<'info> {
-    fn send_x(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+    fn send_x(&self) -> CpiContext<'_, '_, '_, 'info, token::Transfer<'info>> {
         CpiContext::new(
-            self.token_program.to_account_info(),
-            Transfer {
+            self.token_x_program.to_account_info(),
+            token::Transfer {
                 from: self.reserve_x.to_account_info(),
                 to: self.account_x.to_account_info(),
                 authority: self.program_authority.clone(),
@@ -89,10 +127,34 @@ impl<'info> SendTokens<'info> for Swap<'info> {
         )
     }
 
-    fn send_y(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+    fn send_y(&self) -> CpiContext<'_, '_, '_, 'info, token::Transfer<'info>> {
         CpiContext::new(
-            self.token_program.to_account_info(),
-            Transfer {
+            self.token_y_program.to_account_info(),
+            token::Transfer {
+                from: self.reserve_y.to_account_info(),
+                to: self.account_y.to_account_info(),
+                authority: self.program_authority.clone(),
+            },
+        )
+    }
+
+    fn send_x_2022(&self) -> CpiContext<'_, '_, '_, 'info, token_2022::TransferChecked<'info>> {
+        CpiContext::new(
+            self.token_x_program.to_account_info(),
+            token_2022::TransferChecked {
+                mint: self.token_x.to_account_info(),
+                from: self.reserve_x.to_account_info(),
+                to: self.account_x.to_account_info(),
+                authority: self.program_authority.clone(),
+            },
+        )
+    }
+
+    fn send_y_2022(&self) -> CpiContext<'_, '_, '_, 'info, token_2022::TransferChecked<'info>> {
+        CpiContext::new(
+            self.token_y_program.to_account_info(),
+            token_2022::TransferChecked {
+                mint: self.token_y.to_account_info(),
                 from: self.reserve_y.to_account_info(),
                 to: self.account_y.to_account_info(),
                 authority: self.program_authority.clone(),
@@ -102,10 +164,13 @@ impl<'info> SendTokens<'info> for Swap<'info> {
 }
 
 impl<'info> TakeRefTokens<'info> for Swap<'info> {
-    fn take_ref_x(&self, to: AccountInfo<'info>) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+    fn take_ref_x(
+        &self,
+        to: AccountInfo<'info>,
+    ) -> CpiContext<'_, '_, '_, 'info, token::Transfer<'info>> {
         CpiContext::new(
-            self.token_program.to_account_info(),
-            Transfer {
+            self.token_x_program.to_account_info(),
+            token::Transfer {
                 from: self.account_x.to_account_info(),
                 to: to.to_account_info(),
                 authority: self.owner.to_account_info().clone(),
@@ -113,10 +178,43 @@ impl<'info> TakeRefTokens<'info> for Swap<'info> {
         )
     }
 
-    fn take_ref_y(&self, to: AccountInfo<'info>) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+    fn take_ref_y(
+        &self,
+        to: AccountInfo<'info>,
+    ) -> CpiContext<'_, '_, '_, 'info, token::Transfer<'info>> {
         CpiContext::new(
-            self.token_program.to_account_info(),
-            Transfer {
+            self.token_y_program.to_account_info(),
+            token::Transfer {
+                from: self.account_y.to_account_info(),
+                to: to.to_account_info(),
+                authority: self.owner.to_account_info().clone(),
+            },
+        )
+    }
+
+    fn take_ref_x_2022(
+        &self,
+        to: AccountInfo<'info>,
+    ) -> CpiContext<'_, '_, '_, 'info, token_2022::TransferChecked<'info>> {
+        CpiContext::new(
+            self.token_x_program.to_account_info(),
+            token_2022::TransferChecked {
+                mint: self.token_x.to_account_info(),
+                from: self.account_x.to_account_info(),
+                to: to.to_account_info(),
+                authority: self.owner.to_account_info().clone(),
+            },
+        )
+    }
+
+    fn take_ref_y_2022(
+        &self,
+        to: AccountInfo<'info>,
+    ) -> CpiContext<'_, '_, '_, 'info, token_2022::TransferChecked<'info>> {
+        CpiContext::new(
+            self.token_y_program.to_account_info(),
+            token_2022::TransferChecked {
+                mint: self.token_y.to_account_info(),
                 from: self.account_y.to_account_info(),
                 to: to.to_account_info(),
                 authority: self.owner.to_account_info().clone(),
@@ -127,14 +225,14 @@ impl<'info> TakeRefTokens<'info> for Swap<'info> {
 
 impl<'info> Swap<'info> {
     pub fn handler(
-        ctx: Context<'_, '_, '_, 'info, Swap<'info>>,
+        ctx: Context<'_, '_, 'info, 'info, Swap<'info>>,
         x_to_y: bool,
         amount: u64,
         by_amount_in: bool, // whether amount specifies input or output
         sqrt_price_limit: u128,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         msg!("INVARIANT: SWAP");
-        require!(amount != 0, ZeroAmount);
+        require!(amount != 0, ErrorCode::ZeroAmount);
 
         let sqrt_price_limit = Price::new(sqrt_price_limit);
         let mut pool = ctx.accounts.pool.load_mut()?;
@@ -144,9 +242,9 @@ impl<'info> Swap<'info> {
         let ref_account = match ctx
             .remaining_accounts
             .iter()
-            .find(|account| *account.owner == token::ID)
+            .find(|account| *account.owner == token::ID || *account.owner == token_2022::ID)
         {
-            Some(account) => match Account::<'_, TokenAccount>::try_from(account) {
+            Some(account) => match InterfaceAccount::<'info, TokenAccount>::try_from(account) {
                 Ok(token) => {
                     let is_valid_mint = token.mint
                         == match x_to_y {
@@ -169,13 +267,13 @@ impl<'info> Swap<'info> {
             require!(
                 { pool.sqrt_price } > sqrt_price_limit
                     && sqrt_price_limit <= Price::new(MAX_SQRT_PRICE),
-                WrongLimit
+                ErrorCode::WrongLimit
             );
         } else {
             require!(
                 { pool.sqrt_price } < sqrt_price_limit
                     && sqrt_price_limit >= Price::new(MIN_SQRT_PRICE),
-                WrongLimit
+                ErrorCode::WrongLimit
             );
         }
 
@@ -296,26 +394,197 @@ impl<'info> Swap<'info> {
         }
 
         // Execute swap
-        let (take_ctx, send_ctx) = match x_to_y {
-            true => (ctx.accounts.take_x(), ctx.accounts.send_y()),
-            false => (ctx.accounts.take_y(), ctx.accounts.send_x()),
-        };
-
         let signer: &[&[&[u8]]] = get_signer!(state.nonce);
-        token::transfer(send_ctx.with_signer(signer), total_amount_out.0)?;
 
-        match ref_account.is_some() && !total_amount_referral.is_zero() {
-            true => {
-                let take_ref_ctx = match x_to_y {
-                    true => ctx.accounts.take_ref_x(ref_account.unwrap().clone()),
-                    false => ctx.accounts.take_ref_y(ref_account.unwrap().clone()),
-                };
-                token::transfer(take_ctx, total_amount_in.0 - total_amount_referral.0)?;
-                token::transfer(take_ref_ctx, total_amount_referral.0)?;
+        msg!("Referal accounts is some {:?}", ref_account.is_some());
+
+        // Both tokens are SPL
+        if ctx.accounts.token_x_program.key() == token::ID
+            && ctx.accounts.token_y_program.key() == token::ID
+        {
+            let (take_ctx, send_ctx) = match x_to_y {
+                true => (ctx.accounts.take_x(), ctx.accounts.send_y()),
+                false => (ctx.accounts.take_y(), ctx.accounts.send_x()),
+            };
+
+            token::transfer(send_ctx.with_signer(signer), total_amount_out.0)?;
+
+            match ref_account.is_some() && !total_amount_referral.is_zero() {
+                true => {
+                    let take_ref_ctx = match x_to_y {
+                        true => ctx.accounts.take_ref_x(ref_account.unwrap().clone()),
+                        false => ctx.accounts.take_ref_y(ref_account.unwrap().clone()),
+                    };
+                    token::transfer(take_ctx, total_amount_in.0 - total_amount_referral.0)?;
+                    token::transfer(take_ref_ctx, total_amount_referral.0)?;
+                }
+                false => {
+                    token::transfer(take_ctx, total_amount_in.0)?;
+                }
             }
-            false => {
-                token::transfer(take_ctx, total_amount_in.0)?;
+        } else
+        // X - Token2022 & Y - SPL
+        if ctx.accounts.token_x_program.key() == token_2022::ID
+            && ctx.accounts.token_y_program.key() == token::ID
+        {
+            match x_to_y {
+                true => {
+                    let (take_ctx, send_ctx) = (ctx.accounts.take_x_2022(), ctx.accounts.send_y());
+                    token::transfer(send_ctx.with_signer(signer), total_amount_out.0)?;
+                    match ref_account.is_some() && !total_amount_referral.is_zero() {
+                        true => {
+                            let take_ref_ctx =
+                                ctx.accounts.take_ref_x_2022(ref_account.unwrap().clone());
+
+                            token_2022::transfer_checked(
+                                take_ctx,
+                                total_amount_in.0 - total_amount_referral.0,
+                                ctx.accounts.token_x.decimals,
+                            )?;
+                            token_2022::transfer_checked(
+                                take_ref_ctx,
+                                total_amount_referral.0,
+                                ctx.accounts.token_x.decimals,
+                            )?;
+                        }
+                        false => {
+                            token_2022::transfer_checked(
+                                take_ctx,
+                                total_amount_in.0,
+                                ctx.accounts.token_x.decimals,
+                            )?;
+                        }
+                    }
+                }
+                false => {
+                    let (take_ctx, send_ctx) = (ctx.accounts.take_y(), ctx.accounts.send_x_2022());
+                    token_2022::transfer_checked(
+                        send_ctx.with_signer(signer),
+                        total_amount_out.0,
+                        ctx.accounts.token_x.decimals,
+                    )?;
+                    match ref_account.is_some() && !total_amount_referral.is_zero() {
+                        true => {
+                            let take_ref_ctx =
+                                ctx.accounts.take_ref_y(ref_account.unwrap().clone());
+                            token::transfer(take_ctx, total_amount_in.0 - total_amount_referral.0)?;
+                            token::transfer(take_ref_ctx, total_amount_referral.0)?;
+                        }
+                        false => {
+                            token::transfer(take_ctx, total_amount_in.0)?;
+                        }
+                    }
+                }
             }
+        } else
+        // X - SPL & Y - Token2022
+        if ctx.accounts.token_x_program.key() == token::ID
+            && ctx.accounts.token_y_program.key() == token_2022::ID
+        {
+            match x_to_y {
+                true => {
+                    let (take_ctx, send_ctx) = (ctx.accounts.take_x(), ctx.accounts.send_y_2022());
+                    token_2022::transfer_checked(
+                        send_ctx.with_signer(signer),
+                        total_amount_out.0,
+                        ctx.accounts.token_y.decimals,
+                    )?;
+                    match ref_account.is_some() && !total_amount_referral.is_zero() {
+                        true => {
+                            let take_ref_ctx =
+                                ctx.accounts.take_ref_x(ref_account.unwrap().clone());
+
+                            token::transfer(take_ctx, total_amount_in.0 - total_amount_referral.0)?;
+                            token::transfer(take_ref_ctx, total_amount_referral.0)?;
+                        }
+                        false => {
+                            token::transfer(take_ctx, total_amount_in.0)?;
+                        }
+                    }
+                }
+                false => {
+                    let (take_ctx, send_ctx) = (ctx.accounts.take_y_2022(), ctx.accounts.send_x());
+                    token::transfer(send_ctx.with_signer(signer), total_amount_out.0)?;
+                    match ref_account.is_some() && !total_amount_referral.is_zero() {
+                        true => {
+                            let take_ref_ctx =
+                                ctx.accounts.take_ref_y_2022(ref_account.unwrap().clone());
+                            token_2022::transfer_checked(
+                                take_ctx,
+                                total_amount_in.0 - total_amount_referral.0,
+                                ctx.accounts.token_y.decimals,
+                            )?;
+                            token_2022::transfer_checked(
+                                take_ref_ctx,
+                                total_amount_referral.0,
+                                ctx.accounts.token_y.decimals,
+                            )?;
+                        }
+                        false => {
+                            token_2022::transfer_checked(
+                                take_ctx,
+                                total_amount_in.0,
+                                ctx.accounts.token_y.decimals,
+                            )?;
+                        }
+                    }
+                }
+            }
+        } else
+        // X - Token2022 & Y - Token2022
+        if ctx.accounts.token_x_program.key() == token_2022::ID
+            && ctx.accounts.token_y_program.key() == token_2022::ID
+        {
+            let (take_ctx, send_ctx, take_decimals, send_decimals) = match x_to_y {
+                true => (
+                    ctx.accounts.take_x_2022(),
+                    ctx.accounts.send_y_2022(),
+                    ctx.accounts.token_x.decimals,
+                    ctx.accounts.token_y.decimals,
+                ),
+                false => (
+                    ctx.accounts.take_y_2022(),
+                    ctx.accounts.send_x_2022(),
+                    ctx.accounts.token_y.decimals,
+                    ctx.accounts.token_x.decimals,
+                ),
+            };
+
+            token_2022::transfer_checked(
+                send_ctx.with_signer(signer),
+                total_amount_out.0,
+                send_decimals,
+            )?;
+
+            match ref_account.is_some() && !total_amount_referral.is_zero() {
+                true => {
+                    let (take_ref_ctx, ref_decimals) = match x_to_y {
+                        true => (
+                            ctx.accounts.take_ref_x_2022(ref_account.unwrap().clone()),
+                            ctx.accounts.token_x.decimals,
+                        ),
+                        false => (
+                            ctx.accounts.take_ref_y_2022(ref_account.unwrap().clone()),
+                            ctx.accounts.token_y.decimals,
+                        ),
+                    };
+                    token_2022::transfer_checked(
+                        take_ctx,
+                        total_amount_in.0 - total_amount_referral.0,
+                        take_decimals,
+                    )?;
+                    token_2022::transfer_checked(
+                        take_ref_ctx,
+                        total_amount_referral.0,
+                        ref_decimals,
+                    )?;
+                }
+                false => {
+                    token_2022::transfer_checked(take_ctx, total_amount_in.0, take_decimals)?;
+                }
+            }
+        } else {
+            return Err(ErrorCode::InvalidTokenProgram.into());
         }
 
         Ok(())

@@ -1,4 +1,4 @@
-import { BN } from '@project-serum/anchor'
+import { BN } from '@coral-xyz/anchor'
 import { assert } from 'chai'
 import { Decimal, Tick, Tickmap } from './market'
 import {
@@ -523,14 +523,14 @@ export const getLiquidity = (
     }
   }
 
-  const { liquidity: liquidityByY, x: estimatedX } = getLiquidityByYPrice(
+  const { liquidity: liquidityByY } = getLiquidityByYPrice(
     y,
     lowerSqrtPrice,
     upperSqrtPrice,
     currentSqrtPrice,
     roundingUp
   )
-  const { liquidity: liquidityByX, y: estimatedY } = getLiquidityByXPrice(
+  const { liquidity: liquidityByX } = getLiquidityByXPrice(
     x,
     lowerSqrtPrice,
     upperSqrtPrice,

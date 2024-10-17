@@ -1,4 +1,4 @@
-import { Provider, Wallet } from '@project-serum/anchor'
+import { Provider, Wallet } from '@coral-xyz/anchor'
 import { clusterApiUrl, PublicKey } from '@solana/web3.js'
 import { MOCK_TOKENS } from '@invariant-labs/sdk'
 import { EndIncentive, Staker } from '../../../staker-sdk/src/staker'
