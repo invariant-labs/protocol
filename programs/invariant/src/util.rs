@@ -1,6 +1,5 @@
 use std::cell::RefMut;
 use std::convert::TryInto;
-// use std::io::Write;
 
 use crate::math::calculate_price_sqrt;
 use crate::structs::pool::Pool;
