@@ -35,7 +35,6 @@ pub struct Pool {
 account_size!(Pool);
 
 impl Pool {
-    // #[allow(unaligned_references)]
     pub fn add_fee(
         &mut self,
         amount: TokenAmount,
