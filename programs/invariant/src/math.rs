@@ -326,7 +326,6 @@ fn get_next_sqrt_price_y_down(
     }
 }
 
-// #[allow(unaligned_references)]
 pub fn calculate_fee_growth_inside(
     tick_lower: Tick,
     tick_upper: Tick,
