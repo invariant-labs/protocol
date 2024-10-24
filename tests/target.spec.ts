@@ -1,18 +1,24 @@
-import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import * as anchor from '@coral-xyz/anchor'
+import { AnchorProvider, BN } from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken, createUserWithTokens, initMarket } from './testUtils'
-import { Market, Pair, Network, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
+import {
+  Market,
+  Pair,
+  Network,
+  LIQUIDITY_DENOMINATOR,
+  PRICE_DENOMINATOR,
+  sleep
+} from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
-import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { toDecimal, tou64 } from '@invariant-labs/sdk/src/utils'
+import { fromFee, getBalance } from '@invariant-labs/sdk/lib/utils'
+import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { CreateTick, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
-import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
+import { createAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 
 describe('target', () => {
-  const provider = Provider.local()
+  const provider = AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
@@ -20,8 +26,6 @@ describe('target', () => {
   const admin = Keypair.generate()
   let market: Market
   let pair: Pair
-  let tokenX: Token
-  let tokenY: Token
 
   before(async () => {
     market = await Market.build(
@@ -46,9 +50,7 @@ describe('target', () => {
       fee: fromFee(new BN(600)),
       tickSpacing: 10
     }
-    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+    pair = new Pair(tokens[0], tokens[1], feeTier)
   })
 
   it('#init()', async () => {
@@ -103,14 +105,24 @@ describe('target', () => {
     await connection.requestAirdrop(swapper.publicKey, 1e9)
     const amount = new BN(1000)
 
-    const accountX = await tokenX.createAccount(swapper.publicKey)
-    const accountY = await tokenY.createAccount(swapper.publicKey)
+    const accountX = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      swapper.publicKey
+    )
+    const accountY = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      swapper.publicKey
+    )
 
-    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(mintAmount))
+    await mintTo(connection, mintAuthority, pair.tokenX, accountX, mintAuthority, mintAmount)
 
     // Swap
     const poolDataBefore = await market.getPool(pair)
-    const reservesBefore = await market.getReserveBalances(pair, tokenX, tokenY)
+    const reservesBefore = await market.getReserveBalances(pair)
 
     const swapVars: Swap = {
       pair,
@@ -124,7 +136,7 @@ describe('target', () => {
       byAmountIn: false
     }
     await market.swap(swapVars, swapper)
-
+    await sleep(1000)
     // Check pool
     const poolData = await market.getPool(pair)
     assert.ok(poolData.liquidity.v.eq(poolDataBefore.liquidity.v))
@@ -132,9 +144,9 @@ describe('target', () => {
     assert.ok(poolData.sqrtPrice.v.lt(poolDataBefore.sqrtPrice.v))
 
     // Check amounts and fees
-    const amountX = (await tokenX.getAccountInfo(accountX)).amount
-    const amountY = (await tokenY.getAccountInfo(accountY)).amount
-    const reservesAfter = await market.getReserveBalances(pair, tokenX, tokenY)
+    const amountX = await getBalance(connection, accountX)
+    const amountY = await getBalance(connection, accountY)
+    const reservesAfter = await market.getReserveBalances(pair)
     const reserveXDelta = reservesAfter.x.sub(reservesBefore.x)
     const reserveYDelta = reservesBefore.y.sub(reservesAfter.y)
 

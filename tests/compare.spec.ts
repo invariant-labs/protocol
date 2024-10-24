@@ -1,17 +1,23 @@
-import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import * as anchor from '@coral-xyz/anchor'
+import { AnchorProvider, BN } from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken, initMarket } from './testUtils'
-import { Market, Pair, LIQUIDITY_DENOMINATOR, Network } from '@invariant-labs/sdk'
+import {
+  Market,
+  Pair,
+  LIQUIDITY_DENOMINATOR,
+  Network,
+  sleep,
+  PRICE_DENOMINATOR
+} from '@invariant-labs/sdk'
 import { FeeTier, InitPosition, Swap } from '@invariant-labs/sdk/lib/market'
-import { fromFee } from '@invariant-labs/sdk/lib/utils'
-import { toDecimal, tou64 } from '@invariant-labs/sdk/src/utils'
-import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
+import { fromFee, getBalance } from '@invariant-labs/sdk/lib/utils'
+import { toDecimal } from '@invariant-labs/sdk/src/utils'
+import { createAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 
 describe('compare', () => {
-  const provider = Provider.local()
+  const provider = AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
@@ -24,10 +30,6 @@ describe('compare', () => {
   let market: Market
   let firstPair: Pair
   let secondPair: Pair
-  let tokenX: Token
-  let tokenY: Token
-  let tokenZ: Token
-  let tokenW: Token
 
   before(async () => {
     market = await Market.build(
@@ -50,13 +52,8 @@ describe('compare', () => {
       createToken(connection, wallet, mintAuthority)
     ])
 
-    firstPair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-    tokenX = new Token(connection, firstPair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, firstPair.tokenY, TOKEN_PROGRAM_ID, wallet)
-
-    secondPair = new Pair(tokens[2].publicKey, tokens[3].publicKey, feeTier)
-    tokenZ = new Token(connection, secondPair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenW = new Token(connection, secondPair.tokenY, TOKEN_PROGRAM_ID, wallet)
+    firstPair = new Pair(tokens[0], tokens[1], feeTier)
+    secondPair = new Pair(tokens[2], tokens[3], feeTier)
   })
 
   it('#init()', async () => {
@@ -66,15 +63,64 @@ describe('compare', () => {
   it('#swap() within a tick', async () => {
     const positionOwner = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
-    const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
-    const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
-    const userTokenZAccount = await tokenZ.createAccount(positionOwner.publicKey)
-    const userTokenWAccount = await tokenW.createAccount(positionOwner.publicKey)
-    const mintAmount = tou64(new BN(10).pow(new BN(10)))
-    await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-    await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-    await tokenZ.mintTo(userTokenZAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-    await tokenW.mintTo(userTokenWAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+    await sleep(1000)
+    const userTokenXAccount = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      firstPair.tokenX,
+      positionOwner.publicKey
+    )
+    const userTokenYAccount = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      firstPair.tokenY,
+      positionOwner.publicKey
+    )
+    const userTokenZAccount = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      secondPair.tokenX,
+      positionOwner.publicKey
+    )
+    const userTokenWAccount = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      secondPair.tokenY,
+      positionOwner.publicKey
+    )
+    const mintAmount = new BN(10).pow(new BN(10))
+    await mintTo(
+      connection,
+      mintAuthority,
+      firstPair.tokenX,
+      userTokenXAccount,
+      mintAuthority,
+      mintAmount
+    )
+    await mintTo(
+      connection,
+      mintAuthority,
+      firstPair.tokenY,
+      userTokenYAccount,
+      mintAuthority,
+      mintAmount
+    )
+    await mintTo(
+      connection,
+      mintAuthority,
+      secondPair.tokenX,
+      userTokenZAccount,
+      mintAuthority,
+      mintAmount
+    )
+    await mintTo(
+      connection,
+      mintAuthority,
+      secondPair.tokenY,
+      userTokenWAccount,
+      mintAuthority,
+      mintAmount
+    )
     const liquidityDelta = { v: new BN(2000000).mul(LIQUIDITY_DENOMINATOR) }
     const lowerTick: number = -50
     const upperTick: number = 50
@@ -111,22 +157,71 @@ describe('compare', () => {
     // Create owner
     const owner = Keypair.generate()
     await connection.requestAirdrop(owner.publicKey, 1e9)
-    const accountX = await tokenX.createAccount(owner.publicKey)
-    const accountY = await tokenY.createAccount(owner.publicKey)
-    const accountZ = await tokenZ.createAccount(owner.publicKey)
-    const accountW = await tokenW.createAccount(owner.publicKey)
-    await tokenX.mintTo(accountX, mintAuthority.publicKey, [mintAuthority], tou64(new BN(10000)))
-    await tokenY.mintTo(accountY, mintAuthority.publicKey, [mintAuthority], tou64(new BN(10000)))
-    await tokenZ.mintTo(accountZ, mintAuthority.publicKey, [mintAuthority], tou64(new BN(10000)))
-    await tokenW.mintTo(accountW, mintAuthority.publicKey, [mintAuthority], tou64(new BN(10000)))
+    await sleep(1000)
+    const accountX = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      firstPair.tokenX,
+      owner.publicKey
+    )
+    const accountY = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      firstPair.tokenY,
+      owner.publicKey
+    )
+    const accountZ = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      secondPair.tokenX,
+      owner.publicKey
+    )
+    const accountW = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      secondPair.tokenY,
+      owner.publicKey
+    )
+    await mintTo(
+      connection,
+      mintAuthority,
+      firstPair.tokenX,
+      accountX,
+      mintAuthority,
+      new BN(10000)
+    )
+    await mintTo(
+      connection,
+      mintAuthority,
+      firstPair.tokenY,
+      accountY,
+      mintAuthority,
+      new BN(10000)
+    )
+    await mintTo(
+      connection,
+      mintAuthority,
+      secondPair.tokenX,
+      accountZ,
+      mintAuthority,
+      new BN(10000)
+    )
+    await mintTo(
+      connection,
+      mintAuthority,
+      secondPair.tokenY,
+      accountW,
+      mintAuthority,
+      new BN(10000)
+    )
 
     // Swap
     const firstPoolDataBefore = await market.getPool(firstPair)
     const secondPoolDataBefore = await market.getPool(secondPair)
-    const reserveXBefore = (await tokenX.getAccountInfo(firstPoolDataBefore.tokenXReserve)).amount
-    const reserveYBefore = (await tokenY.getAccountInfo(firstPoolDataBefore.tokenYReserve)).amount
-    const reserveZBefore = (await tokenZ.getAccountInfo(secondPoolDataBefore.tokenXReserve)).amount
-    const reserveWBefore = (await tokenW.getAccountInfo(secondPoolDataBefore.tokenYReserve)).amount
+    const reserveXBefore = await getBalance(connection, firstPoolDataBefore.tokenXReserve)
+    const reserveYBefore = await getBalance(connection, firstPoolDataBefore.tokenYReserve)
+    const reserveZBefore = await getBalance(connection, secondPoolDataBefore.tokenXReserve)
+    const reserveWBefore = await getBalance(connection, secondPoolDataBefore.tokenYReserve)
 
     // make swap on first pool
     const swapVars: Swap = {
@@ -155,21 +250,22 @@ describe('compare', () => {
       byAmountIn: true
     }
     await market.swap(swapVars2, owner)
+    await sleep(1000)
 
     // Check pool
     const firstPoolData = await market.getPool(firstPair)
     const secondPoolData = await market.getPool(secondPair)
 
     // Check amounts and fees
-    const amountX = (await tokenX.getAccountInfo(accountX)).amount
-    const amountY = (await tokenY.getAccountInfo(accountY)).amount
-    const amountZ = (await tokenZ.getAccountInfo(accountZ)).amount
-    const amountW = (await tokenW.getAccountInfo(accountW)).amount
+    const amountX = await getBalance(connection, accountX)
+    const amountY = await getBalance(connection, accountY)
+    const amountZ = await getBalance(connection, accountZ)
+    const amountW = await getBalance(connection, accountW)
 
-    const reserveXAfter = (await tokenX.getAccountInfo(firstPoolData.tokenXReserve)).amount
-    const reserveYAfter = (await tokenY.getAccountInfo(firstPoolData.tokenYReserve)).amount
-    const reserveZAfter = (await tokenZ.getAccountInfo(secondPoolData.tokenXReserve)).amount
-    const reserveWAfter = (await tokenW.getAccountInfo(secondPoolData.tokenYReserve)).amount
+    const reserveXAfter = await getBalance(connection, firstPoolDataBefore.tokenXReserve)
+    const reserveYAfter = await getBalance(connection, firstPoolDataBefore.tokenYReserve)
+    const reserveZAfter = await getBalance(connection, secondPoolDataBefore.tokenXReserve)
+    const reserveWAfter = await getBalance(connection, secondPoolDataBefore.tokenYReserve)
 
     const reserveXDelta = reserveXAfter.sub(reserveXBefore)
     const reserveYDelta = reserveYBefore.sub(reserveYAfter)

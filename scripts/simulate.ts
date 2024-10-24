@@ -1,5 +1,5 @@
-import * as anchor from '@project-serum/anchor'
-import { Provider } from '@project-serum/anchor'
+import * as anchor from '@coral-xyz/anchor'
+import { AnchorProvider } from '@coral-xyz/anchor'
 import { clusterApiUrl, PublicKey } from '@solana/web3.js'
 import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
 // trunk-ignore(eslint/@typescript-eslint/no-unused-vars)
@@ -9,12 +9,12 @@ import { FEE_TIERS, simulateSwap, SimulateSwapInterface } from '@invariant-labs/
 import { Tick } from '@invariant-labs/sdk/src/market'
 import { DENOMINATOR } from '@invariant-labs/sdk'
 import { Swap } from '@invariant-labs/sdk/lib/market'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { getOrCreateAssociatedTokenAccount } from '@solana/spl-token'
 
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
-const provider = Provider.local(clusterApiUrl('devnet'), {
+const provider = AnchorProvider.local(clusterApiUrl('devnet'), {
   skipPreflight: true
 })
 const connection = provider.connection
@@ -30,8 +30,6 @@ const main = async () => {
   const pair = new Pair(new PublicKey(tokenXAddress), new PublicKey(tokenYAddress), feeTier)
 
   if (!new PublicKey(tokenXAddress).equals(pair.tokenX)) throw new Error('Order is reversed')
-  const tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-  const tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
   const ticksArray: Tick[] = await market.getClosestTicks(pair, Infinity)
   const ticks: Map<number, Tick> = new Map<number, Tick>()
@@ -70,8 +68,8 @@ const main = async () => {
   )
 
   const [accountX, accountY] = await Promise.all([
-    tokenX.getOrCreateAssociatedAccountInfo(wallet.publicKey),
-    tokenY.getOrCreateAssociatedAccountInfo(wallet.publicKey)
+    getOrCreateAssociatedTokenAccount(connection, wallet.publicKey, pair.tokenX, wallet.publicKey),
+    getOrCreateAssociatedTokenAccount(connection, wallet.publicKey, pair.tokenY, wallet.publicKey)
   ])
 
   const swapProps: Swap = {

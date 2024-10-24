@@ -1,10 +1,8 @@
-use crate::errors::ErrorCode;
+use crate::errors::ErrorCode::{self, *};
 use crate::structs::oracle::Oracle;
 use crate::structs::pool::Pool;
-use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::system_program;
-use anchor_spl::token::Mint;
+use anchor_spl::token_interface::Mint;
 
 #[derive(Accounts)]
 pub struct InitializeOracle<'info> {
@@ -16,17 +14,16 @@ pub struct InitializeOracle<'info> {
     #[account(zero)]
     pub oracle: AccountLoader<'info, Oracle>,
     #[account(constraint = token_x.key() == pool.load()?.token_x @ InvalidTokenAccount)]
-    pub token_x: Box<Account<'info, Mint>>,
+    pub token_x: Box<InterfaceAccount<'info, Mint>>,
     #[account(constraint = token_y.key() == pool.load()?.token_y @ InvalidTokenAccount)]
-    pub token_y: Box<Account<'info, Mint>>,
+    pub token_y: Box<InterfaceAccount<'info, Mint>>,
     pub payer: Signer<'info>,
     pub rent: Sysvar<'info, Rent>,
-    #[account(address = system_program::ID)]
-    pub system_program: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 impl<'info> InitializeOracle<'info> {
-    pub fn handler(&self) -> ProgramResult {
+    pub fn handler(&self) -> Result<()> {
         msg!("INVARIANT: INITIALIZE ORACLE");
 
         let oracle = &mut self.oracle.load_init()?;

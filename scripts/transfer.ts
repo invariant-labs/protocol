@@ -1,14 +1,13 @@
-import { BN, Provider } from '@project-serum/anchor'
+import { BN, AnchorProvider } from '@coral-xyz/anchor'
 import { clusterApiUrl, Keypair, PublicKey } from '@solana/web3.js'
 import { MOCK_TOKENS } from '@invariant-labs/sdk/src/network'
 import { MINTER } from './minter'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { tou64 } from '@invariant-labs/sdk/src/utils'
+import { createAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
-const provider = Provider.local(clusterApiUrl('devnet'), {
+const provider = AnchorProvider.local(clusterApiUrl('devnet'), {
   skipPreflight: true
 })
 
@@ -24,30 +23,72 @@ const main = async () => {
 }
 
 const transferUsdcUsdt = async (recipient: PublicKey) => {
-  const usdc = new Token(connection, new PublicKey(MOCK_TOKENS.USDC), TOKEN_PROGRAM_ID, wallet)
-  const usdt = new Token(connection, new PublicKey(MOCK_TOKENS.USDT), TOKEN_PROGRAM_ID, wallet)
-
-  const recipientUsdc = await usdc.createAccount(recipient)
-  const recipientUsdt = await usdt.createAccount(recipient)
+  const recipientUsdc = await createAssociatedTokenAccount(
+    connection,
+    wallet,
+    new PublicKey(MOCK_TOKENS.USDC),
+    recipient
+  )
+  const recipientUsdt = await createAssociatedTokenAccount(
+    connection,
+    wallet,
+    new PublicKey(MOCK_TOKENS.USDT),
+    recipient
+  )
 
   const usdcAmount = new BN(10).pow(new BN(6)).muln(1000) // 1000 USDC
   const usdtAmount = new BN(10).pow(new BN(6)).muln(1000) // 1000 USDT
 
-  await usdc.mintTo(recipientUsdc, MINTER, [], tou64(usdcAmount))
-  await usdt.mintTo(recipientUsdt, MINTER, [], tou64(usdtAmount))
+  await mintTo(
+    connection,
+    wallet,
+    new PublicKey(MOCK_TOKENS.USDC),
+    recipientUsdc,
+    MINTER.publicKey,
+    usdcAmount
+  )
+  await mintTo(
+    connection,
+    wallet,
+    new PublicKey(MOCK_TOKENS.USDT),
+    recipientUsdt,
+    MINTER.publicKey,
+    usdtAmount
+  )
 }
 const transferUsdcSol = async (recipient: PublicKey) => {
-  const usdc = new Token(connection, new PublicKey(MOCK_TOKENS.USDC), TOKEN_PROGRAM_ID, wallet)
-  const sol = new Token(connection, new PublicKey(MOCK_TOKENS.SOL), TOKEN_PROGRAM_ID, wallet)
-
-  const recipientUsdc = await usdc.createAccount(recipient)
-  const recipientSol = await sol.createAccount(recipient)
+  const recipientUsdc = await createAssociatedTokenAccount(
+    connection,
+    wallet,
+    new PublicKey(MOCK_TOKENS.USDC),
+    recipient
+  )
+  const recipientSol = await createAssociatedTokenAccount(
+    connection,
+    wallet,
+    new PublicKey(MOCK_TOKENS.SOL),
+    recipient
+  )
 
   const usdcAmount = new BN(10).pow(new BN(6)).muln(1000) // 1000 USD
   const solAmount = new BN(10).pow(new BN(9)).muln(5) // 5 SOL
 
-  await usdc.mintTo(recipientUsdc, MINTER, [], tou64(usdcAmount))
-  await sol.mintTo(recipientSol, MINTER, [], tou64(solAmount))
+  await mintTo(
+    connection,
+    wallet,
+    new PublicKey(MOCK_TOKENS.USDC),
+    recipientUsdc,
+    MINTER.publicKey,
+    usdcAmount
+  )
+  await mintTo(
+    connection,
+    wallet,
+    new PublicKey(MOCK_TOKENS.SOL),
+    recipientSol,
+    MINTER.publicKey,
+    solAmount
+  )
 }
 
 // trunk-ignore(eslint/@typescript-eslint/no-floating-promises)

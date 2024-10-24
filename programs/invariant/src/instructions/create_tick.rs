@@ -7,15 +7,16 @@ use crate::util::check_tick;
 use crate::util::get_current_timestamp;
 use crate::ErrorCode::*;
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::system_program;
-use anchor_spl::token::Mint;
+use anchor_spl::token;
+use anchor_spl::token_2022;
+use anchor_spl::token_interface::{Mint, TokenInterface};
 
 #[derive(Accounts)]
 #[instruction( index: i32)]
 pub struct CreateTick<'info> {
     #[account(init,
         seeds = [b"tickv1", pool.key().as_ref(), &index.to_le_bytes()],
-        bump, payer = payer
+        bump, payer = payer, space = Tick::LEN
     )]
     pub tick: AccountLoader<'info, Tick>,
     #[account(
@@ -25,23 +26,33 @@ pub struct CreateTick<'info> {
     pub pool: AccountLoader<'info, Pool>,
     #[account(mut,
         constraint = tickmap.key() == pool.load()?.tickmap @ InvalidTickmap,
-        constraint = tickmap.to_account_info().owner == program_id @ InvalidTickmapOwner,
+        constraint = tickmap.to_account_info().owner == __program_id @ InvalidTickmapOwner,
     )]
     pub tickmap: AccountLoader<'info, Tickmap>,
     #[account(mut)]
     pub payer: Signer<'info>,
+
     #[account(
-        constraint = token_x.key() == pool.load()?.token_x @ InvalidTokenAccount)]
-    pub token_x: Account<'info, Mint>,
-    #[account(constraint = token_y.key() == pool.load()?.token_y @ InvalidTokenAccount)]
-    pub token_y: Account<'info, Mint>,
+        constraint = token_x.key() == pool.load()?.token_x @ InvalidTokenAccount,
+        mint::token_program = token_x_program
+    )]
+    pub token_x: InterfaceAccount<'info, Mint>,
+    #[account(
+        constraint = token_y.key() == pool.load()?.token_y @ InvalidTokenAccount,
+        mint::token_program = token_y_program
+    )]
+    pub token_y: InterfaceAccount<'info, Mint>,
     pub rent: Sysvar<'info, Rent>,
-    #[account(address = system_program::ID)]
-    pub system_program: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
+
+    #[account(constraint = token_x_program.key() == token::ID || token_x_program.key() == token_2022::ID)]
+    pub token_x_program: Interface<'info, TokenInterface>,
+    #[account(constraint = token_y_program.key() == token::ID || token_y_program.key() == token_2022::ID)]
+    pub token_y_program: Interface<'info, TokenInterface>,
 }
 
 impl<'info> CreateTick<'info> {
-    pub fn handler(&self, index: i32, bump: u8) -> ProgramResult {
+    pub fn handler(&self, index: i32, bump: u8) -> Result<()> {
         msg!("INVARIANT: CREATE_TICK");
 
         let mut tick = self.tick.load_init()?;

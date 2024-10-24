@@ -1,17 +1,16 @@
-import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import * as anchor from '@coral-xyz/anchor'
+import { AnchorProvider, BN } from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken } from './testUtils'
-import { Market, Pair, Network, calculatePriceSqrt } from '@invariant-labs/sdk'
+import { Market, Pair, Network, calculatePriceSqrt, sleep } from '@invariant-labs/sdk'
 import { CreateFeeTier, FeeTier, InitPoolAndPosition } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { isInitialized } from '@invariant-labs/sdk/lib/math'
-import { tou64 } from '@invariant-labs/sdk/src/utils'
+import { createAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 
 describe('swap', () => {
-  const provider = Provider.local()
+  const provider = AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
@@ -24,8 +23,7 @@ describe('swap', () => {
 
   let market: Market
   let pair: Pair
-  let tokenX: Token
-  let tokenY: Token
+
   const owner = Keypair.generate()
 
   beforeEach(async () => {
@@ -47,9 +45,7 @@ describe('swap', () => {
       createToken(connection, wallet, mintAuthority)
     ])
 
-    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+    pair = new Pair(tokens[0], tokens[1], feeTier)
   })
 
   it('#init()', async () => {
@@ -62,15 +58,24 @@ describe('swap', () => {
   })
 
   it('#init Pool and position in a single tx', async () => {
-    const [userTokenX, userTokenY] = await Promise.all([
-      tokenX.createAccount(owner.publicKey),
-      tokenY.createAccount(owner.publicKey),
-      connection.requestAirdrop(owner.publicKey, 1e9)
-    ])
-    await Promise.all([
-      tokenX.mintTo(userTokenX, mintAuthority, [], tou64(1e9)),
-      tokenY.mintTo(userTokenY, mintAuthority, [], tou64(1e9))
-    ])
+    const userTokenX = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      owner.publicKey
+    )
+    const userTokenY = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      owner.publicKey
+    )
+    await connection.requestAirdrop(owner.publicKey, 1e9)
+    await sleep(1000)
+
+    await mintTo(connection, mintAuthority, pair.tokenX, userTokenX, mintAuthority, 1e9)
+    await mintTo(connection, mintAuthority, pair.tokenY, userTokenY, mintAuthority, 1e9)
+    await sleep(1000)
 
     const initTick = pair.tickSpacing * 3
     const lowerTick = pair.tickSpacing * 2
@@ -102,15 +107,24 @@ describe('swap', () => {
     assert.isTrue(isInitialized(tickmap, upperTick, pair.tickSpacing))
   })
   it('#init second one on the same keypair', async () => {
-    const [userTokenX, userTokenY] = await Promise.all([
-      tokenX.createAccount(owner.publicKey),
-      tokenY.createAccount(owner.publicKey),
-      connection.requestAirdrop(owner.publicKey, 1e9)
-    ])
-    await Promise.all([
-      tokenX.mintTo(userTokenX, mintAuthority, [], tou64(1e9)),
-      tokenY.mintTo(userTokenY, mintAuthority, [], tou64(1e9))
-    ])
+    const userTokenX = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      owner.publicKey
+    )
+    const userTokenY = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      owner.publicKey
+    )
+    await connection.requestAirdrop(owner.publicKey, 1e9)
+    await sleep(1000)
+
+    await mintTo(connection, mintAuthority, pair.tokenX, userTokenX, mintAuthority, 1e9)
+    await mintTo(connection, mintAuthority, pair.tokenY, userTokenY, mintAuthority, 1e9)
+    await sleep(1000)
 
     const initTick = pair.tickSpacing * 3
     const lowerTick = pair.tickSpacing * 2

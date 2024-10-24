@@ -1,27 +1,29 @@
-import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
+import * as anchor from '@coral-xyz/anchor'
+import { AnchorProvider, BN } from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
-import { createTokensAndPool, createUserWithTokens } from './testUtils'
+import { createTokensAndPool, createUserWithTokens, assertThrowsAsync } from './testUtils'
 import { Market, Network, sleep, calculatePriceSqrt, INVARIANT_ERRORS } from '@invariant-labs/sdk'
-import { assertThrowsAsync, getMaxTick, toDecimal } from '@invariant-labs/sdk/src/utils'
+import { getMaxTick, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { Decimal, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 import { getLiquidityByX, getLiquidityByY } from '@invariant-labs/sdk/src/math'
 import { beforeEach } from 'mocha'
 import { assert } from 'chai'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
-import { feeToTickSpacing, FEE_TIERS, PRICE_DENOMINATOR } from '@invariant-labs/sdk/lib/utils'
+import {
+  feeToTickSpacing,
+  FEE_TIERS,
+  PRICE_DENOMINATOR,
+  getBalance
+} from '@invariant-labs/sdk/lib/utils'
 import { Pair } from '@invariant-labs/sdk/lib/pair'
 
 describe('limits', () => {
-  const provider = Provider.local()
+  const provider = AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
   const admin = Keypair.generate()
   const feeTier = FEE_TIERS[0]
   let market: Market
-  let tokenX: Token
-  let tokenY: Token
   let pair: Pair
   let mintAuthority: Keypair
   const assumedTargetPrice: Decimal = { v: new BN(PRICE_DENOMINATOR) }
@@ -43,9 +45,6 @@ describe('limits', () => {
     const result = await createTokensAndPool(market, connection, admin, 0, feeTier)
     pair = result.pair
     mintAuthority = result.mintAuthority
-
-    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
   })
 
   it('big deposit both tokens', async () => {
@@ -136,8 +135,8 @@ describe('limits', () => {
       }
       await market.initPosition(initPositionVars, owner)
 
-      assert.ok((await tokenX.getAccountInfo(userAccountX)).amount.eqn(0))
-      assert.ok((await tokenY.getAccountInfo(userAccountY)).amount.eq(mintAmount))
+      assert.ok((await getBalance(connection, userAccountX)).eqn(0))
+      assert.ok((await getBalance(connection, userAccountY)).eq(mintAmount))
 
       const swapVars: Swap = {
         pair,
@@ -152,8 +151,8 @@ describe('limits', () => {
       }
       await market.swap(swapVars, owner)
 
-      assert.isFalse((await tokenX.getAccountInfo(userAccountX)).amount.eqn(0))
-      assert.ok((await tokenY.getAccountInfo(userAccountY)).amount.eqn(0))
+      assert.isFalse((await getBalance(connection, userAccountX)).amount.eqn(0))
+      assert.ok((await getBalance(connection, userAccountY)).amount.eqn(0))
     })
 
     it('big deposit Y and swap X', async () => {
@@ -189,8 +188,8 @@ describe('limits', () => {
       }
       await market.initPosition(initPositionVars, owner)
 
-      assert.ok((await tokenX.getAccountInfo(userAccountX)).amount.eq(mintAmount))
-      assert.ok((await tokenY.getAccountInfo(userAccountY)).amount.eqn(0))
+      assert.ok((await getBalance(connection, userAccountX)).eq(mintAmount))
+      assert.ok((await getBalance(connection, userAccountY)).amount.eqn(0))
 
       const swapVars: Swap = {
         pair,
@@ -205,8 +204,8 @@ describe('limits', () => {
       }
       await market.swap(swapVars, owner)
 
-      assert.ok((await tokenX.getAccountInfo(userAccountX)).amount.eqn(0))
-      assert.isFalse((await tokenY.getAccountInfo(userAccountY)).amount.eqn(0))
+      assert.ok((await getBalance(connection, userAccountX)).amount.eqn(0))
+      assert.isFalse((await getBalance(connection, userAccountY)).amount.eqn(0))
     })
 
     it('big deposit and swaps', async () => {
@@ -320,9 +319,6 @@ describe('limits', () => {
       const currentSqrtPrice = poolData.sqrtPrice
       assert.equal(poolData.currentTickIndex, initTick)
       assert.equal(currentSqrtPrice.v.toString(), calculatePriceSqrt(initTick).v.toString())
-
-      tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-      tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
 
       const mintAmount = new BN(2).pow(new BN(63)).subn(1)
 

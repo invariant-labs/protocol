@@ -1,5 +1,5 @@
 import { PublicKey } from '@solana/web3.js'
-import { utils, BN } from '@project-serum/anchor'
+import { utils, BN } from '@coral-xyz/anchor'
 import { FeeTier } from './market'
 import { bigNumberToBuffer, feeToTickSpacing, getFeeTierAddress } from './utils'
 
@@ -36,8 +36,8 @@ export class Pair {
     }
   }
 
-  async getAddressAndBump(programId: PublicKey): Promise<[PublicKey, number]> {
-    return await PublicKey.findProgramAddress(
+  getAddressAndBump(programId: PublicKey): [PublicKey, number] {
+    return PublicKey.findProgramAddressSync(
       [
         Buffer.from(utils.bytes.utf8.encode(POOL_SEED)),
         this.tokenX.toBuffer(),
@@ -49,13 +49,13 @@ export class Pair {
     )
   }
 
-  async getAddress(programId: PublicKey): Promise<PublicKey> {
-    return await this.getAddressAndBump(programId).then(([address, _]) => address)
+  getAddress(programId: PublicKey): PublicKey {
+    return this.getAddressAndBump(programId)[0]
   }
 
-  async getFeeTierAddress(programId: PublicKey) {
+  getFeeTierAddress(programId: PublicKey) {
     if (this.feeTierAddress == null) {
-      const { address: feeTierAddress } = await getFeeTierAddress(this.feeTier, programId)
+      const { address: feeTierAddress } = getFeeTierAddress(this.feeTier, programId)
       this.feeTierAddress = feeTierAddress
     }
     return this.feeTierAddress

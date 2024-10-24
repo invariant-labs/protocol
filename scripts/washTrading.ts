@@ -1,15 +1,13 @@
 import * as fs from 'fs'
-import { BN, Provider } from '@project-serum/anchor'
+import { AnchorProvider, BN } from '@coral-xyz/anchor'
 import { clusterApiUrl, Connection, Keypair, PublicKey } from '@solana/web3.js'
 import { MOCK_TOKENS, Network } from '@invariant-labs/sdk/src/network'
 import { MINTER } from './minter'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import { Market, Pair } from '@invariant-labs/sdk/src'
 import { FEE_TIERS, toDecimal } from '@invariant-labs/sdk/src/utils'
 import { Swap } from '@invariant-labs/sdk/src/market'
 import { CloserLimit, getCloserLimit, U128MAX } from '@invariant-labs/sdk/lib/utils'
-import { calculateSwapStep, getDeltaX, getDeltaY, U64_MAX } from '@invariant-labs/sdk/src/math'
-import { findClosestTicks } from '@invariant-labs/sdk/src/math'
+import { calculateSwapStep, U64_MAX } from '@invariant-labs/sdk/src/math'
 import { formatLiquidity, formatPrice, handleMint, isRPCError } from './utils'
 import { sleep } from '@invariant-labs/sdk'
 import { PoolStructure } from '@invariant-labs/sdk/lib/market'
@@ -17,7 +15,7 @@ import { PoolStructure } from '@invariant-labs/sdk/lib/market'
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
-const provider = Provider.local(clusterApiUrl('devnet'), {
+const provider = AnchorProvider.local(clusterApiUrl('devnet'), {
   commitment: 'confirmed',
   skipPreflight: true
 })

@@ -7,7 +7,7 @@ import {
   TickmapChange,
   tickToPosition
 } from '@invariant-labs/sdk/src/tickmap'
-import { BN } from '@project-serum/anchor'
+import { BN } from '@coral-xyz/anchor'
 import { assert } from 'chai'
 
 describe('tickmap', () => {

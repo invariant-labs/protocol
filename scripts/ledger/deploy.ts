@@ -3,7 +3,7 @@ import { FeeTier } from '@invariant-labs/sdk/lib/market'
 import { fromFee } from '@invariant-labs/sdk/lib/utils'
 import { CreateFeeTier, Market } from '@invariant-labs/sdk/src/market'
 import { FEE_TIERS } from '@invariant-labs/sdk/src/utils'
-import { Provider } from '@project-serum/anchor'
+import { AnchorProvider } from '@coral-xyz/anchor'
 import { clusterApiUrl, PublicKey } from '@solana/web3.js'
 import { BN } from '../../staker-sdk/lib'
 import { LedgerWalletProvider } from '../walletProvider/ledger'
@@ -12,7 +12,7 @@ import { getLedgerWallet, signAndSendLedger } from '../walletProvider/wallet'
 // trunk-ignore(eslint/@typescript-eslint/no-var-requires)
 require('dotenv').config()
 
-const provider = Provider.local(clusterApiUrl('devnet'), {
+const provider = AnchorProvider.local(clusterApiUrl('devnet'), {
   skipPreflight: true
 })
 const connection = provider.connection

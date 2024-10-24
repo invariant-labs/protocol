@@ -1,20 +1,20 @@
-import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import * as anchor from '@coral-xyz/anchor'
+import { AnchorProvider, BN } from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
-import { createToken } from './testUtils'
+import { createToken, assertThrowsAsync } from './testUtils'
 import {
   Market,
   Pair,
   TICK_LIMIT,
   Network,
   INVARIANT_ERRORS,
+  sleep,
   calculatePriceSqrt
 } from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
-import { assertThrowsAsync, fromFee } from '@invariant-labs/sdk/lib/utils'
-import { PRICE_DENOMINATOR, toDecimal, tou64 } from '@invariant-labs/sdk/src/utils'
+import { fromFee } from '@invariant-labs/sdk/lib/utils'
+import { PRICE_DENOMINATOR, toDecimal } from '@invariant-labs/sdk/src/utils'
 import {
   CreateFeeTier,
   CreatePool,
@@ -23,10 +23,10 @@ import {
   Swap
 } from '@invariant-labs/sdk/src/market'
 import { getLiquidityByX } from '@invariant-labs/sdk/lib/math'
-import { DENOMINATOR } from '@invariant-labs/sdk'
+import { createAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 
 describe('swap with cross both side', () => {
-  const provider = Provider.local()
+  const provider = AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
@@ -39,8 +39,6 @@ describe('swap with cross both side', () => {
     tickSpacing: 10
   }
   let pair: Pair
-  let tokenX: Token
-  let tokenY: Token
 
   before(async () => {
     market = await Market.build(
@@ -61,9 +59,7 @@ describe('swap with cross both side', () => {
       createToken(connection, wallet, mintAuthority)
     ])
 
-    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+    pair = new Pair(tokens[0], tokens[1], feeTier)
 
     await market.createState(admin.publicKey, admin)
 
@@ -82,8 +78,8 @@ describe('swap with cross both side', () => {
     await market.createPool(createPoolVars)
 
     const createdPool = await market.getPool(pair)
-    assert.ok(createdPool.tokenX.equals(tokenX.publicKey))
-    assert.ok(createdPool.tokenY.equals(tokenY.publicKey))
+    assert.ok(createdPool.tokenX.equals(pair.tokenX))
+    assert.ok(createdPool.tokenY.equals(pair.tokenY))
     assert.ok(createdPool.fee.v.eq(feeTier.fee))
     assert.equal(createdPool.tickSpacing, feeTier.tickSpacing)
     assert.ok(createdPool.liquidity.v.eqn(0))
@@ -125,12 +121,38 @@ describe('swap with cross both side', () => {
 
     const positionOwner = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
-    const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
-    const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
-    const mintAmount = tou64(new BN(10).pow(new BN(5)))
+    await sleep(1000)
 
-    await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-    await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+    const userTokenXAccount = await createAssociatedTokenAccount(
+      connection,
+      positionOwner,
+      pair.tokenX,
+      positionOwner.publicKey
+    )
+    const userTokenYAccount = await createAssociatedTokenAccount(
+      connection,
+      positionOwner,
+      pair.tokenY,
+      positionOwner.publicKey
+    )
+    const mintAmount = new BN(10).pow(new BN(5))
+
+    await mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      userTokenXAccount,
+      mintAuthority,
+      mintAmount
+    )
+    await mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      userTokenYAccount,
+      mintAuthority,
+      mintAmount
+    )
     const { sqrtPrice } = await market.getPool(pair)
     const { liquidity: liquidityDelta } = getLiquidityByX(
       mintAmount.divn(10),
@@ -174,24 +196,34 @@ describe('swap with cross both side', () => {
     // Create owner
     const owner = Keypair.generate()
     await connection.requestAirdrop(owner.publicKey, 1e9)
-
+    await sleep(1000)
     const limitWithoutCrossTickAmount = new BN(10068)
     const notCrossAmount = new BN(1)
     const minAmountToCrossFromTickPrice = new BN(3)
     const crossingAmountByAmountOut = new BN(20136101434)
 
-    const accountX = await tokenX.createAccount(owner.publicKey)
-    const accountY = await tokenY.createAccount(owner.publicKey)
-    await tokenX.mintTo(
+    const accountX = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      owner.publicKey
+    )
+    const accountY = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      owner.publicKey
+    )
+    await mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenX,
       accountX,
-      mintAuthority.publicKey,
-      [mintAuthority],
-      tou64(
-        limitWithoutCrossTickAmount
-          .add(minAmountToCrossFromTickPrice)
-          .add(notCrossAmount)
-          .add(crossingAmountByAmountOut)
-      )
+      mintAuthority,
+      limitWithoutCrossTickAmount
+        .add(minAmountToCrossFromTickPrice)
+        .add(notCrossAmount)
+        .add(crossingAmountByAmountOut)
     )
 
     // Swap
@@ -280,17 +312,21 @@ describe('swap with cross both side', () => {
     const massiveLiquidityAmountX = new BN(10).pow(new BN(19))
     const massiveLiquidityAmountY = new BN(10).pow(new BN(19))
 
-    await tokenX.mintTo(
+    await mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenX,
       userTokenXAccount,
-      mintAuthority.publicKey,
-      [mintAuthority],
-      tou64(massiveLiquidityAmountX)
+      mintAuthority,
+      massiveLiquidityAmountX
     )
-    await tokenY.mintTo(
+    await mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenY,
       userTokenYAccount,
-      mintAuthority.publicKey,
-      [mintAuthority],
-      tou64(massiveLiquidityAmountY)
+      mintAuthority,
+      massiveLiquidityAmountY
     )
 
     const currentPrice = (await market.getPool(pair)).sqrtPrice

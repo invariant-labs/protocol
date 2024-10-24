@@ -39,8 +39,7 @@ pub struct CreateIncentive<'info> {
     pub token_program: AccountInfo<'info>,
     #[account(address = invariant::ID)]
     pub invariant: Program<'info, Invariant>,
-    #[account(address = system_program::ID)]
-    pub system_program: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
 }
 

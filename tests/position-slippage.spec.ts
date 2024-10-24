@@ -1,5 +1,5 @@
-import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
+import * as anchor from '@coral-xyz/anchor'
+import { AnchorProvider } from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
 import {
   assertThrowsAsync,
@@ -7,13 +7,13 @@ import {
   createTokensAndPool,
   createUserWithTokens
 } from './testUtils'
-import { Market, Network, sleep, PRICE_DENOMINATOR, INVARIANT_ERRORS } from '@invariant-labs/sdk'
+import { Market, Network, sleep } from '@invariant-labs/sdk'
 import { toDecimal } from '@invariant-labs/sdk/src/utils'
 import { InitPosition } from '@invariant-labs/sdk/lib/market'
 import { toPrice } from '@invariant-labs/sdk/lib/utils'
 
 describe('Position Slippage', () => {
-  const provider = Provider.local()
+  const provider = AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
@@ -33,15 +33,10 @@ describe('Position Slippage', () => {
 
     await market.createState(admin.publicKey, admin)
 
-    const { pair, mintAuthority } = await createPoolWithLiquidity(market, connection, admin)
-    const { owner, userAccountX, userAccountY } = await createUserWithTokens(
-      pair,
-      connection,
-      mintAuthority
-    )
+    await createPoolWithLiquidity(market, connection, admin)
   })
 
-  it.only('zero slippage', async () => {
+  it('zero slippage', async () => {
     const { pair, mintAuthority } = await createTokensAndPool(market, connection, wallet)
     const { owner, userAccountX, userAccountY } = await createUserWithTokens(
       pair,
@@ -107,7 +102,7 @@ describe('Position Slippage', () => {
       knownPrice: { v: toPrice(103, 2).v },
       slippage: toDecimal(3, 2)
     }
-    assertThrowsAsync(market.initPosition(initPositionVars, owner))
+    await assertThrowsAsync(market.initPosition(initPositionVars, owner))
   })
 
   it('above range', async () => {
@@ -130,6 +125,6 @@ describe('Position Slippage', () => {
       knownPrice: { v: toPrice(97, 2).v },
       slippage: toDecimal(3, 2)
     }
-    assertThrowsAsync(market.initPosition(initPositionVars, owner))
+    await assertThrowsAsync(market.initPosition(initPositionVars, owner))
   })
 })

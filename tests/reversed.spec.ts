@@ -1,18 +1,24 @@
-import * as anchor from '@project-serum/anchor'
-import { Provider, BN } from '@project-serum/anchor'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import * as anchor from '@coral-xyz/anchor'
+import { AnchorProvider, BN } from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
 import { assert } from 'chai'
 import { createToken, initMarket } from './testUtils'
-import { Market, Pair, Network, LIQUIDITY_DENOMINATOR } from '@invariant-labs/sdk'
+import {
+  Market,
+  Pair,
+  Network,
+  LIQUIDITY_DENOMINATOR,
+  PRICE_DENOMINATOR,
+  sleep
+} from '@invariant-labs/sdk'
 import { FeeTier } from '@invariant-labs/sdk/lib/market'
-import { fromFee } from '@invariant-labs/sdk/lib/utils'
+import { fromFee, getBalance } from '@invariant-labs/sdk/lib/utils'
 import { CreateTick, InitPosition, Swap } from '@invariant-labs/sdk/src/market'
 import { toDecimal, tou64 } from '@invariant-labs/sdk/src/utils'
-import { PRICE_DENOMINATOR } from '@invariant-labs/sdk'
+import { createAssociatedTokenAccount, mintTo } from '@solana/spl-token'
 
 describe('reversed', () => {
-  const provider = Provider.local()
+  const provider = AnchorProvider.local()
   const connection = provider.connection
   // @ts-expect-error
   const wallet = provider.wallet.payer as Keypair
@@ -24,8 +30,6 @@ describe('reversed', () => {
   }
   let market: Market
   let pair: Pair
-  let tokenX: Token
-  let tokenY: Token
 
   before(async () => {
     market = await Market.build(
@@ -46,9 +50,7 @@ describe('reversed', () => {
       createToken(connection, wallet, mintAuthority)
     ])
 
-    pair = new Pair(tokens[0].publicKey, tokens[1].publicKey, feeTier)
-    tokenX = new Token(connection, pair.tokenX, TOKEN_PROGRAM_ID, wallet)
-    tokenY = new Token(connection, pair.tokenY, TOKEN_PROGRAM_ID, wallet)
+    pair = new Pair(tokens[0], tokens[1], feeTier)
   })
 
   it('#init()', async () => {
@@ -68,12 +70,36 @@ describe('reversed', () => {
 
     const positionOwner = Keypair.generate()
     await connection.requestAirdrop(positionOwner.publicKey, 1e9)
-    const userTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
-    const userTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
-
+    await sleep(1000)
+    const userTokenXAccount = await createAssociatedTokenAccount(
+      connection,
+      positionOwner,
+      pair.tokenX,
+      positionOwner.publicKey
+    )
+    const userTokenYAccount = await createAssociatedTokenAccount(
+      connection,
+      positionOwner,
+      pair.tokenY,
+      positionOwner.publicKey
+    )
     const mintAmount = tou64(new BN(10).pow(new BN(10)))
-    await tokenX.mintTo(userTokenXAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
-    await tokenY.mintTo(userTokenYAccount, mintAuthority.publicKey, [mintAuthority], mintAmount)
+    await mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      userTokenXAccount,
+      mintAuthority,
+      mintAmount
+    )
+    await mintTo(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      userTokenYAccount,
+      mintAuthority,
+      mintAmount
+    )
 
     const liquidityDelta = { v: new BN(1000000).mul(LIQUIDITY_DENOMINATOR) }
 
@@ -115,18 +141,30 @@ describe('reversed', () => {
     // Prepare swapper
     const owner = Keypair.generate()
     await connection.requestAirdrop(owner.publicKey, 1e9)
+    await sleep(1000)
     const amount = new BN(1000)
 
-    const accountX = await tokenX.createAccount(owner.publicKey)
-    const accountY = await tokenY.createAccount(owner.publicKey)
+    const accountX = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenX,
+      owner.publicKey
+    )
+    const accountY = await createAssociatedTokenAccount(
+      connection,
+      mintAuthority,
+      pair.tokenY,
+      owner.publicKey
+    )
 
     const { tokenXReserve } = await market.getPool(pair)
-    await tokenY.mintTo(accountY, mintAuthority.publicKey, [mintAuthority], tou64(amount))
-    await tokenX.mintTo(tokenXReserve, mintAuthority.publicKey, [mintAuthority], tou64(amount))
+    await mintTo(connection, mintAuthority, pair.tokenY, accountY, mintAuthority, amount)
+    await mintTo(connection, mintAuthority, pair.tokenX, tokenXReserve, mintAuthority, amount)
+    await sleep(1000)
 
     // Swap
     const poolDataBefore = await market.getPool(pair)
-    const reservesBefore = await market.getReserveBalances(pair, tokenX, tokenY)
+    const reservesBefore = await market.getReserveBalances(pair)
 
     const swapVars: Swap = {
       pair,
@@ -140,6 +178,7 @@ describe('reversed', () => {
       byAmountIn: true
     }
     await market.swap(swapVars, owner)
+    await sleep(1000)
 
     // Check pool
     const poolData = await market.getPool(pair)
@@ -148,9 +187,9 @@ describe('reversed', () => {
     assert.ok(poolData.sqrtPrice.v.gt(poolDataBefore.sqrtPrice.v))
 
     // Check amounts and fees
-    const amountX = (await tokenX.getAccountInfo(accountX)).amount
-    const amountY = (await tokenY.getAccountInfo(accountY)).amount
-    const reservesAfter = await market.getReserveBalances(pair, tokenX, tokenY)
+    const amountX = await getBalance(connection, accountX)
+    const amountY = await getBalance(connection, accountY)
+    const reservesAfter = await market.getReserveBalances(pair)
     const reserveXDelta = reservesBefore.x.sub(reservesAfter.x)
     const reserveYDelta = reservesAfter.y.sub(reservesBefore.y)
 
