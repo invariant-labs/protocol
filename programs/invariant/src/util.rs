@@ -1,4 +1,3 @@
-// use anchor_lang::__private::CLOSED_ACCOUNT_DISCRIMINATOR;
 use std::cell::RefMut;
 use std::convert::TryInto;
 // use std::io::Write;
