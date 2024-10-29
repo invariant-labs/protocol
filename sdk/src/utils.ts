@@ -33,12 +33,10 @@ import {
   getLiquidityByY,
   getXfromLiquidity,
   isEnoughAmountToPushPrice,
-  MIN_TICK,
-  sqrt
+  MIN_TICK
 } from './math'
 import { alignTickToSpacing, getTickFromPrice } from './tick'
 import { getNextTick, getPreviousTick, getSearchLimit } from './tickmap'
-import { struct, u32, u8 } from '@solana/buffer-layout'
 import { u64 } from '@solana/spl-token'
 import { TokenInfo, TokenListContainer, TokenListProvider } from '@solana/spl-token-registry'
 
@@ -192,7 +190,7 @@ export interface CloserLimitResult {
 
 export const computeUnitsInstruction = (
   units: number,
-  wallet: PublicKey
+  _wallet: PublicKey
 ): TransactionInstruction => {
   return ComputeBudgetProgram.setComputeUnitLimit({ units })
 }
@@ -1370,7 +1368,7 @@ export const getPositionIndex = async (
     const indexBuffer = Buffer.alloc(4)
     indexBuffer.writeInt32LE(counter)
 
-    const [positionAddress, positionBump] = await PublicKey.findProgramAddress(
+    const [positionAddress, _positionBump] = await PublicKey.findProgramAddress(
       [Buffer.from(utils.bytes.utf8.encode('positionv1')), owner.toBuffer(), indexBuffer],
       invariantAddress
     )
