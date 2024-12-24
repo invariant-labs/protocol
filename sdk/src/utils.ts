@@ -20,7 +20,9 @@ import {
   PoolData,
   Errors,
   PositionInitData,
-  Position
+  Position,
+  TICK_CROSSES_PER_IX,
+  TICK_VIRTUAL_CROSSES_PER_IX
 } from './market'
 import {
   calculateMinReceivedTokensByAmountIn,
@@ -118,6 +120,8 @@ export interface SimulateSwapInterface {
   ticks: Map<number, Tick>
   tickmap: Tickmap
   pool: PoolData
+  maxVirtualCrosses?: number
+  maxCrosses?: number
 }
 
 export interface Simulation {
@@ -482,6 +486,7 @@ export const getCloserLimit = (closerLimit: CloserLimit): CloserLimitResult => {
 
 export enum SimulationStatus {
   Ok,
+  SwapStepLimitReached = 'Swap step limit reached',
   WrongLimit = 'Price limit is on the wrong side of price',
   PriceLimitReached = 'Price would cross swap limit',
   TickNotFound = 'tick crossed but not passed to simulation',
@@ -497,7 +502,9 @@ export const swapSimulation = async (
   priceLimit: Decimal,
   slippage: Decimal,
   market: Market,
-  poolAddress: PublicKey
+  poolAddress: PublicKey,
+  maxVirtualCrosses?: number,
+  maxCrosses?: number
 ): Promise<SimulationResult> => {
   const { currentTickIndex, fee, tickSpacing, tokenX, tokenY, liquidity, sqrtPrice } =
     await market.getPoolByAddress(poolAddress)
@@ -528,7 +535,9 @@ export const swapSimulation = async (
     slippage,
     ticks,
     tickmap,
-    pool: poolData
+    pool: poolData,
+    maxCrosses,
+    maxVirtualCrosses
   }
 
   return simulateSwap(swapParameters)
@@ -545,18 +554,27 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     priceLimit: optionalPriceLimit,
     pool
   } = swapParameters
+  let maxCrosses = swapParameters.maxCrosses ?? TICK_CROSSES_PER_IX
+  let maxVirtualCrosses = swapParameters.maxVirtualCrosses ?? TICK_VIRTUAL_CROSSES_PER_IX
+
   let { currentTickIndex, tickSpacing, liquidity, sqrtPrice, fee } = pool
-  const startingSqrtPrice = sqrtPrice.v
+  const startingSqrtPrice = sqrtPrice
   let previousTickIndex = MAX_TICK + 1
   const amountPerTick: BN[] = []
   const crossedTicks: number[] = []
-  const priceLimit =
-    optionalPriceLimit ?? xToY ? calculatePriceSqrt(MIN_TICK) : calculatePriceSqrt(MAX_TICK)
+  let swapSteps = 0
+  let priceLimitAfterSlippage
+
+  if (!optionalPriceLimit) {
+    priceLimitAfterSlippage = xToY ? calculatePriceSqrt(MIN_TICK) : calculatePriceSqrt(MAX_TICK)
+  } else {
+    priceLimitAfterSlippage = calculatePriceAfterSlippage(optionalPriceLimit, slippage, !xToY)
+  }
+
   let accumulatedAmount: BN = new BN(0)
   let accumulatedAmountOut: BN = new BN(0)
   let accumulatedAmountIn: BN = new BN(0)
   let accumulatedFee: BN = new BN(0)
-  const priceLimitAfterSlippage = calculatePriceAfterSlippage(priceLimit, slippage, !xToY)
 
   // Sanity check, should never throw
   if (xToY) {
@@ -591,6 +609,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
       byAmountIn,
       fee
     )
+    swapSteps++
 
     accumulatedAmountIn = accumulatedAmountIn.add(result.amountIn)
     accumulatedAmountOut = accumulatedAmountOut.add(result.amountOut)
@@ -629,10 +648,13 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
 
       // cross
       if (initialized) {
-        if (!ticks.has(tickIndex)) {
+        const tick = ticks.get(tickIndex)
+
+        if (tick === undefined) {
           throw new Error(SimulationStatus.TickNotFound)
         }
-        const tick = ticks.get(tickIndex) as Tick
+
+        crossedTicks.push(tickIndex)
 
         if (!xToY || isEnoughAmountToCross) {
           // trunk-ignore(eslint/no-mixed-operators)
@@ -641,7 +663,6 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
           } else {
             liquidity = { v: liquidity.v.sub(tick.liquidityChange.v) }
           }
-          crossedTicks.push(tickIndex)
         } else if (!remainingAmount.eqn(0)) {
           if (byAmountIn) {
             accumulatedAmountIn = accumulatedAmountIn.add(remainingAmount)
@@ -668,10 +689,8 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
       accumulatedAmount = new BN(0)
     }
 
-    // in the future this can be replaced by counter
-    if (!isTickInitialized && liquidity.v.eqn(0)) {
-      // throw new Error(SimulationErrors.TooLargeGap)
-      status = SimulationStatus.TooLargeGap
+    if (swapSteps > maxCrosses + maxVirtualCrosses || crossedTicks.length > maxCrosses) {
+      status = SimulationStatus.SwapStepLimitReached
       break
     }
 
@@ -689,18 +708,14 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     status = SimulationStatus.NoGainSwap
   }
 
-  const priceAfterSwap: BN = sqrtPrice.v
-  const priceImpact = calculatePriceImpact(startingSqrtPrice, priceAfterSwap)
+  const priceAfterSwap = sqrtPrice
 
+  const priceImpact = calculatePriceImpact(startingSqrtPrice.v, priceAfterSwap.v)
   let minReceived: BN
   if (byAmountIn) {
-    const endingPriceAfterSlippage = calculatePriceAfterSlippage(
-      { v: priceAfterSwap },
-      slippage,
-      !xToY
-    ).v
+    const endingPriceAfterSlippage = calculatePriceAfterSlippage(priceAfterSwap, slippage, !xToY)
     minReceived = calculateMinReceivedTokensByAmountIn(
-      endingPriceAfterSlippage,
+      endingPriceAfterSlippage.v,
       xToY,
       accumulatedAmountIn,
       pool.fee.v
@@ -716,7 +731,7 @@ export const simulateSwap = (swapParameters: SimulateSwapInterface): SimulationR
     accumulatedAmountIn,
     accumulatedAmountOut,
     accumulatedFee,
-    priceAfterSwap,
+    priceAfterSwap: priceAfterSwap.v,
     priceImpact,
     minReceived
   }
