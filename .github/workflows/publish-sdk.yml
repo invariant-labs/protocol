@@ -1,11 +1,11 @@
 name: Publish sdk
 
-on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'sdk/**'
+# on:
+#   push:
+#     branches:
+#       - master
+#     paths:
+#       - 'sdk/**'
 env:
   solana_version: '1.14.13'
   anchor_version: '0.21.0'
