@@ -140,6 +140,11 @@ pub mod invariant {
     pub fn change_fee_receiver(ctx: Context<ChangeFeeReceiver>) -> ProgramResult {
         ctx.accounts.handler()
     }
+
+    #[access_control(admin(&ctx.accounts.state, &ctx.accounts.admin))]
+    pub fn remove_defunct_pool(ctx: Context<RemoveDefunctPool>) -> ProgramResult {
+        ctx.accounts.handler()
+    }
 }
 
 fn admin(state_loader: &AccountLoader<State>, signer: &AccountInfo) -> Result<()> {

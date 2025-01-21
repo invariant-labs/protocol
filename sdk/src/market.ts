@@ -1350,6 +1350,43 @@ export class Market {
     await signAndSend(tx, [signer], this.connection)
   }
 
+  async removeDefunctPoolInstruction(removeDefunctPool: RemoveDefunctPool) {
+    const { pair, accountX, accountY } = removeDefunctPool
+    const adminPubkey = removeDefunctPool.admin ?? this.wallet.publicKey
+    const { address: stateAddress } = await this.getStateAddress()
+    const poolAddress = await pair.getAddress(this.program.programId)
+    const pool = await this.getPool(pair)
+
+    return this.program.instruction.removeDefunctPool({
+      accounts: {
+        state: stateAddress,
+        pool: poolAddress,
+        tickmap: pool.tickmap,
+        tokenX: pair.tokenX,
+        tokenY: pair.tokenY,
+        accountX,
+        accountY,
+        reserveX: pool.tokenXReserve,
+        reserveY: pool.tokenYReserve,
+        admin: adminPubkey,
+        programAuthority: this.programAuthority,
+        tokenProgram: TOKEN_PROGRAM_ID
+      }
+    })
+  }
+
+  async removeDefunctPoolTransaction(removeDefunctPool: RemoveDefunctPool) {
+    const ix = await this.removeDefunctPoolInstruction(removeDefunctPool)
+    removeDefunctPool
+    return new Transaction().add(ix)
+  }
+
+  async removeDefunctPool(removeDefunctPool: RemoveDefunctPool, signer: Keypair) {
+    const tx = await this.removeDefunctPoolTransaction(removeDefunctPool)
+
+    await signAndSend(tx, [signer], this.connection)
+  }
+
   async getWholeLiquidity(pair: Pair) {
     const poolPublicKey = await pair.getAddress(this.program.programId)
     const positions: Position[] = (
@@ -1670,6 +1707,13 @@ export interface ChangeFeeReceiver {
   pair: Pair
   admin?: PublicKey
   feeReceiver: PublicKey
+}
+
+export interface RemoveDefunctPool {
+  pair: Pair
+  accountX: PublicKey
+  accountY: PublicKey
+  admin?: PublicKey
 }
 
 export interface PositionInitData {
