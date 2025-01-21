@@ -7,6 +7,7 @@ use crate::structs::State;
 use crate::ErrorCode::*;
 use crate::SEED;
 use anchor_lang::prelude::*;
+use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token;
 use anchor_spl::token::CloseAccount;
 use anchor_spl::token::Token;
@@ -30,14 +31,16 @@ pub struct RemoveDefunctPool<'info> {
     pub tickmap: AccountLoader<'info, Tickmap>,
     pub token_x: Account<'info, Mint>,
     pub token_y: Account<'info, Mint>,
-    #[account(mut,
-        constraint = account_x.mint == token_x.key() @ InvalidMint,
-        constraint = &account_x.owner == admin.key @ InvalidOwner,
+    #[account(init_if_needed,
+        payer = admin,
+        associated_token::mint = token_x,
+        associated_token::authority = admin
     )]
     pub account_x: Box<Account<'info, TokenAccount>>,
-    #[account(mut,
-        constraint = account_y.mint == token_y.key() @ InvalidMint,
-        constraint = &account_y.owner == admin.key @ InvalidOwner
+    #[account(init_if_needed,
+        payer = admin,
+        associated_token::mint = token_y,
+        associated_token::authority = admin
     )]
     pub account_y: Box<Account<'info, TokenAccount>>,
     #[account(mut,
@@ -57,6 +60,9 @@ pub struct RemoveDefunctPool<'info> {
     #[account(constraint = &state.load()?.authority == program_authority.key @ InvalidAuthority)]
     pub program_authority: AccountInfo<'info>,
     pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub rent: Sysvar<'info, Rent>,
+    pub system_program: Program<'info, System>,
 }
 
 impl<'info> interfaces::send_tokens::SendTokens<'info> for RemoveDefunctPool<'info> {

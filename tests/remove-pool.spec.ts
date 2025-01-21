@@ -61,15 +61,9 @@ describe('remove pool', () => {
   })
 
   it('#removeDefunctPool()', async () => {
-    const adminTokenXAccount = await tokenX.createAccount(admin.publicKey)
-    const adminTokenYAccount = await tokenY.createAccount(admin.publicKey)
-
     const poolState = await market.getPool(pair)
 
-    await market.removeDefunctPool(
-      { pair, admin: admin.publicKey, accountX: adminTokenXAccount, accountY: adminTokenYAccount },
-      admin
-    )
+    await market.removeDefunctPool({ pair, admin: admin.publicKey }, admin)
     await assertThrowsAsync(market.getPool(pair), 'Error: Account does not exist')
     await assertThrowsAsync(
       market.program.account.tickmap.fetch(poolState.tickmap),
@@ -93,16 +87,11 @@ describe('remove pool', () => {
       initTick
     })
 
-    const positionOwnerTokenXAccount = await tokenX.createAccount(positionOwner.publicKey)
-    const positionOwnerTokenYAccount = await tokenY.createAccount(positionOwner.publicKey)
-
     await assertThrowsAsync(
       market.removeDefunctPool(
         {
           pair,
-          admin: positionOwner.publicKey,
-          accountX: positionOwnerTokenXAccount,
-          accountY: positionOwnerTokenYAccount
+          admin: positionOwner.publicKey
         },
         positionOwner
       ),
@@ -165,16 +154,11 @@ describe('remove pool', () => {
     )
     await market.getPosition(positionOwner.publicKey, positionIndex)
 
-    const adminTokenXAccount = await tokenX.createAccount(admin.publicKey)
-    const adminTokenYAccount = await tokenY.createAccount(admin.publicKey)
-
     await assertThrowsAsync(
       market.removeDefunctPool(
         {
           pair,
-          admin: admin.publicKey,
-          accountX: adminTokenXAccount,
-          accountY: adminTokenYAccount
+          admin: admin.publicKey
         },
         admin
       ),
@@ -196,16 +180,9 @@ describe('remove pool', () => {
       },
       positionOwner
     )
-
-    const adminTokenXAccount = await tokenX.createAccount(admin.publicKey)
-    const adminTokenYAccount = await tokenY.createAccount(admin.publicKey)
-
     const poolState = await market.getPool(pair)
 
-    await market.removeDefunctPool(
-      { pair, admin: admin.publicKey, accountX: adminTokenXAccount, accountY: adminTokenYAccount },
-      admin
-    )
+    await market.removeDefunctPool({ pair, admin: admin.publicKey }, admin)
     await assertThrowsAsync(market.getPool(pair), 'Error: Account does not exist')
     await assertThrowsAsync(
       market.program.account.tickmap.fetch(poolState.tickmap),
