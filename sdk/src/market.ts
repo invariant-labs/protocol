@@ -1,5 +1,5 @@
 import { BN, Program, utils, Provider } from '@project-serum/anchor'
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token'
 import {
   ComputeBudgetProgram,
   Connection,
@@ -39,6 +39,7 @@ import { Invariant, IDL } from './idl/invariant'
 import { DENOMINATOR, IWallet, Pair, signAndSend } from '.'
 import { getMarketAddress, Network } from './network'
 import { bs58 } from '@project-serum/anchor/dist/cjs/utils/bytes'
+import { getAssociatedTokenAddress } from './token'
 
 const POSITION_SEED = 'positionv1'
 const TICK_SEED = 'tickv1'
@@ -1350,6 +1351,49 @@ export class Market {
     await signAndSend(tx, [signer], this.connection)
   }
 
+  async removeDefunctPoolInstruction(removeDefunctPool: RemoveDefunctPool) {
+    const { pair } = removeDefunctPool
+    const adminPubkey = removeDefunctPool.admin ?? this.wallet.publicKey
+    const { address: stateAddress } = await this.getStateAddress()
+    const poolAddress = await pair.getAddress(this.program.programId)
+    const pool = await this.getPool(pair)
+
+    const accountX = getAssociatedTokenAddress(adminPubkey, pair.tokenX)
+    const accountY = getAssociatedTokenAddress(adminPubkey, pair.tokenY)
+
+    return this.program.instruction.removeDefunctPool({
+      accounts: {
+        state: stateAddress,
+        pool: poolAddress,
+        tickmap: pool.tickmap,
+        tokenX: pair.tokenX,
+        tokenY: pair.tokenY,
+        accountX,
+        accountY,
+        reserveX: pool.tokenXReserve,
+        reserveY: pool.tokenYReserve,
+        admin: adminPubkey,
+        programAuthority: this.programAuthority,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+        systemProgram: SystemProgram.programId
+      }
+    })
+  }
+
+  async removeDefunctPoolTransaction(removeDefunctPool: RemoveDefunctPool) {
+    const ix = await this.removeDefunctPoolInstruction(removeDefunctPool)
+
+    return new Transaction().add(ix)
+  }
+
+  async removeDefunctPool(removeDefunctPool: RemoveDefunctPool, signer: Keypair) {
+    const tx = await this.removeDefunctPoolTransaction(removeDefunctPool)
+
+    await signAndSend(tx, [signer], this.connection)
+  }
+
   async getWholeLiquidity(pair: Pair) {
     const poolPublicKey = await pair.getAddress(this.program.programId)
     const positions: Position[] = (
@@ -1670,6 +1714,11 @@ export interface ChangeFeeReceiver {
   pair: Pair
   admin?: PublicKey
   feeReceiver: PublicKey
+}
+
+export interface RemoveDefunctPool {
+  pair: Pair
+  admin?: PublicKey
 }
 
 export interface PositionInitData {

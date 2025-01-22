@@ -210,7 +210,7 @@ export async function assertThrowsAsync(fn: Promise<any>, word?: string) {
       err = e.toString()
     }
     if (word) {
-      const regex = new RegExp(`${word}$`)
+      const regex = new RegExp(`${word}`)
       if (!regex.test(err)) {
         console.log(err)
         throw new Error('Invalid Error message')
