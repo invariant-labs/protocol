@@ -1,11 +1,11 @@
 name: Publish sdk
 
-on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'sdk/**'
+# on:
+#   push:
+#     branches:
+#       - master
+#     paths:
+#       - 'sdk/**'
 env:
   solana_version: '1.14.13'
   anchor_version: '0.21.0'
@@ -14,6 +14,10 @@ jobs:
   install:
     runs-on: ubuntu-latest
     steps:
+      - name: install libssl1.1
+        run: |
+          wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+          sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb
       - uses: actions/checkout@v2
       - uses: actions/cache@v2
         name: Cache Cargo registry + index
@@ -66,7 +70,7 @@ jobs:
       - name: install essential
         run: |
           sudo apt-get update
-          sudo apt-get install -y pkg-config build-essential libudev-dev
+          sudo apt-get install -y pkg-config build-essential libudev-dev libusb-1.0-0-dev
       - name: install solana
         if: steps.cache-solana.outputs.cache-hit != 'true'
         run: |
