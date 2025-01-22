@@ -1384,7 +1384,7 @@ export class Market {
 
   async removeDefunctPoolTransaction(removeDefunctPool: RemoveDefunctPool) {
     const ix = await this.removeDefunctPoolInstruction(removeDefunctPool)
-    removeDefunctPool
+
     return new Transaction().add(ix)
   }
 

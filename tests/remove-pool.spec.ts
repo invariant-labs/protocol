@@ -80,6 +80,22 @@ describe('remove pool', () => {
     )
   })
 
+  it('#removeDefunctPool() initialized by another signer', async () => {
+    await market.createPool({
+      pair,
+      payer: positionOwner,
+      initTick
+    })
+
+    await market.removeDefunctPool(
+      {
+        pair,
+        admin: admin.publicKey
+      },
+      admin
+    )
+  })
+
   it('#removeDefunctPool() cannot as not admin', async () => {
     await market.createPool({
       pair,

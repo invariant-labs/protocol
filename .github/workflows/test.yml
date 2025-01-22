@@ -39,6 +39,7 @@ jobs:
             'npm run test:change-protocol-fee',
             'npm run test:tickmap',
             'npm run test:change-fee-receiver',
+            'npm run test:remove-pool',
             'npm run test:whole-liquidity',
             'npm run test:position-change',
             'npm run test:protocol-fee',
